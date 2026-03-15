@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Brain, User, Plus } from "lucide-react";
 import { isChildSession } from "@/lib/childSession";
+import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
   { path: "/dashboard", label: "Home", icon: Home },
@@ -11,17 +12,16 @@ const navItems = [
 export const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const isChild = isChildSession();
 
-  // Don't show on focus session or non-main pages
   const hiddenPaths = ["/focus", "/auth", "/onboarding", "/"];
   if (hiddenPaths.some((p) => location.pathname.startsWith(p) && (p !== "/" || location.pathname === "/"))) {
     return null;
   }
 
-  const items = isChild
-    ? navItems.filter((i) => i.path !== "/profiles")
-    : navItems;
+  const isParentView = Boolean(user);
+  const items = isParentView ? navItems : navItems.filter((i) => i.path !== "/profiles");
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border safe-area-bottom sm:hidden">
@@ -29,14 +29,41 @@ export const BottomNav = () => {
         {items.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
+
+          if (isParentView && item.path === "/profiles") {
+            return (
+              <>
+                <button
+                  onClick={() => navigate("/add-homework")}
+                  className="flex flex-col items-center gap-0.5 px-2 py-0.5 rounded-xl transition-colors min-w-[64px] text-primary"
+                  aria-label="Aggiungi compito"
+                >
+                  <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-card -mt-4">
+                    <Plus className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] font-semibold">Aggiungi</span>
+                </button>
+
+                <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-[56px] ${
+                    isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
+                  <span className="text-[10px] font-medium">{item.label}</span>
+                </button>
+              </>
+            );
+          }
+
           return (
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
               className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-[56px] ${
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
@@ -44,16 +71,17 @@ export const BottomNav = () => {
             </button>
           );
         })}
-        {/* Add homework button for parents */}
-        {!isChild && (
+
+        {!isParentView && !isChild && (
           <button
             onClick={() => navigate("/add-homework")}
-            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-[56px] text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center gap-0.5 px-2 py-0.5 rounded-xl transition-colors min-w-[64px] text-primary"
+            aria-label="Aggiungi compito"
           >
-            <div className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center -mt-1">
+            <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-card -mt-4">
               <Plus className="w-5 h-5" />
             </div>
-            <span className="text-[10px] font-medium">Aggiungi</span>
+            <span className="text-[10px] font-semibold">Aggiungi</span>
           </button>
         )}
       </div>
