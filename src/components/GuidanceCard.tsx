@@ -157,7 +157,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, isTyping, streamingText]);
 
-  const streamCoachReply = async (allMessages: Message[]) => {
+  const streamCoachReply = async (allMessages: ChatMessage[]) => {
     setIsTyping(true);
     setStreamingText("");
 
