@@ -107,7 +107,7 @@ const FocusSession = () => {
       </div>
 
       {phase !== "focus" ? (
-        <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-12">
+        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-start sm:justify-center px-4 sm:px-6 pt-3 pb-16">
           <AnimatePresence mode="wait">
             {phase === "checkin" && (
               <motion.div key="checkin" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={spring} className="max-w-md w-full text-center">
