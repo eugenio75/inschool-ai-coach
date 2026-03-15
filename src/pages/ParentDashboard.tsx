@@ -40,6 +40,9 @@ const ParentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [aiInsights, setAiInsights] = useState<any[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [regeneratingCode, setRegeneratingCode] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const load = async () => {
