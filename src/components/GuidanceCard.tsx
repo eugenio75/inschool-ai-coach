@@ -131,8 +131,10 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     } catch { return null; }
   };
 
-  // Initial message
+  // Initial message - only if no restored messages
   useEffect(() => {
+    if (messages.length > 0) return; // Already restored from sessionStorage
+    
     const profile = getProfile();
     const name = profile?.name || "campione";
     const sourceType = taskContext?.sourceType || "manual";
@@ -151,7 +153,15 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     }
     
     setMessages([{ id: "init", role: "coach", text: initial }]);
-  }, [emotion, taskTitle, taskSubject, taskContext?.sourceType]);
+  }, []); // Run once on mount
+
+  // Persist messages to sessionStorage and notify parent
+  useEffect(() => {
+    if (sessionKey && messages.length > 0) {
+      sessionStorage.setItem(`focus-chat-${sessionKey}`, JSON.stringify(messages));
+    }
+    onMessagesChange?.(messages);
+  }, [messages, sessionKey, onMessagesChange]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
