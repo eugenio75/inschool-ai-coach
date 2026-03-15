@@ -106,100 +106,109 @@ const FocusSession = () => {
         <button onClick={endSession} className="text-muted-foreground hover:text-foreground transition-colors"><X className="w-5 h-5" /></button>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-36 sm:pb-48">
-        <AnimatePresence mode="wait">
-          {phase === "checkin" && (
-            <motion.div key="checkin" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={spring} className="max-w-md w-full text-center">
-              <h2 className="font-display text-2xl font-bold text-foreground mb-2">Come ti senti adesso?</h2>
-              <p className="text-muted-foreground mb-8">Non c'è una risposta giusta. Dimmi come stai.</p>
-              <div className="flex flex-wrap justify-center gap-3 mb-8">
-                {emotionOptions.map((e) => (
-                  <button key={e.id} onClick={() => setEmotion(e.id)} className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-2xl border transition-all ${emotion === e.id ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}>
-                    <span className="text-2xl">{e.emoji}</span>
-                    <span className="text-xs font-medium text-foreground">{e.label}</span>
-                  </button>
-                ))}
-              </div>
-              <Button onClick={startBreathing} disabled={!emotion} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl px-8 py-5 text-base disabled:opacity-40">Sono pronto</Button>
-            </motion.div>
-          )}
-
-          {phase === "breathing" && (
-            <motion.div key="breathing" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={spring} className="text-center">
-              <h2 className="font-display text-xl font-bold text-foreground mb-8">Facciamo 3 respiri profondi</h2>
-              <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="w-32 h-32 rounded-full bg-sage-light border-2 border-primary/30 mx-auto flex items-center justify-center">
-                <span className="text-3xl font-display font-bold text-primary animate-pulse-soft">{breathCount + 1}</span>
+      {phase !== "focus" ? (
+        <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-12">
+          <AnimatePresence mode="wait">
+            {phase === "checkin" && (
+              <motion.div key="checkin" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={spring} className="max-w-md w-full text-center">
+                <h2 className="font-display text-2xl font-bold text-foreground mb-2">Come ti senti adesso?</h2>
+                <p className="text-muted-foreground mb-8">Non c'è una risposta giusta. Dimmi come stai.</p>
+                <div className="flex flex-wrap justify-center gap-3 mb-8">
+                  {emotionOptions.map((e) => (
+                    <button key={e.id} onClick={() => setEmotion(e.id)} className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-2xl border transition-all ${emotion === e.id ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}>
+                      <span className="text-2xl">{e.emoji}</span>
+                      <span className="text-xs font-medium text-foreground">{e.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <Button onClick={startBreathing} disabled={!emotion} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl px-8 py-5 text-base disabled:opacity-40">Sono pronto</Button>
               </motion.div>
-              <p className="text-muted-foreground mt-6">Inspira... ed espira...</p>
-            </motion.div>
-          )}
+            )}
 
-          {phase === "focus" && (
-            <motion.div key="focus" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={spring} className="text-center w-full max-w-md">
-              <ProgressSun progress={progress} size={120} />
-              <p className="font-display text-4xl font-bold text-foreground mt-6 tabular-nums">{formatTime(seconds)}</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                {progress < 0.25 ? "Stai andando benissimo." : progress < 0.5 ? "Ottimo ritmo!" : progress < 0.75 ? "Più di metà! 💪" : "Quasi finito!"}
-              </p>
-            </motion.div>
-          )}
+            {phase === "breathing" && (
+              <motion.div key="breathing" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={spring} className="text-center">
+                <h2 className="font-display text-xl font-bold text-foreground mb-8">Facciamo 3 respiri profondi</h2>
+                <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="w-32 h-32 rounded-full bg-sage-light border-2 border-primary/30 mx-auto flex items-center justify-center">
+                  <span className="text-3xl font-display font-bold text-primary animate-pulse-soft">{breathCount + 1}</span>
+                </motion.div>
+                <p className="text-muted-foreground mt-6">Inspira... ed espira...</p>
+              </motion.div>
+            )}
 
-          {phase === "recap" && (
-            <motion.div key="recap" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={spring} className="text-center max-w-md w-full">
-              <div className="w-16 h-16 rounded-2xl bg-sage-light flex items-center justify-center mx-auto mb-6"><span className="text-3xl">🌟</span></div>
-              <h2 className="font-display text-2xl font-bold text-foreground mb-2">Bravissimo, {studentName}!</h2>
-              <p className="text-muted-foreground mb-2">Hai lavorato per {minutesWorked} minuti su {taskTitle}.</p>
-              <div className="grid grid-cols-3 gap-3 my-6">
-                <div className="bg-sage-light rounded-xl p-3 text-center">
-                  <p className="text-lg font-display font-bold text-sage-dark">+{minutesWorked * 2}</p>
-                  <p className="text-[10px] text-sage-dark/80">punti focus</p>
+            {phase === "recap" && (
+              <motion.div key="recap" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={spring} className="text-center max-w-md w-full">
+                <div className="w-16 h-16 rounded-2xl bg-sage-light flex items-center justify-center mx-auto mb-6"><span className="text-3xl">🌟</span></div>
+                <h2 className="font-display text-2xl font-bold text-foreground mb-2">Bravissimo, {studentName}!</h2>
+                <p className="text-muted-foreground mb-2">Hai lavorato per {minutesWorked} minuti su {taskTitle}.</p>
+                <div className="grid grid-cols-3 gap-3 my-6">
+                  <div className="bg-sage-light rounded-xl p-3 text-center">
+                    <p className="text-lg font-display font-bold text-sage-dark">+{minutesWorked * 2}</p>
+                    <p className="text-[10px] text-sage-dark/80">punti focus</p>
+                  </div>
+                  <div className="bg-clay-light rounded-xl p-3 text-center">
+                    <p className="text-lg font-display font-bold text-clay-dark">+{Math.round(minutesWorked * 0.5)}</p>
+                    <p className="text-[10px] text-clay-dark/80">autonomia</p>
+                  </div>
+                  <div className="bg-terracotta-light rounded-xl p-3 text-center">
+                    <p className="text-lg font-display font-bold text-terracotta">+1</p>
+                    <p className="text-[10px] text-terracotta/80">costanza</p>
+                  </div>
                 </div>
-                <div className="bg-clay-light rounded-xl p-3 text-center">
-                  <p className="text-lg font-display font-bold text-clay-dark">+{Math.round(minutesWorked * 0.5)}</p>
-                  <p className="text-[10px] text-clay-dark/80">autonomia</p>
+                <p className="text-sm text-sage-dark font-medium mb-8">Hai dimostrato costanza e impegno. 🌱</p>
+                <div className="flex flex-col gap-3">
+                  <Button onClick={() => navigate(`/homework/${task?.id}`)} variant="outline" className="rounded-2xl py-5 border-border">Vedi dettagli compito</Button>
+                  <Button onClick={() => navigate("/dashboard")} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5">Torna ai compiti</Button>
                 </div>
-                <div className="bg-terracotta-light rounded-xl p-3 text-center">
-                  <p className="text-lg font-display font-bold text-terracotta">+1</p>
-                  <p className="text-[10px] text-terracotta/80">costanza</p>
-                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* Timer + controls - compact row at top */}
+          <motion.div
+            key="focus"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={spring}
+            className="px-4 pt-2 pb-3 shrink-0"
+          >
+            <div className="flex items-center justify-center gap-4">
+              <ProgressSun progress={progress} size={56} />
+              <div className="text-left">
+                <p className="font-display text-3xl font-bold text-foreground tabular-nums">{formatTime(seconds)}</p>
+                <p className="text-xs text-muted-foreground">
+                  {progress < 0.25 ? "Stai andando benissimo." : progress < 0.5 ? "Ottimo ritmo!" : progress < 0.75 ? "Più di metà! 💪" : "Quasi finito!"}
+                </p>
               </div>
-              <p className="text-sm text-sage-dark font-medium mb-8">Hai dimostrato costanza e impegno. 🌱</p>
-              <div className="flex flex-col gap-3">
-                <Button onClick={() => navigate(`/homework/${task?.id}`)} variant="outline" className="rounded-2xl py-5 border-border">Vedi dettagli compito</Button>
-                <Button onClick={() => navigate("/dashboard")} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5">Torna ai compiti</Button>
+              <div className="flex items-center gap-2 ml-2">
+                <Button variant="outline" size="sm" onClick={() => setIsRunning(!isRunning)} className="rounded-lg border-border px-3 py-1.5 text-xs h-auto">
+                  {isRunning ? <Pause className="w-3.5 h-3.5 mr-1" /> : <Play className="w-3.5 h-3.5 mr-1" />}
+                  {isRunning ? "Pausa" : "Riprendi"}
+                </Button>
+                <Button size="sm" onClick={endSession} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-lg px-3 py-1.5 text-xs h-auto">Fine</Button>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {phase === "focus" && (
-        <>
-          <GuidanceCard
-            emotion={emotion}
-            taskTitle={taskTitle}
-            taskSubject={taskSubject}
-            taskContext={task ? {
-              title: task.title,
-              subject: task.subject,
-              description: task.description,
-              sourceType: task.source_type,
-              keyConcepts: task.key_concepts,
-              microSteps: task.micro_steps,
-              difficulty: task.difficulty,
-            } : undefined}
-            bottomOffset={72}
-          />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border safe-area-bottom">
-            <div className="px-4 py-3 flex items-center justify-center gap-3 max-w-2xl mx-auto">
-              <Button variant="outline" onClick={() => setIsRunning(!isRunning)} className="rounded-xl border-border px-5 py-4 text-sm flex-1 max-w-[160px]">
-                {isRunning ? <Pause className="w-4 h-4 mr-1.5" /> : <Play className="w-4 h-4 mr-1.5" />}
-                {isRunning ? "Pausa" : "Riprendi"}
-              </Button>
-              <Button onClick={endSession} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-xl px-5 py-4 text-sm flex-1 max-w-[160px]">Ho finito</Button>
             </div>
+          </motion.div>
+
+          {/* Coach card - inline, not fixed overlay */}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <GuidanceCard
+              emotion={emotion}
+              taskTitle={taskTitle}
+              taskSubject={taskSubject}
+              taskContext={task ? {
+                title: task.title,
+                subject: task.subject,
+                description: task.description,
+                sourceType: task.source_type,
+                keyConcepts: task.key_concepts,
+                microSteps: task.micro_steps,
+                difficulty: task.difficulty,
+              } : undefined}
+            />
           </div>
-        </>
+        </div>
       )}
     </div>
   );
