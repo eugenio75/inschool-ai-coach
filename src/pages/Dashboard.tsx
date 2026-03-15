@@ -144,8 +144,10 @@ const Dashboard = () => {
 
       {/* FAB only for parents */}
       {!isChild && (
-        <div className="fixed bottom-6 right-6">
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/add-homework")} className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-card flex items-center justify-center"><Plus className="w-6 h-6" /></motion.button>
+        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50">
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/add-homework")} className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-hover flex items-center justify-center">
+            <Plus className="w-6 h-6" />
+          </motion.button>
         </div>
       )}
     </div>
