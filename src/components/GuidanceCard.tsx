@@ -303,13 +303,15 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     }
   };
 
+  const isInline = bottomOffset === undefined || bottomOffset === null;
+
   return (
     <motion.div
-      initial={{ y: 100, opacity: 0 }}
+      initial={{ y: 40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={spring}
-      className="fixed left-0 right-0 z-40"
-      style={{ bottom: bottomOffset }}
+      className={isInline ? "h-full flex flex-col" : "fixed left-0 right-0 z-40"}
+      style={isInline ? undefined : { bottom: bottomOffset }}
     >
       {/* Hidden file inputs */}
       <input
@@ -328,8 +330,8 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
         className="hidden"
       />
 
-      <div className="max-w-2xl mx-auto px-4 pb-4">
-        <div className="bg-card rounded-2xl shadow-hover border border-primary/10 overflow-hidden">
+      <div className={isInline ? "h-full flex flex-col px-0 pb-0" : "max-w-2xl mx-auto px-4 pb-4"}>
+        <div className={`bg-card rounded-2xl shadow-hover border border-primary/10 overflow-hidden ${isInline ? "flex-1 flex flex-col min-h-0" : ""}`}>
           {/* Toggle */}
           <button
             onClick={() => setExpanded(!expanded)}
@@ -356,11 +358,11 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                 animate={{ height: "auto" }}
                 exit={{ height: 0 }}
                 transition={{ duration: 0.2 }}
-                className="overflow-hidden"
+                className={`overflow-hidden ${isInline ? "flex-1 flex flex-col min-h-0" : ""}`}
               >
-                <div className="px-4 pb-4 flex flex-col">
+                <div className={`px-4 pb-4 flex flex-col ${isInline ? "flex-1 min-h-0" : ""}`}>
                   {/* Chat messages */}
-                  <div ref={scrollRef} className="max-h-56 overflow-y-auto space-y-3 mb-3 scroll-smooth">
+                  <div ref={scrollRef} className={`${isInline ? "flex-1 min-h-0" : "max-h-56"} overflow-y-auto space-y-3 mb-3 scroll-smooth`}>
                     {messages.map((msg) => (
                       <motion.div
                         key={msg.id}
