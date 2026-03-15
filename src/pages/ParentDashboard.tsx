@@ -1,40 +1,51 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, BookOpen, TrendingUp, Brain, AlertCircle, Lightbulb } from "lucide-react";
+import { ArrowLeft, Clock, BookOpen, TrendingUp, Brain, AlertCircle, Lightbulb, Shield, BarChart3, Eye, MessageCircle } from "lucide-react";
 import { ProgressSun } from "@/components/ProgressSun";
+import { BadgeGrid } from "@/components/GamificationBar";
+import { mockGamification } from "@/lib/mockData";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
-const weeklyData = [
-  { day: "Lun", minutes: 35, tasks: 3 },
-  { day: "Mar", minutes: 45, tasks: 4 },
-  { day: "Mer", minutes: 20, tasks: 2 },
-  { day: "Gio", minutes: 50, tasks: 5 },
-  { day: "Ven", minutes: 30, tasks: 3 },
-  { day: "Sab", minutes: 15, tasks: 1 },
-  { day: "Dom", minutes: 0, tasks: 0 },
-];
-
+const weeklyData = mockGamification.weeklyProgress;
 const maxMinutes = Math.max(...weeklyData.map((d) => d.minutes));
 
 const insights = [
   {
     icon: TrendingUp,
     title: "Autonomia in crescita",
-    text: "Questa settimana ha completato il 40% dei compiti senza chiedere aiuto.",
+    text: "Questa settimana ha completato il 40% dei compiti senza chiedere aiuto. La settimana scorsa era il 25%.",
     color: "sage",
   },
   {
     icon: AlertCircle,
     title: "Matematica richiede supporto",
-    text: "Le frazioni restano il punto più difficile. Il coach sta lavorando su micro-passi.",
+    text: "Le frazioni restano il punto più difficile. Il coach sta usando micro-passi e domande guidate per rafforzare la comprensione.",
     color: "terracotta",
   },
   {
-    icon: Lightbulb,
-    title: "Consiglio per i genitori",
-    text: "Evita di chiedere 'Hai finito i compiti?'. Prova con 'Come è andata la sessione oggi?'",
+    icon: Eye,
+    title: "Pattern di distrazione",
+    text: "Dopo 12 minuti tende a perdere concentrazione, soprattutto con materie di lettura. Le sessioni più brevi funzionano meglio.",
     color: "clay",
+  },
+  {
+    icon: Brain,
+    title: "Punti di forza cognitivi",
+    text: "Eccelle nel ragionamento visivo-spaziale e nella memorizzazione per schemi. Le scienze sono la materia dove dimostra più autonomia.",
+    color: "sage",
+  },
+  {
+    icon: Lightbulb,
+    title: "Consiglio per ridurre i conflitti",
+    text: "Evita di chiedere 'Hai finito i compiti?'. Prova con 'Come è andata la sessione oggi?' oppure 'Cosa hai scoperto di interessante?'",
+    color: "clay",
+  },
+  {
+    icon: MessageCircle,
+    title: "Comunicazione con il coach",
+    text: "Quando si sente bloccato, risponde meglio a indizi concreti che a spiegazioni teoriche. Lo stile 'gentile e paziente' è il più efficace.",
+    color: "sage",
   },
 ];
 
@@ -43,6 +54,13 @@ const colorMap: Record<string, { bg: string; icon: string }> = {
   terracotta: { bg: "bg-terracotta-light", icon: "text-terracotta" },
   clay: { bg: "bg-clay-light", icon: "text-clay-dark" },
 };
+
+const subjectDifficulty = [
+  { subject: "Matematica", difficulty: 78, trend: "up" },
+  { subject: "Italiano", difficulty: 35, trend: "stable" },
+  { subject: "Storia", difficulty: 55, trend: "down" },
+  { subject: "Scienze", difficulty: 20, trend: "down" },
+];
 
 const ParentDashboard = () => {
   const navigate = useNavigate();
@@ -124,15 +142,10 @@ const ParentDashboard = () => {
                 <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
                   <motion.div
                     initial={{ height: 0 }}
-                    animate={{ height: `${(d.minutes / maxMinutes) * 100}%` }}
+                    animate={{ height: `${maxMinutes > 0 ? (d.minutes / maxMinutes) * 100 : 0}%` }}
                     transition={{ ...spring, delay: 0.3 + i * 0.05 }}
-                    className="w-full rounded-lg bg-primary/20 min-h-[4px] relative"
-                  >
-                    <div
-                      className="absolute bottom-0 left-0 right-0 rounded-lg bg-primary"
-                      style={{ height: "100%" }}
-                    />
-                  </motion.div>
+                    className="w-full rounded-lg bg-primary min-h-[4px]"
+                  />
                   <span className="text-xs text-muted-foreground">{d.day}</span>
                 </div>
               ))}
@@ -141,10 +154,91 @@ const ParentDashboard = () => {
         </div>
       </div>
 
-      {/* Insights */}
+      {/* Autonomy trend */}
       <div className="px-6 mt-6">
+        <div className="max-w-2xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: 0.25 }}
+            className="bg-card rounded-2xl border border-border p-5 shadow-soft"
+          >
+            <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Shield className="w-4 h-4 text-sage-dark" />
+              Livello di autonomia per giorno
+            </h3>
+            <div className="flex items-end justify-between gap-2 h-20">
+              {weeklyData.map((d, i) => (
+                <div key={`a-${d.day}`} className="flex-1 flex flex-col items-center gap-1">
+                  <motion.div
+                    initial={{ height: 0 }}
+                    animate={{ height: `${d.autonomy}%` }}
+                    transition={{ ...spring, delay: 0.35 + i * 0.05 }}
+                    className="w-full rounded-lg bg-secondary min-h-[4px]"
+                  />
+                  <span className="text-[10px] text-muted-foreground">{d.autonomy > 0 ? `${d.autonomy}%` : "—"}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Subject difficulty */}
+      <div className="px-6 mt-6">
+        <div className="max-w-2xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: 0.3 }}
+            className="bg-card rounded-2xl border border-border p-5 shadow-soft"
+          >
+            <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-clay-dark" />
+              Difficoltà per materia
+            </h3>
+            <div className="space-y-3">
+              {subjectDifficulty.map((item) => (
+                <div key={item.subject} className="flex items-center gap-3">
+                  <span className="text-sm text-foreground w-24 font-medium">{item.subject}</span>
+                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${item.difficulty}%` }}
+                      transition={spring}
+                      className={`h-full rounded-full ${
+                        item.difficulty > 60 ? "bg-terracotta" : item.difficulty > 40 ? "bg-secondary" : "bg-primary"
+                      }`}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground w-8">
+                    {item.trend === "up" ? "📈" : item.trend === "down" ? "📉" : "➡️"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Badges earned */}
+      <div className="px-6 mt-6">
+        <div className="max-w-2xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: 0.35 }}
+          >
+            <h3 className="font-display font-semibold text-foreground mb-4">Badge guadagnati</h3>
+            <BadgeGrid />
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Insights */}
+      <div className="px-6 mt-8">
         <div className="max-w-2xl mx-auto space-y-3">
-          <h3 className="font-display font-semibold text-foreground">Osservazioni</h3>
+          <h3 className="font-display font-semibold text-foreground">Osservazioni e consigli</h3>
           {insights.map((insight, i) => {
             const colors = colorMap[insight.color];
             return (
@@ -152,7 +246,7 @@ const ParentDashboard = () => {
                 key={insight.title}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ ...spring, delay: 0.3 + i * 0.1 }}
+                transition={{ ...spring, delay: 0.4 + i * 0.08 }}
                 className="bg-card rounded-2xl border border-border p-5 shadow-soft"
               >
                 <div className="flex gap-4">

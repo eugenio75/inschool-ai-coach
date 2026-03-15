@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, ChevronUp, ChevronDown, Send } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
 interface GuidanceCardProps {
   emotion: string;
   taskTitle?: string;
+  taskSubject?: string;
 }
 
 interface Message {
@@ -27,130 +29,165 @@ const variantClasses = {
   muted: "bg-muted text-muted-foreground hover:bg-accent",
 };
 
-// Simulated coach responses based on context
-const coachReplies: Record<string, string[]> = {
-  stuck: [
-    "Nessun problema! Rileggiamo insieme la consegna. Cosa ti chiede di fare esattamente?",
-    "Facciamo un passo indietro. Qual è la prima cosa che noti nell'esercizio?",
-    "Va bene, capita a tutti. Proviamo a scomporre il problema in pezzi più piccoli. Qual è il primo pezzo?",
-  ],
-  hint: [
-    "Un piccolo indizio: guarda i numeri. Cosa hanno in comune?",
-    "Prova a pensare: hai già visto qualcosa di simile in classe? Quando?",
-    "Ecco un suggerimento: prova a rileggere l'ultima riga della consegna. Cosa ti dice di fare?",
-  ],
-  gotit: [
-    "Fantastico! Spiegami con parole tue cosa hai capito. Così vediamo se ci siamo.",
-    "Bravo! Adesso prova a fare il prossimo passo da solo. Se serve, ci sono.",
-    "Ottimo lavoro! Riesci a pensare a un altro modo per arrivare alla stessa risposta?",
-  ],
-  // Simulated responses to free-text input
-  generic: [
-    "Interessante quello che dici! Prova a spiegarmelo con un esempio.",
-    "Buona osservazione. E secondo te, perché funziona così?",
-    "Ci sei quasi! Cosa succederebbe se provassimo a fare il contrario?",
-    "Mi piace come stai ragionando. Qual è il prossimo passo secondo te?",
-    "Ok, fermati un attimo. Rileggi quello che hai scritto: ha senso per te?",
-    "Stai andando nella direzione giusta. Cosa ti manca per completare il ragionamento?",
-    "Prova a pensarla così: se dovessi spiegarlo a un amico, cosa diresti?",
-    "Bene! Adesso chiediti: come faccio a verificare se è giusto?",
-  ],
-  math: [
-    "Ok, partiamo dal primo numero. Cosa sai fare con le frazioni?",
-    "Ricordi la regola? Quando dividi una frazione, cosa fai con la seconda?",
-    "Proviamo insieme: qual è il primo passaggio per risolvere questa operazione?",
-    "Hai provato a disegnarlo? A volte vedere le frazioni aiuta tantissimo.",
-  ],
-  reading: [
-    "Hai letto tutto il paragrafo? Qual è l'idea principale secondo te?",
-    "Prova a sottolineare le parole che non conosci. Quante sono?",
-    "Se dovessi riassumere in una frase sola, cosa diresti?",
-    "C'è un personaggio o un concetto che ti ha colpito? Perché?",
-  ],
-};
-
-function getCoachReply(input: string, replyCount: number): string {
-  const lower = input.toLowerCase();
-  
-  // Check for math-related keywords
-  if (lower.match(/frazion|numer|divid|moltiplic|sottraz|addizion|calcol|matemat|uguale/)) {
-    const replies = coachReplies.math;
-    return replies[replyCount % replies.length];
-  }
-  
-  // Check for reading/comprehension keywords
-  if (lower.match(/legg|pagin|paragraf|capito|testo|storia|parola|signific/)) {
-    const replies = coachReplies.reading;
-    return replies[replyCount % replies.length];
-  }
-  
-  // Check for frustration/difficulty
-  if (lower.match(/non capisco|difficile|non so|aiuto|non riesco|impossibile|odio/)) {
-    return "Respira un attimo. È normale sentirsi così. Facciamo solo un piccolo passo — qual è la prima cosa che vedi nell'esercizio?";
-  }
-  
-  // Check for "I think I know" / attempts
-  if (lower.match(/penso|credo|forse|secondo me|provo|potrebbe essere/)) {
-    return "Ottima idea! Prova e vediamo cosa succede. Non aver paura di sbagliare, è così che si impara.";
-  }
-  
-  // Check for correct answer attempts
-  if (lower.match(/è giusto|corretto|fatto|finito|risultato/)) {
-    return "Bene! Adesso spiegami come ci sei arrivato. Qual è stato il tuo ragionamento?";
-  }
-  
-  const replies = coachReplies.generic;
-  return replies[replyCount % replies.length];
-}
-
-export const GuidanceCard = ({ emotion, taskTitle }: GuidanceCardProps) => {
+export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardProps) => {
   const [expanded, setExpanded] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [replyCount, setReplyCount] = useState(0);
+  const [streamingText, setStreamingText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Load student profile
+  const getProfile = () => {
+    try {
+      const saved = localStorage.getItem("inschool-profile");
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  };
+
   // Initial message based on emotion
   useEffect(() => {
-    const initial = emotion === "frustrated" || emotion === "worried"
-      ? "Capisco che può sembrare difficile. Facciamo il primo piccolo passo insieme — solo quello. Cosa dice la consegna?"
-      : emotion === "tired"
-      ? "Sei stanco, è normale. Facciamo solo un micro-passo, poi vediamo come va. Cosa devi fare in questo esercizio?"
-      : `Perfetto, iniziamo! ${taskTitle ? `Stiamo lavorando su "${taskTitle}".` : ""} Leggi la consegna dell'esercizio. Cosa ti chiede di fare?`;
+    const profile = getProfile();
+    const name = profile?.name || "campione";
+    
+    let initial: string;
+    if (emotion === "frustrated" || emotion === "worried") {
+      initial = `Capisco che può sembrare difficile, ${name}. Facciamo il primo piccolo passo insieme — solo quello. Cosa dice la consegna?`;
+    } else if (emotion === "tired") {
+      initial = `Sei stanco, ${name}, è normale. Facciamo solo un micro-passo, poi vediamo come va. Cosa devi fare in questo esercizio?`;
+    } else {
+      initial = `Perfetto ${name}, iniziamo! ${taskTitle ? `Stiamo lavorando su "${taskTitle}"${taskSubject ? ` di ${taskSubject}` : ""}.` : ""} Leggi la consegna dell'esercizio. Cosa ti chiede di fare?`;
+    }
     
     setMessages([{ id: "init", role: "coach", text: initial }]);
-  }, [emotion, taskTitle]);
+  }, [emotion, taskTitle, taskSubject]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, isTyping]);
+  }, [messages, isTyping, streamingText]);
 
-  const addCoachReply = (text: string) => {
+  const streamCoachReply = async (allMessages: Message[]) => {
     setIsTyping(true);
-    const delay = 800 + Math.random() * 1200;
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { id: `coach-${Date.now()}`, role: "coach", text }]);
+    setStreamingText("");
+
+    const profile = getProfile();
+    const chatMessages = allMessages.map(m => ({
+      role: m.role === "coach" ? "assistant" as const : "user" as const,
+      content: m.text,
+    }));
+
+    // Add context about the current task
+    if (taskTitle) {
+      chatMessages.unshift({
+        role: "user" as const,
+        content: `[CONTESTO: Lo studente sta lavorando su "${taskTitle}" di ${taskSubject || "materia non specificata"}. Emozione iniziale: ${emotion}. Non mostrare questo messaggio, usalo solo come contesto.]`,
+      });
+    }
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coach`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            messages: chatMessages,
+            studentProfile: profile,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Errore di connessione");
+      }
+
+      if (!response.body) throw new Error("No stream body");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = "";
+      let assistantText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              assistantText += content;
+              setStreamingText(assistantText);
+            }
+          } catch {
+            textBuffer = line + "\n" + textBuffer;
+            break;
+          }
+        }
+      }
+
+      // Finalize message
+      if (assistantText) {
+        setMessages(prev => [...prev, { id: `coach-${Date.now()}`, role: "coach", text: assistantText }]);
+      }
+    } catch (err) {
+      console.error("AI Coach error:", err);
+      // Fallback to local response
+      const fallback = getFallbackResponse(allMessages[allMessages.length - 1]?.text || "");
+      setMessages(prev => [...prev, { id: `coach-${Date.now()}`, role: "coach", text: fallback }]);
+    } finally {
       setIsTyping(false);
-      setReplyCount((c) => c + 1);
-    }, delay);
+      setStreamingText("");
+    }
+  };
+
+  const getFallbackResponse = (input: string): string => {
+    const lower = input.toLowerCase();
+    if (lower.match(/non capisco|difficile|non so|aiuto|non riesco/))
+      return "Respira un attimo. È normale sentirsi così. Facciamo solo un piccolo passo — qual è la prima cosa che vedi nell'esercizio?";
+    if (lower.match(/bloccato|stuck/))
+      return "Nessun problema! Rileggiamo insieme la consegna. Cosa ti chiede di fare esattamente?";
+    if (lower.match(/indizio|hint|suggerimento/))
+      return "Un piccolo indizio: guarda bene i dati che hai. Cosa noti? C'è qualcosa che già conosci?";
+    if (lower.match(/capito|ho capito|fatto/))
+      return "Fantastico! Spiegami con parole tue cosa hai capito. Così vediamo se ci siamo! 🌱";
+    return "Interessante! Prova a spiegarmelo con un esempio. Come ci sei arrivato?";
   };
 
   const handleSend = () => {
     const trimmed = input.trim();
     if (!trimmed || isTyping) return;
 
-    setMessages((prev) => [...prev, { id: `student-${Date.now()}`, role: "student", text: trimmed }]);
+    const newMsg: Message = { id: `student-${Date.now()}`, role: "student", text: trimmed };
+    const updated = [...messages, newMsg];
+    setMessages(updated);
     setInput("");
-    addCoachReply(getCoachReply(trimmed, replyCount));
+    streamCoachReply(updated);
   };
 
   const handlePath = (pathId: string) => {
     const label = thinkingPaths.find((p) => p.id === pathId)?.label || "";
-    setMessages((prev) => [...prev, { id: `student-${Date.now()}`, role: "student", text: label }]);
-    const replies = coachReplies[pathId];
-    addCoachReply(replies[replyCount % replies.length]);
+    const newMsg: Message = { id: `student-${Date.now()}`, role: "student", text: label };
+    const updated = [...messages, newMsg];
+    setMessages(updated);
+    streamCoachReply(updated);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -179,11 +216,7 @@ export const GuidanceCard = ({ emotion, taskTitle }: GuidanceCardProps) => {
                 <Shield className="w-3.5 h-3.5 text-sage-dark" />
               </div>
               <span className="text-sm font-display font-semibold text-foreground">Coach AI</span>
-              {!expanded && messages.length > 1 && (
-                <span className="text-xs text-muted-foreground ml-1">
-                  — {messages[messages.length - 1].text.slice(0, 40)}...
-                </span>
-              )}
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             </div>
             {expanded ? (
               <ChevronDown className="w-4 h-4 text-muted-foreground" />
@@ -205,7 +238,7 @@ export const GuidanceCard = ({ emotion, taskTitle }: GuidanceCardProps) => {
                   {/* Chat messages */}
                   <div
                     ref={scrollRef}
-                    className="max-h-48 overflow-y-auto space-y-3 mb-3 scroll-smooth"
+                    className="max-h-56 overflow-y-auto space-y-3 mb-3 scroll-smooth"
                   >
                     {messages.map((msg) => (
                       <motion.div
@@ -227,8 +260,22 @@ export const GuidanceCard = ({ emotion, taskTitle }: GuidanceCardProps) => {
                       </motion.div>
                     ))}
 
-                    {/* Typing indicator */}
-                    {isTyping && (
+                    {/* Streaming text */}
+                    {streamingText && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex justify-start"
+                      >
+                        <div className="max-w-[85%] bg-sage-light/50 text-foreground rounded-2xl rounded-bl-md px-4 py-2.5 text-sm leading-relaxed">
+                          {streamingText}
+                          <span className="inline-block w-1.5 h-4 bg-primary/40 ml-0.5 animate-pulse" />
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Typing indicator (before stream starts) */}
+                    {isTyping && !streamingText && (
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
