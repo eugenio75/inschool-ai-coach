@@ -142,9 +142,9 @@ const Dashboard = () => {
         )}
       </div></div>
 
-      {/* FAB only for parents - high enough to avoid browser chrome on mobile */}
+      {/* FAB only for parents on desktop (mobile uses BottomNav) */}
       {!isChild && (
-        <div className="fixed bottom-24 right-4 sm:bottom-8 sm:right-6 z-50">
+        <div className="hidden sm:block fixed bottom-8 right-6 z-50">
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/add-homework")} className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-hover flex items-center justify-center">
             <Plus className="w-6 h-6" />
           </motion.button>
