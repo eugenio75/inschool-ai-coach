@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, ChevronUp, ChevronDown, Send } from "lucide-react";
+import { Shield, ChevronUp, ChevronDown, Send, Mic, MicOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
@@ -35,8 +35,57 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [streamingText, setStreamingText] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  // Speech recognition setup
+  const startRecording = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setInput("(Il tuo browser non supporta il riconoscimento vocale)");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "it-IT";
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event: any) => {
+      let transcript = "";
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setInput(transcript);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognition.onerror = () => {
+      setIsRecording(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+  };
+
+  const stopRecording = () => {
+    recognitionRef.current?.stop();
+    setIsRecording(false);
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
 
   // Load student profile
   const getProfile = () => {
@@ -312,10 +361,21 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      placeholder="Scrivi qui la tua risposta..."
+                      placeholder={isRecording ? "🎙️ Sto ascoltando..." : "Scrivi o parla qui..."}
                       disabled={isTyping}
-                      className="flex-1 bg-muted/50 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 transition-all"
+                      className={`flex-1 bg-muted/50 border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 transition-all ${isRecording ? "border-destructive/50 bg-destructive/5" : "border-border"}`}
                     />
+                    <button
+                      onClick={toggleRecording}
+                      disabled={isTyping}
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors shrink-0 ${
+                        isRecording
+                          ? "bg-destructive text-destructive-foreground animate-pulse"
+                          : "bg-muted text-muted-foreground hover:bg-accent hover:text-foreground"
+                      } disabled:opacity-40`}
+                    >
+                      {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                    </button>
                     <button
                       onClick={handleSend}
                       disabled={!input.trim() || isTyping}
