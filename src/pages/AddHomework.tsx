@@ -78,16 +78,36 @@ const AddHomework = () => {
     }
   };
 
+  const processFile = (file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    setPhotoFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setPhotoPreview(ev.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setPhotoFile(file);
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setPhotoPreview(ev.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (file) processFile(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragActive(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragActive(false);
   };
 
   const handleManualSave = async () => {
