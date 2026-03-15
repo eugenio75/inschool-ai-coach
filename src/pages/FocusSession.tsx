@@ -173,15 +173,17 @@ const FocusSession = () => {
             transition={spring}
             className="px-4 pt-2 pb-3 shrink-0"
           >
-            <div className="flex items-center justify-center gap-4">
-              <ProgressSun progress={progress} size={56} />
-              <div className="text-left">
-                <p className="font-display text-3xl font-bold text-foreground tabular-nums">{formatTime(seconds)}</p>
-                <p className="text-xs text-muted-foreground">
-                  {progress < 0.25 ? "Stai andando benissimo." : progress < 0.5 ? "Ottimo ritmo!" : progress < 0.75 ? "Più di metà! 💪" : "Quasi finito!"}
-                </p>
+            <div className="flex flex-col gap-3 items-center">
+              <div className="flex items-center justify-center gap-3">
+                <ProgressSun progress={progress} size={56} />
+                <div className="text-left">
+                  <p className="font-display text-3xl font-bold text-foreground tabular-nums">{formatTime(seconds)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {progress < 0.25 ? "Stai andando benissimo." : progress < 0.5 ? "Ottimo ritmo!" : progress < 0.75 ? "Più di metà! 💪" : "Quasi finito!"}
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-2 ml-2">
+              <div className="flex items-center justify-center gap-2 w-full">
                 <Button variant="outline" size="sm" onClick={() => setIsRunning(!isRunning)} className="rounded-lg border-border px-3 py-1.5 text-xs h-auto">
                   {isRunning ? <Pause className="w-3.5 h-3.5 mr-1" /> : <Play className="w-3.5 h-3.5 mr-1" />}
                   {isRunning ? "Pausa" : "Riprendi"}
