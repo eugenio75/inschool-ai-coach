@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       badges: {
         Row: {
+          child_profile_id: string
           created_at: string
           description: string | null
           earned: boolean | null
@@ -24,9 +25,9 @@ export type Database = {
           id: string
           name: string
           quality: string
-          user_id: string
         }
         Insert: {
+          child_profile_id: string
           created_at?: string
           description?: string | null
           earned?: boolean | null
@@ -35,9 +36,9 @@ export type Database = {
           id?: string
           name: string
           quality: string
-          user_id: string
         }
         Update: {
+          child_profile_id?: string
           created_at?: string
           description?: string | null
           earned?: boolean | null
@@ -46,43 +47,69 @@ export type Database = {
           id?: string
           name?: string
           quality?: string
-          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "badges_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      daily_missions: {
+      child_profiles: {
         Row: {
+          age: number | null
+          avatar_emoji: string | null
           created_at: string
-          done: boolean | null
+          difficult_subjects: string[] | null
+          favorite_subjects: string[] | null
+          focus_time: number | null
           id: string
-          mission_date: string | null
-          points: number | null
-          text: string
-          user_id: string
+          name: string
+          parent_id: string
+          school_level: string | null
+          struggles: string[] | null
+          support_style: string | null
+          updated_at: string
         }
         Insert: {
+          age?: number | null
+          avatar_emoji?: string | null
           created_at?: string
-          done?: boolean | null
+          difficult_subjects?: string[] | null
+          favorite_subjects?: string[] | null
+          focus_time?: number | null
           id?: string
-          mission_date?: string | null
-          points?: number | null
-          text: string
-          user_id: string
+          name: string
+          parent_id: string
+          school_level?: string | null
+          struggles?: string[] | null
+          support_style?: string | null
+          updated_at?: string
         }
         Update: {
+          age?: number | null
+          avatar_emoji?: string | null
           created_at?: string
-          done?: boolean | null
+          difficult_subjects?: string[] | null
+          favorite_subjects?: string[] | null
+          focus_time?: number | null
           id?: string
-          mission_date?: string | null
-          points?: number | null
-          text?: string
-          user_id?: string
+          name?: string
+          parent_id?: string
+          school_level?: string | null
+          struggles?: string[] | null
+          support_style?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
       focus_sessions: {
         Row: {
           autonomy_points: number | null
+          child_profile_id: string
           completed_at: string
           consistency_points: number | null
           duration_seconds: number
@@ -90,10 +117,10 @@ export type Database = {
           focus_points: number | null
           id: string
           task_id: string | null
-          user_id: string
         }
         Insert: {
           autonomy_points?: number | null
+          child_profile_id: string
           completed_at?: string
           consistency_points?: number | null
           duration_seconds?: number
@@ -101,10 +128,10 @@ export type Database = {
           focus_points?: number | null
           id?: string
           task_id?: string | null
-          user_id: string
         }
         Update: {
           autonomy_points?: number | null
+          child_profile_id?: string
           completed_at?: string
           consistency_points?: number | null
           duration_seconds?: number
@@ -112,9 +139,15 @@ export type Database = {
           focus_points?: number | null
           id?: string
           task_id?: string | null
-          user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "focus_sessions_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "focus_sessions_task_id_fkey"
             columns: ["task_id"]
@@ -127,6 +160,7 @@ export type Database = {
       gamification: {
         Row: {
           autonomy_points: number | null
+          child_profile_id: string
           consistency_points: number | null
           created_at: string
           focus_points: number | null
@@ -134,10 +168,10 @@ export type Database = {
           last_activity_date: string | null
           streak: number | null
           updated_at: string
-          user_id: string
         }
         Insert: {
           autonomy_points?: number | null
+          child_profile_id: string
           consistency_points?: number | null
           created_at?: string
           focus_points?: number | null
@@ -145,10 +179,10 @@ export type Database = {
           last_activity_date?: string | null
           streak?: number | null
           updated_at?: string
-          user_id: string
         }
         Update: {
           autonomy_points?: number | null
+          child_profile_id?: string
           consistency_points?: number | null
           created_at?: string
           focus_points?: number | null
@@ -156,12 +190,20 @@ export type Database = {
           last_activity_date?: string | null
           streak?: number | null
           updated_at?: string
-          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gamification_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: true
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       homework_tasks: {
         Row: {
+          child_profile_id: string
           completed: boolean | null
           created_at: string
           description: string | null
@@ -177,9 +219,9 @@ export type Database = {
           subject: string
           title: string
           updated_at: string
-          user_id: string
         }
         Insert: {
+          child_profile_id: string
           completed?: boolean | null
           created_at?: string
           description?: string | null
@@ -195,9 +237,9 @@ export type Database = {
           subject: string
           title: string
           updated_at?: string
-          user_id: string
         }
         Update: {
+          child_profile_id?: string
           completed?: boolean | null
           created_at?: string
           description?: string | null
@@ -213,12 +255,20 @@ export type Database = {
           subject?: string
           title?: string
           updated_at?: string
-          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "homework_tasks_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       memory_items: {
         Row: {
+          child_profile_id: string
           concept: string
           created_at: string
           id: string
@@ -227,9 +277,9 @@ export type Database = {
           strength: number | null
           subject: string
           summary: string | null
-          user_id: string
         }
         Insert: {
+          child_profile_id: string
           concept: string
           created_at?: string
           id?: string
@@ -238,9 +288,9 @@ export type Database = {
           strength?: number | null
           subject: string
           summary?: string | null
-          user_id: string
         }
         Update: {
+          child_profile_id?: string
           concept?: string
           created_at?: string
           id?: string
@@ -249,51 +299,34 @@ export type Database = {
           strength?: number | null
           subject?: string
           summary?: string | null
-          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "memory_items_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      profiles: {
+      parent_settings: {
         Row: {
-          age: number | null
           created_at: string
-          difficult_subjects: string[] | null
-          favorite_subjects: string[] | null
-          focus_time: number | null
           id: string
-          name: string
-          school_level: string | null
-          struggles: string[] | null
-          support_style: string | null
-          updated_at: string
+          parent_pin: string | null
           user_id: string
         }
         Insert: {
-          age?: number | null
           created_at?: string
-          difficult_subjects?: string[] | null
-          favorite_subjects?: string[] | null
-          focus_time?: number | null
           id?: string
-          name?: string
-          school_level?: string | null
-          struggles?: string[] | null
-          support_style?: string | null
-          updated_at?: string
+          parent_pin?: string | null
           user_id: string
         }
         Update: {
-          age?: number | null
           created_at?: string
-          difficult_subjects?: string[] | null
-          favorite_subjects?: string[] | null
-          focus_time?: number | null
           id?: string
-          name?: string
-          school_level?: string | null
-          struggles?: string[] | null
-          support_style?: string | null
-          updated_at?: string
+          parent_pin?: string | null
           user_id?: string
         }
         Relationships: []
@@ -303,7 +336,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      owns_child_profile: { Args: { profile_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

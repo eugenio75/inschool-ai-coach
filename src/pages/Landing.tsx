@@ -53,12 +53,12 @@ const Landing = () => {
             <Button
               variant="ghost"
               className="text-muted-foreground"
-              onClick={() => navigate("/parent-dashboard")}
+              onClick={() => navigate("/auth")}
             >
-              Area genitori
+              Accedi
             </Button>
             <Button
-              onClick={() => navigate("/onboarding")}
+              onClick={() => navigate("/auth")}
               className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl px-5"
             >
               Inizia gratis
@@ -111,7 +111,7 @@ const Landing = () => {
           >
             <Button
               size="lg"
-              onClick={() => navigate("/onboarding")}
+              onClick={() => navigate("/auth")}
               className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl px-8 py-6 text-base font-medium shadow-card"
             >
               Inizia con il tuo bambino
@@ -120,10 +120,10 @@ const Landing = () => {
             <Button
               size="lg"
               variant="outline"
-              onClick={() => navigate("/parent-dashboard")}
+              onClick={() => navigate("/auth")}
               className="rounded-2xl px-8 py-6 text-base border-border text-muted-foreground hover:bg-muted"
             >
-              Scopri l'area genitori
+              Accedi all'area genitori
             </Button>
           </motion.div>
         </div>
@@ -298,7 +298,7 @@ const Landing = () => {
             </p>
             <Button
               size="lg"
-              onClick={() => navigate("/onboarding")}
+              onClick={() => navigate("/auth")}
               className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl px-8 py-6 text-base font-medium shadow-card"
             >
               Inizia gratis

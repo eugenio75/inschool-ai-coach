@@ -1,30 +1,43 @@
 import { supabase } from "@/integrations/supabase/client";
 
-// Helper to get or create a user_id for MVP (no auth yet)
-export function getUserId(): string {
-  let userId = localStorage.getItem("inschool-user-id");
-  if (!userId) {
-    userId = crypto.randomUUID();
-    localStorage.setItem("inschool-user-id", userId);
-  }
-  return userId;
+// ============ CHILD PROFILE CONTEXT ============
+
+export function getActiveChildProfileId(): string | null {
+  return localStorage.getItem("inschool-active-child-id");
 }
 
-// ============ PROFILES ============
+export function setActiveChildProfileId(id: string) {
+  localStorage.setItem("inschool-active-child-id", id);
+}
 
-export async function getProfile() {
-  const userId = getUserId();
+export function clearActiveChildProfileId() {
+  localStorage.removeItem("inschool-active-child-id");
+}
+
+// ============ CHILD PROFILES ============
+
+export async function getChildProfiles() {
   const { data, error } = await supabase
-    .from("profiles")
+    .from("child_profiles")
     .select("*")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (error) console.error("getProfile error:", error);
+    .order("created_at", { ascending: true });
+  if (error) console.error("getChildProfiles error:", error);
+  return data || [];
+}
+
+export async function getChildProfile(profileId: string) {
+  const { data, error } = await supabase
+    .from("child_profiles")
+    .select("*")
+    .eq("id", profileId)
+    .single();
+  if (error) console.error("getChildProfile error:", error);
   return data;
 }
 
-export async function upsertProfile(profile: {
+export async function createChildProfile(profile: {
   name: string;
+  avatar_emoji?: string;
   age?: number;
   school_level?: string;
   favorite_subjects?: string[];
@@ -33,40 +46,66 @@ export async function upsertProfile(profile: {
   focus_time?: number;
   support_style?: string;
 }) {
-  const userId = getUserId();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
   const { data, error } = await supabase
-    .from("profiles")
-    .upsert(
-      { user_id: userId, ...profile, updated_at: new Date().toISOString() },
-      { onConflict: "user_id" }
-    )
+    .from("child_profiles")
+    .insert({ parent_id: user.id, ...profile })
     .select()
     .single();
-  if (error) console.error("upsertProfile error:", error);
+  if (error) console.error("createChildProfile error:", error);
   
-  // Keep localStorage in sync for quick access
-  localStorage.setItem("inschool-profile", JSON.stringify({
-    name: profile.name,
-    age: profile.age,
-    schoolLevel: profile.school_level,
-    favoriteSubjects: profile.favorite_subjects,
-    difficultSubjects: profile.difficult_subjects,
-    struggles: profile.struggles,
-    focusTime: profile.focus_time?.toString() || "15",
-    supportStyle: profile.support_style,
-  }));
+  // Auto-create gamification record
+  if (data) {
+    await supabase.from("gamification").insert({ child_profile_id: data.id });
+  }
   
   return data;
 }
 
+export async function updateChildProfile(profileId: string, updates: Record<string, any>) {
+  const { data, error } = await supabase
+    .from("child_profiles")
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq("id", profileId)
+    .select()
+    .single();
+  if (error) console.error("updateChildProfile error:", error);
+  return data;
+}
+
+// ============ PARENT SETTINGS ============
+
+export async function getParentSettings() {
+  const { data, error } = await supabase
+    .from("parent_settings")
+    .select("*")
+    .maybeSingle();
+  if (error) console.error("getParentSettings error:", error);
+  return data;
+}
+
+export async function updateParentPin(pin: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { error } = await supabase
+    .from("parent_settings")
+    .update({ parent_pin: pin })
+    .eq("user_id", user.id);
+  if (error) console.error("updateParentPin error:", error);
+}
+
 // ============ HOMEWORK TASKS ============
 
-export async function getTasks() {
-  const userId = getUserId();
+export async function getTasks(childProfileId?: string) {
+  const profileId = childProfileId || getActiveChildProfileId();
+  if (!profileId) return [];
+
   const { data, error } = await supabase
     .from("homework_tasks")
     .select("*")
-    .eq("user_id", userId)
+    .eq("child_profile_id", profileId)
     .order("created_at", { ascending: false });
   if (error) console.error("getTasks error:", error);
   return data || [];
@@ -95,10 +134,12 @@ export async function createTask(task: {
   source_image_url?: string;
   due_date?: string;
 }) {
-  const userId = getUserId();
+  const profileId = getActiveChildProfileId();
+  if (!profileId) return null;
+
   const { data, error } = await supabase
     .from("homework_tasks")
-    .insert({ user_id: userId, ...task })
+    .insert({ child_profile_id: profileId, ...task })
     .select()
     .single();
   if (error) console.error("createTask error:", error);
@@ -116,14 +157,6 @@ export async function updateTask(taskId: string, updates: Record<string, any>) {
   return data;
 }
 
-export async function deleteTask(taskId: string) {
-  const { error } = await supabase
-    .from("homework_tasks")
-    .delete()
-    .eq("id", taskId);
-  if (error) console.error("deleteTask error:", error);
-}
-
 // ============ FOCUS SESSIONS ============
 
 export async function saveFocusSession(session: {
@@ -134,32 +167,35 @@ export async function saveFocusSession(session: {
   autonomy_points?: number;
   consistency_points?: number;
 }) {
-  const userId = getUserId();
+  const profileId = getActiveChildProfileId();
+  if (!profileId) return null;
+
   const { data, error } = await supabase
     .from("focus_sessions")
-    .insert({ user_id: userId, ...session })
+    .insert({ child_profile_id: profileId, ...session })
     .select()
     .single();
   if (error) console.error("saveFocusSession error:", error);
 
-  // Update gamification
   if (data) {
     await updateGamificationPoints(
+      profileId,
       session.focus_points || 0,
       session.autonomy_points || 0,
       session.consistency_points || 0
     );
   }
-
   return data;
 }
 
-export async function getFocusSessions() {
-  const userId = getUserId();
+export async function getFocusSessions(childProfileId?: string) {
+  const profileId = childProfileId || getActiveChildProfileId();
+  if (!profileId) return [];
+
   const { data, error } = await supabase
     .from("focus_sessions")
     .select("*")
-    .eq("user_id", userId)
+    .eq("child_profile_id", profileId)
     .order("completed_at", { ascending: false });
   if (error) console.error("getFocusSessions error:", error);
   return data || [];
@@ -167,44 +203,32 @@ export async function getFocusSessions() {
 
 // ============ GAMIFICATION ============
 
-export async function getGamification() {
-  const userId = getUserId();
+export async function getGamification(childProfileId?: string) {
+  const profileId = childProfileId || getActiveChildProfileId();
+  if (!profileId) return null;
+
   const { data, error } = await supabase
     .from("gamification")
     .select("*")
-    .eq("user_id", userId)
+    .eq("child_profile_id", profileId)
     .maybeSingle();
-  
   if (error) console.error("getGamification error:", error);
-  
-  if (!data) {
-    // Create initial gamification record
-    const { data: created, error: createErr } = await supabase
-      .from("gamification")
-      .insert({ user_id: userId })
-      .select()
-      .single();
-    if (createErr) console.error("createGamification error:", createErr);
-    return created;
-  }
-  
   return data;
 }
 
-async function updateGamificationPoints(focus: number, autonomy: number, consistency: number) {
-  const userId = getUserId();
-  const current = await getGamification();
+async function updateGamificationPoints(profileId: string, focus: number, autonomy: number, consistency: number) {
+  const current = await getGamification(profileId);
   if (!current) return;
 
   const today = new Date().toISOString().split("T")[0];
   const lastDate = current.last_activity_date;
   const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
-  
+
   let newStreak = current.streak || 0;
   if (lastDate === yesterday) newStreak += 1;
   else if (lastDate !== today) newStreak = 1;
 
-  const { error } = await supabase
+  await supabase
     .from("gamification")
     .update({
       focus_points: (current.focus_points || 0) + focus,
@@ -214,19 +238,19 @@ async function updateGamificationPoints(focus: number, autonomy: number, consist
       last_activity_date: today,
       updated_at: new Date().toISOString(),
     })
-    .eq("user_id", userId);
-
-  if (error) console.error("updateGamification error:", error);
+    .eq("child_profile_id", profileId);
 }
 
 // ============ MEMORY ITEMS ============
 
-export async function getMemoryItems() {
-  const userId = getUserId();
+export async function getMemoryItems(childProfileId?: string) {
+  const profileId = childProfileId || getActiveChildProfileId();
+  if (!profileId) return [];
+
   const { data, error } = await supabase
     .from("memory_items")
     .select("*")
-    .eq("user_id", userId)
+    .eq("child_profile_id", profileId)
     .order("strength", { ascending: true });
   if (error) console.error("getMemoryItems error:", error);
   return data || [];
@@ -239,10 +263,12 @@ export async function createMemoryItem(item: {
   recall_questions?: string[];
   strength?: number;
 }) {
-  const userId = getUserId();
+  const profileId = getActiveChildProfileId();
+  if (!profileId) return null;
+
   const { data, error } = await supabase
     .from("memory_items")
-    .insert({ user_id: userId, ...item })
+    .insert({ child_profile_id: profileId, ...item })
     .select()
     .single();
   if (error) console.error("createMemoryItem error:", error);
@@ -250,30 +276,27 @@ export async function createMemoryItem(item: {
 }
 
 export async function updateMemoryStrength(itemId: string, strength: number) {
-  const { error } = await supabase
+  await supabase
     .from("memory_items")
     .update({ strength, last_reviewed: new Date().toISOString() })
     .eq("id", itemId);
-  if (error) console.error("updateMemoryStrength error:", error);
 }
 
 // ============ IMAGE UPLOAD ============
 
 export async function uploadHomeworkImage(file: File): Promise<string | null> {
-  const fileName = `${getUserId()}/${Date.now()}-${file.name}`;
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id || "anonymous";
+  const fileName = `${userId}/${Date.now()}-${file.name}`;
+
   const { data, error } = await supabase.storage
     .from("homework-images")
     .upload(fileName, file);
-
-  if (error) {
-    console.error("Upload error:", error);
-    return null;
-  }
+  if (error) { console.error("Upload error:", error); return null; }
 
   const { data: urlData } = supabase.storage
     .from("homework-images")
     .getPublicUrl(data.path);
-
   return urlData.publicUrl;
 }
 
@@ -291,11 +314,9 @@ export async function extractTasksFromImage(imageUrl: string, sourceType: string
       body: JSON.stringify({ imageUrl, sourceType }),
     }
   );
-
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
     throw new Error(err.error || "Errore nell'analisi dell'immagine");
   }
-
   return response.json();
 }
