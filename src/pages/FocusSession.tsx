@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Pause, Play, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
-import { GuidanceCard } from "@/components/GuidanceCard";
-import { getTask, saveFocusSession } from "@/lib/database";
+import { GuidanceCard, ChatMessage } from "@/components/GuidanceCard";
+import { getTask, saveFocusSession, getActiveChildProfileId } from "@/lib/database";
+import { isChildSession, getChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -19,13 +20,36 @@ const emotionOptions = [
   { id: "frustrated", emoji: "😤", label: "Frustrato" },
 ];
 
+const SESSION_KEY_PREFIX = "focus-session-";
+
+function getSessionState(taskId: string) {
+  try {
+    const saved = sessionStorage.getItem(`${SESSION_KEY_PREFIX}${taskId}`);
+    return saved ? JSON.parse(saved) : null;
+  } catch { return null; }
+}
+
+function saveSessionState(taskId: string, state: any) {
+  sessionStorage.setItem(`${SESSION_KEY_PREFIX}${taskId}`, JSON.stringify(state));
+}
+
+function clearSessionState(taskId: string) {
+  sessionStorage.removeItem(`${SESSION_KEY_PREFIX}${taskId}`);
+  sessionStorage.removeItem(`focus-chat-${taskId}`);
+}
+
 const FocusSession = () => {
   const navigate = useNavigate();
   const { taskId } = useParams();
   const [task, setTask] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [phase, setPhase] = useState<Phase>("checkin");
-  const [emotion, setEmotion] = useState("");
+  const [extracting, setExtracting] = useState(false);
+  const chatMessagesRef = useRef<ChatMessage[]>([]);
+
+  // Restore state from sessionStorage if available
+  const restored = taskId ? getSessionState(taskId) : null;
+  const [phase, setPhase] = useState<Phase>(restored?.phase || "checkin");
+  const [emotion, setEmotion] = useState(restored?.emotion || "");
   const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
@@ -42,11 +66,14 @@ const FocusSession = () => {
   }, [taskId]);
 
   const focusMinutes = profile?.focusTime ? parseInt(profile.focusTime) : (task?.estimated_minutes || 15);
-  const [seconds, setSeconds] = useState(focusMinutes * 60);
-  const [isRunning, setIsRunning] = useState(false);
+  const [seconds, setSeconds] = useState(restored?.seconds ?? focusMinutes * 60);
+  const [isRunning, setIsRunning] = useState(restored?.isRunning || false);
   const [breathCount, setBreathCount] = useState(0);
 
-  useEffect(() => { setSeconds(focusMinutes * 60); }, [focusMinutes]);
+  // Only reset seconds when focusMinutes changes AND there's no restored state
+  useEffect(() => {
+    if (!restored) setSeconds(focusMinutes * 60);
+  }, [focusMinutes]);
 
   const totalSeconds = focusMinutes * 60;
   const progress = 1 - seconds / totalSeconds;
@@ -56,6 +83,13 @@ const FocusSession = () => {
     const interval = setInterval(() => setSeconds((s) => s - 1), 1000);
     return () => clearInterval(interval);
   }, [isRunning, seconds]);
+
+  // Persist state on every change
+  useEffect(() => {
+    if (taskId && phase !== "recap") {
+      saveSessionState(taskId, { phase, emotion, seconds, isRunning });
+    }
+  }, [phase, emotion, seconds, isRunning, taskId]);
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
@@ -68,6 +102,48 @@ const FocusSession = () => {
         return c + 1;
       });
     }, 4000);
+  };
+
+  const handleMessagesChange = useCallback((msgs: ChatMessage[]) => {
+    chatMessagesRef.current = msgs;
+  }, []);
+
+  const extractAndSaveConcepts = async () => {
+    const messages = chatMessagesRef.current;
+    if (messages.length < 3) return; // Too few messages to extract
+
+    setExtracting(true);
+    try {
+      const childSession = getChildSession();
+      const childProfileId = getActiveChildProfileId();
+
+      const body: any = {
+        chatMessages: messages.map(m => ({ role: m.role, text: m.text })),
+        taskSubject: task?.subject,
+        taskTitle: task?.title,
+      };
+
+      const headers: any = {
+        "Content-Type": "application/json",
+      };
+
+      if (childSession) {
+        body.accessCode = childSession.accessCode;
+        body.childProfileId = childSession.profileId;
+      } else {
+        body.childProfileId = childProfileId;
+        headers.Authorization = `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`;
+      }
+
+      await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-concepts`,
+        { method: "POST", headers, body: JSON.stringify(body) }
+      );
+    } catch (err) {
+      console.error("Failed to extract concepts:", err);
+    } finally {
+      setExtracting(false);
+    }
   };
 
   const endSession = async () => {
@@ -84,6 +160,12 @@ const FocusSession = () => {
       autonomy_points: Math.round(minutesWorked * 0.5),
       consistency_points: 1,
     });
+
+    // Extract concepts from chat and save to memory
+    await extractAndSaveConcepts();
+
+    // Clear persisted session state
+    if (taskId) clearSessionState(taskId);
   };
 
   const minutesWorked = Math.round((totalSeconds - seconds) / 60);
@@ -140,6 +222,14 @@ const FocusSession = () => {
                 <div className="w-16 h-16 rounded-2xl bg-sage-light flex items-center justify-center mx-auto mb-6"><span className="text-3xl">🌟</span></div>
                 <h2 className="font-display text-2xl font-bold text-foreground mb-2">Bravissimo, {studentName}!</h2>
                 <p className="text-muted-foreground mb-2">Hai lavorato per {minutesWorked} minuti su {taskTitle}.</p>
+                
+                {extracting && (
+                  <div className="flex items-center justify-center gap-2 my-3 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Salvo i concetti nella tua memoria...</span>
+                  </div>
+                )}
+                
                 <div className="grid grid-cols-3 gap-3 my-6">
                   <div className="bg-sage-light rounded-xl p-3 text-center">
                     <p className="text-lg font-display font-bold text-sage-dark">+{minutesWorked * 2}</p>
@@ -154,8 +244,16 @@ const FocusSession = () => {
                     <p className="text-[10px] text-terracotta/80">costanza</p>
                   </div>
                 </div>
-                <p className="text-sm text-sage-dark font-medium mb-8">Hai dimostrato costanza e impegno. 🌱</p>
+                <p className="text-sm text-sage-dark font-medium mb-4">Hai dimostrato costanza e impegno. 🌱</p>
+                
+                {!extracting && (
+                  <p className="text-xs text-muted-foreground mb-4">I concetti studiati sono stati salvati in Memoria e Ripasso 🧠</p>
+                )}
+                
                 <div className="flex flex-col gap-3">
+                  <Button onClick={() => navigate("/memory")} variant="outline" className="rounded-2xl py-5 border-border">
+                    <span className="mr-2">🧠</span> Vai a Memoria e Ripasso
+                  </Button>
                   <Button onClick={() => navigate(`/homework/${task?.id}`)} variant="outline" className="rounded-2xl py-5 border-border">Vedi dettagli compito</Button>
                   <Button onClick={() => navigate("/dashboard")} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5">Torna ai compiti</Button>
                 </div>
@@ -199,6 +297,8 @@ const FocusSession = () => {
               emotion={emotion}
               taskTitle={taskTitle}
               taskSubject={taskSubject}
+              sessionKey={taskId}
+              onMessagesChange={handleMessagesChange}
               taskContext={task ? {
                 title: task.title,
                 subject: task.subject,

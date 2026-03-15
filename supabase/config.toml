@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.child-api]
 verify_jwt = false
+
+[functions.extract-concepts]
+verify_jwt = false

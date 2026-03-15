@@ -20,9 +20,11 @@ interface GuidanceCardProps {
   taskSubject?: string;
   taskContext?: TaskContext;
   bottomOffset?: number;
+  sessionKey?: string; // key for sessionStorage persistence
+  onMessagesChange?: (messages: ChatMessage[]) => void;
 }
 
-interface Message {
+export interface ChatMessage {
   id: string;
   role: "coach" | "student";
   text: string;
@@ -41,9 +43,17 @@ const variantClasses = {
   muted: "bg-muted text-muted-foreground hover:bg-accent",
 };
 
-export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bottomOffset }: GuidanceCardProps) => {
+export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bottomOffset, sessionKey, onMessagesChange }: GuidanceCardProps) => {
   const [expanded, setExpanded] = useState(true);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    if (sessionKey) {
+      try {
+        const saved = sessionStorage.getItem(`focus-chat-${sessionKey}`);
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return [];
+  });
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [streamingText, setStreamingText] = useState("");
@@ -121,8 +131,10 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     } catch { return null; }
   };
 
-  // Initial message
+  // Initial message - only if no restored messages
   useEffect(() => {
+    if (messages.length > 0) return; // Already restored from sessionStorage
+    
     const profile = getProfile();
     const name = profile?.name || "campione";
     const sourceType = taskContext?.sourceType || "manual";
@@ -141,13 +153,21 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     }
     
     setMessages([{ id: "init", role: "coach", text: initial }]);
-  }, [emotion, taskTitle, taskSubject, taskContext?.sourceType]);
+  }, []); // Run once on mount
+
+  // Persist messages to sessionStorage and notify parent
+  useEffect(() => {
+    if (sessionKey && messages.length > 0) {
+      sessionStorage.setItem(`focus-chat-${sessionKey}`, JSON.stringify(messages));
+    }
+    onMessagesChange?.(messages);
+  }, [messages, sessionKey, onMessagesChange]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, isTyping, streamingText]);
 
-  const streamCoachReply = async (allMessages: Message[]) => {
+  const streamCoachReply = async (allMessages: ChatMessage[]) => {
     setIsTyping(true);
     setStreamingText("");
 
@@ -275,7 +295,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     const trimmed = input.trim();
     if ((!trimmed && !pendingImage) || isTyping) return;
 
-    const newMsg: Message = {
+    const newMsg: ChatMessage = {
       id: `student-${Date.now()}`,
       role: "student",
       text: trimmed || (pendingImage ? "📷 Ho fotografato i miei esercizi" : ""),
@@ -290,7 +310,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
 
   const handlePath = (pathId: string) => {
     const label = thinkingPaths.find((p) => p.id === pathId)?.label || "";
-    const newMsg: Message = { id: `student-${Date.now()}`, role: "student", text: label };
+    const newMsg: ChatMessage = { id: `student-${Date.now()}`, role: "student", text: label };
     const updated = [...messages, newMsg];
     setMessages(updated);
     streamCoachReply(updated);
