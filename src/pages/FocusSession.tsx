@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { GuidanceCard } from "@/components/GuidanceCard";
 
-const spring = { type: "spring", stiffness: 260, damping: 30 };
+const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
 type Phase = "checkin" | "breathing" | "focus" | "recap";
 

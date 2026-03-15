@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, BookOpen, TrendingUp, Brain, AlertCircle, Lightbulb } from "lucide-react";
 import { ProgressSun } from "@/components/ProgressSun";
 
-const spring = { type: "spring", stiffness: 260, damping: 30 };
+const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
 const weeklyData = [
   { day: "Lun", minutes: 35, tasks: 3 },

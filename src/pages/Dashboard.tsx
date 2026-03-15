@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { TaskCard } from "@/components/TaskCard";
 
-const spring = { type: "spring", stiffness: 260, damping: 30 };
+const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
 const mockTasks = [
   {

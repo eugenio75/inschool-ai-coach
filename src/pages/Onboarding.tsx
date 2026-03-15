@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, BookOpen, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const spring = { type: "spring", stiffness: 260, damping: 30 };
+const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
 const schoolLevels = [
   { id: "primaria-1-2", label: "Primaria 1ª-2ª" },

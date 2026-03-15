@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, ChevronUp, ChevronDown } from "lucide-react";
 
-const spring = { type: "spring", stiffness: 260, damping: 30 };
+const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
 interface GuidanceCardProps {
   emotion: string;
