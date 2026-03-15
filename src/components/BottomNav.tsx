@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
   { path: "/dashboard", label: "Home", icon: Home },
+  { path: "/add-homework", label: "Aggiungi", icon: Plus, isAdd: true },
   { path: "/memory", label: "Memoria", icon: Brain },
   { path: "/profiles", label: "Profilo", icon: User },
 ];
@@ -21,7 +22,13 @@ export const BottomNav = () => {
   }
 
   const isParentView = Boolean(user);
-  const items = isParentView ? navItems : navItems.filter((i) => i.path !== "/profiles");
+  let items = navItems;
+  if (!isParentView) {
+    items = items.filter((i) => i.path !== "/profiles");
+  }
+  if (isChild) {
+    items = items.filter((i) => !i.isAdd);
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border safe-area-bottom sm:hidden">
@@ -30,30 +37,20 @@ export const BottomNav = () => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
 
-          if (isParentView && item.path === "/profiles") {
-            return [
-              <button
-                key="add-homework-mobile"
-                onClick={() => navigate("/add-homework")}
-                className="flex flex-col items-center gap-0.5 px-2 py-0.5 rounded-xl transition-colors min-w-[64px] text-primary"
-                aria-label="Aggiungi compito"
-              >
-                <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-card">
-                  <Plus className="w-5 h-5" />
-                </div>
-                <span className="text-[10px] font-semibold">Aggiungi</span>
-              </button>,
+          if (item.isAdd) {
+            return (
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-[56px] ${
-                  isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                }`}
+                className="flex flex-col items-center gap-0.5 px-2 py-0.5 rounded-xl transition-colors min-w-[56px] text-primary"
+                aria-label="Aggiungi compito"
               >
-                <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
-                <span className="text-[10px] font-medium">{item.label}</span>
-              </button>,
-            ];
+                <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <span className="text-[10px] font-semibold">Aggiungi</span>
+              </button>
+            );
           }
 
           return (
@@ -69,19 +66,6 @@ export const BottomNav = () => {
             </button>
           );
         })}
-
-        {!isParentView && !isChild && (
-          <button
-            onClick={() => navigate("/add-homework")}
-            className="flex flex-col items-center gap-0.5 px-2 py-0.5 rounded-xl transition-colors min-w-[64px] text-primary"
-            aria-label="Aggiungi compito"
-          >
-            <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-card">
-              <Plus className="w-5 h-5" />
-            </div>
-            <span className="text-[10px] font-semibold">Aggiungi</span>
-          </button>
-        )}
       </div>
     </nav>
   );
