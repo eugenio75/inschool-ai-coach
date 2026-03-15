@@ -321,6 +321,7 @@ const FocusSession = () => {
               taskSubject={taskSubject}
               sessionKey={taskId}
               onMessagesChange={handleMessagesChange}
+              weakConcepts={weakConcepts}
               taskContext={task ? {
                 title: task.title,
                 subject: task.subject,

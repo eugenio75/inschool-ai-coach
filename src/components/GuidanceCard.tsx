@@ -215,6 +215,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
           body: JSON.stringify({
             messages: chatMessages,
             studentProfile: profile,
+            weakConcepts: weakConcepts?.length ? weakConcepts : undefined,
             taskContext: taskContext ? {
               title: taskContext.title || taskTitle,
               subject: taskContext.subject || taskSubject,
