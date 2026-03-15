@@ -2,3 +2,6 @@ project_id = "dofsaapcjcjkvyjqgays"
 
 [functions.ai-coach]
 verify_jwt = false
+
+[functions.ocr-homework]
+verify_jwt = false
