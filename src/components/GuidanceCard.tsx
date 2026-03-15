@@ -21,7 +21,7 @@ interface GuidanceCardProps {
   taskContext?: TaskContext;
   bottomOffset?: number;
   sessionKey?: string; // key for sessionStorage persistence
-  onMessagesChange?: (messages: Message[]) => void;
+  onMessagesChange?: (messages: ChatMessage[]) => void;
 }
 
 export interface ChatMessage {
