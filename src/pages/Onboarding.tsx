@@ -45,7 +45,7 @@ interface OnboardingData {
   difficultSubjects: string[];
   struggles: string[];
   focusTime: string;
-  supportStyle: string;
+  supportStyles: string[];
 }
 
 const Onboarding = () => {
