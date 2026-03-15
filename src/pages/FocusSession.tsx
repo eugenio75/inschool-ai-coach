@@ -107,21 +107,21 @@ const FocusSession = () => {
       </div>
 
       {phase !== "focus" ? (
-        <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-12">
+        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-start sm:justify-center px-4 sm:px-6 pt-3 pb-16">
           <AnimatePresence mode="wait">
             {phase === "checkin" && (
-              <motion.div key="checkin" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={spring} className="max-w-md w-full text-center">
-                <h2 className="font-display text-2xl font-bold text-foreground mb-2">Come ti senti adesso?</h2>
-                <p className="text-muted-foreground mb-8">Non c'è una risposta giusta. Dimmi come stai.</p>
-                <div className="flex flex-wrap justify-center gap-3 mb-8">
+              <motion.div key="checkin" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={spring} className="max-w-md w-full text-center pb-3">
+                <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-1.5">Come ti senti adesso?</h2>
+                <p className="text-muted-foreground mb-4 sm:mb-6">Non c'è una risposta giusta. Dimmi come stai.</p>
+                <div className="flex flex-wrap justify-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
                   {emotionOptions.map((e) => (
-                    <button key={e.id} onClick={() => setEmotion(e.id)} className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-2xl border transition-all ${emotion === e.id ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}>
-                      <span className="text-2xl">{e.emoji}</span>
+                    <button key={e.id} onClick={() => setEmotion(e.id)} className={`flex flex-col items-center gap-1 px-3 py-2.5 rounded-2xl border transition-all ${emotion === e.id ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}>
+                      <span className="text-xl sm:text-2xl">{e.emoji}</span>
                       <span className="text-xs font-medium text-foreground">{e.label}</span>
                     </button>
                   ))}
                 </div>
-                <Button onClick={startBreathing} disabled={!emotion} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl px-8 py-5 text-base disabled:opacity-40">Sono pronto</Button>
+                <Button onClick={startBreathing} disabled={!emotion} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl px-8 py-4 sm:py-5 text-base disabled:opacity-40">Sono pronto</Button>
               </motion.div>
             )}
 
