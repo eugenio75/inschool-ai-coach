@@ -192,7 +192,7 @@ const FocusSession = () => {
           </motion.div>
 
           {/* Coach card - inline, not fixed overlay */}
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-4">
             <GuidanceCard
               emotion={emotion}
               taskTitle={taskTitle}

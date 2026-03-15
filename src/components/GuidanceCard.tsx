@@ -358,11 +358,11 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                 animate={{ height: "auto" }}
                 exit={{ height: 0 }}
                 transition={{ duration: 0.2 }}
-                className={`overflow-hidden ${isInline ? "flex-1 flex flex-col min-h-0" : ""}`}
+                className="overflow-hidden"
               >
-                <div className={`px-4 pb-4 flex flex-col ${isInline ? "flex-1 min-h-0" : ""}`}>
+                <div className="px-4 pb-4 flex flex-col">
                   {/* Chat messages */}
-                  <div ref={scrollRef} className={`${isInline ? "flex-1 min-h-0" : "max-h-56"} overflow-y-auto space-y-3 mb-3 scroll-smooth`}>
+                  <div ref={scrollRef} className={`${isInline ? "max-h-[24dvh]" : "max-h-56"} overflow-y-auto space-y-3 mb-3 scroll-smooth`}>
                     {messages.map((msg) => (
                       <motion.div
                         key={msg.id}
