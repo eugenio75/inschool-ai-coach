@@ -181,7 +181,20 @@ const FocusSession = () => {
       </div>
 
       {phase === "focus" && (
-        <GuidanceCard emotion={emotion} taskTitle={taskTitle} taskSubject={taskSubject} />
+        <GuidanceCard
+          emotion={emotion}
+          taskTitle={taskTitle}
+          taskSubject={taskSubject}
+          taskContext={task ? {
+            title: task.title,
+            subject: task.subject,
+            description: task.description,
+            sourceType: task.source_type,
+            keyConcepts: task.key_concepts,
+            microSteps: task.micro_steps,
+            difficulty: task.difficulty,
+          } : undefined}
+        />
       )}
     </div>
   );

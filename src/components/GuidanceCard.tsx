@@ -1,26 +1,37 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, ChevronUp, ChevronDown, Send, Mic, MicOff } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Shield, ChevronUp, ChevronDown, Send, Mic, MicOff, Camera, Image, X } from "lucide-react";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
+
+interface TaskContext {
+  title?: string;
+  subject?: string;
+  description?: string;
+  sourceType?: string;
+  keyConcepts?: string[];
+  microSteps?: any[];
+  difficulty?: number;
+}
 
 interface GuidanceCardProps {
   emotion: string;
   taskTitle?: string;
   taskSubject?: string;
+  taskContext?: TaskContext;
 }
 
 interface Message {
   id: string;
   role: "coach" | "student";
   text: string;
+  imageUrl?: string;
 }
 
 const thinkingPaths = [
   { id: "stuck", label: "Sono bloccato", variant: "sage" as const },
   { id: "hint", label: "Dammi un indizio", variant: "clay" as const },
-  { id: "gotit", label: "Ho capito!", variant: "muted" as const },
+  { id: "check", label: "Controlla la mia risposta", variant: "muted" as const },
 ];
 
 const variantClasses = {
@@ -29,30 +40,32 @@ const variantClasses = {
   muted: "bg-muted text-muted-foreground hover:bg-accent",
 };
 
-export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardProps) => {
+export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext }: GuidanceCardProps) => {
   const [expanded, setExpanded] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [streamingText, setStreamingText] = useState("");
   const [isRecording, setIsRecording] = useState(false);
+  const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  // Speech recognition setup
+  // Speech recognition
   const startRecording = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setInput("(Il tuo browser non supporta il riconoscimento vocale)");
       return;
     }
-
     const recognition = new SpeechRecognition();
     recognition.lang = "it-IT";
     recognition.continuous = false;
     recognition.interimResults = true;
-
     recognition.onresult = (event: any) => {
       let transcript = "";
       for (let i = 0; i < event.results.length; i++) {
@@ -60,15 +73,8 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
       }
       setInput(transcript);
     };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-    };
-
-    recognition.onerror = () => {
-      setIsRecording(false);
-    };
-
+    recognition.onend = () => setIsRecording(false);
+    recognition.onerror = () => setIsRecording(false);
     recognitionRef.current = recognition;
     recognition.start();
     setIsRecording(true);
@@ -80,14 +86,33 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
   };
 
   const toggleRecording = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
+    isRecording ? stopRecording() : startRecording();
   };
 
-  // Load student profile
+  // Image handling
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsUploading(true);
+    try {
+      // Convert to base64 data URL for preview and sending
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPendingImage(reader.result as string);
+        setIsUploading(false);
+      };
+      reader.onerror = () => setIsUploading(false);
+      reader.readAsDataURL(file);
+    } catch {
+      setIsUploading(false);
+    }
+    // Reset input so same file can be selected again
+    e.target.value = "";
+  };
+
+  const removePendingImage = () => setPendingImage(null);
+
   const getProfile = () => {
     try {
       const saved = localStorage.getItem("inschool-profile");
@@ -95,22 +120,27 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
     } catch { return null; }
   };
 
-  // Initial message based on emotion
+  // Initial message
   useEffect(() => {
     const profile = getProfile();
     const name = profile?.name || "campione";
+    const sourceType = taskContext?.sourceType || "manual";
     
     let initial: string;
     if (emotion === "frustrated" || emotion === "worried") {
       initial = `Capisco che può sembrare difficile, ${name}. Facciamo il primo piccolo passo insieme — solo quello. Cosa dice la consegna?`;
     } else if (emotion === "tired") {
       initial = `Sei stanco, ${name}, è normale. Facciamo solo un micro-passo, poi vediamo come va. Cosa devi fare in questo esercizio?`;
+    } else if (sourceType === "photo" || sourceType === "textbook") {
+      initial = `Perfetto ${name}! Ho visto l'esercizio${taskSubject ? ` di ${taskSubject}` : ""}. Prima di tutto, facciamo un piccolo ripasso di quello che ci serve per risolverlo. Sei pronto?`;
+    } else if (taskTitle?.toLowerCase().includes("legg") || taskTitle?.toLowerCase().includes("lettura") || taskTitle?.toLowerCase().includes("libro")) {
+      initial = `Perfetto ${name}! Vedo che devi leggere. 📖 Quale libro o capitolo stai leggendo? Raccontami un po'!`;
     } else {
       initial = `Perfetto ${name}, iniziamo! ${taskTitle ? `Stiamo lavorando su "${taskTitle}"${taskSubject ? ` di ${taskSubject}` : ""}.` : ""} Leggi la consegna dell'esercizio. Cosa ti chiede di fare?`;
     }
     
     setMessages([{ id: "init", role: "coach", text: initial }]);
-  }, [emotion, taskTitle, taskSubject]);
+  }, [emotion, taskTitle, taskSubject, taskContext?.sourceType]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -121,18 +151,29 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
     setStreamingText("");
 
     const profile = getProfile();
-    const chatMessages = allMessages.map(m => ({
-      role: m.role === "coach" ? "assistant" as const : "user" as const,
-      content: m.text,
-    }));
-
-    // Add context about the current task
-    if (taskTitle) {
-      chatMessages.unshift({
-        role: "user" as const,
-        content: `[CONTESTO: Lo studente sta lavorando su "${taskTitle}" di ${taskSubject || "materia non specificata"}. Emozione iniziale: ${emotion}. Non mostrare questo messaggio, usalo solo come contesto.]`,
-      });
-    }
+    
+    // Build chat messages, including images as multimodal content
+    const chatMessages = allMessages.map(m => {
+      if (m.imageUrl && m.role === "student") {
+        // Multimodal message with image
+        const content: any[] = [];
+        if (m.text) {
+          content.push({ type: "text", text: m.text });
+        }
+        content.push({
+          type: "image_url",
+          image_url: { url: m.imageUrl },
+        });
+        if (!m.text) {
+          content.push({ type: "text", text: "Ho fotografato il mio quaderno con gli esercizi svolti. Puoi controllare le mie risposte?" });
+        }
+        return { role: "user" as const, content };
+      }
+      return {
+        role: m.role === "coach" ? "assistant" as const : "user" as const,
+        content: m.text,
+      };
+    });
 
     try {
       const response = await fetch(
@@ -146,6 +187,18 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
           body: JSON.stringify({
             messages: chatMessages,
             studentProfile: profile,
+            taskContext: taskContext ? {
+              title: taskContext.title || taskTitle,
+              subject: taskContext.subject || taskSubject,
+              description: taskContext.description,
+              sourceType: taskContext.sourceType,
+              keyConcepts: taskContext.keyConcepts,
+              microSteps: taskContext.microSteps,
+              difficulty: taskContext.difficulty,
+            } : {
+              title: taskTitle,
+              subject: taskSubject,
+            },
           }),
         }
       );
@@ -154,7 +207,6 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
         const errData = await response.json().catch(() => ({}));
         throw new Error(errData.error || "Errore di connessione");
       }
-
       if (!response.body) throw new Error("No stream body");
 
       const reader = response.body.getReader();
@@ -192,13 +244,11 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
         }
       }
 
-      // Finalize message
       if (assistantText) {
         setMessages(prev => [...prev, { id: `coach-${Date.now()}`, role: "coach", text: assistantText }]);
       }
     } catch (err) {
       console.error("AI Coach error:", err);
-      // Fallback to local response
       const fallback = getFallbackResponse(allMessages[allMessages.length - 1]?.text || "");
       setMessages(prev => [...prev, { id: `coach-${Date.now()}`, role: "coach", text: fallback }]);
     } finally {
@@ -222,12 +272,18 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
 
   const handleSend = () => {
     const trimmed = input.trim();
-    if (!trimmed || isTyping) return;
+    if ((!trimmed && !pendingImage) || isTyping) return;
 
-    const newMsg: Message = { id: `student-${Date.now()}`, role: "student", text: trimmed };
+    const newMsg: Message = {
+      id: `student-${Date.now()}`,
+      role: "student",
+      text: trimmed || (pendingImage ? "📷 Ho fotografato i miei esercizi" : ""),
+      imageUrl: pendingImage || undefined,
+    };
     const updated = [...messages, newMsg];
     setMessages(updated);
     setInput("");
+    setPendingImage(null);
     streamCoachReply(updated);
   };
 
@@ -253,6 +309,23 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
       transition={spring}
       className="fixed bottom-0 left-0 right-0 z-40"
     >
+      {/* Hidden file inputs */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageSelect}
+        className="hidden"
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleImageSelect}
+        className="hidden"
+      />
+
       <div className="max-w-2xl mx-auto px-4 pb-4">
         <div className="bg-card rounded-2xl shadow-hover border border-primary/10 overflow-hidden">
           {/* Toggle */}
@@ -285,10 +358,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
               >
                 <div className="px-4 pb-4 flex flex-col">
                   {/* Chat messages */}
-                  <div
-                    ref={scrollRef}
-                    className="max-h-56 overflow-y-auto space-y-3 mb-3 scroll-smooth"
-                  >
+                  <div ref={scrollRef} className="max-h-56 overflow-y-auto space-y-3 mb-3 scroll-smooth">
                     {messages.map((msg) => (
                       <motion.div
                         key={msg.id}
@@ -304,6 +374,13 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
                               : "bg-primary text-primary-foreground rounded-br-md"
                           }`}
                         >
+                          {msg.imageUrl && (
+                            <img
+                              src={msg.imageUrl}
+                              alt="Esercizio fotografato"
+                              className="rounded-lg mb-2 max-h-32 object-cover"
+                            />
+                          )}
                           {msg.text}
                         </div>
                       </motion.div>
@@ -311,11 +388,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
 
                     {/* Streaming text */}
                     {streamingText && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="flex justify-start"
-                      >
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
                         <div className="max-w-[85%] bg-sage-light/50 text-foreground rounded-2xl rounded-bl-md px-4 py-2.5 text-sm leading-relaxed">
                           {streamingText}
                           <span className="inline-block w-1.5 h-4 bg-primary/40 ml-0.5 animate-pulse" />
@@ -323,13 +396,9 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
                       </motion.div>
                     )}
 
-                    {/* Typing indicator (before stream starts) */}
+                    {/* Typing indicator */}
                     {isTyping && !streamingText && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="flex justify-start"
-                      >
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
                         <div className="bg-sage-light/50 rounded-2xl rounded-bl-md px-4 py-3 flex gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: "0ms" }} />
                           <span className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -338,6 +407,19 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
                       </motion.div>
                     )}
                   </div>
+
+                  {/* Pending image preview */}
+                  {pendingImage && (
+                    <div className="mb-3 relative inline-block">
+                      <img src={pendingImage} alt="Anteprima" className="h-20 rounded-xl border border-border object-cover" />
+                      <button
+                        onClick={removePendingImage}
+                        className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
 
                   {/* Quick action buttons */}
                   <div className="flex flex-wrap gap-2 mb-3">
@@ -353,15 +435,33 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
                     ))}
                   </div>
 
-                  {/* Text input */}
+                  {/* Input area */}
                   <div className="flex items-center gap-2">
+                    {/* Camera button */}
+                    <button
+                      onClick={() => cameraInputRef.current?.click()}
+                      disabled={isTyping || isUploading}
+                      className="w-9 h-9 rounded-xl bg-muted text-muted-foreground hover:bg-accent hover:text-foreground flex items-center justify-center transition-colors shrink-0 disabled:opacity-40"
+                      title="Fotografa il quaderno"
+                    >
+                      <Camera className="w-4 h-4" />
+                    </button>
+                    {/* Gallery button */}
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isTyping || isUploading}
+                      className="w-9 h-9 rounded-xl bg-muted text-muted-foreground hover:bg-accent hover:text-foreground flex items-center justify-center transition-colors shrink-0 disabled:opacity-40"
+                      title="Carica foto"
+                    >
+                      <Image className="w-4 h-4" />
+                    </button>
                     <input
                       ref={inputRef}
                       type="text"
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      placeholder={isRecording ? "🎙️ Sto ascoltando..." : "Scrivi o parla qui..."}
+                      placeholder={isRecording ? "🎙️ Sto ascoltando..." : pendingImage ? "Aggiungi un messaggio..." : "Scrivi o parla qui..."}
                       disabled={isTyping}
                       className={`flex-1 bg-muted/50 border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 transition-all ${isRecording ? "border-destructive/50 bg-destructive/5" : "border-border"}`}
                     />
@@ -378,7 +478,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
                     </button>
                     <button
                       onClick={handleSend}
-                      disabled={!input.trim() || isTyping}
+                      disabled={(!input.trim() && !pendingImage) || isTyping}
                       className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 disabled:opacity-40 transition-colors shrink-0"
                     >
                       <Send className="w-4 h-4" />

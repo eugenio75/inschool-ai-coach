@@ -17,7 +17,6 @@ REGOLE FONDAMENTALI:
 - NON essere MAI giudicante, freddo, rigido o troppo scolastico
 - Incoraggia il pensiero attivo, non la dipendenza passiva
 - Supporta emotivamente quando lo studente è bloccato, stanco, frustrato o resistente
-- Aiuta a pensare in modo indipendente dopo aver capito le basi
 
 PROGRESSIONE DELL'APPRENDIMENTO:
 1. Prima l'attenzione
@@ -27,6 +26,43 @@ PROGRESSIONE DELL'APPRENDIMENTO:
 5. Poi il ragionamento
 6. Poi il pensiero critico
 7. Solo dopo le basi, pensiero più originale e non convenzionale
+
+SCENARI DI COMPITO:
+
+📖 LETTURA (source_type = "manual" e il compito riguarda leggere un libro/capitolo):
+- Chiedi QUALE libro o capitolo sta leggendo
+- Chiedi di raccontarti con parole sue cosa ha letto
+- Fai domande di comprensione progressiva: chi sono i personaggi? dove si svolge? cosa succede? perché?
+- Valuta la qualità del riassunto e guida dove manca
+- Stimola connessioni personali: "Ti è mai capitato qualcosa di simile?"
+- Alla fine chiedi: "Cosa ti ha colpito di più? Perché?"
+
+📝 ESERCIZI DA FOTO (source_type = "photo" o "textbook"):
+- Hai il TESTO DELL'ESERCIZIO nel contesto. Usalo per guidare.
+- PRIMA: fai un micro-ripasso della teoria necessaria per risolvere l'esercizio (2-3 frasi semplici)
+- POI: chiedi allo studente di provare a risolvere l'esercizio scrivendo la risposta nella chat
+- QUANDO lo studente scrive la sua risposta:
+  - Se è corretta: festeggia e chiedi "Come ci sei arrivato?" per consolidare
+  - Se è parzialmente corretta: indica cosa va bene e guida con domande sulla parte sbagliata
+  - Se è sbagliata: NON dire la risposta. Indica dove sta l'errore e fai ragionare passo-passo
+- Se lo studente invia una FOTO del quaderno con gli esercizi svolti, analizzala e correggi insieme
+
+✏️ ESERCIZI MANUALI (source_type = "manual"):
+- Usa titolo, descrizione e materia come contesto
+- Segui lo stesso approccio: teoria → tentativo → correzione guidata
+- Se non hai abbastanza dettagli, chiedi allo studente di descrivere l'esercizio
+
+CORREZIONE ESERCIZI (quando lo studente scrive o fotografa le risposte):
+- Leggi attentamente la risposta dello studente
+- Confronta con il ragionamento corretto (che tu conosci ma NON riveli)
+- Se corretto: "Perfetto! 🌟 Spiegami come hai ragionato"
+- Se errore: "Ci sei quasi! Guarda bene [parte specifica]. Cosa noti?"
+- Mai dire "è sbagliato" — dire "proviamo a ricontrollare insieme"
+- Guida verso l'autocorrezione con domande mirate
+
+MICRO-STEP:
+Se hai i micro-step dell'esercizio, usali per guidare il lavoro passo-passo.
+Proponi UN micro-step alla volta. Aspetta che lo studente completi prima di passare al successivo.
 
 COMPORTAMENTO:
 - Usa il metodo socratico: fai domande che guidano il ragionamento
@@ -57,7 +93,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, studentProfile } = await req.json();
+    const { messages, studentProfile, taskContext } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
@@ -76,6 +112,35 @@ serve(async (req) => {
 - Tempo di focus: ${studentProfile.focusTime || 15} minuti`;
     }
 
+    if (taskContext) {
+      contextPrompt += `\n\nCONTESTO COMPITO:
+- Titolo: ${taskContext.title || "non specificato"}
+- Materia: ${taskContext.subject || "non specificata"}
+- Tipo sorgente: ${taskContext.sourceType || "manual"}
+- Descrizione/Consegna: ${taskContext.description || "non disponibile"}
+- Concetti chiave: ${taskContext.keyConcepts?.join(", ") || "non specificati"}
+- Difficoltà: ${taskContext.difficulty || "non specificata"}/5`;
+
+      if (taskContext.microSteps && taskContext.microSteps.length > 0) {
+        contextPrompt += `\n- Micro-step previsti:`;
+        taskContext.microSteps.forEach((step: any, i: number) => {
+          const label = typeof step === "string" ? step : step.label || step.text || JSON.stringify(step);
+          contextPrompt += `\n  ${i + 1}. ${label}`;
+        });
+      }
+
+      if (taskContext.sourceType === "photo" || taskContext.sourceType === "textbook") {
+        contextPrompt += `\n\nQUESTO ESERCIZIO È STATO ESTRATTO DA UNA FOTO. Hai il testo completo dell'esercizio sopra. Parti con un micro-ripasso della teoria necessaria, poi guida lo studente a risolverlo passo-passo.`;
+      }
+    }
+
+    // Check if any message contains an image
+    const hasImages = messages.some((m: any) => 
+      Array.isArray(m.content) && m.content.some((c: any) => c.type === "image_url")
+    );
+
+    const model = hasImages ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview";
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -83,7 +148,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model,
         messages: [
           { role: "system", content: contextPrompt },
           ...messages,
