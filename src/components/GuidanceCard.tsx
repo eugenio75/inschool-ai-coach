@@ -285,7 +285,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     const trimmed = input.trim();
     if ((!trimmed && !pendingImage) || isTyping) return;
 
-    const newMsg: Message = {
+    const newMsg: ChatMessage = {
       id: `student-${Date.now()}`,
       role: "student",
       text: trimmed || (pendingImage ? "📷 Ho fotografato i miei esercizi" : ""),
