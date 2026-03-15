@@ -60,6 +60,7 @@ export type Database = {
       }
       child_profiles: {
         Row: {
+          access_code: string | null
           age: number | null
           avatar_emoji: string | null
           created_at: string
@@ -75,6 +76,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          access_code?: string | null
           age?: number | null
           avatar_emoji?: string | null
           created_at?: string
@@ -90,6 +92,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          access_code?: string | null
           age?: number | null
           avatar_emoji?: string | null
           created_at?: string
@@ -336,7 +339,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_child_access_code: { Args: never; Returns: string }
       owns_child_profile: { Args: { profile_id: string }; Returns: boolean }
+      validate_child_code: { Args: { code: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
