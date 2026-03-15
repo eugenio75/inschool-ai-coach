@@ -175,7 +175,7 @@ const Onboarding = () => {
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Come deve aiutarlo il coach?</h2></div>
             <div className="space-y-3">
-              {supportStyles.map((s) => (<button key={s.id} onClick={() => setData({ ...data, supportStyle: s.id })} className={`w-full text-left px-5 py-4 rounded-2xl border transition-all ${data.supportStyle === s.id ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}><span className="text-xl mr-3">{s.emoji}</span><span className="font-medium text-foreground">{s.label}</span></button>))}
+              {supportStyles.map((s) => (<button key={s.id} onClick={() => setData({ ...data, supportStyles: toggleInArray(data.supportStyles, s.id) })} className={`w-full text-left px-5 py-4 rounded-2xl border transition-all ${data.supportStyles.includes(s.id) ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}><span className="text-xl mr-3">{s.emoji}</span><span className="font-medium text-foreground">{s.label}</span></button>))}
             </div>
           </div>
         );
