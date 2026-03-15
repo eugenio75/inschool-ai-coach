@@ -303,13 +303,15 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     }
   };
 
+  const isInline = bottomOffset === undefined || bottomOffset === null;
+
   return (
     <motion.div
-      initial={{ y: 100, opacity: 0 }}
+      initial={{ y: 40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={spring}
-      className="fixed left-0 right-0 z-40"
-      style={{ bottom: bottomOffset }}
+      className={isInline ? "h-full flex flex-col" : "fixed left-0 right-0 z-40"}
+      style={isInline ? undefined : { bottom: bottomOffset }}
     >
       {/* Hidden file inputs */}
       <input
