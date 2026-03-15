@@ -298,7 +298,7 @@ const Landing = () => {
             </p>
             <Button
               size="lg"
-              onClick={() => navigate("/onboarding")}
+              onClick={() => navigate("/auth")}
               className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl px-8 py-6 text-base font-medium shadow-card"
             >
               Inizia gratis
