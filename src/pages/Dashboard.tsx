@@ -113,14 +113,14 @@ const Dashboard = () => {
         </div></div>
       )}
 
-      <div className="px-6 mt-6"><div className="max-w-2xl mx-auto">
+      <div className="px-4 sm:px-6 mt-5 sm:mt-6"><div className="max-w-2xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.25 }}>
           <div className="flex items-center gap-2 mb-3"><Target className="w-4 h-4 text-clay-dark" /><h3 className="font-display font-semibold text-foreground text-sm">Missioni del giorno</h3></div>
           <DailyMissions />
         </motion.div>
       </div></div>
 
-      <div className="px-6 mt-6"><div className="max-w-2xl mx-auto">
+      <div className="px-4 sm:px-6 mt-5 sm:mt-6 pb-4"><div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-display font-semibold text-foreground text-sm">Compiti di oggi</h3>
           <button onClick={() => navigate("/memory")} className="text-xs text-primary font-medium hover:underline flex items-center gap-1"><Brain className="w-3 h-3" /> Ripassa</button>
