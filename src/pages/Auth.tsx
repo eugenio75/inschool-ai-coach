@@ -65,7 +65,7 @@ const Auth = () => {
             <BookOpen className="w-7 h-7 text-primary-foreground" />
           </div>
           <h1 className="font-display text-2xl font-bold text-foreground">
-            {isLogin ? "Bentornato!" : "Crea la tua famiglia"}
+            {isLogin ? "Bentornato!" : "Crea Inschool Family"}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {isLogin ? "Accedi per continuare" : "Registra l'account del genitore"}
