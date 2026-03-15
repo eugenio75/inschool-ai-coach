@@ -169,6 +169,11 @@ const FocusSession = () => {
       consistency_points: 1,
     });
 
+    // Mark task as completed
+    if (task?.id) {
+      await updateTask(task.id, { completed: true });
+    }
+
     // Extract concepts from chat and save to memory
     await extractAndSaveConcepts();
 
