@@ -361,10 +361,21 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject }: GuidanceCardPr
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      placeholder="Scrivi qui la tua risposta..."
+                      placeholder={isRecording ? "🎙️ Sto ascoltando..." : "Scrivi o parla qui..."}
                       disabled={isTyping}
-                      className="flex-1 bg-muted/50 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 transition-all"
+                      className={`flex-1 bg-muted/50 border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 transition-all ${isRecording ? "border-destructive/50 bg-destructive/5" : "border-border"}`}
                     />
+                    <button
+                      onClick={toggleRecording}
+                      disabled={isTyping}
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors shrink-0 ${
+                        isRecording
+                          ? "bg-destructive text-destructive-foreground animate-pulse"
+                          : "bg-muted text-muted-foreground hover:bg-accent hover:text-foreground"
+                      } disabled:opacity-40`}
+                    >
+                      {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                    </button>
                     <button
                       onClick={handleSend}
                       disabled={!input.trim() || isTyping}
