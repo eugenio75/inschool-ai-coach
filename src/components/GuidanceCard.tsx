@@ -41,7 +41,7 @@ const variantClasses = {
   muted: "bg-muted text-muted-foreground hover:bg-accent",
 };
 
-export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext }: GuidanceCardProps) => {
+export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bottomOffset = 0 }: GuidanceCardProps) => {
   const [expanded, setExpanded] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
