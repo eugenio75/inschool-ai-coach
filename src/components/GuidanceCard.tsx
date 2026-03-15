@@ -50,7 +50,7 @@ const variantClasses = {
   muted: "bg-muted text-muted-foreground hover:bg-accent",
 };
 
-export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bottomOffset, sessionKey, onMessagesChange }: GuidanceCardProps) => {
+export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bottomOffset, sessionKey, onMessagesChange, weakConcepts }: GuidanceCardProps) => {
   const [expanded, setExpanded] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     if (sessionKey) {
