@@ -246,22 +246,29 @@ const AddHomework = () => {
             {(mode === "photo-diary" || mode === "photo-book") && (
               <motion.div key="photo" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={spring} className="space-y-5">
                 {!photoPreview ? (
-                  <label className="block cursor-pointer">
-                    <div className="border-2 border-dashed border-border rounded-2xl p-12 text-center hover:border-primary/40 transition-colors">
+                  <label 
+                    className="block cursor-pointer"
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                  >
+                    <div className={`border-2 border-dashed rounded-2xl p-12 text-center transition-colors ${dragActive ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}>
                       <div className="w-16 h-16 rounded-2xl bg-sage-light flex items-center justify-center mx-auto mb-4">
                         <Camera className="w-7 h-7 text-sage-dark" />
                       </div>
                       <p className="font-display font-semibold text-foreground mb-1">
                         {mode === "photo-diary" ? "Fotografa il diario" : "Fotografa il libro"}
                       </p>
-                      <p className="text-sm text-muted-foreground">Tocca per scattare una foto o caricare un'immagine</p>
+                      <p className="text-sm text-muted-foreground">
+                        Tocca per scattare, carica un'immagine o trascinala qui
+                      </p>
                     </div>
                     <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} />
                   </label>
                 ) : (
                   <div className="space-y-4">
                     <div className="relative rounded-2xl overflow-hidden border border-border">
-                      <img src={photoPreview} alt="Foto caricata" className="w-full max-h-64 object-cover" />
+                      <img src={photoPreview} alt="Foto caricata" className="w-full max-h-[70vh] object-contain bg-muted/30" />
                       <button onClick={() => { setPhotoPreview(null); setPhotoFile(null); }} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-foreground/60 text-background flex items-center justify-center">
                         <X className="w-4 h-4" />
                       </button>
