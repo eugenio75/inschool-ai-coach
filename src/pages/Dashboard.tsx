@@ -1,60 +1,18 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Clock, Plus, ArrowRight, Camera, Type, Sparkles } from "lucide-react";
+import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Target, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { TaskCard } from "@/components/TaskCard";
+import { GamificationBar, DailyMissions } from "@/components/GamificationBar";
+import { mockTasks } from "@/lib/mockData";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
-
-const mockTasks = [
-  {
-    id: "1",
-    subject: "Matematica",
-    title: "Frazioni: La Grande Divisione",
-    description: "Esercizi pagina 45, numeri 1-5",
-    estimatedMinutes: 15,
-    difficulty: 2,
-    steps: 3,
-    completed: false,
-  },
-  {
-    id: "2",
-    subject: "Italiano",
-    title: "Comprensione del testo",
-    description: "Leggere il brano e rispondere alle domande",
-    estimatedMinutes: 20,
-    difficulty: 1,
-    steps: 4,
-    completed: false,
-  },
-  {
-    id: "3",
-    subject: "Scienze",
-    title: "Il ciclo dell'acqua",
-    description: "Studiare paragrafo 3 e fare lo schema",
-    estimatedMinutes: 15,
-    difficulty: 2,
-    steps: 2,
-    completed: true,
-  },
-  {
-    id: "4",
-    subject: "Storia",
-    title: "I Romani: la Repubblica",
-    description: "Riassunto pagine 78-82",
-    estimatedMinutes: 25,
-    difficulty: 3,
-    steps: 5,
-    completed: false,
-  },
-];
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ name: string }>({ name: "Studente" });
-  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("inschool-profile");
@@ -79,12 +37,21 @@ const Dashboard = () => {
               </div>
               <span className="font-display text-xl font-semibold text-foreground">Inschool</span>
             </div>
-            <button
-              onClick={() => navigate("/settings")}
-              className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors"
-            >
-              <span className="text-sm font-display font-bold">{profile.name.charAt(0).toUpperCase()}</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate("/memory")}
+                className="w-9 h-9 rounded-xl bg-clay-light flex items-center justify-center text-clay-dark hover:bg-accent transition-colors"
+                title="Memoria e ripasso"
+              >
+                <Brain className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => navigate("/settings")}
+                className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors"
+              >
+                <span className="text-sm font-display font-bold">{profile.name.charAt(0).toUpperCase()}</span>
+              </button>
+            </div>
           </div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
@@ -94,12 +61,17 @@ const Dashboard = () => {
             <p className="text-muted-foreground">Ecco i tuoi compiti di oggi. Da dove vuoi partire?</p>
           </motion.div>
 
+          {/* Gamification bar */}
+          <div className="mt-5">
+            <GamificationBar />
+          </div>
+
           {/* Stats strip */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...spring, delay: 0.1 }}
-            className="flex items-center gap-4 mt-5"
+            className="flex items-center gap-4 mt-4"
           >
             <div className="flex items-center gap-4 flex-1">
               <ProgressSun progress={completedCount / mockTasks.length} />
@@ -146,22 +118,51 @@ const Dashboard = () => {
         </div>
       )}
 
+      {/* Daily missions */}
+      <div className="px-6 mt-6">
+        <div className="max-w-2xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: 0.25 }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <Target className="w-4 h-4 text-clay-dark" />
+              <h3 className="font-display font-semibold text-foreground text-sm">Missioni del giorno</h3>
+            </div>
+            <DailyMissions />
+          </motion.div>
+        </div>
+      </div>
+
       {/* Task list */}
       <div className="px-6 mt-6">
-        <div className="max-w-2xl mx-auto space-y-3">
-          {mockTasks.map((task, i) => (
-            <motion.div
-              key={task.id}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ ...spring, delay: 0.2 + i * 0.08 }}
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-display font-semibold text-foreground text-sm">Compiti di oggi</h3>
+            <button
+              onClick={() => navigate("/memory")}
+              className="text-xs text-primary font-medium hover:underline flex items-center gap-1"
             >
-              <TaskCard
-                task={task}
-                onClick={() => navigate(`/focus/${task.id}`)}
-              />
-            </motion.div>
-          ))}
+              <Brain className="w-3 h-3" />
+              Ripassa
+            </button>
+          </div>
+          <div className="space-y-3">
+            {mockTasks.map((task, i) => (
+              <motion.div
+                key={task.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ ...spring, delay: 0.3 + i * 0.08 }}
+              >
+                <TaskCard
+                  task={task}
+                  onClick={() => navigate(`/homework/${task.id}`)}
+                />
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -170,65 +171,12 @@ const Dashboard = () => {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => setShowAddModal(true)}
+          onClick={() => navigate("/add-homework")}
           className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-card flex items-center justify-center"
         >
           <Plus className="w-6 h-6" />
         </motion.button>
       </div>
-
-      {/* Add homework modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-foreground/20 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={spring}
-            className="bg-card rounded-2xl shadow-hover border border-border p-6 w-full max-w-md"
-          >
-            <h3 className="font-display text-lg font-bold text-foreground mb-2">Aggiungi compiti</h3>
-            <p className="text-sm text-muted-foreground mb-6">Come vuoi inserire i tuoi compiti?</p>
-
-            <div className="space-y-3">
-              <button className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl border border-border hover:bg-muted transition-colors text-left">
-                <div className="w-10 h-10 rounded-xl bg-sage-light flex items-center justify-center">
-                  <Type className="w-5 h-5 text-sage-dark" />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground text-sm">Scrivi a mano</p>
-                  <p className="text-xs text-muted-foreground">Descrivi il compito con parole tue</p>
-                </div>
-              </button>
-              <button className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl border border-border hover:bg-muted transition-colors text-left">
-                <div className="w-10 h-10 rounded-xl bg-clay-light flex items-center justify-center">
-                  <Camera className="w-5 h-5 text-clay-dark" />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground text-sm">Fotografa il diario</p>
-                  <p className="text-xs text-muted-foreground">Scatta una foto dei compiti scritti</p>
-                </div>
-              </button>
-              <button className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl border border-border hover:bg-muted transition-colors text-left">
-                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground text-sm">Fotografa il libro</p>
-                  <p className="text-xs text-muted-foreground">Scatta una foto delle pagine da studiare</p>
-                </div>
-              </button>
-            </div>
-
-            <Button
-              variant="ghost"
-              onClick={() => setShowAddModal(false)}
-              className="w-full mt-4 text-muted-foreground"
-            >
-              Annulla
-            </Button>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 };
