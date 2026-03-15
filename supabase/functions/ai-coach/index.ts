@@ -93,7 +93,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, studentProfile, taskContext } = await req.json();
+    const { messages, studentProfile, taskContext, weakConcepts } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
@@ -132,6 +132,21 @@ serve(async (req) => {
       if (taskContext.sourceType === "photo" || taskContext.sourceType === "textbook") {
         contextPrompt += `\n\nQUESTO ESERCIZIO È STATO ESTRATTO DA UNA FOTO. Hai il testo completo dell'esercizio sopra. Parti con un micro-ripasso della teoria necessaria, poi guida lo studente a risolverlo passo-passo.`;
       }
+    }
+
+    // Inject weak memory concepts for reinforcement
+    if (weakConcepts && weakConcepts.length > 0) {
+      contextPrompt += `\n\nCONCETTI DEBOLI DA RINFORZARE (dalla memoria dello studente):`;
+      weakConcepts.forEach((c: any, i: number) => {
+        contextPrompt += `\n${i + 1}. "${c.concept}" (forza: ${c.strength || 0}/100)${c.summary ? ` — ${c.summary}` : ""}`;
+      });
+      contextPrompt += `\n\nISTRUZIONI RINFORZO MEMORIA:
+- Durante la sessione, trova momenti naturali per collegare il compito attuale a questi concetti deboli
+- NON fare un ripasso formale separato — intreccia i riferimenti in modo organico ("A proposito, ricordi quando abbiamo parlato di...?")
+- Fai micro-domande veloci (30 secondi max) per verificare se il concetto è ancora presente
+- Se lo studente ricorda bene, conferma brevemente e prosegui
+- Se non ricorda, dai un indizio rapido e torna al compito principale
+- Priorità: il compito attuale viene PRIMA. Il rinforzo è secondario e deve essere leggero`;
     }
 
     // Check if any message contains an image

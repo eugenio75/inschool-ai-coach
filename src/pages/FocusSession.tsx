@@ -5,7 +5,7 @@ import { ArrowLeft, Pause, Play, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { GuidanceCard, ChatMessage } from "@/components/GuidanceCard";
-import { getTask, saveFocusSession, updateTask, getActiveChildProfileId } from "@/lib/database";
+import { getTask, saveFocusSession, updateTask, getActiveChildProfileId, getMemoryItems } from "@/lib/database";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
@@ -44,6 +44,7 @@ const FocusSession = () => {
   const [task, setTask] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [extracting, setExtracting] = useState(false);
+  const [weakConcepts, setWeakConcepts] = useState<any[]>([]);
   const chatMessagesRef = useRef<ChatMessage[]>([]);
 
   // Restore state from sessionStorage if available
@@ -57,6 +58,14 @@ const FocusSession = () => {
       if (taskId) {
         const t = await getTask(taskId);
         setTask(t);
+        // Fetch weak memory items for this subject to reinforce during coaching
+        if (t?.subject) {
+          const allMemory = await getMemoryItems();
+          const weak = allMemory
+            .filter((m: any) => m.subject === t.subject && (m.strength || 0) < 60)
+            .slice(0, 3);
+          setWeakConcepts(weak);
+        }
       }
       const saved = localStorage.getItem("inschool-profile");
       if (saved) try { setProfile(JSON.parse(saved)); } catch {}
@@ -312,6 +321,7 @@ const FocusSession = () => {
               taskSubject={taskSubject}
               sessionKey={taskId}
               onMessagesChange={handleMessagesChange}
+              weakConcepts={weakConcepts}
               taskContext={task ? {
                 title: task.title,
                 subject: task.subject,

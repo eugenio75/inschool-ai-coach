@@ -14,14 +14,21 @@ interface TaskContext {
   difficulty?: number;
 }
 
+interface WeakConcept {
+  concept: string;
+  summary?: string;
+  strength?: number;
+}
+
 interface GuidanceCardProps {
   emotion: string;
   taskTitle?: string;
   taskSubject?: string;
   taskContext?: TaskContext;
   bottomOffset?: number;
-  sessionKey?: string; // key for sessionStorage persistence
+  sessionKey?: string;
   onMessagesChange?: (messages: ChatMessage[]) => void;
+  weakConcepts?: WeakConcept[];
 }
 
 export interface ChatMessage {
@@ -43,7 +50,7 @@ const variantClasses = {
   muted: "bg-muted text-muted-foreground hover:bg-accent",
 };
 
-export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bottomOffset, sessionKey, onMessagesChange }: GuidanceCardProps) => {
+export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bottomOffset, sessionKey, onMessagesChange, weakConcepts }: GuidanceCardProps) => {
   const [expanded, setExpanded] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     if (sessionKey) {
@@ -208,6 +215,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
           body: JSON.stringify({
             messages: chatMessages,
             studentProfile: profile,
+            weakConcepts: weakConcepts?.length ? weakConcepts : undefined,
             taskContext: taskContext ? {
               title: taskContext.title || taskTitle,
               subject: taskContext.subject || taskSubject,
