@@ -90,4 +90,8 @@
   .shadow-hover {
     box-shadow: var(--shadow-hover);
   }
+  }
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
