@@ -1,13 +1,30 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, BookOpen, TrendingUp, Brain, AlertCircle, Lightbulb, Shield, BarChart3, Eye, MessageCircle, Lock, Loader2 } from "lucide-react";
+import { ArrowLeft, Clock, BookOpen, Brain, Lightbulb, Lock, Loader2, Eye, MessageCircle, Heart, Star, Sparkles } from "lucide-react";
 import { ProgressSun } from "@/components/ProgressSun";
 import { BadgeGrid } from "@/components/GamificationBar";
 import { getChildProfiles, getFocusSessions, getGamification, getParentSettings } from "@/lib/database";
-import { mockGamification } from "@/lib/mockData";
+import { supabase } from "@/integrations/supabase/client";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
+
+const iconMap: Record<string, any> = {
+  lightbulb: Lightbulb,
+  eye: Eye,
+  message: MessageCircle,
+  brain: Brain,
+  heart: Heart,
+  clock: Clock,
+  star: Star,
+};
+
+const categoryColors: Record<string, { bg: string; text: string }> = {
+  metodo: { bg: "bg-sage-light", text: "text-sage-dark" },
+  emotivo: { bg: "bg-clay-light", text: "text-clay-dark" },
+  autonomia: { bg: "bg-primary/10", text: "text-primary" },
+  motivazione: { bg: "bg-amber-100", text: "text-amber-700" },
+};
 
 const ParentDashboard = () => {
   const navigate = useNavigate();
@@ -20,6 +37,8 @@ const ParentDashboard = () => {
   const [gamification, setGamification] = useState<any>(null);
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [aiInsights, setAiInsights] = useState<any[]>([]);
+  const [insightsLoading, setInsightsLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -43,6 +62,36 @@ const ParentDashboard = () => {
     };
     loadChild();
   }, [selectedChild]);
+
+  // Fetch AI insights when child data is loaded
+  useEffect(() => {
+    if (!selectedChild || !unlocked) return;
+    const selectedProfile = children.find(c => c.id === selectedChild);
+    if (!selectedProfile) return;
+
+    const fetchInsights = async () => {
+      setInsightsLoading(true);
+      setAiInsights([]);
+      try {
+        const totalMinutes = sessions.reduce((a, s) => a + Math.round((s.duration_seconds || 0) / 60), 0);
+        const { data, error } = await supabase.functions.invoke("parent-insights", {
+          body: {
+            childProfile: selectedProfile,
+            gamification,
+            sessionsCount: sessions.length,
+            totalMinutes,
+          },
+        });
+        if (error) throw error;
+        if (data?.insights) setAiInsights(data.insights);
+      } catch (e) {
+        console.error("Failed to fetch AI insights:", e);
+      } finally {
+        setInsightsLoading(false);
+      }
+    };
+    fetchInsights();
+  }, [selectedChild, unlocked, sessions, gamification]);
 
   const checkPin = () => {
     if (pinInput === correctPin) {
@@ -101,7 +150,7 @@ const ParentDashboard = () => {
 
           {/* Child selector */}
           {children.length > 1 && (
-            <div className="flex gap-2 mb-6">
+            <div className="flex gap-2 mb-6 flex-wrap">
               {children.map((child) => (
                 <button key={child.id} onClick={() => setSelectedChild(child.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${selectedChild === child.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>
                   <span>{child.avatar_emoji || "🧒"}</span> {child.name}
@@ -154,23 +203,48 @@ const ParentDashboard = () => {
         </div></div>
       )}
 
-      {/* Insights */}
+      {/* AI Personalized Insights */}
       <div className="px-6 mt-8"><div className="max-w-2xl mx-auto space-y-3">
-        <h3 className="font-display font-semibold text-foreground">Consigli per i genitori</h3>
-        {[
-          { icon: Lightbulb, text: "Evita 'Hai finito i compiti?'. Prova con 'Cosa hai scoperto oggi?'", color: "sage" },
-          { icon: Eye, text: "Le sessioni più brevi funzionano meglio. Rispetta i tempi del bambino.", color: "clay" },
-          { icon: MessageCircle, text: "Lo stile 'gentile' produce i migliori risultati con il coach AI.", color: "sage" },
-        ].map((insight, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 + i * 0.08 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
-            <div className="flex gap-4">
-              <div className={`w-10 h-10 rounded-xl ${insight.color === "sage" ? "bg-sage-light" : "bg-clay-light"} flex items-center justify-center flex-shrink-0`}>
-                <insight.icon className={`w-5 h-5 ${insight.color === "sage" ? "text-sage-dark" : "text-clay-dark"}`} />
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">{insight.text}</p>
-            </div>
-          </motion.div>
-        ))}
+        <div className="flex items-center gap-2 mb-1">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <h3 className="font-display font-semibold text-foreground">Consigli personalizzati per {selectedProfile?.name}</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">Generati dall'AI in base ai dati reali di studio</p>
+
+        {insightsLoading ? (
+          <div className="flex flex-col items-center gap-3 py-10">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Analizzo i progressi di {selectedProfile?.name}...</p>
+          </div>
+        ) : aiInsights.length > 0 ? (
+          aiInsights.map((insight, i) => {
+            const IconComponent = iconMap[insight.icon] || Lightbulb;
+            const colors = categoryColors[insight.category] || categoryColors.metodo;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ ...spring, delay: 0.1 + i * 0.08 }}
+                className="bg-card rounded-2xl border border-border p-5 shadow-soft"
+              >
+                <div className="flex gap-4">
+                  <div className={`w-10 h-10 rounded-xl ${colors.bg} flex items-center justify-center flex-shrink-0`}>
+                    <IconComponent className={`w-5 h-5 ${colors.text}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground mb-1">{insight.title}</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{insight.text}</p>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-sm text-muted-foreground">Nessun consiglio disponibile al momento.</p>
+          </div>
+        )}
       </div></div>
     </div>
   );
