@@ -437,54 +437,61 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                     ))}
                   </div>
 
-                  {/* Input area */}
-                  <div className="flex items-center gap-2">
-                    {/* Camera button */}
-                    <button
-                      onClick={() => cameraInputRef.current?.click()}
-                      disabled={isTyping || isUploading}
-                      className="w-9 h-9 rounded-xl bg-muted text-muted-foreground hover:bg-accent hover:text-foreground flex items-center justify-center transition-colors shrink-0 disabled:opacity-40"
-                      title="Fotografa il quaderno"
-                    >
-                      <Camera className="w-4 h-4" />
-                    </button>
-                    {/* Gallery button */}
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isTyping || isUploading}
-                      className="w-9 h-9 rounded-xl bg-muted text-muted-foreground hover:bg-accent hover:text-foreground flex items-center justify-center transition-colors shrink-0 disabled:opacity-40"
-                      title="Carica foto"
-                    >
-                      <Image className="w-4 h-4" />
-                    </button>
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder={isRecording ? "🎙️ Sto ascoltando..." : pendingImage ? "Aggiungi un messaggio..." : "Scrivi o parla qui..."}
-                      disabled={isTyping}
-                      className={`flex-1 bg-muted/50 border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 transition-all ${isRecording ? "border-destructive/50 bg-destructive/5" : "border-border"}`}
-                    />
-                    <button
-                      onClick={toggleRecording}
-                      disabled={isTyping}
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors shrink-0 ${
-                        isRecording
-                          ? "bg-destructive text-destructive-foreground animate-pulse"
-                          : "bg-muted text-muted-foreground hover:bg-accent hover:text-foreground"
-                      } disabled:opacity-40`}
-                    >
-                      {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                    </button>
-                    <button
-                      onClick={handleSend}
-                      disabled={(!input.trim() && !pendingImage) || isTyping}
-                      className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 disabled:opacity-40 transition-colors shrink-0"
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
+                  {/* Input area - two rows on mobile for better touch targets */}
+                  <div className="flex flex-col gap-2">
+                    {/* Media buttons row */}
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => cameraInputRef.current?.click()}
+                        disabled={isTyping || isUploading}
+                        className="h-8 px-2.5 rounded-lg bg-muted text-muted-foreground hover:bg-accent hover:text-foreground flex items-center gap-1.5 transition-colors shrink-0 disabled:opacity-40 text-xs font-medium"
+                        title="Fotografa il quaderno"
+                      >
+                        <Camera className="w-3.5 h-3.5" />
+                        <span className="hidden xs:inline">Foto</span>
+                      </button>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isTyping || isUploading}
+                        className="h-8 px-2.5 rounded-lg bg-muted text-muted-foreground hover:bg-accent hover:text-foreground flex items-center gap-1.5 transition-colors shrink-0 disabled:opacity-40 text-xs font-medium"
+                        title="Carica foto"
+                      >
+                        <Image className="w-3.5 h-3.5" />
+                        <span className="hidden xs:inline">Galleria</span>
+                      </button>
+                      <button
+                        onClick={toggleRecording}
+                        disabled={isTyping}
+                        className={`h-8 px-2.5 rounded-lg flex items-center gap-1.5 transition-colors shrink-0 text-xs font-medium ${
+                          isRecording
+                            ? "bg-destructive text-destructive-foreground animate-pulse"
+                            : "bg-muted text-muted-foreground hover:bg-accent hover:text-foreground"
+                        } disabled:opacity-40`}
+                      >
+                        {isRecording ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+                        <span className="hidden xs:inline">{isRecording ? "Stop" : "Voce"}</span>
+                      </button>
+                    </div>
+                    {/* Text input + send row */}
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder={isRecording ? "🎙️ Sto ascoltando..." : pendingImage ? "Aggiungi un messaggio..." : "Scrivi qui..."}
+                        disabled={isTyping}
+                        className={`flex-1 min-w-0 bg-muted/50 border rounded-xl px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 transition-all ${isRecording ? "border-destructive/50 bg-destructive/5" : "border-border"}`}
+                      />
+                      <button
+                        onClick={handleSend}
+                        disabled={(!input.trim() && !pendingImage) || isTyping}
+                        className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 disabled:opacity-40 transition-colors shrink-0"
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </motion.div>
