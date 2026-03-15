@@ -110,7 +110,7 @@ const FocusSession = () => {
 
   const extractAndSaveConcepts = async () => {
     const messages = chatMessagesRef.current;
-    if (messages.length < 3) return; // Too few messages to extract
+    if (messages.length < 3) return;
 
     setExtracting(true);
     try {
@@ -132,8 +132,16 @@ const FocusSession = () => {
         body.childProfileId = childSession.profileId;
       } else {
         body.childProfileId = childProfileId;
-        headers.Authorization = `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`;
+        // Get the actual user JWT token for authentication
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers.Authorization = `Bearer ${session.access_token}`;
+        }
       }
+
+      // Also include apikey header required by Supabase
+      headers.apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
       await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-concepts`,
