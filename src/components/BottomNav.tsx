@@ -26,9 +26,6 @@ export const BottomNav = () => {
   if (!isParentView) {
     items = items.filter((i) => i.path !== "/profiles");
   }
-  if (isChild) {
-    items = items.filter((i) => !i.isAdd);
-  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border safe-area-bottom sm:hidden">
