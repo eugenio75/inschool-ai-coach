@@ -14,14 +14,21 @@ interface TaskContext {
   difficulty?: number;
 }
 
+interface WeakConcept {
+  concept: string;
+  summary?: string;
+  strength?: number;
+}
+
 interface GuidanceCardProps {
   emotion: string;
   taskTitle?: string;
   taskSubject?: string;
   taskContext?: TaskContext;
   bottomOffset?: number;
-  sessionKey?: string; // key for sessionStorage persistence
+  sessionKey?: string;
   onMessagesChange?: (messages: ChatMessage[]) => void;
+  weakConcepts?: WeakConcept[];
 }
 
 export interface ChatMessage {
