@@ -37,6 +37,8 @@ const ParentDashboard = () => {
   const [selectedChild, setSelectedChild] = useState<string | null>(null);
   const [gamification, setGamification] = useState<any>(null);
   const [sessions, setSessions] = useState<any[]>([]);
+  const [memoryItems, setMemoryItems] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [aiInsights, setAiInsights] = useState<any[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
