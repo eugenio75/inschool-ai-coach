@@ -15,7 +15,7 @@ export const BottomNav = () => {
   const { user } = useAuth();
   const isChild = isChildSession();
 
-  const hiddenPaths = ["/focus", "/auth", "/onboarding", "/"];
+  const hiddenPaths = ["/focus", "/homework", "/add-homework", "/auth", "/onboarding", "/"];
   if (hiddenPaths.some((p) => location.pathname.startsWith(p) && (p !== "/" || location.pathname === "/"))) {
     return null;
   }
