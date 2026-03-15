@@ -55,7 +55,7 @@ const Onboarding = () => {
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<OnboardingData>({
     name: "", avatar: "🧒", age: "", schoolLevel: "", favoriteSubjects: [],
-    difficultSubjects: [], struggles: [], focusTime: "15", supportStyle: "",
+    difficultSubjects: [], struggles: [], focusTime: "15", supportStyles: [],
   });
 
   const totalSteps = 7;
