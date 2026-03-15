@@ -38,7 +38,7 @@ export const BottomNav = () => {
                 className="flex flex-col items-center gap-0.5 px-2 py-0.5 rounded-xl transition-colors min-w-[64px] text-primary"
                 aria-label="Aggiungi compito"
               >
-                <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-card -mt-4">
+                <div className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-card">
                   <Plus className="w-5 h-5" />
                 </div>
                 <span className="text-[10px] font-semibold">Aggiungi</span>
