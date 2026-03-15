@@ -46,10 +46,9 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
     <motion.button
       whileHover={{ y: -2 }}
       onClick={onClick}
-      disabled={task.completed}
       className={`w-full text-left p-5 rounded-2xl border transition-all ${
         task.completed
-          ? "bg-muted/50 border-border opacity-60"
+          ? "bg-muted/40 border-primary/20 opacity-70 hover:opacity-90"
           : "bg-card border-border shadow-soft hover:shadow-card"
       }`}
     >
