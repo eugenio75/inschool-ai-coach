@@ -86,12 +86,42 @@ const ParentDashboard = () => {
       setAiInsights([]);
       try {
         const totalMinutes = sessions.reduce((a, s) => a + Math.round((s.duration_seconds || 0) / 60), 0);
+        
+        // Prepare recent sessions with task subject info
+        const recentSessions = sessions.slice(0, 10).map(s => {
+          const task = tasks.find(t => t.id === s.task_id);
+          return { ...s, subject: task?.subject || "N/A" };
+        });
+
+        // Get weak concepts (strength < 60)
+        const weakConcepts = memoryItems.filter(m => (m.strength || 0) < 60);
+
+        // Build subject stats
+        const subjectStats: Record<string, { sessions: number; totalMinutes: number; completed: number; total: number }> = {};
+        for (const task of tasks) {
+          if (!subjectStats[task.subject]) {
+            subjectStats[task.subject] = { sessions: 0, totalMinutes: 0, completed: 0, total: 0 };
+          }
+          subjectStats[task.subject].total++;
+          if (task.completed) subjectStats[task.subject].completed++;
+        }
+        for (const s of sessions) {
+          const task = tasks.find(t => t.id === s.task_id);
+          const subject = task?.subject || "Altro";
+          if (!subjectStats[subject]) subjectStats[subject] = { sessions: 0, totalMinutes: 0, completed: 0, total: 0 };
+          subjectStats[subject].sessions++;
+          subjectStats[subject].totalMinutes += Math.round((s.duration_seconds || 0) / 60);
+        }
+
         const { data, error } = await supabase.functions.invoke("parent-insights", {
           body: {
             childProfile: selectedProfile,
             gamification,
             sessionsCount: sessions.length,
             totalMinutes,
+            recentSessions,
+            weakConcepts,
+            subjectStats,
           },
         });
         if (error) throw error;
@@ -103,7 +133,7 @@ const ParentDashboard = () => {
       }
     };
     fetchInsights();
-  }, [selectedChild, unlocked, sessions, gamification]);
+  }, [selectedChild, unlocked, sessions, gamification, memoryItems, tasks]);
 
   const checkPin = () => {
     if (pinInput === correctPin) {
