@@ -97,7 +97,7 @@ const Onboarding = () => {
         localStorage.setItem("inschool-profile", JSON.stringify({
           name: data.name, age: data.age, schoolLevel: data.schoolLevel,
           favoriteSubjects: data.favoriteSubjects, focusTime: data.focusTime,
-          supportStyle: data.supportStyle,
+          supportStyles: data.supportStyles,
         }));
         navigate("/dashboard");
       }
