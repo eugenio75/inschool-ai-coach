@@ -106,7 +106,7 @@ const FocusSession = () => {
         <button onClick={endSession} className="text-muted-foreground hover:text-foreground transition-colors"><X className="w-5 h-5" /></button>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-48">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-36 sm:pb-48">
         <AnimatePresence mode="wait">
           {phase === "checkin" && (
             <motion.div key="checkin" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={spring} className="max-w-md w-full text-center">
