@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.ocr-homework]
 verify_jwt = false
+
+[functions.parent-insights]
+verify_jwt = false
+
+[functions.child-api]
+verify_jwt = false
