@@ -19,6 +19,7 @@ interface GuidanceCardProps {
   taskTitle?: string;
   taskSubject?: string;
   taskContext?: TaskContext;
+  bottomOffset?: number;
 }
 
 interface Message {
@@ -40,7 +41,7 @@ const variantClasses = {
   muted: "bg-muted text-muted-foreground hover:bg-accent",
 };
 
-export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext }: GuidanceCardProps) => {
+export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bottomOffset = 0 }: GuidanceCardProps) => {
   const [expanded, setExpanded] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -307,7 +308,8 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext }: G
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={spring}
-      className="fixed bottom-0 left-0 right-0 z-40"
+      className="fixed left-0 right-0 z-40"
+      style={{ bottom: bottomOffset }}
     >
       {/* Hidden file inputs */}
       <input
