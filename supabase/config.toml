@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.extract-concepts]
 verify_jwt = false
+
+[functions.review-memory]
+verify_jwt = false
