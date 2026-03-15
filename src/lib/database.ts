@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isChildSession, childApi } from "@/lib/childSession";
 
 // ============ CHILD PROFILE CONTEXT ============
 
@@ -26,6 +27,13 @@ export async function getChildProfiles() {
 }
 
 export async function getChildProfile(profileId: string) {
+  if (isChildSession()) {
+    // In child session, profile is already in localStorage
+    const saved = localStorage.getItem("inschool-profile");
+    if (saved) try { return JSON.parse(saved); } catch {}
+    return null;
+  }
+
   const { data, error } = await supabase
     .from("child_profiles")
     .select("*")
@@ -49,9 +57,13 @@ export async function createChildProfile(profile: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
+  // Generate access code
+  const { data: codeData } = await supabase.rpc("generate_child_access_code");
+  const accessCode = codeData || undefined;
+
   const { data, error } = await supabase
     .from("child_profiles")
-    .insert({ parent_id: user.id, ...profile })
+    .insert({ parent_id: user.id, access_code: accessCode, ...profile })
     .select()
     .single();
   if (error) console.error("createChildProfile error:", error);
@@ -99,6 +111,10 @@ export async function updateParentPin(pin: string) {
 // ============ HOMEWORK TASKS ============
 
 export async function getTasks(childProfileId?: string) {
+  if (isChildSession()) {
+    return childApi("get-tasks");
+  }
+
   const profileId = childProfileId || getActiveChildProfileId();
   if (!profileId) return [];
 
@@ -112,6 +128,10 @@ export async function getTasks(childProfileId?: string) {
 }
 
 export async function getTask(taskId: string) {
+  if (isChildSession()) {
+    return childApi("get-task", { taskId });
+  }
+
   const { data, error } = await supabase
     .from("homework_tasks")
     .select("*")
@@ -147,6 +167,10 @@ export async function createTask(task: {
 }
 
 export async function updateTask(taskId: string, updates: Record<string, any>) {
+  if (isChildSession()) {
+    return childApi("update-task", { taskId, updates });
+  }
+
   const { data, error } = await supabase
     .from("homework_tasks")
     .update({ ...updates, updated_at: new Date().toISOString() })
@@ -167,6 +191,10 @@ export async function saveFocusSession(session: {
   autonomy_points?: number;
   consistency_points?: number;
 }) {
+  if (isChildSession()) {
+    return childApi("save-focus-session", session);
+  }
+
   const profileId = getActiveChildProfileId();
   if (!profileId) return null;
 
@@ -189,6 +217,10 @@ export async function saveFocusSession(session: {
 }
 
 export async function getFocusSessions(childProfileId?: string) {
+  if (isChildSession()) {
+    return childApi("get-focus-sessions");
+  }
+
   const profileId = childProfileId || getActiveChildProfileId();
   if (!profileId) return [];
 
@@ -204,6 +236,10 @@ export async function getFocusSessions(childProfileId?: string) {
 // ============ GAMIFICATION ============
 
 export async function getGamification(childProfileId?: string) {
+  if (isChildSession()) {
+    return childApi("get-gamification");
+  }
+
   const profileId = childProfileId || getActiveChildProfileId();
   if (!profileId) return null;
 
@@ -244,6 +280,10 @@ async function updateGamificationPoints(profileId: string, focus: number, autono
 // ============ MEMORY ITEMS ============
 
 export async function getMemoryItems(childProfileId?: string) {
+  if (isChildSession()) {
+    return childApi("get-memory-items");
+  }
+
   const profileId = childProfileId || getActiveChildProfileId();
   if (!profileId) return [];
 
@@ -276,6 +316,10 @@ export async function createMemoryItem(item: {
 }
 
 export async function updateMemoryStrength(itemId: string, strength: number) {
+  if (isChildSession()) {
+    return childApi("update-memory-strength", { itemId, strength });
+  }
+
   await supabase
     .from("memory_items")
     .update({ strength, last_reviewed: new Date().toISOString() })
