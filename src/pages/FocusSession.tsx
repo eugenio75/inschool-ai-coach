@@ -174,20 +174,31 @@ const FocusSession = () => {
       </div>
 
       {phase === "focus" && (
-        <GuidanceCard
-          emotion={emotion}
-          taskTitle={taskTitle}
-          taskSubject={taskSubject}
-          taskContext={task ? {
-            title: task.title,
-            subject: task.subject,
-            description: task.description,
-            sourceType: task.source_type,
-            keyConcepts: task.key_concepts,
-            microSteps: task.micro_steps,
-            difficulty: task.difficulty,
-          } : undefined}
-        />
+        <>
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-t border-border px-6 py-4 flex items-center justify-center gap-4">
+            <Button variant="outline" onClick={() => setIsRunning(!isRunning)} className="rounded-xl border-border px-6 py-5">
+              {isRunning ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
+              {isRunning ? "Pausa" : "Riprendi"}
+            </Button>
+            <Button onClick={endSession} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-xl px-6 py-5">Ho finito</Button>
+          </div>
+          <div className="pb-20">
+            <GuidanceCard
+              emotion={emotion}
+              taskTitle={taskTitle}
+              taskSubject={taskSubject}
+              taskContext={task ? {
+                title: task.title,
+                subject: task.subject,
+                description: task.description,
+                sourceType: task.source_type,
+                keyConcepts: task.key_concepts,
+                microSteps: task.micro_steps,
+                difficulty: task.difficulty,
+              } : undefined}
+            />
+          </div>
+        </>
       )}
     </div>
   );
