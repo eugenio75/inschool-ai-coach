@@ -1,6 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Brain, User, Plus } from "lucide-react";
-import { isChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
@@ -14,7 +13,6 @@ export const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const isChild = isChildSession();
 
   const hiddenPaths = ["/focus", "/homework", "/add-homework", "/auth", "/onboarding", "/"];
   if (hiddenPaths.some((p) => location.pathname.startsWith(p) && (p !== "/" || location.pathname === "/"))) {
@@ -25,9 +23,6 @@ export const BottomNav = () => {
   let items = navItems;
   if (!isParentView) {
     items = items.filter((i) => i.path !== "/profiles");
-  }
-  if (isChild) {
-    items = items.filter((i) => !i.isAdd);
   }
 
   return (
