@@ -22,23 +22,29 @@ serve(async (req) => {
       throw new Error("imageUrl is required");
     }
 
+    const contextNote = sourceType === "photo-book"
+      ? "L'immagine è una foto di un LIBRO DI TESTO. Identifica gli esercizi, le domande o le attività visibili."
+      : "L'immagine è una foto del DIARIO SCOLASTICO. Leggi i compiti scritti a mano o stampati.";
+
     const systemPrompt = `Sei un assistente che analizza foto di compiti scolastici per bambini delle scuole primarie e medie italiane.
 
-ANALISI IMMAGINE:
-Devi estrarre i compiti visibili nell'immagine e restituirli in formato strutturato.
+${contextNote}
 
-Per ogni compito trovato, estrai:
-- subject: la materia (Italiano, Matematica, Scienze, Storia, Geografia, Inglese, Arte, Musica, Tecnologia)
-- title: titolo breve del compito
-- description: dettagli (pagine, esercizi, cosa fare)
-- estimatedMinutes: stima del tempo necessario (numero intero)
-- difficulty: difficoltà da 1 a 3
+Analizza TUTTA l'immagine con attenzione, anche i bordi e le parti meno nitide.
 
-${sourceType === "photo-book" 
-  ? "L'immagine è una foto di un LIBRO DI TESTO. Identifica gli esercizi, le domande o le attività visibili."
-  : "L'immagine è una foto del DIARIO SCOLASTICO. Leggi i compiti scritti a mano o stampati."}
+Per ogni compito trovato, restituisci un oggetto JSON con:
+- "subject": la materia (una tra: Italiano, Matematica, Scienze, Storia, Geografia, Inglese, Arte, Musica, Tecnologia)
+- "title": titolo breve del compito
+- "description": dettagli (pagine, esercizi, cosa fare)
+- "estimatedMinutes": stima del tempo necessario (numero intero)
+- "difficulty": difficoltà da 1 a 3 (numero intero)
 
-IMPORTANTE: Se non riesci a leggere chiaramente qualcosa, indica comunque ciò che vedi con [illeggibile] nelle parti non chiare.`;
+Se non riesci a leggere chiaramente qualcosa, indica [illeggibile] nelle parti non chiare.
+
+RISPONDI ESCLUSIVAMENTE con un JSON valido nel formato:
+{"tasks": [{"subject": "...", "title": "...", "description": "...", "estimatedMinutes": 15, "difficulty": 1}]}
+
+Nessun altro testo, solo il JSON.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -59,43 +65,11 @@ IMPORTANTE: Se non riesci a leggere chiaramente qualcosa, indica comunque ciò c
               },
               {
                 type: "text",
-                text: "Analizza questa foto e estrai tutti i compiti che vedi. Rispondi SOLO con un array JSON valido di oggetti, senza altro testo.",
+                text: "Analizza questa foto e estrai tutti i compiti che vedi. Rispondi SOLO con il JSON.",
               },
             ],
           },
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "extract_homework",
-              description: "Extract homework tasks from an image of a school diary or textbook",
-              parameters: {
-                type: "object",
-                properties: {
-                  tasks: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        subject: { type: "string", enum: ["Italiano", "Matematica", "Scienze", "Storia", "Geografia", "Inglese", "Arte", "Musica", "Tecnologia"] },
-                        title: { type: "string" },
-                        description: { type: "string" },
-                        estimatedMinutes: { type: "number" },
-                        difficulty: { type: "number", enum: [1, 2, 3] },
-                      },
-                      required: ["subject", "title", "description", "estimatedMinutes", "difficulty"],
-                      additionalProperties: false,
-                    },
-                  },
-                },
-                required: ["tasks"],
-                additionalProperties: false,
-              },
-            },
-          },
-        ],
-        tool_choice: { type: "function", function: { name: "extract_homework" } },
       }),
     });
 
@@ -121,27 +95,40 @@ IMPORTANTE: Se non riesci a leggere chiaramente qualcosa, indica comunque ciò c
     }
 
     const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || "";
     
-    // Extract tool call result
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (toolCall?.function?.arguments) {
-      const parsed = JSON.parse(toolCall.function.arguments);
-      return new Response(JSON.stringify({ tasks: parsed.tasks }), {
+    // Parse JSON from response - try direct parse first, then extract from markdown
+    let tasks = null;
+    
+    // Remove markdown code fences if present
+    const cleaned = content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+    
+    try {
+      const parsed = JSON.parse(cleaned);
+      tasks = parsed.tasks || parsed;
+    } catch {
+      // Try to find JSON object or array in the text
+      const objMatch = cleaned.match(/\{[\s\S]*"tasks"[\s\S]*\}/);
+      if (objMatch) {
+        try {
+          const parsed = JSON.parse(objMatch[0]);
+          tasks = parsed.tasks;
+        } catch {}
+      }
+      
+      if (!tasks) {
+        const arrMatch = cleaned.match(/\[[\s\S]*\]/);
+        if (arrMatch) {
+          try { tasks = JSON.parse(arrMatch[0]); } catch {}
+        }
+      }
+    }
+
+    if (tasks && Array.isArray(tasks) && tasks.length > 0) {
+      return new Response(JSON.stringify({ tasks }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    // Fallback: try to parse from content
-    const content = data.choices?.[0]?.message?.content || "";
-    try {
-      const jsonMatch = content.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        const tasks = JSON.parse(jsonMatch[0]);
-        return new Response(JSON.stringify({ tasks }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    } catch {}
 
     return new Response(JSON.stringify({ error: "Non sono riuscito a estrarre i compiti dalla foto. Prova con un'immagine più chiara." }), {
       status: 422,
