@@ -19,6 +19,7 @@ interface GuidanceCardProps {
   taskTitle?: string;
   taskSubject?: string;
   taskContext?: TaskContext;
+  bottomOffset?: number;
 }
 
 interface Message {
