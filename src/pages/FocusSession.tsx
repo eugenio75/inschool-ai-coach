@@ -5,7 +5,7 @@ import { ArrowLeft, Pause, Play, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { GuidanceCard, ChatMessage } from "@/components/GuidanceCard";
-import { getTask, saveFocusSession, getActiveChildProfileId } from "@/lib/database";
+import { getTask, saveFocusSession, updateTask, getActiveChildProfileId } from "@/lib/database";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
@@ -168,6 +168,11 @@ const FocusSession = () => {
       autonomy_points: Math.round(minutesWorked * 0.5),
       consistency_points: 1,
     });
+
+    // Mark task as completed
+    if (task?.id) {
+      await updateTask(task.id, { completed: true });
+    }
 
     // Extract concepts from chat and save to memory
     await extractAndSaveConcepts();
