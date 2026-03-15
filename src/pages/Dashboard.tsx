@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Target, Loader2, Users } from "lucide-react";
+import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Target, Loader2, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { TaskCard } from "@/components/TaskCard";
 import { GamificationBar, DailyMissions } from "@/components/GamificationBar";
 import { getTasks, getActiveChildProfileId, getChildProfile } from "@/lib/database";
+import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -15,28 +16,38 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const isChild = isChildSession();
 
   useEffect(() => {
     const profileId = getActiveChildProfileId();
-    if (!profileId) { navigate("/profiles"); return; }
+    if (!profileId && !isChild) { navigate("/profiles"); return; }
 
     const load = async () => {
-      const p = await getChildProfile(profileId);
-      if (p) setProfile(p);
-      else {
-        // Profile from localStorage fallback
-        const saved = localStorage.getItem("inschool-profile");
-        if (saved) try { setProfile(JSON.parse(saved)); } catch {}
+      if (isChild) {
+        const session = getChildSession();
+        if (session) setProfile(session.profile);
+      } else {
+        const p = await getChildProfile(profileId!);
+        if (p) setProfile(p);
+        else {
+          const saved = localStorage.getItem("inschool-profile");
+          if (saved) try { setProfile(JSON.parse(saved)); } catch {}
+        }
       }
       const dbTasks = await getTasks();
       setTasks(dbTasks);
       setLoading(false);
     };
     load();
-  }, [navigate]);
+  }, [navigate, isChild]);
+
+  const handleChildLogout = () => {
+    clearChildSession();
+    navigate("/auth");
+  };
 
   const name = profile?.name || "Studente";
-  const avatar = profile?.avatar_emoji || "🧒";
+  const avatar = profile?.avatar_emoji || profile?.avatarEmoji || "🧒";
   const completedCount = tasks.filter((t) => t.completed).length;
   const totalMinutes = tasks.reduce((a: number, t: any) => a + (t.estimated_minutes || 0), 0);
   const suggestedTask = tasks.find((t: any) => !t.completed && (t.difficulty || 1) <= 2);
@@ -60,15 +71,21 @@ const Dashboard = () => {
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => navigate("/memory")} className="w-9 h-9 rounded-xl bg-clay-light flex items-center justify-center text-clay-dark hover:bg-accent transition-colors" title="Memoria e ripasso"><Brain className="w-4 h-4" /></button>
-              <button onClick={() => navigate("/profiles")} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors" title="Cambia profilo">
-                <span className="text-lg">{avatar}</span>
-              </button>
+              {isChild ? (
+                <button onClick={handleChildLogout} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors" title="Esci">
+                  <LogOut className="w-4 h-4 text-muted-foreground" />
+                </button>
+              ) : (
+                <button onClick={() => navigate("/profiles")} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors" title="Cambia profilo">
+                  <span className="text-lg">{avatar}</span>
+                </button>
+              )}
             </div>
           </div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
             <h1 className="font-display text-2xl font-bold text-foreground mb-1">Ciao {name}! 👋</h1>
-            <p className="text-muted-foreground">{tasks.length > 0 ? "Ecco i tuoi compiti. Da dove vuoi partire?" : "Aggiungi i tuoi compiti per iniziare!"}</p>
+            <p className="text-muted-foreground">{tasks.length > 0 ? "Ecco i tuoi compiti. Da dove vuoi partire?" : "Non ci sono compiti per oggi! 🎉"}</p>
           </motion.div>
 
           <div className="mt-5"><GamificationBar /></div>
@@ -113,8 +130,8 @@ const Dashboard = () => {
         ) : tasks.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
             <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4"><BookOpen className="w-7 h-7 text-muted-foreground" /></div>
-            <p className="text-muted-foreground mb-4">Nessun compito ancora!</p>
-            <Button onClick={() => navigate("/add-homework")} className="bg-primary text-primary-foreground rounded-2xl"><Plus className="w-4 h-4 mr-2" /> Aggiungi compiti</Button>
+            <p className="text-muted-foreground mb-4">{isChild ? "Il genitore aggiungerà i compiti per te!" : "Nessun compito ancora!"}</p>
+            {!isChild && <Button onClick={() => navigate("/add-homework")} className="bg-primary text-primary-foreground rounded-2xl"><Plus className="w-4 h-4 mr-2" /> Aggiungi compiti</Button>}
           </motion.div>
         ) : (
           <div className="space-y-3">{tasks.map((task, i) => (
@@ -125,9 +142,12 @@ const Dashboard = () => {
         )}
       </div></div>
 
-      <div className="fixed bottom-6 right-6">
-        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/add-homework")} className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-card flex items-center justify-center"><Plus className="w-6 h-6" /></motion.button>
-      </div>
+      {/* FAB only for parents */}
+      {!isChild && (
+        <div className="fixed bottom-6 right-6">
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/add-homework")} className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-card flex items-center justify-center"><Plus className="w-6 h-6" /></motion.button>
+        </div>
+      )}
     </div>
   );
 };

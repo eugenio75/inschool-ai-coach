@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, BookOpen, Brain, Lightbulb, Lock, Loader2, Eye, MessageCircle, Heart, Star, Sparkles } from "lucide-react";
+import { ArrowLeft, Clock, BookOpen, Brain, Lightbulb, Lock, Loader2, Eye, MessageCircle, Heart, Star, Sparkles, KeyRound, RefreshCw, Copy, Check } from "lucide-react";
 import { ProgressSun } from "@/components/ProgressSun";
 import { BadgeGrid } from "@/components/GamificationBar";
-import { getChildProfiles, getFocusSessions, getGamification, getParentSettings } from "@/lib/database";
+import { getChildProfiles, getFocusSessions, getGamification, getParentSettings, updateChildProfile } from "@/lib/database";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -39,6 +40,9 @@ const ParentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [aiInsights, setAiInsights] = useState<any[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [regeneratingCode, setRegeneratingCode] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const load = async () => {
@@ -198,6 +202,61 @@ const ParentDashboard = () => {
               <div><p className="text-lg font-display font-bold text-sage-dark">{gamification.focus_points || 0}</p><p className="text-xs text-muted-foreground">Focus</p></div>
               <div><p className="text-lg font-display font-bold text-clay-dark">{gamification.autonomy_points || 0}</p><p className="text-xs text-muted-foreground">Autonomia</p></div>
               <div><p className="text-lg font-display font-bold text-terracotta">🔥 {gamification.streak || 0}</p><p className="text-xs text-muted-foreground">Streak</p></div>
+            </div>
+          </div>
+        </div></div>
+      )}
+
+      {/* Child Access Code */}
+      {selectedProfile && (
+        <div className="px-6 mt-6"><div className="max-w-2xl mx-auto">
+          <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
+            <div className="flex items-center gap-2 mb-3">
+              <KeyRound className="w-4 h-4 text-primary" />
+              <h3 className="font-display font-semibold text-foreground text-sm">Codice accesso di {selectedProfile.name}</h3>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">Condividi questo codice con {selectedProfile.name} per farlo entrare direttamente nella sua area.</p>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 bg-muted rounded-xl px-5 py-3 text-center">
+                <span className="font-display text-2xl font-bold tracking-widest text-foreground">
+                  {selectedProfile.access_code || "—"}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  if (selectedProfile.access_code) {
+                    navigator.clipboard.writeText(selectedProfile.access_code);
+                    setCopiedCode(selectedProfile.id);
+                    setTimeout(() => setCopiedCode(null), 2000);
+                  }
+                }}
+                className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors"
+                title="Copia codice"
+              >
+                {copiedCode === selectedProfile.id ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+              </button>
+              <button
+                onClick={async () => {
+                  setRegeneratingCode(selectedProfile.id);
+                  try {
+                    const { data: newCode } = await supabase.rpc("generate_child_access_code");
+                    if (newCode) {
+                      await updateChildProfile(selectedProfile.id, { access_code: newCode });
+                      setChildren(prev => prev.map(c => c.id === selectedProfile.id ? { ...c, access_code: newCode } : c));
+                      toast({ title: `Nuovo codice generato: ${newCode}` });
+                    }
+                  } catch (e) {
+                    toast({ title: "Errore nella rigenerazione", variant: "destructive" });
+                  } finally {
+                    setRegeneratingCode(null);
+                  }
+                }}
+                disabled={regeneratingCode === selectedProfile.id}
+                className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors disabled:opacity-40"
+                title="Genera nuovo codice"
+              >
+                <RefreshCw className={`w-4 h-4 text-muted-foreground ${regeneratingCode === selectedProfile.id ? "animate-spin" : ""}`} />
+              </button>
             </div>
           </div>
         </div></div>
