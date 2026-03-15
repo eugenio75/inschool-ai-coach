@@ -111,7 +111,13 @@ const ProfileSelector = () => {
           </motion.button>
         </div>
 
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+          <button
+            onClick={() => navigate("/parent-dashboard")}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <BookOpen className="w-4 h-4" /> Area Genitori
+          </button>
           <button
             onClick={() => navigate("/settings")}
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
