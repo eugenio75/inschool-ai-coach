@@ -60,14 +60,14 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="bg-card border-b border-border px-6 pt-6 pb-8">
+      <div className="bg-card border-b border-border px-4 sm:px-6 pt-5 sm:pt-6 pb-6 sm:pb-8">
         <div className="max-w-2xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center">
                 <BookOpen className="w-4 h-4 text-primary-foreground" />
               </div>
-              <span className="font-display text-xl font-semibold text-foreground">Inschool</span>
+              <span className="font-display text-lg sm:text-xl font-semibold text-foreground">Inschool</span>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => navigate("/memory")} className="w-9 h-9 rounded-xl bg-clay-light flex items-center justify-center text-clay-dark hover:bg-accent transition-colors" title="Memoria e ripasso"><Brain className="w-4 h-4" /></button>
