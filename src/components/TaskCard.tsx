@@ -67,12 +67,12 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Clock className="w-3 h-3" />
-          {task.steps} passi da fare
+          {task.completed ? "Completato" : `${task.steps} passi da fare`}
         </div>
         {task.completed ? (
-          <div className="flex items-center gap-1 text-primary text-xs font-medium">
+          <div className="flex items-center gap-1 text-primary text-xs font-medium bg-primary/10 px-2 py-0.5 rounded-full">
             <Check className="w-3.5 h-3.5" />
-            Completato
+            Fatto ✓
           </div>
         ) : (
           <div className="flex items-center gap-1 text-primary text-xs font-medium">
