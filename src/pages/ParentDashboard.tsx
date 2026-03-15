@@ -4,8 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, BookOpen, Brain, Lightbulb, Lock, Loader2, Eye, MessageCircle, Heart, Star, Sparkles, KeyRound, RefreshCw, Copy, Check } from "lucide-react";
 import { ProgressSun } from "@/components/ProgressSun";
 import { BadgeGrid } from "@/components/GamificationBar";
-import { getChildProfiles, getFocusSessions, getGamification, getParentSettings } from "@/lib/database";
+import { getChildProfiles, getFocusSessions, getGamification, getParentSettings, updateChildProfile } from "@/lib/database";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
