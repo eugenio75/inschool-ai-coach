@@ -141,13 +141,6 @@ const FocusSession = () => {
               <p className="text-sm text-muted-foreground mt-2">
                 {progress < 0.25 ? "Stai andando benissimo." : progress < 0.5 ? "Ottimo ritmo!" : progress < 0.75 ? "Più di metà! 💪" : "Quasi finito!"}
               </p>
-              <div className="flex items-center justify-center gap-4 mt-8">
-                <Button variant="outline" onClick={() => setIsRunning(!isRunning)} className="rounded-xl border-border">
-                  {isRunning ? <Pause className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
-                  {isRunning ? "Pausa" : "Riprendi"}
-                </Button>
-                <Button onClick={endSession} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-xl">Ho finito</Button>
-              </div>
             </motion.div>
           )}
 
