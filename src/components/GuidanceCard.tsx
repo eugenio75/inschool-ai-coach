@@ -24,7 +24,7 @@ interface GuidanceCardProps {
   onMessagesChange?: (messages: Message[]) => void;
 }
 
-interface Message {
+export interface ChatMessage {
   id: string;
   role: "coach" | "student";
   text: string;
