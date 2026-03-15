@@ -14,7 +14,290 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      badges: {
+        Row: {
+          created_at: string
+          description: string | null
+          earned: boolean | null
+          earned_date: string | null
+          emoji: string
+          id: string
+          name: string
+          quality: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          earned?: boolean | null
+          earned_date?: string | null
+          emoji: string
+          id?: string
+          name: string
+          quality: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          earned?: boolean | null
+          earned_date?: string | null
+          emoji?: string
+          id?: string
+          name?: string
+          quality?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_missions: {
+        Row: {
+          created_at: string
+          done: boolean | null
+          id: string
+          mission_date: string | null
+          points: number | null
+          text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          done?: boolean | null
+          id?: string
+          mission_date?: string | null
+          points?: number | null
+          text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          done?: boolean | null
+          id?: string
+          mission_date?: string | null
+          points?: number | null
+          text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      focus_sessions: {
+        Row: {
+          autonomy_points: number | null
+          completed_at: string
+          consistency_points: number | null
+          duration_seconds: number
+          emotion: string | null
+          focus_points: number | null
+          id: string
+          task_id: string | null
+          user_id: string
+        }
+        Insert: {
+          autonomy_points?: number | null
+          completed_at?: string
+          consistency_points?: number | null
+          duration_seconds?: number
+          emotion?: string | null
+          focus_points?: number | null
+          id?: string
+          task_id?: string | null
+          user_id: string
+        }
+        Update: {
+          autonomy_points?: number | null
+          completed_at?: string
+          consistency_points?: number | null
+          duration_seconds?: number
+          emotion?: string | null
+          focus_points?: number | null
+          id?: string
+          task_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "focus_sessions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "homework_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gamification: {
+        Row: {
+          autonomy_points: number | null
+          consistency_points: number | null
+          created_at: string
+          focus_points: number | null
+          id: string
+          last_activity_date: string | null
+          streak: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          autonomy_points?: number | null
+          consistency_points?: number | null
+          created_at?: string
+          focus_points?: number | null
+          id?: string
+          last_activity_date?: string | null
+          streak?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          autonomy_points?: number | null
+          consistency_points?: number | null
+          created_at?: string
+          focus_points?: number | null
+          id?: string
+          last_activity_date?: string | null
+          streak?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      homework_tasks: {
+        Row: {
+          completed: boolean | null
+          created_at: string
+          description: string | null
+          difficulty: number | null
+          due_date: string | null
+          estimated_minutes: number | null
+          id: string
+          key_concepts: string[] | null
+          micro_steps: Json | null
+          recall_questions: string[] | null
+          source_image_url: string | null
+          source_type: string | null
+          subject: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string
+          description?: string | null
+          difficulty?: number | null
+          due_date?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          key_concepts?: string[] | null
+          micro_steps?: Json | null
+          recall_questions?: string[] | null
+          source_image_url?: string | null
+          source_type?: string | null
+          subject: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string
+          description?: string | null
+          difficulty?: number | null
+          due_date?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          key_concepts?: string[] | null
+          micro_steps?: Json | null
+          recall_questions?: string[] | null
+          source_image_url?: string | null
+          source_type?: string | null
+          subject?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      memory_items: {
+        Row: {
+          concept: string
+          created_at: string
+          id: string
+          last_reviewed: string | null
+          recall_questions: string[] | null
+          strength: number | null
+          subject: string
+          summary: string | null
+          user_id: string
+        }
+        Insert: {
+          concept: string
+          created_at?: string
+          id?: string
+          last_reviewed?: string | null
+          recall_questions?: string[] | null
+          strength?: number | null
+          subject: string
+          summary?: string | null
+          user_id: string
+        }
+        Update: {
+          concept?: string
+          created_at?: string
+          id?: string
+          last_reviewed?: string | null
+          recall_questions?: string[] | null
+          strength?: number | null
+          subject?: string
+          summary?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          age: number | null
+          created_at: string
+          difficult_subjects: string[] | null
+          favorite_subjects: string[] | null
+          focus_time: number | null
+          id: string
+          name: string
+          school_level: string | null
+          struggles: string[] | null
+          support_style: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          created_at?: string
+          difficult_subjects?: string[] | null
+          favorite_subjects?: string[] | null
+          focus_time?: number | null
+          id?: string
+          name?: string
+          school_level?: string | null
+          struggles?: string[] | null
+          support_style?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          created_at?: string
+          difficult_subjects?: string[] | null
+          favorite_subjects?: string[] | null
+          focus_time?: number | null
+          id?: string
+          name?: string
+          school_level?: string | null
+          struggles?: string[] | null
+          support_style?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
