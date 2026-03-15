@@ -5,7 +5,7 @@ import { ArrowLeft, Pause, Play, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { GuidanceCard, ChatMessage } from "@/components/GuidanceCard";
-import { getTask, saveFocusSession, getActiveChildProfileId } from "@/lib/database";
+import { getTask, saveFocusSession, updateTask, getActiveChildProfileId } from "@/lib/database";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
