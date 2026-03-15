@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { isChildSession } from "@/lib/childSession";
+import { BottomNav } from "@/components/BottomNav";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import ProfileSelector from "./pages/ProfileSelector";
@@ -70,6 +71,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AppRoutes />
+          <BottomNav />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
