@@ -53,12 +53,12 @@ const Landing = () => {
             <Button
               variant="ghost"
               className="text-muted-foreground"
-              onClick={() => navigate("/parent-dashboard")}
+              onClick={() => navigate("/auth")}
             >
-              Area genitori
+              Accedi
             </Button>
             <Button
-              onClick={() => navigate("/onboarding")}
+              onClick={() => navigate("/auth")}
               className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl px-5"
             >
               Inizia gratis
