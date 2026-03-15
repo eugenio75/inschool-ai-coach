@@ -300,7 +300,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
 
   const handlePath = (pathId: string) => {
     const label = thinkingPaths.find((p) => p.id === pathId)?.label || "";
-    const newMsg: Message = { id: `student-${Date.now()}`, role: "student", text: label };
+    const newMsg: ChatMessage = { id: `student-${Date.now()}`, role: "student", text: label };
     const updated = [...messages, newMsg];
     setMessages(updated);
     streamCoachReply(updated);
