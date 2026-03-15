@@ -303,7 +303,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     }
   };
 
-  const isInline = bottomOffset === undefined || bottomOffset === null;
+  const isInline = typeof bottomOffset !== "number";
 
   return (
     <motion.div
