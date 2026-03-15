@@ -166,6 +166,17 @@ serve(async (req) => {
         break;
       }
 
+      case "create-task": {
+        const { data, error } = await supabase
+          .from("homework_tasks")
+          .insert({ child_profile_id: childProfileId, ...payload })
+          .select()
+          .single();
+        if (error) throw error;
+        result = data;
+        break;
+      }
+
       case "get-focus-sessions": {
         const { data } = await supabase
           .from("focus_sessions")

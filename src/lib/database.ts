@@ -154,6 +154,10 @@ export async function createTask(task: {
   source_image_url?: string;
   due_date?: string;
 }) {
+  if (isChildSession()) {
+    return childApi("create-task", task);
+  }
+
   const profileId = getActiveChildProfileId();
   if (!profileId) return null;
 

@@ -53,7 +53,7 @@ const AppRoutes = () => (
     <Route path="/profiles" element={<ProtectedRoute><ProfileSelector /></ProtectedRoute>} />
     <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
     <Route path="/dashboard" element={<AccessibleRoute><Dashboard /></AccessibleRoute>} />
-    <Route path="/add-homework" element={<ProtectedRoute><AddHomework /></ProtectedRoute>} />
+    <Route path="/add-homework" element={<AccessibleRoute><AddHomework /></AccessibleRoute>} />
     <Route path="/homework/:taskId" element={<AccessibleRoute><HomeworkDetail /></AccessibleRoute>} />
     <Route path="/focus/:taskId" element={<AccessibleRoute><FocusSession /></AccessibleRoute>} />
     <Route path="/memory" element={<AccessibleRoute><MemoryRecap /></AccessibleRoute>} />
