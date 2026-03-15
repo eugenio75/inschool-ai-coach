@@ -45,7 +45,7 @@ interface OnboardingData {
   difficultSubjects: string[];
   struggles: string[];
   focusTime: string;
-  supportStyle: string;
+  supportStyles: string[];
 }
 
 const Onboarding = () => {
@@ -55,7 +55,7 @@ const Onboarding = () => {
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<OnboardingData>({
     name: "", avatar: "🧒", age: "", schoolLevel: "", favoriteSubjects: [],
-    difficultSubjects: [], struggles: [], focusTime: "15", supportStyle: "",
+    difficultSubjects: [], struggles: [], focusTime: "15", supportStyles: [],
   });
 
   const totalSteps = 7;
@@ -69,7 +69,7 @@ const Onboarding = () => {
       case 2: return data.schoolLevel !== "";
       case 3: return data.favoriteSubjects.length > 0;
       case 4: return data.struggles.length > 0;
-      case 5: return data.supportStyle !== "";
+      case 5: return data.supportStyles.length > 0;
       case 6: return true;
       default: return false;
     }
@@ -89,7 +89,7 @@ const Onboarding = () => {
         difficult_subjects: data.difficultSubjects,
         struggles: data.struggles,
         focus_time: parseInt(data.focusTime) || 15,
-        support_style: data.supportStyle,
+        support_style: data.supportStyles.join(","),
       });
       setSaving(false);
       if (profile) {
@@ -97,7 +97,7 @@ const Onboarding = () => {
         localStorage.setItem("inschool-profile", JSON.stringify({
           name: data.name, age: data.age, schoolLevel: data.schoolLevel,
           favoriteSubjects: data.favoriteSubjects, focusTime: data.focusTime,
-          supportStyle: data.supportStyle,
+          supportStyles: data.supportStyles,
         }));
         navigate("/dashboard");
       }
@@ -175,7 +175,7 @@ const Onboarding = () => {
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Come deve aiutarlo il coach?</h2></div>
             <div className="space-y-3">
-              {supportStyles.map((s) => (<button key={s.id} onClick={() => setData({ ...data, supportStyle: s.id })} className={`w-full text-left px-5 py-4 rounded-2xl border transition-all ${data.supportStyle === s.id ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}><span className="text-xl mr-3">{s.emoji}</span><span className="font-medium text-foreground">{s.label}</span></button>))}
+              {supportStyles.map((s) => (<button key={s.id} onClick={() => setData({ ...data, supportStyles: toggleInArray(data.supportStyles, s.id) })} className={`w-full text-left px-5 py-4 rounded-2xl border transition-all ${data.supportStyles.includes(s.id) ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}><span className="text-xl mr-3">{s.emoji}</span><span className="font-medium text-foreground">{s.label}</span></button>))}
             </div>
           </div>
         );
