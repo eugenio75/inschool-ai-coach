@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Brain, User, Plus } from "lucide-react";
-import { isChildSession } from "@/lib/childSession";
+import { useAuth } from "@/hooks/useAuth";
 import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
