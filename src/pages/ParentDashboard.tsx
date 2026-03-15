@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, BookOpen, Brain, Lightbulb, Lock, Loader2, Eye, MessageCircle, Heart, Star, Sparkles, KeyRound, RefreshCw, Copy, Check } from "lucide-react";
 import { ProgressSun } from "@/components/ProgressSun";
 import { BadgeGrid } from "@/components/GamificationBar";
-import { getChildProfiles, getFocusSessions, getGamification, getParentSettings, updateChildProfile } from "@/lib/database";
+import { getChildProfiles, getFocusSessions, getGamification, getParentSettings, updateChildProfile, getMemoryItems, getTasks } from "@/lib/database";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -37,6 +37,8 @@ const ParentDashboard = () => {
   const [selectedChild, setSelectedChild] = useState<string | null>(null);
   const [gamification, setGamification] = useState<any>(null);
   const [sessions, setSessions] = useState<any[]>([]);
+  const [memoryItems, setMemoryItems] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [aiInsights, setAiInsights] = useState<any[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
@@ -59,10 +61,16 @@ const ParentDashboard = () => {
   useEffect(() => {
     if (!selectedChild) return;
     const loadChild = async () => {
-      const g = await getGamification(selectedChild);
+      const [g, s, m, t] = await Promise.all([
+        getGamification(selectedChild),
+        getFocusSessions(selectedChild),
+        getMemoryItems(selectedChild),
+        getTasks(selectedChild),
+      ]);
       setGamification(g);
-      const s = await getFocusSessions(selectedChild);
       setSessions(s);
+      setMemoryItems(m);
+      setTasks(t);
     };
     loadChild();
   }, [selectedChild]);
@@ -78,12 +86,42 @@ const ParentDashboard = () => {
       setAiInsights([]);
       try {
         const totalMinutes = sessions.reduce((a, s) => a + Math.round((s.duration_seconds || 0) / 60), 0);
+        
+        // Prepare recent sessions with task subject info
+        const recentSessions = sessions.slice(0, 10).map(s => {
+          const task = tasks.find(t => t.id === s.task_id);
+          return { ...s, subject: task?.subject || "N/A" };
+        });
+
+        // Get weak concepts (strength < 60)
+        const weakConcepts = memoryItems.filter(m => (m.strength || 0) < 60);
+
+        // Build subject stats
+        const subjectStats: Record<string, { sessions: number; totalMinutes: number; completed: number; total: number }> = {};
+        for (const task of tasks) {
+          if (!subjectStats[task.subject]) {
+            subjectStats[task.subject] = { sessions: 0, totalMinutes: 0, completed: 0, total: 0 };
+          }
+          subjectStats[task.subject].total++;
+          if (task.completed) subjectStats[task.subject].completed++;
+        }
+        for (const s of sessions) {
+          const task = tasks.find(t => t.id === s.task_id);
+          const subject = task?.subject || "Altro";
+          if (!subjectStats[subject]) subjectStats[subject] = { sessions: 0, totalMinutes: 0, completed: 0, total: 0 };
+          subjectStats[subject].sessions++;
+          subjectStats[subject].totalMinutes += Math.round((s.duration_seconds || 0) / 60);
+        }
+
         const { data, error } = await supabase.functions.invoke("parent-insights", {
           body: {
             childProfile: selectedProfile,
             gamification,
             sessionsCount: sessions.length,
             totalMinutes,
+            recentSessions,
+            weakConcepts,
+            subjectStats,
           },
         });
         if (error) throw error;
@@ -95,7 +133,7 @@ const ParentDashboard = () => {
       }
     };
     fetchInsights();
-  }, [selectedChild, unlocked, sessions, gamification]);
+  }, [selectedChild, unlocked, sessions, gamification, memoryItems, tasks]);
 
   const checkPin = () => {
     if (pinInput === correctPin) {
