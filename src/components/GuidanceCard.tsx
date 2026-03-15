@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, ChevronUp, ChevronDown, Send } from "lucide-react";
+import { Shield, ChevronUp, ChevronDown, Send, Mic, MicOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
