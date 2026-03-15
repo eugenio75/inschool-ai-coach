@@ -58,6 +58,14 @@ const FocusSession = () => {
       if (taskId) {
         const t = await getTask(taskId);
         setTask(t);
+        // Fetch weak memory items for this subject to reinforce during coaching
+        if (t?.subject) {
+          const allMemory = await getMemoryItems();
+          const weak = allMemory
+            .filter((m: any) => m.subject === t.subject && (m.strength || 0) < 60)
+            .slice(0, 3);
+          setWeakConcepts(weak);
+        }
       }
       const saved = localStorage.getItem("inschool-profile");
       if (saved) try { setProfile(JSON.parse(saved)); } catch {}
