@@ -35,9 +35,12 @@ const AddHomework = () => {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [extractedTasks, setExtractedTasks] = useState<ExtractedTask[]>([]);
   const [saving, setSaving] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
 
   const handlePhotoAnalysis = async () => {
     if (!photoFile) return;
+    // Capture sourceType BEFORE changing mode
+    const sourceType = mode === "photo-book" ? "photo-book" : "photo-diary";
     setMode("processing");
 
     try {
@@ -46,7 +49,6 @@ const AddHomework = () => {
       if (!imageUrl) throw new Error("Upload fallito");
 
       // Call OCR edge function
-      const sourceType = mode === "photo-book" ? "photo-book" : "photo-diary";
       const result = await extractTasksFromImage(imageUrl, sourceType);
 
       if (result.tasks && result.tasks.length > 0) {
