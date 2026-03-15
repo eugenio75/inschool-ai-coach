@@ -69,7 +69,7 @@ const Onboarding = () => {
       case 2: return data.schoolLevel !== "";
       case 3: return data.favoriteSubjects.length > 0;
       case 4: return data.struggles.length > 0;
-      case 5: return data.supportStyle !== "";
+      case 5: return data.supportStyles.length > 0;
       case 6: return true;
       default: return false;
     }
