@@ -89,7 +89,7 @@ const Onboarding = () => {
         difficult_subjects: data.difficultSubjects,
         struggles: data.struggles,
         focus_time: parseInt(data.focusTime) || 15,
-        support_style: data.supportStyle,
+        support_style: data.supportStyles.join(","),
       });
       setSaving(false);
       if (profile) {
