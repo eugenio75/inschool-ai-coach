@@ -59,15 +59,15 @@ const Dashboard = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <div className="bg-card border-b border-border px-6 pt-6 pb-8">
+    <div className="min-h-screen bg-background pb-28 sm:pb-24">
+      <div className="bg-card border-b border-border px-4 sm:px-6 pt-5 sm:pt-6 pb-6 sm:pb-8">
         <div className="max-w-2xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center">
                 <BookOpen className="w-4 h-4 text-primary-foreground" />
               </div>
-              <span className="font-display text-xl font-semibold text-foreground">Inschool</span>
+              <span className="font-display text-lg sm:text-xl font-semibold text-foreground">Inschool</span>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => navigate("/memory")} className="w-9 h-9 rounded-xl bg-clay-light flex items-center justify-center text-clay-dark hover:bg-accent transition-colors" title="Memoria e ripasso"><Brain className="w-4 h-4" /></button>
@@ -84,8 +84,8 @@ const Dashboard = () => {
           </div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
-            <h1 className="font-display text-2xl font-bold text-foreground mb-1">Ciao {name}! 👋</h1>
-            <p className="text-muted-foreground">{tasks.length > 0 ? "Ecco i tuoi compiti. Da dove vuoi partire?" : "Non ci sono compiti per oggi! 🎉"}</p>
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-1">Ciao {name}! 👋</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">{tasks.length > 0 ? "Ecco i tuoi compiti. Da dove vuoi partire?" : "Non ci sono compiti per oggi! 🎉"}</p>
           </motion.div>
 
           <div className="mt-5"><GamificationBar /></div>
@@ -105,22 +105,22 @@ const Dashboard = () => {
       </div>
 
       {suggestedTask && (
-        <div className="px-6 -mt-4"><div className="max-w-2xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 }} className="bg-sage-light border border-primary/20 rounded-2xl p-5 flex items-center justify-between">
-            <div><div className="flex items-center gap-2 mb-1"><Sparkles className="w-4 h-4 text-sage-dark" /><span className="text-xs font-medium text-sage-dark uppercase tracking-wider">Consiglio del coach</span></div><p className="text-sm text-foreground">Inizia con <strong>{suggestedTask.title}</strong></p></div>
-            <Button onClick={() => navigate(`/focus/${suggestedTask.id}`)} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-xl px-4 py-2 text-sm flex-shrink-0">Inizia <ArrowRight className="ml-1 w-3.5 h-3.5" /></Button>
+        <div className="px-4 sm:px-6 -mt-3 sm:-mt-4"><div className="max-w-2xl mx-auto">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 }} className="bg-sage-light border border-primary/20 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1"><div className="flex items-center gap-2 mb-1"><Sparkles className="w-4 h-4 text-sage-dark flex-shrink-0" /><span className="text-xs font-medium text-sage-dark uppercase tracking-wider">Consiglio del coach</span></div><p className="text-sm text-foreground truncate">Inizia con <strong>{suggestedTask.title}</strong></p></div>
+            <Button onClick={() => navigate(`/focus/${suggestedTask.id}`)} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-xl px-3 sm:px-4 py-2 text-sm flex-shrink-0">Inizia <ArrowRight className="ml-1 w-3.5 h-3.5" /></Button>
           </motion.div>
         </div></div>
       )}
 
-      <div className="px-6 mt-6"><div className="max-w-2xl mx-auto">
+      <div className="px-4 sm:px-6 mt-5 sm:mt-6"><div className="max-w-2xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.25 }}>
           <div className="flex items-center gap-2 mb-3"><Target className="w-4 h-4 text-clay-dark" /><h3 className="font-display font-semibold text-foreground text-sm">Missioni del giorno</h3></div>
           <DailyMissions />
         </motion.div>
       </div></div>
 
-      <div className="px-6 mt-6"><div className="max-w-2xl mx-auto">
+      <div className="px-4 sm:px-6 mt-5 sm:mt-6 pb-4"><div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-display font-semibold text-foreground text-sm">Compiti di oggi</h3>
           <button onClick={() => navigate("/memory")} className="text-xs text-primary font-medium hover:underline flex items-center gap-1"><Brain className="w-3 h-3" /> Ripassa</button>
@@ -144,8 +144,10 @@ const Dashboard = () => {
 
       {/* FAB only for parents */}
       {!isChild && (
-        <div className="fixed bottom-6 right-6">
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/add-homework")} className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-card flex items-center justify-center"><Plus className="w-6 h-6" /></motion.button>
+        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50">
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => navigate("/add-homework")} className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-hover flex items-center justify-center">
+            <Plus className="w-6 h-6" />
+          </motion.button>
         </div>
       )}
     </div>
