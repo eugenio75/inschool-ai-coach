@@ -20,6 +20,8 @@ interface GuidanceCardProps {
   taskSubject?: string;
   taskContext?: TaskContext;
   bottomOffset?: number;
+  sessionKey?: string; // key for sessionStorage persistence
+  onMessagesChange?: (messages: Message[]) => void;
 }
 
 interface Message {
