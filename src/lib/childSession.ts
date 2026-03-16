@@ -14,6 +14,7 @@ interface ChildSession {
     struggles: string[] | null;
     focus_time: number | null;
     support_style: string | null;
+    interests: string[] | null;
   };
 }
 
@@ -41,6 +42,7 @@ export function setChildSession(session: ChildSession) {
     struggles: session.profile.struggles,
     focusTime: session.profile.focus_time?.toString() || "15",
     supportStyle: session.profile.support_style,
+    interests: session.profile.interests,
   }));
 }
 

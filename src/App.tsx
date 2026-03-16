@@ -18,6 +18,7 @@ import CoachChallenge from "./pages/CoachChallenge";
 import MemoryRecap from "./pages/MemoryRecap";
 import ParentDashboard from "./pages/ParentDashboard";
 import Settings from "./pages/Settings";
+import StudentProfile from "./pages/StudentProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,7 @@ const AppRoutes = () => (
     <Route path="/challenge/:missionId" element={<AccessibleRoute><CoachChallenge /></AccessibleRoute>} />
     <Route path="/memory" element={<AccessibleRoute><MemoryRecap /></AccessibleRoute>} />
     <Route path="/parent-dashboard" element={<ProtectedRoute><ParentDashboard /></ProtectedRoute>} />
+    <Route path="/student-profile" element={<AccessibleRoute><StudentProfile /></AccessibleRoute>} />
     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>

@@ -158,6 +158,9 @@ const CoachChallenge = () => {
               struggles: profile.struggles,
               supportStyle: profile.support_style,
               focusTime: profile.focus_time,
+              interests: profile.interests,
+              difficultSubjects: profile.difficult_subjects,
+              favoriteSubjects: profile.favorite_subjects,
             } : undefined,
             taskContext: {
               title: mission?.title || "Sfida del Coach",

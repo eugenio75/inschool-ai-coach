@@ -67,12 +67,13 @@ serve(async (req) => {
 
     // Get context: child profile, tasks, weak concepts
     const [profileResult, tasksResult, memoryResult] = await Promise.all([
-      supabase.from("child_profiles").select("name, age, school_level, support_style").eq("id", resolvedChildId).maybeSingle(),
+      supabase.from("child_profiles").select("name, age, school_level, support_style, interests").eq("id", resolvedChildId).maybeSingle(),
       supabase.from("homework_tasks").select("id, subject, title").eq("child_profile_id", resolvedChildId).eq("completed", false),
       supabase.from("memory_items").select("id, concept, subject, strength, summary").eq("child_profile_id", resolvedChildId).order("strength", { ascending: true }).limit(10),
     ]);
 
     const studentName = profileResult.data?.name || "Studente";
+    const studentInterests = profileResult.data?.interests || [];
     const hasTasks = (tasksResult.data?.length || 0) > 0;
     const weakConcepts = (memoryResult.data || []).filter((m: any) => (m.strength || 0) < 60);
     const hasWeakConcepts = weakConcepts.length > 0;
@@ -127,14 +128,15 @@ serve(async (req) => {
         ).join("\n");
 
         const aiPrompt = `Sei il Coach AI di Inschool. Genera UNA missione del giorno personalizzata per ${studentName} (${profileResult.data?.age || ""} anni, ${profileResult.data?.school_level || ""}).
-
+${studentInterests.length > 0 ? `\nINTERESSI PERSONALI DI ${studentName.toUpperCase()}: ${studentInterests.join(", ")}
+Usa ASSOLUTAMENTE questi interessi per creare la sfida! Il titolo e la storia devono incorporare le sue passioni per rendere il ripasso irresistibile.\n` : ""}
 CONCETTI CON LACUNE:
 ${conceptsList || "Nessuno"}
 
 COMPITI ATTIVI:
 ${tasksList || "Nessuno"}
 
-OBIETTIVO: Creare una SFIDA NARRATIVA che mescoli creativamente i compiti e/o i concetti deboli dello studente in un'unica esperienza coinvolgente.
+OBIETTIVO: Creare una SFIDA NARRATIVA che mescoli creativamente i compiti e/o i concetti deboli dello studente in un'unica esperienza coinvolgente.${studentInterests.length > 0 ? ` USA i suoi interessi (${studentInterests.join(", ")}) come tema della storia!` : ""}
 
 ESEMPI DI SFIDE CREATIVE:
 - Se ha compiti di Italiano (Pinocchio) e Matematica: "Pinocchio e la magia dei numeri!" → il coach racconta un'avventura dove Pinocchio deve risolvere problemi di matematica
