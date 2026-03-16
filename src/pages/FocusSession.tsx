@@ -163,11 +163,24 @@ const FocusSession = () => {
     }
   };
 
+  const handleExit = () => {
+    // Exit without saving anything - no work was done or user wants to quit
+    if (taskId) clearSessionState(taskId);
+    navigate("/dashboard");
+  };
+
   const endSession = async () => {
     setIsRunning(false);
-    setPhase("recap");
     const durationSeconds = totalSeconds - seconds;
     const minutesWorked = Math.round(durationSeconds / 60);
+
+    // Minimum 1 minute of real work required to earn points
+    if (minutesWorked < 1) {
+      handleExit();
+      return;
+    }
+    
+    setPhase("recap");
     
     await saveFocusSession({
       task_id: task?.id,
@@ -178,7 +191,7 @@ const FocusSession = () => {
       consistency_points: 1,
     });
 
-    // Mark task as completed
+    // Mark task as completed only if worked at least 1 minute
     if (task?.id) {
       await updateTask(task.id, { completed: true });
     }
@@ -186,7 +199,7 @@ const FocusSession = () => {
     // Extract concepts from chat and save to memory
     await extractAndSaveConcepts();
 
-    // Auto-complete daily missions
+    // Auto-complete daily missions only with real work
     try {
       const missions = await getDailyMissions();
       for (const mission of missions) {
