@@ -5,6 +5,7 @@ import { ArrowLeft, Send, Mic, MicOff, Sparkles, Trophy, Timer, Pause, Play } fr
 import { Button } from "@/components/ui/button";
 import { getDailyMissions, completeMission, getGamification } from "@/lib/database";
 import { isChildSession, getChildSession } from "@/lib/childSession";
+import { CelebrationOverlay } from "@/components/CelebrationOverlay";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
