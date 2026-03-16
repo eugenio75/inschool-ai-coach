@@ -39,6 +39,7 @@ const ParentDashboard = () => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [memoryItems, setMemoryItems] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
+  const [missions, setMissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [aiInsights, setAiInsights] = useState<any[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
