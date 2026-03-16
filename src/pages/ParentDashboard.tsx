@@ -211,7 +211,7 @@ const ParentDashboard = () => {
       </div>
 
       {/* Stats */}
-      <div className="px-6 -mt-4"><div className="max-w-2xl mx-auto">
+      <div className="px-6 -mt-4"><div className="max-w-3xl mx-auto">
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-card rounded-2xl border border-border p-4 text-center shadow-soft">
             <div className="flex justify-center mb-2"><ProgressSun progress={0.72} size={40} /></div>
