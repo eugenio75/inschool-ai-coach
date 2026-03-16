@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Flame, Star, Zap, Target, Loader2, Brain, MessageCircle, ArrowRight } from "lucide-react";
-import { getGamification, getDailyMissions, completeMission } from "@/lib/database";
+import { getGamification, getDailyMissions, completeMission, getTasks } from "@/lib/database";
+import { toast } from "@/hooks/use-toast";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -103,14 +104,39 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
     load();
   }, []);
 
-  const handleMissionClick = (mission: any) => {
+  const handleMissionClick = async (mission: any) => {
     if (mission.completed) return;
+    
     if (mission.mission_type === "review_weak_concept" || mission.mission_type === "review_concept") {
       navigate("/memory");
-    } else if (mission.mission_type === "coach_challenge" || mission.mission_type === "study_session" || mission.mission_type === "study_minutes") {
-      // Navigate to dashboard so the student can pick a task to start a session
-      navigate("/dashboard");
-    } else if (mission.mission_type === "complete_task") {
+      return;
+    }
+    
+    // For coach_challenge, complete_task, study_session, study_minutes:
+    // Find a matching incomplete task and navigate to its focus session
+    try {
+      const tasks = await getTasks();
+      const incompleteTasks = tasks.filter((t: any) => !t.completed);
+      
+      if (incompleteTasks.length === 0) {
+        toast({ title: "Nessun compito disponibile", description: "Chiedi al genitore di aggiungere dei compiti! 📚" });
+        return;
+      }
+      
+      // Try to find a task matching the mission's subject/metadata
+      const metadata = mission.metadata || {};
+      let targetTask = incompleteTasks[0]; // fallback to first incomplete
+      
+      if (metadata.subject) {
+        const subjectMatch = incompleteTasks.find((t: any) => 
+          metadata.subject.toLowerCase().includes(t.subject.toLowerCase())
+        );
+        if (subjectMatch) targetTask = subjectMatch;
+      }
+      
+      navigate(`/focus/${targetTask.id}`);
+    } catch (err) {
+      console.error("Error finding task for mission:", err);
       navigate("/dashboard");
     }
   };
