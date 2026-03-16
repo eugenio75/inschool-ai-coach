@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import AddHomework from "./pages/AddHomework";
 import HomeworkDetail from "./pages/HomeworkDetail";
 import FocusSession from "./pages/FocusSession";
+import CoachChallenge from "./pages/CoachChallenge";
 import MemoryRecap from "./pages/MemoryRecap";
 import ParentDashboard from "./pages/ParentDashboard";
 import Settings from "./pages/Settings";
