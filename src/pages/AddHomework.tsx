@@ -167,7 +167,7 @@ const AddHomework = () => {
           description: task.description,
           estimated_minutes: task.estimatedMinutes,
           difficulty: task.difficulty,
-          source_type: "photo",
+          source_type: extractedSourceType || "photo",
           source_image_url: uploadedImageUrl || undefined,
           due_date: dueDate,
         });

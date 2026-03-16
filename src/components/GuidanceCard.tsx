@@ -146,14 +146,18 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     const profile = getProfile();
     const name = profile?.name || "campione";
     const sourceType = taskContext?.sourceType || "manual";
+    const isPhotoTask = ["photo", "textbook", "photo-book", "photo-diary"].includes(sourceType);
+    const hasSourcePage = Boolean(taskContext?.sourceImageUrl);
     
     let initial: string;
     if (emotion === "frustrated" || emotion === "worried") {
       initial = `Capisco che può sembrare difficile, ${name}. Facciamo il primo piccolo passo insieme — solo quello. Cosa dice la consegna?`;
     } else if (emotion === "tired") {
       initial = `Sei stanco, ${name}, è normale. Facciamo solo un micro-passo, poi vediamo come va. Cosa devi fare in questo esercizio?`;
-    } else if (sourceType === "photo" || sourceType === "textbook") {
-      initial = `Perfetto ${name}! Ho visto l'esercizio${taskSubject ? ` di ${taskSubject}` : ""}. Prima di tutto, facciamo un piccolo ripasso di quello che ci serve per risolverlo. Sei pronto?`;
+    } else if (isPhotoTask && hasSourcePage) {
+      initial = `Perfetto ${name}! Ho la pagina allegata${taskSubject ? ` di ${taskSubject}` : ""}. Partiamo da quello che c'è davvero scritto: quale esercizio vuoi guardare per primo?`;
+    } else if (isPhotoTask) {
+      initial = `Perfetto ${name}! Per seguire bene gli esercizi del libro senza inventare nulla, ho bisogno della pagina originale oppure della frase esatta dell'esercizio. Me la mandi o me la scrivi?`;
     } else if (taskTitle?.toLowerCase().includes("legg") || taskTitle?.toLowerCase().includes("lettura") || taskTitle?.toLowerCase().includes("libro")) {
       initial = `Perfetto ${name}! Vedo che devi leggere. 📖 Quale libro o capitolo stai leggendo? Raccontami un po'!`;
     } else {
