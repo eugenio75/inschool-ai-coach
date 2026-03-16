@@ -202,7 +202,7 @@ const AddHomework = () => {
           <input
             type="date"
             value={dueDate}
-            min={getTomorrow()}
+            min={getToday()}
             onChange={(e) => {
               setDueDate(e.target.value);
               setShowDatePicker(false);
