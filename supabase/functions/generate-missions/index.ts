@@ -67,12 +67,13 @@ serve(async (req) => {
 
     // Get context: child profile, tasks, weak concepts
     const [profileResult, tasksResult, memoryResult] = await Promise.all([
-      supabase.from("child_profiles").select("name, age, school_level, support_style").eq("id", resolvedChildId).maybeSingle(),
+      supabase.from("child_profiles").select("name, age, school_level, support_style, interests").eq("id", resolvedChildId).maybeSingle(),
       supabase.from("homework_tasks").select("id, subject, title").eq("child_profile_id", resolvedChildId).eq("completed", false),
       supabase.from("memory_items").select("id, concept, subject, strength, summary").eq("child_profile_id", resolvedChildId).order("strength", { ascending: true }).limit(10),
     ]);
 
     const studentName = profileResult.data?.name || "Studente";
+    const studentInterests = profileResult.data?.interests || [];
     const hasTasks = (tasksResult.data?.length || 0) > 0;
     const weakConcepts = (memoryResult.data || []).filter((m: any) => (m.strength || 0) < 60);
     const hasWeakConcepts = weakConcepts.length > 0;
