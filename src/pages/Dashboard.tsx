@@ -207,7 +207,38 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {suggestion && (
+      {/* Paused session banner */}
+      {pausedSession && (
+        <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={spring}
+            className="bg-clay-light border border-clay-dark/20 rounded-2xl p-4 sm:p-5"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 rounded-full bg-clay-dark animate-pulse" />
+                  <span className="text-xs font-medium text-clay-dark uppercase tracking-wider">Sessione in pausa</span>
+                </div>
+                <p className="text-sm font-medium text-foreground">
+                  Stavi lavorando su <strong>{pausedSession.task.title}</strong>
+                </p>
+                <p className="text-xs text-clay-dark/80 mt-0.5">{pausedSession.task.subject}</p>
+              </div>
+              <Button
+                onClick={() => navigate(`/focus/${pausedSession.task.id}`)}
+                className="bg-clay-dark text-white hover:bg-clay-dark/90 rounded-xl px-3 sm:px-4 py-2 text-sm flex-shrink-0"
+              >
+                <Play className="w-3.5 h-3.5 mr-1" /> Riprendi
+              </Button>
+            </div>
+          </motion.div>
+        </div></div>
+      )}
+
+      {suggestion && !pausedSession && (
         <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 }} className="bg-sage-light border border-primary/20 rounded-2xl p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3">
