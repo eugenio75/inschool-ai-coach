@@ -167,9 +167,16 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
               </p>
             )}
           </div>
-          <span className={`text-xs font-bold shrink-0 mt-0.5 ${mission.completed ? "text-primary/60" : "text-primary"}`}>
-            +{mission.points_reward}
-          </span>
+          <div className="flex flex-col items-end gap-1.5 shrink-0 mt-0.5">
+            <span className={`text-xs font-bold ${mission.completed ? "text-primary/60" : "text-primary"}`}>
+              +{mission.points_reward}
+            </span>
+            {!mission.completed && (
+              <span className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
+                Inizia <ArrowRight className="w-3 h-3" />
+              </span>
+            )}
+          </div>
         </button>
       ))}
     </div>
