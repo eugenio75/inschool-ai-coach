@@ -123,16 +123,14 @@ export const CelebrationOverlay = ({ show, onComplete, message, points }: Celebr
   );
 };
 
-// Social proof messages - simulated peer activity
+// Social proof — cooperative, class-oriented, never competitive
 const socialProofMessages = [
-  "3 studenti stanno studiando in questo momento 📚",
-  "Marco ha appena completato una sfida di matematica! 🎯",
-  "Oggi 12 studenti hanno già fatto i compiti 💪",
-  "Sofia ha raggiunto una streak di 5 giorni! 🔥",
-  "I tuoi compagni stanno migliorando, unisciti a loro! 🌟",
-  "7 studenti hanno completato le missioni oggi ⚡",
-  "Luca ha sbloccato il badge 'Esploratore' 🏅",
-  "Oggi è un giorno perfetto per studiare insieme! 🌈",
+  "La tua classe ha completato 18 missioni questa settimana 📚",
+  "Insieme avete studiato per 3 ore oggi! 🌱",
+  "I tuoi compagni stanno lavorando sodo — unisciti a loro! 💪",
+  "La classe ha ripassato 12 concetti questa settimana 🧠",
+  "Oggi è un buon giorno per studiare insieme! 🌈",
+  "Insieme si impara meglio — la tua classe sta crescendo! ✨",
 ];
 
 export const SocialProofBanner = () => {
