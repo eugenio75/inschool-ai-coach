@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Flame, Star, Zap, Target, Loader2, Brain, MessageCircle, ArrowRight } from "lucide-react";
-import { getGamification, getDailyMissions, completeMission } from "@/lib/database";
+import { getGamification, getDailyMissions, completeMission, getTasks } from "@/lib/database";
+import { toast } from "@/hooks/use-toast";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
