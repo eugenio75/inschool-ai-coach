@@ -89,7 +89,10 @@ const Dashboard = () => {
             <p className="text-sm sm:text-base text-muted-foreground">{tasks.length > 0 ? "Ecco i tuoi compiti. Da dove vuoi partire?" : "Non ci sono compiti per oggi! 🎉"}</p>
           </motion.div>
 
-          <div className="mt-5"><GamificationBar /></div>
+          <div className="mt-5 space-y-3">
+            <GamificationBar />
+            <SocialProofBanner />
+          </div>
 
           {!loading && tasks.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.1 }} className="flex items-center gap-4 mt-4">

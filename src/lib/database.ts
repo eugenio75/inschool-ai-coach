@@ -265,8 +265,26 @@ async function updateGamificationPoints(profileId: string, focus: number, autono
   const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
 
   let newStreak = current.streak || 0;
-  if (lastDate === yesterday) newStreak += 1;
-  else if (lastDate !== today) newStreak = 1;
+  let shields = (current as any).streak_shields || 0;
+  let nextShieldAt = (current as any).next_shield_at || 7;
+
+  if (lastDate === yesterday) {
+    newStreak += 1;
+  } else if (lastDate !== today) {
+    // Missed day(s) - use shield if available
+    if (shields > 0) {
+      shields -= 1;
+      // Keep streak, don't reset
+    } else {
+      newStreak = 1;
+    }
+  }
+
+  // Award shield every 7 consecutive days
+  if (newStreak >= nextShieldAt) {
+    shields += 1;
+    nextShieldAt = newStreak + 7;
+  }
 
   await supabase
     .from("gamification")
@@ -277,7 +295,9 @@ async function updateGamificationPoints(profileId: string, focus: number, autono
       streak: newStreak,
       last_activity_date: today,
       updated_at: new Date().toISOString(),
-    })
+      streak_shields: shields,
+      next_shield_at: nextShieldAt,
+    } as any)
     .eq("child_profile_id", profileId);
 }
 
