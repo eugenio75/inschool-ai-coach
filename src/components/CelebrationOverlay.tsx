@@ -7,14 +7,29 @@ const softColors = [
   "hsl(var(--clay))",
 ];
 
-// Calm, meaningful messages — no hype, just warm acknowledgment
-const celebrationMessages = [
+// Age-appropriate celebration messages
+const primaryMessages = [
   { emoji: "🌟", text: "Ce l'hai fatta!" },
-  { emoji: "🌱", text: "Un passo in più." },
-  { emoji: "🧠", text: "Ottimo lavoro." },
-  { emoji: "📚", text: "Compito completato." },
-  { emoji: "✨", text: "Ben fatto." },
+  { emoji: "🎉", text: "Fantastico!" },
+  { emoji: "🌈", text: "Bravissimo!" },
+  { emoji: "🚀", text: "Che campione!" },
+  { emoji: "🦋", text: "Stupendo!" },
+  { emoji: "🌻", text: "Super lavoro!" },
 ];
+
+const middleMessages = [
+  { emoji: "✨", text: "Ottimo lavoro." },
+  { emoji: "📚", text: "Esercizio completato." },
+  { emoji: "🧠", text: "Ben fatto." },
+  { emoji: "🌱", text: "Un passo in più." },
+  { emoji: "💡", text: "Obiettivo raggiunto." },
+];
+
+function isPrimary(schoolLevel?: string): boolean {
+  if (!schoolLevel) return false;
+  const s = schoolLevel.toLowerCase();
+  return s.includes("primaria") || s.includes("elementar");
+}
 
 interface Particle {
   id: number;
@@ -23,6 +38,7 @@ interface Particle {
   color: string;
   size: number;
   rotation: number;
+  shape: "circle" | "star" | "square";
 }
 
 interface CelebrationOverlayProps {
@@ -30,33 +46,60 @@ interface CelebrationOverlayProps {
   onComplete?: () => void;
   message?: string;
   points?: number;
+  schoolLevel?: string;
 }
 
-export const CelebrationOverlay = ({ show, onComplete, message, points }: CelebrationOverlayProps) => {
+export const CelebrationOverlay = ({ show, onComplete, message, points, schoolLevel }: CelebrationOverlayProps) => {
   const [particles, setParticles] = useState<Particle[]>([]);
+  const primary = isPrimary(schoolLevel);
+  
+  const messages = primary ? primaryMessages : middleMessages;
   const [celebration] = useState(() => 
-    celebrationMessages[Math.floor(Math.random() * celebrationMessages.length)]
+    messages[Math.floor(Math.random() * messages.length)]
   );
 
   useEffect(() => {
     if (!show) return;
     
-    // Fewer, softer particles — calm celebration, not overstimulating
-    const newParticles: Particle[] = Array.from({ length: 8 }, (_, i) => ({
+    const particleCount = primary ? 16 : 8;
+    const spread = primary ? 20 : 30;
+    const shapes: Array<"circle" | "star" | "square"> = primary 
+      ? ["circle", "star", "square"] 
+      : ["circle"];
+    
+    const newParticles: Particle[] = Array.from({ length: particleCount }, (_, i) => ({
       id: i,
-      x: 30 + Math.random() * 40, // centered cluster
-      y: 20 + Math.random() * 40,
+      x: spread + Math.random() * (100 - spread * 2),
+      y: 10 + Math.random() * 60,
       color: softColors[Math.floor(Math.random() * softColors.length)],
-      size: Math.random() * 6 + 3,
-      rotation: Math.random() * 180,
+      size: primary ? Math.random() * 10 + 4 : Math.random() * 6 + 3,
+      rotation: Math.random() * 360,
+      shape: shapes[Math.floor(Math.random() * shapes.length)],
     }));
     setParticles(newParticles);
 
+    const duration = primary ? 3200 : 2200;
     const timer = setTimeout(() => {
       onComplete?.();
-    }, 2500);
+    }, duration);
     return () => clearTimeout(timer);
-  }, [show, onComplete]);
+  }, [show, onComplete, primary]);
+
+  const getParticleStyle = (p: Particle) => {
+    const base: React.CSSProperties = { backgroundColor: p.color };
+    if (p.shape === "star") {
+      return {
+        ...base,
+        clipPath: "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)",
+        width: p.size * 1.5,
+        height: p.size * 1.5,
+      };
+    }
+    if (p.shape === "square") {
+      return { ...base, borderRadius: 2, width: p.size, height: p.size };
+    }
+    return { ...base, borderRadius: "50%", width: p.size, height: p.size };
+  };
 
   return (
     <AnimatePresence>
@@ -67,7 +110,7 @@ export const CelebrationOverlay = ({ show, onComplete, message, points }: Celebr
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center"
         >
-          {/* Confetti particles */}
+          {/* Particles */}
           {particles.map((p) => (
             <motion.div
               key={p.id}
@@ -80,17 +123,17 @@ export const CelebrationOverlay = ({ show, onComplete, message, points }: Celebr
               animate={{ 
                 x: `${p.x}vw`, 
                 y: `${p.y}vh`,
-                scale: [0, 1, 0],
+                scale: primary ? [0, 1.2, 0] : [0, 1, 0],
                 rotate: p.rotation,
-                opacity: [0, 0.7, 0],
+                opacity: primary ? [0, 0.9, 0] : [0, 0.7, 0],
               }}
-              transition={{ duration: 2, ease: "easeOut" }}
-              className="absolute rounded-full"
-              style={{ 
-                width: p.size, 
-                height: p.size, 
-                backgroundColor: p.color,
+              transition={{ 
+                duration: primary ? 2.5 : 2, 
+                ease: "easeOut",
+                delay: primary ? Math.random() * 0.3 : 0,
               }}
+              className="absolute"
+              style={getParticleStyle(p)}
             />
           ))}
 
@@ -99,11 +142,20 @@ export const CelebrationOverlay = ({ show, onComplete, message, points }: Celebr
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: primary ? 0.5 : 0.6, ease: "easeOut" }}
             className="bg-card rounded-3xl shadow-lg px-8 py-6 text-center border border-border"
           >
-            <span className="text-5xl block mb-2">{celebration.emoji}</span>
-            <p className="font-display text-xl font-bold text-foreground">
+            <motion.span 
+              className={`block mb-2 ${primary ? "text-6xl" : "text-5xl"}`}
+              animate={primary ? { 
+                scale: [1, 1.2, 1],
+                rotate: [0, 10, -10, 0],
+              } : {}}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              {celebration.emoji}
+            </motion.span>
+            <p className={`font-display font-bold text-foreground ${primary ? "text-2xl" : "text-xl"}`}>
               {message || celebration.text}
             </p>
             {points && (
