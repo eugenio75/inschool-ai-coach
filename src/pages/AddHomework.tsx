@@ -66,6 +66,7 @@ const AddHomework = () => {
     try {
       const imageUrl = await uploadHomeworkImage(photoFile);
       if (!imageUrl) throw new Error("Upload fallito");
+      setUploadedImageUrl(imageUrl);
 
       const result = await extractTasksFromImage(imageUrl, sourceType);
 
