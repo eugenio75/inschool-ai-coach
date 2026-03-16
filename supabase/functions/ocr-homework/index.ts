@@ -32,17 +32,20 @@ ${contextNote}
 
 Analizza TUTTA l'immagine con attenzione, anche i bordi e le parti meno nitide.
 
-Per ogni compito trovato, restituisci un oggetto JSON con:
+Per ogni compito/esercizio trovato, restituisci un oggetto JSON con:
 - "subject": la materia (una tra: Italiano, Matematica, Scienze, Storia, Geografia, Inglese, Arte, Musica, Tecnologia)
-- "title": titolo breve del compito
-- "description": dettagli (pagine, esercizi, cosa fare)
+- "title": titolo breve del compito (es. "Esercizio 2 - Vero o Falso")
+- "description": dettagli generali (pagine, cosa fare)
+- "exerciseText": il TESTO COMPLETO E LETTERALE dell'esercizio come appare nell'immagine. Trascrivi OGNI parola, OGNI domanda, OGNI opzione esattamente come scritte. NON riassumere, NON parafrasare, NON omettere nulla. Se ci sono sotto-domande (a, b, c...) o affermazioni da valutare, trascrivile TUTTE.
 - "estimatedMinutes": stima del tempo necessario (numero intero)
 - "difficulty": difficoltà da 1 a 3 (numero intero)
+
+REGOLA CRITICA per "exerciseText": devi trascrivere il testo PAROLA PER PAROLA come appare nel libro/quaderno. Se non riesci a leggere una parte, scrivi [illeggibile]. Non inventare MAI testo che non vedi.
 
 Se non riesci a leggere chiaramente qualcosa, indica [illeggibile] nelle parti non chiare.
 
 RISPONDI ESCLUSIVAMENTE con un JSON valido nel formato:
-{"tasks": [{"subject": "...", "title": "...", "description": "...", "estimatedMinutes": 15, "difficulty": 1}]}
+{"tasks": [{"subject": "...", "title": "...", "description": "...", "exerciseText": "...", "estimatedMinutes": 15, "difficulty": 1}]}
 
 Nessun altro testo, solo il JSON.`;
 
