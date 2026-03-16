@@ -25,19 +25,35 @@ const CoachChallenge = () => {
   const [streamingText, setStreamingText] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [paused, setPaused] = useState(false);
   const [completed, setCompleted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
   const startTimeRef = useRef(Date.now());
+  const pausedAtRef = useRef<number | null>(null);
 
   // Timer
   useEffect(() => {
+    if (paused) return;
     const interval = setInterval(() => {
       setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [paused]);
+
+  const togglePause = () => {
+    if (paused) {
+      // Resume: shift startTime forward by the paused duration
+      const pausedDuration = Date.now() - (pausedAtRef.current || Date.now());
+      startTimeRef.current += pausedDuration;
+      pausedAtRef.current = null;
+      setPaused(false);
+    } else {
+      pausedAtRef.current = Date.now();
+      setPaused(true);
+    }
+  };
 
   const minutesElapsed = Math.floor(elapsed / 60);
   const secondsElapsed = elapsed % 60;
