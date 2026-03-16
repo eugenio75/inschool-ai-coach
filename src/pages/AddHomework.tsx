@@ -36,7 +36,8 @@ function formatDueDate(dateStr: string): string {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const diffDays = Math.round((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays <= 1) return "domani";
+  if (diffDays === 0) return "oggi";
+  if (diffDays === 1) return "domani";
   if (diffDays === 2) return "dopodomani";
   return d.toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" });
 }
