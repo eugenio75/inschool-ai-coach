@@ -96,10 +96,10 @@ export const CelebrationOverlay = ({ show, onComplete, message, points }: Celebr
 
           {/* Central message */}
           <motion.div
-            initial={{ scale: 0, rotate: -10 }}
-            animate={{ scale: [0, 1.2, 1], rotate: [-10, 5, 0] }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             className="bg-card rounded-3xl shadow-lg px-8 py-6 text-center border border-border"
           >
             <span className="text-5xl block mb-2">{celebration.emoji}</span>
