@@ -240,6 +240,7 @@ const FocusSession = () => {
         show={showCelebration} 
         onComplete={() => setShowCelebration(false)}
         points={minutesWorked * 2}
+        schoolLevel={profile?.schoolLevel || profile?.school_level}
       />
       <div className="px-6 pt-6 pb-4 flex items-center justify-between">
         <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft className="w-5 h-5" /></button>

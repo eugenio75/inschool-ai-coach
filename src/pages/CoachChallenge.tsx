@@ -281,6 +281,7 @@ const CoachChallenge = () => {
         onComplete={() => setShowCelebration(false)}
         message="Sfida completata!"
         points={mission.points_reward}
+        schoolLevel={getProfile()?.schoolLevel || getProfile()?.school_level}
       />
       {/* Header */}
       <div className="bg-card border-b border-border px-4 py-3">
