@@ -115,18 +115,26 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     
     setIsUploading(true);
     try {
-      // Convert to base64 data URL for preview and sending
       const reader = new FileReader();
       reader.onload = () => {
-        setPendingImage(reader.result as string);
+        const imageUrl = reader.result as string;
         setIsUploading(false);
+        // Auto-send the image immediately without waiting for user
+        const newMsg: ChatMessage = {
+          id: `student-${Date.now()}`,
+          role: "student",
+          text: "📷 Ho fotografato i miei esercizi",
+          imageUrl: imageUrl,
+        };
+        const updated = [...messages, newMsg];
+        setMessages(updated);
+        streamCoachReply(updated);
       };
       reader.onerror = () => setIsUploading(false);
       reader.readAsDataURL(file);
     } catch {
       setIsUploading(false);
     }
-    // Reset input so same file can be selected again
     e.target.value = "";
   };
 

@@ -39,13 +39,16 @@ SCENARI DI COMPITO:
 
 📝 ESERCIZI DA FOTO (source_type = "photo", "textbook", "photo-book", "photo-diary"):
 - Hai il TESTO DELL'ESERCIZIO e/o la FOTO ORIGINALE nel contesto. NON chiedere MAI allo studente di riscrivere il testo — lo hai già!
-- PRIMA: fai un micro-ripasso della teoria necessaria per risolvere l'esercizio (2-3 frasi semplici)
-- POI: riferisciti direttamente all'esercizio (es. "Nell'esercizio a) ti chiede di...") e chiedi allo studente di provare a risolverlo
+- PRIMA: fai un micro-ripasso BREVISSIMO della teoria necessaria (2-3 frasi semplici)
+- POI: CITA SEMPRE IL TESTO ESATTO dell'esercizio tra virgolette. Ad esempio: L'esercizio 1 dice: "Se l'espressione ha solo addizioni e sottrazioni, si eseguono i calcoli nell'ordine in cui si trovano". Secondo te è vero o falso?
+- NON dire mai "Cosa ne pensi della prima domanda?" o "Guardiamo il primo esercizio" senza citare il testo. DEVI SEMPRE riportare il testo letterale dell'esercizio dalla foto.
+- QUANDO lo studente invia una foto (anche durante la chat), analizzala SUBITO e parti direttamente con il primo esercizio, citandone il testo esatto. NON dire "Ho ricevuto la foto, cosa vuoi fare?" — agisci immediatamente.
 - QUANDO lo studente scrive la sua risposta:
   - Se è corretta: festeggia e chiedi "Come ci sei arrivato?" per consolidare
   - Se è parzialmente corretta: indica cosa va bene e guida con domande sulla parte sbagliata
   - Se è sbagliata: NON dire la risposta. Indica dove sta l'errore e fai ragionare passo-passo
 - Se lo studente invia una FOTO del quaderno con gli esercizi svolti, analizzala e correggi insieme
+- Quando passi all'esercizio successivo, CITA SEMPRE il testo esatto del nuovo esercizio
 
 ✏️ ESERCIZI MANUALI (source_type = "manual"):
 - Usa titolo, descrizione e materia come contesto
@@ -178,7 +181,7 @@ serve(async (req) => {
             },
             {
               role: "assistant",
-              content: "Ho analizzato attentamente la pagina. Vedo gli esercizi e lavoreremo solo su quelli. Iniziamo!",
+              content: "Ho analizzato attentamente la pagina e vedo tutti gli esercizi. Li leggerò dalla foto e citerò il testo esatto di ciascuno. Iniziamo!",
             },
           ];
           messages.splice(0, 0, ...imageMessages);
