@@ -46,6 +46,7 @@ const FocusSession = () => {
   const [loading, setLoading] = useState(true);
   const [extracting, setExtracting] = useState(false);
   const [weakConcepts, setWeakConcepts] = useState<any[]>([]);
+  const [showCelebration, setShowCelebration] = useState(false);
   const chatMessagesRef = useRef<ChatMessage[]>([]);
 
   // Restore state from sessionStorage if available
