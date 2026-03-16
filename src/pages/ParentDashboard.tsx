@@ -233,7 +233,7 @@ const ParentDashboard = () => {
 
       {/* Gamification */}
       {gamification && (
-        <div className="px-6 mt-6"><div className="max-w-2xl mx-auto">
+        <div className="px-6 mt-6"><div className="max-w-3xl mx-auto">
           <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
             <h3 className="font-display font-semibold text-foreground mb-4">Punti e streak</h3>
             <div className="grid grid-cols-3 gap-3 text-center">
