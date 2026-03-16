@@ -181,7 +181,7 @@ serve(async (req) => {
             },
             {
               role: "assistant",
-              content: "Ho analizzato attentamente la pagina. Vedo gli esercizi e lavoreremo solo su quelli. Iniziamo!",
+              content: "Ho analizzato attentamente la pagina e vedo tutti gli esercizi. Li leggerò dalla foto e citerò il testo esatto di ciascuno. Iniziamo!",
             },
           ];
           messages.splice(0, 0, ...imageMessages);
