@@ -198,10 +198,46 @@ serve(async (req) => {
       contextPrompt += `\n\nPROFILO STUDENTE:
 - Nome: ${studentProfile.name || "Studente"}
 - Età: ${studentProfile.age || "non specificata"}
-- Classe: ${studentProfile.schoolLevel || "non specificata"}
+- Classe: ${studentProfile.schoolLevel || studentProfile.school_level || "non specificata"}
 - Difficoltà principali: ${studentProfile.struggles?.join(", ") || "non specificate"}
-- Stile preferito: ${studentProfile.supportStyle || "gentile"}
-- Tempo di focus: ${studentProfile.focusTime || 15} minuti`;
+- Stile preferito: ${studentProfile.supportStyle || studentProfile.support_style || "gentile"}
+- Tempo di focus: ${studentProfile.focusTime || studentProfile.focus_time || 15} minuti
+- Materie che trova difficili/non piacevoli: ${studentProfile.difficultSubjects?.join(", ") || studentProfile.difficult_subjects?.join(", ") || "nessuna"}
+- Materie preferite: ${studentProfile.favoriteSubjects?.join(", ") || studentProfile.favorite_subjects?.join(", ") || "nessuna"}`;
+    }
+
+    // Detect if this is a "difficult/disliked" subject for the student
+    const difficultSubjects = studentProfile?.difficultSubjects || studentProfile?.difficult_subjects || [];
+    const favoriteSubjects = studentProfile?.favoriteSubjects || studentProfile?.favorite_subjects || [];
+    const currentSubject = taskContext?.subject?.toLowerCase() || "";
+    const isDifficultSubject = difficultSubjects.some((s: string) => currentSubject.includes(s.toLowerCase()) || s.toLowerCase().includes(currentSubject));
+
+    if (isDifficultSubject && currentSubject) {
+      contextPrompt += `\n\n🎮 MODALITÀ MATERIA DIFFICILE ATTIVA — "${taskContext.subject}" è una materia che ${studentProfile?.name || "lo studente"} trova difficile o non piacevole!
+
+OBIETTIVO: Rendere questa sessione più coinvolgente e divertente del solito, senza sacrificare la qualità didattica.
+
+STRATEGIE OBBLIGATORIE:
+1. CONTESTUALIZZA nel mondo reale: collega ogni concetto a situazioni quotidiane, giochi, sport, videogiochi, animali o cose che piacciono ai bambini della sua età
+   - Esempio: "Le frazioni? Pensa a quando dividi una pizza con gli amici!"
+   - Esempio: "La geografia? È come esplorare una mappa di un videogioco!"
+
+2. TRASFORMA in sfida/gioco: presenta gli esercizi come piccole sfide o enigmi
+   - "Vediamo se riesci a scoprire il trucco dietro questa operazione..."
+   - "C'è un segreto nascosto in questa regola. Riesci a trovarlo?"
+
+3. USA ANALOGIE con le materie che ama: ${favoriteSubjects.length > 0 ? `ama ${favoriteSubjects.join(", ")}, quindi cerca collegamenti!` : "trova collegamenti con i suoi interessi"}
+   - Se ama lo sport: usa metafore sportive per spiegare i concetti
+   - Se ama la musica: "Il ritmo di una canzone è come il ritmo di una poesia..."
+
+4. CELEBRA di più (ma in modo autentico): in questa materia lo studente ha bisogno di più incoraggiamento
+   - Sottolinea ogni piccolo progresso: "Vedi? Questa materia non è poi così cattiva quando la guardi da vicino!"
+   - Normalizza la difficoltà: "Anche a molti adulti sembrava difficile, poi hanno scoperto il trucco"
+
+5. RITMO PIÙ LEGGERO: fai passi ancora più piccoli, pause naturali, e mantieni un tono giocoso
+   - Se senti resistenza: "Ok, facciamo solo questa piccola cosa e poi vediamo come ti senti"
+
+IMPORTANTE: NON dire mai "So che non ti piace questa materia" — mostra semplicemente che è interessante con i fatti.`;
     }
 
     if (taskContext) {
