@@ -5,7 +5,7 @@ import { ArrowLeft, Pause, Play, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { GuidanceCard, ChatMessage } from "@/components/GuidanceCard";
-import { getTask, saveFocusSession, updateTask, getActiveChildProfileId, getMemoryItems } from "@/lib/database";
+import { getTask, saveFocusSession, updateTask, getActiveChildProfileId, getMemoryItems, getDailyMissions, completeMission } from "@/lib/database";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
@@ -185,6 +185,25 @@ const FocusSession = () => {
 
     // Extract concepts from chat and save to memory
     await extractAndSaveConcepts();
+
+    // Auto-complete daily missions
+    try {
+      const missions = await getDailyMissions();
+      for (const mission of missions) {
+        if (mission.completed) continue;
+        if (mission.mission_type === "study_session") {
+          await completeMission(mission.id, mission.points_reward);
+        }
+        if (mission.mission_type === "complete_task" && task?.id) {
+          await completeMission(mission.id, mission.points_reward);
+        }
+        if (mission.mission_type === "study_minutes" && minutesWorked >= 10) {
+          await completeMission(mission.id, mission.points_reward);
+        }
+      }
+    } catch (err) {
+      console.error("Mission completion error:", err);
+    }
 
     // Clear persisted session state
     if (taskId) clearSessionState(taskId);

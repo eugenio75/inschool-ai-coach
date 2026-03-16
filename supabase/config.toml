@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.review-memory]
 verify_jwt = false
+
+[functions.generate-missions]
+verify_jwt = false
