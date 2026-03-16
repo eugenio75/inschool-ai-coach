@@ -20,6 +20,7 @@ serve(async (req) => {
     const difficultyLevel = currentStrength >= 70 ? "avanzato" : currentStrength >= 40 ? "intermedio" : "base";
 
     const studentName = studentProfile?.name || "Studente";
+    const studentInterests = studentProfile?.interests || [];
     const systemPrompt = `Sei il Coach AI di Inschool. Stai facendo un RIPASSO con ${studentName} su un concetto che ha già studiato.
 Rivolgiti SEMPRE a ${studentName} usando il suo nome. Non parlare mai in terza persona ("lo studente ha imparato..."), ma dì "${studentName}, ricordi...?", "${studentName}, prova a spiegarmi...".
 
@@ -32,6 +33,7 @@ PROFILO STUDENTE:
 - Nome: ${studentName}
 - Età: ${studentProfile?.age || "non specificata"}
 - Stile preferito: ${studentProfile?.supportStyle || "gentile"}
+${studentInterests.length > 0 ? `- Interessi: ${studentInterests.join(", ")}\n\nUsa i suoi interessi (${studentInterests.join(", ")}) per creare esempi e analogie più coinvolgenti durante il ripasso. Questo lo aiuterà a memorizzare meglio!` : ""}
 
 REGOLE:
 - Rivolgiti SEMPRE a ${studentName} chiamandolo per nome
