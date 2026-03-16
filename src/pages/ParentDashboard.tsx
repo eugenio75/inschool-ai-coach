@@ -181,7 +181,7 @@ const ParentDashboard = () => {
   return (
     <div className="min-h-screen bg-background pb-12">
       <div className="bg-card border-b border-border px-6 pt-6 pb-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
             <button onClick={() => navigate("/profiles")} className="text-muted-foreground hover:text-foreground"><ArrowLeft className="w-5 h-5" /></button>
             <div className="flex items-center gap-2">
@@ -211,7 +211,7 @@ const ParentDashboard = () => {
       </div>
 
       {/* Stats */}
-      <div className="px-6 -mt-4"><div className="max-w-2xl mx-auto">
+      <div className="px-6 -mt-4"><div className="max-w-3xl mx-auto">
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-card rounded-2xl border border-border p-4 text-center shadow-soft">
             <div className="flex justify-center mb-2"><ProgressSun progress={0.72} size={40} /></div>
@@ -233,7 +233,7 @@ const ParentDashboard = () => {
 
       {/* Gamification */}
       {gamification && (
-        <div className="px-6 mt-6"><div className="max-w-2xl mx-auto">
+        <div className="px-6 mt-6"><div className="max-w-3xl mx-auto">
           <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
             <h3 className="font-display font-semibold text-foreground mb-4">Punti e streak</h3>
             <div className="grid grid-cols-3 gap-3 text-center">
@@ -247,7 +247,7 @@ const ParentDashboard = () => {
 
       {/* Child Access Code */}
       {selectedProfile && (
-        <div className="px-6 mt-6"><div className="max-w-2xl mx-auto">
+        <div className="px-6 mt-6"><div className="max-w-3xl mx-auto">
           <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
             <div className="flex items-center gap-2 mb-3">
               <KeyRound className="w-4 h-4 text-primary" />
@@ -301,7 +301,7 @@ const ParentDashboard = () => {
       )}
 
       {/* AI Personalized Insights */}
-      <div className="px-6 mt-8"><div className="max-w-2xl mx-auto space-y-3">
+      <div className="px-6 mt-8"><div className="max-w-3xl mx-auto space-y-3">
         <div className="flex items-center gap-2 mb-1">
           <Sparkles className="w-4 h-4 text-primary" />
           <h3 className="font-display font-semibold text-foreground">Consigli personalizzati per {selectedProfile?.name}</h3>

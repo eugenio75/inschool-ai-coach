@@ -275,7 +275,7 @@ const CoachChallenge = () => {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <div className="bg-card border-b border-border px-4 py-3">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
+        <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={handleExit} className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors">
               <ArrowLeft className="w-4 h-4 text-muted-foreground" />
@@ -320,7 +320,7 @@ const CoachChallenge = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-clay-light/50 border-b border-clay/20 px-4 py-2"
         >
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-2">
               <div className="flex-1 bg-clay/20 rounded-full h-1.5">
                 <motion.div
@@ -340,7 +340,7 @@ const CoachChallenge = () => {
 
       {/* Chat area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
-        <div className="max-w-2xl mx-auto space-y-3">
+        <div className="max-w-3xl mx-auto space-y-3">
           {messages.map((msg) => (
             <motion.div
               key={msg.id}
@@ -389,7 +389,7 @@ const CoachChallenge = () => {
           animate={{ opacity: 1, y: 0 }}
           className="px-4 py-3 bg-card border-t border-border"
         >
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-3xl mx-auto">
             <Button onClick={handleComplete} className="w-full bg-primary text-primary-foreground rounded-2xl py-3 font-display font-bold">
               <Trophy className="w-4 h-4 mr-2" />
               Completa la sfida! +{mission.points_reward} punti
@@ -405,7 +405,7 @@ const CoachChallenge = () => {
           animate={{ opacity: 1, y: 0 }}
           className="px-4 py-3 bg-sage-light border-t border-primary/20"
         >
-          <div className="max-w-2xl mx-auto text-center">
+          <div className="max-w-3xl mx-auto text-center">
             <p className="text-sm font-display font-bold text-sage-dark">🎉 Sfida completata! +{mission.points_reward} punti guadagnati!</p>
             <Button onClick={() => navigate("/dashboard")} variant="ghost" className="mt-2 text-xs text-sage-dark">
               Torna alla dashboard
@@ -416,7 +416,7 @@ const CoachChallenge = () => {
 
       {/* Input area */}
       <div className="bg-card border-t border-border px-4 py-3">
-        <div className="max-w-2xl mx-auto flex items-center gap-2">
+        <div className="max-w-3xl mx-auto flex items-center gap-2">
           <button
             onClick={toggleRecording}
             className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${

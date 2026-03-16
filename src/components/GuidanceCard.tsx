@@ -358,7 +358,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
         className="hidden"
       />
 
-      <div className={isInline ? "h-full flex flex-col px-0 pb-0" : "max-w-2xl mx-auto px-4 pb-4"}>
+      <div className={isInline ? "h-full flex flex-col px-0 pb-0" : "max-w-3xl mx-auto px-4 pb-4"}>
         <div className={`bg-card rounded-2xl shadow-hover border border-primary/10 overflow-hidden ${isInline ? "flex-1 flex flex-col min-h-0" : ""}`}>
           {/* Toggle */}
           <button

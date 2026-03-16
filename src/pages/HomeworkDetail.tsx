@@ -72,7 +72,7 @@ const HomeworkDetail = () => {
   return (
     <div className="min-h-screen bg-background pb-32">
       <div className="bg-card border-b border-border px-6 pt-6 pb-6">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3 mb-4">
             <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-5 h-5" />
@@ -99,7 +99,7 @@ const HomeworkDetail = () => {
       {/* Micro-steps */}
       {microSteps.length > 0 && (
         <div className="px-6 mt-6">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-2 mb-4">
               <BookOpen className="w-4 h-4 text-sage-dark" />
               <h2 className="font-display font-semibold text-foreground">Micro-passi</h2>
@@ -144,7 +144,7 @@ const HomeworkDetail = () => {
       {/* Key concepts */}
       {keyConcepts.length > 0 && (
         <div className="px-6 mt-8">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-2 mb-4">
               <Brain className="w-4 h-4 text-clay-dark" />
               <h2 className="font-display font-semibold text-foreground">Concetti chiave</h2>
@@ -163,7 +163,7 @@ const HomeworkDetail = () => {
       {/* Recall questions */}
       {recallQuestions.length > 0 && (
         <div className="px-6 mt-8">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-2 mb-4">
               <Lightbulb className="w-4 h-4 text-terracotta" />
               <h2 className="font-display font-semibold text-foreground">Domande di ripasso</h2>
@@ -181,7 +181,7 @@ const HomeworkDetail = () => {
 
       {/* Bottom CTA */}
       <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border px-6 py-4">
-        <div className="max-w-2xl mx-auto flex gap-3">
+        <div className="max-w-3xl mx-auto flex gap-3">
           {task.completed ? (
             <>
               <Button onClick={() => navigate("/memory")} variant="outline" className="flex-1 rounded-2xl py-5 text-base border-border">

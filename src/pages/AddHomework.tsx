@@ -159,7 +159,7 @@ const AddHomework = () => {
     <div className="min-h-screen bg-background pb-12">
       {/* Header */}
       <div className="bg-card border-b border-border px-6 pt-6 pb-6">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3 mb-4">
             <button onClick={() => mode === "choose" ? navigate("/dashboard") : setMode("choose")} className="text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-5 h-5" />
@@ -177,7 +177,7 @@ const AddHomework = () => {
       </div>
 
       <div className="px-6 mt-6">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <AnimatePresence mode="wait">
             {/* Choose mode */}
             {mode === "choose" && (
