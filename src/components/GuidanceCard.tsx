@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, ChevronUp, ChevronDown, Send, Mic, MicOff, Camera, Image, X } from "lucide-react";
+import { Shield, ChevronUp, ChevronDown, Send, Mic, MicOff, Camera, Image, X, Calculator } from "lucide-react";
+import { MathNotepad } from "@/components/MathNotepad";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -52,6 +53,7 @@ const variantClasses = {
 };
 
 export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bottomOffset, sessionKey, onMessagesChange, weakConcepts }: GuidanceCardProps) => {
+  const isMathSubject = /matem|aritm|geometr|algebra/i.test((taskSubject || "") + " " + (taskContext?.subject || ""));
   const [expanded, setExpanded] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     if (sessionKey) {
@@ -68,6 +70,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
   const [isRecording, setIsRecording] = useState(false);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [notepadOpen, setNotepadOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -503,6 +506,17 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                         <Image className="w-3.5 h-3.5" />
                         <span className="hidden xs:inline">Galleria</span>
                       </button>
+                      {isMathSubject && (
+                        <button
+                          onClick={() => setNotepadOpen(true)}
+                          disabled={isTyping}
+                          className="h-8 px-2.5 rounded-lg bg-sage-light text-sage-dark hover:bg-accent hover:text-foreground flex items-center gap-1.5 transition-colors shrink-0 disabled:opacity-40 text-xs font-medium"
+                          title="Blocco note per i calcoli"
+                        >
+                          <Calculator className="w-3.5 h-3.5" />
+                          <span className="hidden xs:inline">Calcoli</span>
+                        </button>
+                      )}
                       <button
                         onClick={toggleRecording}
                         disabled={isTyping}
@@ -543,6 +557,25 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Math Notepad */}
+      {isMathSubject && (
+        <MathNotepad
+          open={notepadOpen}
+          onClose={() => setNotepadOpen(false)}
+          isCoachTyping={isTyping}
+          onSendToCoach={(operationText) => {
+            const newMsg: ChatMessage = {
+              id: `student-${Date.now()}`,
+              role: "student",
+              text: `📝 Ho fatto questa operazione sul blocco note:\n\`\`\`\n${operationText}\n\`\`\`\nÈ corretta?`,
+            };
+            const updated = [...messages, newMsg];
+            setMessages(updated);
+            streamCoachReply(updated);
+          }}
+        />
+      )}
     </motion.div>
   );
 };
