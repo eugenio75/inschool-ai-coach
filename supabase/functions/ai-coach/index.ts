@@ -202,8 +202,11 @@ serve(async (req) => {
     const hasImages = messages.some((m: any) => 
       Array.isArray(m.content) && m.content.some((c: any) => c.type === "image_url")
     );
+    const hasSourceImage = !!(taskContext?.sourceImageUrl);
 
-    const model = hasImages ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview";
+    // Use Pro model when we have source images (needs precise visual analysis)
+    // Use Flash for student photos (simpler check) or text-only
+    const model = hasSourceImage ? "google/gemini-2.5-pro" : hasImages ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview";
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
