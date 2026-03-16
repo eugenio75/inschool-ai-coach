@@ -171,13 +171,12 @@ const Dashboard = () => {
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => navigate("/memory")} className="w-9 h-9 rounded-xl bg-clay-light flex items-center justify-center text-clay-dark hover:bg-accent transition-colors" title="Memoria e ripasso"><Brain className="w-4 h-4" /></button>
-              {isChild ? (
+              <button onClick={() => navigate("/student-profile")} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors" title="Il mio profilo">
+                <span className="text-lg">{avatar}</span>
+              </button>
+              {isChild && (
                 <button onClick={handleChildLogout} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors" title="Esci">
                   <LogOut className="w-4 h-4 text-muted-foreground" />
-                </button>
-              ) : (
-                <button onClick={() => navigate("/profiles")} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors" title="Cambia profilo">
-                  <span className="text-lg">{avatar}</span>
                 </button>
               )}
             </div>
