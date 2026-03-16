@@ -330,6 +330,63 @@ export async function updateMemoryStrength(itemId: string, strength: number) {
     .eq("id", itemId);
 }
 
+// ============ DAILY MISSIONS ============
+
+export async function getDailyMissions(childProfileId?: string): Promise<any[]> {
+  if (isChildSession()) {
+    return childApi("get-daily-missions");
+  }
+
+  const profileId = childProfileId || getActiveChildProfileId();
+  if (!profileId) return [];
+
+  // Call the generate-missions edge function which returns existing or creates new
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-missions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ childProfileId: profileId }),
+      }
+    );
+    if (!response.ok) return [];
+    const result = await response.json();
+    return result.missions || [];
+  } catch (err) {
+    console.error("getDailyMissions error:", err);
+    return [];
+  }
+}
+
+export async function completeMission(missionId: string, pointsReward: number) {
+  if (isChildSession()) {
+    return childApi("complete-mission", { missionId, pointsReward });
+  }
+
+  const profileId = getActiveChildProfileId();
+  if (!profileId) return;
+
+  await supabase
+    .from("daily_missions")
+    .update({ completed: true, completed_at: new Date().toISOString() })
+    .eq("id", missionId);
+
+  // Add points to gamification
+  const current = await getGamification(profileId);
+  if (current) {
+    await supabase.from("gamification").update({
+      focus_points: (current.focus_points || 0) + pointsReward,
+      updated_at: new Date().toISOString(),
+    }).eq("child_profile_id", profileId);
+  }
+}
+
 // ============ IMAGE UPLOAD ============
 
 export async function uploadHomeworkImage(file: File): Promise<string | null> {
