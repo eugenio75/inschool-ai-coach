@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Lock, Loader2, Users, Shield } from "lucide-react";
+import { ArrowLeft, BookOpen, Lock, Loader2, Users, Shield, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/useAuth";
-import { getChildProfiles, getParentSettings, updateParentPin } from "@/lib/database";
+import { getChildProfiles, getParentSettings, updateParentPin, updateChildProfile } from "@/lib/database";
+
+const AVATAR_EMOJIS = ["🧒", "👦", "👧", "🦸", "🧑‍🎓", "🦊", "🐼", "🦁", "🐯", "🐸", "🦄", "🐲", "🌟", "🚀", "🎨", "⚽", "🎸", "🦋", "🐬", "🦉"];
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -61,7 +64,33 @@ const Settings = () => {
             <div className="space-y-3">
               {profiles.map((p) => (
                 <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
-                  <span className="text-2xl">{p.avatar_emoji || "🧒"}</span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className="relative group text-2xl hover:scale-110 transition-transform">
+                        {p.avatar_emoji || "🧒"}
+                        <span className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Pencil className="w-2.5 h-2.5" />
+                        </span>
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-3" side="right">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Scegli un'icona per {p.name}</p>
+                      <div className="grid grid-cols-5 gap-2">
+                        {AVATAR_EMOJIS.map((emoji) => (
+                          <button
+                            key={emoji}
+                            onClick={async () => {
+                              await updateChildProfile(p.id, { avatar_emoji: emoji });
+                              setProfiles(prev => prev.map(pr => pr.id === p.id ? { ...pr, avatar_emoji: emoji } : pr));
+                            }}
+                            className={`text-2xl p-1.5 rounded-lg hover:bg-accent transition-colors ${p.avatar_emoji === emoji ? "bg-accent ring-2 ring-primary" : ""}`}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   <div className="flex-1">
                     <p className="font-medium text-foreground">{p.name}</p>
                     <p className="text-xs text-muted-foreground">{p.age ? `${p.age} anni` : ""} {p.school_level ? `• ${p.school_level}` : ""}</p>
