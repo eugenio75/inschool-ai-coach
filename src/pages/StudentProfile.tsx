@@ -60,18 +60,23 @@ const StudentProfile = () => {
     if (!profile) return;
     setSaving(true);
     try {
+      const updates = {
+        avatar_emoji: selectedAvatar,
+        interests,
+        class_section: classSection.trim() || null,
+        school_name: schoolName.trim() || null,
+        city: city.trim() || null,
+      };
       if (isChild) {
-        // Use child-api to update
         const { childApi } = await import("@/lib/childSession");
-        await childApi("update-profile", { avatar_emoji: selectedAvatar, interests });
-        // Update local session
+        await childApi("update-profile", updates);
         const session = getChildSession();
         if (session) {
-          const updatedProfile = { ...session.profile, avatar_emoji: selectedAvatar, interests };
+          const updatedProfile = { ...session.profile, ...updates };
           setChildSession({ ...session, profile: updatedProfile });
         }
       } else {
-        await updateChildProfile(profile.id, { avatar_emoji: selectedAvatar, interests });
+        await updateChildProfile(profile.id, updates);
       }
       toast({ title: "Profilo aggiornato! ✨" });
       navigate(-1);
