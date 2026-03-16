@@ -183,7 +183,7 @@ const FocusSession = () => {
     }
     
     setPhase("recap");
-    
+    setShowCelebration(true);
     await saveFocusSession({
       task_id: task?.id,
       emotion,
