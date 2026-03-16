@@ -42,6 +42,7 @@ export function setChildSession(session: ChildSession) {
     struggles: session.profile.struggles,
     focusTime: session.profile.focus_time?.toString() || "15",
     supportStyle: session.profile.support_style,
+    interests: session.profile.interests,
   }));
 }
 
