@@ -405,7 +405,7 @@ const CoachChallenge = () => {
           animate={{ opacity: 1, y: 0 }}
           className="px-4 py-3 bg-sage-light border-t border-primary/20"
         >
-          <div className="max-w-2xl mx-auto text-center">
+          <div className="max-w-3xl mx-auto text-center">
             <p className="text-sm font-display font-bold text-sage-dark">🎉 Sfida completata! +{mission.points_reward} punti guadagnati!</p>
             <Button onClick={() => navigate("/dashboard")} variant="ghost" className="mt-2 text-xs text-sage-dark">
               Torna alla dashboard
