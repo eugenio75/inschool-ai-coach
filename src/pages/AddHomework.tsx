@@ -49,7 +49,7 @@ const AddHomework = () => {
   const [manualSubject, setManualSubject] = useState("");
   const [manualTitle, setManualTitle] = useState("");
   const [manualDescription, setManualDescription] = useState("");
-  const [dueDate, setDueDate] = useState(getTomorrow());
+  const [dueDate, setDueDate] = useState(getToday());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
