@@ -94,6 +94,7 @@ const Dashboard = () => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [suggestion, setSuggestion] = useState<{ task: any; reason: string } | null>(null);
+  const [pausedSession, setPausedSession] = useState<{ task: any; state: any } | null>(null);
   const isChild = isChildSession();
 
   useEffect(() => {
