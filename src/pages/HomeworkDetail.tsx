@@ -99,7 +99,7 @@ const HomeworkDetail = () => {
       {/* Micro-steps */}
       {microSteps.length > 0 && (
         <div className="px-6 mt-6">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-2 mb-4">
               <BookOpen className="w-4 h-4 text-sage-dark" />
               <h2 className="font-display font-semibold text-foreground">Micro-passi</h2>
