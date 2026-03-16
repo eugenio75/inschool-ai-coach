@@ -6,21 +6,29 @@ const corsHeaders = {
 };
 
 const SYSTEM_PROMPT = `Sei un esperto di pedagogia e psicologia dell'apprendimento per bambini e ragazzi.
-Analizzi i dati DETTAGLIATI di studio di un bambino e fornisci consigli personalizzati ai genitori.
+Analizzi i dati DETTAGLIATI e REALI di studio di un bambino e fornisci consigli personalizzati ai genitori.
 
-REGOLE:
+REGOLE FONDAMENTALI:
 - Rispondi SEMPRE in italiano
-- Fornisci esattamente 4 consigli personalizzati basati sui dati REALI e SPECIFICI del bambino
-- Ogni consiglio DEVE riferirsi a dati concreti che hai ricevuto (materie specifiche, concetti deboli, emozioni, pattern)
-- Tono: caldo, non giudicante, incoraggiante
+- Fornisci esattamente 4 consigli personalizzati basati ESCLUSIVAMENTE sui dati REALI e SPECIFICI che ricevi
+- Ogni consiglio DEVE citare dati concreti: nomi di concetti studiati, materie, emozioni registrate, missioni completate, pattern specifici
+- NON inventare mai informazioni che non sono nei dati
+- Se i dati sono pochi, riconosci questo fatto e dai consigli su come costruire un'abitudine di studio regolare
+- Tono: caldo, non giudicante, incoraggiante, pratico
 - NON menzionare mai voti o performance scolastica
 - Concentrati su: autonomia, benessere emotivo, metodo di studio, motivazione
-- Se ci sono concetti deboli in memoria, suggerisci strategie concrete per rafforzarli
-- Se noti pattern emotivi (es. sempre stanco), suggerisci adattamenti
+
+DATI SPECIALI DA ANALIZZARE:
+- SESSIONI ESTESE: se lo studente ha studiato più del tempo previsto, evidenzialo come segnale positivo di motivazione intrinseca
+- MISSIONI E SFIDE: commenta le sfide del coach completate come segnale di impegno ludico-educativo
+- PATTERN EMOTIVI: se noti emozioni ricorrenti (tired, ready, excited, etc.), suggerisci adattamenti concreti
+- PROGRESSIONE MEMORIA: confronta concetti forti vs deboli per suggerire strategie di consolidamento
+- Se ci sono concetti con forza >= 80, celebrali come successi concreti dello studente
+- Se ci sono concetti con forza < 60, suggerisci strategie specifiche per rafforzarli
 
 FORMATO RISPOSTA (JSON array di 4 oggetti):
 [
-  { "icon": "lightbulb|eye|message|brain|heart|clock|star", "title": "Titolo breve", "text": "Consiglio in 1-2 frasi con riferimenti specifici ai dati", "category": "metodo|emotivo|autonomia|motivazione" }
+  { "icon": "lightbulb|eye|message|brain|heart|clock|star", "title": "Titolo breve e specifico", "text": "Consiglio in 2-3 frasi con riferimenti SPECIFICI ai dati reali (nomi concetti, materie, emozioni, missioni)", "category": "metodo|emotivo|autonomia|motivazione" }
 ]
 
 Rispondi SOLO con il JSON array, nient'altro.`;
@@ -31,7 +39,7 @@ serve(async (req) => {
   }
 
   try {
-    const { childProfile, gamification, sessionsCount, totalMinutes, recentSessions, weakConcepts, subjectStats } = await req.json();
+    const { childProfile, gamification, sessionsCount, totalMinutes, recentSessions, allConcepts, subjectStats, missionsData, emotionPatterns, extendedSessionsCount } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -41,17 +49,37 @@ serve(async (req) => {
     // Build detailed sessions section
     let sessionsDetail = "Nessuna sessione recente.";
     if (recentSessions && recentSessions.length > 0) {
-      sessionsDetail = recentSessions.map((s: any, i: number) => 
-        `${i + 1}. Materia: ${s.subject || "N/A"} | Durata: ${Math.round((s.duration_seconds || 0) / 60)}min | Emozione: ${s.emotion || "non registrata"} | Data: ${s.completed_at?.split("T")[0] || "N/A"}`
-      ).join("\n");
+      sessionsDetail = recentSessions.map((s: any, i: number) => {
+        let line = `${i + 1}. Materia: ${s.subject} | Compito: "${s.task_title || "N/A"}" | Durata: ${s.actual_minutes || Math.round((s.duration_seconds || 0) / 60)}min (previsti: ${s.expected_minutes || "N/A"}min) | Emozione: ${s.emotion || "non registrata"} | Data: ${s.completed_at?.split("T")[0] || "N/A"}`;
+        if (s.studied_extra) line += " ⭐ HA STUDIATO PIÙ DEL PREVISTO!";
+        return line;
+      }).join("\n");
     }
 
-    // Build weak concepts section
+    // Build concepts section (all, not just weak)
     let conceptsDetail = "Nessun concetto in memoria.";
-    if (weakConcepts && weakConcepts.length > 0) {
-      conceptsDetail = weakConcepts.map((c: any) => 
-        `- ${c.concept} (${c.subject}) — forza memoria: ${c.strength}/100${c.summary ? ` — ${c.summary}` : ""}`
-      ).join("\n");
+    if (allConcepts && allConcepts.length > 0) {
+      const weak = allConcepts.filter((c: any) => c.is_weak);
+      const strong = allConcepts.filter((c: any) => c.is_strong);
+      const medium = allConcepts.filter((c: any) => !c.is_weak && !c.is_strong);
+
+      conceptsDetail = "";
+      if (strong.length > 0) {
+        conceptsDetail += "CONCETTI BEN ACQUISITI (forza ≥ 80):\n" + strong.map((c: any) =>
+          `  ✅ ${c.concept} (${c.subject}) — forza: ${c.strength}/100${c.summary ? ` — ${c.summary}` : ""}`
+        ).join("\n") + "\n\n";
+      }
+      if (medium.length > 0) {
+        conceptsDetail += "CONCETTI IN CONSOLIDAMENTO (forza 60-79):\n" + medium.map((c: any) =>
+          `  🔄 ${c.concept} (${c.subject}) — forza: ${c.strength}/100${c.summary ? ` — ${c.summary}` : ""}`
+        ).join("\n") + "\n\n";
+      }
+      if (weak.length > 0) {
+        conceptsDetail += "CONCETTI DA RAFFORZARE (forza < 60):\n" + weak.map((c: any) =>
+          `  ⚠️ ${c.concept} (${c.subject}) — forza: ${c.strength}/100${c.summary ? ` — ${c.summary}` : ""}`
+        ).join("\n");
+      }
+      if (!conceptsDetail) conceptsDetail = "Nessun concetto in memoria.";
     }
 
     // Build subject stats section
@@ -62,7 +90,26 @@ serve(async (req) => {
       ).join("\n");
     }
 
-    const userPrompt = `Analizza questi dati DETTAGLIATI e fornisci 4 consigli personalizzati per i genitori di ${childProfile.name}:
+    // Build missions section
+    let missionsDetail = "Nessuna missione registrata.";
+    if (missionsData && missionsData.total > 0) {
+      missionsDetail = `Missioni totali: ${missionsData.total} | Completate: ${missionsData.completed} | Sfide Coach completate: ${missionsData.challengesCompleted}`;
+      if (missionsData.types && missionsData.types.length > 0) {
+        missionsDetail += "\nDettaglio:\n" + missionsData.types.map((m: any) =>
+          `  ${m.completed ? "✅" : "❌"} ${m.title} (${m.type}) — ${m.date}`
+        ).join("\n");
+      }
+    }
+
+    // Build emotion patterns section
+    let emotionDetail = "Nessun pattern emotivo rilevato.";
+    if (emotionPatterns && Object.keys(emotionPatterns).length > 0) {
+      emotionDetail = Object.entries(emotionPatterns).map(([emotion, count]) =>
+        `- ${emotion}: ${count} volte`
+      ).join("\n");
+    }
+
+    const userPrompt = `Analizza questi dati DETTAGLIATI e REALI e fornisci 4 consigli iper-personalizzati per i genitori di ${childProfile.name}:
 
 PROFILO:
 - Nome: ${childProfile.name}
@@ -70,25 +117,35 @@ PROFILO:
 - Classe: ${childProfile.school_level || "non specificata"}
 - Materie preferite: ${childProfile.favorite_subjects?.join(", ") || "non specificate"}
 - Materie difficili: ${childProfile.difficult_subjects?.join(", ") || "non specificate"}
-- Difficoltà: ${childProfile.struggles?.join(", ") || "nessuna specificata"}
+- Difficoltà segnalate: ${childProfile.struggles?.join(", ") || "nessuna specificata"}
 - Stile coach: ${childProfile.support_style || "gentile"}
 - Tempo focus preferito: ${childProfile.focus_time || 15} minuti
 
 STATISTICHE GENERALI:
 - Sessioni totali: ${sessionsCount || 0}
 - Minuti totali di studio: ${totalMinutes || 0}
-- Punti focus: ${gamification?.focus_points || 0}
+- Sessioni in cui ha studiato PIÙ del previsto: ${extendedSessionsCount || 0}
+- Punti impegno: ${gamification?.focus_points || 0}
 - Punti autonomia: ${gamification?.autonomy_points || 0}
-- Streak attuale: ${gamification?.streak || 0} giorni
+- Punti costanza: ${gamification?.consistency_points || 0}
+- Streak attuale: ${gamification?.streak || 0} giorni consecutivi
 
-ULTIME SESSIONI (dettaglio):
+ULTIME SESSIONI DI STUDIO (dettaglio con compiti specifici):
 ${sessionsDetail}
 
-CONCETTI DEBOLI IN MEMORIA (forza < 60):
+MAPPA DELLA MEMORIA (tutti i concetti studiati con livello di acquisizione):
 ${conceptsDetail}
 
+MISSIONI E SFIDE DEL COACH:
+${missionsDetail}
+
+PATTERN EMOTIVI (come si sentiva prima di studiare):
+${emotionDetail}
+
 STATISTICHE PER MATERIA:
-${subjectDetail}`;
+${subjectDetail}
+
+IMPORTANTE: Ogni consiglio deve citare DATI SPECIFICI da quelli sopra (nomi di concetti, titoli di compiti, emozioni, missioni). Non dare consigli generici.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
