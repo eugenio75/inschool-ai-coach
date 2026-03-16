@@ -80,10 +80,11 @@ export const CelebrationOverlay = ({ show, onComplete, message, points }: Celebr
               animate={{ 
                 x: `${p.x}vw`, 
                 y: `${p.y}vh`,
-                scale: [0, 1.5, 0],
+                scale: [0, 1, 0],
                 rotate: p.rotation,
+                opacity: [0, 0.7, 0],
               }}
-              transition={{ duration: 1.5, ease: "easeOut" }}
+              transition={{ duration: 2, ease: "easeOut" }}
               className="absolute rounded-full"
               style={{ 
                 width: p.size, 
