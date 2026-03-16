@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import AddHomework from "./pages/AddHomework";
 import HomeworkDetail from "./pages/HomeworkDetail";
 import FocusSession from "./pages/FocusSession";
+import CoachChallenge from "./pages/CoachChallenge";
 import MemoryRecap from "./pages/MemoryRecap";
 import ParentDashboard from "./pages/ParentDashboard";
 import Settings from "./pages/Settings";
@@ -56,6 +57,7 @@ const AppRoutes = () => (
     <Route path="/add-homework" element={<AccessibleRoute><AddHomework /></AccessibleRoute>} />
     <Route path="/homework/:taskId" element={<AccessibleRoute><HomeworkDetail /></AccessibleRoute>} />
     <Route path="/focus/:taskId" element={<AccessibleRoute><FocusSession /></AccessibleRoute>} />
+    <Route path="/challenge/:missionId" element={<AccessibleRoute><CoachChallenge /></AccessibleRoute>} />
     <Route path="/memory" element={<AccessibleRoute><MemoryRecap /></AccessibleRoute>} />
     <Route path="/parent-dashboard" element={<ProtectedRoute><ParentDashboard /></ProtectedRoute>} />
     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

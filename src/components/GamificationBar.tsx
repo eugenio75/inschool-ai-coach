@@ -111,8 +111,13 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
       navigate("/memory");
       return;
     }
+
+    if (mission.mission_type === "coach_challenge") {
+      navigate(`/challenge/${mission.id}`);
+      return;
+    }
     
-    // For coach_challenge, complete_task, study_session, study_minutes:
+    // For complete_task, study_session, study_minutes:
     // Find a matching incomplete task and navigate to its focus session
     try {
       const tasks = await getTasks();
@@ -123,9 +128,8 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
         return;
       }
       
-      // Try to find a task matching the mission's subject/metadata
       const metadata = mission.metadata || {};
-      let targetTask = incompleteTasks[0]; // fallback to first incomplete
+      let targetTask = incompleteTasks[0];
       
       if (metadata.subject) {
         const subjectMatch = incompleteTasks.find((t: any) => 
