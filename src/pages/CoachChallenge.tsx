@@ -249,6 +249,7 @@ const CoachChallenge = () => {
     if (mission && !completed) {
       await completeMission(mission.id, mission.points_reward);
       setCompleted(true);
+      setShowCelebration(true);
     }
   };
 
