@@ -53,6 +53,7 @@ const AddHomework = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [extractedTasks, setExtractedTasks] = useState<ExtractedTask[]>([]);
   const [saving, setSaving] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -65,6 +66,7 @@ const AddHomework = () => {
     try {
       const imageUrl = await uploadHomeworkImage(photoFile);
       if (!imageUrl) throw new Error("Upload fallito");
+      setUploadedImageUrl(imageUrl);
 
       const result = await extractTasksFromImage(imageUrl, sourceType);
 
@@ -98,6 +100,7 @@ const AddHomework = () => {
   const processFile = (file: File) => {
     if (!file.type.startsWith("image/")) return;
     setPhotoFile(file);
+    setUploadedImageUrl(null);
     const reader = new FileReader();
     reader.onload = (ev) => {
       setPhotoPreview(ev.target?.result as string);
@@ -162,6 +165,7 @@ const AddHomework = () => {
           estimated_minutes: task.estimatedMinutes,
           difficulty: task.difficulty,
           source_type: "photo",
+          source_image_url: uploadedImageUrl || undefined,
           due_date: dueDate,
         });
       }
@@ -331,7 +335,7 @@ const AddHomework = () => {
                   <div className="space-y-4">
                     <div className="relative rounded-2xl overflow-hidden border border-border">
                       <img src={photoPreview} alt="Foto caricata" className="w-full max-h-[70vh] object-contain bg-muted/30" />
-                      <button onClick={() => { setPhotoPreview(null); setPhotoFile(null); }} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-foreground/60 text-background flex items-center justify-center">
+                      <button onClick={() => { setPhotoPreview(null); setPhotoFile(null); setUploadedImageUrl(null); }} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-foreground/60 text-background flex items-center justify-center">
                         <X className="w-4 h-4" />
                       </button>
                     </div>
