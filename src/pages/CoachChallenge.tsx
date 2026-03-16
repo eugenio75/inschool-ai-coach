@@ -340,7 +340,7 @@ const CoachChallenge = () => {
 
       {/* Chat area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
-        <div className="max-w-2xl mx-auto space-y-3">
+        <div className="max-w-3xl mx-auto space-y-3">
           {messages.map((msg) => (
             <motion.div
               key={msg.id}
