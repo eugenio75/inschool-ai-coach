@@ -174,8 +174,8 @@ const FocusSession = () => {
     const durationSeconds = totalSeconds - seconds;
     const minutesWorked = Math.round(durationSeconds / 60);
 
-    // Minimum 1 minute of real work required to earn points
-    if (minutesWorked < 1) {
+    // Minimum 5 minutes of real work required to earn points
+    if (minutesWorked < 5) {
       handleExit();
       return;
     }
