@@ -5,6 +5,7 @@ import { ArrowLeft, Pause, Play, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { GuidanceCard, ChatMessage } from "@/components/GuidanceCard";
+import { CelebrationOverlay } from "@/components/CelebrationOverlay";
 import { getTask, saveFocusSession, updateTask, getActiveChildProfileId, getMemoryItems, getDailyMissions, completeMission } from "@/lib/database";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 
