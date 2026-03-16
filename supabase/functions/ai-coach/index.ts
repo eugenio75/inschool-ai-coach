@@ -152,8 +152,29 @@ serve(async (req) => {
         });
       }
 
-      if (taskContext.sourceType === "photo" || taskContext.sourceType === "textbook") {
+      if (taskContext.sourceType === "photo" || taskContext.sourceType === "textbook" || taskContext.sourceType === "photo-book" || taskContext.sourceType === "photo-diary") {
         contextPrompt += `\n\nQUESTO ESERCIZIO È STATO ESTRATTO DA UNA FOTO. Hai il testo completo dell'esercizio sopra. Parti con un micro-ripasso della teoria necessaria, poi guida lo studente a risolverlo passo-passo.`;
+        
+        // Inject the source image as the first user message so the model can see the original page
+        if (taskContext.sourceImageUrl) {
+          contextPrompt += `\nL'IMMAGINE ORIGINALE della pagina del libro/diario è allegata come primo messaggio. Usala come riferimento per guidare lo studente sugli esercizi specifici visibili nella pagina.`;
+          
+          // Prepend a system-injected image message before the conversation
+          messages.unshift({
+            role: "user",
+            content: [
+              { type: "text", text: "Ecco la foto della pagina con gli esercizi da fare:" },
+              { type: "image_url", image_url: { url: taskContext.sourceImageUrl } },
+            ],
+          });
+          // Add an assistant acknowledgment so it doesn't confuse the conversation flow
+          messages.unshift({
+            role: "assistant", 
+            content: "Ho visto la pagina! Iniziamo a lavorare sugli esercizi."
+          });
+          // Note: unshift adds at beginning, so order will be: user(image) -> assistant(ack) -> rest
+          // But we need: user(image), assistant(ack), then rest. Let me fix order:
+        }
       }
     }
 

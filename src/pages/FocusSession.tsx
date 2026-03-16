@@ -370,6 +370,7 @@ const FocusSession = () => {
                 keyConcepts: task.key_concepts,
                 microSteps: task.micro_steps,
                 difficulty: task.difficulty,
+                sourceImageUrl: task.source_image_url,
               } : undefined}
             />
           </div>

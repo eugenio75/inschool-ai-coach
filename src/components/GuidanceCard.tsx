@@ -225,6 +225,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
               keyConcepts: taskContext.keyConcepts,
               microSteps: taskContext.microSteps,
               difficulty: taskContext.difficulty,
+              sourceImageUrl: taskContext.sourceImageUrl,
             } : {
               title: taskTitle,
               subject: taskSubject,
