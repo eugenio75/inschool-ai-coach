@@ -134,21 +134,28 @@ ${conceptsList || "Nessuno"}
 COMPITI ATTIVI:
 ${tasksList || "Nessuno"}
 
-La missione deve essere:
-- Specifica e legata a una lacuna reale dello studente
-- Fattibile in 5-10 minuti
-- Formulata in modo amichevole e motivante, rivolgendoti a ${studentName} per nome
-- Può essere: un mini-esercizio da fare col Coach, una domanda di ragionamento, una spiegazione da dare con parole proprie
-- NON deve essere generica (no "studia di più")
+OBIETTIVO: Creare una SFIDA NARRATIVA che mescoli creativamente i compiti e/o i concetti deboli dello studente in un'unica esperienza coinvolgente.
 
-IMPORTANTE: Il tipo della missione deve essere "coach_challenge" — lo studente la completerà chattando con il Coach durante una sessione.
+ESEMPI DI SFIDE CREATIVE:
+- Se ha compiti di Italiano (Pinocchio) e Matematica: "Pinocchio e la magia dei numeri!" → il coach racconta un'avventura dove Pinocchio deve risolvere problemi di matematica
+- Se ha compiti di Scienze e Storia: "L'inventore del tempo!" → lo studente viaggia nel tempo e deve usare la scienza per risolvere enigmi storici  
+- Se ha lacune in grammatica e compiti di geografia: "Il detective delle parole perdute!" → deve trovare errori grammaticali nelle descrizioni di luoghi
+- Se ha un solo compito: crea comunque una cornice narrativa avvincente attorno a quel tema
+
+REGOLE:
+- Il titolo deve essere ACCATTIVANTE e narrativo (come il titolo di un mini-gioco), max 8 parole
+- La descrizione deve essere una frase motivante che anticipa l'avventura, rivolta a ${studentName} per nome
+- MESCOLA almeno 2 materie/concetti quando possibile
+- Deve essere fattibile in 5-10 minuti di chat col Coach
+- Il tipo è "coach_challenge" — lo studente la completerà chattando con il Coach
+- NON deve essere generica o noiosa
 
 Rispondi SOLO con un JSON:
 {
-  "title": "titolo breve della missione (max 8 parole)",
-  "description": "descrizione motivante di 1-2 frasi rivolta a ${studentName}",
-  "subject": "materia collegata",
-  "concept": "concetto collegato se presente"
+  "title": "titolo narrativo accattivante",
+  "description": "descrizione avventurosa di 1-2 frasi rivolta a ${studentName}",
+  "subject": "materie coinvolte (es. 'Italiano e Matematica')",
+  "concept": "concetti collegati se presenti"
 }`;
 
         const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
