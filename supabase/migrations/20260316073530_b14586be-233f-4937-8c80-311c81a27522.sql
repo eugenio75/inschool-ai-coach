@@ -1,0 +1,1 @@
+UPDATE homework_tasks SET completed = false, updated_at = now() WHERE id = '52207295-b76a-4dde-960c-37d551870a72';
