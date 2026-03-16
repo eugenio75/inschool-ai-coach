@@ -118,10 +118,15 @@ export async function getTasks(childProfileId?: string) {
   const profileId = childProfileId || getActiveChildProfileId();
   if (!profileId) return [];
 
+  // Show tasks due today or earlier (+ tasks without due_date for backwards compat)
+  const today = new Date().toISOString().split("T")[0];
+
   const { data, error } = await supabase
     .from("homework_tasks")
     .select("*")
     .eq("child_profile_id", profileId)
+    .or(`due_date.is.null,due_date.lte.${today}`)
+    .order("due_date", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
   if (error) console.error("getTasks error:", error);
   return data || [];
