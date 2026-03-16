@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Send, Mic, MicOff, Sparkles, Trophy, Timer } from "lucide-react";
+import { ArrowLeft, Send, Mic, MicOff, Sparkles, Trophy, Timer, Pause, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getDailyMissions, completeMission, getGamification } from "@/lib/database";
 import { isChildSession, getChildSession } from "@/lib/childSession";
