@@ -168,7 +168,7 @@ const ParentDashboard = () => {
       }
     };
     fetchInsights();
-  }, [selectedChild, unlocked, sessions, gamification, memoryItems, tasks]);
+  }, [selectedChild, unlocked, sessions, gamification, memoryItems, tasks, missions]);
 
   const checkPin = () => {
     if (pinInput === correctPin) {
