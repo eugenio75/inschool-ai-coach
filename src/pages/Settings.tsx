@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Lock, Loader2, Users, Shield } from "lucide-react";
+import { ArrowLeft, BookOpen, Lock, Loader2, Users, Shield, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/useAuth";
-import { getChildProfiles, getParentSettings, updateParentPin } from "@/lib/database";
+import { getChildProfiles, getParentSettings, updateParentPin, updateChildProfile } from "@/lib/database";
+
+const AVATAR_EMOJIS = ["🧒", "👦", "👧", "🦸", "🧑‍🎓", "🦊", "🐼", "🦁", "🐯", "🐸", "🦄", "🐲", "🌟", "🚀", "🎨", "⚽", "🎸", "🦋", "🐬", "🦉"];
 
 const Settings = () => {
   const navigate = useNavigate();
