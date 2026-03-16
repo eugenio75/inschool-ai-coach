@@ -392,17 +392,23 @@ const CoachChallenge = () => {
         </div>
       </div>
 
-      {/* Complete button */}
-      {minutesElapsed >= 5 && !completed && (
+      {/* Complete / End button - always visible when not completed */}
+      {!completed && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="px-4 py-3 bg-card border-t border-border"
         >
           <div className="max-w-3xl mx-auto">
-            <Button onClick={handleComplete} className="w-full bg-primary text-primary-foreground rounded-2xl py-3 font-display font-bold">
+            <Button
+              onClick={handleComplete}
+              disabled={minutesElapsed < 5}
+              className="w-full rounded-2xl py-3 font-display font-bold"
+            >
               <Trophy className="w-4 h-4 mr-2" />
-              Completa la sfida! +{mission.points_reward} punti
+              {minutesElapsed >= 5
+                ? `Completa la sfida! +${mission.points_reward} punti`
+                : `Completa tra ${5 - minutesElapsed} min`}
             </Button>
           </div>
         </motion.div>
