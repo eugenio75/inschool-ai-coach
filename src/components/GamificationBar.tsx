@@ -19,32 +19,46 @@ export const GamificationBar = () => {
 
   if (!g) return null;
 
+  const total = (g.focus_points || 0) + (g.autonomy_points || 0) + (g.consistency_points || 0);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...spring, delay: 0.15 }}
-      className="flex items-center gap-4 overflow-x-auto pb-1"
+      className="space-y-2"
     >
-      <div className="flex items-center gap-1.5 bg-terracotta-light rounded-xl px-3 py-2 flex-shrink-0">
-        <Flame className="w-4 h-4 text-terracotta" />
-        <span className="text-sm font-display font-bold text-terracotta">{g.streak || 0}</span>
-        <span className="text-xs text-terracotta/80">giorni</span>
+      {/* Main row: streak + total */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 bg-terracotta-light rounded-xl px-3 py-2">
+          <Flame className="w-4 h-4 text-terracotta" />
+          <span className="text-sm font-display font-bold text-terracotta">{g.streak || 0}</span>
+          <span className="text-xs text-terracotta/80">giorni</span>
+        </div>
+        <div className="flex items-center gap-1.5 bg-primary/10 rounded-xl px-3 py-2">
+          <Star className="w-4 h-4 text-primary" />
+          <span className="text-sm font-display font-bold text-primary">{total}</span>
+          <span className="text-xs text-primary/80">punti</span>
+        </div>
       </div>
-      <div className="flex items-center gap-1.5 bg-sage-light rounded-xl px-3 py-2 flex-shrink-0">
-        <Zap className="w-4 h-4 text-sage-dark" />
-        <span className="text-sm font-display font-bold text-sage-dark">{g.focus_points || 0}</span>
-        <span className="text-xs text-sage-dark/80">focus</span>
-      </div>
-      <div className="flex items-center gap-1.5 bg-clay-light rounded-xl px-3 py-2 flex-shrink-0">
-        <Star className="w-4 h-4 text-clay-dark" />
-        <span className="text-sm font-display font-bold text-clay-dark">{g.autonomy_points || 0}</span>
-        <span className="text-xs text-clay-dark/80">autonomia</span>
-      </div>
-      <div className="flex items-center gap-1.5 bg-muted rounded-xl px-3 py-2 flex-shrink-0">
-        <Target className="w-4 h-4 text-muted-foreground" />
-        <span className="text-sm font-display font-bold text-muted-foreground">{g.consistency_points || 0}</span>
-        <span className="text-xs text-muted-foreground/80">costanza</span>
+
+      {/* Detail row: 3 sub-scores */}
+      <div className="flex items-center gap-3 overflow-x-auto">
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Zap className="w-3 h-3 text-sage-dark" />
+          <span className="font-medium text-sage-dark">{g.focus_points || 0}</span>
+          <span>impegno</span>
+        </div>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Star className="w-3 h-3 text-clay-dark" />
+          <span className="font-medium text-clay-dark">{g.autonomy_points || 0}</span>
+          <span>indipendenza</span>
+        </div>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Target className="w-3 h-3 text-muted-foreground" />
+          <span className="font-medium">{g.consistency_points || 0}</span>
+          <span>costanza</span>
+        </div>
       </div>
     </motion.div>
   );
@@ -91,11 +105,8 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
 
   const handleMissionClick = (mission: any) => {
     if (mission.completed) return;
-    // Navigate to relevant section based on mission type
     if (mission.mission_type === "review_weak_concept") {
       navigate("/memory");
-    } else if (mission.mission_type === "coach_challenge" || mission.mission_type === "study_session") {
-      navigate("/dashboard"); // They'll pick a task from there
     }
   };
 
