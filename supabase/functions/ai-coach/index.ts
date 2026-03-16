@@ -195,6 +195,7 @@ serve(async (req) => {
     // Build context-aware system prompt
     let contextPrompt = SYSTEM_PROMPT;
     if (studentProfile) {
+      const interests = studentProfile.interests || [];
       contextPrompt += `\n\nPROFILO STUDENTE:
 - Nome: ${studentProfile.name || "Studente"}
 - Età: ${studentProfile.age || "non specificata"}
@@ -203,7 +204,18 @@ serve(async (req) => {
 - Stile preferito: ${studentProfile.supportStyle || studentProfile.support_style || "gentile"}
 - Tempo di focus: ${studentProfile.focusTime || studentProfile.focus_time || 15} minuti
 - Materie che trova difficili/non piacevoli: ${studentProfile.difficultSubjects?.join(", ") || studentProfile.difficult_subjects?.join(", ") || "nessuna"}
-- Materie preferite: ${studentProfile.favoriteSubjects?.join(", ") || studentProfile.favorite_subjects?.join(", ") || "nessuna"}`;
+- Materie preferite: ${studentProfile.favoriteSubjects?.join(", ") || studentProfile.favorite_subjects?.join(", ") || "nessuna"}
+- Interessi personali: ${interests.length > 0 ? interests.join(", ") : "non specificati"}`;
+
+      if (interests.length > 0) {
+        contextPrompt += `\n\n🎯 INTERESSI DELLO STUDENTE: ${interests.join(", ")}
+Usa questi interessi per rendere le spiegazioni più coinvolgenti:
+- Crea analogie e esempi collegati ai suoi interessi quando possibile
+- Nelle storie e negli scenari, incorpora elementi che conosce e ama
+- NON forzare il collegamento se non è naturale — deve sembrare organico
+- Esempio: se ama il calcio e studi le frazioni → "Immagina di dividere il campo in parti uguali"
+- Esempio: se ama Minecraft e studi la geometria → "Pensa ai blocchi: ogni cubo ha 6 facce"`;
+      }
     }
 
     // Detect if this is a "difficult/disliked" subject for the student
