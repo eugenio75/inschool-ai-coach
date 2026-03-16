@@ -1,25 +1,19 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const confettiColors = [
+const softColors = [
   "hsl(var(--primary))",
-  "hsl(var(--secondary))",
-  "hsl(var(--terracotta))",
   "hsl(var(--sage))",
   "hsl(var(--clay))",
 ];
 
+// Calm, meaningful messages — no hype, just warm acknowledgment
 const celebrationMessages = [
-  { emoji: "🌟", text: "Fantastico!" },
-  { emoji: "🚀", text: "Che razzo!" },
-  { emoji: "💪", text: "Che forza!" },
-  { emoji: "🧠", text: "Cervellone!" },
-  { emoji: "🔥", text: "Sei on fire!" },
-  { emoji: "⚡", text: "Super veloce!" },
-  { emoji: "🎯", text: "Centro perfetto!" },
-  { emoji: "🏆", text: "Da campione!" },
-  { emoji: "✨", text: "Brillante!" },
-  { emoji: "🌈", text: "Incredibile!" },
+  { emoji: "🌟", text: "Ce l'hai fatta!" },
+  { emoji: "🌱", text: "Un passo in più." },
+  { emoji: "🧠", text: "Ottimo lavoro." },
+  { emoji: "📚", text: "Compito completato." },
+  { emoji: "✨", text: "Ben fatto." },
 ];
 
 interface Particle {
@@ -47,19 +41,20 @@ export const CelebrationOverlay = ({ show, onComplete, message, points }: Celebr
   useEffect(() => {
     if (!show) return;
     
-    const newParticles: Particle[] = Array.from({ length: 20 }, (_, i) => ({
+    // Fewer, softer particles — calm celebration, not overstimulating
+    const newParticles: Particle[] = Array.from({ length: 8 }, (_, i) => ({
       id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
-      size: Math.random() * 8 + 4,
-      rotation: Math.random() * 360,
+      x: 30 + Math.random() * 40, // centered cluster
+      y: 20 + Math.random() * 40,
+      color: softColors[Math.floor(Math.random() * softColors.length)],
+      size: Math.random() * 6 + 3,
+      rotation: Math.random() * 180,
     }));
     setParticles(newParticles);
 
     const timer = setTimeout(() => {
       onComplete?.();
-    }, 2000);
+    }, 2500);
     return () => clearTimeout(timer);
   }, [show, onComplete]);
 
@@ -85,10 +80,11 @@ export const CelebrationOverlay = ({ show, onComplete, message, points }: Celebr
               animate={{ 
                 x: `${p.x}vw`, 
                 y: `${p.y}vh`,
-                scale: [0, 1.5, 0],
+                scale: [0, 1, 0],
                 rotate: p.rotation,
+                opacity: [0, 0.7, 0],
               }}
-              transition={{ duration: 1.5, ease: "easeOut" }}
+              transition={{ duration: 2, ease: "easeOut" }}
               className="absolute rounded-full"
               style={{ 
                 width: p.size, 
@@ -100,10 +96,10 @@ export const CelebrationOverlay = ({ show, onComplete, message, points }: Celebr
 
           {/* Central message */}
           <motion.div
-            initial={{ scale: 0, rotate: -10 }}
-            animate={{ scale: [0, 1.2, 1], rotate: [-10, 5, 0] }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             className="bg-card rounded-3xl shadow-lg px-8 py-6 text-center border border-border"
           >
             <span className="text-5xl block mb-2">{celebration.emoji}</span>
@@ -127,16 +123,14 @@ export const CelebrationOverlay = ({ show, onComplete, message, points }: Celebr
   );
 };
 
-// Social proof messages - simulated peer activity
+// Social proof — cooperative, class-oriented, never competitive
 const socialProofMessages = [
-  "3 studenti stanno studiando in questo momento 📚",
-  "Marco ha appena completato una sfida di matematica! 🎯",
-  "Oggi 12 studenti hanno già fatto i compiti 💪",
-  "Sofia ha raggiunto una streak di 5 giorni! 🔥",
-  "I tuoi compagni stanno migliorando, unisciti a loro! 🌟",
-  "7 studenti hanno completato le missioni oggi ⚡",
-  "Luca ha sbloccato il badge 'Esploratore' 🏅",
-  "Oggi è un giorno perfetto per studiare insieme! 🌈",
+  "La tua classe ha completato 18 missioni questa settimana 📚",
+  "Insieme avete studiato per 3 ore oggi! 🌱",
+  "I tuoi compagni stanno lavorando sodo — unisciti a loro! 💪",
+  "La classe ha ripassato 12 concetti questa settimana 🧠",
+  "Oggi è un buon giorno per studiare insieme! 🌈",
+  "Insieme si impara meglio — la tua classe sta crescendo! ✨",
 ];
 
 export const SocialProofBanner = () => {
