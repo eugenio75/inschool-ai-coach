@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Pause, Play, X, Loader2 } from "lucide-react";
+import { ArrowLeft, Pause, Play, X, Loader2, Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { GuidanceCard, ChatMessage } from "@/components/GuidanceCard";
@@ -11,7 +11,10 @@ import { isChildSession, getChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
-type Phase = "checkin" | "breathing" | "focus" | "recap";
+type Phase = "checkin" | "breathing" | "focus" | "break" | "recap";
+
+const BREAK_SECONDS = 5 * 60; // 5 minutes
+const MAX_POMODORO_CYCLES = 3;
 
 const emotionOptions = [
   { id: "ready", emoji: "😊", label: "Pronto" },
@@ -19,6 +22,14 @@ const emotionOptions = [
   { id: "worried", emoji: "😟", label: "Preoccupato" },
   { id: "bored", emoji: "😐", label: "Annoiato" },
   { id: "frustrated", emoji: "😤", label: "Frustrato" },
+];
+
+const breakMessages = [
+  "Hai lavorato bene! Riposa gli occhi 👀",
+  "Pausa meritata! Alzati e fai due passi 🚶",
+  "Bevi un po' d'acqua e rilassati 💧",
+  "Guarda fuori dalla finestra per un momento 🌿",
+  "Fai qualche respiro profondo 🌬️",
 ];
 
 const SESSION_KEY_PREFIX = "focus-session-";
@@ -39,6 +50,33 @@ function clearSessionState(taskId: string) {
   sessionStorage.removeItem(`focus-chat-${taskId}`);
 }
 
+// Generate a soft chime sound using Web Audio API
+function playChimeSound() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5 - gentle chord
+    
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.15);
+      gain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + i * 0.15 + 0.1);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + i * 0.15 + 1.5);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.15);
+      osc.stop(ctx.currentTime + i * 0.15 + 1.5);
+    });
+    
+    // Clean up context after sounds finish
+    setTimeout(() => ctx.close(), 3000);
+  } catch (e) {
+    console.warn("Could not play chime:", e);
+  }
+}
+
 const FocusSession = () => {
   const navigate = useNavigate();
   const { taskId } = useParams();
@@ -54,6 +92,9 @@ const FocusSession = () => {
   const [phase, setPhase] = useState<Phase>(restored?.phase || "checkin");
   const [emotion, setEmotion] = useState(restored?.emotion || "");
   const [profile, setProfile] = useState<any>(null);
+  const [pomodoroCount, setPomodoroCount] = useState(restored?.pomodoroCount || 1);
+  const [breakSeconds, setBreakSeconds] = useState(BREAK_SECONDS);
+  const [breakMessage] = useState(() => breakMessages[Math.floor(Math.random() * breakMessages.length)]);
 
   useEffect(() => {
     const load = async () => {
@@ -87,20 +128,53 @@ const FocusSession = () => {
   }, [focusMinutes]);
 
   const totalSeconds = focusMinutes * 60;
+  const totalWorkedSeconds = (pomodoroCount - 1) * totalSeconds + (totalSeconds - seconds);
   const progress = 1 - seconds / totalSeconds;
 
+  // Focus timer countdown
   useEffect(() => {
-    if (!isRunning || seconds <= 0) return;
+    if (!isRunning || seconds <= 0 || phase !== "focus") return;
     const interval = setInterval(() => setSeconds((s) => s - 1), 1000);
     return () => clearInterval(interval);
-  }, [isRunning, seconds]);
+  }, [isRunning, seconds, phase]);
+
+  // Detect timer reaching 0 → trigger break
+  useEffect(() => {
+    if (phase === "focus" && seconds <= 0 && isRunning) {
+      setIsRunning(false);
+      if (pomodoroCount >= MAX_POMODORO_CYCLES) {
+        // Max cycles reached, suggest ending
+        endSession();
+      } else {
+        // Start break
+        playChimeSound();
+        setPhase("break");
+        setBreakSeconds(BREAK_SECONDS);
+      }
+    }
+  }, [seconds, phase, isRunning, pomodoroCount]);
+
+  // Break timer countdown
+  useEffect(() => {
+    if (phase !== "break" || breakSeconds <= 0) return;
+    const interval = setInterval(() => setBreakSeconds((s) => s - 1), 1000);
+    return () => clearInterval(interval);
+  }, [phase, breakSeconds]);
+
+  // Break timer reaching 0 → restart focus
+  useEffect(() => {
+    if (phase === "break" && breakSeconds <= 0) {
+      playChimeSound();
+      resumeAfterBreak();
+    }
+  }, [breakSeconds, phase]);
 
   // Persist state on every change
   useEffect(() => {
     if (taskId && phase !== "recap") {
-      saveSessionState(taskId, { phase, emotion, seconds, isRunning });
+      saveSessionState(taskId, { phase, emotion, seconds, isRunning, pomodoroCount });
     }
-  }, [phase, emotion, seconds, isRunning, taskId]);
+  }, [phase, emotion, seconds, isRunning, taskId, pomodoroCount]);
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
@@ -113,6 +187,13 @@ const FocusSession = () => {
         return c + 1;
       });
     }, 4000);
+  };
+
+  const resumeAfterBreak = () => {
+    setPomodoroCount((c: number) => c + 1);
+    setSeconds(totalSeconds);
+    setPhase("focus");
+    setIsRunning(true);
   };
 
   const handleMessagesChange = useCallback((msgs: ChatMessage[]) => {
@@ -143,7 +224,6 @@ const FocusSession = () => {
         body.childProfileId = childSession.profileId;
       } else {
         body.childProfileId = childProfileId;
-        // Get the actual user JWT token for authentication
         const { supabase } = await import("@/integrations/supabase/client");
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.access_token) {
@@ -151,7 +231,6 @@ const FocusSession = () => {
         }
       }
 
-      // Also include apikey header required by Supabase
       headers.apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
       await fetch(
@@ -166,17 +245,14 @@ const FocusSession = () => {
   };
 
   const handleExit = () => {
-    // Exit without saving anything - no work was done or user wants to quit
     if (taskId) clearSessionState(taskId);
     navigate("/dashboard");
   };
 
   const endSession = async () => {
     setIsRunning(false);
-    const durationSeconds = totalSeconds - seconds;
-    const minutesWorked = Math.round(durationSeconds / 60);
+    const minutesWorked = Math.round(totalWorkedSeconds / 60);
 
-    // Minimum 5 minutes of real work required to earn points
     if (minutesWorked < 5) {
       handleExit();
       return;
@@ -187,21 +263,18 @@ const FocusSession = () => {
     await saveFocusSession({
       task_id: task?.id,
       emotion,
-      duration_seconds: durationSeconds,
+      duration_seconds: totalWorkedSeconds,
       focus_points: minutesWorked * 2,
       autonomy_points: Math.round(minutesWorked * 0.5),
       consistency_points: 1,
     });
 
-    // Mark task as completed only if worked at least 1 minute
     if (task?.id) {
       await updateTask(task.id, { completed: true });
     }
 
-    // Extract concepts from chat and save to memory
     await extractAndSaveConcepts();
 
-    // Auto-complete daily missions only with real work
     try {
       const missions = await getDailyMissions();
       for (const mission of missions) {
@@ -221,11 +294,10 @@ const FocusSession = () => {
       console.error("Mission completion error:", err);
     }
 
-    // Clear persisted session state
     if (taskId) clearSessionState(taskId);
   };
 
-  const minutesWorked = Math.round((totalSeconds - seconds) / 60);
+  const minutesWorked = Math.round(totalWorkedSeconds / 60);
   const studentName = profile?.name || "campione";
   const taskTitle = task?.title || "il tuo compito";
   const taskSubject = task?.subject || "";
@@ -251,7 +323,81 @@ const FocusSession = () => {
         <button onClick={handleExit} className="text-muted-foreground hover:text-foreground transition-colors"><X className="w-5 h-5" /></button>
       </div>
 
-      {phase !== "focus" ? (
+      {/* Break overlay */}
+      <AnimatePresence>
+        {phase === "break" && (
+          <motion.div
+            key="break-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-background/95 backdrop-blur-sm flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={spring}
+              className="text-center max-w-sm mx-auto px-6"
+            >
+              {/* Pulsating coffee icon */}
+              <motion.div
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="w-24 h-24 rounded-full bg-accent flex items-center justify-center mx-auto mb-6"
+              >
+                <Coffee className="w-10 h-10 text-accent-foreground" />
+              </motion.div>
+
+              <h2 className="font-display text-2xl font-bold text-foreground mb-2">
+                Fai una pausa! ☕
+              </h2>
+              <p className="text-muted-foreground mb-6">{breakMessage}</p>
+
+              {/* Break countdown */}
+              <div className="bg-card rounded-2xl border border-border px-6 py-4 mb-6">
+                <p className="text-xs text-muted-foreground mb-1">La pausa finisce tra</p>
+                <p className="font-display text-4xl font-bold text-foreground tabular-nums">
+                  {formatTime(breakSeconds)}
+                </p>
+              </div>
+
+              {/* Pomodoro cycle indicator */}
+              <div className="flex items-center justify-center gap-2 mb-6">
+                {Array.from({ length: MAX_POMODORO_CYCLES }, (_, i) => (
+                  <div
+                    key={i}
+                    className={`w-3 h-3 rounded-full transition-colors ${
+                      i < pomodoroCount ? "bg-primary" : "bg-muted"
+                    }`}
+                  />
+                ))}
+                <span className="text-xs text-muted-foreground ml-1">
+                  Ciclo {pomodoroCount}/{MAX_POMODORO_CYCLES}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <Button
+                  onClick={resumeAfterBreak}
+                  className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5 text-base"
+                >
+                  Riprendi subito
+                </Button>
+                <Button
+                  onClick={endSession}
+                  variant="outline"
+                  className="rounded-2xl py-5 border-border"
+                >
+                  Ho finito, termina sessione
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {phase !== "focus" && phase !== "break" ? (
         <div className="flex-1 overflow-y-auto flex flex-col items-center justify-start sm:justify-center px-4 sm:px-6 pt-3 pb-16">
           <AnimatePresence mode="wait">
             {phase === "checkin" && (
@@ -284,7 +430,10 @@ const FocusSession = () => {
               <motion.div key="recap" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={spring} className="text-center max-w-md w-full">
                 <div className="w-16 h-16 rounded-2xl bg-sage-light flex items-center justify-center mx-auto mb-6"><span className="text-3xl">🌟</span></div>
                 <h2 className="font-display text-2xl font-bold text-foreground mb-2">Bravissimo, {studentName}!</h2>
-                <p className="text-muted-foreground mb-2">Hai lavorato per {minutesWorked} minuti su {taskTitle}.</p>
+                <p className="text-muted-foreground mb-2">
+                  Hai lavorato per {minutesWorked} minuti su {taskTitle}
+                  {pomodoroCount > 1 ? ` (${pomodoroCount} cicli)` : ""}.
+                </p>
                 
                 {extracting && (
                   <div className="flex items-center justify-center gap-2 my-3 text-sm text-muted-foreground">
@@ -324,7 +473,7 @@ const FocusSession = () => {
             )}
           </AnimatePresence>
         </div>
-      ) : (
+      ) : phase === "focus" ? (
         <div className="flex-1 flex flex-col min-h-0">
           {/* Timer + controls - compact row at top */}
           <motion.div
@@ -340,6 +489,7 @@ const FocusSession = () => {
                 <div className="text-left">
                   <p className="font-display text-3xl font-bold text-foreground tabular-nums">{formatTime(seconds)}</p>
                   <p className="text-xs text-muted-foreground">
+                    {pomodoroCount > 1 && <span className="text-primary font-medium mr-1">Ciclo {pomodoroCount}</span>}
                     {progress < 0.25 ? "Stai andando benissimo." : progress < 0.5 ? "Ottimo ritmo!" : progress < 0.75 ? "Più di metà! 💪" : "Quasi finito!"}
                   </p>
                 </div>
@@ -376,7 +526,7 @@ const FocusSession = () => {
             />
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };
