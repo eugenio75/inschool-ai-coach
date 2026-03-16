@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Send, Mic, MicOff, Sparkles, Trophy, Timer } from "lucide-react";
+import { ArrowLeft, Send, Mic, MicOff, Sparkles, Trophy, Timer, Pause, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getDailyMissions, completeMission, getGamification } from "@/lib/database";
 import { isChildSession, getChildSession } from "@/lib/childSession";
@@ -25,19 +25,35 @@ const CoachChallenge = () => {
   const [streamingText, setStreamingText] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [paused, setPaused] = useState(false);
   const [completed, setCompleted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
   const startTimeRef = useRef(Date.now());
+  const pausedAtRef = useRef<number | null>(null);
 
   // Timer
   useEffect(() => {
+    if (paused) return;
     const interval = setInterval(() => {
       setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [paused]);
+
+  const togglePause = () => {
+    if (paused) {
+      // Resume: shift startTime forward by the paused duration
+      const pausedDuration = Date.now() - (pausedAtRef.current || Date.now());
+      startTimeRef.current += pausedDuration;
+      pausedAtRef.current = null;
+      setPaused(false);
+    } else {
+      pausedAtRef.current = Date.now();
+      setPaused(true);
+    }
+  };
 
   const minutesElapsed = Math.floor(elapsed / 60);
   const secondsElapsed = elapsed % 60;
@@ -272,11 +288,21 @@ const CoachChallenge = () => {
               <p className="text-xs text-muted-foreground truncate max-w-[200px]">{mission.title}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 bg-muted rounded-xl px-3 py-1.5">
-              <Timer className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-xs font-mono font-medium text-foreground">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={togglePause}
+              className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
+                paused ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
+              }`}
+              title={paused ? "Riprendi" : "Pausa"}
+            >
+              {paused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
+            </button>
+            <div className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 ${paused ? "bg-clay-light" : "bg-muted"}`}>
+              <Timer className={`w-3.5 h-3.5 ${paused ? "text-clay-dark" : "text-muted-foreground"}`} />
+              <span className={`text-xs font-mono font-medium ${paused ? "text-clay-dark" : "text-foreground"}`}>
                 {String(minutesElapsed).padStart(2, "0")}:{String(secondsElapsed).padStart(2, "0")}
+                {paused && " ⏸"}
               </span>
             </div>
             <div className="flex items-center gap-1 bg-primary/10 rounded-xl px-3 py-1.5">
