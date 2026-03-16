@@ -102,7 +102,11 @@ const StudentProfile = () => {
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
   if (!profile) return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">Profilo non trovato</p></div>;
 
-  const hasChanges = selectedAvatar !== (profile.avatar_emoji || "🧒") || JSON.stringify(interests) !== JSON.stringify(profile.interests || []);
+  const hasChanges = selectedAvatar !== (profile.avatar_emoji || "🧒") 
+    || JSON.stringify(interests) !== JSON.stringify(profile.interests || [])
+    || classSection !== (profile.class_section || "")
+    || schoolName !== (profile.school_name || "")
+    || city !== (profile.city || "");
 
   return (
     <div className="min-h-screen bg-background pb-24">
