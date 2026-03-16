@@ -48,7 +48,7 @@ const Settings = () => {
       </div>
 
       <div className="px-6 py-8">
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="max-w-3xl mx-auto space-y-6">
           {/* Account info */}
           <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
             <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2"><Shield className="w-4 h-4 text-sage-dark" /> Account genitore</h3>

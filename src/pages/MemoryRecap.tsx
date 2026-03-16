@@ -361,7 +361,7 @@ const MemoryRecap = () => {
 
           {strong.length > 0 && (
             <div className="px-6 mt-8">
-              <div className="max-w-2xl mx-auto">
+              <div className="max-w-3xl mx-auto">
                 <div className="flex items-center gap-2 mb-4">
                   <Sparkles className="w-4 h-4 text-sage-dark" />
                   <h2 className="font-display font-semibold text-foreground">Concetti solidi</h2>

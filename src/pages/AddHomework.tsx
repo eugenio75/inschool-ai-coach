@@ -177,7 +177,7 @@ const AddHomework = () => {
       </div>
 
       <div className="px-6 mt-6">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <AnimatePresence mode="wait">
             {/* Choose mode */}
             {mode === "choose" && (
