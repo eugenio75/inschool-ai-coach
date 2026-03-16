@@ -162,6 +162,7 @@ const AddHomework = () => {
           estimated_minutes: task.estimatedMinutes,
           difficulty: task.difficulty,
           source_type: "photo",
+          source_image_url: photoFile ? undefined : undefined,
           due_date: dueDate,
         });
       }
