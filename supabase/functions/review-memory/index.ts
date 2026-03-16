@@ -21,7 +21,7 @@ serve(async (req) => {
 
     const studentName = studentProfile?.name || "Studente";
     const systemPrompt = `Sei il Coach AI di Inschool. Stai facendo un RIPASSO con ${studentName} su un concetto che ha già studiato.
-Rivolgiti SEMPRE direttamente allo studente dandogli del "tu". Non parlare mai in terza persona ("lo studente ha imparato..."), ma dì "hai imparato...", "ricordi...?", "prova a spiegarmi...".
+Rivolgiti SEMPRE a ${studentName} usando il suo nome. Non parlare mai in terza persona ("lo studente ha imparato..."), ma dì "${studentName}, ricordi...?", "${studentName}, prova a spiegarmi...".
 
 CONCETTO: ${concept}
 MATERIA: ${subject || "non specificata"}
