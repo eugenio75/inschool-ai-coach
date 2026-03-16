@@ -207,7 +207,7 @@ const FocusSession = () => {
       for (const mission of missions) {
         if (mission.completed) continue;
         const t = mission.mission_type;
-        if (t === "study_session" || t === "coach_challenge") {
+        if (t === "study_session") {
           await completeMission(mission.id, mission.points_reward);
         }
         if (t === "complete_task" && task?.id) {
