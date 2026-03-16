@@ -62,16 +62,18 @@ const ParentDashboard = () => {
   useEffect(() => {
     if (!selectedChild) return;
     const loadChild = async () => {
-      const [g, s, m, t] = await Promise.all([
+      const [g, s, m, t, dm] = await Promise.all([
         getGamification(selectedChild),
         getFocusSessions(selectedChild),
         getMemoryItems(selectedChild),
         getTasks(selectedChild),
+        getDailyMissions(selectedChild),
       ]);
       setGamification(g);
       setSessions(s);
       setMemoryItems(m);
       setTasks(t);
+      setMissions(dm);
     };
     loadChild();
   }, [selectedChild]);
