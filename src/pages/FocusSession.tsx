@@ -186,6 +186,25 @@ const FocusSession = () => {
     // Extract concepts from chat and save to memory
     await extractAndSaveConcepts();
 
+    // Auto-complete daily missions
+    try {
+      const missions = await getDailyMissions();
+      for (const mission of missions) {
+        if (mission.completed) continue;
+        if (mission.mission_type === "study_session") {
+          await completeMission(mission.id, mission.points_reward);
+        }
+        if (mission.mission_type === "complete_task" && task?.id) {
+          await completeMission(mission.id, mission.points_reward);
+        }
+        if (mission.mission_type === "study_minutes" && minutesWorked >= 10) {
+          await completeMission(mission.id, mission.points_reward);
+        }
+      }
+    } catch (err) {
+      console.error("Mission completion error:", err);
+    }
+
     // Clear persisted session state
     if (taskId) clearSessionState(taskId);
   };
