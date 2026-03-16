@@ -114,15 +114,15 @@ serve(async (req) => {
 
     const userPrompt = `Analizza questi dati DETTAGLIATI e REALI e fornisci 4 consigli iper-personalizzati per i genitori di ${childProfile.name}:
 
-PROFILO:
+PROFILO (solo per contesto, NON basare i consigli sulle preferenze dichiarate):
 - Nome: ${childProfile.name}
 - Età: ${childProfile.age || "non specificata"}
 - Classe: ${childProfile.school_level || "non specificata"}
-- Materie preferite: ${childProfile.favorite_subjects?.join(", ") || "non specificate"}
-- Materie difficili: ${childProfile.difficult_subjects?.join(", ") || "non specificate"}
-- Difficoltà segnalate: ${childProfile.struggles?.join(", ") || "nessuna specificata"}
-- Stile coach: ${childProfile.support_style || "gentile"}
 - Tempo focus preferito: ${childProfile.focus_time || 15} minuti
+
+MATERIE CHE NON PIACCIONO O SONO DIFFICILI (usa queste per suggerire come renderle più attraenti):
+- Materie difficili: ${childProfile.difficult_subjects?.join(", ") || "nessuna indicata"}
+- Difficoltà segnalate: ${childProfile.struggles?.join(", ") || "nessuna"}
 
 STATISTICHE GENERALI:
 - Sessioni totali: ${sessionsCount || 0}
@@ -148,7 +148,7 @@ ${emotionDetail}
 STATISTICHE PER MATERIA:
 ${subjectDetail}
 
-IMPORTANTE: Ogni consiglio deve citare DATI SPECIFICI da quelli sopra (nomi di concetti, titoli di compiti, emozioni, missioni). Non dare consigli generici.`;
+IMPORTANTE: Basa i consigli sui DATI REALI di studio (sessioni, concetti, missioni, emozioni), NON sulle preferenze dichiarate. Usa le materie difficili/non piacevoli SOLO per suggerire strategie creative per avvicinarsi ad esse.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
