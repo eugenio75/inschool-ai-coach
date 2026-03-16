@@ -1,0 +1,1 @@
+UPDATE daily_missions SET completed = false, completed_at = NULL WHERE id = 'fff775ca-a379-4d5a-9b89-9bcf6986686e';
