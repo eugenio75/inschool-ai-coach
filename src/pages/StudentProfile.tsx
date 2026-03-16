@@ -149,6 +149,50 @@ const StudentProfile = () => {
             </div>
           </motion.div>
 
+          {/* School info */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.15 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
+            <div className="flex items-center gap-2 mb-1">
+              <School className="w-4 h-4 text-sage-dark" />
+              <h3 className="font-display font-semibold text-foreground text-sm">La mia scuola</h3>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">Queste info aiutano il coach a conoscerti meglio (facoltativo)</p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Classe (es. 3ª B)</label>
+                <input
+                  type="text"
+                  value={classSection}
+                  onChange={(e) => setClassSection(e.target.value.slice(0, 20))}
+                  placeholder="Es. 3ª B"
+                  maxLength={20}
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Nome della scuola</label>
+                <input
+                  type="text"
+                  value={schoolName}
+                  onChange={(e) => setSchoolName(e.target.value.slice(0, 100))}
+                  placeholder="Es. IC Alessandro Manzoni"
+                  maxLength={100}
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1"><MapPin className="w-3 h-3" /> Città</label>
+                <input
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value.slice(0, 50))}
+                  placeholder="Es. Roma"
+                  maxLength={50}
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+            </div>
+          </motion.div>
+
           {/* Interests */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
             <div className="flex items-center gap-2 mb-1">
