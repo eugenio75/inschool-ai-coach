@@ -24,10 +24,9 @@ const subjects = [
   "Italiano", "Matematica", "Scienze", "Storia", "Geografia", "Inglese", "Arte", "Musica", "Tecnologia",
 ];
 
-/** Returns tomorrow's date as YYYY-MM-DD */
-function getTomorrow(): string {
+/** Returns today's date as YYYY-MM-DD */
+function getToday(): string {
   const d = new Date();
-  d.setDate(d.getDate() + 1);
   return d.toISOString().split("T")[0];
 }
 
