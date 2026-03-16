@@ -28,6 +28,7 @@ const CoachChallenge = () => {
   const [elapsed, setElapsed] = useState(0);
   const [paused, setPaused] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
