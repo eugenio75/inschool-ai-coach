@@ -57,6 +57,7 @@ const AppRoutes = () => (
     <Route path="/add-homework" element={<AccessibleRoute><AddHomework /></AccessibleRoute>} />
     <Route path="/homework/:taskId" element={<AccessibleRoute><HomeworkDetail /></AccessibleRoute>} />
     <Route path="/focus/:taskId" element={<AccessibleRoute><FocusSession /></AccessibleRoute>} />
+    <Route path="/challenge/:missionId" element={<AccessibleRoute><CoachChallenge /></AccessibleRoute>} />
     <Route path="/memory" element={<AccessibleRoute><MemoryRecap /></AccessibleRoute>} />
     <Route path="/parent-dashboard" element={<ProtectedRoute><ParentDashboard /></ProtectedRoute>} />
     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
