@@ -103,6 +103,7 @@ const AddHomework = () => {
     if (!file.type.startsWith("image/")) return;
     setPhotoFile(file);
     setUploadedImageUrl(null);
+    setExtractedSourceType(null);
     const reader = new FileReader();
     reader.onload = (ev) => {
       setPhotoPreview(ev.target?.result as string);
