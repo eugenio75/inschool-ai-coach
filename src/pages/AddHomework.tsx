@@ -24,10 +24,9 @@ const subjects = [
   "Italiano", "Matematica", "Scienze", "Storia", "Geografia", "Inglese", "Arte", "Musica", "Tecnologia",
 ];
 
-/** Returns tomorrow's date as YYYY-MM-DD */
-function getTomorrow(): string {
+/** Returns today's date as YYYY-MM-DD */
+function getToday(): string {
   const d = new Date();
-  d.setDate(d.getDate() + 1);
   return d.toISOString().split("T")[0];
 }
 
@@ -37,7 +36,8 @@ function formatDueDate(dateStr: string): string {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const diffDays = Math.round((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays <= 1) return "domani";
+  if (diffDays === 0) return "oggi";
+  if (diffDays === 1) return "domani";
   if (diffDays === 2) return "dopodomani";
   return d.toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" });
 }
@@ -49,7 +49,7 @@ const AddHomework = () => {
   const [manualSubject, setManualSubject] = useState("");
   const [manualTitle, setManualTitle] = useState("");
   const [manualDescription, setManualDescription] = useState("");
-  const [dueDate, setDueDate] = useState(getTomorrow());
+  const [dueDate, setDueDate] = useState(getToday());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -202,7 +202,7 @@ const AddHomework = () => {
           <input
             type="date"
             value={dueDate}
-            min={getTomorrow()}
+            min={getToday()}
             onChange={(e) => {
               setDueDate(e.target.value);
               setShowDatePicker(false);
