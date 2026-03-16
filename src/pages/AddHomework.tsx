@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Type, BookOpen, Plus, X, Sparkles, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Camera, Type, BookOpen, Plus, X, Sparkles, Check, Loader2, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createTask, uploadHomeworkImage, extractTasksFromImage } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +24,24 @@ const subjects = [
   "Italiano", "Matematica", "Scienze", "Storia", "Geografia", "Inglese", "Arte", "Musica", "Tecnologia",
 ];
 
+/** Returns tomorrow's date as YYYY-MM-DD */
+function getTomorrow(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().split("T")[0];
+}
+
+/** Format date for display: "domani", "dopodomani", or "gio 20 mar" */
+function formatDueDate(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays <= 1) return "domani";
+  if (diffDays === 2) return "dopodomani";
+  return d.toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" });
+}
+
 const AddHomework = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -31,6 +49,8 @@ const AddHomework = () => {
   const [manualSubject, setManualSubject] = useState("");
   const [manualTitle, setManualTitle] = useState("");
   const [manualDescription, setManualDescription] = useState("");
+  const [dueDate, setDueDate] = useState(getTomorrow());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [extractedTasks, setExtractedTasks] = useState<ExtractedTask[]>([]);
@@ -39,16 +59,13 @@ const AddHomework = () => {
 
   const handlePhotoAnalysis = async () => {
     if (!photoFile) return;
-    // Capture sourceType BEFORE changing mode
     const sourceType = mode === "photo-book" ? "photo-book" : "photo-diary";
     setMode("processing");
 
     try {
-      // Upload image to storage
       const imageUrl = await uploadHomeworkImage(photoFile);
       if (!imageUrl) throw new Error("Upload fallito");
 
-      // Call OCR edge function
       const result = await extractTasksFromImage(imageUrl, sourceType);
 
       if (result.tasks && result.tasks.length > 0) {
@@ -121,6 +138,7 @@ const AddHomework = () => {
         estimated_minutes: 15,
         difficulty: 1,
         source_type: "manual",
+        due_date: dueDate,
       });
       toast({ title: "Compito aggiunto! ✅" });
       navigate("/dashboard");
@@ -144,6 +162,7 @@ const AddHomework = () => {
           estimated_minutes: task.estimatedMinutes,
           difficulty: task.difficulty,
           source_type: "photo",
+          due_date: dueDate,
         });
       }
       toast({ title: `${selected.length} compiti aggiunti! ✅` });
@@ -154,6 +173,45 @@ const AddHomework = () => {
       setSaving(false);
     }
   };
+
+  /** Date picker row component */
+  const DatePickerRow = () => (
+    <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 flex-1">
+        <CalendarDays className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        <span className="text-sm text-foreground">
+          Da fare per <strong>{formatDueDate(dueDate)}</strong>
+        </span>
+      </div>
+      {!showDatePicker ? (
+        <button
+          onClick={() => setShowDatePicker(true)}
+          className="text-xs text-primary font-medium hover:underline"
+        >
+          Cambia data
+        </button>
+      ) : (
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={dueDate}
+            min={getTomorrow()}
+            onChange={(e) => {
+              setDueDate(e.target.value);
+              setShowDatePicker(false);
+            }}
+            className="text-sm px-2 py-1 rounded-lg border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
+          <button
+            onClick={() => setShowDatePicker(false)}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -235,6 +293,10 @@ const AddHomework = () => {
                   <label className="text-sm font-medium text-foreground mb-2 block">Dettagli (opzionale)</label>
                   <textarea value={manualDescription} onChange={(e) => setManualDescription(e.target.value)} placeholder="Es: Pagina 45, numeri 1-5." rows={3} className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
                 </div>
+                {/* Due date */}
+                <div className="bg-muted/50 rounded-2xl px-4 py-3">
+                  <DatePickerRow />
+                </div>
                 <Button onClick={handleManualSave} disabled={!manualSubject || !manualTitle || saving} className="w-full bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5 text-base disabled:opacity-40">
                   {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
                   Aggiungi compito
@@ -273,6 +335,10 @@ const AddHomework = () => {
                         <X className="w-4 h-4" />
                       </button>
                     </div>
+                    {/* Due date */}
+                    <div className="bg-muted/50 rounded-2xl px-4 py-3">
+                      <DatePickerRow />
+                    </div>
                     <Button onClick={handlePhotoAnalysis} className="w-full bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5 text-base">
                       <Sparkles className="w-4 h-4 mr-2" />
                       Analizza con AI e trova i compiti
@@ -301,6 +367,11 @@ const AddHomework = () => {
                   <p className="text-sm text-foreground">
                     Ho trovato <strong>{extractedTasks.length} compiti</strong> nella foto. Deseleziona quelli che non servono.
                   </p>
+                </div>
+
+                {/* Due date for all extracted tasks */}
+                <div className="bg-muted/50 rounded-2xl px-4 py-3">
+                  <DatePickerRow />
                 </div>
 
                 {extractedTasks.map((task, i) => (
