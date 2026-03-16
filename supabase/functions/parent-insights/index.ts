@@ -12,6 +12,8 @@ REGOLE FONDAMENTALI:
 - Rispondi SEMPRE in italiano
 - Fornisci esattamente 4 consigli personalizzati basati ESCLUSIVAMENTE sui dati REALI e SPECIFICI che ricevi
 - Ogni consiglio DEVE citare dati concreti: nomi di concetti studiati, materie, emozioni registrate, missioni completate, pattern specifici
+- NON usare le materie preferite/difficili dichiarate dal profilo come base per i consigli — quelle sono solo dichiarazioni iniziali
+- PERÒ, se ci sono materie dichiarate come "difficili" o "non piacevoli", dedica UNO dei 4 consigli a strategie concrete per renderle più attraenti e divertenti per lo studente (gamification, collegamenti con interessi, approcci creativi)
 - NON inventare mai informazioni che non sono nei dati
 - Se i dati sono pochi, riconosci questo fatto e dai consigli su come costruire un'abitudine di studio regolare
 - Tono: caldo, non giudicante, incoraggiante, pratico
@@ -25,6 +27,7 @@ DATI SPECIALI DA ANALIZZARE:
 - PROGRESSIONE MEMORIA: confronta concetti forti vs deboli per suggerire strategie di consolidamento
 - Se ci sono concetti con forza >= 80, celebrali come successi concreti dello studente
 - Se ci sono concetti con forza < 60, suggerisci strategie specifiche per rafforzarli
+- MATERIE NON PIACEVOLI: se il profilo indica materie difficili/non amate, suggerisci modi creativi per avvicinarsi (giochi, storie, collegamenti con passioni del bambino)
 
 FORMATO RISPOSTA (JSON array di 4 oggetti):
 [
@@ -111,15 +114,15 @@ serve(async (req) => {
 
     const userPrompt = `Analizza questi dati DETTAGLIATI e REALI e fornisci 4 consigli iper-personalizzati per i genitori di ${childProfile.name}:
 
-PROFILO:
+PROFILO (solo per contesto, NON basare i consigli sulle preferenze dichiarate):
 - Nome: ${childProfile.name}
 - Età: ${childProfile.age || "non specificata"}
 - Classe: ${childProfile.school_level || "non specificata"}
-- Materie preferite: ${childProfile.favorite_subjects?.join(", ") || "non specificate"}
-- Materie difficili: ${childProfile.difficult_subjects?.join(", ") || "non specificate"}
-- Difficoltà segnalate: ${childProfile.struggles?.join(", ") || "nessuna specificata"}
-- Stile coach: ${childProfile.support_style || "gentile"}
 - Tempo focus preferito: ${childProfile.focus_time || 15} minuti
+
+MATERIE CHE NON PIACCIONO O SONO DIFFICILI (usa queste per suggerire come renderle più attraenti):
+- Materie difficili: ${childProfile.difficult_subjects?.join(", ") || "nessuna indicata"}
+- Difficoltà segnalate: ${childProfile.struggles?.join(", ") || "nessuna"}
 
 STATISTICHE GENERALI:
 - Sessioni totali: ${sessionsCount || 0}
@@ -145,7 +148,7 @@ ${emotionDetail}
 STATISTICHE PER MATERIA:
 ${subjectDetail}
 
-IMPORTANTE: Ogni consiglio deve citare DATI SPECIFICI da quelli sopra (nomi di concetti, titoli di compiti, emozioni, missioni). Non dare consigli generici.`;
+IMPORTANTE: Basa i consigli sui DATI REALI di studio (sessioni, concetti, missioni, emozioni), NON sulle preferenze dichiarate. Usa le materie difficili/non piacevoli SOLO per suggerire strategie creative per avvicinarsi ad esse.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
