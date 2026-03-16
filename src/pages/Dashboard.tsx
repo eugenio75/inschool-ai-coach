@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { TaskCard } from "@/components/TaskCard";
 import { GamificationBar, DailyMissions } from "@/components/GamificationBar";
+import { SocialProofBanner } from "@/components/CelebrationOverlay";
 import { getTasks, getActiveChildProfileId, getChildProfile } from "@/lib/database";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 
