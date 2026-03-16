@@ -78,7 +78,7 @@ const AddHomework = () => {
             id: `e${i}`,
             subject: t.subject || "Altro",
             title: t.title,
-            description: t.description || "",
+            description: t.exerciseText || t.description || "",
             estimatedMinutes: t.estimatedMinutes || 15,
             difficulty: t.difficulty || 1,
             selected: true,
