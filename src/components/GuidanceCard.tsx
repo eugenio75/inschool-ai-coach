@@ -69,6 +69,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
   const [isRecording, setIsRecording] = useState(false);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [notepadOpen, setNotepadOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
