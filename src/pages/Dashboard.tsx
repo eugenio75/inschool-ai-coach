@@ -105,7 +105,7 @@ const Dashboard = () => {
       </div>
 
       {suggestedTask && (
-        <div className="px-4 sm:px-6 mt-3"><div className="max-w-2xl mx-auto">
+        <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 }} className="bg-sage-light border border-primary/20 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
             <div className="min-w-0 flex-1"><div className="flex items-center gap-2 mb-1"><Sparkles className="w-4 h-4 text-sage-dark flex-shrink-0" /><span className="text-xs font-medium text-sage-dark uppercase tracking-wider">Consiglio del coach</span></div><p className="text-sm text-foreground truncate">Inizia con <strong>{suggestedTask.title}</strong></p></div>
             <Button onClick={() => navigate(`/focus/${suggestedTask.id}`)} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-xl px-3 sm:px-4 py-2 text-sm flex-shrink-0">Inizia <ArrowRight className="ml-1 w-3.5 h-3.5" /></Button>
