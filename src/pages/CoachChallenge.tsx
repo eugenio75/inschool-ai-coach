@@ -275,7 +275,7 @@ const CoachChallenge = () => {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <div className="bg-card border-b border-border px-4 py-3">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
+        <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={handleExit} className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors">
               <ArrowLeft className="w-4 h-4 text-muted-foreground" />
