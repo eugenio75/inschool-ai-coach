@@ -53,6 +53,7 @@ const AddHomework = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [extractedTasks, setExtractedTasks] = useState<ExtractedTask[]>([]);
   const [saving, setSaving] = useState(false);
   const [dragActive, setDragActive] = useState(false);
