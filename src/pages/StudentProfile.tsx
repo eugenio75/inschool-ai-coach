@@ -124,9 +124,9 @@ const StudentProfile = () => {
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={spring} className="text-center">
             <div className="text-6xl mb-2">{selectedAvatar}</div>
             <h2 className="font-display text-xl font-bold text-foreground">{profile.name}</h2>
-            {profile.school_level && (
-              <p className="text-sm text-muted-foreground mt-1">{profile.age ? `${profile.age} anni • ` : ""}{profile.school_level}</p>
-            )}
+            <p className="text-sm text-muted-foreground mt-1">
+              {[profile.age ? `${profile.age} anni` : "", classSection, schoolName, city].filter(Boolean).join(" • ") || profile.school_level || ""}
+            </p>
           </motion.div>
         </div>
       </div>
