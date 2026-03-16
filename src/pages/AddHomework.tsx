@@ -100,6 +100,7 @@ const AddHomework = () => {
   const processFile = (file: File) => {
     if (!file.type.startsWith("image/")) return;
     setPhotoFile(file);
+    setUploadedImageUrl(null);
     const reader = new FileReader();
     reader.onload = (ev) => {
       setPhotoPreview(ev.target?.result as string);
