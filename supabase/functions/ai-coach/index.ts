@@ -159,21 +159,21 @@ serve(async (req) => {
         if (taskContext.sourceImageUrl) {
           contextPrompt += `\nL'IMMAGINE ORIGINALE della pagina del libro/diario è allegata come primo messaggio. Usala come riferimento per guidare lo studente sugli esercizi specifici visibili nella pagina.`;
           
-          // Prepend a system-injected image message before the conversation
-          messages.unshift({
-            role: "user",
-            content: [
-              { type: "text", text: "Ecco la foto della pagina con gli esercizi da fare:" },
-              { type: "image_url", image_url: { url: taskContext.sourceImageUrl } },
-            ],
-          });
-          // Add an assistant acknowledgment so it doesn't confuse the conversation flow
-          messages.unshift({
-            role: "assistant", 
-            content: "Ho visto la pagina! Iniziamo a lavorare sugli esercizi."
-          });
-          // Note: unshift adds at beginning, so order will be: user(image) -> assistant(ack) -> rest
-          // But we need: user(image), assistant(ack), then rest. Let me fix order:
+          // Prepend image context at the start of conversation: user(image) → assistant(ack) → rest
+          const imageMessages = [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: "Ecco la foto della pagina con gli esercizi da fare:" },
+                { type: "image_url", image_url: { url: taskContext.sourceImageUrl } },
+              ],
+            },
+            {
+              role: "assistant",
+              content: "Ho visto la pagina! Iniziamo a lavorare sugli esercizi.",
+            },
+          ];
+          messages.splice(0, 0, ...imageMessages);
         }
       }
     }
