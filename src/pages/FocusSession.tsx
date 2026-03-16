@@ -240,7 +240,7 @@ const FocusSession = () => {
           <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{taskSubject}</p>
           <p className="text-sm font-display font-semibold text-foreground">{taskTitle}</p>
         </div>
-        <button onClick={endSession} className="text-muted-foreground hover:text-foreground transition-colors"><X className="w-5 h-5" /></button>
+        <button onClick={handleExit} className="text-muted-foreground hover:text-foreground transition-colors"><X className="w-5 h-5" /></button>
       </div>
 
       {phase !== "focus" ? (
