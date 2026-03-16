@@ -113,7 +113,7 @@ const Dashboard = () => {
         </div></div>
       )}
 
-      <div className="px-4 sm:px-6 mt-5 sm:mt-6"><div className="max-w-2xl mx-auto">
+      <div className="px-4 sm:px-6 mt-5 sm:mt-6"><div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.25 }}>
           <div className="flex items-center gap-2 mb-3"><Target className="w-4 h-4 text-clay-dark" /><h3 className="font-display font-semibold text-foreground text-sm">Missioni del giorno</h3></div>
           <DailyMissions />
