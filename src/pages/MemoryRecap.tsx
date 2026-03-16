@@ -227,10 +227,12 @@ const RecapCard = ({ item, onUpdate }: { item: any; onUpdate: (id: string, stren
   const handleStrengthUpdate = async (newStrength: number) => {
     await updateMemoryStrength(item.id, newStrength);
     onUpdate(item.id, newStrength);
-    // Auto-complete review_concept mission
+    // Auto-complete review missions
     try {
       const missions = await getDailyMissions();
-      const reviewMission = missions.find((m: any) => m.mission_type === "review_concept" && !m.completed);
+      const reviewMission = missions.find((m: any) =>
+        (m.mission_type === "review_concept" || m.mission_type === "review_weak_concept") && !m.completed
+      );
       if (reviewMission) await completeMission(reviewMission.id, reviewMission.points_reward);
     } catch {}
   };
