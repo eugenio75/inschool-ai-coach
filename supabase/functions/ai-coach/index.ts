@@ -152,17 +152,19 @@ serve(async (req) => {
         });
       }
 
-      if (taskContext.sourceType === "photo" || taskContext.sourceType === "textbook" || taskContext.sourceType === "photo-book" || taskContext.sourceType === "photo-diary") {
+      const isPhotoTask = taskContext.sourceType === "photo" || taskContext.sourceType === "textbook" || taskContext.sourceType === "photo-book" || taskContext.sourceType === "photo-diary";
+
+      if (isPhotoTask) {
         contextPrompt += `\n\n⚠️ QUESTO ESERCIZIO È STATO ESTRATTO DA UNA FOTO — REGOLE CRITICHE:
-1. HAI GIÀ il testo dell'esercizio (nella descrizione sopra e/o nell'immagine allegata). NON chiedere MAI allo studente di riscrivere o ricopiare il testo.
-2. CITA FEDELMENTE il testo degli esercizi ESATTAMENTE come appare nella foto/descrizione. NON inventare, NON modificare, NON parafrasare gli esercizi.
-3. Se non riesci a leggere qualcosa nell'immagine, chiedi allo studente SOLO la parte illeggibile, non tutto il testo.
-4. Parti DIRETTAMENTE con un micro-ripasso della teoria, poi guida lo studente a risolvere gli esercizi REALI dalla pagina.
-5. Riferisciti agli esercizi con il loro numero/lettera esatto come visibile nella pagina (es. "Nell'esercizio 3a) dice...").
-6. NON INVENTARE MAI esercizi che non esistono nella pagina. Lavora SOLO con quelli reali.
-7. DIFFERENZA IMPORTANTE: nella sezione "Memoria e Ripasso" puoi creare domande ed esercizi originali per testare la comprensione. Ma QUI, durante la sessione di focus su un compito da foto, devi lavorare ESCLUSIVAMENTE sugli esercizi reali della pagina.`;
+1. Se hai l'immagine originale allegata, usa SOLO quella come fonte principale per citare gli esercizi.
+2. Se NON hai l'immagine originale, NON puoi sapere il testo esatto degli esercizi: in questo caso NON citare MAI frasi precise, NON inventare affermazioni, NON parafrasare come se avessi visto la pagina.
+3. Se manca l'immagine, puoi usare solo il contesto generale disponibile (titolo, materia, descrizione sintetica) e devi dichiarare apertamente che non vedi la pagina.
+4. Se manca l'immagine e serve lavorare su un esercizio specifico, chiedi allo studente di inviare di nuovo la foto oppure di scrivere la frase esatta dell'esercizio.
+5. Se hai l'immagine ma non riesci a leggere qualcosa, chiedi SOLO la parte illeggibile, non tutto il testo.
+6. Riferisciti agli esercizi con il loro numero/lettera esatto SOLO quando sono davvero visibili nella pagina.
+7. NON INVENTARE MAI esercizi, affermazioni o consegne che non esistono nella pagina reale.
+8. DIFFERENZA IMPORTANTE: nella sezione "Memoria e Ripasso" puoi creare domande ed esercizi originali per testare la comprensione. Ma QUI, durante la sessione di focus su un compito da foto, devi lavorare ESCLUSIVAMENTE sugli esercizi reali della pagina oppure chiedere chiarimento se la pagina non è disponibile.`;
         
-        // Inject the source image as the first user message so the model can see the original page
         if (taskContext.sourceImageUrl) {
           contextPrompt += `\nL'IMMAGINE ORIGINALE della pagina è allegata come primo messaggio. ANALIZZALA ATTENTAMENTE e usa SOLO gli esercizi che vedi realmente nella foto. Se la foto è poco chiara, chiedi conferma allo studente sulla parte specifica che non riesci a leggere.`;
           
@@ -180,6 +182,8 @@ serve(async (req) => {
             },
           ];
           messages.splice(0, 0, ...imageMessages);
+        } else {
+          contextPrompt += `\nATTENZIONE: l'immagine originale della pagina NON è disponibile in questa sessione. Quindi non citare mai il testo esatto degli esercizi come se lo vedessi. Se serve precisione, chiedi la foto o la frase esatta allo studente.`;
         }
       }
     }

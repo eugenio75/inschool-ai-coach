@@ -55,12 +55,14 @@ const AddHomework = () => {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [extractedTasks, setExtractedTasks] = useState<ExtractedTask[]>([]);
+  const [extractedSourceType, setExtractedSourceType] = useState<"photo-book" | "photo-diary" | null>(null);
   const [saving, setSaving] = useState(false);
   const [dragActive, setDragActive] = useState(false);
 
   const handlePhotoAnalysis = async () => {
     if (!photoFile) return;
     const sourceType = mode === "photo-book" ? "photo-book" : "photo-diary";
+    setExtractedSourceType(sourceType);
     setMode("processing");
 
     try {
@@ -93,7 +95,7 @@ const AddHomework = () => {
         description: err.message || "Non sono riuscito ad analizzare la foto. Riprova con un'immagine più chiara.",
         variant: "destructive",
       });
-      setMode(photoFile ? "photo-diary" : "choose");
+      setMode(photoFile ? sourceType : "choose");
     }
   };
 
@@ -101,6 +103,7 @@ const AddHomework = () => {
     if (!file.type.startsWith("image/")) return;
     setPhotoFile(file);
     setUploadedImageUrl(null);
+    setExtractedSourceType(null);
     const reader = new FileReader();
     reader.onload = (ev) => {
       setPhotoPreview(ev.target?.result as string);
@@ -164,7 +167,7 @@ const AddHomework = () => {
           description: task.description,
           estimated_minutes: task.estimatedMinutes,
           difficulty: task.difficulty,
-          source_type: "photo",
+          source_type: extractedSourceType || "photo",
           source_image_url: uploadedImageUrl || undefined,
           due_date: dueDate,
         });
