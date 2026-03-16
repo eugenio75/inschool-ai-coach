@@ -37,10 +37,10 @@ SCENARI DI COMPITO:
 - Stimola connessioni personali: "Ti è mai capitato qualcosa di simile?"
 - Alla fine chiedi: "Cosa ti ha colpito di più? Perché?"
 
-📝 ESERCIZI DA FOTO (source_type = "photo" o "textbook"):
-- Hai il TESTO DELL'ESERCIZIO nel contesto. Usalo per guidare.
+📝 ESERCIZI DA FOTO (source_type = "photo", "textbook", "photo-book", "photo-diary"):
+- Hai il TESTO DELL'ESERCIZIO e/o la FOTO ORIGINALE nel contesto. NON chiedere MAI allo studente di riscrivere il testo — lo hai già!
 - PRIMA: fai un micro-ripasso della teoria necessaria per risolvere l'esercizio (2-3 frasi semplici)
-- POI: chiedi allo studente di provare a risolvere l'esercizio scrivendo la risposta nella chat
+- POI: riferisciti direttamente all'esercizio (es. "Nell'esercizio a) ti chiede di...") e chiedi allo studente di provare a risolverlo
 - QUANDO lo studente scrive la sua risposta:
   - Se è corretta: festeggia e chiedi "Come ci sei arrivato?" per consolidare
   - Se è parzialmente corretta: indica cosa va bene e guida con domande sulla parte sbagliata
@@ -153,11 +153,14 @@ serve(async (req) => {
       }
 
       if (taskContext.sourceType === "photo" || taskContext.sourceType === "textbook" || taskContext.sourceType === "photo-book" || taskContext.sourceType === "photo-diary") {
-        contextPrompt += `\n\nQUESTO ESERCIZIO È STATO ESTRATTO DA UNA FOTO. Hai il testo completo dell'esercizio sopra. Parti con un micro-ripasso della teoria necessaria, poi guida lo studente a risolverlo passo-passo.`;
+        contextPrompt += `\n\nQUESTO ESERCIZIO È STATO ESTRATTO DA UNA FOTO.
+REGOLA CRITICA: HAI GIÀ il testo dell'esercizio (nella descrizione sopra e/o nell'immagine allegata). NON chiedere MAI allo studente di riscrivere o ricopiare il testo dell'esercizio — lo hai già tu!
+Parti DIRETTAMENTE con un micro-ripasso della teoria necessaria, poi guida lo studente a risolverlo passo-passo.
+Riferisciti agli esercizi specifici usando il testo che già possiedi (es. "Nell'esercizio a) ti chiede di..." oppure "Guardando il problema, vedo che...").`;
         
         // Inject the source image as the first user message so the model can see the original page
         if (taskContext.sourceImageUrl) {
-          contextPrompt += `\nL'IMMAGINE ORIGINALE della pagina del libro/diario è allegata come primo messaggio. Usala come riferimento per guidare lo studente sugli esercizi specifici visibili nella pagina.`;
+          contextPrompt += `\nL'IMMAGINE ORIGINALE della pagina del libro/diario è allegata come primo messaggio. Usala come riferimento per guidare lo studente sugli esercizi specifici visibili nella pagina. NON chiedere allo studente di descriverti cosa c'è scritto — lo vedi già tu.`;
           
           // Prepend image context at the start of conversation: user(image) → assistant(ack) → rest
           const imageMessages = [
