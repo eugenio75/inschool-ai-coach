@@ -14,6 +14,7 @@ interface ChildSession {
     struggles: string[] | null;
     focus_time: number | null;
     support_style: string | null;
+    interests: string[] | null;
   };
 }
 
