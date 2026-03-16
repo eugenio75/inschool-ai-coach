@@ -389,7 +389,7 @@ const CoachChallenge = () => {
           animate={{ opacity: 1, y: 0 }}
           className="px-4 py-3 bg-card border-t border-border"
         >
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-3xl mx-auto">
             <Button onClick={handleComplete} className="w-full bg-primary text-primary-foreground rounded-2xl py-3 font-display font-bold">
               <Trophy className="w-4 h-4 mr-2" />
               Completa la sfida! +{mission.points_reward} punti
