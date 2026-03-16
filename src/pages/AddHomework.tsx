@@ -55,6 +55,7 @@ const AddHomework = () => {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [extractedTasks, setExtractedTasks] = useState<ExtractedTask[]>([]);
+  const [extractedSourceType, setExtractedSourceType] = useState<"photo-book" | "photo-diary" | null>(null);
   const [saving, setSaving] = useState(false);
   const [dragActive, setDragActive] = useState(false);
 
