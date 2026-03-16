@@ -301,7 +301,7 @@ const ParentDashboard = () => {
       )}
 
       {/* AI Personalized Insights */}
-      <div className="px-6 mt-8"><div className="max-w-2xl mx-auto space-y-3">
+      <div className="px-6 mt-8"><div className="max-w-3xl mx-auto space-y-3">
         <div className="flex items-center gap-2 mb-1">
           <Sparkles className="w-4 h-4 text-primary" />
           <h3 className="font-display font-semibold text-foreground">Consigli personalizzati per {selectedProfile?.name}</h3>
