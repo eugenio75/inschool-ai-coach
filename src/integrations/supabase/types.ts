@@ -109,6 +109,56 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_missions: {
+        Row: {
+          child_profile_id: string
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          description: string
+          id: string
+          metadata: Json | null
+          mission_date: string
+          mission_type: string
+          points_reward: number
+          title: string
+        }
+        Insert: {
+          child_profile_id: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          metadata?: Json | null
+          mission_date?: string
+          mission_type: string
+          points_reward?: number
+          title: string
+        }
+        Update: {
+          child_profile_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          metadata?: Json | null
+          mission_date?: string
+          mission_type?: string
+          points_reward?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_missions_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       focus_sessions: {
         Row: {
           autonomy_points: number | null
