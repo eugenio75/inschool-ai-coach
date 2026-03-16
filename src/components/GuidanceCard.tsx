@@ -505,6 +505,17 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                         <Image className="w-3.5 h-3.5" />
                         <span className="hidden xs:inline">Galleria</span>
                       </button>
+                      {isMathSubject && (
+                        <button
+                          onClick={() => setNotepadOpen(true)}
+                          disabled={isTyping}
+                          className="h-8 px-2.5 rounded-lg bg-sage-light text-sage-dark hover:bg-accent hover:text-foreground flex items-center gap-1.5 transition-colors shrink-0 disabled:opacity-40 text-xs font-medium"
+                          title="Blocco note per i calcoli"
+                        >
+                          <Calculator className="w-3.5 h-3.5" />
+                          <span className="hidden xs:inline">Calcoli</span>
+                        </button>
+                      )}
                       <button
                         onClick={toggleRecording}
                         disabled={isTyping}
