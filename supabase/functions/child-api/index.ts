@@ -187,6 +187,72 @@ serve(async (req) => {
         break;
       }
 
+      case "get-daily-missions": {
+        const today = new Date().toISOString().split("T")[0];
+        // Try to get existing missions
+        let { data: missions } = await supabase
+          .from("daily_missions")
+          .select("*")
+          .eq("child_profile_id", childProfileId)
+          .eq("mission_date", today);
+
+        if (!missions || missions.length === 0) {
+          // Generate missions by calling the generate-missions function logic inline
+          const [tasksRes, memRes] = await Promise.all([
+            supabase.from("homework_tasks").select("id").eq("child_profile_id", childProfileId).eq("completed", false),
+            supabase.from("memory_items").select("id, strength").eq("child_profile_id", childProfileId).lt("strength", 60),
+          ]);
+          const hasTasks = (tasksRes.data?.length || 0) > 0;
+          const hasWeak = (memRes.data?.length || 0) > 0;
+
+          const templates = [
+            { type: "study_session", title: "Completa una sessione di studio", description: "Porta a termine una sessione con il Coach", points: 15 },
+            ...(hasWeak ? [{ type: "review_concept", title: "Ripassa un concetto", description: "Fai un ripasso nella sezione Memoria", points: 10 }] : []),
+            { type: "study_minutes", title: "Studia per almeno 10 minuti", description: "Accumula 10 minuti di studio oggi", points: 15 },
+            ...(hasTasks ? [{ type: "complete_task", title: "Completa un compito", description: "Finisci uno dei tuoi compiti di oggi", points: 20 }] : []),
+          ];
+
+          const shuffled = templates.sort(() => Math.random() - 0.5);
+          const selected = [shuffled[0]];
+          for (const t of shuffled) {
+            if (selected.length >= 2) break;
+            if (!selected.find(s => s.type === t.type)) selected.push(t);
+          }
+
+          const toInsert = selected.map(m => ({
+            child_profile_id: childProfileId,
+            mission_date: today,
+            mission_type: m.type,
+            title: m.title,
+            description: m.description,
+            points_reward: m.points,
+          }));
+
+          const { data: inserted } = await supabase.from("daily_missions").insert(toInsert).select();
+          missions = inserted || [];
+        }
+        result = missions;
+        break;
+      }
+
+      case "complete-mission": {
+        await supabase.from("daily_missions").update({
+          completed: true,
+          completed_at: new Date().toISOString(),
+        }).eq("id", payload.missionId).eq("child_profile_id", childProfileId);
+
+        // Add points to gamification
+        const { data: gam2 } = await supabase.from("gamification").select("*").eq("child_profile_id", childProfileId).maybeSingle();
+        if (gam2) {
+          await supabase.from("gamification").update({
+            focus_points: (gam2.focus_points || 0) + (payload.pointsReward || 0),
+            updated_at: new Date().toISOString(),
+          }).eq("child_profile_id", childProfileId);
+        }
+        result = { success: true };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Azione non supportata" }), {
           status: 400,
