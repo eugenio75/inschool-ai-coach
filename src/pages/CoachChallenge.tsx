@@ -276,6 +276,12 @@ const CoachChallenge = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <CelebrationOverlay
+        show={showCelebration}
+        onComplete={() => setShowCelebration(false)}
+        message="Sfida completata!"
+        points={mission.points_reward}
+      />
       {/* Header */}
       <div className="bg-card border-b border-border px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
