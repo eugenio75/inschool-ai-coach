@@ -47,6 +47,9 @@ const StudentProfile = () => {
         setProfile(p);
         setSelectedAvatar(p.avatar_emoji || "🧒");
         setInterests(p.interests || []);
+        setClassSection(p.class_section || "");
+        setSchoolName(p.school_name || "");
+        setCity(p.city || "");
       }
       setLoading(false);
     };
