@@ -115,6 +115,20 @@ const Dashboard = () => {
       const dbTasks = await getTasks();
       setTasks(dbTasks);
 
+      // Detect paused focus session
+      for (const t of dbTasks) {
+        try {
+          const saved = sessionStorage.getItem(`focus-session-${t.id}`);
+          if (saved) {
+            const state = JSON.parse(saved);
+            if (state.phase === "focus" || state.phase === "checkin" || state.phase === "breathing") {
+              setPausedSession({ task: t, state });
+              break;
+            }
+          }
+        } catch {}
+      }
+
       // Smart suggestion
       const pending = dbTasks.filter((t: any) => !t.completed);
       if (pending.length > 0) {
