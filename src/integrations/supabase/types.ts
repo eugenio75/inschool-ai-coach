@@ -63,6 +63,8 @@ export type Database = {
           access_code: string | null
           age: number | null
           avatar_emoji: string | null
+          city: string | null
+          class_section: string | null
           created_at: string
           difficult_subjects: string[] | null
           favorite_subjects: string[] | null
@@ -72,6 +74,7 @@ export type Database = {
           name: string
           parent_id: string
           school_level: string | null
+          school_name: string | null
           struggles: string[] | null
           support_style: string | null
           updated_at: string
@@ -80,6 +83,8 @@ export type Database = {
           access_code?: string | null
           age?: number | null
           avatar_emoji?: string | null
+          city?: string | null
+          class_section?: string | null
           created_at?: string
           difficult_subjects?: string[] | null
           favorite_subjects?: string[] | null
@@ -89,6 +94,7 @@ export type Database = {
           name: string
           parent_id: string
           school_level?: string | null
+          school_name?: string | null
           struggles?: string[] | null
           support_style?: string | null
           updated_at?: string
@@ -97,6 +103,8 @@ export type Database = {
           access_code?: string | null
           age?: number | null
           avatar_emoji?: string | null
+          city?: string | null
+          class_section?: string | null
           created_at?: string
           difficult_subjects?: string[] | null
           favorite_subjects?: string[] | null
@@ -106,6 +114,7 @@ export type Database = {
           name?: string
           parent_id?: string
           school_level?: string | null
+          school_name?: string | null
           struggles?: string[] | null
           support_style?: string | null
           updated_at?: string

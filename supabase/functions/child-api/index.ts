@@ -173,6 +173,9 @@ serve(async (req) => {
         const allowedFields: Record<string, any> = {};
         if (payload.avatar_emoji) allowedFields.avatar_emoji = payload.avatar_emoji;
         if (payload.interests) allowedFields.interests = payload.interests;
+        if (payload.class_section !== undefined) allowedFields.class_section = payload.class_section;
+        if (payload.school_name !== undefined) allowedFields.school_name = payload.school_name;
+        if (payload.city !== undefined) allowedFields.city = payload.city;
         allowedFields.updated_at = new Date().toISOString();
 
         const { data } = await supabase

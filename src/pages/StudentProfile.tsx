@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Sparkles, X, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, Sparkles, X, Plus, Loader2, School, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isChildSession, getChildSession, setChildSession } from "@/lib/childSession";
 import { getActiveChildProfileId, getChildProfile, updateChildProfile } from "@/lib/database";
@@ -27,6 +27,9 @@ const StudentProfile = () => {
   const [saving, setSaving] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
+  const [classSection, setClassSection] = useState("");
+  const [schoolName, setSchoolName] = useState("");
+  const [city, setCity] = useState("");
   const [customInterest, setCustomInterest] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -44,6 +47,9 @@ const StudentProfile = () => {
         setProfile(p);
         setSelectedAvatar(p.avatar_emoji || "🧒");
         setInterests(p.interests || []);
+        setClassSection(p.class_section || "");
+        setSchoolName(p.school_name || "");
+        setCity(p.city || "");
       }
       setLoading(false);
     };
@@ -54,18 +60,23 @@ const StudentProfile = () => {
     if (!profile) return;
     setSaving(true);
     try {
+      const updates = {
+        avatar_emoji: selectedAvatar,
+        interests,
+        class_section: classSection.trim() || null,
+        school_name: schoolName.trim() || null,
+        city: city.trim() || null,
+      };
       if (isChild) {
-        // Use child-api to update
         const { childApi } = await import("@/lib/childSession");
-        await childApi("update-profile", { avatar_emoji: selectedAvatar, interests });
-        // Update local session
+        await childApi("update-profile", updates);
         const session = getChildSession();
         if (session) {
-          const updatedProfile = { ...session.profile, avatar_emoji: selectedAvatar, interests };
+          const updatedProfile = { ...session.profile, ...updates };
           setChildSession({ ...session, profile: updatedProfile });
         }
       } else {
-        await updateChildProfile(profile.id, { avatar_emoji: selectedAvatar, interests });
+        await updateChildProfile(profile.id, updates);
       }
       toast({ title: "Profilo aggiornato! ✨" });
       navigate(-1);
@@ -91,7 +102,11 @@ const StudentProfile = () => {
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
   if (!profile) return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">Profilo non trovato</p></div>;
 
-  const hasChanges = selectedAvatar !== (profile.avatar_emoji || "🧒") || JSON.stringify(interests) !== JSON.stringify(profile.interests || []);
+  const hasChanges = selectedAvatar !== (profile.avatar_emoji || "🧒") 
+    || JSON.stringify(interests) !== JSON.stringify(profile.interests || [])
+    || classSection !== (profile.class_section || "")
+    || schoolName !== (profile.school_name || "")
+    || city !== (profile.city || "");
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -109,9 +124,9 @@ const StudentProfile = () => {
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={spring} className="text-center">
             <div className="text-6xl mb-2">{selectedAvatar}</div>
             <h2 className="font-display text-xl font-bold text-foreground">{profile.name}</h2>
-            {profile.school_level && (
-              <p className="text-sm text-muted-foreground mt-1">{profile.age ? `${profile.age} anni • ` : ""}{profile.school_level}</p>
-            )}
+            <p className="text-sm text-muted-foreground mt-1">
+              {[profile.age ? `${profile.age} anni` : "", classSection, schoolName, city].filter(Boolean).join(" • ") || profile.school_level || ""}
+            </p>
           </motion.div>
         </div>
       </div>
@@ -131,6 +146,50 @@ const StudentProfile = () => {
                   {emoji}
                 </button>
               ))}
+            </div>
+          </motion.div>
+
+          {/* School info */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.15 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
+            <div className="flex items-center gap-2 mb-1">
+              <School className="w-4 h-4 text-sage-dark" />
+              <h3 className="font-display font-semibold text-foreground text-sm">La mia scuola</h3>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">Queste info aiutano il coach a conoscerti meglio (facoltativo)</p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Classe (es. 3ª B)</label>
+                <input
+                  type="text"
+                  value={classSection}
+                  onChange={(e) => setClassSection(e.target.value.slice(0, 20))}
+                  placeholder="Es. 3ª B"
+                  maxLength={20}
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Nome della scuola</label>
+                <input
+                  type="text"
+                  value={schoolName}
+                  onChange={(e) => setSchoolName(e.target.value.slice(0, 100))}
+                  placeholder="Es. IC Alessandro Manzoni"
+                  maxLength={100}
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1"><MapPin className="w-3 h-3" /> Città</label>
+                <input
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value.slice(0, 50))}
+                  placeholder="Es. Roma"
+                  maxLength={50}
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
             </div>
           </motion.div>
 
