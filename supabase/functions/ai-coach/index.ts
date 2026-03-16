@@ -153,27 +153,29 @@ serve(async (req) => {
       }
 
       if (taskContext.sourceType === "photo" || taskContext.sourceType === "textbook" || taskContext.sourceType === "photo-book" || taskContext.sourceType === "photo-diary") {
-        contextPrompt += `\n\nQUESTO ESERCIZIO È STATO ESTRATTO DA UNA FOTO.
-REGOLA CRITICA: HAI GIÀ il testo dell'esercizio (nella descrizione sopra e/o nell'immagine allegata). NON chiedere MAI allo studente di riscrivere o ricopiare il testo dell'esercizio — lo hai già tu!
-Parti DIRETTAMENTE con un micro-ripasso della teoria necessaria, poi guida lo studente a risolverlo passo-passo.
-Riferisciti agli esercizi specifici usando il testo che già possiedi (es. "Nell'esercizio a) ti chiede di..." oppure "Guardando il problema, vedo che...").`;
+        contextPrompt += `\n\n⚠️ QUESTO ESERCIZIO È STATO ESTRATTO DA UNA FOTO — REGOLE CRITICHE:
+1. HAI GIÀ il testo dell'esercizio (nella descrizione sopra e/o nell'immagine allegata). NON chiedere MAI allo studente di riscrivere o ricopiare il testo.
+2. CITA FEDELMENTE il testo degli esercizi ESATTAMENTE come appare nella foto/descrizione. NON inventare, NON modificare, NON parafrasare gli esercizi.
+3. Se non riesci a leggere qualcosa nell'immagine, chiedi allo studente SOLO la parte illeggibile, non tutto il testo.
+4. Parti DIRETTAMENTE con un micro-ripasso della teoria, poi guida lo studente a risolvere gli esercizi REALI dalla pagina.
+5. Riferisciti agli esercizi con il loro numero/lettera esatto come visibile nella pagina (es. "Nell'esercizio 3a) dice...").
+6. NON INVENTARE MAI esercizi che non esistono nella pagina. Lavora SOLO con quelli reali.`;
         
         // Inject the source image as the first user message so the model can see the original page
         if (taskContext.sourceImageUrl) {
-          contextPrompt += `\nL'IMMAGINE ORIGINALE della pagina del libro/diario è allegata come primo messaggio. Usala come riferimento per guidare lo studente sugli esercizi specifici visibili nella pagina. NON chiedere allo studente di descriverti cosa c'è scritto — lo vedi già tu.`;
+          contextPrompt += `\nL'IMMAGINE ORIGINALE della pagina è allegata come primo messaggio. ANALIZZALA ATTENTAMENTE e usa SOLO gli esercizi che vedi realmente nella foto. Se la foto è poco chiara, chiedi conferma allo studente sulla parte specifica che non riesci a leggere.`;
           
-          // Prepend image context at the start of conversation: user(image) → assistant(ack) → rest
           const imageMessages = [
             {
               role: "user",
               content: [
-                { type: "text", text: "Ecco la foto della pagina con gli esercizi da fare:" },
+                { type: "text", text: "Ecco la foto della pagina con gli esercizi da fare. Analizzala attentamente e usa SOLO gli esercizi che vedi qui:" },
                 { type: "image_url", image_url: { url: taskContext.sourceImageUrl } },
               ],
             },
             {
               role: "assistant",
-              content: "Ho visto la pagina! Iniziamo a lavorare sugli esercizi.",
+              content: "Ho analizzato attentamente la pagina. Vedo gli esercizi e lavoreremo solo su quelli. Iniziamo!",
             },
           ];
           messages.splice(0, 0, ...imageMessages);
@@ -200,8 +202,11 @@ Riferisciti agli esercizi specifici usando il testo che già possiedi (es. "Nell
     const hasImages = messages.some((m: any) => 
       Array.isArray(m.content) && m.content.some((c: any) => c.type === "image_url")
     );
+    const hasSourceImage = !!(taskContext?.sourceImageUrl);
 
-    const model = hasImages ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview";
+    // Use Pro model when we have source images (needs precise visual analysis)
+    // Use Flash for student photos (simpler check) or text-only
+    const model = hasSourceImage ? "google/gemini-2.5-pro" : hasImages ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview";
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
