@@ -159,7 +159,8 @@ serve(async (req) => {
 3. Se non riesci a leggere qualcosa nell'immagine, chiedi allo studente SOLO la parte illeggibile, non tutto il testo.
 4. Parti DIRETTAMENTE con un micro-ripasso della teoria, poi guida lo studente a risolvere gli esercizi REALI dalla pagina.
 5. Riferisciti agli esercizi con il loro numero/lettera esatto come visibile nella pagina (es. "Nell'esercizio 3a) dice...").
-6. NON INVENTARE MAI esercizi che non esistono nella pagina. Lavora SOLO con quelli reali.`;
+6. NON INVENTARE MAI esercizi che non esistono nella pagina. Lavora SOLO con quelli reali.
+7. DIFFERENZA IMPORTANTE: nella sezione "Memoria e Ripasso" puoi creare domande ed esercizi originali per testare la comprensione. Ma QUI, durante la sessione di focus su un compito da foto, devi lavorare ESCLUSIVAMENTE sugli esercizi reali della pagina.`;
         
         // Inject the source image as the first user message so the model can see the original page
         if (taskContext.sourceImageUrl) {
