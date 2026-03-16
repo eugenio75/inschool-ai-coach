@@ -101,7 +101,7 @@ export const CelebrationOverlay = ({ show, onComplete, message, points }: Celebr
           {/* Central message */}
           <motion.div
             initial={{ scale: 0, rotate: -10 }}
-            animate={{ scale: [0, 1.2, 1], rotate: [−10, 5, 0] }}
+            animate={{ scale: [0, 1.2, 1], rotate: [-10, 5, 0] }}
             exit={{ scale: 0, opacity: 0 }}
             transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
             className="bg-card rounded-3xl shadow-lg px-8 py-6 text-center border border-border"
