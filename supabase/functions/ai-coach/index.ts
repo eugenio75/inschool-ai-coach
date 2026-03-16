@@ -154,9 +154,11 @@ serve(async (req) => {
 - Titolo: ${taskContext.title || "non specificato"}
 - Materia: ${taskContext.subject || "non specificata"}
 - Tipo sorgente: ${taskContext.sourceType || "manual"}
-- Descrizione/Consegna: ${taskContext.description || "non disponibile"}
+- TESTO COMPLETO DELL'ESERCIZIO (trascritto dalla foto): ${taskContext.description || "non disponibile"}
 - Concetti chiave: ${taskContext.keyConcepts?.join(", ") || "non specificati"}
-- Difficoltà: ${taskContext.difficulty || "non specificata"}/5`;
+- Difficoltà: ${taskContext.difficulty || "non specificata"}/5
+
+IMPORTANTE: Il campo "TESTO COMPLETO DELL'ESERCIZIO" contiene la trascrizione letterale dell'esercizio dalla foto. Usa QUESTO testo come fonte primaria per citare le domande. La foto serve come conferma visiva.`;
 
       if (taskContext.microSteps && taskContext.microSteps.length > 0) {
         contextPrompt += `\n- Micro-step previsti:`;
