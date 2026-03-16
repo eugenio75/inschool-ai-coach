@@ -6,38 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Mission templates - 2 missions per day, picked based on context
-const MISSION_TEMPLATES = [
-  {
-    type: "study_session",
-    title: "Completa una sessione di studio",
-    description: "Porta a termine una sessione con il Coach",
-    points: 15,
-    condition: "always", // always available
-  },
-  {
-    type: "review_concept",
-    title: "Ripassa un concetto",
-    description: "Fai un ripasso nella sezione Memoria",
-    points: 10,
-    condition: "has_weak_concepts",
-  },
-  {
-    type: "study_minutes",
-    title: "Studia per almeno 10 minuti",
-    description: "Accumula 10 minuti di studio oggi",
-    points: 15,
-    condition: "always",
-  },
-  {
-    type: "complete_task",
-    title: "Completa un compito",
-    description: "Finisci uno dei tuoi compiti di oggi",
-    points: 20,
-    condition: "has_tasks",
-  },
-];
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -57,8 +25,7 @@ serve(async (req) => {
       const { data: codeResult } = await supabase.rpc("validate_child_code", { code: accessCode });
       if (!codeResult?.valid) {
         return new Response(JSON.stringify({ error: "Codice non valido" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       resolvedChildId = codeResult.profile.id;
@@ -71,8 +38,7 @@ serve(async (req) => {
         const { data: { user } } = await userClient.auth.getUser();
         if (!user) {
           return new Response(JSON.stringify({ error: "Non autorizzato" }), {
-            status: 401,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
       }
@@ -99,55 +65,149 @@ serve(async (req) => {
       });
     }
 
-    // Get context to pick appropriate missions
-    const [tasksResult, memoryResult] = await Promise.all([
-      supabase.from("homework_tasks").select("id").eq("child_profile_id", resolvedChildId).eq("completed", false),
-      supabase.from("memory_items").select("id, strength").eq("child_profile_id", resolvedChildId).lt("strength", 60),
+    // Get context: child profile, tasks, weak concepts
+    const [profileResult, tasksResult, memoryResult] = await Promise.all([
+      supabase.from("child_profiles").select("name, age, school_level, support_style").eq("id", resolvedChildId).maybeSingle(),
+      supabase.from("homework_tasks").select("id, subject, title").eq("child_profile_id", resolvedChildId).eq("completed", false),
+      supabase.from("memory_items").select("id, concept, subject, strength, summary").eq("child_profile_id", resolvedChildId).order("strength", { ascending: true }).limit(10),
     ]);
 
+    const studentName = profileResult.data?.name || "Studente";
     const hasTasks = (tasksResult.data?.length || 0) > 0;
-    const hasWeakConcepts = (memoryResult.data?.length || 0) > 0;
+    const weakConcepts = (memoryResult.data || []).filter((m: any) => (m.strength || 0) < 60);
+    const hasWeakConcepts = weakConcepts.length > 0;
 
-    // Filter available missions based on context
-    const available = MISSION_TEMPLATES.filter(m => {
-      if (m.condition === "always") return true;
-      if (m.condition === "has_tasks") return hasTasks;
-      if (m.condition === "has_weak_concepts") return hasWeakConcepts;
-      return true;
-    });
+    const missions: any[] = [];
 
-    // Pick 2 missions, prioritizing variety
-    const selected: typeof MISSION_TEMPLATES = [];
-    const shuffled = [...available].sort(() => Math.random() - 0.5);
+    // --- MISSION 1: Template-based with dynamic weak concept ---
+    if (hasWeakConcepts) {
+      // Pick the weakest concept
+      const weakest = weakConcepts[0];
+      missions.push({
+        child_profile_id: resolvedChildId,
+        mission_date: today,
+        mission_type: "review_weak_concept",
+        title: `Ripassa "${weakest.concept}"`,
+        description: `${studentName}, il Coach ha notato che potresti ripassare ${weakest.concept} (${weakest.subject}). Vai nella sezione Memoria!`,
+        points_reward: 15,
+        metadata: { concept_id: weakest.id, concept: weakest.concept, subject: weakest.subject },
+      });
+    } else if (hasTasks) {
+      missions.push({
+        child_profile_id: resolvedChildId,
+        mission_date: today,
+        mission_type: "complete_task",
+        title: "Completa un compito",
+        description: `${studentName}, prova a finire uno dei tuoi compiti di oggi!`,
+        points_reward: 20,
+      });
+    } else {
+      missions.push({
+        child_profile_id: resolvedChildId,
+        mission_date: today,
+        mission_type: "study_session",
+        title: "Fai una sessione di studio",
+        description: `${studentName}, porta a termine una sessione con il Coach!`,
+        points_reward: 15,
+      });
+    }
 
-    // Always include study_session as one mission
-    const studyMission = shuffled.find(m => m.type === "study_session");
-    if (studyMission) selected.push(studyMission);
+    // --- MISSION 2: AI-generated personalized mission ---
+    let aiMission: any = null;
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    // Pick second mission (different type)
-    for (const m of shuffled) {
-      if (selected.length >= 2) break;
-      if (!selected.find(s => s.type === m.type)) {
-        selected.push(m);
+    if (LOVABLE_API_KEY && (hasWeakConcepts || hasTasks)) {
+      try {
+        const conceptsList = weakConcepts.slice(0, 5).map((c: any) =>
+          `- "${c.concept}" (${c.subject}, forza: ${c.strength}/100)${c.summary ? `: ${c.summary}` : ""}`
+        ).join("\n");
+
+        const tasksList = (tasksResult.data || []).slice(0, 5).map((t: any) =>
+          `- "${t.title}" (${t.subject})`
+        ).join("\n");
+
+        const aiPrompt = `Sei il Coach AI di Inschool. Genera UNA missione del giorno personalizzata per ${studentName} (${profileResult.data?.age || ""} anni, ${profileResult.data?.school_level || ""}).
+
+CONCETTI CON LACUNE:
+${conceptsList || "Nessuno"}
+
+COMPITI ATTIVI:
+${tasksList || "Nessuno"}
+
+La missione deve essere:
+- Specifica e legata a una lacuna reale dello studente
+- Fattibile in 5-10 minuti
+- Formulata in modo amichevole e motivante, rivolgendoti a ${studentName} per nome
+- Può essere: un mini-esercizio da fare col Coach, una domanda di ragionamento, una spiegazione da dare con parole proprie
+- NON deve essere generica (no "studia di più")
+
+IMPORTANTE: Il tipo della missione deve essere "coach_challenge" — lo studente la completerà chattando con il Coach durante una sessione.
+
+Rispondi SOLO con un JSON:
+{
+  "title": "titolo breve della missione (max 8 parole)",
+  "description": "descrizione motivante di 1-2 frasi rivolta a ${studentName}",
+  "subject": "materia collegata",
+  "concept": "concetto collegato se presente"
+}`;
+
+        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash-lite",
+            messages: [{ role: "user", content: aiPrompt }],
+          }),
+        });
+
+        if (aiResponse.ok) {
+          const aiData = await aiResponse.json();
+          let rawText = aiData.choices?.[0]?.message?.content || "";
+          rawText = rawText.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+
+          try {
+            const parsed = JSON.parse(rawText);
+            aiMission = {
+              child_profile_id: resolvedChildId,
+              mission_date: today,
+              mission_type: "coach_challenge",
+              title: parsed.title || "Sfida del Coach",
+              description: parsed.description || `${studentName}, il Coach ha una sfida per te!`,
+              points_reward: 20,
+              metadata: {
+                subject: parsed.subject || null,
+                concept: parsed.concept || null,
+                ai_generated: true,
+              },
+            };
+          } catch {
+            console.error("Failed to parse AI mission");
+          }
+        }
+      } catch (err) {
+        console.error("AI mission generation error:", err);
       }
     }
 
-    // Ensure we have exactly 2
-    while (selected.length < 2 && shuffled.length > 0) {
-      const m = shuffled.pop()!;
-      if (!selected.find(s => s.type === m.type)) selected.push(m);
+    // Use AI mission as second, or fallback to template
+    if (aiMission) {
+      missions.push(aiMission);
+    } else {
+      // Fallback: simple template mission
+      missions.push({
+        child_profile_id: resolvedChildId,
+        mission_date: today,
+        mission_type: "study_session",
+        title: "Completa una sessione di studio",
+        description: `${studentName}, porta a termine una sessione con il Coach!`,
+        points_reward: 15,
+      });
     }
 
     // Insert missions
-    const missions = selected.map(m => ({
-      child_profile_id: resolvedChildId,
-      mission_date: today,
-      mission_type: m.type,
-      title: m.title,
-      description: m.description,
-      points_reward: m.points,
-    }));
-
     const { data: inserted, error } = await supabase
       .from("daily_missions")
       .insert(missions)
@@ -155,7 +215,6 @@ serve(async (req) => {
 
     if (error) {
       console.error("Insert missions error:", error);
-      // If unique constraint violation, missions were created concurrently
       const { data: retry } = await supabase
         .from("daily_missions")
         .select("*")
