@@ -7,7 +7,7 @@ import { ProgressSun } from "@/components/ProgressSun";
 import { TaskCard } from "@/components/TaskCard";
 import { GamificationBar, DailyMissions } from "@/components/GamificationBar";
 import { SocialProofBanner } from "@/components/CelebrationOverlay";
-import { getTasks, getActiveChildProfileId, getChildProfile } from "@/lib/database";
+import { getTasks, getActiveChildProfileId, getChildProfile, getMemoryItems } from "@/lib/database";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
