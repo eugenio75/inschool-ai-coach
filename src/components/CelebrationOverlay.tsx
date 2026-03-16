@@ -41,19 +41,20 @@ export const CelebrationOverlay = ({ show, onComplete, message, points }: Celebr
   useEffect(() => {
     if (!show) return;
     
-    const newParticles: Particle[] = Array.from({ length: 20 }, (_, i) => ({
+    // Fewer, softer particles — calm celebration, not overstimulating
+    const newParticles: Particle[] = Array.from({ length: 8 }, (_, i) => ({
       id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
-      size: Math.random() * 8 + 4,
-      rotation: Math.random() * 360,
+      x: 30 + Math.random() * 40, // centered cluster
+      y: 20 + Math.random() * 40,
+      color: softColors[Math.floor(Math.random() * softColors.length)],
+      size: Math.random() * 6 + 3,
+      rotation: Math.random() * 180,
     }));
     setParticles(newParticles);
 
     const timer = setTimeout(() => {
       onComplete?.();
-    }, 2000);
+    }, 2500);
     return () => clearTimeout(timer);
   }, [show, onComplete]);
 
