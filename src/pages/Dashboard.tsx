@@ -17,6 +17,7 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [suggestion, setSuggestion] = useState<{ task: any; reason: string } | null>(null);
   const isChild = isChildSession();
 
   useEffect(() => {
@@ -37,6 +38,15 @@ const Dashboard = () => {
       }
       const dbTasks = await getTasks();
       setTasks(dbTasks);
+
+      // Smart suggestion logic
+      const pending = dbTasks.filter((t: any) => !t.completed);
+      if (pending.length > 0) {
+        const memoryItems = await getMemoryItems();
+        const picked = pickSmartTask(pending, memoryItems);
+        setSuggestion(picked);
+      }
+
       setLoading(false);
     };
     load();
@@ -46,12 +56,6 @@ const Dashboard = () => {
     clearChildSession();
     navigate("/auth");
   };
-
-  const name = profile?.name || "Studente";
-  const avatar = profile?.avatar_emoji || profile?.avatarEmoji || "🧒";
-  const completedCount = tasks.filter((t) => t.completed).length;
-  const totalMinutes = tasks.reduce((a: number, t: any) => a + (t.estimated_minutes || 0), 0);
-  const suggestedTask = tasks.find((t: any) => !t.completed && (t.difficulty || 1) <= 2);
 
   const mapTask = (t: any) => ({
     id: t.id, subject: t.subject, title: t.title, description: t.description || "",
