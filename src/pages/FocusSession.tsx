@@ -275,11 +275,11 @@ const FocusSession = () => {
                 <div className="grid grid-cols-3 gap-3 my-6">
                   <div className="bg-sage-light rounded-xl p-3 text-center">
                     <p className="text-lg font-display font-bold text-sage-dark">+{minutesWorked * 2}</p>
-                    <p className="text-[10px] text-sage-dark/80">punti focus</p>
+                    <p className="text-[10px] text-sage-dark/80">impegno</p>
                   </div>
                   <div className="bg-clay-light rounded-xl p-3 text-center">
                     <p className="text-lg font-display font-bold text-clay-dark">+{Math.round(minutesWorked * 0.5)}</p>
-                    <p className="text-[10px] text-clay-dark/80">autonomia</p>
+                    <p className="text-[10px] text-clay-dark/80">indipendenza</p>
                   </div>
                   <div className="bg-terracotta-light rounded-xl p-3 text-center">
                     <p className="text-lg font-display font-bold text-terracotta">+1</p>
