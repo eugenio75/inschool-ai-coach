@@ -12,6 +12,7 @@ interface TaskContext {
   keyConcepts?: string[];
   microSteps?: any[];
   difficulty?: number;
+  sourceImageUrl?: string;
 }
 
 interface WeakConcept {
