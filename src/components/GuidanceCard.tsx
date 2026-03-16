@@ -557,6 +557,25 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Math Notepad */}
+      {isMathSubject && (
+        <MathNotepad
+          open={notepadOpen}
+          onClose={() => setNotepadOpen(false)}
+          isCoachTyping={isTyping}
+          onSendToCoach={(operationText) => {
+            const newMsg: ChatMessage = {
+              id: `student-${Date.now()}`,
+              role: "student",
+              text: `📝 Ho fatto questa operazione sul blocco note:\n\`\`\`\n${operationText}\n\`\`\`\nÈ corretta?`,
+            };
+            const updated = [...messages, newMsg];
+            setMessages(updated);
+            streamCoachReply(updated);
+          }}
+        />
+      )}
     </motion.div>
   );
 };
