@@ -143,7 +143,6 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
       console.error("Error finding task for mission:", err);
       navigate("/dashboard");
     }
-    }
   };
 
   if (loading) {
