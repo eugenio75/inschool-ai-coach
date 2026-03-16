@@ -62,6 +62,7 @@ const AddHomework = () => {
   const handlePhotoAnalysis = async () => {
     if (!photoFile) return;
     const sourceType = mode === "photo-book" ? "photo-book" : "photo-diary";
+    setExtractedSourceType(sourceType);
     setMode("processing");
 
     try {
@@ -94,7 +95,7 @@ const AddHomework = () => {
         description: err.message || "Non sono riuscito ad analizzare la foto. Riprova con un'immagine più chiara.",
         variant: "destructive",
       });
-      setMode(photoFile ? "photo-diary" : "choose");
+      setMode(photoFile ? sourceType : "choose");
     }
   };
 
