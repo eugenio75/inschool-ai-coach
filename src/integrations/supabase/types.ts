@@ -219,7 +219,9 @@ export type Database = {
           focus_points: number | null
           id: string
           last_activity_date: string | null
+          next_shield_at: number | null
           streak: number | null
+          streak_shields: number | null
           updated_at: string
         }
         Insert: {
@@ -230,7 +232,9 @@ export type Database = {
           focus_points?: number | null
           id?: string
           last_activity_date?: string | null
+          next_shield_at?: number | null
           streak?: number | null
+          streak_shields?: number | null
           updated_at?: string
         }
         Update: {
@@ -241,7 +245,9 @@ export type Database = {
           focus_points?: number | null
           id?: string
           last_activity_date?: string | null
+          next_shield_at?: number | null
           streak?: number | null
+          streak_shields?: number | null
           updated_at?: string
         }
         Relationships: [
