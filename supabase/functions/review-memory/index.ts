@@ -34,7 +34,7 @@ PROFILO STUDENTE:
 - Stile preferito: ${studentProfile?.supportStyle || "gentile"}
 
 REGOLE:
-- Rivolgiti SEMPRE con il "tu" direttamente a ${studentName}
+- Rivolgiti SEMPRE a ${studentName} chiamandolo per nome
 - Fai domande adattive al suo livello
 - Se livello "base": domande semplici, definizioni, esempi concreti
 - Se livello "intermedio": domande di applicazione, collegamento tra concetti
