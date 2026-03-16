@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Flame, Star, Zap, Target, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Flame, Star, Zap, Target, Loader2, Brain, MessageCircle } from "lucide-react";
 import { getGamification, getDailyMissions, completeMission } from "@/lib/database";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
@@ -49,7 +50,33 @@ export const GamificationBar = () => {
   );
 };
 
+const MissionIcon = ({ type }: { type: string }) => {
+  switch (type) {
+    case "review_weak_concept": return <Brain className="w-3.5 h-3.5" />;
+    case "coach_challenge": return <MessageCircle className="w-3.5 h-3.5" />;
+    case "complete_task": return <Target className="w-3.5 h-3.5" />;
+    default: return <Zap className="w-3.5 h-3.5" />;
+  }
+};
+
+const MissionTag = ({ type }: { type: string }) => {
+  const tags: Record<string, { label: string; className: string }> = {
+    review_weak_concept: { label: "Ripasso", className: "bg-clay-light text-clay-dark" },
+    coach_challenge: { label: "Sfida del Coach", className: "bg-sage-light text-sage-dark" },
+    complete_task: { label: "Compito", className: "bg-terracotta-light text-terracotta" },
+    study_session: { label: "Studio", className: "bg-muted text-muted-foreground" },
+    study_minutes: { label: "Tempo", className: "bg-muted text-muted-foreground" },
+  };
+  const tag = tags[type] || tags.study_session;
+  return (
+    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md ${tag.className}`}>
+      {tag.label}
+    </span>
+  );
+};
+
 export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () => void }) => {
+  const navigate = useNavigate();
   const [missions, setMissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -62,11 +89,14 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
     load();
   }, []);
 
-  const handleComplete = async (mission: any) => {
+  const handleMissionClick = (mission: any) => {
     if (mission.completed) return;
-    await completeMission(mission.id, mission.points_reward);
-    setMissions(prev => prev.map(m => m.id === mission.id ? { ...m, completed: true, completed_at: new Date().toISOString() } : m));
-    onMissionComplete?.();
+    // Navigate to relevant section based on mission type
+    if (mission.mission_type === "review_weak_concept") {
+      navigate("/memory");
+    } else if (mission.mission_type === "coach_challenge" || mission.mission_type === "study_session") {
+      navigate("/dashboard"); // They'll pick a task from there
+    }
   };
 
   if (loading) {
@@ -88,35 +118,43 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
   return (
     <div className="space-y-2">
       {missions.map((mission) => (
-        <div
+        <button
           key={mission.id}
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+          onClick={() => handleMissionClick(mission)}
+          className={`w-full flex items-start gap-3 px-4 py-3 rounded-xl transition-all text-left ${
             mission.completed
               ? "bg-sage-light/30 border border-primary/10"
-              : "bg-card border border-border shadow-soft"
+              : "bg-card border border-border shadow-soft hover:border-primary/20"
           }`}
         >
-          <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${
+          <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5 ${
             mission.completed ? "bg-primary" : "border-2 border-border"
           }`}>
-            {mission.completed && (
+            {mission.completed ? (
               <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
+            ) : (
+              <MissionIcon type={mission.mission_type} />
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <span className={`text-sm ${mission.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-              {mission.title}
-            </span>
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className={`text-sm font-medium ${mission.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                {mission.title}
+              </span>
+              <MissionTag type={mission.mission_type} />
+            </div>
             {mission.description && (
-              <p className={`text-xs ${mission.completed ? "text-muted-foreground/60" : "text-muted-foreground"}`}>
+              <p className={`text-xs leading-relaxed ${mission.completed ? "text-muted-foreground/60" : "text-muted-foreground"}`}>
                 {mission.description}
               </p>
             )}
           </div>
-          <span className="text-xs font-medium text-muted-foreground">+{mission.points_reward}</span>
-        </div>
+          <span className={`text-xs font-bold shrink-0 mt-0.5 ${mission.completed ? "text-primary/60" : "text-primary"}`}>
+            +{mission.points_reward}
+          </span>
+        </button>
       ))}
     </div>
   );

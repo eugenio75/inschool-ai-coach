@@ -191,13 +191,14 @@ const FocusSession = () => {
       const missions = await getDailyMissions();
       for (const mission of missions) {
         if (mission.completed) continue;
-        if (mission.mission_type === "study_session") {
+        const t = mission.mission_type;
+        if (t === "study_session" || t === "coach_challenge") {
           await completeMission(mission.id, mission.points_reward);
         }
-        if (mission.mission_type === "complete_task" && task?.id) {
+        if (t === "complete_task" && task?.id) {
           await completeMission(mission.id, mission.points_reward);
         }
-        if (mission.mission_type === "study_minutes" && minutesWorked >= 10) {
+        if (t === "study_minutes" && minutesWorked >= 10) {
           await completeMission(mission.id, mission.points_reward);
         }
       }
