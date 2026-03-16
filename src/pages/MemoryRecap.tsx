@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Brain, RefreshCw, ChevronDown, ChevronUp, Sparkles, Loader2, Send, MessageCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getMemoryItems, updateMemoryStrength } from "@/lib/database";
+import { getMemoryItems, updateMemoryStrength, getDailyMissions, completeMission } from "@/lib/database";
 import { subjectColors } from "@/lib/mockData";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
