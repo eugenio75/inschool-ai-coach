@@ -31,7 +31,6 @@ serve(async (req) => {
     let resolvedChildId = childProfileId;
 
     if (accessCode) {
-      // Child session: validate code
       const { data: codeResult } = await supabase.rpc("validate_child_code", { code: accessCode });
       if (!codeResult?.valid) {
         return new Response(JSON.stringify({ error: "Codice non valido" }), {
@@ -41,7 +40,6 @@ serve(async (req) => {
       }
       resolvedChildId = codeResult.profile.id;
     } else {
-      // Parent session: validate via auth header
       const authHeader = req.headers.get("Authorization");
       if (!authHeader) {
         return new Response(JSON.stringify({ error: "Non autorizzato" }), {
@@ -67,14 +65,22 @@ serve(async (req) => {
       });
     }
 
+    // Fetch child name for personalized summaries
+    const { data: childProfile } = await supabase
+      .from("child_profiles")
+      .select("name")
+      .eq("id", resolvedChildId)
+      .maybeSingle();
+    const studentName = childProfile?.name || "Lo studente";
+
     // Build conversation text for analysis
     const conversationText = chatMessages
       .filter((m: any) => typeof m.text === "string" && m.text.trim())
       .map((m: any) => `${m.role === "coach" ? "Coach" : "Studente"}: ${m.text}`)
       .join("\n");
 
-    const extractPrompt = `Analizza questa conversazione di studio tra un coach AI e uno studente.
-Estrai i CONCETTI CHIAVE che lo studente ha imparato o su cui ha lavorato durante la sessione.
+    const extractPrompt = `Analizza questa conversazione di studio tra un coach AI e ${studentName}.
+Estrai i CONCETTI CHIAVE che ${studentName} ha imparato o su cui ha lavorato durante la sessione.
 
 Materia: ${taskSubject || "non specificata"}
 Argomento: ${taskTitle || "non specificato"}
@@ -84,9 +90,9 @@ ${conversationText}
 
 Rispondi SOLO con un JSON array di oggetti, ognuno con:
 - "concept": il nome breve del concetto (max 6 parole)
-- "summary": un riassunto di 1-2 frasi di cosa lo studente ha capito/lavorato
+- "summary": un riassunto di 1-2 frasi di cosa ${studentName} ha capito/lavorato. Usa SEMPRE il nome "${studentName}" e mai "lo studente".
 - "recall_questions": array di 2-3 domande di ripasso per verificare la comprensione
-- "strength": un numero da 20 a 80 che stima quanto bene lo studente ha capito (basandoti sulle risposte nella chat)
+- "strength": un numero da 20 a 80 che stima quanto bene ${studentName} ha capito (basandoti sulle risposte nella chat)
 
 Estrai da 1 a 4 concetti. Se la conversazione è troppo breve o non contiene apprendimento significativo, rispondi con un array vuoto [].
 
@@ -148,7 +154,6 @@ Rispondi SOLO con il JSON, senza markdown o altro testo.`;
           .maybeSingle();
 
         if (existing) {
-          // Update strength (average of old and new)
           const newStrength = Math.round((existing.strength + item.strength) / 2);
           await supabase
             .from("memory_items")
