@@ -5,6 +5,7 @@ import { ArrowLeft, Pause, Play, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { GuidanceCard, ChatMessage } from "@/components/GuidanceCard";
+import { CelebrationOverlay } from "@/components/CelebrationOverlay";
 import { getTask, saveFocusSession, updateTask, getActiveChildProfileId, getMemoryItems, getDailyMissions, completeMission } from "@/lib/database";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 
@@ -45,6 +46,7 @@ const FocusSession = () => {
   const [loading, setLoading] = useState(true);
   const [extracting, setExtracting] = useState(false);
   const [weakConcepts, setWeakConcepts] = useState<any[]>([]);
+  const [showCelebration, setShowCelebration] = useState(false);
   const chatMessagesRef = useRef<ChatMessage[]>([]);
 
   // Restore state from sessionStorage if available
@@ -181,7 +183,7 @@ const FocusSession = () => {
     }
     
     setPhase("recap");
-    
+    setShowCelebration(true);
     await saveFocusSession({
       task_id: task?.id,
       emotion,
@@ -234,6 +236,11 @@ const FocusSession = () => {
 
   return (
     <div className="h-[100dvh] bg-background flex flex-col overflow-hidden">
+      <CelebrationOverlay 
+        show={showCelebration} 
+        onComplete={() => setShowCelebration(false)}
+        points={minutesWorked * 2}
+      />
       <div className="px-6 pt-6 pb-4 flex items-center justify-between">
         <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft className="w-5 h-5" /></button>
         <div className="text-center">

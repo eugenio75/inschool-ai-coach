@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { TaskCard } from "@/components/TaskCard";
 import { GamificationBar, DailyMissions } from "@/components/GamificationBar";
+import { SocialProofBanner } from "@/components/CelebrationOverlay";
 import { getTasks, getActiveChildProfileId, getChildProfile } from "@/lib/database";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 
@@ -88,7 +89,10 @@ const Dashboard = () => {
             <p className="text-sm sm:text-base text-muted-foreground">{tasks.length > 0 ? "Ecco i tuoi compiti. Da dove vuoi partire?" : "Non ci sono compiti per oggi! 🎉"}</p>
           </motion.div>
 
-          <div className="mt-5"><GamificationBar /></div>
+          <div className="mt-5 space-y-3">
+            <GamificationBar />
+            <SocialProofBanner />
+          </div>
 
           {!loading && tasks.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.1 }} className="flex items-center gap-4 mt-4">

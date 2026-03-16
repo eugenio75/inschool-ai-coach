@@ -5,6 +5,7 @@ import { ArrowLeft, Send, Mic, MicOff, Sparkles, Trophy, Timer, Pause, Play } fr
 import { Button } from "@/components/ui/button";
 import { getDailyMissions, completeMission, getGamification } from "@/lib/database";
 import { isChildSession, getChildSession } from "@/lib/childSession";
+import { CelebrationOverlay } from "@/components/CelebrationOverlay";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -27,6 +28,7 @@ const CoachChallenge = () => {
   const [elapsed, setElapsed] = useState(0);
   const [paused, setPaused] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -247,6 +249,7 @@ const CoachChallenge = () => {
     if (mission && !completed) {
       await completeMission(mission.id, mission.points_reward);
       setCompleted(true);
+      setShowCelebration(true);
     }
   };
 
@@ -273,6 +276,12 @@ const CoachChallenge = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <CelebrationOverlay
+        show={showCelebration}
+        onComplete={() => setShowCelebration(false)}
+        message="Sfida completata!"
+        points={mission.points_reward}
+      />
       {/* Header */}
       <div className="bg-card border-b border-border px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-center justify-between">

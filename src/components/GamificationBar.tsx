@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Flame, Star, Zap, Target, Loader2, Brain, MessageCircle, ArrowRight } from "lucide-react";
 import { getGamification, getDailyMissions, completeMission, getTasks } from "@/lib/database";
 import { toast } from "@/hooks/use-toast";
+import { StreakShieldBadge } from "@/components/CelebrationOverlay";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -21,6 +22,10 @@ export const GamificationBar = () => {
   if (!g) return null;
 
   const total = (g.focus_points || 0) + (g.autonomy_points || 0) + (g.consistency_points || 0);
+  const shields = (g as any).streak_shields || 0;
+  const nextShieldAt = (g as any).next_shield_at || 7;
+  const streak = g.streak || 0;
+  const daysToShield = Math.max(0, nextShieldAt - streak);
 
   return (
     <motion.div
@@ -29,11 +34,11 @@ export const GamificationBar = () => {
       transition={{ ...spring, delay: 0.15 }}
       className="space-y-2"
     >
-      {/* Main row: streak + total */}
-      <div className="flex items-center gap-3">
+      {/* Main row: streak + total + shields */}
+      <div className="flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-1.5 bg-terracotta-light rounded-xl px-3 py-2">
           <Flame className="w-4 h-4 text-terracotta" />
-          <span className="text-sm font-display font-bold text-terracotta">{g.streak || 0}</span>
+          <span className="text-sm font-display font-bold text-terracotta">{streak}</span>
           <span className="text-xs text-terracotta/80">giorni</span>
         </div>
         <div className="flex items-center gap-1.5 bg-primary/10 rounded-xl px-3 py-2">
@@ -41,6 +46,12 @@ export const GamificationBar = () => {
           <span className="text-sm font-display font-bold text-primary">{total}</span>
           <span className="text-xs text-primary/80">punti</span>
         </div>
+        <StreakShieldBadge shields={shields} />
+        {shields === 0 && streak > 0 && daysToShield <= 3 && (
+          <span className="text-[10px] text-muted-foreground">
+            🛡️ tra {daysToShield} {daysToShield === 1 ? 'giorno' : 'giorni'}
+          </span>
+        )}
       </div>
 
       {/* Detail row: 3 sub-scores */}
