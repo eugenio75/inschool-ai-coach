@@ -7,16 +7,93 @@ import { ProgressSun } from "@/components/ProgressSun";
 import { TaskCard } from "@/components/TaskCard";
 import { GamificationBar, DailyMissions } from "@/components/GamificationBar";
 import { SocialProofBanner } from "@/components/CelebrationOverlay";
-import { getTasks, getActiveChildProfileId, getChildProfile } from "@/lib/database";
+import { getTasks, getActiveChildProfileId, getChildProfile, getMemoryItems } from "@/lib/database";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
+
+/** Score each pending task and return the best one with a reason */
+function pickSmartTask(
+  pendingTasks: any[],
+  memoryItems: any[]
+): { task: any; reason: string } {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Build a map: subject → average memory strength
+  const subjectStrength: Record<string, { total: number; count: number }> = {};
+  for (const m of memoryItems) {
+    const s = m.subject?.toLowerCase();
+    if (!s) continue;
+    if (!subjectStrength[s]) subjectStrength[s] = { total: 0, count: 0 };
+    subjectStrength[s].total += m.strength ?? 50;
+    subjectStrength[s].count += 1;
+  }
+  const avgStrength = (subject: string): number | null => {
+    const entry = subjectStrength[subject?.toLowerCase()];
+    if (!entry || entry.count === 0) return null;
+    return entry.total / entry.count;
+  };
+
+  let bestTask = pendingTasks[0];
+  let bestScore = -Infinity;
+  let bestReason = "";
+
+  for (const task of pendingTasks) {
+    let score = 0;
+    let reason = "";
+
+    // 1. Due date urgency (highest priority)
+    if (task.due_date) {
+      const due = new Date(task.due_date);
+      due.setHours(0, 0, 0, 0);
+      const daysUntil = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysUntil <= 0) {
+        score += 100;
+        reason = "Questo compito scade oggi!";
+      } else if (daysUntil === 1) {
+        score += 80;
+        reason = "Questo compito scade domani";
+      } else if (daysUntil <= 3) {
+        score += 50;
+        reason = `Scade tra ${daysUntil} giorni`;
+      }
+    }
+
+    // 2. Weak memory in this subject
+    const strength = avgStrength(task.subject);
+    if (strength !== null && strength < 40) {
+      score += 60;
+      if (!reason) reason = `Hai bisogno di rinforzare ${task.subject} — la tua memoria è al ${Math.round(strength)}%`;
+      else reason += ` e hai bisogno di rinforzare ${task.subject}`;
+    } else if (strength !== null && strength < 60) {
+      score += 30;
+      if (!reason) reason = `${task.subject} ha bisogno di un po' di pratica — memoria al ${Math.round(strength)}%`;
+    }
+
+    // 3. Fallback: prefer easier tasks slightly (lower friction to start)
+    score += Math.max(0, 3 - (task.difficulty || 1)) * 5;
+
+    if (!reason) {
+      reason = "Un buon punto di partenza per oggi";
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestTask = task;
+      bestReason = reason;
+    }
+  }
+
+  return { task: bestTask, reason: bestReason };
+}
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [suggestion, setSuggestion] = useState<{ task: any; reason: string } | null>(null);
   const isChild = isChildSession();
 
   useEffect(() => {
@@ -37,6 +114,14 @@ const Dashboard = () => {
       }
       const dbTasks = await getTasks();
       setTasks(dbTasks);
+
+      // Smart suggestion
+      const pending = dbTasks.filter((t: any) => !t.completed);
+      if (pending.length > 0) {
+        const memoryItems = await getMemoryItems();
+        setSuggestion(pickSmartTask(pending, memoryItems));
+      }
+
       setLoading(false);
     };
     load();
@@ -51,7 +136,6 @@ const Dashboard = () => {
   const avatar = profile?.avatar_emoji || profile?.avatarEmoji || "🧒";
   const completedCount = tasks.filter((t) => t.completed).length;
   const totalMinutes = tasks.reduce((a: number, t: any) => a + (t.estimated_minutes || 0), 0);
-  const suggestedTask = tasks.find((t: any) => !t.completed && (t.difficulty || 1) <= 2);
 
   const mapTask = (t: any) => ({
     id: t.id, subject: t.subject, title: t.title, description: t.description || "",
@@ -108,11 +192,22 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {suggestedTask && (
+      {suggestion && (
         <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 }} className="bg-sage-light border border-primary/20 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
-            <div className="min-w-0 flex-1"><div className="flex items-center gap-2 mb-1"><Sparkles className="w-4 h-4 text-sage-dark flex-shrink-0" /><span className="text-xs font-medium text-sage-dark uppercase tracking-wider">Consiglio del coach</span></div><p className="text-sm text-foreground truncate">Inizia con <strong>{suggestedTask.title}</strong></p></div>
-            <Button onClick={() => navigate(`/focus/${suggestedTask.id}`)} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-xl px-3 sm:px-4 py-2 text-sm flex-shrink-0">Inizia <ArrowRight className="ml-1 w-3.5 h-3.5" /></Button>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 }} className="bg-sage-light border border-primary/20 rounded-2xl p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="w-4 h-4 text-sage-dark flex-shrink-0" />
+                  <span className="text-xs font-medium text-sage-dark uppercase tracking-wider">Consiglio del coach</span>
+                </div>
+                <p className="text-sm font-medium text-foreground">Inizia con <strong>{suggestion.task.title}</strong></p>
+                <p className="text-xs text-sage-dark/80 mt-1">{suggestion.reason}</p>
+              </div>
+              <Button onClick={() => navigate(`/homework/${suggestion.task.id}`)} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-xl px-3 sm:px-4 py-2 text-sm flex-shrink-0">
+                Vedi <ArrowRight className="ml-1 w-3.5 h-3.5" />
+              </Button>
+            </div>
           </motion.div>
         </div></div>
       )}
