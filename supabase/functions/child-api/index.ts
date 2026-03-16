@@ -169,6 +169,22 @@ serve(async (req) => {
         break;
       }
 
+      case "update-profile": {
+        const allowedFields: Record<string, any> = {};
+        if (payload.avatar_emoji) allowedFields.avatar_emoji = payload.avatar_emoji;
+        if (payload.interests) allowedFields.interests = payload.interests;
+        allowedFields.updated_at = new Date().toISOString();
+
+        const { data } = await supabase
+          .from("child_profiles")
+          .update(allowedFields)
+          .eq("id", childProfileId)
+          .select()
+          .single();
+        result = data;
+        break;
+      }
+
       case "create-task": {
         const { data, error } = await supabase
           .from("homework_tasks")
