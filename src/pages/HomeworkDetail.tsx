@@ -181,7 +181,7 @@ const HomeworkDetail = () => {
 
       {/* Bottom CTA */}
       <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border px-6 py-4">
-        <div className="max-w-2xl mx-auto flex gap-3">
+        <div className="max-w-3xl mx-auto flex gap-3">
           {task.completed ? (
             <>
               <Button onClick={() => navigate("/memory")} variant="outline" className="flex-1 rounded-2xl py-5 text-base border-border">
