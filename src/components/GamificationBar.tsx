@@ -105,8 +105,13 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
 
   const handleMissionClick = (mission: any) => {
     if (mission.completed) return;
-    if (mission.mission_type === "review_weak_concept") {
+    if (mission.mission_type === "review_weak_concept" || mission.mission_type === "review_concept") {
       navigate("/memory");
+    } else if (mission.mission_type === "coach_challenge" || mission.mission_type === "study_session" || mission.mission_type === "study_minutes") {
+      // Navigate to dashboard so the student can pick a task to start a session
+      navigate("/dashboard");
+    } else if (mission.mission_type === "complete_task") {
+      navigate("/dashboard");
     }
   };
 
