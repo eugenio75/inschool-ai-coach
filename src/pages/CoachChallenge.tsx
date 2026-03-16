@@ -288,11 +288,21 @@ const CoachChallenge = () => {
               <p className="text-xs text-muted-foreground truncate max-w-[200px]">{mission.title}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 bg-muted rounded-xl px-3 py-1.5">
-              <Timer className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-xs font-mono font-medium text-foreground">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={togglePause}
+              className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
+                paused ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
+              }`}
+              title={paused ? "Riprendi" : "Pausa"}
+            >
+              {paused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
+            </button>
+            <div className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 ${paused ? "bg-clay-light" : "bg-muted"}`}>
+              <Timer className={`w-3.5 h-3.5 ${paused ? "text-clay-dark" : "text-muted-foreground"}`} />
+              <span className={`text-xs font-mono font-medium ${paused ? "text-clay-dark" : "text-foreground"}`}>
                 {String(minutesElapsed).padStart(2, "0")}:{String(secondsElapsed).padStart(2, "0")}
+                {paused && " ⏸"}
               </span>
             </div>
             <div className="flex items-center gap-1 bg-primary/10 rounded-xl px-3 py-1.5">
