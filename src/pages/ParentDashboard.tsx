@@ -247,7 +247,7 @@ const ParentDashboard = () => {
 
       {/* Child Access Code */}
       {selectedProfile && (
-        <div className="px-6 mt-6"><div className="max-w-2xl mx-auto">
+        <div className="px-6 mt-6"><div className="max-w-3xl mx-auto">
           <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
             <div className="flex items-center gap-2 mb-3">
               <KeyRound className="w-4 h-4 text-primary" />
