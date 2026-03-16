@@ -1,25 +1,19 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const confettiColors = [
+const softColors = [
   "hsl(var(--primary))",
-  "hsl(var(--secondary))",
-  "hsl(var(--terracotta))",
   "hsl(var(--sage))",
   "hsl(var(--clay))",
 ];
 
+// Calm, meaningful messages — no hype, just warm acknowledgment
 const celebrationMessages = [
-  { emoji: "🌟", text: "Fantastico!" },
-  { emoji: "🚀", text: "Che razzo!" },
-  { emoji: "💪", text: "Che forza!" },
-  { emoji: "🧠", text: "Cervellone!" },
-  { emoji: "🔥", text: "Sei on fire!" },
-  { emoji: "⚡", text: "Super veloce!" },
-  { emoji: "🎯", text: "Centro perfetto!" },
-  { emoji: "🏆", text: "Da campione!" },
-  { emoji: "✨", text: "Brillante!" },
-  { emoji: "🌈", text: "Incredibile!" },
+  { emoji: "🌟", text: "Ce l'hai fatta!" },
+  { emoji: "🌱", text: "Un passo in più." },
+  { emoji: "🧠", text: "Ottimo lavoro." },
+  { emoji: "📚", text: "Compito completato." },
+  { emoji: "✨", text: "Ben fatto." },
 ];
 
 interface Particle {
