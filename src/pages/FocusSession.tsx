@@ -529,6 +529,7 @@ const FocusSession = () => {
                 microSteps: task.micro_steps,
                 difficulty: task.difficulty,
                 sourceImageUrl: task.source_image_url,
+                taskType: (task as any).task_type || "exercise",
               } : undefined}
             />
           </div>
