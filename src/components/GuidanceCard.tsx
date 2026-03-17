@@ -173,7 +173,8 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
         ? `Sei stanco, ${name}, va bene. Partiamo con una domanda semplice sul brano: qual è il fatto principale che hai letto?`
         : `Sei stanco, ${name}, è normale. Facciamo solo un micro-passo, poi vediamo come va. Cosa devi fare in questo esercizio?`;
     } else if (isPhotoTask && hasSourcePage) {
-      initial = `Perfetto ${name}! Ho la pagina allegata${taskSubject ? ` di ${taskSubject}` : ""}. Partiamo da quello che c'è davvero scritto: quale esercizio vuoi guardare per primo?`;
+      const title = taskContext?.title || taskTitle || "";
+      initial = `Perfetto ${name}! Ho la pagina davanti${taskSubject ? ` di ${taskSubject}` : ""}. Lavoriamo su "${title}". Analizzo l'esercizio e partiamo subito! Sei pronto?`;
     } else if (isPhotoTask) {
       initial = `Perfetto ${name}! Per seguire bene gli esercizi del libro senza inventare nulla, ho bisogno della pagina originale oppure della frase esatta dell'esercizio. Me la mandi o me la scrivi?`;
     } else if (isReadingComprehensionTask && hasReadingText) {
