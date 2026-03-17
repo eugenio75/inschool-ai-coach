@@ -260,6 +260,26 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     }
   }, [messages]);
 
+  // Defensive recovery: if a stale generic prompt survives on photo/PDF tasks, replace it and auto-start analysis
+  useEffect(() => {
+    const sourceType = taskContext?.sourceType || "manual";
+    const isPhotoTask = ["photo", "textbook", "photo-book", "photo-diary"].includes(sourceType);
+    const staleGenericPrompt = /cosa dice la consegna dell'esercizio\?/i.test(messages[0]?.text || "");
+
+    if (!isPhotoTask || !staleGenericPrompt || messages.length !== 1 || messages[0]?.id !== "init") {
+      return;
+    }
+
+    const profile = getProfile();
+    const name = profile?.name || "campione";
+    const safeInitial = taskContext?.description
+      ? `Perfetto ${name}! Ho già il testo dell'attività${taskSubject ? ` di ${taskSubject}` : ""}. Partiamo da qui: "${taskContext.description}".`
+      : `Perfetto ${name}! Ho già il compito${taskSubject ? ` di ${taskSubject}` : ""}. Lo guardo io e partiamo insieme.`;
+
+    autoAnalyzeRef.current = true;
+    setMessages([{ id: "init", role: "coach", text: safeInitial }]);
+  }, [messages, taskContext, taskSubject]);
+
   // Persist messages to sessionStorage and notify parent
   useEffect(() => {
     if (sessionKey && messages.length > 0) {
