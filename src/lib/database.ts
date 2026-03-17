@@ -158,6 +158,7 @@ export async function createTask(task: {
   source_type?: string;
   source_image_url?: string;
   due_date?: string;
+  task_type?: string;
 }) {
   if (isChildSession()) {
     return childApi("create-task", task);
