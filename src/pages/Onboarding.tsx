@@ -65,7 +65,7 @@ const Onboarding = () => {
 
   const canProceed = () => {
     switch (step) {
-      case 0: return data.name.trim() !== "" && data.age !== "";
+      case 0: return data.name.trim() !== "" && data.age !== "" && data.gender !== "";
       case 1: return data.avatar !== "";
       case 2: return data.schoolLevel !== "";
       case 3: return data.favoriteSubjects.length > 0;
