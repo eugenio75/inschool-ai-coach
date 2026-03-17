@@ -193,8 +193,13 @@ const Dashboard = () => {
           </div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
-            <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-1">Ciao {name}! 👋</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">{tasks.length > 0 ? "Ecco i tuoi compiti. Da dove vuoi partire?" : "Non ci sono compiti per oggi! 🎉"}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-1">Ciao {name}! 👋</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">{tasks.length > 0 ? "Ecco i tuoi compiti. Da dove vuoi partire?" : "Non ci sono compiti per oggi! 🎉"}</p>
+              </div>
+              {isChild && <QuickHelpButton onClick={() => setQuickHelpOpen(true)} />}
+            </div>
           </motion.div>
 
           <div className="mt-5 space-y-3">
