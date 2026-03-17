@@ -418,9 +418,19 @@ const AddHomework = () => {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{task.subject} • ~{task.estimatedMinutes} min</span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {task.task_type === "study" && (
+                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-accent text-accent-foreground">
+                              <BookOpen className="w-3 h-3" /> Studio
+                            </span>
+                          )}
+                          {task.task_type === "exercise" && (
+                            <span className="text-[10px] font-bold text-clay-dark uppercase tracking-wider bg-clay-light px-2 py-0.5 rounded-full">Esercizio</span>
+                          )}
+                          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{task.subject} • ~{task.estimatedMinutes} min</span>
+                        </div>
                         <h4 className="font-display font-semibold text-foreground mt-1">{task.title}</h4>
-                        <p className="text-sm text-muted-foreground mt-0.5">{task.description}</p>
+                        <p className="text-sm text-muted-foreground mt-0.5 line-clamp-3">{task.description}</p>
                       </div>
                       <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ml-3 ${task.selected ? "bg-primary" : "bg-border"}`}>
                         {task.selected && <Check className="w-4 h-4 text-primary-foreground" />}
