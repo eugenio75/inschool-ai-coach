@@ -264,15 +264,35 @@ IMPORTANTE: NON dire mai "So che non ti piace questa materia" — mostra semplic
     }
 
     if (taskContext) {
+      const taskType = taskContext.taskType || "exercise";
+      
       contextPrompt += `\n\nCONTESTO COMPITO:
 - Titolo: ${taskContext.title || "non specificato"}
 - Materia: ${taskContext.subject || "non specificata"}
 - Tipo sorgente: ${taskContext.sourceType || "manual"}
-- TESTO COMPLETO DELL'ESERCIZIO (trascritto dalla foto): ${taskContext.description || "non disponibile"}
+- Tipo compito: ${taskType}
+- TESTO COMPLETO: ${taskContext.description || "non disponibile"}
 - Concetti chiave: ${taskContext.keyConcepts?.join(", ") || "non specificati"}
-- Difficoltà: ${taskContext.difficulty || "non specificata"}/5
+- Difficoltà: ${taskContext.difficulty || "non specificata"}/5`;
 
-IMPORTANTE: Il campo "TESTO COMPLETO DELL'ESERCIZIO" contiene la trascrizione letterale dell'esercizio dalla foto. Usa QUESTO testo come fonte primaria per citare le domande. La foto serve come conferma visiva.`;
+      if (taskType === "study") {
+        contextPrompt += `\n\n📖 QUESTO È UN COMPITO DI STUDIO — MODALITÀ INTERROGAZIONE AI:
+Il testo completo della pagina da studiare è nel campo "TESTO COMPLETO" sopra. Lo studente deve studiare e saper ripetere questo contenuto.
+
+COMPORTAMENTO OBBLIGATORIO:
+1. PRIMO MESSAGGIO: Fai subito UNA domanda specifica e concreta sul contenuto del testo. NON chiedere "cosa devi fare", "raccontami cosa sai" o domande generiche. TU HAI GIÀ IL TESTO, quindi parti direttamente!
+2. Genera domande basate ESCLUSIVAMENTE sul testo fornito — non inventare informazioni non presenti.
+3. Segui il framework in 5 fasi: Sondaggio → Comprensione → Memorizzazione → Mini-interrogazione → Feedback finale.
+4. Fai UNA domanda alla volta. Aspetta la risposta prima di procedere.
+5. Se lo studente risponde bene, conferma brevemente e alza il livello della domanda successiva.
+6. Se risponde in modo vago o sbagliato, dai un indizio contestuale dal testo e rifai la domanda in modo più semplice.
+7. Copri TUTTI i concetti importanti del testo, non solo i primi paragrafi.
+8. Alla fine (dopo 6-8 domande), dai un feedback complessivo: "Punti dove sei stato chiaro: [...], Punti da ripassare: [...]"
+9. NON leggere il testo allo studente. LUI deve ricordare e rielaborare.
+10. NON chiedere "Cosa dice la consegna?" — la consegna è STUDIARE e tu devi INTERROGARE.`;
+      } else {
+        contextPrompt += `\n\nIMPORTANTE: Il campo "TESTO COMPLETO" contiene la trascrizione letterale dell'esercizio dalla foto. Usa QUESTO testo come fonte primaria per citare le domande. La foto serve come conferma visiva.`;
+      }
 
       if (taskContext.microSteps && taskContext.microSteps.length > 0) {
         contextPrompt += `\n- Micro-step previsti:`;
