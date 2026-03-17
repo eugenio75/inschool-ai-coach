@@ -344,7 +344,15 @@ const AddHomework = () => {
                 ) : (
                   <div className="space-y-4">
                     <div className="relative rounded-2xl overflow-hidden border border-border">
-                      <img src={photoPreview} alt="Foto caricata" className="w-full max-h-[70vh] object-contain bg-muted/30" />
+                      {photoPreview === "pdf" ? (
+                        <div className="w-full py-16 flex flex-col items-center justify-center bg-muted/30">
+                          <BookOpen className="w-12 h-12 text-muted-foreground mb-3" />
+                          <p className="font-medium text-foreground">{photoFile?.name}</p>
+                          <p className="text-sm text-muted-foreground mt-1">PDF pronto per l'analisi</p>
+                        </div>
+                      ) : (
+                        <img src={photoPreview!} alt="Foto caricata" className="w-full max-h-[70vh] object-contain bg-muted/30" />
+                      )}
                       <button onClick={() => { setPhotoPreview(null); setPhotoFile(null); setUploadedImageUrl(null); }} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-foreground/60 text-background flex items-center justify-center">
                         <X className="w-4 h-4" />
                       </button>
