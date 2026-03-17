@@ -19,6 +19,7 @@ import MemoryRecap from "./pages/MemoryRecap";
 import ParentDashboard from "./pages/ParentDashboard";
 import Settings from "./pages/Settings";
 import StudentProfile from "./pages/StudentProfile";
+import EmotionalCheckin from "./pages/EmotionalCheckin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
