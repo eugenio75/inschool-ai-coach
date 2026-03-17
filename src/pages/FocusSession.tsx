@@ -33,7 +33,7 @@ const breakMessages = [
 ];
 
 const SESSION_KEY_PREFIX = "focus-session-";
-const SESSION_VERSION = "v2"; // Bump to invalidate old sessions
+const SESSION_VERSION = "v3"; // Bump to invalidate old sessions with stuck greeting
 
 function getSessionState(taskId: string) {
   try {
