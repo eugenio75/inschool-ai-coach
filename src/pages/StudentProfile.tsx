@@ -62,8 +62,9 @@ const StudentProfile = () => {
     if (!profile) return;
     setSaving(true);
     try {
-      const updates = {
+      const updates: Record<string, any> = {
         avatar_emoji: selectedAvatar,
+        gender: gender || null,
         interests,
         class_section: classSection.trim() || null,
         school_name: schoolName.trim() || null,
