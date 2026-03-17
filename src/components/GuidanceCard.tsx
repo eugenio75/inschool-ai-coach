@@ -150,6 +150,9 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     } catch { return null; }
   };
 
+  // Track if we need to auto-trigger AI analysis after initial message
+  const autoAnalyzeRef = useRef(false);
+
   // Initial message - only if no restored messages
   useEffect(() => {
     if (messages.length > 0) return; // Already restored from sessionStorage
@@ -164,6 +167,8 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     const hasReadingText = (taskContext?.description || "").trim().length > 80;
     
     let initial: string;
+    let shouldAutoAnalyze = false;
+
     if (emotion === "frustrated" || emotion === "worried") {
       initial = isReadingComprehensionTask
         ? `Capisco che può sembrare difficile, ${name}. Facciamo un passo alla volta: di chi o di cosa parla il brano?`
@@ -174,7 +179,8 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
         : `Sei stanco, ${name}, è normale. Facciamo solo un micro-passo, poi vediamo come va. Cosa devi fare in questo esercizio?`;
     } else if (isPhotoTask && hasSourcePage) {
       const title = taskContext?.title || taskTitle || "";
-      initial = `Perfetto ${name}! Ho la pagina davanti${taskSubject ? ` di ${taskSubject}` : ""}. Lavoriamo su "${title}". Analizzo l'esercizio e partiamo subito! Sei pronto?`;
+      initial = `Perfetto ${name}! Ho la pagina davanti${taskSubject ? ` di ${taskSubject}` : ""}. Lavoriamo su "${title}". Analizzo l'esercizio e ti preparo il ripasso... ⏳`;
+      shouldAutoAnalyze = true;
     } else if (isPhotoTask) {
       initial = `Perfetto ${name}! Per seguire bene gli esercizi del libro senza inventare nulla, ho bisogno della pagina originale oppure della frase esatta dell'esercizio. Me la mandi o me la scrivi?`;
     } else if (isReadingComprehensionTask && hasReadingText) {
@@ -187,8 +193,29 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
       initial = `Perfetto ${name}, iniziamo! ${taskTitle ? `Stiamo lavorando su "${taskTitle}"${taskSubject ? ` di ${taskSubject}` : ""}.` : ""} Leggi la consegna dell'esercizio. Cosa ti chiede di fare?`;
     }
     
-    setMessages([{ id: "init", role: "coach", text: initial }]);
+    const initMessages: ChatMessage[] = [{ id: "init", role: "coach", text: initial }];
+    setMessages(initMessages);
+    
+    if (shouldAutoAnalyze) {
+      autoAnalyzeRef.current = true;
+    }
   }, []); // Run once on mount
+
+  // Auto-trigger AI analysis for photo tasks after initial message is set
+  useEffect(() => {
+    if (autoAnalyzeRef.current && messages.length === 1 && messages[0].id === "init") {
+      autoAnalyzeRef.current = false;
+      // Add a simulated student confirmation and trigger AI
+      const studentMsg: ChatMessage = {
+        id: `student-auto-${Date.now()}`,
+        role: "student",
+        text: "Sì, sono pronto! Iniziamo con il ripasso della teoria.",
+      };
+      const updated = [...messages, studentMsg];
+      setMessages(updated);
+      streamCoachReply(updated);
+    }
+  }, [messages]);
 
   // Persist messages to sessionStorage and notify parent
   useEffect(() => {
