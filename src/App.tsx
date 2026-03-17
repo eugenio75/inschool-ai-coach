@@ -55,6 +55,7 @@ const AppRoutes = () => (
     <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
     <Route path="/profiles" element={<ProtectedRoute><ProfileSelector /></ProtectedRoute>} />
     <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+    <Route path="/checkin" element={<AccessibleRoute><EmotionalCheckin /></AccessibleRoute>} />
     <Route path="/dashboard" element={<AccessibleRoute><Dashboard /></AccessibleRoute>} />
     <Route path="/add-homework" element={<AccessibleRoute><AddHomework /></AccessibleRoute>} />
     <Route path="/homework/:taskId" element={<AccessibleRoute><HomeworkDetail /></AccessibleRoute>} />
