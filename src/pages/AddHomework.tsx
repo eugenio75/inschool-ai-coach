@@ -100,15 +100,22 @@ const AddHomework = () => {
   };
 
   const processFile = (file: File) => {
-    if (!file.type.startsWith("image/")) return;
+    const isImage = file.type.startsWith("image/");
+    const isPdf = file.type === "application/pdf";
+    if (!isImage && !isPdf) return;
     setPhotoFile(file);
     setUploadedImageUrl(null);
     setExtractedSourceType(null);
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setPhotoPreview(ev.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setPhotoPreview(ev.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // For PDFs, show a placeholder preview
+      setPhotoPreview("pdf");
+    }
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
