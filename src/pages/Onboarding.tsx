@@ -114,6 +114,14 @@ const Onboarding = () => {
             <div className="space-y-4">
               <input type="text" placeholder="Nome del bambino" value={data.name} onChange={(e) => setData({ ...data, name: e.target.value })} className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-lg" />
               <div>
+                <label className="text-sm text-muted-foreground mb-2 block">Genere</label>
+                <div className="flex gap-3">
+                  {[{ id: "M", label: "👦 Maschio" }, { id: "F", label: "👧 Femmina" }].map((g) => (
+                    <button key={g.id} onClick={() => setData({ ...data, gender: g.id })} className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all ${data.gender === g.id ? "bg-primary text-primary-foreground shadow-soft" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{g.label}</button>
+                  ))}
+                </div>
+              </div>
+              <div>
                 <label className="text-sm text-muted-foreground mb-2 block">Quanti anni ha?</label>
                 <div className="flex flex-wrap gap-2">
                   {Array.from({ length: 8 }, (_, i) => (i + 6).toString()).map((age) => (
