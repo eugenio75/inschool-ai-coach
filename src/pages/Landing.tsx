@@ -1,7 +1,11 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Heart, Brain, Shield, Sparkles, ArrowRight, BookOpen, Clock, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { isChildSession } from "@/lib/childSession";
+import { useAuth } from "@/hooks/useAuth";
+import { getActiveChildProfileId } from "@/lib/database";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
