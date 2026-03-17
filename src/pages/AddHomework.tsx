@@ -336,7 +336,7 @@ const AddHomework = () => {
                         {mode === "photo-diary" ? "Fotografa il diario" : "Fotografa il libro"}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Tocca per scattare, carica un'immagine o trascinala qui
+                        Tocca per scattare, carica un'immagine/PDF o trascinala qui
                       </p>
                     </div>
                     <input type="file" accept="image/*,application/pdf" capture="environment" className="hidden" onChange={handlePhotoUpload} />
