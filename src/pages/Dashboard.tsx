@@ -9,7 +9,7 @@ import { GamificationBar, DailyMissions } from "@/components/GamificationBar";
 import { SocialProofBanner } from "@/components/CelebrationOverlay";
 import { QuickHelpButton, QuickHelpModal } from "@/components/QuickHelp";
 import { shouldShowCheckin } from "@/pages/EmotionalCheckin";
-import { getTasks, getActiveChildProfileId, getChildProfile, getMemoryItems } from "@/lib/database";
+import { getTasks, getActiveChildProfileId, getChildProfile, getMemoryItems, deleteTask } from "@/lib/database";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
