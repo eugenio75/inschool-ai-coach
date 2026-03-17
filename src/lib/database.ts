@@ -506,7 +506,7 @@ export async function uploadHomeworkImage(file: File): Promise<string | null> {
 
 // ============ OCR ============
 
-export async function extractTasksFromImage(imageUrl: string, sourceType: string) {
+export async function extractTasksFromImage(imageUrl: string, sourceType: string, userNote?: string) {
   const response = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ocr-homework`,
     {
@@ -515,7 +515,7 @@ export async function extractTasksFromImage(imageUrl: string, sourceType: string
         "Content-Type": "application/json",
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
-      body: JSON.stringify({ imageUrl, sourceType }),
+      body: JSON.stringify({ imageUrl, sourceType, userNote: userNote || undefined }),
     }
   );
   if (!response.ok) {

@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, sourceType } = await req.json();
+    const { imageUrl, sourceType, userNote } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -39,11 +39,15 @@ serve(async (req) => {
       ? "L'immagine è una foto di un LIBRO DI TESTO. Identifica gli esercizi, le domande o le attività visibili."
       : "L'immagine è una foto del DIARIO SCOLASTICO. Leggi i compiti scritti a mano o stampati.";
 
+    const userInstruction = userNote
+      ? `\n\nIMPORTANTE - INDICAZIONE DELLO STUDENTE: "${userNote}"\nConcentrati SOLO sugli esercizi/attività indicati dallo studente. Se lo studente specifica numeri di esercizi, pagine o attività particolari, estrai SOLO quelli e ignora il resto.`
+      : "";
+
     const systemPrompt = `Sei un assistente che analizza foto di compiti scolastici per bambini delle scuole primarie e medie italiane.
 
 ${contextNote}
 
-Analizza TUTTA l'immagine con attenzione, anche i bordi e le parti meno nitide.
+Analizza TUTTA l'immagine con attenzione, anche i bordi e le parti meno nitide.${userInstruction}
 
 Per ogni compito/esercizio trovato, restituisci un oggetto JSON con:
 - "subject": la materia (una tra: Italiano, Matematica, Scienze, Storia, Geografia, Inglese, Arte, Musica, Tecnologia)

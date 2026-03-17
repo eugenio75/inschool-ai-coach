@@ -58,6 +58,7 @@ const AddHomework = () => {
   const [extractedSourceType, setExtractedSourceType] = useState<"photo-book" | "photo-diary" | null>(null);
   const [saving, setSaving] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [photoNote, setPhotoNote] = useState("");
 
   const handlePhotoAnalysis = async () => {
     if (!photoFile) return;
@@ -70,7 +71,7 @@ const AddHomework = () => {
       if (!imageUrl) throw new Error("Upload fallito");
       setUploadedImageUrl(imageUrl);
 
-      const result = await extractTasksFromImage(imageUrl, sourceType);
+      const result = await extractTasksFromImage(imageUrl, sourceType, photoNote.trim() || undefined);
 
       if (result.tasks && result.tasks.length > 0) {
         setExtractedTasks(
@@ -356,6 +357,17 @@ const AddHomework = () => {
                       <button onClick={() => { setPhotoPreview(null); setPhotoFile(null); setUploadedImageUrl(null); }} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-foreground/60 text-background flex items-center justify-center">
                         <X className="w-4 h-4" />
                       </button>
+                    </div>
+                    {/* Optional note about what to do */}
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-2 block">Cosa devi fare? (opzionale)</label>
+                      <textarea
+                        value={photoNote}
+                        onChange={(e) => setPhotoNote(e.target.value)}
+                        placeholder="Es: Esercizio 3 e 4 a pagina 52, solo le domande vero/falso..."
+                        rows={2}
+                        className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none text-sm"
+                      />
                     </div>
                     {/* Due date */}
                     <div className="bg-muted/50 rounded-2xl px-4 py-3">
