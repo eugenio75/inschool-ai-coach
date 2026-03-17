@@ -41,6 +41,17 @@ const howItWorks = [
 
 const Landing = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (loading) return;
+    if (isChildSession()) {
+      navigate("/dashboard", { replace: true });
+    } else if (user) {
+      const profileId = getActiveChildProfileId();
+      navigate(profileId ? "/dashboard" : "/profiles", { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   return (
     <div className="min-h-screen bg-background">
