@@ -14,6 +14,7 @@ interface TaskContext {
   microSteps?: any[];
   difficulty?: number;
   sourceImageUrl?: string;
+  taskType?: string;
 }
 
 interface WeakConcept {
