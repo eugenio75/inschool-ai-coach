@@ -166,17 +166,34 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     const isReadingComprehensionTask = /(comprension|comprendere|brano|testo|lettura|leggi e rispondi|rispondi alle domande|domande sul testo|racconto)/i.test(readingContext);
     const hasReadingText = (taskContext?.description || "").trim().length > 80;
     
+    // Detect oral/study tasks: subjects like Storia, Geografia, Scienze with manual source
+    const oralContext = `${taskTitle || ""} ${taskContext?.title || ""} ${taskContext?.description || ""}`.toLowerCase();
+    const isOralSubject = /stori|geografi|scienz|italian|letteratur|grammati|biologi|filosof|diritt|civic|religion|music/i.test((taskSubject || "") + " " + (taskContext?.subject || ""));
+    const isOralStudyTask = !isPhotoTask && (
+      /(studia|ripeti|ripassa|ripetere|ripassare|orale|interrogazione|esponi|esporre|presentazione|memorizza|impara|leggere e studiare|preparare)/i.test(oralContext) ||
+      (isOralSubject && sourceType === "manual" && !isReadingComprehensionTask && !/(eserciz|calcol|risolv|complet|scrivi|traduci)/i.test(oralContext))
+    );
+    
     let initial: string;
     let shouldAutoAnalyze = false;
 
-    if (emotion === "frustrated" || emotion === "worried") {
+    if (isOralStudyTask) {
+      // For oral/study tasks, NEVER ask "cosa devi fare" — go straight to study method
+      if (emotion === "frustrated" || emotion === "worried") {
+        initial = `Capisco che può sembrare tanto, ${name}. Ma facciamo un passo alla volta: ti aiuto io a organizzare lo studio di ${taskSubject || "questo argomento"}. 📖 Raccontami con parole tue cosa sai già su "${taskTitle || "questo argomento"}".`;
+      } else if (emotion === "tired") {
+        initial = `Sei stanco, ${name}, va bene. Facciamo una cosa leggera: ripassiamo "${taskTitle || "l'argomento"}" con calma. 📖 Dimmi con parole tue cosa ricordi su questo argomento.`;
+      } else {
+        initial = `Perfetto ${name}! Oggi studiamo "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""}. 📖 Raccontami con parole tue cosa sai già — poi ti aiuto a organizzare tutto e facciamo una mini-interrogazione!`;
+      }
+    } else if (emotion === "frustrated" || emotion === "worried") {
       initial = isReadingComprehensionTask
         ? `Capisco che può sembrare difficile, ${name}. Facciamo un passo alla volta: di chi o di cosa parla il brano?`
         : `Capisco che può sembrare difficile, ${name}. Facciamo il primo piccolo passo insieme — solo quello. Cosa dice la consegna?`;
     } else if (emotion === "tired") {
       initial = isReadingComprehensionTask
         ? `Sei stanco, ${name}, va bene. Partiamo con una domanda semplice sul brano: qual è il fatto principale che hai letto?`
-        : `Sei stanco, ${name}, è normale. Facciamo solo un micro-passo, poi vediamo come va. Cosa devi fare in questo esercizio?`;
+        : `Sei stanco, ${name}, è normale. Facciamo solo un micro-passo, poi vediamo come va. Cosa dice la consegna dell'esercizio?`;
     } else if (isPhotoTask && hasSourcePage) {
       const title = taskContext?.title || taskTitle || "";
       initial = `Perfetto ${name}! Ho la pagina davanti${taskSubject ? ` di ${taskSubject}` : ""}. Lavoriamo su "${title}". Analizzo l'esercizio e ti preparo il ripasso... ⏳`;
@@ -190,7 +207,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     } else if (taskTitle?.toLowerCase().includes("legg") || taskTitle?.toLowerCase().includes("lettura") || taskTitle?.toLowerCase().includes("libro")) {
       initial = `Perfetto ${name}! Vedo che devi leggere. 📖 Quale libro o capitolo stai leggendo? Raccontami un po'!`;
     } else {
-      initial = `Perfetto ${name}, iniziamo! ${taskTitle ? `Stiamo lavorando su "${taskTitle}"${taskSubject ? ` di ${taskSubject}` : ""}.` : ""} Leggi la consegna dell'esercizio. Cosa ti chiede di fare?`;
+      initial = `Perfetto ${name}, iniziamo! ${taskTitle ? `Stiamo lavorando su "${taskTitle}"${taskSubject ? ` di ${taskSubject}` : ""}.` : ""} Cosa dice la consegna?`;
     }
     
     const initMessages: ChatMessage[] = [{ id: "init", role: "coach", text: initial }];
