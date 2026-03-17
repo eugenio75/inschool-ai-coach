@@ -33,7 +33,7 @@ const breakMessages = [
 ];
 
 const SESSION_KEY_PREFIX = "focus-session-";
-const SESSION_VERSION = "v3"; // Bump to invalidate old sessions with stuck greeting
+const SESSION_VERSION = "v4"; // Bump: oral study now auto-triggers questions
 
 function getSessionState(taskId: string) {
   try {
