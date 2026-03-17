@@ -159,16 +159,27 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     const sourceType = taskContext?.sourceType || "manual";
     const isPhotoTask = ["photo", "textbook", "photo-book", "photo-diary"].includes(sourceType);
     const hasSourcePage = Boolean(taskContext?.sourceImageUrl);
+    const readingContext = `${taskTitle || ""} ${taskSubject || ""} ${taskContext?.title || ""} ${taskContext?.description || ""}`.toLowerCase();
+    const isReadingComprehensionTask = /(comprension|comprendere|brano|testo|lettura|leggi e rispondi|rispondi alle domande|domande sul testo|racconto)/i.test(readingContext);
+    const hasReadingText = (taskContext?.description || "").trim().length > 80;
     
     let initial: string;
     if (emotion === "frustrated" || emotion === "worried") {
-      initial = `Capisco che può sembrare difficile, ${name}. Facciamo il primo piccolo passo insieme — solo quello. Cosa dice la consegna?`;
+      initial = isReadingComprehensionTask
+        ? `Capisco che può sembrare difficile, ${name}. Facciamo un passo alla volta: di chi o di cosa parla il brano?`
+        : `Capisco che può sembrare difficile, ${name}. Facciamo il primo piccolo passo insieme — solo quello. Cosa dice la consegna?`;
     } else if (emotion === "tired") {
-      initial = `Sei stanco, ${name}, è normale. Facciamo solo un micro-passo, poi vediamo come va. Cosa devi fare in questo esercizio?`;
+      initial = isReadingComprehensionTask
+        ? `Sei stanco, ${name}, va bene. Partiamo con una domanda semplice sul brano: qual è il fatto principale che hai letto?`
+        : `Sei stanco, ${name}, è normale. Facciamo solo un micro-passo, poi vediamo come va. Cosa devi fare in questo esercizio?`;
     } else if (isPhotoTask && hasSourcePage) {
       initial = `Perfetto ${name}! Ho la pagina allegata${taskSubject ? ` di ${taskSubject}` : ""}. Partiamo da quello che c'è davvero scritto: quale esercizio vuoi guardare per primo?`;
     } else if (isPhotoTask) {
       initial = `Perfetto ${name}! Per seguire bene gli esercizi del libro senza inventare nulla, ho bisogno della pagina originale oppure della frase esatta dell'esercizio. Me la mandi o me la scrivi?`;
+    } else if (isReadingComprehensionTask && hasReadingText) {
+      initial = `Perfetto ${name}! Ti faccio domande sul brano per vedere se l'hai capito bene. Iniziamo: di chi o di cosa parla il testo?`;
+    } else if (isReadingComprehensionTask) {
+      initial = `Perfetto ${name}! Facciamo comprensione del testo. Raccontami in 2 frasi cosa hai letto e poi ti faccio domande mirate.`;
     } else if (taskTitle?.toLowerCase().includes("legg") || taskTitle?.toLowerCase().includes("lettura") || taskTitle?.toLowerCase().includes("libro")) {
       initial = `Perfetto ${name}! Vedo che devi leggere. 📖 Quale libro o capitolo stai leggendo? Raccontami un po'!`;
     } else {
