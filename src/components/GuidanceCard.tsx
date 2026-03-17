@@ -316,6 +316,19 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
 
   const getFallbackResponse = (input: string): string => {
     const lower = input.toLowerCase();
+    const readingContext = `${taskTitle || ""} ${taskSubject || ""} ${taskContext?.title || ""} ${taskContext?.description || ""}`.toLowerCase();
+    const isReadingComprehensionTask = /(comprension|comprendere|brano|testo|lettura|leggi e rispondi|rispondi alle domande|domande sul testo|racconto)/i.test(readingContext);
+
+    if (isReadingComprehensionTask) {
+      if (lower.match(/non capisco|difficile|non so|aiuto|non riesco/)) {
+        return "Va bene, torniamo al brano. Chi o che cosa è al centro del testo?";
+      }
+      if (lower.match(/capito|compreso|ho capito|ho compreso/)) {
+        return "Bene, controlliamo subito. Qual è il fatto più importante raccontato nel brano?";
+      }
+      return "Ti faccio una domanda sul testo: chi è il protagonista, oppure di che cosa parla il brano?";
+    }
+
     if (lower.match(/non capisco|difficile|non so|aiuto|non riesco/))
       return "Respira un attimo. È normale sentirsi così. Facciamo solo un piccolo passo — qual è la prima cosa che vedi nell'esercizio?";
     if (lower.match(/bloccato|stuck/))
@@ -324,7 +337,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
       return "Un piccolo indizio: guarda bene i dati che hai. Cosa noti? C'è qualcosa che già conosci?";
     if (lower.match(/capito|ho capito|fatto/))
       return "Fantastico! Spiegami con parole tue cosa hai capito. Così vediamo se ci siamo! 🌱";
-    return "Interessante! Prova a spiegarmelo con un esempio. Come ci sei arrivato?";
+    return "Partiamo da un passo preciso: cosa ti chiede esattamente la consegna?";
   };
 
   const handleSend = () => {
