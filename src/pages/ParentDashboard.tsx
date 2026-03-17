@@ -45,6 +45,7 @@ const ParentDashboard = () => {
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [regeneratingCode, setRegeneratingCode] = useState<string | null>(null);
+  const [emotionalAlerts, setEmotionalAlerts] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
