@@ -33,16 +33,23 @@ const breakMessages = [
 ];
 
 const SESSION_KEY_PREFIX = "focus-session-";
+const SESSION_VERSION = "v2"; // Bump to invalidate old sessions
 
 function getSessionState(taskId: string) {
   try {
     const saved = sessionStorage.getItem(`${SESSION_KEY_PREFIX}${taskId}`);
-    return saved ? JSON.parse(saved) : null;
+    if (!saved) return null;
+    const parsed = JSON.parse(saved);
+    if (parsed._version !== SESSION_VERSION) {
+      clearSessionState(taskId);
+      return null;
+    }
+    return parsed;
   } catch { return null; }
 }
 
 function saveSessionState(taskId: string, state: any) {
-  sessionStorage.setItem(`${SESSION_KEY_PREFIX}${taskId}`, JSON.stringify(state));
+  sessionStorage.setItem(`${SESSION_KEY_PREFIX}${taskId}`, JSON.stringify({ ...state, _version: SESSION_VERSION }));
 }
 
 function clearSessionState(taskId: string) {
