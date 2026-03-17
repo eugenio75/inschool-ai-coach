@@ -54,13 +54,26 @@ const variantClasses = {
 
 export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bottomOffset, sessionKey, onMessagesChange, weakConcepts }: GuidanceCardProps) => {
   const isMathSubject = /matem|aritm|geometr|algebra/i.test((taskSubject || "") + " " + (taskContext?.subject || ""));
+  const CHAT_SESSION_VERSION = "v2";
   const [expanded, setExpanded] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     if (sessionKey) {
       try {
         const saved = sessionStorage.getItem(`focus-chat-${sessionKey}`);
-        if (saved) return JSON.parse(saved);
-      } catch {}
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            sessionStorage.removeItem(`focus-chat-${sessionKey}`);
+            return [];
+          }
+          if (parsed?._version === CHAT_SESSION_VERSION && Array.isArray(parsed.messages)) {
+            return parsed.messages;
+          }
+          sessionStorage.removeItem(`focus-chat-${sessionKey}`);
+        }
+      } catch {
+        sessionStorage.removeItem(`focus-chat-${sessionKey}`);
+      }
     }
     return [];
   });
@@ -78,76 +91,88 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Speech recognition
-  const startRecording = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setInput("(Il tuo browser non supporta il riconoscimento vocale)");
-      return;
+  const getProfile = () => {
+    try {
+      const saved = localStorage.getItem("inschool-profile");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
     }
-    const recognition = new SpeechRecognition();
-    recognition.lang = "it-IT";
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.onresult = (event: any) => {
-      let transcript = "";
-      for (let i = 0; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
-      }
-      setInput(transcript);
-    };
-    recognition.onend = () => setIsRecording(false);
-    recognition.onerror = () => setIsRecording(false);
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsRecording(true);
   };
 
-  const stopRecording = () => {
-    recognitionRef.current?.stop();
-    setIsRecording(false);
-  };
+  const removePendingImage = () => setPendingImage(null);
 
-  const toggleRecording = () => {
-    isRecording ? stopRecording() : startRecording();
-  };
-
-  // Image handling
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
-    setIsUploading(true);
+
     try {
+      setIsUploading(true);
       const reader = new FileReader();
       reader.onload = () => {
-        const imageUrl = reader.result as string;
+        const imageUrl = typeof reader.result === "string" ? reader.result : null;
+        setPendingImage(imageUrl);
         setIsUploading(false);
-        // Auto-send the image immediately without waiting for user
-        const newMsg: ChatMessage = {
-          id: `student-${Date.now()}`,
-          role: "student",
-          text: "📷 Ho fotografato i miei esercizi",
-          imageUrl: imageUrl,
-        };
-        const updated = [...messages, newMsg];
-        setMessages(updated);
-        streamCoachReply(updated);
       };
       reader.onerror = () => setIsUploading(false);
       reader.readAsDataURL(file);
     } catch {
       setIsUploading(false);
     }
+
     e.target.value = "";
   };
 
-  const removePendingImage = () => setPendingImage(null);
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
 
-  const getProfile = () => {
+    const recognition = new SpeechRecognition();
+    recognition.lang = "it-IT";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results || [])
+        .map((result: any) => result?.[0]?.transcript || "")
+        .join(" ")
+        .trim();
+
+      if (transcript) {
+        setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+      }
+    };
+
+    recognition.onerror = () => setIsRecording(false);
+    recognition.onend = () => setIsRecording(false);
+    recognitionRef.current = recognition;
+
+    return () => {
+      try {
+        recognition.stop();
+      } catch {}
+      recognitionRef.current = null;
+    };
+  }, []);
+
+  const toggleRecording = () => {
+    const recognition = recognitionRef.current;
+    if (!recognition || isTyping) return;
+
+    if (isRecording) {
+      try {
+        recognition.stop();
+      } catch {}
+      setIsRecording(false);
+      return;
+    }
+
     try {
-      const saved = localStorage.getItem("inschool-profile");
-      return saved ? JSON.parse(saved) : null;
-    } catch { return null; }
+      recognition.start();
+      setIsRecording(true);
+    } catch {
+      setIsRecording(false);
+    }
   };
 
   // Track if we need to auto-trigger AI analysis after initial message
@@ -178,8 +203,6 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     let shouldAutoAnalyze = false;
 
     if (isOralStudyTask) {
-      // For oral/study tasks: start with a direct question to probe understanding, never "raccontami"
-      const shouldAutoTrigger = true;
       if (emotion === "frustrated" || emotion === "worried") {
         initial = `Capisco che può sembrare tanto, ${name}. Ma facciamo un passo alla volta — ti faccio io qualche domanda su "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""} per capire da dove partiamo. 📖`;
       } else if (emotion === "tired") {
@@ -187,8 +210,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
       } else {
         initial = `Perfetto ${name}! Oggi studiamo "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""}. 📖 Ti faccio subito qualche domanda per capire cosa sai già — poi approfondiamo dove serve!`;
       }
-      // Auto-trigger AI to start asking questions immediately
-      shouldAutoAnalyze = shouldAutoTrigger;
+      shouldAutoAnalyze = true;
     } else if (emotion === "frustrated" || emotion === "worried") {
       initial = isReadingComprehensionTask
         ? `Capisco che può sembrare difficile, ${name}. Facciamo un passo alla volta: di chi o di cosa parla il brano?`
@@ -221,11 +243,10 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     }
   }, []); // Run once on mount
 
-  // Auto-trigger AI analysis for photo tasks after initial message is set
+  // Auto-trigger AI analysis after initial message is set
   useEffect(() => {
     if (autoAnalyzeRef.current && messages.length === 1 && messages[0].id === "init") {
       autoAnalyzeRef.current = false;
-      // Add a simulated student confirmation and trigger AI
       const studentMsg: ChatMessage = {
         id: `student-auto-${Date.now()}`,
         role: "student",
@@ -240,7 +261,10 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
   // Persist messages to sessionStorage and notify parent
   useEffect(() => {
     if (sessionKey && messages.length > 0) {
-      sessionStorage.setItem(`focus-chat-${sessionKey}`, JSON.stringify(messages));
+      sessionStorage.setItem(
+        `focus-chat-${sessionKey}`,
+        JSON.stringify({ _version: CHAT_SESSION_VERSION, messages })
+      );
     }
     onMessagesChange?.(messages);
   }, [messages, sessionKey, onMessagesChange]);
