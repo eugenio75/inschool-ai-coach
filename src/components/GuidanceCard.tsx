@@ -547,7 +547,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                         className={`flex ${msg.role === "student" ? "justify-end" : "justify-start"}`}
                       >
                         <div
-                          className={`max-w-[85%] rounded-2xl px-4 py-3 text-lg leading-relaxed ${
+                          className={`max-w-[85%] rounded-2xl px-4 py-3 text-xl leading-relaxed ${
                             msg.role === "coach"
                               ? "bg-sage-light/50 text-foreground rounded-bl-md"
                               : "bg-primary text-primary-foreground rounded-br-md"
@@ -568,7 +568,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                     {/* Streaming text */}
                     {streamingText && (
                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                        <div className="max-w-[85%] bg-sage-light/50 text-foreground rounded-2xl rounded-bl-md px-4 py-3 text-lg leading-relaxed">
+                        <div className="max-w-[85%] bg-sage-light/50 text-foreground rounded-2xl rounded-bl-md px-4 py-3 text-xl leading-relaxed">
                           {streamingText}
                           <span className="inline-block w-1.5 h-4 bg-primary/40 ml-0.5 animate-pulse" />
                         </div>
@@ -670,7 +670,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                         onKeyDown={handleKeyDown}
                         placeholder={isRecording ? "🎙️ Sto ascoltando..." : pendingImage ? "Aggiungi un messaggio..." : "Scrivi qui..."}
                         disabled={isTyping}
-                        className={`flex-1 min-w-0 bg-muted/50 border rounded-xl px-3 py-2.5 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 transition-all ${isRecording ? "border-destructive/50 bg-destructive/5" : "border-border"}`}
+                        className={`flex-1 min-w-0 bg-muted/50 border rounded-xl px-3 py-2.5 text-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 transition-all ${isRecording ? "border-destructive/50 bg-destructive/5" : "border-border"}`}
                       />
                       <button
                         onClick={handleSend}
