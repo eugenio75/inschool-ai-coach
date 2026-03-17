@@ -309,6 +309,7 @@ const Dashboard = () => {
           </motion.button>
         </div>
       )}
+      <QuickHelpModal open={quickHelpOpen} onClose={() => setQuickHelpOpen(false)} />
     </div>
   );
 };
