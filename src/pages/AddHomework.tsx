@@ -358,6 +358,17 @@ const AddHomework = () => {
                         <X className="w-4 h-4" />
                       </button>
                     </div>
+                    {/* Optional note about what to do */}
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-2 block">Cosa devi fare? (opzionale)</label>
+                      <textarea
+                        value={photoNote}
+                        onChange={(e) => setPhotoNote(e.target.value)}
+                        placeholder="Es: Esercizio 3 e 4 a pagina 52, solo le domande vero/falso..."
+                        rows={2}
+                        className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none text-sm"
+                      />
+                    </div>
                     {/* Due date */}
                     <div className="bg-muted/50 rounded-2xl px-4 py-3">
                       <DatePickerRow />
