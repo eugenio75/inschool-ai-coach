@@ -91,7 +91,89 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Speech recognition
-  // ... keep existing code
+  const getProfile = () => {
+    try {
+      const saved = localStorage.getItem("inschool-profile");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const removePendingImage = () => setPendingImage(null);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploading(true);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const imageUrl = typeof reader.result === "string" ? reader.result : null;
+        setPendingImage(imageUrl);
+        setIsUploading(false);
+      };
+      reader.onerror = () => setIsUploading(false);
+      reader.readAsDataURL(file);
+    } catch {
+      setIsUploading(false);
+    }
+
+    e.target.value = "";
+  };
+
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "it-IT";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results || [])
+        .map((result: any) => result?.[0]?.transcript || "")
+        .join(" ")
+        .trim();
+
+      if (transcript) {
+        setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+      }
+    };
+
+    recognition.onerror = () => setIsRecording(false);
+    recognition.onend = () => setIsRecording(false);
+    recognitionRef.current = recognition;
+
+    return () => {
+      try {
+        recognition.stop();
+      } catch {}
+      recognitionRef.current = null;
+    };
+  }, []);
+
+  const toggleRecording = () => {
+    const recognition = recognitionRef.current;
+    if (!recognition || isTyping) return;
+
+    if (isRecording) {
+      try {
+        recognition.stop();
+      } catch {}
+      setIsRecording(false);
+      return;
+    }
+
+    try {
+      recognition.start();
+      setIsRecording(true);
+    } catch {
+      setIsRecording(false);
+    }
+  };
 
   // Track if we need to auto-trigger AI analysis after initial message
   const autoAnalyzeRef = useRef(false);
