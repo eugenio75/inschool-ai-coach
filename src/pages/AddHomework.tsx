@@ -180,6 +180,7 @@ const AddHomework = () => {
           source_type: extractedSourceType || "photo",
           source_image_url: uploadedImageUrl || undefined,
           due_date: dueDate,
+          task_type: task.task_type,
         });
       }
       toast({ title: `${selected.length} compiti aggiunti! ✅` });
