@@ -26,6 +26,7 @@ const StudentProfile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState("");
+  const [gender, setGender] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
   const [classSection, setClassSection] = useState("");
   const [schoolName, setSchoolName] = useState("");
