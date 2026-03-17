@@ -85,16 +85,21 @@ const EmotionalCheckin = () => {
 
   const childSession = getChildSession();
   const name = childSession?.profile?.name || "campione";
+  const gender = childSession?.profile?.gender as string | undefined;
+
+  const stateAnswers = useMemo(() => getStateAnswers(gender), [gender]);
 
   // Pick today's questions based on day-of-year for rotation
   const { q1, q2, q3 } = useMemo(() => {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    const expQ = getExperienceQuestions();
+    const stQ = getStateQuestions(gender);
     return {
-      q1: experienceQuestions[dayOfYear % experienceQuestions.length],
-      q2: stateQuestions[dayOfYear % stateQuestions.length],
+      q1: expQ[dayOfYear % expQ.length],
+      q2: stQ[dayOfYear % stQ.length],
       q3: optionalQuestions[dayOfYear % optionalQuestions.length],
     };
-  }, []);
+  }, [gender]);
 
   const handleAnswer = (question: string, answerId: string, label: string) => {
     setAnswers(prev => [...prev, { question, answer: label, answerId }]);
