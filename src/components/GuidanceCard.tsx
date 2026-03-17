@@ -547,7 +547,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                         className={`flex ${msg.role === "student" ? "justify-end" : "justify-start"}`}
                       >
                         <div
-                          className={`max-w-[85%] rounded-2xl px-4 py-3 text-lg leading-relaxed ${
+                          className={`max-w-[85%] rounded-2xl px-4 py-3 text-xl leading-relaxed ${
                             msg.role === "coach"
                               ? "bg-sage-light/50 text-foreground rounded-bl-md"
                               : "bg-primary text-primary-foreground rounded-br-md"
