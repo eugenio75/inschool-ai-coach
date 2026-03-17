@@ -54,7 +54,7 @@ const variantClasses = {
 
 export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bottomOffset, sessionKey, onMessagesChange, weakConcepts }: GuidanceCardProps) => {
   const isMathSubject = /matem|aritm|geometr|algebra/i.test((taskSubject || "") + " " + (taskContext?.subject || ""));
-  const CHAT_SESSION_VERSION = "v2";
+  const CHAT_SESSION_VERSION = "v3";
   const [expanded, setExpanded] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     if (sessionKey) {
