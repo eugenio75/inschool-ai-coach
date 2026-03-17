@@ -127,16 +127,21 @@ serve(async (req) => {
           `- "${t.title}" (${t.subject})`
         ).join("\n");
 
+        // Pick ONE random interest for this mission to keep the narrative focused
+        const todayInterest = studentInterests.length > 0
+          ? studentInterests[Math.floor(Math.random() * studentInterests.length)]
+          : null;
+
         const aiPrompt = `Sei il Coach AI di Inschool. Genera UNA missione del giorno personalizzata per ${studentName} (${profileResult.data?.age || ""} anni, ${profileResult.data?.school_level || ""}).
-${studentInterests.length > 0 ? `\nINTERESSI PERSONALI DI ${studentName.toUpperCase()}: ${studentInterests.join(", ")}
-Usa ASSOLUTAMENTE questi interessi per creare la sfida! Il titolo e la storia devono incorporare le sue passioni per rendere il ripasso irresistibile.\n` : ""}
+${todayInterest ? `\nINTERESSE DEL GIORNO: ${todayInterest}
+Usa SOLO questo interesse come filo conduttore della sfida. Non mescolare più interessi insieme — la narrazione deve essere coerente e ruotare attorno a UN SOLO tema.\n` : ""}
 CONCETTI CON LACUNE:
 ${conceptsList || "Nessuno"}
 
 COMPITI ATTIVI:
 ${tasksList || "Nessuno"}
 
-OBIETTIVO: Creare una SFIDA NARRATIVA che mescoli creativamente i compiti e/o i concetti deboli dello studente in un'unica esperienza coinvolgente.${studentInterests.length > 0 ? ` USA i suoi interessi (${studentInterests.join(", ")}) come tema della storia!` : ""}
+OBIETTIVO: Creare una SFIDA NARRATIVA che mescoli creativamente i compiti e/o i concetti deboli dello studente in un'unica esperienza coinvolgente.${todayInterest ? ` Usa "${todayInterest}" come ambientazione della storia.` : ""}
 
 ESEMPI DI SFIDE CREATIVE:
 - Se ha compiti di Italiano (Pinocchio) e Matematica: "Pinocchio e la magia dei numeri!" → il coach racconta un'avventura dove Pinocchio deve risolvere problemi di matematica
