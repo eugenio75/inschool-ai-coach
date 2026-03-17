@@ -338,6 +338,58 @@ const ParentDashboard = () => {
         </div></div>
       )}
 
+      {/* Emotional Alerts */}
+      {emotionalAlerts.filter(a => !a.read).length > 0 && (
+        <div className="px-6 mt-6"><div className="max-w-3xl mx-auto space-y-3">
+          <div className="flex items-center gap-2 mb-1">
+            <Heart className="w-4 h-4 text-destructive" />
+            <h3 className="font-display font-semibold text-foreground">Benessere emotivo</h3>
+          </div>
+          {emotionalAlerts.filter(a => !a.read).map((alert) => {
+            const levelConfig: Record<string, { bg: string; border: string; icon: any; text: string }> = {
+              high: { bg: "bg-destructive/10", border: "border-destructive/30", icon: ShieldAlert, text: "text-destructive" },
+              medium: { bg: "bg-amber-50", border: "border-amber-300/30", icon: AlertTriangle, text: "text-amber-700" },
+              low: { bg: "bg-blue-50", border: "border-blue-300/30", icon: Info, text: "text-blue-700" },
+            };
+            const config = levelConfig[alert.alert_level] || levelConfig.low;
+            const IconComp = config.icon;
+            return (
+              <motion.div
+                key={alert.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={spring}
+                className={`${config.bg} border ${config.border} rounded-2xl p-5`}
+              >
+                <div className="flex gap-3">
+                  <div className={`w-10 h-10 rounded-xl ${config.bg} flex items-center justify-center flex-shrink-0`}>
+                    <IconComp className={`w-5 h-5 ${config.text}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className={`font-display font-semibold text-sm ${config.text}`}>{alert.title}</h4>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${config.bg} ${config.text} font-medium uppercase`}>
+                        {alert.alert_level === "high" ? "Importante" : alert.alert_level === "medium" ? "Attenzione" : "Info"}
+                      </span>
+                    </div>
+                    <p className="text-sm text-foreground/80 leading-relaxed mb-3">{alert.message}</p>
+                    <button
+                      onClick={async () => {
+                        await markAlertRead(alert.id);
+                        setEmotionalAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, read: true } : a));
+                      }}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Ho letto ✓
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div></div>
+      )}
+
       {/* AI Personalized Insights */}
       <div className="px-6 mt-8"><div className="max-w-3xl mx-auto space-y-3">
         <div className="flex items-center gap-2 mb-1">
