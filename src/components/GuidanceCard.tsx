@@ -229,7 +229,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
       const studentMsg: ChatMessage = {
         id: `student-auto-${Date.now()}`,
         role: "student",
-        text: "Sì, sono pronto! Iniziamo con il ripasso della teoria.",
+        text: "Sì, partiamo! Fammi delle domande.",
       };
       const updated = [...messages, studentMsg];
       setMessages(updated);
