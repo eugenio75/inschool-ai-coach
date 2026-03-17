@@ -1,0 +1,1 @@
+ALTER TABLE public.homework_tasks ADD COLUMN task_type text NOT NULL DEFAULT 'exercise';
