@@ -97,7 +97,15 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [suggestion, setSuggestion] = useState<{ task: any; reason: string } | null>(null);
   const [pausedSession, setPausedSession] = useState<{ task: any; state: any } | null>(null);
+  const [quickHelpOpen, setQuickHelpOpen] = useState(false);
   const isChild = isChildSession();
+
+  // Redirect to check-in if not done today (only for child sessions)
+  useEffect(() => {
+    if (isChild && shouldShowCheckin()) {
+      navigate("/checkin", { replace: true });
+    }
+  }, [isChild, navigate]);
 
   useEffect(() => {
     const profileId = getActiveChildProfileId();
