@@ -178,14 +178,17 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     let shouldAutoAnalyze = false;
 
     if (isOralStudyTask) {
-      // For oral/study tasks, NEVER ask "cosa devi fare" — go straight to study method
+      // For oral/study tasks: start with a direct question to probe understanding, never "raccontami"
+      const shouldAutoTrigger = true;
       if (emotion === "frustrated" || emotion === "worried") {
-        initial = `Capisco che può sembrare tanto, ${name}. Ma facciamo un passo alla volta: ti aiuto io a organizzare lo studio di ${taskSubject || "questo argomento"}. 📖 Raccontami con parole tue cosa sai già su "${taskTitle || "questo argomento"}".`;
+        initial = `Capisco che può sembrare tanto, ${name}. Ma facciamo un passo alla volta — ti faccio io qualche domanda su "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""} per capire da dove partiamo. 📖`;
       } else if (emotion === "tired") {
-        initial = `Sei stanco, ${name}, va bene. Facciamo una cosa leggera: ripassiamo "${taskTitle || "l'argomento"}" con calma. 📖 Dimmi con parole tue cosa ricordi su questo argomento.`;
+        initial = `Sei stanco, ${name}, va bene. Facciamo una cosa leggera: ti faccio qualche domanda su "${taskTitle || "l'argomento"}" e vediamo cosa ricordi. Niente stress! 📖`;
       } else {
-        initial = `Perfetto ${name}! Oggi studiamo "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""}. 📖 Raccontami con parole tue cosa sai già — poi ti aiuto a organizzare tutto e facciamo una mini-interrogazione!`;
+        initial = `Perfetto ${name}! Oggi studiamo "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""}. 📖 Ti faccio subito qualche domanda per capire cosa sai già — poi approfondiamo dove serve!`;
       }
+      // Auto-trigger AI to start asking questions immediately
+      shouldAutoAnalyze = shouldAutoTrigger;
     } else if (emotion === "frustrated" || emotion === "worried") {
       initial = isReadingComprehensionTask
         ? `Capisco che può sembrare difficile, ${name}. Facciamo un passo alla volta: di chi o di cosa parla il brano?`
@@ -226,7 +229,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
       const studentMsg: ChatMessage = {
         id: `student-auto-${Date.now()}`,
         role: "student",
-        text: "Sì, sono pronto! Iniziamo con il ripasso della teoria.",
+        text: "Sì, partiamo! Fammi delle domande.",
       };
       const updated = [...messages, studentMsg];
       setMessages(updated);
