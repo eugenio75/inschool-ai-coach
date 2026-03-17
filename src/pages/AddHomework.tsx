@@ -58,6 +58,7 @@ const AddHomework = () => {
   const [extractedSourceType, setExtractedSourceType] = useState<"photo-book" | "photo-diary" | null>(null);
   const [saving, setSaving] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [photoNote, setPhotoNote] = useState("");
 
   const handlePhotoAnalysis = async () => {
     if (!photoFile) return;
