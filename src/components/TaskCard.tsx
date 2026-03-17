@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Clock, Check, ArrowRight } from "lucide-react";
+import { Clock, Check, ArrowRight, BookOpen, PenLine } from "lucide-react";
 
 interface Task {
   id: string;
@@ -10,6 +10,7 @@ interface Task {
   difficulty: number;
   steps: number;
   completed: boolean;
+  task_type?: string;
 }
 
 interface TaskCardProps {
