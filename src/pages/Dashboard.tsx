@@ -289,8 +289,8 @@ const Dashboard = () => {
         ) : tasks.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
             <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4"><BookOpen className="w-7 h-7 text-muted-foreground" /></div>
-            <p className="text-muted-foreground mb-4">{isChild ? "Il genitore aggiungerà i compiti per te!" : "Nessun compito ancora!"}</p>
-            {!isChild && <Button onClick={() => navigate("/add-homework")} className="bg-primary text-primary-foreground rounded-2xl"><Plus className="w-4 h-4 mr-2" /> Aggiungi compiti</Button>}
+            <p className="text-muted-foreground mb-4">Nessun compito ancora!</p>
+            <Button onClick={() => navigate("/add-homework")} className="bg-primary text-primary-foreground rounded-2xl"><Plus className="w-4 h-4 mr-2" /> Aggiungi compiti</Button>
           </motion.div>
         ) : (
           <div className="space-y-3">{tasks.map((task, i) => (
