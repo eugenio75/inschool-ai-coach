@@ -205,10 +205,16 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
       (isOralSubject && !isReadingComprehensionTask && !/(eserciz|calcol|risolv|complet|scrivi|traduci|osserva|indica|parlane|conversando|prova a capire)/i.test(oralContext))
     );
     
+    const isStudyTask = taskContext?.taskType === "study";
+    
     let initial: string;
     let shouldAutoAnalyze = false;
 
-    if (isPhotoTask && hasSourcePage) {
+    if (isStudyTask) {
+      // Study tasks: go directly to interrogation mode
+      initial = `Ciao ${name}! 📖 Oggi studiamo "${taskContext?.title || taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""}. Ho il testo della pagina e ti farò delle domande per aiutarti a capire e memorizzare tutto. Partiamo!`;
+      shouldAutoAnalyze = true;
+    } else if (isPhotoTask && hasSourcePage) {
       const title = taskContext?.title || taskTitle || "";
       initial = `Perfetto ${name}! Ho la pagina davanti${taskSubject ? ` di ${taskSubject}` : ""}. Lavoriamo su "${title}". Analizzo l'esercizio e ti preparo il ripasso... ⏳`;
       shouldAutoAnalyze = true;
