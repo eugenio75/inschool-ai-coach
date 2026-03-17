@@ -9,7 +9,7 @@ import { GamificationBar, DailyMissions } from "@/components/GamificationBar";
 import { SocialProofBanner } from "@/components/CelebrationOverlay";
 import { QuickHelpButton, QuickHelpModal } from "@/components/QuickHelp";
 import { shouldShowCheckin } from "@/pages/EmotionalCheckin";
-import { getTasks, getActiveChildProfileId, getChildProfile, getMemoryItems } from "@/lib/database";
+import { getTasks, getActiveChildProfileId, getChildProfile, getMemoryItems, deleteTask } from "@/lib/database";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
@@ -295,7 +295,10 @@ const Dashboard = () => {
         ) : (
           <div className="space-y-3">{tasks.map((task, i) => (
             <motion.div key={task.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.3 + i * 0.08 }}>
-              <TaskCard task={mapTask(task)} onClick={() => navigate(`/homework/${task.id}`)} />
+              <TaskCard task={mapTask(task)} onClick={() => navigate(`/homework/${task.id}`)} onDelete={async (taskId) => {
+                await deleteTask(taskId);
+                setTasks((prev) => prev.filter((t) => t.id !== taskId));
+              }} />
             </motion.div>
           ))}</div>
         )}

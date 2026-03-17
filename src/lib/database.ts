@@ -192,6 +192,19 @@ export async function updateTask(taskId: string, updates: Record<string, any>) {
   return data;
 }
 
+export async function deleteTask(taskId: string) {
+  if (isChildSession()) {
+    return childApi("delete-task", { taskId });
+  }
+
+  const { error } = await supabase
+    .from("homework_tasks")
+    .delete()
+    .eq("id", taskId);
+  if (error) console.error("deleteTask error:", error);
+  return !error;
+}
+
 // ============ FOCUS SESSIONS ============
 
 export async function saveFocusSession(session: {
