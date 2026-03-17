@@ -22,6 +22,18 @@ serve(async (req) => {
       throw new Error("imageUrl is required");
     }
 
+    // Check if it's a PDF - if so, download and convert to base64 data URL
+    const isPdf = imageUrl.toLowerCase().endsWith(".pdf") || imageUrl.includes(".pdf");
+    let finalImageUrl = imageUrl;
+
+    if (isPdf) {
+      const pdfResponse = await fetch(imageUrl);
+      if (!pdfResponse.ok) throw new Error("Impossibile scaricare il PDF");
+      const pdfBuffer = await pdfResponse.arrayBuffer();
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(pdfBuffer)));
+      finalImageUrl = `data:application/pdf;base64,${base64}`;
+    }
+
     const contextNote = sourceType === "photo-book"
       ? "L'immagine è una foto di un LIBRO DI TESTO. Identifica gli esercizi, le domande o le attività visibili."
       : "L'immagine è una foto del DIARIO SCOLASTICO. Leggi i compiti scritti a mano o stampati.";
@@ -64,7 +76,7 @@ Nessun altro testo, solo il JSON.`;
             content: [
               {
                 type: "image_url",
-                image_url: { url: imageUrl },
+                image_url: { url: finalImageUrl },
               },
               {
                 type: "text",
