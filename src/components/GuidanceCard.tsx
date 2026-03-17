@@ -178,9 +178,13 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
   // Track if we need to auto-trigger AI analysis after initial message
   const autoAnalyzeRef = useRef(false);
 
-  // Initial message - only if no restored messages
+  // Initial message - wait for task context when a task is present
   useEffect(() => {
     if (messages.length > 0) return; // Already restored from sessionStorage
+
+    const hasTaskIdentity = Boolean(taskTitle || taskSubject || taskContext?.title);
+    const isTaskContextReady = !hasTaskIdentity || Boolean(taskContext);
+    if (!isTaskContextReady) return;
     
     const profile = getProfile();
     const name = profile?.name || "campione";
@@ -243,7 +247,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     if (shouldAutoAnalyze) {
       autoAnalyzeRef.current = true;
     }
-  }, []); // Run once on mount
+  }, [messages.length, taskTitle, taskSubject, taskContext, emotion]);
 
   // Auto-trigger AI analysis after initial message is set
   useEffect(() => {
