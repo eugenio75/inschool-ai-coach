@@ -47,6 +47,7 @@ const StudentProfile = () => {
       if (p) {
         setProfile(p);
         setSelectedAvatar(p.avatar_emoji || "🧒");
+        setGender((p as any).gender || "");
         setInterests(p.interests || []);
         setClassSection(p.class_section || "");
         setSchoolName(p.school_name || "");
