@@ -283,6 +283,8 @@ IMPORTANTE: Il campo "TESTO COMPLETO DELL'ESERCIZIO" contiene la trascrizione le
       }
 
       const isPhotoTask = taskContext.sourceType === "photo" || taskContext.sourceType === "textbook" || taskContext.sourceType === "photo-book" || taskContext.sourceType === "photo-diary";
+      const sourceImageUrl = taskContext.sourceImageUrl || "";
+      const hasSupportedImageUrl = /\.(png|jpe?g|webp|gif)(\?|$)/i.test(sourceImageUrl);
 
       if (isPhotoTask) {
         contextPrompt += `\n\n⚠️ QUESTO ESERCIZIO È STATO ESTRATTO DA UNA FOTO — REGOLE CRITICHE:
@@ -295,7 +297,7 @@ IMPORTANTE: Il campo "TESTO COMPLETO DELL'ESERCIZIO" contiene la trascrizione le
 7. NON INVENTARE MAI esercizi, affermazioni o consegne che non esistono nella pagina reale.
 8. DIFFERENZA IMPORTANTE: nella sezione "Memoria e Ripasso" puoi creare domande ed esercizi originali per testare la comprensione. Ma QUI, durante la sessione di focus su un compito da foto, devi lavorare ESCLUSIVAMENTE sugli esercizi reali della pagina oppure chiedere chiarimento se la pagina non è disponibile.`;
         
-        if (taskContext.sourceImageUrl) {
+        if (hasSupportedImageUrl) {
           contextPrompt += `\nL'IMMAGINE ORIGINALE della pagina è allegata come primo messaggio. ANALIZZALA ATTENTAMENTE e usa SOLO gli esercizi che vedi realmente nella foto. Se la foto è poco chiara, chiedi conferma allo studente sulla parte specifica che non riesci a leggere.`;
           
           const imageMessages = [
@@ -303,7 +305,7 @@ IMPORTANTE: Il campo "TESTO COMPLETO DELL'ESERCIZIO" contiene la trascrizione le
               role: "user",
               content: [
                 { type: "text", text: "Ecco la foto della pagina con gli esercizi da fare. Analizzala attentamente e usa SOLO gli esercizi che vedi qui:" },
-                { type: "image_url", image_url: { url: taskContext.sourceImageUrl } },
+                { type: "image_url", image_url: { url: sourceImageUrl } },
               ],
             },
             {
@@ -313,7 +315,7 @@ IMPORTANTE: Il campo "TESTO COMPLETO DELL'ESERCIZIO" contiene la trascrizione le
           ];
           messages.splice(0, 0, ...imageMessages);
         } else {
-          contextPrompt += `\nATTENZIONE: l'immagine originale della pagina NON è disponibile in questa sessione. Quindi non citare mai il testo esatto degli esercizi come se lo vedessi. Se serve precisione, chiedi la foto o la frase esatta allo studente.`;
+          contextPrompt += `\nATTENZIONE: l'immagine originale della pagina non è disponibile in un formato immagine supportato dal modello (per esempio potrebbe essere un PDF). Quindi non citare mai il testo esatto degli esercizi come se lo vedessi. Usa il testo trascritto del compito come fonte principale e, se serve precisione, chiedi allo studente una foto JPG o PNG della pagina.`;
         }
       }
     }
