@@ -194,15 +194,23 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     // Detect oral/study tasks: subjects like Storia, Geografia, Scienze with manual source
     const oralContext = `${taskTitle || ""} ${taskContext?.title || ""} ${taskContext?.description || ""}`.toLowerCase();
     const isOralSubject = /stori|geografi|scienz|italian|letteratur|grammati|biologi|filosof|diritt|civic|religion|music/i.test((taskSubject || "") + " " + (taskContext?.subject || ""));
-    const isOralStudyTask = !isPhotoTask && (
+    const isManualSource = sourceType === "manual";
+    const isOralStudyTask = isManualSource && (
       /(studia|ripeti|ripassa|ripetere|ripassare|orale|interrogazione|esponi|esporre|presentazione|memorizza|impara|leggere e studiare|preparare)/i.test(oralContext) ||
-      (isOralSubject && sourceType === "manual" && !isReadingComprehensionTask && !/(eserciz|calcol|risolv|complet|scrivi|traduci)/i.test(oralContext))
+      (isOralSubject && !isReadingComprehensionTask && !/(eserciz|calcol|risolv|complet|scrivi|traduci|osserva|indica|parlane|conversando|prova a capire)/i.test(oralContext))
     );
     
     let initial: string;
     let shouldAutoAnalyze = false;
 
-    if (isOralStudyTask) {
+    if (isPhotoTask && hasSourcePage) {
+      const title = taskContext?.title || taskTitle || "";
+      initial = `Perfetto ${name}! Ho la pagina davanti${taskSubject ? ` di ${taskSubject}` : ""}. Lavoriamo su "${title}". Analizzo l'esercizio e ti preparo il ripasso... ⏳`;
+      shouldAutoAnalyze = true;
+    } else if (isPhotoTask) {
+      initial = `Perfetto ${name}! Ho già il testo dell'attività${taskSubject ? ` di ${taskSubject}` : ""}. Partiamo da qui: ${taskContext?.description ? `"${taskContext.description}"` : `guardiamo insieme cosa chiede l'esercizio`}.`;
+      shouldAutoAnalyze = true;
+    } else if (isOralStudyTask) {
       if (emotion === "frustrated" || emotion === "worried") {
         initial = `Capisco che può sembrare tanto, ${name}. Ma facciamo un passo alla volta — ti faccio io qualche domanda su "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""} per capire da dove partiamo. 📖`;
       } else if (emotion === "tired") {
@@ -219,12 +227,6 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
       initial = isReadingComprehensionTask
         ? `Sei stanco, ${name}, va bene. Partiamo con una domanda semplice sul brano: qual è il fatto principale che hai letto?`
         : `Sei stanco, ${name}, è normale. Facciamo solo un micro-passo, poi vediamo come va. Cosa dice la consegna dell'esercizio?`;
-    } else if (isPhotoTask && hasSourcePage) {
-      const title = taskContext?.title || taskTitle || "";
-      initial = `Perfetto ${name}! Ho la pagina davanti${taskSubject ? ` di ${taskSubject}` : ""}. Lavoriamo su "${title}". Analizzo l'esercizio e ti preparo il ripasso... ⏳`;
-      shouldAutoAnalyze = true;
-    } else if (isPhotoTask) {
-      initial = `Perfetto ${name}! Per seguire bene gli esercizi del libro senza inventare nulla, ho bisogno della pagina originale oppure della frase esatta dell'esercizio. Me la mandi o me la scrivi?`;
     } else if (isReadingComprehensionTask && hasReadingText) {
       initial = `Perfetto ${name}! Ti faccio domande sul brano per vedere se l'hai capito bene. Iniziamo: di chi o di cosa parla il testo?`;
     } else if (isReadingComprehensionTask) {
