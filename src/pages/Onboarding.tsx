@@ -40,6 +40,7 @@ interface OnboardingData {
   name: string;
   avatar: string;
   age: string;
+  gender: string;
   schoolLevel: string;
   favoriteSubjects: string[];
   difficultSubjects: string[];
@@ -54,7 +55,7 @@ const Onboarding = () => {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<OnboardingData>({
-    name: "", avatar: "🧒", age: "", schoolLevel: "", favoriteSubjects: [],
+    name: "", avatar: "🧒", age: "", gender: "", schoolLevel: "", favoriteSubjects: [],
     difficultSubjects: [], struggles: [], focusTime: "15", supportStyles: [],
   });
 
@@ -64,7 +65,7 @@ const Onboarding = () => {
 
   const canProceed = () => {
     switch (step) {
-      case 0: return data.name.trim() !== "" && data.age !== "";
+      case 0: return data.name.trim() !== "" && data.age !== "" && data.gender !== "";
       case 1: return data.avatar !== "";
       case 2: return data.schoolLevel !== "";
       case 3: return data.favoriteSubjects.length > 0;
@@ -84,6 +85,7 @@ const Onboarding = () => {
         name: data.name,
         avatar_emoji: data.avatar,
         age: parseInt(data.age) || undefined,
+        gender: data.gender || undefined,
         school_level: data.schoolLevel,
         favorite_subjects: data.favoriteSubjects,
         difficult_subjects: data.difficultSubjects,
@@ -112,6 +114,14 @@ const Onboarding = () => {
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Come si chiama il bambino?</h2><p className="text-muted-foreground">Il coach lo chiamerà per nome.</p></div>
             <div className="space-y-4">
               <input type="text" placeholder="Nome del bambino" value={data.name} onChange={(e) => setData({ ...data, name: e.target.value })} className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-lg" />
+              <div>
+                <label className="text-sm text-muted-foreground mb-2 block">Genere</label>
+                <div className="flex gap-3">
+                  {[{ id: "M", label: "👦 Maschio" }, { id: "F", label: "👧 Femmina" }].map((g) => (
+                    <button key={g.id} onClick={() => setData({ ...data, gender: g.id })} className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all ${data.gender === g.id ? "bg-primary text-primary-foreground shadow-soft" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{g.label}</button>
+                  ))}
+                </div>
+              </div>
               <div>
                 <label className="text-sm text-muted-foreground mb-2 block">Quanti anni ha?</label>
                 <div className="flex flex-wrap gap-2">

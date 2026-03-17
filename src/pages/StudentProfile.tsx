@@ -26,6 +26,7 @@ const StudentProfile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState("");
+  const [gender, setGender] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
   const [classSection, setClassSection] = useState("");
   const [schoolName, setSchoolName] = useState("");
@@ -46,6 +47,7 @@ const StudentProfile = () => {
       if (p) {
         setProfile(p);
         setSelectedAvatar(p.avatar_emoji || "🧒");
+        setGender((p as any).gender || "");
         setInterests(p.interests || []);
         setClassSection(p.class_section || "");
         setSchoolName(p.school_name || "");
@@ -60,8 +62,9 @@ const StudentProfile = () => {
     if (!profile) return;
     setSaving(true);
     try {
-      const updates = {
+      const updates: Record<string, any> = {
         avatar_emoji: selectedAvatar,
+        gender: gender || null,
         interests,
         class_section: classSection.trim() || null,
         school_name: schoolName.trim() || null,
@@ -145,6 +148,16 @@ const StudentProfile = () => {
                 >
                   {emoji}
                 </button>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Gender */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.12 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
+            <h3 className="font-display font-semibold text-foreground mb-3 text-sm">Genere</h3>
+            <div className="flex gap-3">
+              {[{ id: "M", label: "👦 Maschio" }, { id: "F", label: "👧 Femmina" }].map((g) => (
+                <button key={g.id} onClick={() => setGender(g.id)} className={`flex-1 px-4 py-3 rounded-xl font-medium text-sm transition-all ${gender === g.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{g.label}</button>
               ))}
             </div>
           </motion.div>

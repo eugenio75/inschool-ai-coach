@@ -69,6 +69,7 @@ export type Database = {
           difficult_subjects: string[] | null
           favorite_subjects: string[] | null
           focus_time: number | null
+          gender: string | null
           id: string
           interests: string[] | null
           name: string
@@ -89,6 +90,7 @@ export type Database = {
           difficult_subjects?: string[] | null
           favorite_subjects?: string[] | null
           focus_time?: number | null
+          gender?: string | null
           id?: string
           interests?: string[] | null
           name: string
@@ -109,6 +111,7 @@ export type Database = {
           difficult_subjects?: string[] | null
           favorite_subjects?: string[] | null
           focus_time?: number | null
+          gender?: string | null
           id?: string
           interests?: string[] | null
           name?: string

@@ -47,6 +47,7 @@ export async function createChildProfile(profile: {
   name: string;
   avatar_emoji?: string;
   age?: number;
+  gender?: string;
   school_level?: string;
   favorite_subjects?: string[];
   difficult_subjects?: string[];

@@ -10,21 +10,38 @@ const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
 const CHECKIN_DATE_KEY = "inschool-last-checkin-date";
 
-// Question pools - rotate daily
-const experienceQuestions = [
-  "Oggi c'è stata una cosa che ti ha fatto sorridere oppure una un po' complicata?",
-  "Se ripensi alla giornata, qual è la cosa che ti è rimasta più in testa?",
-  "Oggi c'è stato un momento facile o uno un po' difficile?",
-  "C'è stato qualcosa di bello o di un po' strano oggi?",
-  "Com'è andata la giornata? C'è qualcosa che vuoi raccontarmi?",
-];
+// Gender-aware text helper: returns M/F variant based on gender
+function g(gender: string | undefined, male: string, female: string): string {
+  if (gender === "F") return female;
+  if (gender === "M") return male;
+  return `${male}/${female.slice(-1)}`; // fallback: "o/a"
+}
 
-const stateQuestions = [
-  "E adesso come ti senti? Più carico/a oppure un po' scarico/a?",
-  "Hai più voglia di partire oppure oggi serve andare piano piano?",
-  "Ti senti pronto/a oppure un po' stanco/a oggi?",
-  "Come stai in questo momento? Tranquillo/a o un po' agitato/a?",
-];
+// Question pools - will be gender-adapted at render time
+function getExperienceQuestions() {
+  return [
+    "Oggi c'è stata una cosa che ti ha fatto sorridere oppure una un po' complicata?",
+    "Se ripensi alla giornata, qual è la cosa che ti è rimasta più in testa?",
+    "Oggi c'è stato un momento facile o uno un po' difficile?",
+    "C'è stato qualcosa di bello o di un po' strano oggi?",
+    "Com'è andata la giornata? C'è qualcosa che vuoi raccontarmi?",
+  ];
+}
+
+function getStateQuestions(gender?: string) {
+  const ca = g(gender, "carico", "carica");
+  const sa = g(gender, "scarico", "scarica");
+  const pa = g(gender, "pronto", "pronta");
+  const sta = g(gender, "stanco", "stanca");
+  const tra = g(gender, "tranquillo", "tranquilla");
+  const agi = g(gender, "agitato", "agitata");
+  return [
+    `E adesso come ti senti? Più ${ca} oppure un po' ${sa}?`,
+    "Hai più voglia di partire oppure oggi serve andare piano piano?",
+    `Ti senti ${pa} oppure un po' ${sta} oggi?`,
+    `Come stai in questo momento? ${tra} o un po' ${agi}?`,
+  ];
+}
 
 const optionalQuestions = [
   "C'è qualcosa che ti è rimasto in testa che vuoi raccontarmi?",
@@ -39,12 +56,14 @@ const experienceAnswers = [
   { id: "mixed", emoji: "🤷", label: "Un po' e un po'" },
 ];
 
-const stateAnswers = [
-  { id: "charged", emoji: "⚡", label: "Carico/a!" },
-  { id: "calm", emoji: "😌", label: "Tranquillo/a" },
-  { id: "tired", emoji: "😴", label: "Un po' stanco/a" },
-  { id: "nervous", emoji: "😬", label: "Un po' agitato/a" },
-];
+function getStateAnswers(gender?: string) {
+  return [
+    { id: "charged", emoji: "⚡", label: g(gender, "Carico!", "Carica!") },
+    { id: "calm", emoji: "😌", label: g(gender, "Tranquillo", "Tranquilla") },
+    { id: "tired", emoji: "😴", label: `Un po' ${g(gender, "stanco", "stanca")}` },
+    { id: "nervous", emoji: "😬", label: `Un po' ${g(gender, "agitato", "agitata")}` },
+  ];
+}
 
 export function shouldShowCheckin(): boolean {
   const lastDate = localStorage.getItem(CHECKIN_DATE_KEY);
@@ -66,16 +85,21 @@ const EmotionalCheckin = () => {
 
   const childSession = getChildSession();
   const name = childSession?.profile?.name || "campione";
+  const gender = childSession?.profile?.gender as string | undefined;
+
+  const stateAnswers = useMemo(() => getStateAnswers(gender), [gender]);
 
   // Pick today's questions based on day-of-year for rotation
   const { q1, q2, q3 } = useMemo(() => {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    const expQ = getExperienceQuestions();
+    const stQ = getStateQuestions(gender);
     return {
-      q1: experienceQuestions[dayOfYear % experienceQuestions.length],
-      q2: stateQuestions[dayOfYear % stateQuestions.length],
+      q1: expQ[dayOfYear % expQ.length],
+      q2: stQ[dayOfYear % stQ.length],
       q3: optionalQuestions[dayOfYear % optionalQuestions.length],
     };
-  }, []);
+  }, [gender]);
 
   const handleAnswer = (question: string, answerId: string, label: string) => {
     setAnswers(prev => [...prev, { question, answer: label, answerId }]);

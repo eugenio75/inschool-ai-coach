@@ -8,6 +8,7 @@ interface ChildSession {
     name: string;
     age: number | null;
     avatar_emoji: string | null;
+    gender: string | null;
     school_level: string | null;
     favorite_subjects: string[] | null;
     difficult_subjects: string[] | null;
