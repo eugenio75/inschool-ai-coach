@@ -152,6 +152,16 @@ const StudentProfile = () => {
             </div>
           </motion.div>
 
+          {/* Gender */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.12 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
+            <h3 className="font-display font-semibold text-foreground mb-3 text-sm">Genere</h3>
+            <div className="flex gap-3">
+              {[{ id: "M", label: "👦 Maschio" }, { id: "F", label: "👧 Femmina" }].map((g) => (
+                <button key={g.id} onClick={() => setGender(g.id)} className={`flex-1 px-4 py-3 rounded-xl font-medium text-sm transition-all ${gender === g.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{g.label}</button>
+              ))}
+            </div>
+          </motion.div>
+
           {/* School info */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.15 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
             <div className="flex items-center gap-2 mb-1">
