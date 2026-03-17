@@ -188,6 +188,17 @@ serve(async (req) => {
         break;
       }
 
+      case "delete-task": {
+        const { error } = await supabase
+          .from("homework_tasks")
+          .delete()
+          .eq("id", payload.taskId)
+          .eq("child_profile_id", childProfileId);
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
       case "create-task": {
         const { data, error } = await supabase
           .from("homework_tasks")
