@@ -339,7 +339,7 @@ const AddHomework = () => {
                         Tocca per scattare, carica un'immagine o trascinala qui
                       </p>
                     </div>
-                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} />
+                    <input type="file" accept="image/*,application/pdf" capture="environment" className="hidden" onChange={handlePhotoUpload} />
                   </label>
                 ) : (
                   <div className="space-y-4">
