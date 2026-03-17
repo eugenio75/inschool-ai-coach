@@ -40,6 +40,7 @@ interface OnboardingData {
   name: string;
   avatar: string;
   age: string;
+  gender: string;
   schoolLevel: string;
   favoriteSubjects: string[];
   difficultSubjects: string[];
@@ -54,7 +55,7 @@ const Onboarding = () => {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<OnboardingData>({
-    name: "", avatar: "🧒", age: "", schoolLevel: "", favoriteSubjects: [],
+    name: "", avatar: "🧒", age: "", gender: "", schoolLevel: "", favoriteSubjects: [],
     difficultSubjects: [], struggles: [], focusTime: "15", supportStyles: [],
   });
 
