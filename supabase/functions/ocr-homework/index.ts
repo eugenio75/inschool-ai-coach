@@ -47,7 +47,7 @@ serve(async (req) => {
 
 ${contextNote}
 
-Analizza TUTTA l'immagine con attenzione, anche i bordi e le parti meno nitide.
+Analizza TUTTA l'immagine con attenzione, anche i bordi e le parti meno nitide.${userInstruction}
 
 Per ogni compito/esercizio trovato, restituisci un oggetto JSON con:
 - "subject": la materia (una tra: Italiano, Matematica, Scienze, Storia, Geografia, Inglese, Arte, Musica, Tecnologia)

@@ -71,7 +71,7 @@ const AddHomework = () => {
       if (!imageUrl) throw new Error("Upload fallito");
       setUploadedImageUrl(imageUrl);
 
-      const result = await extractTasksFromImage(imageUrl, sourceType);
+      const result = await extractTasksFromImage(imageUrl, sourceType, photoNote.trim() || undefined);
 
       if (result.tasks && result.tasks.length > 0) {
         setExtractedTasks(
