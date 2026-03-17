@@ -370,6 +370,7 @@ export type Database = {
           source_image_url: string | null
           source_type: string | null
           subject: string
+          task_type: string
           title: string
           updated_at: string
         }
@@ -388,6 +389,7 @@ export type Database = {
           source_image_url?: string | null
           source_type?: string | null
           subject: string
+          task_type?: string
           title: string
           updated_at?: string
         }
@@ -406,6 +408,7 @@ export type Database = {
           source_image_url?: string | null
           source_type?: string | null
           subject?: string
+          task_type?: string
           title?: string
           updated_at?: string
         }

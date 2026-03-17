@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Clock, Check, ArrowRight } from "lucide-react";
+import { Clock, Check, ArrowRight, BookOpen, PenLine } from "lucide-react";
 
 interface Task {
   id: string;
@@ -10,6 +10,7 @@ interface Task {
   difficulty: number;
   steps: number;
   completed: boolean;
+  task_type?: string;
 }
 
 interface TaskCardProps {
@@ -41,6 +42,7 @@ const subjectColors: Record<string, string> = {
 
 export const TaskCard = ({ task, onClick }: TaskCardProps) => {
   const colorClass = subjectColors[task.subject] || "bg-muted text-muted-foreground";
+  const isStudy = task.task_type === "study";
 
   return (
     <motion.button
@@ -53,9 +55,21 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
       }`}
     >
       <div className="flex items-start justify-between mb-3">
-        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${colorClass}`}>
-          {task.subject} • {task.estimatedMinutes} min
-        </span>
+        <div className="flex items-center gap-2">
+          {isStudy && (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-accent text-accent-foreground">
+              <BookOpen className="w-3 h-3" /> Studio
+            </span>
+          )}
+          {!isStudy && task.task_type === "exercise" && (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-clay-light text-clay-dark">
+              <PenLine className="w-3 h-3" /> Esercizio
+            </span>
+          )}
+          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${colorClass}`}>
+            {task.subject} • {task.estimatedMinutes} min
+          </span>
+        </div>
         <DifficultyDots level={task.difficulty} />
       </div>
 

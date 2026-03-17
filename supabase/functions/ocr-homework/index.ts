@@ -36,20 +36,60 @@ serve(async (req) => {
     }
 
     const contextNote = sourceType === "photo-book"
-      ? "L'immagine è una foto di un LIBRO DI TESTO. Identifica gli esercizi, le domande o le attività visibili."
+      ? "L'immagine è una foto di un LIBRO DI TESTO. Analizza TUTTO il contenuto della pagina: testo narrativo, spiegazioni, didascalie, immagini, tabelle E eventuali esercizi."
       : "L'immagine è una foto del DIARIO SCOLASTICO. Leggi i compiti scritti a mano o stampati.";
 
     const userInstruction = userNote
       ? `\n\nIMPORTANTE - INDICAZIONE DELLO STUDENTE: "${userNote}"\nConcentrati SOLO sugli esercizi/attività indicati dallo studente. Se lo studente specifica numeri di esercizi, pagine o attività particolari, estrai SOLO quelli e ignora il resto.`
       : "";
 
-    const systemPrompt = `Sei un assistente che analizza foto di compiti scolastici per bambini delle scuole primarie e medie italiane.
+    // Different prompt based on source type
+    const isBookPage = sourceType === "photo-book";
+
+    const systemPrompt = isBookPage
+      ? `Sei un assistente che analizza foto di pagine di libri scolastici per bambini delle scuole primarie e medie italiane.
+
+${contextNote}${userInstruction}
+
+ANALISI DELLA PAGINA - DISTINGUI TRA CONTENUTO DA STUDIARE ED ESERCIZI:
+
+La pagina può contenere DUE tipi di contenuto:
+1. **CONTENUTO DA STUDIARE** (testo narrativo, spiegazioni, paragrafi informativi, didascalie, definizioni, regole) → task_type: "study"
+2. **ESERCIZI** (domande, completamenti, vero/falso, calcoli, attività pratiche) → task_type: "exercise"
+
+REGOLE:
+- Se la pagina contiene testo da studiare (paragrafi, spiegazioni, storia, scienze, geografia...), crea PRIMA un compito di tipo "study" con la trascrizione COMPLETA e LETTERALE di TUTTO il testo della pagina.
+- Se la pagina contiene anche esercizi, crea compiti SEPARATI di tipo "exercise" per ciascun esercizio.
+- Se la pagina contiene SOLO esercizi (es. pagina di esercizi di matematica), crea solo compiti "exercise".
+- Il compito "study" DEVE contenere TUTTO il testo visibile nella pagina: titoli, sottotitoli, paragrafi, didascalie, note, definizioni. NON riassumere, NON omettere nulla.
+
+Per ogni elemento trovato, restituisci un oggetto JSON con:
+- "task_type": "study" per contenuto da studiare, "exercise" per esercizi
+- "subject": la materia (una tra: Italiano, Matematica, Scienze, Storia, Geografia, Inglese, Arte, Musica, Tecnologia)
+- "title": per study → "Studia: [titolo argomento/pagina]"; per exercise → titolo breve dell'esercizio (es. "Esercizio 2 - Vero o Falso")
+- "description": per study → testo COMPLETO E LETTERALE della pagina; per exercise → testo COMPLETO dell'esercizio
+- "exerciseText": SOLO per exercise → il TESTO COMPLETO E LETTERALE dell'esercizio. Per study lascia vuoto.
+- "estimatedMinutes": stima del tempo (studio: 15-30 min; esercizio: 5-15 min)
+- "difficulty": difficoltà da 1 a 3
+
+REGOLA CRITICA per il contenuto "study": trascrivi OGNI parola, OGNI paragrafo, OGNI didascalia esattamente come appare nella pagina. Il bambino userà questo testo per studiare e ripetere. NON riassumere, NON parafrasare.
+
+REGOLA CRITICA per gli "exercise": trascrivi il testo PAROLA PER PAROLA come appare nel libro. Se non riesci a leggere una parte, scrivi [illeggibile].
+
+ORDINE: metti PRIMA i compiti "study" (nell'ordine in cui appaiono nella pagina), POI gli "exercise".
+
+RISPONDI ESCLUSIVAMENTE con un JSON valido nel formato:
+{"tasks": [{"task_type": "study", "subject": "...", "title": "...", "description": "...", "exerciseText": "", "estimatedMinutes": 20, "difficulty": 1}, {"task_type": "exercise", "subject": "...", "title": "...", "description": "...", "exerciseText": "...", "estimatedMinutes": 10, "difficulty": 2}]}
+
+Nessun altro testo, solo il JSON.`
+      : `Sei un assistente che analizza foto di compiti scolastici per bambini delle scuole primarie e medie italiane.
 
 ${contextNote}
 
 Analizza TUTTA l'immagine con attenzione, anche i bordi e le parti meno nitide.${userInstruction}
 
 Per ogni compito/esercizio trovato, restituisci un oggetto JSON con:
+- "task_type": "exercise"
 - "subject": la materia (una tra: Italiano, Matematica, Scienze, Storia, Geografia, Inglese, Arte, Musica, Tecnologia)
 - "title": titolo breve del compito (es. "Esercizio 2 - Vero o Falso")
 - "description": dettagli generali (pagine, cosa fare)
@@ -62,7 +102,7 @@ REGOLA CRITICA per "exerciseText": devi trascrivere il testo PAROLA PER PAROLA c
 Se non riesci a leggere chiaramente qualcosa, indica [illeggibile] nelle parti non chiare.
 
 RISPONDI ESCLUSIVAMENTE con un JSON valido nel formato:
-{"tasks": [{"subject": "...", "title": "...", "description": "...", "exerciseText": "...", "estimatedMinutes": 15, "difficulty": 1}]}
+{"tasks": [{"task_type": "exercise", "subject": "...", "title": "...", "description": "...", "exerciseText": "...", "estimatedMinutes": 15, "difficulty": 1}]}
 
 Nessun altro testo, solo il JSON.`;
 
@@ -85,7 +125,9 @@ Nessun altro testo, solo il JSON.`;
               },
               {
                 type: "text",
-                text: "Analizza questa foto e estrai tutti i compiti che vedi. Rispondi SOLO con il JSON.",
+                text: isBookPage
+                  ? "Analizza questa pagina del libro. Trascrivi TUTTO il contenuto testuale come compito di studio, e se ci sono esercizi creali come compiti separati. Rispondi SOLO con il JSON."
+                  : "Analizza questa foto e estrai tutti i compiti che vedi. Rispondi SOLO con il JSON.",
               },
             ],
           },
@@ -117,17 +159,14 @@ Nessun altro testo, solo il JSON.`;
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
     
-    // Parse JSON from response - try direct parse first, then extract from markdown
+    // Parse JSON from response
     let tasks = null;
-    
-    // Remove markdown code fences if present
     const cleaned = content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
     
     try {
       const parsed = JSON.parse(cleaned);
       tasks = parsed.tasks || parsed;
     } catch {
-      // Try to find JSON object or array in the text
       const objMatch = cleaned.match(/\{[\s\S]*"tasks"[\s\S]*\}/);
       if (objMatch) {
         try {
@@ -145,6 +184,12 @@ Nessun altro testo, solo il JSON.`;
     }
 
     if (tasks && Array.isArray(tasks) && tasks.length > 0) {
+      // Ensure task_type is set
+      tasks = tasks.map((t: any) => ({
+        ...t,
+        task_type: t.task_type || "exercise",
+      }));
+
       return new Response(JSON.stringify({ tasks }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
