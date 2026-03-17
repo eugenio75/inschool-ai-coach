@@ -171,6 +171,88 @@ export type Database = {
           },
         ]
       }
+      emotional_alerts: {
+        Row: {
+          alert_level: string
+          child_profile_id: string
+          created_at: string
+          id: string
+          message: string
+          pattern_data: Json | null
+          read: boolean
+          title: string
+        }
+        Insert: {
+          alert_level?: string
+          child_profile_id: string
+          created_at?: string
+          id?: string
+          message: string
+          pattern_data?: Json | null
+          read?: boolean
+          title: string
+        }
+        Update: {
+          alert_level?: string
+          child_profile_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          pattern_data?: Json | null
+          read?: boolean
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emotional_alerts_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emotional_checkins: {
+        Row: {
+          checkin_date: string
+          child_profile_id: string
+          created_at: string
+          emotional_tone: string | null
+          energy_level: string | null
+          id: string
+          responses: Json
+          signals: string[] | null
+        }
+        Insert: {
+          checkin_date?: string
+          child_profile_id: string
+          created_at?: string
+          emotional_tone?: string | null
+          energy_level?: string | null
+          id?: string
+          responses?: Json
+          signals?: string[] | null
+        }
+        Update: {
+          checkin_date?: string
+          child_profile_id?: string
+          created_at?: string
+          emotional_tone?: string | null
+          energy_level?: string | null
+          id?: string
+          responses?: Json
+          signals?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emotional_checkins_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       focus_sessions: {
         Row: {
           autonomy_points: number | null

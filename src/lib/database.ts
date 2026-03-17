@@ -412,6 +412,80 @@ export async function completeMission(missionId: string, pointsReward: number) {
   }
 }
 
+// ============ EMOTIONAL CHECKINS ============
+
+export async function saveEmotionalCheckin(checkin: {
+  responses: any[];
+  emotional_tone: string;
+  energy_level: string;
+  signals: string[];
+}) {
+  if (isChildSession()) {
+    return childApi("save-checkin", checkin);
+  }
+
+  const profileId = getActiveChildProfileId();
+  if (!profileId) return null;
+
+  const today = new Date().toISOString().split("T")[0];
+  const { data, error } = await supabase
+    .from("emotional_checkins")
+    .upsert({
+      child_profile_id: profileId,
+      checkin_date: today,
+      ...checkin,
+    } as any, { onConflict: "child_profile_id,checkin_date" })
+    .select()
+    .single();
+  if (error) console.error("saveEmotionalCheckin error:", error);
+
+  // Trigger async analysis
+  triggerEmotionalAnalysis(profileId);
+
+  return data;
+}
+
+export async function getEmotionalAlerts(childProfileId?: string) {
+  const profileId = childProfileId || getActiveChildProfileId();
+  if (!profileId) return [];
+
+  const { data, error } = await supabase
+    .from("emotional_alerts")
+    .select("*")
+    .eq("child_profile_id", profileId)
+    .order("created_at", { ascending: false })
+    .limit(10);
+  if (error) console.error("getEmotionalAlerts error:", error);
+  return data || [];
+}
+
+export async function markAlertRead(alertId: string) {
+  await supabase
+    .from("emotional_alerts")
+    .update({ read: true } as any)
+    .eq("id", alertId);
+}
+
+async function triggerEmotionalAnalysis(profileId: string) {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-emotions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ childProfileId: profileId }),
+      }
+    );
+  } catch (err) {
+    console.error("Emotional analysis trigger error:", err);
+  }
+}
+
 // ============ IMAGE UPLOAD ============
 
 export async function uploadHomeworkImage(file: File): Promise<string | null> {

@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Target, Loader2, LogOut, Play } from "lucide-react";
+import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Target, Loader2, LogOut, Play, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { TaskCard } from "@/components/TaskCard";
 import { GamificationBar, DailyMissions } from "@/components/GamificationBar";
 import { SocialProofBanner } from "@/components/CelebrationOverlay";
+import { QuickHelpButton, QuickHelpModal } from "@/components/QuickHelp";
+import { shouldShowCheckin } from "@/pages/EmotionalCheckin";
 import { getTasks, getActiveChildProfileId, getChildProfile, getMemoryItems } from "@/lib/database";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 
@@ -95,7 +97,15 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [suggestion, setSuggestion] = useState<{ task: any; reason: string } | null>(null);
   const [pausedSession, setPausedSession] = useState<{ task: any; state: any } | null>(null);
+  const [quickHelpOpen, setQuickHelpOpen] = useState(false);
   const isChild = isChildSession();
+
+  // Redirect to check-in if not done today (only for child sessions)
+  useEffect(() => {
+    if (isChild && shouldShowCheckin()) {
+      navigate("/checkin", { replace: true });
+    }
+  }, [isChild, navigate]);
 
   useEffect(() => {
     const profileId = getActiveChildProfileId();
@@ -183,8 +193,13 @@ const Dashboard = () => {
           </div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
-            <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-1">Ciao {name}! 👋</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">{tasks.length > 0 ? "Ecco i tuoi compiti. Da dove vuoi partire?" : "Non ci sono compiti per oggi! 🎉"}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-1">Ciao {name}! 👋</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">{tasks.length > 0 ? "Ecco i tuoi compiti. Da dove vuoi partire?" : "Non ci sono compiti per oggi! 🎉"}</p>
+              </div>
+              {isChild && <QuickHelpButton onClick={() => setQuickHelpOpen(true)} />}
+            </div>
           </motion.div>
 
           <div className="mt-5 space-y-3">
@@ -294,6 +309,7 @@ const Dashboard = () => {
           </motion.button>
         </div>
       )}
+      <QuickHelpModal open={quickHelpOpen} onClose={() => setQuickHelpOpen(false)} />
     </div>
   );
 };

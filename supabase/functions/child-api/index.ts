@@ -257,6 +257,35 @@ serve(async (req) => {
         break;
       }
 
+      case "save-checkin": {
+        const today = new Date().toISOString().split("T")[0];
+        const { data, error: checkinErr } = await supabase
+          .from("emotional_checkins")
+          .upsert({
+            child_profile_id: childProfileId,
+            checkin_date: today,
+            responses: payload.responses,
+            emotional_tone: payload.emotional_tone,
+            energy_level: payload.energy_level,
+            signals: payload.signals,
+          }, { onConflict: "child_profile_id,checkin_date" })
+          .select()
+          .single();
+        if (checkinErr) throw checkinErr;
+
+        // Trigger analysis asynchronously
+        try {
+          await fetch(`${supabaseUrl}/functions/v1/analyze-emotions`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceRoleKey}` },
+            body: JSON.stringify({ childProfileId, accessCode }),
+          });
+        } catch {}
+
+        result = data;
+        break;
+      }
+
       case "complete-mission": {
         await supabase.from("daily_missions").update({
           completed: true,

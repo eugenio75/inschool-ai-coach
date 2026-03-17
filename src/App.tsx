@@ -19,6 +19,7 @@ import MemoryRecap from "./pages/MemoryRecap";
 import ParentDashboard from "./pages/ParentDashboard";
 import Settings from "./pages/Settings";
 import StudentProfile from "./pages/StudentProfile";
+import EmotionalCheckin from "./pages/EmotionalCheckin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ const AppRoutes = () => (
     <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
     <Route path="/profiles" element={<ProtectedRoute><ProfileSelector /></ProtectedRoute>} />
     <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+    <Route path="/checkin" element={<AccessibleRoute><EmotionalCheckin /></AccessibleRoute>} />
     <Route path="/dashboard" element={<AccessibleRoute><Dashboard /></AccessibleRoute>} />
     <Route path="/add-homework" element={<AccessibleRoute><AddHomework /></AccessibleRoute>} />
     <Route path="/homework/:taskId" element={<AccessibleRoute><HomeworkDetail /></AccessibleRoute>} />
