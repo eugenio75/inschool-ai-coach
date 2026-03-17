@@ -85,6 +85,7 @@ const Onboarding = () => {
         name: data.name,
         avatar_emoji: data.avatar,
         age: parseInt(data.age) || undefined,
+        gender: data.gender || undefined,
         school_level: data.schoolLevel,
         favorite_subjects: data.favoriteSubjects,
         difficult_subjects: data.difficultSubjects,
