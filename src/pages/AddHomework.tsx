@@ -18,6 +18,7 @@ interface ExtractedTask {
   estimatedMinutes: number;
   difficulty: number;
   selected: boolean;
+  task_type: string;
 }
 
 const subjects = [
