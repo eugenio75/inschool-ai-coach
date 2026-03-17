@@ -39,6 +39,10 @@ serve(async (req) => {
       ? "L'immagine è una foto di un LIBRO DI TESTO. Identifica gli esercizi, le domande o le attività visibili."
       : "L'immagine è una foto del DIARIO SCOLASTICO. Leggi i compiti scritti a mano o stampati.";
 
+    const userInstruction = userNote
+      ? `\n\nIMPORTANTE - INDICAZIONE DELLO STUDENTE: "${userNote}"\nConcentrati SOLO sugli esercizi/attività indicati dallo studente. Se lo studente specifica numeri di esercizi, pagine o attività particolari, estrai SOLO quelli e ignora il resto.`
+      : "";
+
     const systemPrompt = `Sei un assistente che analizza foto di compiti scolastici per bambini delle scuole primarie e medie italiane.
 
 ${contextNote}
