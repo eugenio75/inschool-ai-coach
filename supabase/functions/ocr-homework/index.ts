@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,8 +30,8 @@ serve(async (req) => {
     if (isPdf) {
       const pdfResponse = await fetch(imageUrl);
       if (!pdfResponse.ok) throw new Error("Impossibile scaricare il PDF");
-      const pdfBuffer = await pdfResponse.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(pdfBuffer)));
+      const pdfBuffer = new Uint8Array(await pdfResponse.arrayBuffer());
+      const base64 = base64Encode(pdfBuffer);
       finalImageUrl = `data:application/pdf;base64,${base64}`;
     }
 
