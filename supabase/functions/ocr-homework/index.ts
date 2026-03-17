@@ -76,7 +76,7 @@ Nessun altro testo, solo il JSON.`;
             content: [
               {
                 type: "image_url",
-                image_url: { url: imageUrl },
+                image_url: { url: finalImageUrl },
               },
               {
                 type: "text",
