@@ -35,8 +35,11 @@ export function setChildSession(session: ChildSession) {
   // Also set the profile data for components that read it
   localStorage.setItem("inschool-active-child-id", session.profileId);
   localStorage.setItem("inschool-profile", JSON.stringify({
+    id: session.profile.id,
     name: session.profile.name,
     age: session.profile.age,
+    gender: session.profile.gender,
+    avatarEmoji: session.profile.avatar_emoji,
     schoolLevel: session.profile.school_level,
     favoriteSubjects: session.profile.favorite_subjects,
     difficultSubjects: session.profile.difficult_subjects,

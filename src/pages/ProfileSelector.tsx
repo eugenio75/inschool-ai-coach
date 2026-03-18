@@ -31,8 +31,11 @@ const ProfileSelector = () => {
     const profile = profiles.find(p => p.id === profileId);
     if (profile) {
       localStorage.setItem("inschool-profile", JSON.stringify({
+        id: profile.id,
         name: profile.name,
         age: profile.age,
+        gender: profile.gender,
+        avatarEmoji: profile.avatar_emoji,
         schoolLevel: profile.school_level,
         favoriteSubjects: profile.favorite_subjects,
         difficultSubjects: profile.difficult_subjects,
