@@ -1,12 +1,46 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Brain, RefreshCw, ChevronDown, ChevronUp, Sparkles, Loader2, Send, MessageCircle, X } from "lucide-react";
+import { ArrowLeft, Brain, RefreshCw, ChevronDown, ChevronUp, Sparkles, Loader2, Send, MessageCircle, X, BookOpen, Calendar, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getMemoryItems, updateMemoryStrength, getDailyMissions, completeMission } from "@/lib/database";
 import { subjectColors } from "@/lib/mockData";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
+
+// Helper: get Monday of the current week
+function getMonday(d: Date): Date {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+  date.setDate(diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function getSunday(d: Date): Date {
+  const monday = getMonday(d);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  return sunday;
+}
+
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("it-IT", { day: "numeric", month: "short" });
+}
+
+function getDayLabel(dateStr: string): string {
+  const d = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const itemDate = new Date(d);
+  itemDate.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor((today.getTime() - itemDate.getTime()) / 86400000);
+  if (diffDays === 0) return "Oggi";
+  if (diffDays === 1) return "Ieri";
+  return d.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+}
 
 const StrengthBar = ({ strength }: { strength: number }) => {
   const color = strength >= 70 ? "bg-primary" : strength >= 40 ? "bg-secondary" : "bg-terracotta";
@@ -45,7 +79,6 @@ const ReviewChat = ({ item, onStrengthUpdate, onClose }: {
     } catch { return null; }
   };
 
-  // Start review with initial question
   useEffect(() => {
     streamReply([]);
   }, []);
@@ -115,12 +148,10 @@ const ReviewChat = ({ item, onStrengthUpdate, onClose }: {
       }
 
       if (assistantText) {
-        // Check for strength update tag
         const strengthMatch = assistantText.match(/\[STRENGTH_UPDATE:\s*(\d+)\]/);
         if (strengthMatch) {
           const newStrength = Math.max(0, Math.min(100, parseInt(strengthMatch[1])));
           onStrengthUpdate(newStrength);
-          // Remove the tag from displayed text
           assistantText = assistantText.replace(/\[STRENGTH_UPDATE:\s*\d+\]/, "").trim();
         }
         setMessages(prev => [...prev, { role: "assistant", content: assistantText }]);
@@ -145,7 +176,6 @@ const ReviewChat = ({ item, onStrengthUpdate, onClose }: {
 
   return (
     <div className="mt-3 bg-muted/30 rounded-xl border border-border overflow-hidden">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-sage-light/30 border-b border-border">
         <div className="flex items-center gap-2">
           <MessageCircle className="w-4 h-4 text-primary" />
@@ -156,7 +186,6 @@ const ReviewChat = ({ item, onStrengthUpdate, onClose }: {
         </button>
       </div>
 
-      {/* Messages */}
       <div ref={scrollRef} className="max-h-60 overflow-y-auto p-3 space-y-2.5">
         {messages.map((msg, i) => (
           <motion.div
@@ -195,7 +224,6 @@ const ReviewChat = ({ item, onStrengthUpdate, onClose }: {
         )}
       </div>
 
-      {/* Input */}
       <div className="p-3 border-t border-border flex gap-2">
         <input
           ref={inputRef}
@@ -219,7 +247,7 @@ const ReviewChat = ({ item, onStrengthUpdate, onClose }: {
   );
 };
 
-const RecapCard = ({ item, onUpdate }: { item: any; onUpdate: (id: string, strength: number) => void }) => {
+const RecapCard = ({ item, onUpdate, compact = false }: { item: any; onUpdate: (id: string, strength: number) => void; compact?: boolean }) => {
   const [expanded, setExpanded] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
   const colors = subjectColors[item.subject] || subjectColors.Matematica;
@@ -227,7 +255,6 @@ const RecapCard = ({ item, onUpdate }: { item: any; onUpdate: (id: string, stren
   const handleStrengthUpdate = async (newStrength: number) => {
     await updateMemoryStrength(item.id, newStrength);
     onUpdate(item.id, newStrength);
-    // Auto-complete review missions
     try {
       const missions = await getDailyMissions();
       const reviewMission = missions.find((m: any) =>
@@ -239,16 +266,20 @@ const RecapCard = ({ item, onUpdate }: { item: any; onUpdate: (id: string, stren
 
   return (
     <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
-      <button onClick={() => setExpanded(!expanded)} className="w-full flex items-start gap-4 p-5 text-left">
-        <div className={`w-10 h-10 rounded-xl ${colors.bg} flex items-center justify-center flex-shrink-0`}>
-          <Brain className={`w-5 h-5 ${colors.text}`} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className={`text-xs font-bold uppercase tracking-wider ${colors.text}`}>{item.subject}</span>
+      <button onClick={() => setExpanded(!expanded)} className="w-full flex items-start gap-3 p-4 text-left">
+        {!compact && (
+          <div className={`w-9 h-9 rounded-xl ${colors.bg} flex items-center justify-center flex-shrink-0`}>
+            <Brain className={`w-4 h-4 ${colors.text}`} />
           </div>
-          <h3 className="font-display font-semibold text-foreground">{item.concept}</h3>
-          <div className="mt-2"><StrengthBar strength={item.strength || 0} /></div>
+        )}
+        <div className="flex-1 min-w-0">
+          {compact && (
+            <p className="text-[10px] text-muted-foreground mb-0.5">
+              {formatDate(item.created_at)}
+            </p>
+          )}
+          <h3 className="font-display font-semibold text-foreground text-sm">{item.concept}</h3>
+          <div className="mt-1.5"><StrengthBar strength={item.strength || 0} /></div>
         </div>
         {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" /> : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />}
       </button>
@@ -256,8 +287,7 @@ const RecapCard = ({ item, onUpdate }: { item: any; onUpdate: (id: string, stren
       <AnimatePresence>
         {expanded && (
           <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-            <div className="px-5 pb-5 space-y-4">
-              {/* Summary - always visible */}
+            <div className="px-4 pb-4 space-y-3">
               {item.summary && (
                 <div className="bg-sage-light/50 rounded-xl px-4 py-3">
                   <p className="text-xs font-medium text-sage-dark uppercase tracking-wider mb-1">📖 Quello che hai studiato</p>
@@ -265,11 +295,11 @@ const RecapCard = ({ item, onUpdate }: { item: any; onUpdate: (id: string, stren
                 </div>
               )}
 
-              {/* Review button or active review chat */}
               {!reviewMode ? (
                 <Button
                   onClick={() => setReviewMode(true)}
                   className="w-full bg-primary text-primary-foreground hover:bg-sage-dark rounded-xl"
+                  size="sm"
                 >
                   <MessageCircle className="w-4 h-4 mr-2" /> Ripassa con il Coach
                 </Button>
@@ -292,10 +322,179 @@ const RecapCard = ({ item, onUpdate }: { item: any; onUpdate: (id: string, stren
   );
 };
 
+// ============ SUBJECT TAB ============
+
+const SubjectSection = ({ subject, items, onUpdate }: { subject: string; items: any[]; onUpdate: (id: string, strength: number) => void }) => {
+  const colors = subjectColors[subject] || subjectColors.Matematica;
+
+  // Group items by day (most recent first for display, but items within each day in chronological order)
+  const dayGroups = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    // Items are already sorted by created_at ascending from the DB
+    const sorted = [...items].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    
+    for (const item of sorted) {
+      const dayKey = new Date(item.created_at).toISOString().split("T")[0];
+      if (!groups[dayKey]) groups[dayKey] = [];
+      groups[dayKey].push(item);
+    }
+
+    // Sort items within each day chronologically (oldest first)
+    for (const key of Object.keys(groups)) {
+      groups[key].sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    }
+
+    // Return day keys sorted most recent first
+    return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
+  }, [items]);
+
+  const weakCount = items.filter(i => (i.strength || 0) < 50).length;
+
+  return (
+    <div className="space-y-4">
+      {/* Subject stats */}
+      <div className={`${colors.bg} rounded-2xl p-4 flex items-center gap-3`}>
+        <div className={`w-10 h-10 rounded-xl bg-card/60 flex items-center justify-center`}>
+          <Brain className={`w-5 h-5 ${colors.text}`} />
+        </div>
+        <div className="flex-1">
+          <p className={`text-sm font-bold ${colors.text}`}>{items.length} concett{items.length === 1 ? "o" : "i"}</p>
+          {weakCount > 0 && (
+            <p className="text-xs text-muted-foreground">{weakCount} da rafforzare</p>
+          )}
+        </div>
+      </div>
+
+      {/* Day groups */}
+      {dayGroups.map(([dayKey, dayItems]) => (
+        <div key={dayKey}>
+          <div className="flex items-center gap-2 mb-2 px-1">
+            <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              {getDayLabel(dayKey)}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {dayItems.map((item: any, i: number) => (
+              <motion.div key={item.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: i * 0.05 }}>
+                <RecapCard item={item} onUpdate={onUpdate} compact />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ============ WEEKLY SUMMARY ============
+
+const WeeklySummary = ({ items, onUpdate }: { items: any[]; onUpdate: (id: string, strength: number) => void }) => {
+  const now = new Date();
+  const monday = getMonday(now);
+  const sunday = getSunday(now);
+
+  const weekItems = useMemo(() => 
+    items.filter(i => {
+      const d = new Date(i.created_at);
+      return d >= monday && d <= sunday;
+    }),
+    [items, monday.getTime(), sunday.getTime()]
+  );
+
+  const subjectGroups = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    for (const item of weekItems) {
+      if (!groups[item.subject]) groups[item.subject] = [];
+      groups[item.subject].push(item);
+    }
+    // Sort within each group chronologically
+    for (const key of Object.keys(groups)) {
+      groups[key].sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    }
+    return Object.entries(groups).sort(([, a], [, b]) => b.length - a.length);
+  }, [weekItems]);
+
+  const weekLabel = `${monday.toLocaleDateString("it-IT", { day: "numeric", month: "short" })} – ${sunday.toLocaleDateString("it-IT", { day: "numeric", month: "short" })}`;
+
+  if (weekItems.length === 0) {
+    return (
+      <div className="text-center py-12 px-6">
+        <BarChart3 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+        <p className="text-muted-foreground text-sm">Nessun concetto studiato questa settimana.</p>
+        <p className="text-muted-foreground text-xs mt-1">Completa delle sessioni di studio per vedere il riepilogo!</p>
+      </div>
+    );
+  }
+
+  const avgStrength = Math.round(weekItems.reduce((s, i) => s + (i.strength || 0), 0) / weekItems.length);
+
+  return (
+    <div className="space-y-5">
+      {/* Week overview card */}
+      <div className="bg-card rounded-2xl border border-border p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <BarChart3 className="w-4 h-4 text-primary" />
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{weekLabel}</span>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-muted/50 rounded-xl p-3 text-center">
+            <p className="text-2xl font-bold text-foreground">{weekItems.length}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Concetti</p>
+          </div>
+          <div className="bg-muted/50 rounded-xl p-3 text-center">
+            <p className="text-2xl font-bold text-foreground">{subjectGroups.length}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Materie</p>
+          </div>
+          <div className="bg-muted/50 rounded-xl p-3 text-center">
+            <p className="text-2xl font-bold text-foreground">{avgStrength}%</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Forza media</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Per-subject breakdown */}
+      {subjectGroups.map(([subject, subjectItems]) => {
+        const colors = subjectColors[subject] || subjectColors.Matematica;
+        const weakCount = subjectItems.filter((i: any) => (i.strength || 0) < 50).length;
+        return (
+          <div key={subject}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className={`w-7 h-7 rounded-lg ${colors.bg} flex items-center justify-center`}>
+                <BookOpen className={`w-3.5 h-3.5 ${colors.text}`} />
+              </div>
+              <h3 className={`font-display font-semibold text-sm ${colors.text}`}>{subject}</h3>
+              <span className="text-xs text-muted-foreground">({subjectItems.length})</span>
+              {weakCount > 0 && (
+                <span className="text-[10px] bg-terracotta-light text-terracotta px-1.5 py-0.5 rounded-full font-medium ml-auto">
+                  {weakCount} da rafforzare
+                </span>
+              )}
+            </div>
+            <div className="space-y-2">
+              {subjectItems.map((item: any, i: number) => (
+                <motion.div key={item.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: i * 0.05 }}>
+                  <RecapCard item={item} onUpdate={onUpdate} compact />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// ============ MAIN PAGE ============
+
+type ViewMode = "subjects" | "weekly";
+
 const MemoryRecap = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>("subjects");
+  const [activeSubject, setActiveSubject] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -312,21 +511,68 @@ const MemoryRecap = () => {
     ));
   };
 
-  const weak = items.filter(i => (i.strength || 0) < 50);
-  const strong = items.filter(i => (i.strength || 0) >= 50);
+  // Extract unique subjects
+  const subjects = useMemo(() => {
+    const subjectMap: Record<string, number> = {};
+    for (const item of items) {
+      subjectMap[item.subject] = (subjectMap[item.subject] || 0) + 1;
+    }
+    return Object.entries(subjectMap).sort(([, a], [, b]) => b - a);
+  }, [items]);
+
+  // Auto-select first subject
+  useEffect(() => {
+    if (subjects.length > 0 && !activeSubject) {
+      setActiveSubject(subjects[0][0]);
+    }
+  }, [subjects, activeSubject]);
+
+  const activeItems = useMemo(() =>
+    items.filter(i => i.subject === activeSubject),
+    [items, activeSubject]
+  );
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="bg-card border-b border-border px-6 pt-6 pb-8">
+      {/* Header */}
+      <div className="bg-card border-b border-border px-6 pt-6 pb-4">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-3 mb-4">
-            <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft className="w-5 h-5" /></button>
+          <div className="flex items-center gap-3 mb-3">
+            <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
             <span className="font-display text-lg font-semibold text-foreground">Memoria e Ripasso</span>
           </div>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
             <h1 className="font-display text-2xl font-bold text-foreground mb-1">Quello che hai imparato 🧠</h1>
-            <p className="text-muted-foreground text-sm">Rileggi, ripassa e metti alla prova la tua memoria!</p>
+            <p className="text-muted-foreground text-sm">Organizzato per materia, giorno per giorno</p>
           </motion.div>
+
+          {/* View mode toggle */}
+          {items.length > 0 && (
+            <div className="flex gap-1 mt-4 bg-muted/50 rounded-xl p-1">
+              <button
+                onClick={() => setViewMode("subjects")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                  viewMode === "subjects"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" /> Per materia
+              </button>
+              <button
+                onClick={() => setViewMode("weekly")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                  viewMode === "weekly"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <BarChart3 className="w-3.5 h-3.5" /> Riepilogo settimana
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -338,45 +584,59 @@ const MemoryRecap = () => {
           <p className="text-muted-foreground">Nessun concetto salvato ancora.</p>
           <p className="text-muted-foreground text-sm mt-1">Completa delle sessioni di studio per iniziare!</p>
         </div>
-      ) : (
-        <>
-          {weak.length > 0 && (
-            <div className="px-6 mt-6">
-              <div className="max-w-3xl mx-auto">
-                <div className="flex items-center gap-2 mb-4">
-                  <RefreshCw className="w-4 h-4 text-terracotta" />
-                  <h2 className="font-display font-semibold text-foreground">Da rafforzare</h2>
-                  <span className="text-xs bg-terracotta-light text-terracotta px-2 py-0.5 rounded-full font-medium">{weak.length}</span>
-                </div>
-                <div className="space-y-3">
-                  {weak.map((item, i) => (
-                    <motion.div key={item.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: i * 0.08 }}>
-                      <RecapCard item={item} onUpdate={handleItemUpdate} />
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
+      ) : viewMode === "subjects" ? (
+        <div className="max-w-3xl mx-auto">
+          {/* Subject tabs - horizontal scroll */}
+          <div className="px-6 pt-5 pb-2">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {subjects.map(([subject, count]) => {
+                const colors = subjectColors[subject] || subjectColors.Matematica;
+                const isActive = subject === activeSubject;
+                return (
+                  <button
+                    key={subject}
+                    onClick={() => setActiveSubject(subject)}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
+                      isActive
+                        ? `${colors.bg} ${colors.text} ring-2 ring-offset-1 ring-primary/30`
+                        : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {subject}
+                    <span className={`${isActive ? "bg-card/60" : "bg-muted"} px-1.5 py-0.5 rounded-full text-[10px]`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-          )}
+          </div>
 
-          {strong.length > 0 && (
-            <div className="px-6 mt-8">
-              <div className="max-w-3xl mx-auto">
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="w-4 h-4 text-sage-dark" />
-                  <h2 className="font-display font-semibold text-foreground">Concetti solidi</h2>
-                </div>
-                <div className="space-y-3">
-                  {strong.map((item, i) => (
-                    <motion.div key={item.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 + i * 0.08 }}>
-                      <RecapCard item={item} onUpdate={handleItemUpdate} />
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
+          {/* Active subject content */}
+          {activeSubject && (
+            <div className="px-6 pb-6">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeSubject}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <SubjectSection
+                    subject={activeSubject}
+                    items={activeItems}
+                    onUpdate={handleItemUpdate}
+                  />
+                </motion.div>
+              </AnimatePresence>
             </div>
           )}
-        </>
+        </div>
+      ) : (
+        <div className="max-w-3xl mx-auto px-6 pt-5 pb-6">
+          <WeeklySummary items={items} onUpdate={handleItemUpdate} />
+        </div>
       )}
     </div>
   );
