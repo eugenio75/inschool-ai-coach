@@ -84,8 +84,16 @@ const EmotionalCheckin = () => {
   const [freeText, setFreeText] = useState("");
 
   const childSession = getChildSession();
-  const name = childSession?.profile?.name || "campione";
-  const gender = childSession?.profile?.gender as string | undefined;
+  const savedProfile = useMemo(() => {
+    try {
+      const stored = localStorage.getItem("inschool-profile");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  }, []);
+  const name = childSession?.profile?.name || savedProfile?.name || "campione";
+  const gender = (childSession?.profile?.gender || savedProfile?.gender) as string | undefined;
 
   const stateAnswers = useMemo(() => getStateAnswers(gender), [gender]);
 

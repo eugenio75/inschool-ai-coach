@@ -106,6 +106,7 @@ const StudentProfile = () => {
   if (!profile) return <div className="min-h-screen bg-background flex items-center justify-center"><p className="text-muted-foreground">Profilo non trovato</p></div>;
 
   const hasChanges = selectedAvatar !== (profile.avatar_emoji || "🧒") 
+    || gender !== ((profile as any).gender || "")
     || JSON.stringify(interests) !== JSON.stringify(profile.interests || [])
     || classSection !== (profile.class_section || "")
     || schoolName !== (profile.school_name || "")
