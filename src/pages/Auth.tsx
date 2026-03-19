@@ -137,41 +137,56 @@ const Auth = () => {
         const { data, error } = await signIn(email, password);
         if (error) throw error;
         if (data.user) {
-          const { data: profile } = await supabase
+          // Fetch all profiles for this user
+          const { data: profiles } = await supabase
             .from("child_profiles")
             .select("*")
-            .eq("parent_id", data.user.id)
-            .single();
-          
-          if (profile) {
+            .eq("parent_id", data.user.id);
+
+          const adultRoles = ["superiori", "universitario", "docente"];
+          const adultProfile = profiles?.find(p => adultRoles.includes(p.school_level || ""));
+
+          if (adultProfile) {
             setChildSession({
-                profileId: profile.id,
-                accessCode: profile.access_code || "",
-                profile: profile as any
+              profileId: adultProfile.id,
+              accessCode: adultProfile.access_code || "",
+              profile: adultProfile as any,
             });
-            if (["superiori", "universitario", "docente"].includes(profile.school_level)) {
-                if (!(profile as any).onboarding_completed) {
-                    navigate("/onboarding");
-                } else {
-                    navigate("/dashboard");
-                }
+            if (!adultProfile.onboarding_completed) {
+              navigate("/onboarding");
             } else {
-                navigate("/dashboard");
+              navigate("/dashboard");
             }
+          } else if (profiles && profiles.length > 0) {
+            // Has child profiles (parent account)
+            navigate("/profiles");
           } else {
-            const adultRoles = ["superiori", "universitario", "docente"];
+            // No profiles at all — check for stored signup metadata or URL role
+            const adultRoles2 = ["superiori", "universitario", "docente"];
             const urlRole = new URLSearchParams(window.location.search).get("role") || "";
-            if (adultRoles.includes(urlRole)) {
+            const storedMeta = localStorage.getItem("inschool-signup-meta");
+            let meta: any = null;
+            try { meta = storedMeta ? JSON.parse(storedMeta) : null; } catch {}
+
+            const targetRole = meta?.school_level || (adultRoles2.includes(urlRole) ? urlRole : "");
+
+            if (targetRole && adultRoles2.includes(targetRole)) {
               const { data: newProfile, error: profileError } = await supabase
                 .from("child_profiles")
                 .insert({
                   parent_id: data.user.id,
-                  name: data.user.email?.split("@")[0] || "Utente",
-                  school_level: urlRole,
+                  name: meta?.name || data.user.email?.split("@")[0] || "Utente",
+                  school_level: targetRole,
+                  age: meta?.age || null,
+                  city: meta?.city || null,
+                  school_name: meta?.school_name || null,
                   onboarding_completed: false,
                 })
                 .select()
                 .single();
+
+              localStorage.removeItem("inschool-signup-meta");
+
               if (profileError || !newProfile) {
                 toast({ title: "Errore nella creazione del profilo. Riprova.", variant: "destructive" });
                 setLoading(false);
@@ -184,46 +199,33 @@ const Auth = () => {
               });
               navigate("/onboarding");
             } else {
+              localStorage.removeItem("inschool-signup-meta");
               navigate("/profiles");
             }
           }
         }
       } else {
-        const { data: authData, error } = await signUp(email, password);
-        if (error) throw error;
-        if (authData.user) {
-            if (role === "superiori" && parseInt(age) < 14) {
-                toast({ title: "Devi avere almeno 14 anni per registrarti come studente di superiori.", variant: "destructive" });
-                setLoading(false);
-                return;
-            }
-
-            const { data: newProfile, error: profileError } = await supabase.from("child_profiles").insert({
-                name: `${firstName} ${lastName}`,
-                age: parseInt(age),
-                city: locationStr,
-                school_name: schoolName,
-                school_level: role,
-                parent_id: authData.user.id,
-                onboarding_completed: false
-            }).select().single();
-
-            if (profileError) throw profileError;
-
-            setChildSession({
-                profileId: newProfile.id,
-                accessCode: newProfile.access_code || "",
-                profile: newProfile as any
-            });
-            
-            toast({ title: "Account creato con successo! 🎉" });
-            
-            if (["superiori", "universitario", "docente"].includes(role)) {
-                navigate("/onboarding");
-            } else {
-                navigate("/dashboard");
-            }
+        // SIGNUP — just create the auth account, redirect to verify-email.
+        // The child_profile will be created on first login (after email verification).
+        if (role === "superiori" && parseInt(age) < 14) {
+          toast({ title: "Devi avere almeno 14 anni per registrarti come studente di superiori.", variant: "destructive" });
+          setLoading(false);
+          return;
         }
+        const { error } = await signUp(email, password);
+        if (error) throw error;
+
+        // Store signup metadata in localStorage so we can create the profile on first login
+        localStorage.setItem("inschool-signup-meta", JSON.stringify({
+          name: `${firstName} ${lastName}`,
+          age: parseInt(age),
+          city: locationStr,
+          school_name: schoolName,
+          school_level: role,
+        }));
+
+        toast({ title: "Account creato! Controlla la tua email per confermare la registrazione." });
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`);
       }
     } catch (err: any) {
       toast({ title: err.message, variant: "destructive" });
