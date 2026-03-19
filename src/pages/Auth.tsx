@@ -414,8 +414,11 @@ const Auth = () => {
             </div>
         </div>
 
-        {/* Toggle Login/Signup */}
-        <div className="mt-8 text-center text-sm border-t border-slate-100 pt-6">
+        {/* Forgot password + Toggle Login/Signup */}
+        {isLogin && !isMinorRole && (
+          <ForgotPasswordInline />
+        )}
+        <div className="mt-6 text-center text-sm border-t border-slate-100 pt-6">
             <span className="text-slate-500">{isLogin ? "Prima volta in InSchool?" : "Hai già un account?"}</span>
             <button
                 onClick={() => setIsLogin(!isLogin)}
