@@ -543,7 +543,7 @@ export default function DashboardDocente() {
           <DialogHeader>
             <DialogTitle>{verificaPreview?.argomento}</DialogTitle>
           </DialogHeader>
-          <div className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed font-mono bg-slate-50 rounded-xl p-4 border border-slate-200">
+          <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed font-mono bg-muted/50 rounded-xl p-4 border border-border">
             {verificaPreview?.contenuto}
           </div>
           <DialogFooter>
