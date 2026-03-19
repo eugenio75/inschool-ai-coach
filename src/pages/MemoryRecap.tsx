@@ -290,7 +290,7 @@ const RecapCard = ({ item, onUpdate, compact = false }: { item: any; onUpdate: (
             <div className="px-4 pb-4 space-y-3">
               {item.summary && (
                 <div className="bg-sage-light/50 rounded-xl px-4 py-3">
-                  <p className="text-xs font-medium text-sage-dark uppercase tracking-wider mb-1">📖 Quello che hai studiato</p>
+                  <p className="text-xs font-medium text-sage-dark uppercase tracking-wider mb-1">Quello che hai studiato</p>
                   <p className="text-sm text-foreground leading-relaxed">{item.summary}</p>
                 </div>
               )}
