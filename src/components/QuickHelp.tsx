@@ -172,7 +172,7 @@ export const QuickHelpModal = ({ open, onClose }: { open: boolean; onClose: () =
                     <button
                       key={m.id}
                       onClick={() => handleModeSelect(m.id)}
-                      className="flex items-center gap-3 px-5 py-4 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all text-left"
+                      className="flex items-center gap-3 px-5 py-4 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all text-left w-full"
                     >
                       <span className="text-2xl">{m.emoji}</span>
                       <span className="text-sm font-medium text-foreground">{m.label}</span>
