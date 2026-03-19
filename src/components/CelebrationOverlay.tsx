@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Star, Sparkles, BookOpen, Brain, Lightbulb, Trophy, Shield } from "lucide-react";
 
 const softColors = [
   "hsl(var(--primary))",
@@ -9,20 +10,20 @@ const softColors = [
 
 // Age-appropriate celebration messages
 const primaryMessages = [
-  { emoji: "🌟", text: "Ce l'hai fatta!" },
-  { emoji: "🎉", text: "Fantastico!" },
-  { emoji: "🌈", text: "Bravissimo!" },
-  { emoji: "🚀", text: "Che campione!" },
-  { emoji: "🦋", text: "Stupendo!" },
-  { emoji: "🌻", text: "Super lavoro!" },
+  { icon: Star, text: "Ce l'hai fatta!" },
+  { icon: Sparkles, text: "Fantastico!" },
+  { icon: Trophy, text: "Bravissimo!" },
+  { icon: Star, text: "Che campione!" },
+  { icon: Sparkles, text: "Stupendo!" },
+  { icon: Trophy, text: "Super lavoro!" },
 ];
 
 const middleMessages = [
-  { emoji: "✨", text: "Ottimo lavoro." },
-  { emoji: "📚", text: "Esercizio completato." },
-  { emoji: "🧠", text: "Ben fatto." },
-  { emoji: "🌱", text: "Un passo in più." },
-  { emoji: "💡", text: "Obiettivo raggiunto." },
+  { icon: Sparkles, text: "Ottimo lavoro." },
+  { icon: BookOpen, text: "Esercizio completato." },
+  { icon: Brain, text: "Ben fatto." },
+  { icon: Star, text: "Un passo in più." },
+  { icon: Lightbulb, text: "Obiettivo raggiunto." },
 ];
 
 function isPrimary(schoolLevel?: string): boolean {
