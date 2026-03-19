@@ -112,6 +112,7 @@ export default function DashboardDocente() {
         nome: newClasse.nome,
         materia: newClasse.materia || null,
         ordine_scolastico: newClasse.ordine_scolastico || ordine || null,
+        num_studenti: newClasse.num_studenti ? parseInt(newClasse.num_studenti) : 0,
       }).select().single();
     setSavingClasse(false);
     if (!error && data) {
