@@ -45,6 +45,10 @@ export default function DashboardDocente() {
   const [classi, setClassi] = useState<any[]>([]);
   const [loadingClassi, setLoadingClassi] = useState(true);
   const [verificheCount, setVerificheCount] = useState(0);
+  const [verificheSalvate, setVerificheSalvate] = useState<any[]>([]);
+  const [loadingVerifiche, setLoadingVerifiche] = useState(true);
+  const [verificaPreview, setVerificaPreview] = useState<any>(null);
+  const [deleteVerificaId, setDeleteVerificaId] = useState<string | null>(null);
 
   // Nuova classe modal
   const [showClasseModal, setShowClasseModal] = useState(false);
