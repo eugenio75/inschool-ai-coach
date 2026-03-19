@@ -181,8 +181,8 @@ const DashboardAlunno = () => {
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => navigate("/memory")} className="w-9 h-9 rounded-xl bg-clay-light flex items-center justify-center text-clay-dark hover:bg-accent transition-colors" title="Memoria e ripasso"><Brain className="w-4 h-4" /></button>
-              <button onClick={() => navigate("/student-profile")} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors" title="Il mio profilo">
-                <span className="text-lg">{avatar}</span>
+              <button onClick={() => navigate("/student-profile")} className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-accent transition-colors text-xs font-bold text-primary" title="Il mio profilo">
+                {avatarName.charAt(0).toUpperCase()}
               </button>
               {isChild && (
                 <button onClick={handleChildLogout} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors" title="Esci">
