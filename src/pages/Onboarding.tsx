@@ -40,9 +40,8 @@ export default function Onboarding() {
            setInitialStep(data.current_step);
            setInitialData(data.data || {});
         }
-      } else if (user) {
-        navigate("/profiles");
       }
+      // Parent users without child session: show OnboardingLegacy to create a new child profile
       setLoadingData(false);
     };
     check();
