@@ -158,7 +158,7 @@ const ReviewChat = ({ item, onStrengthUpdate, onClose }: {
       }
     } catch (err) {
       console.error("Review error:", err);
-      setMessages(prev => [...prev, { role: "assistant", content: "Oops, c'è stato un problema. Riprova! 🌱" }]);
+      setMessages(prev => [...prev, { role: "assistant", content: "Oops, c'è stato un problema. Riprova!" }]);
     } finally {
       setIsTyping(false);
       setStreamingText("");
