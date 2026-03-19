@@ -130,9 +130,9 @@ export const QuickHelpModal = ({ open, onClose }: { open: boolean; onClose: () =
   const handleModeSelect = (modeId: string) => {
     setMode(modeId);
     const prompts: Record<string, string> = {
-      explain: "Ciao! Di cosa hai bisogno che ti spieghi? Dimmi l'argomento o la materia 📚",
-      guide: "Ciao! Dimmi cosa devi fare e ti guido passo per passo 🧭",
-      quiz: "Ciao! Su che argomento vuoi fare un mini quiz veloce? 🎯",
+      explain: "Ciao! Di cosa hai bisogno che ti spieghi? Dimmi l'argomento o la materia.",
+      guide: "Ciao! Dimmi cosa devi fare e ti guido passo per passo.",
+      quiz: "Ciao! Su che argomento vuoi fare un mini quiz veloce?",
     };
     setMessages([{ role: "assistant", text: prompts[modeId] || prompts.explain }]);
   };
