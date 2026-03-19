@@ -159,9 +159,9 @@ export default function DashboardUniversitario() {
   }
 
   function examBadge(dataPrevista: string | null): { label: string; cls: string } {
-    if (!dataPrevista) return { label: "Data da definire", cls: "bg-slate-100 text-slate-500" };
+    if (!dataPrevista) return { label: "Data da definire", cls: "bg-muted text-muted-foreground" };
     const days = differenceInDays(new Date(dataPrevista), new Date());
-    if (days < 0) return { label: "Concluso", cls: "bg-slate-100 text-slate-500" };
+    if (days < 0) return { label: "Concluso", cls: "bg-muted text-muted-foreground" };
     if (days < 10) return { label: `tra ${days} giorni`, cls: "bg-red-100 text-red-700" };
     if (days < 30) return { label: `tra ${days} giorni`, cls: "bg-yellow-100 text-yellow-700" };
     return { label: `tra ${days} giorni`, cls: "bg-green-100 text-green-700" };
