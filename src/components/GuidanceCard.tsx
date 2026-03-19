@@ -212,7 +212,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
 
     if (isStudyTask) {
       // Study tasks: go directly to interrogation mode
-      initial = `Ciao ${name}! 📖 Oggi studiamo "${taskContext?.title || taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""}. Ho il testo della pagina e ti farò delle domande per aiutarti a capire e memorizzare tutto. Partiamo!`;
+      initial = `Ciao ${name}! Oggi studiamo "${taskContext?.title || taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""}. Ho il testo della pagina e ti farò delle domande per aiutarti a capire e memorizzare tutto. Partiamo!`;
       shouldAutoAnalyze = true;
     } else if (isPhotoTask && hasSourcePage) {
       const title = taskContext?.title || taskTitle || "";
