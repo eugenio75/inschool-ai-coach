@@ -392,7 +392,7 @@ export default function DashboardDocente() {
                 <Button size="sm" variant="outline" className="rounded-xl" onClick={printVerifica}>
                   <Printer className="w-3 h-3 mr-1" />Stampa / PDF
                 </Button>
-                <Button size="sm" variant="ghost" className="rounded-xl text-slate-500" onClick={generateVerifica}>
+                <Button size="sm" variant="ghost" className="rounded-xl text-muted-foreground" onClick={generateVerifica}>
                   Rigenera
                 </Button>
               </div>
