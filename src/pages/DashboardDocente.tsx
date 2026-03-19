@@ -530,6 +530,40 @@ export default function DashboardDocente() {
           </Button>
         </DialogContent>
       </Dialog>
+
+      {/* DIALOG — PREVIEW VERIFICA */}
+      <Dialog open={!!verificaPreview} onOpenChange={() => setVerificaPreview(null)}>
+        <DialogContent className="rounded-2xl max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{verificaPreview?.argomento}</DialogTitle>
+          </DialogHeader>
+          <div className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed font-mono bg-slate-50 rounded-xl p-4 border border-slate-200">
+            {verificaPreview?.contenuto}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" className="rounded-xl" onClick={() => { printSavedVerifica(verificaPreview); }}>
+              <Printer className="w-3.5 h-3.5 mr-1.5" />Stampa
+            </Button>
+            <Button variant="outline" className="rounded-xl" onClick={() => { navigator.clipboard.writeText(verificaPreview?.contenuto || ""); toast.success("Copiato!"); }}>
+              <Copy className="w-3.5 h-3.5 mr-1.5" />Copia
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* DIALOG — ELIMINA VERIFICA */}
+      <Dialog open={!!deleteVerificaId} onOpenChange={() => setDeleteVerificaId(null)}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader><DialogTitle>Eliminare la verifica?</DialogTitle></DialogHeader>
+          <p className="text-sm text-slate-500">Questa azione non può essere annullata.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteVerificaId(null)} className="rounded-xl">Annulla</Button>
+            <Button variant="destructive" onClick={() => deleteVerificaId && deleteVerifica(deleteVerificaId)} className="rounded-xl">
+              Elimina
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
