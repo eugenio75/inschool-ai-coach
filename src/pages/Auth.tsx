@@ -161,19 +161,32 @@ const Auth = () => {
             // Has child profiles (parent account)
             navigate("/profiles");
           } else {
-            // No profiles at all — create one based on URL role
+            // No profiles at all — check for stored signup metadata or URL role
+            const adultRoles2 = ["superiori", "universitario", "docente"];
             const urlRole = new URLSearchParams(window.location.search).get("role") || "";
-            if (adultRoles.includes(urlRole)) {
+            const storedMeta = localStorage.getItem("inschool-signup-meta");
+            let meta: any = null;
+            try { meta = storedMeta ? JSON.parse(storedMeta) : null; } catch {}
+
+            const targetRole = meta?.school_level || (adultRoles2.includes(urlRole) ? urlRole : "");
+
+            if (targetRole && adultRoles2.includes(targetRole)) {
               const { data: newProfile, error: profileError } = await supabase
                 .from("child_profiles")
                 .insert({
                   parent_id: data.user.id,
-                  name: data.user.email?.split("@")[0] || "Utente",
-                  school_level: urlRole,
+                  name: meta?.name || data.user.email?.split("@")[0] || "Utente",
+                  school_level: targetRole,
+                  age: meta?.age || null,
+                  city: meta?.city || null,
+                  school_name: meta?.school_name || null,
                   onboarding_completed: false,
                 })
                 .select()
                 .single();
+
+              localStorage.removeItem("inschool-signup-meta");
+
               if (profileError || !newProfile) {
                 toast({ title: "Errore nella creazione del profilo. Riprova.", variant: "destructive" });
                 setLoading(false);
@@ -186,6 +199,7 @@ const Auth = () => {
               });
               navigate("/onboarding");
             } else {
+              localStorage.removeItem("inschool-signup-meta");
               navigate("/profiles");
             }
           }
