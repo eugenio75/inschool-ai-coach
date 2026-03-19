@@ -561,7 +561,7 @@ export default function DashboardDocente() {
       <Dialog open={!!deleteVerificaId} onOpenChange={() => setDeleteVerificaId(null)}>
         <DialogContent className="rounded-2xl">
           <DialogHeader><DialogTitle>Eliminare la verifica?</DialogTitle></DialogHeader>
-          <p className="text-sm text-slate-500">Questa azione non può essere annullata.</p>
+          <p className="text-sm text-muted-foreground">Questa azione non puo essere annullata.</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteVerificaId(null)} className="rounded-xl">Annulla</Button>
             <Button variant="destructive" onClick={() => deleteVerificaId && deleteVerifica(deleteVerificaId)} className="rounded-xl">

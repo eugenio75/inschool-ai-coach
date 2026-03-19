@@ -263,9 +263,9 @@ export default function DashboardSuperiori() {
 
   function dueDateLabel(dueDate: string): { label: string; cls: string } {
     const d = new Date(dueDate);
-    if (isToday(d)) return { label: "Oggi", cls: "text-orange-500 font-medium" };
-    if (isTomorrow(d)) return { label: "Domani", cls: "text-yellow-600 font-medium" };
-    if (isPast(d)) return { label: `Scaduto ${formatDistanceToNow(d, { locale: it })} fa`, cls: "text-red-500 font-medium" };
+    if (isToday(d)) return { label: "Oggi", cls: "text-destructive font-medium" };
+    if (isTomorrow(d)) return { label: "Domani", cls: "text-secondary-foreground font-medium" };
+    if (isPast(d)) return { label: `Scaduto ${formatDistanceToNow(d, { locale: it })} fa`, cls: "text-destructive font-medium" };
     return { label: format(d, "d MMM", { locale: it }), cls: "text-muted-foreground" };
   }
 

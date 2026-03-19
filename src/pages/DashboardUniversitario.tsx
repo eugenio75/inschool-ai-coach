@@ -482,7 +482,7 @@ export default function DashboardUniversitario() {
       {/* DIALOG — SESSIONE COMPLETATA */}
       <Dialog open={showFocusComplete} onOpenChange={setShowFocusComplete}>
         <DialogContent className="rounded-2xl text-center">
-          <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mt-2" />
+          <CheckCircle2 className="w-12 h-12 text-primary mx-auto mt-2" />
           <DialogHeader><DialogTitle className="text-center mt-2">Sessione completata!</DialogTitle></DialogHeader>
           <p className="text-sm text-muted-foreground py-2">
             {focusDuration || parseInt(focusCustom) || 25} minuti di focus

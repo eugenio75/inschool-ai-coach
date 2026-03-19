@@ -181,12 +181,12 @@ export const mockGamification: GamificationData = {
   autonomyPoints: 120,
   streak: 4,
   badges: [
-    { id: "b1", name: "Prima Fiamma", emoji: "🔥", description: "Hai completato la tua prima sessione di focus", earned: true, earnedDate: "2026-03-11", quality: "coraggio" },
-    { id: "b2", name: "Costante come il Sole", emoji: "☀️", description: "3 giorni consecutivi di studio", earned: true, earnedDate: "2026-03-13", quality: "costanza" },
-    { id: "b3", name: "Esploratore Curioso", emoji: "🔍", description: "Hai chiesto 'perché?' al coach 5 volte", earned: true, earnedDate: "2026-03-14", quality: "curiosità" },
-    { id: "b4", name: "Campione di Autonomia", emoji: "🌱", description: "Hai completato 3 compiti senza chiedere aiuto", earned: false, quality: "autonomia" },
-    { id: "b5", name: "Mente Critica", emoji: "💡", description: "Hai trovato un errore nel tuo ragionamento e l'hai corretto", earned: false, quality: "miglioramento" },
-    { id: "b6", name: "Settimana d'Oro", emoji: "⭐", description: "5 giorni consecutivi di studio", earned: false, quality: "costanza" },
+    { id: "b1", name: "Prima Fiamma", emoji: "flame", description: "Hai completato la tua prima sessione di focus", earned: true, earnedDate: "2026-03-11", quality: "coraggio" },
+    { id: "b2", name: "Costante come il Sole", emoji: "sun", description: "3 giorni consecutivi di studio", earned: true, earnedDate: "2026-03-13", quality: "costanza" },
+    { id: "b3", name: "Esploratore Curioso", emoji: "search", description: "Hai chiesto 'perche?' al coach 5 volte", earned: true, earnedDate: "2026-03-14", quality: "curiosita" },
+    { id: "b4", name: "Campione di Autonomia", emoji: "sprout", description: "Hai completato 3 compiti senza chiedere aiuto", earned: false, quality: "autonomia" },
+    { id: "b5", name: "Mente Critica", emoji: "lightbulb", description: "Hai trovato un errore nel tuo ragionamento e l'hai corretto", earned: false, quality: "miglioramento" },
+    { id: "b6", name: "Settimana d'Oro", emoji: "star", description: "5 giorni consecutivi di studio", earned: false, quality: "costanza" },
   ],
   weeklyProgress: [
     { day: "Lun", minutes: 35, tasks: 3, autonomy: 60 },

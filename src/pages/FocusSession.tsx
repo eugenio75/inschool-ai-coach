@@ -499,7 +499,7 @@ const FocusSession = () => {
                   <p className="font-display text-3xl font-bold text-foreground tabular-nums">{formatTime(seconds)}</p>
                   <p className="text-xs text-muted-foreground">
                     {pomodoroCount > 1 && <span className="text-primary font-medium mr-1">Ciclo {pomodoroCount}</span>}
-                    {progress < 0.25 ? "Stai andando benissimo." : progress < 0.5 ? "Ottimo ritmo!" : progress < 0.75 ? "Più di metà! 💪" : "Quasi finito!"}
+                    {progress < 0.25 ? "Stai andando benissimo." : progress < 0.5 ? "Ottimo ritmo!" : progress < 0.75 ? "Piu di meta completata!" : "Quasi finito!"}
                   </p>
                 </div>
               </div>
