@@ -460,7 +460,7 @@ export default function DashboardUniversitario() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEsameModal(false)} className="rounded-xl">Annulla</Button>
             <Button onClick={saveEsame} disabled={!newEsame.nome_esame.trim() || savingEsame}
-              className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white">
+              className="rounded-xl">
               {savingEsame ? "Salvataggio..." : "Aggiungi"}
             </Button>
           </DialogFooter>
