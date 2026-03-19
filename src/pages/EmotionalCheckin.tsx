@@ -195,12 +195,12 @@ const EmotionalCheckin = () => {
             transition={spring}
             className="max-w-sm w-full text-center"
           >
-            <motion.div
+           <motion.div
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="text-5xl mb-6"
+              className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6"
             >
-              👋
+              <Smile className="w-8 h-8 text-primary" />
             </motion.div>
             <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-2">
               Ciao {name}!
@@ -215,13 +215,13 @@ const EmotionalCheckin = () => {
                   onClick={() => handleAnswer(q1, opt.id, opt.label)}
                   className="flex flex-col items-center gap-2 px-4 py-4 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all"
                 >
-                  <span className="text-2xl">{opt.emoji}</span>
+                  <opt.icon className="w-6 h-6 text-primary" />
                   <span className="text-xs font-medium text-foreground">{opt.label}</span>
                 </button>
               ))}
             </div>
             <button onClick={handleSkip} className="mt-6 text-xs text-muted-foreground hover:text-foreground">
-              Salta per oggi →
+              Salta per oggi
             </button>
           </motion.div>
         )}
