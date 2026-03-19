@@ -382,7 +382,7 @@ export default function DashboardDocente() {
                 {genOutput}
               </div>
               <div className="flex flex-wrap gap-2 mt-3">
-                <Button size="sm" className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white"
+                <Button size="sm" className="rounded-xl"
                   onClick={saveVerifica} disabled={savingVerifica}>
                   {savingVerifica ? "Salvataggio..." : "Salva verifica"}
                 </Button>
