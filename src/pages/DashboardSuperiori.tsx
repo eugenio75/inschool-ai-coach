@@ -266,22 +266,22 @@ export default function DashboardSuperiori() {
     if (isToday(d)) return { label: "Oggi", cls: "text-orange-500 font-medium" };
     if (isTomorrow(d)) return { label: "Domani", cls: "text-yellow-600 font-medium" };
     if (isPast(d)) return { label: `Scaduto ${formatDistanceToNow(d, { locale: it })} fa`, cls: "text-red-500 font-medium" };
-    return { label: format(d, "d MMM", { locale: it }), cls: "text-slate-400" };
+    return { label: format(d, "d MMM", { locale: it }), cls: "text-muted-foreground" };
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-background pb-24">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
 
         {/* HEADER */}
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
           className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               {getGreeting()}, {profile?.name?.split(" ")[0] || ""}
             </h1>
             {(indirizzo || anno) && (
-              <p className="text-slate-500 mt-1 text-sm">
+              <p className="text-muted-foreground mt-1 text-sm">
                 {[indirizzo, anno && `${anno} anno`].filter(Boolean).join(" · ")}
               </p>
             )}
@@ -303,23 +303,23 @@ export default function DashboardSuperiori() {
           </div>
         ) : materie.length > 0 ? (
           <section>
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Le tue materie</h2>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Le tue materie</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {materie.slice(0, 3).map((m, i) => (
                 <motion.button key={m} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
                   onClick={() => navigate(`/challenge/new?subject=${encodeURIComponent(m)}`)}
-                  className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between group hover:border-blue-300 hover:shadow-md transition-all text-left">
+                  className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between group hover:border-primary/40 hover:shadow-md transition-all text-left">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                      <BookOpen className="w-4 h-4 text-blue-600" />
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <BookOpen className="w-4 h-4 text-primary" />
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-800 text-sm">{m}</p>
-                      <p className="text-xs text-slate-400">Studia ora</p>
+                      <p className="font-semibold text-foreground text-sm">{m}</p>
+                      <p className="text-xs text-muted-foreground">Studia ora</p>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-500 transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary transition-colors" />
                 </motion.button>
               ))}
             </div>
@@ -328,31 +328,31 @@ export default function DashboardSuperiori() {
 
         {/* SFIDA DEL GIORNO */}
         <section>
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Sfida del giorno</h2>
-          <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Sfida del giorno</h2>
+          <div className="bg-card border border-border rounded-2xl p-5">
             {challengeLoading ? (
               <div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div>
             ) : challengeError ? (
-              <p className="text-slate-400 text-sm">
+              <p className="text-muted-foreground text-sm">
                 Impossibile generare la sfida oggi.{" "}
-                <button onClick={() => generateChallenge(materie, indirizzo, anno)} className="text-blue-600 underline">Riprova</button>
+                <button onClick={() => generateChallenge(materie, indirizzo, anno)} className="text-primary underline">Riprova</button>
               </p>
             ) : challenge ? (
               <div className="flex gap-3">
-                <Target className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
-                <p className="text-slate-700 leading-relaxed">{challenge}</p>
+                <Target className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                <p className="text-foreground leading-relaxed">{challenge}</p>
               </div>
             ) : (
-              <p className="text-slate-400 text-sm">Completa l'onboarding per ricevere sfide personalizzate.</p>
+              <p className="text-muted-foreground text-sm">Completa l'onboarding per ricevere sfide personalizzate.</p>
             )}
           </div>
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* TIMER POMODORO */}
-          <section className="bg-white border border-slate-200 rounded-2xl p-5">
-            <h2 className="font-semibold text-slate-800 flex items-center gap-2 mb-4">
-              <Timer className="w-4 h-4 text-blue-600" /> Timer di Studio
+          <section className="bg-card border border-border rounded-2xl p-5">
+            <h2 className="font-semibold text-foreground flex items-center gap-2 mb-4">
+              <Timer className="w-4 h-4 text-primary" /> Timer di Studio
             </h2>
             <div className="space-y-3">
               <Select value={timerType} disabled={timerRunning}
@@ -384,11 +384,11 @@ export default function DashboardSuperiori() {
               )}
             </div>
             <div className="text-center py-6">
-              <span className="text-6xl font-mono font-bold text-slate-900 tabular-nums">
+              <span className="text-6xl font-mono font-bold text-foreground tabular-nums">
                 {fmtTime(secondsLeft)}
               </span>
               {timerStarted && (
-                <p className="text-xs text-slate-400 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   {timerRunning ? "In corso" : "In pausa"}{timerMateria ? ` · ${timerMateria}` : ""}
                 </p>
               )}
@@ -407,10 +407,10 @@ export default function DashboardSuperiori() {
           </section>
 
           {/* TASK IN SCADENZA */}
-          <section className="bg-white border border-slate-200 rounded-2xl p-5">
+          <section className="bg-card border border-border rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-slate-800 flex items-center gap-2">
-                <CalendarCheck className="w-4 h-4 text-blue-600" /> Task in scadenza
+              <h2 className="font-semibold text-foreground flex items-center gap-2">
+                <CalendarCheck className="w-4 h-4 text-primary" /> Task in scadenza
               </h2>
               <Button variant="ghost" size="sm" onClick={() => setShowTaskModal(true)} className="h-7 text-xs rounded-lg">
                 <Plus className="w-3 h-3 mr-1" />Aggiungi
@@ -420,9 +420,9 @@ export default function DashboardSuperiori() {
               <div className="space-y-2">{[1, 2, 3].map(i => <Skeleton key={i} className="h-11 rounded-lg" />)}</div>
             ) : tasks.length === 0 ? (
               <div className="flex flex-col items-center py-8 text-center">
-                <CalendarCheck className="w-8 h-8 text-slate-200 mb-2" />
-                <p className="text-sm font-medium text-slate-500">Nessun task in scadenza</p>
-                <p className="text-xs text-slate-400 mt-1">Ottimo lavoro!</p>
+                <CalendarCheck className="w-8 h-8 text-muted-foreground/30 mb-2" />
+                <p className="text-sm font-medium text-muted-foreground">Nessun task in scadenza</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">Ottimo lavoro!</p>
                 <Button variant="outline" size="sm" className="mt-3 rounded-xl text-xs" onClick={() => setShowTaskModal(true)}>
                   <Plus className="w-3 h-3 mr-1" />Aggiungi task
                 </Button>
@@ -432,11 +432,11 @@ export default function DashboardSuperiori() {
                 {tasks.map(task => {
                   const due = task.due_date ? dueDateLabel(task.due_date) : null;
                   return (
-                    <li key={task.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors">
+                    <li key={task.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted transition-colors">
                       <button onClick={() => completeTask(task.id)}
-                        className="w-5 h-5 rounded-full border-2 border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-colors shrink-0" />
+                        className="w-5 h-5 rounded-full border-2 border-border hover:border-primary hover:bg-primary/10 transition-colors shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-800 truncate">{task.title}</p>
+                        <p className="text-sm font-medium text-foreground truncate">{task.title}</p>
                         {task.subject && <Badge variant="secondary" className="text-xs mt-0.5">{task.subject}</Badge>}
                       </div>
                       {due && <span className={`text-xs shrink-0 ${due.cls}`}>{due.label}</span>}
@@ -449,9 +449,9 @@ export default function DashboardSuperiori() {
         </div>
 
         {/* PROGRESSI SETTIMANALI */}
-        <section className="bg-white border border-slate-200 rounded-2xl p-5">
-          <h2 className="font-semibold text-slate-800 flex items-center gap-2 mb-4">
-            <BarChart3 className="w-4 h-4 text-blue-600" /> Progressi questa settimana
+        <section className="bg-card border border-border rounded-2xl p-5">
+          <h2 className="font-semibold text-foreground flex items-center gap-2 mb-4">
+            <BarChart3 className="w-4 h-4 text-primary" /> Progressi questa settimana
           </h2>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={weekData} barSize={28} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
@@ -466,7 +466,7 @@ export default function DashboardSuperiori() {
             </BarChart>
           </ResponsiveContainer>
           {weekData.every(d => d.minuti === 0) && (
-            <p className="text-center text-xs text-slate-400 mt-3">
+            <p className="text-center text-xs text-muted-foreground mt-3">
               Usa il Timer di Studio per registrare le tue sessioni e vedere i progressi
             </p>
           )}
@@ -507,7 +507,7 @@ export default function DashboardSuperiori() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowTaskModal(false)} className="rounded-xl">Annulla</Button>
             <Button onClick={saveNewTask} disabled={!newTask.title.trim() || savingTask}
-              className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
+              className="rounded-xl">
               {savingTask ? "Salvataggio..." : "Salva task"}
             </Button>
           </DialogFooter>
