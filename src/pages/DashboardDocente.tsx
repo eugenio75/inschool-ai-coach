@@ -117,7 +117,7 @@ export default function DashboardDocente() {
     setSavingClasse(false);
     if (!error && data) {
       setClasseCreata(data);
-      setNewClasse({ nome: "", materia: "", ordine_scolastico: "" });
+      setNewClasse({ nome: "", materia: "", ordine_scolastico: "", num_studenti: "" });
       loadAll();
     } else {
       toast.error("Errore nella creazione della classe.");
