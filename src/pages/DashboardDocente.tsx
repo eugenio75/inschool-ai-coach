@@ -435,7 +435,7 @@ export default function DashboardDocente() {
                     </Button>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg"
                       onClick={() => setDeleteVerificaId(v.id)}>
-                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
                     </Button>
                   </div>
                 </div>
