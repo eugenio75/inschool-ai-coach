@@ -402,7 +402,7 @@ export default function DashboardDocente() {
 
         {/* VERIFICHE SALVATE */}
         <section>
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Verifiche salvate</h2>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Verifiche salvate</h2>
           {loadingVerifiche ? (
             <div className="space-y-2">{[1, 2].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
           ) : verificheSalvate.length === 0 ? (
