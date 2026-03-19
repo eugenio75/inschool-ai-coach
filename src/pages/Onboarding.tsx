@@ -137,7 +137,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             if (step === 3) return answers.metodo_studio;
             if (step === 4) return (answers.serve_ai || []).length > 0;
         } else if (role === "docente") {
-            if (step === 1) return answers.docente_ordine;
+            if (step === 1) return answers.docente_ordine && (answers.docente_materie || []).length > 0;
             if (step === 2) return answers.docente_studenti;
             if (step === 3) return (answers.docente_uso || []).length > 0;
             if (step === 4) return (answers.docente_auto || []).length > 0;
@@ -360,6 +360,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 </div>
               );
             case 1:
+              const docenteMaterie = ["Matematica", "Fisica", "Chimica", "Italiano", "Latino", "Greco", "Storia", "Filosofia", "Inglese", "Francese", "Spagnolo", "Tedesco", "Informatica", "Scienze", "Arte", "Musica", "Educazione Fisica", "Diritto", "Economia", "Geografia", "Religione", "Tecnologia"];
               return (
                 <div className="w-full space-y-6">
                     <h2 className="text-2xl font-bold text-slate-900">Il tuo ruolo</h2>
@@ -369,6 +370,15 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                           {["Scuola Primaria", "Scuola Secondaria I grado", "Scuola Secondaria II grado", "Università", "Formazione Professionale"].map(a => <option key={a} value={a}>{a}</option>)}
                        </select>
                        <input ref={locRef} type="text" placeholder="Nome Istituto" className="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 outline-none focus:border-emerald-500 text-slate-800" defaultValue={answers.docente_istituto || ""} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-700 mb-2">Le tue materie (max 5)</p>
+                      <div className="flex flex-wrap gap-2">
+                        {docenteMaterie.map((m: string) => {
+                          const isSel = (answers.docente_materie || []).includes(m);
+                          return <button key={m} onClick={() => toggleMax("docente_materie", m, 5)} className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${isSel ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>{m}</button>;
+                        })}
+                      </div>
                     </div>
                 </div>
               );
@@ -433,6 +443,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     <p className="text-slate-500 mb-6">Il tuo cruscotto didattico ti attende</p>
                     <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 space-y-4 shadow-sm">
                         <div><span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Classe</span><p className="font-medium text-slate-800">{answers.docente_ordine}</p></div>
+                        <div><span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Materie</span><p className="font-medium text-slate-800">{(answers.docente_materie || []).join(", ")}</p></div>
                         <div><span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Automazioni IA</span><p className="font-medium text-slate-800">{(answers.docente_auto || []).join(", ")}</p></div>
                     </div>
                 </div>

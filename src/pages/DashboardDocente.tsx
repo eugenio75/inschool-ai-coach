@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   Users, Plus, FilePlus, BarChart2, BookMarked, CheckSquare,
   FileText, Mic, FolderOpen, Home, Users2, Bell, Copy,
-  Minus, Printer, ChevronRight,
+  Minus, Printer, ChevronRight, Trash2, Eye,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
@@ -45,6 +45,10 @@ export default function DashboardDocente() {
   const [classi, setClassi] = useState<any[]>([]);
   const [loadingClassi, setLoadingClassi] = useState(true);
   const [verificheCount, setVerificheCount] = useState(0);
+  const [verificheSalvate, setVerificheSalvate] = useState<any[]>([]);
+  const [loadingVerifiche, setLoadingVerifiche] = useState(true);
+  const [verificaPreview, setVerificaPreview] = useState<any>(null);
+  const [deleteVerificaId, setDeleteVerificaId] = useState<string | null>(null);
 
   // Nuova classe modal
   const [showClasseModal, setShowClasseModal] = useState(false);
@@ -73,6 +77,7 @@ export default function DashboardDocente() {
 
   async function loadAll() {
     setLoadingClassi(true);
+    setLoadingVerifiche(true);
     try {
       const { data: prefs } = await (supabase as any)
         .from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
@@ -87,8 +92,14 @@ export default function DashboardDocente() {
         .from("verifiche").select("id", { count: "exact", head: true })
         .eq("docente_profile_id", profileId);
       setVerificheCount(count || 0);
+
+      const { data: v } = await (supabase as any)
+        .from("verifiche").select("*").eq("docente_profile_id", profileId)
+        .order("created_at", { ascending: false }).limit(5);
+      setVerificheSalvate(v || []);
     } finally {
       setLoadingClassi(false);
+      setLoadingVerifiche(false);
     }
   }
 
@@ -180,6 +191,22 @@ export default function DashboardDocente() {
     w.document.write(`<html><head><title>Verifica — ${genArgomento}</title><style>body{font-family:serif;max-width:720px;margin:40px auto;line-height:1.7;font-size:14px;}h1{font-size:18px;margin-bottom:4px;}p{margin:8px 0;}</style></head><body><h1>Verifica: ${genArgomento}</h1><hr/>${el.innerText.replace(/\n/g, "<br/>")}</body></html>`);
     w.document.close();
     w.print();
+  }
+
+  function printSavedVerifica(v: any) {
+    const w = window.open("", "_blank");
+    if (!w) return;
+    w.document.write(`<html><head><title>Verifica — ${v.argomento}</title><style>body{font-family:serif;max-width:720px;margin:40px auto;line-height:1.7;font-size:14px;}h1{font-size:18px;margin-bottom:4px;}p{margin:8px 0;}</style></head><body><h1>Verifica: ${v.argomento}</h1><hr/>${(v.contenuto || "").replace(/\n/g, "<br/>")}</body></html>`);
+    w.document.close();
+    w.print();
+  }
+
+  async function deleteVerifica(id: string) {
+    await (supabase as any).from("verifiche").delete().eq("id", id);
+    setVerificheSalvate(prev => prev.filter(v => v.id !== id));
+    setVerificheCount(c => c - 1);
+    setDeleteVerificaId(null);
+    toast.success("Verifica eliminata.");
   }
 
   return (
@@ -372,7 +399,51 @@ export default function DashboardDocente() {
           )}
         </section>
 
-        {/* ALERT STUDENTI */}
+        {/* VERIFICHE SALVATE */}
+        <section>
+          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Verifiche salvate</h2>
+          {loadingVerifiche ? (
+            <div className="space-y-2">{[1, 2].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
+          ) : verificheSalvate.length === 0 ? (
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center">
+              <FileText className="w-7 h-7 text-slate-200 mx-auto mb-2" />
+              <p className="text-sm text-slate-500">Nessuna verifica salvata ancora</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {verificheSalvate.map(v => (
+                <div key={v.id} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-slate-800 text-sm truncate">{v.argomento}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {v.materia && <Badge variant="secondary" className="text-xs">{v.materia}</Badge>}
+                      {v.tipo && <span className="text-xs text-slate-400">{v.tipo}</span>}
+                      <span className="text-xs text-slate-400">
+                        {format(new Date(v.created_at), "d MMM", { locale: it })}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg"
+                      onClick={() => setVerificaPreview(v)}>
+                      <Eye className="w-3.5 h-3.5 text-slate-500" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg"
+                      onClick={() => printSavedVerifica(v)}>
+                      <Printer className="w-3.5 h-3.5 text-slate-500" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg"
+                      onClick={() => setDeleteVerificaId(v.id)}>
+                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* ATTIVITA STUDENTI */}
         <section className="bg-white border border-slate-200 rounded-2xl p-5">
           <h2 className="font-semibold text-slate-800 flex items-center gap-2 mb-3">
             <Bell className="w-4 h-4 text-purple-600" /> Attività studenti
@@ -457,6 +528,40 @@ export default function DashboardDocente() {
             }}>
             <Copy className="w-4 h-4 mr-2" />Copia codice e chiudi
           </Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* DIALOG — PREVIEW VERIFICA */}
+      <Dialog open={!!verificaPreview} onOpenChange={() => setVerificaPreview(null)}>
+        <DialogContent className="rounded-2xl max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{verificaPreview?.argomento}</DialogTitle>
+          </DialogHeader>
+          <div className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed font-mono bg-slate-50 rounded-xl p-4 border border-slate-200">
+            {verificaPreview?.contenuto}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" className="rounded-xl" onClick={() => { printSavedVerifica(verificaPreview); }}>
+              <Printer className="w-3.5 h-3.5 mr-1.5" />Stampa
+            </Button>
+            <Button variant="outline" className="rounded-xl" onClick={() => { navigator.clipboard.writeText(verificaPreview?.contenuto || ""); toast.success("Copiato!"); }}>
+              <Copy className="w-3.5 h-3.5 mr-1.5" />Copia
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* DIALOG — ELIMINA VERIFICA */}
+      <Dialog open={!!deleteVerificaId} onOpenChange={() => setDeleteVerificaId(null)}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader><DialogTitle>Eliminare la verifica?</DialogTitle></DialogHeader>
+          <p className="text-sm text-slate-500">Questa azione non può essere annullata.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteVerificaId(null)} className="rounded-xl">Annulla</Button>
+            <Button variant="destructive" onClick={() => deleteVerificaId && deleteVerifica(deleteVerificaId)} className="rounded-xl">
+              Elimina
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
