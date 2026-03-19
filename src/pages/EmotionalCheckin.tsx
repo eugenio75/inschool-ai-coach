@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Smile, Frown, Minus, Shuffle, Zap, Sun, Moon, AlertTriangle, Star, MessageSquare, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { saveEmotionalCheckin } from "@/lib/database";
 import { getChildSession } from "@/lib/childSession";
