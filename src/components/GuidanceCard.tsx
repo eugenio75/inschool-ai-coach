@@ -227,7 +227,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
       } else if (emotion === "tired") {
         initial = `Sei stanco, ${name}, va bene. Facciamo una cosa leggera: ti faccio qualche domanda su "${taskTitle || "l'argomento"}" e vediamo cosa ricordi. Niente stress!`;
       } else {
-        initial = `Perfetto ${name}! Oggi studiamo "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""}. 📖 Ti faccio subito qualche domanda per capire cosa sai già — poi approfondiamo dove serve!`;
+        initial = `Perfetto ${name}! Oggi studiamo "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""}. Ti faccio subito qualche domanda per capire cosa sai già — poi approfondiamo dove serve!`;
       }
       shouldAutoAnalyze = true;
     } else if (emotion === "frustrated" || emotion === "worried") {
