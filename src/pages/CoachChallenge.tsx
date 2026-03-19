@@ -468,7 +468,7 @@ export default function CoachChallenge() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors"
+                className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors lg:hidden"
               >
                 <PanelLeftOpen className="w-4 h-4 text-muted-foreground" />
               </button>
