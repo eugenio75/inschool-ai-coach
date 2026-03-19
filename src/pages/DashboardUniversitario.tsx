@@ -436,6 +436,9 @@ export default function DashboardUniversitario() {
           )}
         </section>
 
+        {/* CONVERSAZIONI RECENTI */}
+        <RecentConversations profileId={profileId} title="Sessioni di studio recenti" />
+
       </div>
 
       {/* DIALOG — AGGIUNGI ESAME */}

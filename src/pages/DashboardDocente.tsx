@@ -386,6 +386,9 @@ export default function DashboardDocente() {
           </div>
         </section>
 
+        {/* CONVERSAZIONI RECENTI */}
+        <RecentConversations profileId={profileId} title="Le tue sessioni con il Coach AI" />
+
       </div>
 
       {/* DIALOG — NUOVA CLASSE */}
