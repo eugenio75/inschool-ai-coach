@@ -350,9 +350,9 @@ export default function DashboardUniversitario() {
         </section>
 
         {/* TUNNEL DI FOCUS */}
-        <section className="bg-white border border-slate-200 rounded-2xl p-5">
-          <h2 className="font-semibold text-slate-800 flex items-center gap-2 mb-4">
-            <Zap className="w-4 h-4 text-indigo-600" /> Tunnel di Focus
+        <section className="bg-card border border-border rounded-2xl p-5">
+          <h2 className="font-semibold text-foreground flex items-center gap-2 mb-4">
+            <Zap className="w-4 h-4 text-primary" /> Tunnel di Focus
           </h2>
           <AnimatePresence mode="wait">
             {!focusActive ? (
