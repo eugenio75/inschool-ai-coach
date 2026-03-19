@@ -221,7 +221,7 @@ export const MathNotepad = ({ open, onClose }: MathNotepadProps) => {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
             <div className="flex items-center gap-2">
-              <span className="text-lg">📝</span>
+              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center"><CheckCircle2 className="w-4 h-4 text-primary" /></div>
               <h3 className="font-display font-semibold text-foreground text-sm">Blocco Note</h3>
             </div>
             <div className="flex items-center gap-2">
