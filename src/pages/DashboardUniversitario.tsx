@@ -407,9 +407,9 @@ export default function DashboardUniversitario() {
           {loadingRicerche ? (
             <div className="space-y-2">{[1, 2].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
           ) : ricerche.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center">
-              <Search className="w-7 h-7 text-slate-200 mx-auto mb-2" />
-              <p className="text-sm text-slate-500">Nessuna ricerca effettuata ancora</p>
+            <div className="bg-card border border-border rounded-2xl p-6 text-center">
+              <Search className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Nessuna ricerca effettuata ancora</p>
               <Button variant="outline" size="sm" className="mt-3 rounded-xl text-xs"
                 onClick={() => openAiAction("ricerca")}>
                 Prova la Ricerca Bibliografica
