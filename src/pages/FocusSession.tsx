@@ -465,7 +465,7 @@ const FocusSession = () => {
                     <p className="text-[10px] text-terracotta/80">costanza</p>
                   </div>
                 </div>
-                <p className="text-sm text-sage-dark font-medium mb-4">Hai dimostrato costanza e impegno. 🌱</p>
+                <p className="text-sm text-sage-dark font-medium mb-4">Hai dimostrato costanza e impegno.</p>
                 
                 {!extracting && (
                   <p className="text-xs text-muted-foreground mb-4">I concetti studiati sono stati salvati in Memoria e Ripasso 🧠</p>
