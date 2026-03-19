@@ -223,7 +223,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
       shouldAutoAnalyze = true;
     } else if (isOralStudyTask) {
       if (emotion === "frustrated" || emotion === "worried") {
-        initial = `Capisco che può sembrare tanto, ${name}. Ma facciamo un passo alla volta — ti faccio io qualche domanda su "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""} per capire da dove partiamo. 📖`;
+        initial = `Capisco che può sembrare tanto, ${name}. Ma facciamo un passo alla volta — ti faccio io qualche domanda su "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""} per capire da dove partiamo.`;
       } else if (emotion === "tired") {
         initial = `Sei stanco, ${name}, va bene. Facciamo una cosa leggera: ti faccio qualche domanda su "${taskTitle || "l'argomento"}" e vediamo cosa ricordi. Niente stress! 📖`;
       } else {
