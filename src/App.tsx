@@ -22,6 +22,7 @@ import Settings from "./pages/Settings";
 import StudentProfile from "./pages/StudentProfile";
 import EmotionalCheckin from "./pages/EmotionalCheckin";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPassword";
 
 import Privacy from "./pages/Privacy";
 import Security from "./pages/Security";
