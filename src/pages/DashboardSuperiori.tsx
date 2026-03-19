@@ -384,11 +384,11 @@ export default function DashboardSuperiori() {
               )}
             </div>
             <div className="text-center py-6">
-              <span className="text-6xl font-mono font-bold text-slate-900 tabular-nums">
+              <span className="text-6xl font-mono font-bold text-foreground tabular-nums">
                 {fmtTime(secondsLeft)}
               </span>
               {timerStarted && (
-                <p className="text-xs text-slate-400 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   {timerRunning ? "In corso" : "In pausa"}{timerMateria ? ` · ${timerMateria}` : ""}
                 </p>
               )}
