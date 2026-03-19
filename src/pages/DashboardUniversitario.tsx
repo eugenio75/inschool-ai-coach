@@ -268,7 +268,7 @@ export default function DashboardUniversitario() {
         {/* ESAMI IN VISTA */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Esami in vista</h2>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Esami in vista</h2>
             <Button variant="ghost" size="sm" className="h-7 text-xs rounded-lg" onClick={() => setShowEsameModal(true)}>
               <Plus className="w-3 h-3 mr-1" />Aggiungi
             </Button>
