@@ -427,7 +427,7 @@ export default function DashboardDocente() {
                   <div className="flex items-center gap-1 shrink-0">
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg"
                       onClick={() => setVerificaPreview(v)}>
-                      <Eye className="w-3.5 h-3.5 text-slate-500" />
+                      <Eye className="w-3.5 h-3.5 text-muted-foreground" />
                     </Button>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg"
                       onClick={() => printSavedVerifica(v)}>
