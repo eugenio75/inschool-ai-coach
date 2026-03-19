@@ -399,7 +399,51 @@ export default function DashboardDocente() {
           )}
         </section>
 
-        {/* ALERT STUDENTI */}
+        {/* VERIFICHE SALVATE */}
+        <section>
+          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Verifiche salvate</h2>
+          {loadingVerifiche ? (
+            <div className="space-y-2">{[1, 2].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
+          ) : verificheSalvate.length === 0 ? (
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center">
+              <FileText className="w-7 h-7 text-slate-200 mx-auto mb-2" />
+              <p className="text-sm text-slate-500">Nessuna verifica salvata ancora</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {verificheSalvate.map(v => (
+                <div key={v.id} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-slate-800 text-sm truncate">{v.argomento}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {v.materia && <Badge variant="secondary" className="text-xs">{v.materia}</Badge>}
+                      {v.tipo && <span className="text-xs text-slate-400">{v.tipo}</span>}
+                      <span className="text-xs text-slate-400">
+                        {format(new Date(v.created_at), "d MMM", { locale: it })}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg"
+                      onClick={() => setVerificaPreview(v)}>
+                      <Eye className="w-3.5 h-3.5 text-slate-500" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg"
+                      onClick={() => printSavedVerifica(v)}>
+                      <Printer className="w-3.5 h-3.5 text-slate-500" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg"
+                      onClick={() => setDeleteVerificaId(v.id)}>
+                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* ATTIVITA STUDENTI */}
         <section className="bg-white border border-slate-200 rounded-2xl p-5">
           <h2 className="font-semibold text-slate-800 flex items-center gap-2 mb-3">
             <Bell className="w-4 h-4 text-purple-600" /> Attività studenti
