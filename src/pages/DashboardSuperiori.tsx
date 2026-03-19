@@ -328,8 +328,8 @@ export default function DashboardSuperiori() {
 
         {/* SFIDA DEL GIORNO */}
         <section>
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Sfida del giorno</h2>
-          <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Sfida del giorno</h2>
+          <div className="bg-card border border-border rounded-2xl p-5">
             {challengeLoading ? (
               <div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div>
             ) : challengeError ? (
