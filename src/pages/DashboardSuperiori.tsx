@@ -420,9 +420,9 @@ export default function DashboardSuperiori() {
               <div className="space-y-2">{[1, 2, 3].map(i => <Skeleton key={i} className="h-11 rounded-lg" />)}</div>
             ) : tasks.length === 0 ? (
               <div className="flex flex-col items-center py-8 text-center">
-                <CalendarCheck className="w-8 h-8 text-slate-200 mb-2" />
-                <p className="text-sm font-medium text-slate-500">Nessun task in scadenza</p>
-                <p className="text-xs text-slate-400 mt-1">Ottimo lavoro!</p>
+                <CalendarCheck className="w-8 h-8 text-muted-foreground/30 mb-2" />
+                <p className="text-sm font-medium text-muted-foreground">Nessun task in scadenza</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">Ottimo lavoro!</p>
                 <Button variant="outline" size="sm" className="mt-3 rounded-xl text-xs" onClick={() => setShowTaskModal(true)}>
                   <Plus className="w-3 h-3 mr-1" />Aggiungi task
                 </Button>
