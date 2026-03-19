@@ -395,7 +395,7 @@ export default function DashboardSuperiori() {
             </div>
             <div className="flex gap-2">
               <Button onClick={toggleTimer}
-                className={`flex-1 rounded-xl font-semibold ${timerRunning ? "bg-slate-800 hover:bg-slate-700 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"}`}>
+                className={`flex-1 rounded-xl font-semibold ${timerRunning ? "bg-muted text-foreground hover:bg-muted/80" : ""}`}>
                 {timerRunning
                   ? <><Pause className="w-4 h-4 mr-1.5" />Pausa</>
                   : <><Play className="w-4 h-4 mr-1.5" />{timerStarted ? "Riprendi" : "Avvia"}</>}
