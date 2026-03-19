@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Sparkles, Mail, Lock, KeyRound, MapPin, User, ArrowRight, Loader2, Hexagon, Building2, Chrome, Globe, Users, BookOpen, GraduationCap, Laptop } from "lucide-react";
+import { Sparkles, Mail, Lock, KeyRound, MapPin, User, ArrowRight, Loader2, Hexagon, Building2, Chrome, Globe, Users, BookOpen, GraduationCap, Laptop, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
