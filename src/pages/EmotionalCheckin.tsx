@@ -58,10 +58,10 @@ const experienceAnswers = [
 
 function getStateAnswers(gender?: string) {
   return [
-    { id: "charged", emoji: "⚡", label: g(gender, "Carico!", "Carica!") },
-    { id: "calm", emoji: "😌", label: g(gender, "Tranquillo", "Tranquilla") },
-    { id: "tired", emoji: "😴", label: `Un po' ${g(gender, "stanco", "stanca")}` },
-    { id: "nervous", emoji: "😬", label: `Un po' ${g(gender, "agitato", "agitata")}` },
+    { id: "charged", icon: Zap, label: g(gender, "Carico!", "Carica!") },
+    { id: "calm", icon: Sun, label: g(gender, "Tranquillo", "Tranquilla") },
+    { id: "tired", icon: Moon, label: `Un po' ${g(gender, "stanco", "stanca")}` },
+    { id: "nervous", icon: AlertTriangle, label: `Un po' ${g(gender, "agitato", "agitata")}` },
   ];
 }
 
