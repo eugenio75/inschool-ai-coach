@@ -193,6 +193,22 @@ export default function DashboardDocente() {
     w.print();
   }
 
+  function printSavedVerifica(v: any) {
+    const w = window.open("", "_blank");
+    if (!w) return;
+    w.document.write(`<html><head><title>Verifica — ${v.argomento}</title><style>body{font-family:serif;max-width:720px;margin:40px auto;line-height:1.7;font-size:14px;}h1{font-size:18px;margin-bottom:4px;}p{margin:8px 0;}</style></head><body><h1>Verifica: ${v.argomento}</h1><hr/>${(v.contenuto || "").replace(/\n/g, "<br/>")}</body></html>`);
+    w.document.close();
+    w.print();
+  }
+
+  async function deleteVerifica(id: string) {
+    await (supabase as any).from("verifiche").delete().eq("id", id);
+    setVerificheSalvate(prev => prev.filter(v => v.id !== id));
+    setVerificheCount(c => c - 1);
+    setDeleteVerificaId(null);
+    toast.success("Verifica eliminata.");
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
