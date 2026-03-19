@@ -507,7 +507,7 @@ export default function DashboardDocente() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowClasseModal(false)} className="rounded-xl">Annulla</Button>
             <Button onClick={saveClasse} disabled={!newClasse.nome.trim() || savingClasse}
-              className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white">
+              className="rounded-xl">
               {savingClasse ? "Creazione..." : "Crea classe"}
             </Button>
           </DialogFooter>
