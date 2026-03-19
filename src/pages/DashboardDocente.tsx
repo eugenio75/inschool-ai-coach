@@ -431,7 +431,7 @@ export default function DashboardDocente() {
                     </Button>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg"
                       onClick={() => printSavedVerifica(v)}>
-                      <Printer className="w-3.5 h-3.5 text-slate-500" />
+                      <Printer className="w-3.5 h-3.5 text-muted-foreground" />
                     </Button>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg"
                       onClick={() => setDeleteVerificaId(v.id)}>
