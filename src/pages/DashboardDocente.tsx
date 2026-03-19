@@ -36,7 +36,7 @@ function getGreeting(): string {
 
 export default function DashboardDocente() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  
   const session = getChildSession();
   const profile = session?.profile;
   const profileId = session?.profileId;

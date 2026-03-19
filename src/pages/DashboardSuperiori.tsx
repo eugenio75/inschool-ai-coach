@@ -67,7 +67,7 @@ function playBeep() {
 
 export default function DashboardSuperiori() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  
   const session = getChildSession();
   const profile = session?.profile;
   const profileId = session?.profileId;

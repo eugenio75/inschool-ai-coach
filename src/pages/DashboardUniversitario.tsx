@@ -76,7 +76,7 @@ const AI_ACTIONS: Record<string, { label: string; icon: React.ComponentType<{ cl
 
 export default function DashboardUniversitario() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  
   const session = getChildSession();
   const profile = session?.profile;
   const profileId = session?.profileId;
