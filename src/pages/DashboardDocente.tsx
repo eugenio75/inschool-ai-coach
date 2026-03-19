@@ -525,7 +525,7 @@ export default function DashboardDocente() {
               {classeCreata?.codice_invito}
             </p>
           </div>
-          <Button className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 text-white"
+          <Button className="w-full rounded-xl"
             onClick={() => {
               navigator.clipboard.writeText(classeCreata?.codice_invito);
               toast.success("Codice copiato!");
