@@ -484,11 +484,11 @@ export default function DashboardUniversitario() {
         <DialogContent className="rounded-2xl text-center">
           <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mt-2" />
           <DialogHeader><DialogTitle className="text-center mt-2">Sessione completata!</DialogTitle></DialogHeader>
-          <p className="text-sm text-slate-500 py-2">
+          <p className="text-sm text-muted-foreground py-2">
             {focusDuration || parseInt(focusCustom) || 25} minuti di focus
             {focusMateria ? ` su ${focusMateria}` : ""} registrati.
           </p>
-          <Button className="rounded-xl w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+          <Button className="rounded-xl w-full"
             onClick={() => { setShowFocusComplete(false); setFocusSecondsLeft(focusTotalSeconds); }}>
             Ottimo!
           </Button>
