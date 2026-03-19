@@ -169,8 +169,8 @@ const DashboardAlunno = () => {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 sm:pb-8 font-sans">
-      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 pt-5 sm:pt-6 pb-6 sm:pb-8 shadow-sm">
+    <div className="min-h-screen bg-background pb-20 sm:pb-8 font-sans">
+      <div className="bg-card border-b border-border px-4 sm:px-6 pt-5 sm:pt-6 pb-6 sm:pb-8 shadow-sm">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <div className="flex items-center gap-2">
