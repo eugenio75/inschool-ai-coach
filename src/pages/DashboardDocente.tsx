@@ -336,7 +336,7 @@ export default function DashboardDocente() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs text-slate-500 mb-1 block">Numero domande</Label>
+              <Label className="text-xs text-muted-foreground mb-1 block">Numero domande</Label>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" className="h-9 w-9 p-0 rounded-xl"
                   onClick={() => setGenNumero(n => Math.max(5, n - 1))}><Minus className="w-3 h-3" /></Button>
