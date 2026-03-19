@@ -10,14 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
-// Dynamic theme configuration per role
-const roleThemes: Record<string, { bg: string, text: string, button: string, border: string }> = {
-  alunno: { bg: "bg-blue-50", text: "text-blue-600", button: "bg-blue-600 hover:bg-blue-700", border: "focus:border-blue-500" },
-  superiori: { bg: "bg-purple-50", text: "text-purple-600", button: "bg-purple-600 hover:bg-purple-700", border: "focus:border-purple-500" },
-  universitario: { bg: "bg-indigo-50", text: "text-indigo-600", button: "bg-indigo-600 hover:bg-indigo-700", border: "focus:border-indigo-500" },
-  docente: { bg: "bg-emerald-50", text: "text-emerald-600", button: "bg-emerald-600 hover:bg-emerald-700", border: "focus:border-emerald-500" },
-};
-
 function ForgotPasswordInline() {
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
@@ -37,7 +29,7 @@ function ForgotPasswordInline() {
 
   if (!show) {
     return (
-      <button onClick={() => setShow(true)} className="block mx-auto mt-4 text-sm text-slate-500 hover:text-blue-600 transition-colors font-medium">
+      <button onClick={() => setShow(true)} className="block mx-auto mt-4 text-sm text-muted-foreground hover:text-primary transition-colors font-medium">
         Password dimenticata?
       </button>
     );
@@ -45,26 +37,26 @@ function ForgotPasswordInline() {
 
   if (sent) {
     return (
-      <div className="mt-4 bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-        <MailCheck className="w-8 h-8 text-green-500 mx-auto mb-2" />
-        <p className="text-sm font-medium text-green-800">Email inviata!</p>
-        <p className="text-xs text-green-600 mt-1">Controlla la tua casella di posta e segui le istruzioni per reimpostare la password.</p>
+      <div className="mt-4 bg-primary/10 border border-primary/20 rounded-xl p-4 text-center">
+        <MailCheck className="w-8 h-8 text-primary mx-auto mb-2" />
+        <p className="text-sm font-medium text-foreground">Email inviata!</p>
+        <p className="text-xs text-muted-foreground mt-1">Controlla la tua casella di posta e segui le istruzioni per reimpostare la password.</p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleReset} className="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
-      <p className="text-sm font-medium text-slate-700">Recupera la tua password</p>
+    <form onSubmit={handleReset} className="mt-4 bg-muted/50 border border-border rounded-xl p-4 space-y-3">
+      <p className="text-sm font-medium text-foreground">Recupera la tua password</p>
       <div className="relative">
-        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="La tua email"
-          className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 outline-none focus:border-blue-500 text-sm" />
+          className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-background border border-border text-foreground outline-none focus:border-primary text-sm" />
       </div>
-      <p className="text-xs text-slate-500">Ti invieremo un link per reimpostare la password.</p>
+      <p className="text-xs text-muted-foreground">Ti invieremo un link per reimpostare la password.</p>
       <div className="flex gap-2">
-        <Button type="button" variant="ghost" size="sm" onClick={() => setShow(false)} className="text-slate-500 rounded-xl">Annulla</Button>
-        <Button type="submit" size="sm" disabled={loading || !email.trim()} className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl flex-1">
+        <Button type="button" variant="ghost" size="sm" onClick={() => setShow(false)} className="text-muted-foreground rounded-xl">Annulla</Button>
+        <Button type="submit" size="sm" disabled={loading || !email.trim()} className="rounded-xl flex-1">
           {loading ? <Loader2 className="animate-spin w-4 h-4" /> : "Invia link di reset"}
         </Button>
       </div>
@@ -75,14 +67,12 @@ function ForgotPasswordInline() {
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const role = searchParams.get("role") || "alunno"; // alunno, superiori, universitario, docente
+  const role = searchParams.get("role") || "alunno";
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
-
-  const themeConfig = roleThemes[role] || roleThemes["alunno"];
 
   // Form states
   const [email, setEmail] = useState("");
@@ -90,7 +80,7 @@ const Auth = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [age, setAge] = useState("");
-  const [schoolName, setSchoolName] = useState(""); // new field
+  const [schoolName, setSchoolName] = useState("");
   const [locationStr, setLocationStr] = useState("");
   const [childCode, setChildCode] = useState("");
   const locationInputRef = useRef<HTMLInputElement>(null);
@@ -108,7 +98,6 @@ const Auth = () => {
         }
       });
     }
-    // Cleanup
     return () => {
       if (autocomplete) {
         (window as any).google.maps.event.clearInstanceListeners(autocomplete);
@@ -126,6 +115,14 @@ const Auth = () => {
     return "";
   };
 
+  const getRoleIcon = () => {
+    if (role === "alunno") return <Users className="w-8 h-8" />;
+    if (role === "superiori") return <BookOpen className="w-8 h-8" />;
+    if (role === "universitario") return <GraduationCap className="w-8 h-8" />;
+    if (role === "docente") return <Laptop className="w-8 h-8" />;
+    return null;
+  };
+
   const handleAdultSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) return;
@@ -139,7 +136,6 @@ const Auth = () => {
       if (isLogin) {
         const { data, error } = await signIn(email, password);
         if (error) throw error;
-        // Check if adult has a child_profile already
         if (data.user) {
           const { data: profile } = await supabase
             .from("child_profiles")
@@ -153,7 +149,6 @@ const Auth = () => {
                 accessCode: profile.access_code || "",
                 profile: profile as any
             });
-            // ROUTING INTELLIGENTE STEP 1
             if (["superiori", "universitario", "docente"].includes(profile.school_level)) {
                 if (!(profile as any).onboarding_completed) {
                     navigate("/onboarding");
@@ -164,10 +159,7 @@ const Auth = () => {
                 navigate("/dashboard");
             }
           } else {
-            // Adulto autenticato ma senza profilo su child_profiles:
-            // Crea profilo base e manda a onboarding
             const adultRoles = ["superiori", "universitario", "docente"];
-            // Il ruolo viene letto dal search param ?role= (già presente nell'URL al momento del login)
             const urlRole = new URLSearchParams(window.location.search).get("role") || "";
             if (adultRoles.includes(urlRole)) {
               const { data: newProfile, error: profileError } = await supabase
@@ -192,7 +184,6 @@ const Auth = () => {
               });
               navigate("/onboarding");
             } else {
-              // Genitore che non ha ancora creato figli
               navigate("/profiles");
             }
           }
@@ -201,14 +192,12 @@ const Auth = () => {
         const { data: authData, error } = await signUp(email, password);
         if (error) throw error;
         if (authData.user) {
-            // Studente superiori under 18: il genitore deve gestire la registrazione
             if (role === "superiori" && parseInt(age) < 14) {
                 toast({ title: "Devi avere almeno 14 anni per registrarti come studente di superiori.", variant: "destructive" });
                 setLoading(false);
                 return;
             }
 
-            // Crea self profile per gli adulti
             const { data: newProfile, error: profileError } = await supabase.from("child_profiles").insert({
                 name: `${firstName} ${lastName}`,
                 age: parseInt(age),
@@ -216,12 +205,11 @@ const Auth = () => {
                 school_name: schoolName,
                 school_level: role,
                 parent_id: authData.user.id,
-                onboarding_completed: false // Default
+                onboarding_completed: false
             }).select().single();
 
             if (profileError) throw profileError;
 
-            // Log them in natively
             setChildSession({
                 profileId: newProfile.id,
                 accessCode: newProfile.access_code || "",
@@ -230,7 +218,6 @@ const Auth = () => {
             
             toast({ title: "Account creato con successo! 🎉" });
             
-            // ROUTING INTELLIGENTE STEP 1
             if (["superiori", "universitario", "docente"].includes(role)) {
                 navigate("/onboarding");
             } else {
@@ -284,31 +271,33 @@ const Auth = () => {
     toast({ title: `Autenticazione con ${provider} disabilitata in anteprima locale.` });
   };
 
+  const inputClass = "w-full pl-11 pr-4 py-3 rounded-xl bg-muted/50 border border-border text-foreground placeholder-muted-foreground outline-none focus:border-primary transition-colors";
+  const inputSmClass = "w-full pl-9 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-foreground focus:border-primary transition-colors";
+  const labelClass = "text-sm font-semibold text-foreground block mb-1.5";
+  const labelSmClass = "text-xs font-semibold text-muted-foreground mb-1.5 block";
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col items-center justify-center py-10 px-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center py-10 px-4 relative overflow-hidden font-sans">
       {/* Soft Light Background elements */}
       <div className="absolute top-0 w-full h-full pointer-events-none opacity-40">
-        <div className="absolute top-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-blue-200 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-20%] left-[-10%] w-[40vw] h-[40vw] bg-purple-200 blur-[120px] rounded-full" />
+        <div className="absolute top-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-primary/20 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-20%] left-[-10%] w-[40vw] h-[40vw] bg-accent/20 blur-[120px] rounded-full" />
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={spring}
-        className="w-full max-w-[440px] bg-white border border-slate-200 p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative z-10"
+        className="w-full max-w-[440px] bg-card border border-border p-8 rounded-[2rem] shadow-soft relative z-10"
       >
         <div className="text-center mb-8">
-          <div className={`w-16 h-16 rounded-2xl ${themeConfig.bg} ${themeConfig.text} flex items-center justify-center mx-auto mb-5`}>
-            {role === "alunno" && <Users className="w-8 h-8" />}
-            {role === "superiori" && <BookOpen className="w-8 h-8" />}
-            {role === "universitario" && <GraduationCap className="w-8 h-8" />}
-            {role === "docente" && <Laptop className="w-8 h-8" />}
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-5">
+            {getRoleIcon()}
           </div>
-          <h1 className="font-display text-3xl font-bold text-slate-900 tracking-tight">
+          <h1 className="font-display text-3xl font-bold text-foreground tracking-tight">
             {getRoleTitle()}
           </h1>
-          <p className="text-sm text-slate-500 mt-2">
+          <p className="text-sm text-muted-foreground mt-2">
             {isLogin ? "Inserisci le tue credenziali per accedere" : "Crea il tuo profilo accademico in pochi secondi"}
           </p>
         </div>
@@ -323,96 +312,87 @@ const Auth = () => {
             className="space-y-4"
           >
             {isMinorRole ? (
-                // Parent / Alunno Flow
                 <div className="space-y-6">
                     <form onSubmit={handleParentSubmit} className="space-y-4">
                         <div>
-                            <label className="text-sm font-semibold text-slate-700 block mb-1.5">Email Genitore</label>
+                            <label className={labelClass}>Email Genitore</label>
                             <div className="relative">
-                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                <input
-                                    type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                                    className={`w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 ${themeConfig.border} outline-none transition-colors`}
-                                />
+                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <input type="email" required value={email} onChange={e => setEmail(e.target.value)} className={inputClass} />
                             </div>
                         </div>
                         <div>
-                            <label className="text-sm font-semibold text-slate-700 block mb-1.5">Password</label>
+                            <label className={labelClass}>Password</label>
                             <div className="relative">
-                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                <input
-                                    type="password" required value={password} onChange={e => setPassword(e.target.value)}
-                                    className={`w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 ${themeConfig.border} outline-none transition-colors`}
-                                />
+                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <input type="password" required value={password} onChange={e => setPassword(e.target.value)} className={inputClass} />
                             </div>
                         </div>
-                        <Button type="submit" disabled={loading} className={`w-full h-12 rounded-xl text-white font-bold shadow-sm ${themeConfig.button}`}>
+                        <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl font-bold shadow-sm">
                             {loading ? <Loader2 className="animate-spin w-5 h-5 mx-auto"/> : (isLogin ? "Accedi" : "Registrati")}
                         </Button>
                     </form>
 
-                    <div className="h-[1px] bg-slate-200 w-full relative my-8">
-                        <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-white px-4 text-xs font-bold text-slate-400 tracking-wider">OPPURE</span>
+                    <div className="h-[1px] bg-border w-full relative my-8">
+                        <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-card px-4 text-xs font-bold text-muted-foreground tracking-wider">OPPURE</span>
                     </div>
 
-                    <form onSubmit={handleChildCodeSubmit} className="space-y-4 bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
-                        <label className="text-sm font-bold text-blue-900 block text-center">App Studente: Codice Magico</label>
-                        <p className="text-xs text-blue-600 text-center mb-2">Utilizza il codice generato dall'app genitore</p>
+                    <form onSubmit={handleChildCodeSubmit} className="space-y-4 bg-primary/5 p-5 rounded-2xl border border-primary/20">
+                        <label className="text-sm font-bold text-foreground block text-center">App Studente: Codice Magico</label>
+                        <p className="text-xs text-primary text-center mb-2">Utilizza il codice generato dall'app genitore</p>
                         <div className="relative">
-                            <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400" />
+                            <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/60" />
                             <input
                                 placeholder="ES. LUNA42" required value={childCode} onChange={e => setChildCode(e.target.value.toUpperCase())} maxLength={10}
-                                className="w-full pl-11 pr-4 py-3 rounded-xl bg-white border border-blue-200 text-blue-900 placeholder-blue-300 focus:border-blue-500 outline-none text-center font-mono uppercase tracking-widest font-bold shadow-sm"
+                                className="w-full pl-11 pr-4 py-3 rounded-xl bg-background border border-primary/20 text-foreground placeholder-muted-foreground focus:border-primary outline-none text-center font-mono uppercase tracking-widest font-bold shadow-sm"
                             />
                         </div>
-                        <Button variant="secondary" type="submit" disabled={loading || !childCode} className="w-full h-11 rounded-xl bg-blue-100 text-blue-700 hover:bg-blue-200 font-bold">
+                        <Button variant="secondary" type="submit" disabled={loading || !childCode} className="w-full h-11 rounded-xl font-bold">
                             Entra Studente <ArrowRight className="ml-2 w-4 h-4"/>
                         </Button>
                     </form>
                 </div>
             ) : (
-                // Adult Flow
                 <form onSubmit={handleAdultSubmit} className="space-y-4">
                     {!isLogin && (
                         <>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Nome</label>
+                                <label className={labelSmClass}>Nome</label>
                                 <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                                    <input required value={firstName} onChange={e => setFirstName(e.target.value)}
-                                        className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-sm text-slate-900 ${themeConfig.border} transition-colors`} />
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                    <input required value={firstName} onChange={e => setFirstName(e.target.value)} className={inputSmClass} />
                                 </div>
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Cognome</label>
+                                <label className={labelSmClass}>Cognome</label>
                                 <input required value={lastName} onChange={e => setLastName(e.target.value)}
-                                    className={`w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-sm text-slate-900 ${themeConfig.border} transition-colors`} />
+                                    className="w-full px-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-foreground focus:border-primary transition-colors" />
                             </div>
                         </div>
 
                         <div>
-                            <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Nome Istituto / Università</label>
+                            <label className={labelSmClass}>Nome Istituto / Università</label>
                             <div className="relative">
-                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <input required value={schoolName} onChange={e => setSchoolName(e.target.value)} placeholder="Es. Liceo Da Vinci / La Sapienza"
-                                    className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-sm text-slate-900 ${themeConfig.border} transition-colors`} />
+                                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-foreground placeholder-muted-foreground focus:border-primary transition-colors" />
                             </div>
                         </div>
 
                         <div className="grid grid-cols-3 gap-3">
                             <div className="col-span-1">
-                                <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Età</label>
+                                <label className={labelSmClass}>Età</label>
                                 <input required type="number" min="14" max="99" value={age} onChange={e => setAge(e.target.value)} placeholder="Anni"
-                                    className={`w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-sm text-center text-slate-900 ${themeConfig.border} transition-colors`} />
+                                    className="w-full px-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-center text-foreground placeholder-muted-foreground focus:border-primary transition-colors" />
                             </div>
                             <div className="col-span-2">
-                                <label className="text-xs font-semibold text-slate-600 mb-1.5 block">Città</label>
+                                <label className={labelSmClass}>Città</label>
                                 <div className="relative">
-                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                                     <input
                                         ref={locationInputRef}
-                                        className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none text-sm text-slate-900 placeholder-slate-400 ${themeConfig.border} transition-colors`}
+                                        className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-foreground placeholder-muted-foreground focus:border-primary transition-colors"
                                         placeholder="Ricerca..."
                                         required
                                         type="text"
@@ -425,24 +405,22 @@ const Auth = () => {
                     )}
 
                     <div>
-                        <label className="text-sm font-semibold text-slate-700 block mb-1.5">Email</label>
+                        <label className={labelClass}>Email</label>
                         <div className="relative">
-                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                            <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                                className={`w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 outline-none ${themeConfig.border} transition-colors`} />
+                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} className={inputClass} />
                         </div>
                     </div>
 
                     <div>
-                        <label className="text-sm font-semibold text-slate-700 block mb-1.5">Password</label>
+                        <label className={labelClass}>Password</label>
                         <div className="relative">
-                            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                            <input type="password" required value={password} onChange={e => setPassword(e.target.value)} minLength={6}
-                                className={`w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 outline-none ${themeConfig.border} transition-colors`} />
+                            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <input type="password" required value={password} onChange={e => setPassword(e.target.value)} minLength={6} className={inputClass} />
                         </div>
                     </div>
 
-                    <Button type="submit" disabled={loading} className={`w-full h-12 rounded-xl text-white font-bold shadow-sm mt-4 transition-all ${themeConfig.button}`}>
+                    <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl font-bold shadow-sm mt-4 transition-all">
                         {loading ? <Loader2 className="animate-spin w-5 h-5 mx-auto"/> : (isLogin ? "Accedi all'Account" : "Termina Iscrizione")}
                     </Button>
                 </form>
@@ -453,16 +431,16 @@ const Auth = () => {
         {/* Social SSO Placeholders */}
         <div className="mt-8 space-y-3">
              <div className="relative flex items-center mb-6">
-                <div className="flex-grow border-t border-slate-200"></div>
-                <span className="flex-shrink-0 mx-4 text-xs font-semibold text-slate-400 uppercase tracking-widest">Oppure rapido</span>
-                <div className="flex-grow border-t border-slate-200"></div>
+                <div className="flex-grow border-t border-border"></div>
+                <span className="flex-shrink-0 mx-4 text-xs font-semibold text-muted-foreground uppercase tracking-widest">Oppure rapido</span>
+                <div className="flex-grow border-t border-border"></div>
             </div>
             <div className="flex gap-3">
-                <Button type="button" variant="outline" onClick={() => handleSocialPlaceholder("Google")} className="w-full h-11 bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-medium rounded-xl shadow-sm">
-                    <Chrome className="w-4 h-4 mr-2 text-rose-500" /> Google
+                <Button type="button" variant="outline" onClick={() => handleSocialPlaceholder("Google")} className="w-full h-11 font-medium rounded-xl shadow-sm">
+                    <Chrome className="w-4 h-4 mr-2" /> Google
                 </Button>
-                <Button type="button" variant="outline" onClick={() => handleSocialPlaceholder("Azar Group")} className="w-full h-11 bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-medium rounded-xl shadow-sm">
-                    <Globe className="w-4 h-4 mr-2 text-indigo-500" /> Azar Client
+                <Button type="button" variant="outline" onClick={() => handleSocialPlaceholder("Azar Group")} className="w-full h-11 font-medium rounded-xl shadow-sm">
+                    <Globe className="w-4 h-4 mr-2" /> Azar Client
                 </Button>
             </div>
         </div>
@@ -471,11 +449,11 @@ const Auth = () => {
         {isLogin && !isMinorRole && (
           <ForgotPasswordInline />
         )}
-        <div className="mt-6 text-center text-sm border-t border-slate-100 pt-6">
-            <span className="text-slate-500">{isLogin ? "Prima volta in InSchool?" : "Hai già un account?"}</span>
+        <div className="mt-6 text-center text-sm border-t border-border pt-6">
+            <span className="text-muted-foreground">{isLogin ? "Prima volta in InSchool?" : "Hai già un account?"}</span>
             <button
                 onClick={() => setIsLogin(!isLogin)}
-                className={`ml-2 font-bold transition-colors ${themeConfig.text}`}
+                className="ml-2 font-bold transition-colors text-primary hover:text-primary/80"
             >
                 {isLogin ? "Registrati ora" : "Accedi adesso"}
             </button>
@@ -484,7 +462,7 @@ const Auth = () => {
         {/* Go back */}
         <button
             onClick={() => navigate("/")}
-            className="mt-6 text-xs text-slate-400 hover:text-slate-600 block mx-auto transition-colors font-medium"
+            className="mt-6 text-xs text-muted-foreground hover:text-foreground block mx-auto transition-colors font-medium"
         >
             ← Torna alla Home
         </button>
