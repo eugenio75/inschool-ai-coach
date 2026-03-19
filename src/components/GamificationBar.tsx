@@ -136,7 +136,7 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
       const incompleteTasks = tasks.filter((t: any) => !t.completed);
       
       if (incompleteTasks.length === 0) {
-        toast({ title: "Nessun compito disponibile", description: "Chiedi al genitore di aggiungere dei compiti! 📚" });
+        toast({ title: "Nessun compito disponibile", description: "Chiedi al genitore di aggiungere dei compiti." });
         return;
       }
       
