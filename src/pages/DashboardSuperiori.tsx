@@ -292,10 +292,7 @@ export default function DashboardSuperiori() {
               <span className="font-bold text-orange-600">{streak}</span>
               <span className="text-xs text-orange-500 hidden sm:block">giorni</span>
             </div>
-            <button onClick={() => { signOut(); navigate("/"); }}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white transition-colors">
-              <LogOut className="w-4 h-4" />
-            </button>
+            <LogoutButton showLabel />
           </div>
         </motion.div>
 
