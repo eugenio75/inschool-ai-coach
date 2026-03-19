@@ -406,9 +406,9 @@ export default function DashboardDocente() {
           {loadingVerifiche ? (
             <div className="space-y-2">{[1, 2].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
           ) : verificheSalvate.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center">
-              <FileText className="w-7 h-7 text-slate-200 mx-auto mb-2" />
-              <p className="text-sm text-slate-500">Nessuna verifica salvata ancora</p>
+            <div className="bg-card border border-border rounded-2xl p-6 text-center">
+              <FileText className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Nessuna verifica salvata ancora</p>
             </div>
           ) : (
             <div className="space-y-2">
