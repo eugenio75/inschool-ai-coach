@@ -324,7 +324,7 @@ export default function DashboardDocente() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
             <div>
-              <Label className="text-xs text-slate-500 mb-1 block">Tipo domande</Label>
+              <Label className="text-xs text-muted-foreground mb-1 block">Tipo domande</Label>
               <Select value={genTipo} onValueChange={setGenTipo}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
