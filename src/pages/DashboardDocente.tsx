@@ -209,10 +209,7 @@ export default function DashboardDocente() {
               ))}
             </div>
           </div>
-          <button onClick={() => { signOut(); navigate("/"); }}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white transition-colors shrink-0 mt-1">
-            <LogOut className="w-4 h-4" />
-          </button>
+          <LogoutButton showLabel />
         </motion.div>
 
         {/* CLASSI */}
