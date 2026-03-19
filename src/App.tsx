@@ -31,6 +31,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Security = lazy(() => import("./pages/Security"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 
 const queryClient = new QueryClient();
 
