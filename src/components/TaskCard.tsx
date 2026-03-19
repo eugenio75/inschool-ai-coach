@@ -114,7 +114,7 @@ export const TaskCard = ({ task, onClick, onDelete }: TaskCardProps) => {
             {task.completed ? (
               <div className="flex items-center gap-1 text-primary text-xs font-medium bg-primary/10 px-2 py-0.5 rounded-full">
                 <Check className="w-3.5 h-3.5" />
-                Fatto ✓
+                Fatto
               </div>
             ) : (
               <div className="flex items-center gap-1 text-primary text-xs font-medium">

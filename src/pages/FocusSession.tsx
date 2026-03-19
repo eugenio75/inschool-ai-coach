@@ -27,11 +27,11 @@ const emotionOptions = [
 ];
 
 const breakMessages = [
-  "Hai lavorato bene! Riposa gli occhi 👀",
-  "Pausa meritata! Alzati e fai due passi 🚶",
-  "Bevi un po' d'acqua e rilassati 💧",
-  "Guarda fuori dalla finestra per un momento 🌿",
-  "Fai qualche respiro profondo 🌬️",
+  "Hai lavorato bene! Riposa gli occhi.",
+  "Pausa meritata! Alzati e fai due passi.",
+  "Bevi un po' d'acqua e rilassati.",
+  "Guarda fuori dalla finestra per un momento.",
+  "Fai qualche respiro profondo.",
 ];
 
 const SESSION_KEY_PREFIX = "focus-session-";

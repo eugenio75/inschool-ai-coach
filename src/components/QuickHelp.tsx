@@ -174,7 +174,7 @@ export const QuickHelpModal = ({ open, onClose }: { open: boolean; onClose: () =
                       onClick={() => handleModeSelect(m.id)}
                       className="flex items-center gap-3 px-5 py-4 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all text-left w-full"
                     >
-                      <span className="text-2xl">{m.emoji}</span>
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0"><m.icon className="w-5 h-5 text-primary" /></div>
                       <span className="text-sm font-medium text-foreground">{m.label}</span>
                     </button>
                   ))}

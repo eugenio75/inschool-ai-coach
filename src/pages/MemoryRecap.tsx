@@ -544,7 +544,7 @@ const MemoryRecap = () => {
             <span className="font-display text-lg font-semibold text-foreground">Memoria e Ripasso</span>
           </div>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
-            <h1 className="font-display text-2xl font-bold text-foreground mb-1">Quello che hai imparato 🧠</h1>
+            <h1 className="font-display text-2xl font-bold text-foreground mb-1">Quello che hai imparato</h1>
             <p className="text-muted-foreground text-sm">Organizzato per materia, giorno per giorno</p>
           </motion.div>
 

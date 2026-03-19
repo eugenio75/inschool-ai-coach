@@ -668,7 +668,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder={isRecording ? "🎙️ Sto ascoltando..." : pendingImage ? "Aggiungi un messaggio..." : "Scrivi qui..."}
+                        placeholder={isRecording ? "Sto ascoltando..." : pendingImage ? "Aggiungi un messaggio..." : "Scrivi qui..."}
                         disabled={isTyping}
                         className={`flex-1 min-w-0 bg-muted/50 border rounded-xl px-3 py-2.5 text-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 transition-all ${isRecording ? "border-destructive/50 bg-destructive/5" : "border-border"}`}
                       />

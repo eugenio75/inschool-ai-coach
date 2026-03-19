@@ -284,7 +284,7 @@ export const MathNotepad = ({ open, onClose }: MathNotepadProps) => {
                   }`}
                 >
                   <div className="flex items-start gap-2">
-                    <span className="text-base shrink-0 mt-0.5">{feedback.correct ? "✅" : "🔄"}</span>
+                    <span className="shrink-0 mt-0.5">{feedback.correct ? <CheckCircle2 className="w-4 h-4 text-primary" /> : <RotateCcw className="w-4 h-4 text-clay-dark" />}</span>
                     <p>{feedback.message}</p>
                   </div>
                 </motion.div>

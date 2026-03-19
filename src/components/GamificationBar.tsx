@@ -228,7 +228,7 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
 export const BadgeGrid = () => {
   return (
     <div className="grid grid-cols-3 gap-3">
-      <p className="col-span-3 text-center text-xs text-muted-foreground py-4">I badge arriveranno presto! 🏅</p>
+      <p className="col-span-3 text-center text-xs text-muted-foreground py-4">I badge arriveranno presto.</p>
     </div>
   );
 };

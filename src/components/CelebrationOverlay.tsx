@@ -234,7 +234,7 @@ export const StreakShieldBadge = ({ shields }: { shields: number }) => {
       className="flex items-center gap-1 bg-secondary/20 rounded-xl px-2 py-1"
       title={`${shields} scud${shields === 1 ? 'o' : 'i'} protezione streak`}
     >
-      <span className="text-xs">🛡️</span>
+      <Shield className="w-3.5 h-3.5 text-secondary" />
       <span className="text-[10px] font-bold text-secondary">{shields}</span>
     </motion.div>
   );
