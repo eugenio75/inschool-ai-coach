@@ -11,10 +11,12 @@ interface Message {
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
+import { Lightbulb, Compass, Target } from "lucide-react";
+
 const quickModes = [
-  { id: "explain", emoji: "💡", label: "Spiegami una cosa" },
-  { id: "guide", emoji: "🧭", label: "Guidami passo passo" },
-  { id: "quiz", emoji: "🎯", label: "Mini quiz veloce" },
+  { id: "explain", icon: Lightbulb, label: "Spiegami una cosa" },
+  { id: "guide", icon: Compass, label: "Guidami passo passo" },
+  { id: "quiz", icon: Target, label: "Mini quiz veloce" },
 ];
 
 export const QuickHelpButton = ({ onClick }: { onClick: () => void }) => (
@@ -118,7 +120,7 @@ export const QuickHelpModal = ({ open, onClose }: { open: boolean; onClose: () =
         }
       }
     } catch (err) {
-      setMessages(prev => [...prev, { role: "assistant", text: "Mi dispiace, c'è stato un problema. Riprova! 😊" }]);
+      setMessages(prev => [...prev, { role: "assistant", text: "Mi dispiace, c'è stato un problema. Riprova!" }]);
     } finally {
       setLoading(false);
       inputRef.current?.focus();
@@ -128,9 +130,9 @@ export const QuickHelpModal = ({ open, onClose }: { open: boolean; onClose: () =
   const handleModeSelect = (modeId: string) => {
     setMode(modeId);
     const prompts: Record<string, string> = {
-      explain: "Ciao! Di cosa hai bisogno che ti spieghi? Dimmi l'argomento o la materia 📚",
-      guide: "Ciao! Dimmi cosa devi fare e ti guido passo per passo 🧭",
-      quiz: "Ciao! Su che argomento vuoi fare un mini quiz veloce? 🎯",
+      explain: "Ciao! Di cosa hai bisogno che ti spieghi? Dimmi l'argomento o la materia.",
+      guide: "Ciao! Dimmi cosa devi fare e ti guido passo per passo.",
+      quiz: "Ciao! Su che argomento vuoi fare un mini quiz veloce?",
     };
     setMessages([{ role: "assistant", text: prompts[modeId] || prompts.explain }]);
   };
@@ -170,9 +172,9 @@ export const QuickHelpModal = ({ open, onClose }: { open: boolean; onClose: () =
                     <button
                       key={m.id}
                       onClick={() => handleModeSelect(m.id)}
-                      className="flex items-center gap-3 px-5 py-4 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all text-left"
+                      className="flex items-center gap-3 px-5 py-4 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all text-left w-full"
                     >
-                      <span className="text-2xl">{m.emoji}</span>
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0"><m.icon className="w-5 h-5 text-primary" /></div>
                       <span className="text-sm font-medium text-foreground">{m.label}</span>
                     </button>
                   ))}

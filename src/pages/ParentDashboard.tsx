@@ -233,7 +233,7 @@ const ParentDashboard = () => {
             <div className="flex gap-2 mb-6 flex-wrap">
               {children.map((child) => (
                 <button key={child.id} onClick={() => setSelectedChild(child.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${selectedChild === child.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>
-                  <span>{child.avatar_emoji || "🧒"}</span> {child.name}
+                  <span className="w-6 h-6 rounded-md bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">{child.name?.charAt(0)?.toUpperCase() || "S"}</span> {child.name}
                 </button>
               ))}
             </div>
@@ -277,7 +277,7 @@ const ParentDashboard = () => {
             <div className="grid grid-cols-3 gap-3 text-center">
               <div><p className="text-lg font-display font-bold text-sage-dark">{gamification.focus_points || 0}</p><p className="text-xs text-muted-foreground">Focus</p></div>
               <div><p className="text-lg font-display font-bold text-clay-dark">{gamification.autonomy_points || 0}</p><p className="text-xs text-muted-foreground">Autonomia</p></div>
-              <div><p className="text-lg font-display font-bold text-terracotta">🔥 {gamification.streak || 0}</p><p className="text-xs text-muted-foreground">Streak</p></div>
+              <div><p className="text-lg font-display font-bold text-terracotta">{gamification.streak || 0}</p><p className="text-xs text-muted-foreground">Streak</p></div>
             </div>
           </div>
         </div></div>

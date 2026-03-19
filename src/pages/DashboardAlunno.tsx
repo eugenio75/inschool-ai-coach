@@ -158,7 +158,7 @@ const DashboardAlunno = () => {
   };
 
   const name = profile?.name || "Studente";
-  const avatar = profile?.avatar_emoji || profile?.avatarEmoji || "🧒";
+  const avatarName = profile?.name || "S";
   const completedCount = tasks.filter((t) => t.completed).length;
   const totalMinutes = tasks.reduce((a: number, t: any) => a + (t.estimated_minutes || 0), 0);
 
@@ -169,8 +169,8 @@ const DashboardAlunno = () => {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 sm:pb-8 font-sans">
-      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 pt-5 sm:pt-6 pb-6 sm:pb-8 shadow-sm">
+    <div className="min-h-screen bg-background pb-20 sm:pb-8 font-sans">
+      <div className="bg-card border-b border-border px-4 sm:px-6 pt-5 sm:pt-6 pb-6 sm:pb-8 shadow-sm">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <div className="flex items-center gap-2">
@@ -181,8 +181,8 @@ const DashboardAlunno = () => {
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => navigate("/memory")} className="w-9 h-9 rounded-xl bg-clay-light flex items-center justify-center text-clay-dark hover:bg-accent transition-colors" title="Memoria e ripasso"><Brain className="w-4 h-4" /></button>
-              <button onClick={() => navigate("/student-profile")} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors" title="Il mio profilo">
-                <span className="text-lg">{avatar}</span>
+              <button onClick={() => navigate("/student-profile")} className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-accent transition-colors text-xs font-bold text-primary" title="Il mio profilo">
+                {avatarName.charAt(0).toUpperCase()}
               </button>
               {isChild && (
                 <button onClick={handleChildLogout} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors" title="Esci">
@@ -195,8 +195,8 @@ const DashboardAlunno = () => {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-1">Ciao {name}! 👋</h1>
-                <p className="text-sm sm:text-base text-muted-foreground">{tasks.length > 0 ? "Ecco i tuoi compiti. Da dove vuoi partire?" : "Non ci sono compiti per oggi! 🎉"}</p>
+                <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-1">Ciao {name}!</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">{tasks.length > 0 ? "Ecco i tuoi compiti. Da dove vuoi partire?" : "Non ci sono compiti per oggi."}</p>
               </div>
               {isChild && <QuickHelpButton onClick={() => setQuickHelpOpen(true)} />}
             </div>

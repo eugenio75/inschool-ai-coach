@@ -212,22 +212,22 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
 
     if (isStudyTask) {
       // Study tasks: go directly to interrogation mode
-      initial = `Ciao ${name}! 📖 Oggi studiamo "${taskContext?.title || taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""}. Ho il testo della pagina e ti farò delle domande per aiutarti a capire e memorizzare tutto. Partiamo!`;
+      initial = `Ciao ${name}! Oggi studiamo "${taskContext?.title || taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""}. Ho il testo della pagina e ti farò delle domande per aiutarti a capire e memorizzare tutto. Partiamo!`;
       shouldAutoAnalyze = true;
     } else if (isPhotoTask && hasSourcePage) {
       const title = taskContext?.title || taskTitle || "";
-      initial = `Perfetto ${name}! Ho la pagina davanti${taskSubject ? ` di ${taskSubject}` : ""}. Lavoriamo su "${title}". Analizzo l'esercizio e ti preparo il ripasso... ⏳`;
+      initial = `Perfetto ${name}! Ho la pagina davanti${taskSubject ? ` di ${taskSubject}` : ""}. Lavoriamo su "${title}". Analizzo l'esercizio e ti preparo il ripasso...`;
       shouldAutoAnalyze = true;
     } else if (isPhotoTask) {
       initial = `Perfetto ${name}! Ho già il testo dell'attività${taskSubject ? ` di ${taskSubject}` : ""}. Partiamo da qui: ${taskContext?.description ? `"${taskContext.description}"` : `guardiamo insieme cosa chiede l'esercizio`}.`;
       shouldAutoAnalyze = true;
     } else if (isOralStudyTask) {
       if (emotion === "frustrated" || emotion === "worried") {
-        initial = `Capisco che può sembrare tanto, ${name}. Ma facciamo un passo alla volta — ti faccio io qualche domanda su "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""} per capire da dove partiamo. 📖`;
+        initial = `Capisco che può sembrare tanto, ${name}. Ma facciamo un passo alla volta — ti faccio io qualche domanda su "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""} per capire da dove partiamo.`;
       } else if (emotion === "tired") {
-        initial = `Sei stanco, ${name}, va bene. Facciamo una cosa leggera: ti faccio qualche domanda su "${taskTitle || "l'argomento"}" e vediamo cosa ricordi. Niente stress! 📖`;
+        initial = `Sei stanco, ${name}, va bene. Facciamo una cosa leggera: ti faccio qualche domanda su "${taskTitle || "l'argomento"}" e vediamo cosa ricordi. Niente stress!`;
       } else {
-        initial = `Perfetto ${name}! Oggi studiamo "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""}. 📖 Ti faccio subito qualche domanda per capire cosa sai già — poi approfondiamo dove serve!`;
+        initial = `Perfetto ${name}! Oggi studiamo "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""}. Ti faccio subito qualche domanda per capire cosa sai già — poi approfondiamo dove serve!`;
       }
       shouldAutoAnalyze = true;
     } else if (emotion === "frustrated" || emotion === "worried") {
@@ -243,7 +243,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     } else if (isReadingComprehensionTask) {
       initial = `Perfetto ${name}! Facciamo comprensione del testo. Raccontami in 2 frasi cosa hai letto e poi ti faccio domande mirate.`;
     } else if (taskTitle?.toLowerCase().includes("legg") || taskTitle?.toLowerCase().includes("lettura") || taskTitle?.toLowerCase().includes("libro")) {
-      initial = `Perfetto ${name}! Vedo che devi leggere. 📖 Quale libro o capitolo stai leggendo? Raccontami un po'!`;
+      initial = `Perfetto ${name}! Vedo che devi leggere. Quale libro o capitolo stai leggendo? Raccontami un po'!`;
     } else {
       initial = `Perfetto ${name}, iniziamo! ${taskTitle ? `Stiamo lavorando su "${taskTitle}"${taskSubject ? ` di ${taskSubject}` : ""}.` : ""} Cosa dice la consegna?`;
     }
@@ -442,7 +442,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     if (lower.match(/indizio|hint|suggerimento/))
       return "Un piccolo indizio: guarda bene i dati che hai. Cosa noti? C'è qualcosa che già conosci?";
     if (lower.match(/capito|ho capito|fatto/))
-      return "Fantastico! Spiegami con parole tue cosa hai capito. Così vediamo se ci siamo! 🌱";
+      return "Fantastico! Spiegami con parole tue cosa hai capito. Così vediamo se ci siamo!";
     return "Partiamo da un passo preciso: cosa ti chiede esattamente la consegna?";
   };
 
@@ -453,7 +453,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     const newMsg: ChatMessage = {
       id: `student-${Date.now()}`,
       role: "student",
-      text: trimmed || (pendingImage ? "📷 Ho fotografato i miei esercizi" : ""),
+      text: trimmed || (pendingImage ? "Ho fotografato i miei esercizi" : ""),
       imageUrl: pendingImage || undefined,
     };
     const updated = [...messages, newMsg];
@@ -668,7 +668,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder={isRecording ? "🎙️ Sto ascoltando..." : pendingImage ? "Aggiungi un messaggio..." : "Scrivi qui..."}
+                        placeholder={isRecording ? "Sto ascoltando..." : pendingImage ? "Aggiungi un messaggio..." : "Scrivi qui..."}
                         disabled={isTyping}
                         className={`flex-1 min-w-0 bg-muted/50 border rounded-xl px-3 py-2.5 text-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 transition-all ${isRecording ? "border-destructive/50 bg-destructive/5" : "border-border"}`}
                       />

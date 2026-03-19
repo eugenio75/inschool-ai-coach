@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Smile, Frown, Minus, Shuffle, Zap, Sun, Moon, AlertTriangle, Star, MessageSquare, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { saveEmotionalCheckin } from "@/lib/database";
 import { getChildSession } from "@/lib/childSession";
@@ -50,18 +50,18 @@ const optionalQuestions = [
 
 // Answer options for structured responses
 const experienceAnswers = [
-  { id: "smile", emoji: "😊", label: "Qualcosa di bello" },
-  { id: "hard", emoji: "😓", label: "Un po' complicata" },
-  { id: "normal", emoji: "😐", label: "Normale" },
-  { id: "mixed", emoji: "🤷", label: "Un po' e un po'" },
+  { id: "smile", icon: Smile, label: "Qualcosa di bello" },
+  { id: "hard", icon: Frown, label: "Un po' complicata" },
+  { id: "normal", icon: Minus, label: "Normale" },
+  { id: "mixed", icon: Shuffle, label: "Un po' e un po'" },
 ];
 
 function getStateAnswers(gender?: string) {
   return [
-    { id: "charged", emoji: "⚡", label: g(gender, "Carico!", "Carica!") },
-    { id: "calm", emoji: "😌", label: g(gender, "Tranquillo", "Tranquilla") },
-    { id: "tired", emoji: "😴", label: `Un po' ${g(gender, "stanco", "stanca")}` },
-    { id: "nervous", emoji: "😬", label: `Un po' ${g(gender, "agitato", "agitata")}` },
+    { id: "charged", icon: Zap, label: g(gender, "Carico!", "Carica!") },
+    { id: "calm", icon: Sun, label: g(gender, "Tranquillo", "Tranquilla") },
+    { id: "tired", icon: Moon, label: `Un po' ${g(gender, "stanco", "stanca")}` },
+    { id: "nervous", icon: AlertTriangle, label: `Un po' ${g(gender, "agitato", "agitata")}` },
   ];
 }
 
@@ -195,12 +195,12 @@ const EmotionalCheckin = () => {
             transition={spring}
             className="max-w-sm w-full text-center"
           >
-            <motion.div
+           <motion.div
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="text-5xl mb-6"
+              className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6"
             >
-              👋
+              <Smile className="w-8 h-8 text-primary" />
             </motion.div>
             <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-2">
               Ciao {name}!
@@ -215,13 +215,13 @@ const EmotionalCheckin = () => {
                   onClick={() => handleAnswer(q1, opt.id, opt.label)}
                   className="flex flex-col items-center gap-2 px-4 py-4 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all"
                 >
-                  <span className="text-2xl">{opt.emoji}</span>
+                  <opt.icon className="w-6 h-6 text-primary" />
                   <span className="text-xs font-medium text-foreground">{opt.label}</span>
                 </button>
               ))}
             </div>
             <button onClick={handleSkip} className="mt-6 text-xs text-muted-foreground hover:text-foreground">
-              Salta per oggi →
+              Salta per oggi
             </button>
           </motion.div>
         )}
@@ -235,7 +235,7 @@ const EmotionalCheckin = () => {
             transition={spring}
             className="max-w-sm w-full text-center"
           >
-            <div className="text-4xl mb-6">🌟</div>
+            <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-6"><Star className="w-7 h-7 text-accent-foreground" /></div>
             <h2 className="font-display text-lg sm:text-xl font-bold text-foreground mb-2">
               Perfetto!
             </h2>
@@ -249,12 +249,12 @@ const EmotionalCheckin = () => {
                   onClick={() => handleAnswer(q2, opt.id, opt.label)}
                   className="flex flex-col items-center gap-2 px-4 py-4 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all"
                 >
-                  <span className="text-2xl">{opt.emoji}</span>
+                  <opt.icon className="w-6 h-6 text-primary" />
                   <span className="text-xs font-medium text-foreground">{opt.label}</span>
                 </button>
               ))}
             </div>
-            <button onClick={handleSkip} className="mt-6 text-xs text-muted-foreground hover:text-foreground">
+            <button onClick={handleSkip} className="mt-6 text-xs text-muted-foreground hover:text-foreground transition-colors">
               Salta →
             </button>
           </motion.div>
@@ -269,7 +269,7 @@ const EmotionalCheckin = () => {
             transition={spring}
             className="max-w-sm w-full text-center"
           >
-            <div className="text-4xl mb-6">💬</div>
+            <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-6"><MessageSquare className="w-7 h-7 text-muted-foreground" /></div>
             <h2 className="font-display text-lg font-bold text-foreground mb-2">
               Un'ultima cosa...
             </h2>
@@ -288,7 +288,7 @@ const EmotionalCheckin = () => {
               className="w-full bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              {freeText ? "Invia e inizia!" : "Vai ai compiti! 🚀"}
+              {freeText ? "Invia e inizia!" : "Vai ai compiti"} <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
           </motion.div>
         )}

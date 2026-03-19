@@ -48,8 +48,9 @@ export const GamificationBar = () => {
         </div>
         <StreakShieldBadge shields={shields} />
         {shields === 0 && streak > 0 && daysToShield <= 3 && (
-          <span className="text-[10px] text-muted-foreground">
-            🛡️ tra {daysToShield} {daysToShield === 1 ? 'giorno' : 'giorni'}
+          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            tra {daysToShield} {daysToShield === 1 ? 'giorno' : 'giorni'}
           </span>
         )}
       </div>
@@ -135,7 +136,7 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
       const incompleteTasks = tasks.filter((t: any) => !t.completed);
       
       if (incompleteTasks.length === 0) {
-        toast({ title: "Nessun compito disponibile", description: "Chiedi al genitore di aggiungere dei compiti! 📚" });
+        toast({ title: "Nessun compito disponibile", description: "Chiedi al genitore di aggiungere dei compiti." });
         return;
       }
       
@@ -167,7 +168,7 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
   if (missions.length === 0) {
     return (
       <div className="text-center py-3">
-        <p className="text-xs text-muted-foreground">Le missioni di oggi arriveranno presto! 🌱</p>
+        <p className="text-xs text-muted-foreground">Le missioni di oggi arriveranno presto.</p>
       </div>
     );
   }
@@ -227,7 +228,7 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
 export const BadgeGrid = () => {
   return (
     <div className="grid grid-cols-3 gap-3">
-      <p className="col-span-3 text-center text-xs text-muted-foreground py-4">I badge arriveranno presto! 🏅</p>
+      <p className="col-span-3 text-center text-xs text-muted-foreground py-4">I badge arriveranno presto.</p>
     </div>
   );
 };

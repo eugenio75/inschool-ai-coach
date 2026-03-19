@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Pause, Play, X, Loader2, Coffee } from "lucide-react";
+import { ArrowLeft, Pause, Play, X, Loader2, Coffee, Star, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { GuidanceCard, ChatMessage } from "@/components/GuidanceCard";
@@ -16,20 +16,22 @@ type Phase = "checkin" | "breathing" | "focus" | "break" | "recap";
 const BREAK_SECONDS = 5 * 60; // 5 minutes
 const MAX_POMODORO_CYCLES = 3;
 
+import { Smile, Moon, AlertTriangle, Minus, Frown } from "lucide-react";
+
 const emotionOptions = [
-  { id: "ready", emoji: "😊", label: "Pronto" },
-  { id: "tired", emoji: "😴", label: "Stanco" },
-  { id: "worried", emoji: "😟", label: "Preoccupato" },
-  { id: "bored", emoji: "😐", label: "Annoiato" },
-  { id: "frustrated", emoji: "😤", label: "Frustrato" },
+  { id: "ready", icon: Smile, label: "Pronto" },
+  { id: "tired", icon: Moon, label: "Stanco" },
+  { id: "worried", icon: AlertTriangle, label: "Preoccupato" },
+  { id: "bored", icon: Minus, label: "Annoiato" },
+  { id: "frustrated", icon: Frown, label: "Frustrato" },
 ];
 
 const breakMessages = [
-  "Hai lavorato bene! Riposa gli occhi 👀",
-  "Pausa meritata! Alzati e fai due passi 🚶",
-  "Bevi un po' d'acqua e rilassati 💧",
-  "Guarda fuori dalla finestra per un momento 🌿",
-  "Fai qualche respiro profondo 🌬️",
+  "Hai lavorato bene! Riposa gli occhi.",
+  "Pausa meritata! Alzati e fai due passi.",
+  "Bevi un po' d'acqua e rilassati.",
+  "Guarda fuori dalla finestra per un momento.",
+  "Fai qualche respiro profondo.",
 ];
 
 const SESSION_KEY_PREFIX = "focus-session-";
@@ -414,7 +416,7 @@ const FocusSession = () => {
                 <div className="flex flex-wrap justify-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
                   {emotionOptions.map((e) => (
                     <button key={e.id} onClick={() => setEmotion(e.id)} className={`flex flex-col items-center gap-1 px-3 py-2.5 rounded-2xl border transition-all ${emotion === e.id ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}>
-                      <span className="text-xl sm:text-2xl">{e.emoji}</span>
+                      <e.icon className="w-6 h-6 text-primary" />
                       <span className="text-xs font-medium text-foreground">{e.label}</span>
                     </button>
                   ))}
@@ -435,7 +437,7 @@ const FocusSession = () => {
 
             {phase === "recap" && (
               <motion.div key="recap" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={spring} className="text-center max-w-md w-full">
-                <div className="w-16 h-16 rounded-2xl bg-sage-light flex items-center justify-center mx-auto mb-6"><span className="text-3xl">🌟</span></div>
+                <div className="w-16 h-16 rounded-2xl bg-sage-light flex items-center justify-center mx-auto mb-6"><Star className="w-8 h-8 text-primary" /></div>
                 <h2 className="font-display text-2xl font-bold text-foreground mb-2">Bravissimo, {studentName}!</h2>
                 <p className="text-muted-foreground mb-2">
                   Hai lavorato per {minutesWorked} minuti su {taskTitle}
@@ -463,15 +465,15 @@ const FocusSession = () => {
                     <p className="text-[10px] text-terracotta/80">costanza</p>
                   </div>
                 </div>
-                <p className="text-sm text-sage-dark font-medium mb-4">Hai dimostrato costanza e impegno. 🌱</p>
+                <p className="text-sm text-sage-dark font-medium mb-4">Hai dimostrato costanza e impegno.</p>
                 
                 {!extracting && (
-                  <p className="text-xs text-muted-foreground mb-4">I concetti studiati sono stati salvati in Memoria e Ripasso 🧠</p>
+                  <p className="text-xs text-muted-foreground mb-4">I concetti studiati sono stati salvati in Memoria e Ripasso.</p>
                 )}
                 
                 <div className="flex flex-col gap-3">
                   <Button onClick={() => navigate("/memory")} variant="outline" className="rounded-2xl py-5 border-border">
-                    <span className="mr-2">🧠</span> Vai a Memoria e Ripasso
+                    <Brain className="w-4 h-4 mr-2" /> Vai a Memoria e Ripasso
                   </Button>
                   <Button onClick={() => navigate(`/homework/${task?.id}`)} variant="outline" className="rounded-2xl py-5 border-border">Vedi dettagli compito</Button>
                   <Button onClick={() => navigate("/dashboard")} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5">Torna ai compiti</Button>

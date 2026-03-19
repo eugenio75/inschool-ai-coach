@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Star, Sparkles, BookOpen, Brain, Lightbulb, Trophy, Shield } from "lucide-react";
 
 const softColors = [
   "hsl(var(--primary))",
@@ -9,20 +10,20 @@ const softColors = [
 
 // Age-appropriate celebration messages
 const primaryMessages = [
-  { emoji: "🌟", text: "Ce l'hai fatta!" },
-  { emoji: "🎉", text: "Fantastico!" },
-  { emoji: "🌈", text: "Bravissimo!" },
-  { emoji: "🚀", text: "Che campione!" },
-  { emoji: "🦋", text: "Stupendo!" },
-  { emoji: "🌻", text: "Super lavoro!" },
+  { icon: Star, text: "Ce l'hai fatta!" },
+  { icon: Sparkles, text: "Fantastico!" },
+  { icon: Trophy, text: "Bravissimo!" },
+  { icon: Star, text: "Che campione!" },
+  { icon: Sparkles, text: "Stupendo!" },
+  { icon: Trophy, text: "Super lavoro!" },
 ];
 
 const middleMessages = [
-  { emoji: "✨", text: "Ottimo lavoro." },
-  { emoji: "📚", text: "Esercizio completato." },
-  { emoji: "🧠", text: "Ben fatto." },
-  { emoji: "🌱", text: "Un passo in più." },
-  { emoji: "💡", text: "Obiettivo raggiunto." },
+  { icon: Sparkles, text: "Ottimo lavoro." },
+  { icon: BookOpen, text: "Esercizio completato." },
+  { icon: Brain, text: "Ben fatto." },
+  { icon: Star, text: "Un passo in più." },
+  { icon: Lightbulb, text: "Obiettivo raggiunto." },
 ];
 
 function isPrimary(schoolLevel?: string): boolean {
@@ -145,16 +146,16 @@ export const CelebrationOverlay = ({ show, onComplete, message, points, schoolLe
             transition={{ duration: primary ? 0.5 : 0.6, ease: "easeOut" }}
             className="bg-card rounded-3xl shadow-lg px-8 py-6 text-center border border-border"
           >
-            <motion.span 
-              className={`block mb-2 ${primary ? "text-6xl" : "text-5xl"}`}
+            <motion.div 
+              className={`flex items-center justify-center mb-2 ${primary ? "w-16 h-16" : "w-14 h-14"} rounded-2xl bg-primary/10 mx-auto`}
               animate={primary ? { 
                 scale: [1, 1.2, 1],
                 rotate: [0, 10, -10, 0],
               } : {}}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              {celebration.emoji}
-            </motion.span>
+              <celebration.icon className={`${primary ? "w-8 h-8" : "w-7 h-7"} text-primary`} />
+            </motion.div>
             <p className={`font-display font-bold text-foreground ${primary ? "text-2xl" : "text-xl"}`}>
               {message || celebration.text}
             </p>
@@ -177,12 +178,12 @@ export const CelebrationOverlay = ({ show, onComplete, message, points, schoolLe
 
 // Social proof — cooperative, class-oriented, never competitive
 const socialProofMessages = [
-  "La tua classe ha completato 18 missioni questa settimana 📚",
-  "Insieme avete studiato per 3 ore oggi! 🌱",
-  "I tuoi compagni stanno lavorando sodo — unisciti a loro! 💪",
-  "La classe ha ripassato 12 concetti questa settimana 🧠",
-  "Oggi è un buon giorno per studiare insieme! 🌈",
-  "Insieme si impara meglio — la tua classe sta crescendo! ✨",
+  "La tua classe ha completato 18 missioni questa settimana",
+  "Insieme avete studiato per 3 ore oggi!",
+  "I tuoi compagni stanno lavorando sodo — unisciti a loro!",
+  "La classe ha ripassato 12 concetti questa settimana",
+  "Oggi è un buon giorno per studiare insieme!",
+  "Insieme si impara meglio — la tua classe sta crescendo!",
 ];
 
 export const SocialProofBanner = () => {
@@ -233,7 +234,7 @@ export const StreakShieldBadge = ({ shields }: { shields: number }) => {
       className="flex items-center gap-1 bg-secondary/20 rounded-xl px-2 py-1"
       title={`${shields} scud${shields === 1 ? 'o' : 'i'} protezione streak`}
     >
-      <span className="text-xs">🛡️</span>
+      <Shield className="w-3.5 h-3.5 text-secondary" />
       <span className="text-[10px] font-bold text-secondary">{shields}</span>
     </motion.div>
   );

@@ -127,7 +127,7 @@ const HomeworkDetail = () => {
                           </button>
                           {showHint === step.id && (
                             <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="text-xs text-clay-dark bg-clay-light/50 rounded-xl px-3 py-2 mt-2">
-                              💡 {step.hint}
+                              {step.hint}
                             </motion.p>
                           )}
                         </div>

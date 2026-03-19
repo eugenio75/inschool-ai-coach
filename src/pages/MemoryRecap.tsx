@@ -158,7 +158,7 @@ const ReviewChat = ({ item, onStrengthUpdate, onClose }: {
       }
     } catch (err) {
       console.error("Review error:", err);
-      setMessages(prev => [...prev, { role: "assistant", content: "Oops, c'è stato un problema. Riprova! 🌱" }]);
+      setMessages(prev => [...prev, { role: "assistant", content: "Oops, c'è stato un problema. Riprova!" }]);
     } finally {
       setIsTyping(false);
       setStreamingText("");
@@ -290,7 +290,7 @@ const RecapCard = ({ item, onUpdate, compact = false }: { item: any; onUpdate: (
             <div className="px-4 pb-4 space-y-3">
               {item.summary && (
                 <div className="bg-sage-light/50 rounded-xl px-4 py-3">
-                  <p className="text-xs font-medium text-sage-dark uppercase tracking-wider mb-1">📖 Quello che hai studiato</p>
+                  <p className="text-xs font-medium text-sage-dark uppercase tracking-wider mb-1">Quello che hai studiato</p>
                   <p className="text-sm text-foreground leading-relaxed">{item.summary}</p>
                 </div>
               )}
@@ -544,7 +544,7 @@ const MemoryRecap = () => {
             <span className="font-display text-lg font-semibold text-foreground">Memoria e Ripasso</span>
           </div>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
-            <h1 className="font-display text-2xl font-bold text-foreground mb-1">Quello che hai imparato 🧠</h1>
+            <h1 className="font-display text-2xl font-bold text-foreground mb-1">Quello che hai imparato</h1>
             <p className="text-muted-foreground text-sm">Organizzato per materia, giorno per giorno</p>
           </motion.div>
 

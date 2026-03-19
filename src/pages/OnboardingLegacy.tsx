@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
-const avatarOptions = ["🧒", "👦", "👧", "🧒🏻", "👦🏽", "👧🏾", "🦸", "🧙", "🦊", "🐱", "🐻", "🌟"];
+const avatarOptions = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
 
 const schoolLevels = [
   { id: "primaria-1-2", label: "Primaria 1ª-2ª" },
@@ -21,19 +21,19 @@ const schoolLevels = [
 const subjects = ["Italiano", "Matematica", "Scienze", "Storia", "Geografia", "Inglese", "Arte", "Musica", "Tecnologia"];
 
 const struggles = [
-  { id: "distraction", label: "Si distrae facilmente", emoji: "🦋" },
-  { id: "refusal", label: "Rifiuta di iniziare", emoji: "🛑" },
-  { id: "anxiety", label: "Ansia da prestazione", emoji: "😰" },
-  { id: "slowness", label: "È molto lento", emoji: "🐢" },
-  { id: "low-confidence", label: "Poca fiducia in sé", emoji: "🌧️" },
-  { id: "poor-memory", label: "Fatica a ricordare", emoji: "🧠" },
+  { id: "distraction", label: "Si distrae facilmente" },
+  { id: "refusal", label: "Rifiuta di iniziare" },
+  { id: "anxiety", label: "Ansia da prestazione" },
+  { id: "slowness", label: "È molto lento" },
+  { id: "low-confidence", label: "Poca fiducia in sé" },
+  { id: "poor-memory", label: "Fatica a ricordare" },
 ];
 
 const supportStyles = [
-  { id: "gentle", label: "Gentile e paziente", emoji: "🌿" },
-  { id: "playful", label: "Giocoso e leggero", emoji: "🎈" },
-  { id: "challenge", label: "Stimolante e sfidante", emoji: "🚀" },
-  { id: "calm", label: "Calmo e rassicurante", emoji: "☁️" },
+  { id: "gentle", label: "Gentile e paziente" },
+  { id: "playful", label: "Giocoso e leggero" },
+  { id: "challenge", label: "Stimolante e sfidante" },
+  { id: "calm", label: "Calmo e rassicurante" },
 ];
 
 interface OnboardingData {
@@ -55,7 +55,7 @@ const OnboardingLegacy = () => {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<OnboardingData>({
-    name: "", avatar: "🧒", age: "", gender: "", schoolLevel: "", favoriteSubjects: [],
+    name: "", avatar: "A", age: "", gender: "", schoolLevel: "", favoriteSubjects: [],
     difficultSubjects: [], struggles: [], focusTime: "15", supportStyles: [],
   });
 
@@ -123,7 +123,7 @@ const OnboardingLegacy = () => {
               <div>
                 <label className="text-sm text-muted-foreground mb-2 block">Genere</label>
                 <div className="flex gap-3">
-                  {[{ id: "M", label: "👦 Maschio" }, { id: "F", label: "👧 Femmina" }].map((g) => (
+                  {[{ id: "M", label: "Maschio" }, { id: "F", label: "Femmina" }].map((g) => (
                     <button key={g.id} onClick={() => setData({ ...data, gender: g.id })} className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all ${data.gender === g.id ? "bg-primary text-primary-foreground shadow-soft" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{g.label}</button>
                   ))}
                 </div>
@@ -166,11 +166,11 @@ const OnboardingLegacy = () => {
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Quali materie piacciono a {data.name}?</h2></div>
             <div>
-              <label className="text-sm font-medium text-foreground mb-3 block">Piacciono 💚</label>
+              <label className="text-sm font-medium text-foreground mb-3 block">Piacciono</label>
               <div className="flex flex-wrap gap-2 mb-6">
                 {subjects.map((s) => (<button key={`f-${s}`} onClick={() => setData({ ...data, favoriteSubjects: toggleInArray(data.favoriteSubjects, s) })} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${data.favoriteSubjects.includes(s) ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{s}</button>))}
               </div>
-              <label className="text-sm font-medium text-foreground mb-3 block">Difficili 🤔</label>
+              <label className="text-sm font-medium text-foreground mb-3 block">Difficili</label>
               <div className="flex flex-wrap gap-2">
                 {subjects.map((s) => (<button key={`d-${s}`} onClick={() => setData({ ...data, difficultSubjects: toggleInArray(data.difficultSubjects, s) })} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${data.difficultSubjects.includes(s) ? "bg-terracotta text-destructive-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{s}</button>))}
               </div>
@@ -182,7 +182,7 @@ const OnboardingLegacy = () => {
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Cosa succede quando studia?</h2></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {struggles.map((s) => (<button key={s.id} onClick={() => setData({ ...data, struggles: toggleInArray(data.struggles, s.id) })} className={`text-left px-4 py-4 rounded-2xl border transition-all ${data.struggles.includes(s.id) ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}><span className="text-xl mr-2">{s.emoji}</span><span className="font-medium text-foreground text-sm">{s.label}</span></button>))}
+              {struggles.map((s) => (<button key={s.id} onClick={() => setData({ ...data, struggles: toggleInArray(data.struggles, s.id) })} className={`text-left px-4 py-4 rounded-2xl border transition-all ${data.struggles.includes(s.id) ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}><span className="font-medium text-foreground text-sm">{s.label}</span></button>))}
             </div>
           </div>
         );
@@ -191,7 +191,7 @@ const OnboardingLegacy = () => {
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Come deve aiutarlo il coach?</h2></div>
             <div className="space-y-3">
-              {supportStyles.map((s) => (<button key={s.id} onClick={() => setData({ ...data, supportStyles: toggleInArray(data.supportStyles, s.id) })} className={`w-full text-left px-5 py-4 rounded-2xl border transition-all ${data.supportStyles.includes(s.id) ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}><span className="text-xl mr-3">{s.emoji}</span><span className="font-medium text-foreground">{s.label}</span></button>))}
+              {supportStyles.map((s) => (<button key={s.id} onClick={() => setData({ ...data, supportStyles: toggleInArray(data.supportStyles, s.id) })} className={`w-full text-left px-5 py-4 rounded-2xl border transition-all ${data.supportStyles.includes(s.id) ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}><span className="font-medium text-foreground">{s.label}</span></button>))}
             </div>
           </div>
         );
