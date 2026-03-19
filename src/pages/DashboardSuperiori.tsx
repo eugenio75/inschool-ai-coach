@@ -350,9 +350,9 @@ export default function DashboardSuperiori() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* TIMER POMODORO */}
-          <section className="bg-white border border-slate-200 rounded-2xl p-5">
-            <h2 className="font-semibold text-slate-800 flex items-center gap-2 mb-4">
-              <Timer className="w-4 h-4 text-blue-600" /> Timer di Studio
+          <section className="bg-card border border-border rounded-2xl p-5">
+            <h2 className="font-semibold text-foreground flex items-center gap-2 mb-4">
+              <Timer className="w-4 h-4 text-primary" /> Timer di Studio
             </h2>
             <div className="space-y-3">
               <Select value={timerType} disabled={timerRunning}
