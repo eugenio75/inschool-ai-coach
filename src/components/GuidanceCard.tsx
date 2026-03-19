@@ -442,7 +442,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     if (lower.match(/indizio|hint|suggerimento/))
       return "Un piccolo indizio: guarda bene i dati che hai. Cosa noti? C'è qualcosa che già conosci?";
     if (lower.match(/capito|ho capito|fatto/))
-      return "Fantastico! Spiegami con parole tue cosa hai capito. Così vediamo se ci siamo! 🌱";
+      return "Fantastico! Spiegami con parole tue cosa hai capito. Così vediamo se ci siamo!";
     return "Partiamo da un passo preciso: cosa ti chiede esattamente la consegna?";
   };
 
