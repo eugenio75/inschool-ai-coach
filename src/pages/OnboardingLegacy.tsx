@@ -166,11 +166,11 @@ const OnboardingLegacy = () => {
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Quali materie piacciono a {data.name}?</h2></div>
             <div>
-              <label className="text-sm font-medium text-foreground mb-3 block">Piacciono 💚</label>
+              <label className="text-sm font-medium text-foreground mb-3 block">Piacciono</label>
               <div className="flex flex-wrap gap-2 mb-6">
                 {subjects.map((s) => (<button key={`f-${s}`} onClick={() => setData({ ...data, favoriteSubjects: toggleInArray(data.favoriteSubjects, s) })} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${data.favoriteSubjects.includes(s) ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{s}</button>))}
               </div>
-              <label className="text-sm font-medium text-foreground mb-3 block">Difficili 🤔</label>
+              <label className="text-sm font-medium text-foreground mb-3 block">Difficili</label>
               <div className="flex flex-wrap gap-2">
                 {subjects.map((s) => (<button key={`d-${s}`} onClick={() => setData({ ...data, difficultSubjects: toggleInArray(data.difficultSubjects, s) })} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${data.difficultSubjects.includes(s) ? "bg-terracotta text-destructive-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{s}</button>))}
               </div>
