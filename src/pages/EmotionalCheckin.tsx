@@ -249,7 +249,7 @@ const EmotionalCheckin = () => {
                   onClick={() => handleAnswer(q2, opt.id, opt.label)}
                   className="flex flex-col items-center gap-2 px-4 py-4 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all"
                 >
-                  <span className="text-2xl">{opt.emoji}</span>
+                  <opt.icon className="w-6 h-6 text-primary" />
                   <span className="text-xs font-medium text-foreground">{opt.label}</span>
                 </button>
               ))}
