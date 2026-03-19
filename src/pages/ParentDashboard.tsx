@@ -277,7 +277,7 @@ const ParentDashboard = () => {
             <div className="grid grid-cols-3 gap-3 text-center">
               <div><p className="text-lg font-display font-bold text-sage-dark">{gamification.focus_points || 0}</p><p className="text-xs text-muted-foreground">Focus</p></div>
               <div><p className="text-lg font-display font-bold text-clay-dark">{gamification.autonomy_points || 0}</p><p className="text-xs text-muted-foreground">Autonomia</p></div>
-              <div><p className="text-lg font-display font-bold text-terracotta">🔥 {gamification.streak || 0}</p><p className="text-xs text-muted-foreground">Streak</p></div>
+              <div><p className="text-lg font-display font-bold text-terracotta">{gamification.streak || 0}</p><p className="text-xs text-muted-foreground">Streak</p></div>
             </div>
           </div>
         </div></div>

@@ -473,7 +473,7 @@ const FocusSession = () => {
                 
                 <div className="flex flex-col gap-3">
                   <Button onClick={() => navigate("/memory")} variant="outline" className="rounded-2xl py-5 border-border">
-                    <span className="mr-2">🧠</span> Vai a Memoria e Ripasso
+                    <Brain className="w-4 h-4 mr-2" /> Vai a Memoria e Ripasso
                   </Button>
                   <Button onClick={() => navigate(`/homework/${task?.id}`)} variant="outline" className="rounded-2xl py-5 border-border">Vedi dettagli compito</Button>
                   <Button onClick={() => navigate("/dashboard")} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5">Torna ai compiti</Button>

@@ -183,7 +183,7 @@ const AddHomework = () => {
           task_type: task.task_type,
         });
       }
-      toast({ title: `${selected.length} compiti aggiunti! ✅` });
+      toast({ title: `${selected.length} compiti aggiunti!` });
       navigate("/dashboard");
     } catch (err) {
       toast({ title: "Errore", description: "Non sono riuscito a salvare i compiti.", variant: "destructive" });
