@@ -507,7 +507,7 @@ export default function DashboardSuperiori() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowTaskModal(false)} className="rounded-xl">Annulla</Button>
             <Button onClick={saveNewTask} disabled={!newTask.title.trim() || savingTask}
-              className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
+              className="rounded-xl">
               {savingTask ? "Salvataggio..." : "Salva task"}
             </Button>
           </DialogFooter>
