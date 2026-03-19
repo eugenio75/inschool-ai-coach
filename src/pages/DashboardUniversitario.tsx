@@ -403,7 +403,7 @@ export default function DashboardUniversitario() {
 
         {/* RICERCHE BIBLIOGRAFICHE */}
         <section>
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Ultime ricerche bibliografiche</h2>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Ultime ricerche bibliografiche</h2>
           {loadingRicerche ? (
             <div className="space-y-2">{[1, 2].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
           ) : ricerche.length === 0 ? (
