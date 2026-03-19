@@ -317,7 +317,7 @@ export default function DashboardDocente() {
               )}
             </div>
             <div>
-              <Label className="text-xs text-slate-500 mb-1 block">Argomento *</Label>
+              <Label className="text-xs text-muted-foreground mb-1 block">Argomento *</Label>
               <Input placeholder="es. Seconda legge della termodinamica" value={genArgomento}
                 onChange={e => setGenArgomento(e.target.value)} className="rounded-xl" />
             </div>
