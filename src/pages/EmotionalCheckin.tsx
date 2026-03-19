@@ -50,10 +50,10 @@ const optionalQuestions = [
 
 // Answer options for structured responses
 const experienceAnswers = [
-  { id: "smile", emoji: "😊", label: "Qualcosa di bello" },
-  { id: "hard", emoji: "😓", label: "Un po' complicata" },
-  { id: "normal", emoji: "😐", label: "Normale" },
-  { id: "mixed", emoji: "🤷", label: "Un po' e un po'" },
+  { id: "smile", icon: Smile, label: "Qualcosa di bello" },
+  { id: "hard", icon: Frown, label: "Un po' complicata" },
+  { id: "normal", icon: Minus, label: "Normale" },
+  { id: "mixed", icon: Shuffle, label: "Un po' e un po'" },
 ];
 
 function getStateAnswers(gender?: string) {
