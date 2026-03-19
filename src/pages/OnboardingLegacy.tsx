@@ -182,7 +182,7 @@ const OnboardingLegacy = () => {
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Cosa succede quando studia?</h2></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {struggles.map((s) => (<button key={s.id} onClick={() => setData({ ...data, struggles: toggleInArray(data.struggles, s.id) })} className={`text-left px-4 py-4 rounded-2xl border transition-all ${data.struggles.includes(s.id) ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}><span className="text-xl mr-2">{s.emoji}</span><span className="font-medium text-foreground text-sm">{s.label}</span></button>))}
+              {struggles.map((s) => (<button key={s.id} onClick={() => setData({ ...data, struggles: toggleInArray(data.struggles, s.id) })} className={`text-left px-4 py-4 rounded-2xl border transition-all ${data.struggles.includes(s.id) ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}><span className="font-medium text-foreground text-sm">{s.label}</span></button>))}
             </div>
           </div>
         );
