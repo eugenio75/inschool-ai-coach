@@ -156,7 +156,7 @@ const AddHomework = () => {
         source_type: "manual",
         due_date: dueDate,
       });
-      toast({ title: "Compito aggiunto! ✅" });
+      toast({ title: "Compito aggiunto!" });
       navigate("/dashboard");
     } catch (err) {
       toast({ title: "Errore", description: "Non sono riuscito a salvare il compito.", variant: "destructive" });
