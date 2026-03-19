@@ -449,9 +449,9 @@ export default function DashboardSuperiori() {
         </div>
 
         {/* PROGRESSI SETTIMANALI */}
-        <section className="bg-white border border-slate-200 rounded-2xl p-5">
-          <h2 className="font-semibold text-slate-800 flex items-center gap-2 mb-4">
-            <BarChart3 className="w-4 h-4 text-blue-600" /> Progressi questa settimana
+        <section className="bg-card border border-border rounded-2xl p-5">
+          <h2 className="font-semibold text-foreground flex items-center gap-2 mb-4">
+            <BarChart3 className="w-4 h-4 text-primary" /> Progressi questa settimana
           </h2>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={weekData} barSize={28} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
