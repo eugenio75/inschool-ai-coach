@@ -437,7 +437,7 @@ const FocusSession = () => {
 
             {phase === "recap" && (
               <motion.div key="recap" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={spring} className="text-center max-w-md w-full">
-                <div className="w-16 h-16 rounded-2xl bg-sage-light flex items-center justify-center mx-auto mb-6"><span className="text-3xl">🌟</span></div>
+                <div className="w-16 h-16 rounded-2xl bg-sage-light flex items-center justify-center mx-auto mb-6"><Star className="w-8 h-8 text-primary" /></div>
                 <h2 className="font-display text-2xl font-bold text-foreground mb-2">Bravissimo, {studentName}!</h2>
                 <p className="text-muted-foreground mb-2">
                   Hai lavorato per {minutesWorked} minuti su {taskTitle}
