@@ -141,42 +141,43 @@ const CoachChallenge = () => {
     }));
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coach`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            messages: chatMessages,
-            studentProfile: profile ? {
-              name: profile.name,
-              age: profile.age,
-              schoolLevel: profile.school_level,
-              struggles: profile.struggles,
-              supportStyle: profile.support_style,
-              focusTime: profile.focus_time,
-              interests: profile.interests,
-              difficultSubjects: profile.difficult_subjects,
-              favoriteSubjects: profile.favorite_subjects,
-            } : undefined,
-            taskContext: {
-              title: mission?.title || "Sfida del Coach",
-              subject: metadata.subject || "Misto",
-              description: `SFIDA DEL COACH: ${mission?.description || mission?.title}. Questa è una sessione speciale dove devi creare un'esperienza interattiva e coinvolgente per lo studente, mescolando le materie in modo creativo. Non è un compito tradizionale: è una sfida divertente che usa la narrativa per motivare il ripasso.`,
-              sourceType: "coach_challenge",
-              keyConcepts: metadata.concepts || [],
-              difficulty: 2,
-            },
-          }),
-        }
-      );
+      // GOVERNANCE: 4 distinct robust personas based on Role (Alunno, Liceale, Universita, Docente)
+      const role = profile?.school_level || profile?.schoolLevel || "alunno";
+      let baseSystemPrompt = `Sei l'AI InSchool powered by AzarLabs. \nContesto Missione: ${mission?.title || "Sfida"} - ${mission?.description || ""}\n\n`;
+      
+      if (role === "alunno") {
+        baseSystemPrompt += `RUOLO: Tutor Prottetivo per Bambini (Elementari/Medie).
+GOVERNANCE RIGIDA: Sei bloccato in un recinto educativo stretto. Usa un linguaggio iper-semplificato, dolce ed estremamente incoraggiante ("Bravissimo!"). Non fornire MAI argomenti esterni (videogiochi, politica, etc). Se l'utente devia, riportalo gentilmente ai compiti usando approcci giocosi e socratici. Non dare mai la soluzione pronta, fagli fare piccoli passi.`;
+      } else if (role === "superiori") {
+        baseSystemPrompt += `RUOLO: Mentore Rigoroso per Scuole Superiori.
+GOVERNANCE: Sei un mentore esigente, preparato su discipline complesse. Sfida costantemente lo studente a ragionare, pungolalo sulle sue certezze. Usa un linguaggio maturo, motivazionale ma netto. Mantieni un approccio accademico. Non farfugliare, sii chirurgico. Non dare quasi mai la soluzione pronta, fallo sudare concettualmente.`;
+      } else if (role === "universitario") {
+        baseSystemPrompt += `RUOLO: Assistente di Ricerca Universitario.
+GOVERNANCE: Nessuna restrizione tematica formale. Fornisci definizioni ad altissima densità concettuale, supporta sintesi di paper, e assisti su STEM/Lettere/Medicina a livello accademico top. Parla come un ricercatore di Harvard. Se lo studente ha un blocco, offri strategie di Deep Work.`;
+      } else if (role === "docente") {
+        baseSystemPrompt += `RUOLO: Co-pilota Strategico per Docenti.
+GOVERNANCE: L'utente è un Insegnante. Sei il suo fidato assistente. Aiutalo a ideare rubriche di valutazione, formattare verifiche, scrivere piani di lezione originali e analizzare ipotetiche dinamiche di classe. Tono professionale, supercollaborativo e orientato al massimo risparmio di tempo per l'insegnante.`;
+      }
+
+      // We call OpenAI directly for local override
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: baseSystemPrompt },
+            ...chatMessages
+          ],
+          stream: true,
+        }),
+      });
 
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || "Errore di connessione");
+        throw new Error("Errore chiamata AI");
       }
       if (!response.body) throw new Error("No stream body");
 
@@ -191,24 +192,27 @@ const CoachChallenge = () => {
         textBuffer += decoder.decode(value, { stream: true });
 
         let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+        while ((newlineIndex = textBuffer.indexOf("\\n")) !== -1) {
           let line = textBuffer.slice(0, newlineIndex);
           textBuffer = textBuffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
+          if (line.endsWith("\\r")) line = line.slice(0, -1);
+          if (line.trim() === "") continue;
+          if (line === "data: [DONE]") break;
           if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
+
           try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              assistantText += content;
-              setStreamingText(assistantText);
-            }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
+             // In OpenAI stream, data comes back like `data: {"id":"...","choices":[{"delta":{"content":" hello"}}]}`
+             const jsonStr = line.slice(6).trim();
+             if (jsonStr) {
+               const parsed = JSON.parse(jsonStr);
+               const content = parsed.choices?.[0]?.delta?.content;
+               if (content) {
+                 assistantText += content;
+                 setStreamingText(assistantText);
+               }
+             }
+          } catch (e) {
+             // Non-json chunk (partial read handling)
           }
         }
       }
@@ -221,7 +225,7 @@ const CoachChallenge = () => {
       setMessages(prev => [...prev, {
         id: `coach-${Date.now()}`,
         role: "coach",
-        text: "Scusa, c'è stato un piccolo problema. Riproviamo! Raccontami cosa sai su questo argomento 😊",
+        text: "Scusa, il coach è stanco. C'è stato un problema di connessione ai server OpenAI. Riprova tra poco! 💡",
       }]);
     } finally {
       setIsTyping(false);
