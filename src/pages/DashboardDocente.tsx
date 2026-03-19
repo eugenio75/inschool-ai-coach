@@ -269,26 +269,26 @@ export default function DashboardDocente() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {classi.map((cl, i) => (
                 <motion.div key={cl.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                  className="bg-white border border-slate-200 rounded-2xl p-5">
+                  className="bg-card border border-border rounded-2xl p-5">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="font-bold text-slate-900 text-lg">{cl.nome}</p>
+                      <p className="font-bold text-foreground text-lg">{cl.nome}</p>
                       {cl.materia && <Badge variant="secondary" className="mt-1">{cl.materia}</Badge>}
-                      <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
+                      <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
                         <Users className="w-3 h-3" />{cl.num_studenti} studenti
                       </p>
-                      <p className="text-xs text-slate-400 mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         Creata il {format(new Date(cl.created_at), "d MMM yyyy", { locale: it })}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-slate-400 mb-1">Codice</p>
-                      <span className="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-1 rounded-lg text-sm">
+                      <p className="text-xs text-muted-foreground mb-1">Codice</p>
+                      <span className="font-mono font-bold text-foreground bg-muted px-2 py-1 rounded-lg text-sm">
                         {cl.codice_invito}
                       </span>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm" className="mt-3 w-full rounded-xl text-xs text-slate-500"
+                  <Button variant="ghost" size="sm" className="mt-3 w-full rounded-xl text-xs text-muted-foreground"
                     onClick={() => { navigator.clipboard.writeText(cl.codice_invito); toast.success("Codice copiato!"); }}>
                     <Copy className="w-3 h-3 mr-1" />Copia codice invito
                   </Button>
