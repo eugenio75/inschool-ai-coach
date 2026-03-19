@@ -366,9 +366,9 @@ export default function DashboardSuperiori() {
                 <SelectContent>
                   {(Object.entries(TIMER_CONFIGS) as [TimerType, { seconds: number; label: string }][]).map(([k, v]) => (
                     <SelectItem key={k} value={k}>
-                      {k === "pomodoro" ? <Timer className="w-4 h-4 inline mr-2 text-red-500" /> :
-                       k === "deep_work" ? <Brain className="w-4 h-4 inline mr-2 text-blue-500" /> :
-                       <Zap className="w-4 h-4 inline mr-2 text-purple-500" />}
+                      {k === "pomodoro" ? <Timer className="w-4 h-4 inline mr-2 text-destructive" /> :
+                       k === "deep_work" ? <Brain className="w-4 h-4 inline mr-2 text-primary" /> :
+                       <Zap className="w-4 h-4 inline mr-2 text-accent-foreground" />}
                       {v.label}
                     </SelectItem>
                   ))}
