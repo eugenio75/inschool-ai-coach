@@ -120,7 +120,7 @@ export const QuickHelpModal = ({ open, onClose }: { open: boolean; onClose: () =
         }
       }
     } catch (err) {
-      setMessages(prev => [...prev, { role: "assistant", text: "Mi dispiace, c'è stato un problema. Riprova! 😊" }]);
+      setMessages(prev => [...prev, { role: "assistant", text: "Mi dispiace, c'è stato un problema. Riprova!" }]);
     } finally {
       setLoading(false);
       inputRef.current?.focus();
