@@ -126,6 +126,7 @@ const AppRoutes = () => (
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/security" element={<Security />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/dashboard" element={<AccessibleRoute><MaybeAdultLayout><Dashboard /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/add-homework" element={<AccessibleRoute><MaybeAdultLayout><AddHomework /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/homework/:taskId" element={<AccessibleRoute><HomeworkDetail /></AccessibleRoute>} />
