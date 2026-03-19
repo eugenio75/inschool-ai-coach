@@ -303,7 +303,7 @@ export default function DashboardSuperiori() {
           </div>
         ) : materie.length > 0 ? (
           <section>
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Le tue materie</h2>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Le tue materie</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {materie.slice(0, 3).map((m, i) => (
                 <motion.button key={m} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
