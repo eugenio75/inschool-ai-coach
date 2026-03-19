@@ -358,7 +358,7 @@ export default function DashboardDocente() {
             </div>
           </div>
           <Button onClick={generateVerifica} disabled={!genArgomento.trim() || genLoading}
-            className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold">
+            className="w-full rounded-xl font-semibold">
             {genLoading ? "Generazione in corso..." : "Genera con AI"}
           </Button>
 
