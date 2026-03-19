@@ -235,18 +235,18 @@ export default function DashboardUniversitario() {
   const focusProgress = focusActive ? Math.round(((focusTotalSeconds - focusSecondsLeft) / focusTotalSeconds) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-background pb-24">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
 
         {/* HEADER */}
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
           className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               {getGreeting()}, {profile?.name?.split(" ")[0] || ""}
             </h1>
             {(od?.uni_corso || od?.uni_nome || od?.uni_anno) && (
-              <p className="text-slate-500 mt-1 text-sm">
+              <p className="text-muted-foreground mt-1 text-sm">
                 {[od.uni_corso, od.uni_nome, od.uni_anno].filter(Boolean).join(" · ")}
               </p>
             )}
@@ -256,8 +256,8 @@ export default function DashboardUniversitario() {
                 { label: `${kpi.ore} ore totali`, icon: <Timer className="w-3.5 h-3.5" /> },
                 { label: `${kpi.esamiCount} esami configurati`, icon: <GraduationCap className="w-3.5 h-3.5" /> },
               ].map((k, i) => (
-                <div key={i} className="flex items-center gap-1.5 text-xs text-slate-500 bg-white border border-slate-200 rounded-full px-3 py-1.5">
-                  <span className="text-indigo-500">{k.icon}</span>{k.label}
+                <div key={i} className="flex items-center gap-1.5 text-xs text-muted-foreground bg-card border border-border rounded-full px-3 py-1.5">
+                  <span className="text-primary">{k.icon}</span>{k.label}
                 </div>
               ))}
             </div>
