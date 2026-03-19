@@ -137,11 +137,10 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             if (step === 3) return answers.metodo_studio;
             if (step === 4) return (answers.serve_ai || []).length > 0;
         } else if (role === "docente") {
-            if (step === 1) return answers.docente_ordine;
-            if (step === 2) return (answers.docente_materie || []).length > 0;
-            if (step === 3) return answers.docente_studenti;
-            if (step === 4) return (answers.docente_uso || []).length > 0;
-            if (step === 5) return (answers.docente_auto || []).length > 0;
+            if (step === 1) return answers.docente_ordine && (answers.docente_materie || []).length > 0;
+            if (step === 2) return answers.docente_studenti;
+            if (step === 3) return (answers.docente_uso || []).length > 0;
+            if (step === 4) return (answers.docente_auto || []).length > 0;
         }
         return true; 
     };
