@@ -254,10 +254,10 @@ export default function DashboardDocente() {
               {[1, 2].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
             </div>
           ) : classi.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center">
-              <Users className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-              <p className="text-sm font-medium text-slate-500">Non hai ancora creato nessuna classe</p>
-              <p className="text-xs text-slate-400 mt-1">
+            <div className="bg-card border border-border rounded-2xl p-8 text-center">
+              <Users className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm font-medium text-muted-foreground">Non hai ancora creato nessuna classe</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
                 Crea la prima classe e condividi il codice con i tuoi studenti
               </p>
               <Button variant="outline" size="sm" className="mt-3 rounded-xl text-xs"
