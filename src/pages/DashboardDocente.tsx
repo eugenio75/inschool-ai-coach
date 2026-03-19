@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   Users, Plus, FilePlus, BarChart2, BookMarked, CheckSquare,
   FileText, Mic, FolderOpen, Home, Users2, Bell, Copy,
-  Minus, Printer, ChevronRight,
+  Minus, Printer, ChevronRight, Trash2, Eye,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
