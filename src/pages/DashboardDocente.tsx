@@ -346,7 +346,7 @@ export default function DashboardDocente() {
               </div>
             </div>
             <div>
-              <Label className="text-xs text-slate-500 mb-1 block">Difficoltà</Label>
+              <Label className="text-xs text-muted-foreground mb-1 block">Difficolta</Label>
               <Select value={genDifficolta} onValueChange={setGenDifficolta}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
