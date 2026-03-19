@@ -370,7 +370,7 @@ export default function DashboardDocente() {
             </div>
           )}
           {genError && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+            <div className="mt-4 p-4 bg-destructive/5 border border-destructive/20 rounded-xl text-sm text-destructive">
               Impossibile generare la verifica. Verifica la connessione e riprova.
               <button onClick={generateVerifica} className="underline ml-2">Riprova</button>
             </div>
