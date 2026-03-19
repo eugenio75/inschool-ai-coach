@@ -218,11 +218,11 @@ export default function DashboardDocente() {
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
           className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               {getGreeting()}, Prof. {cognome}
             </h1>
             {(materie.length > 0 || istituto) && (
-              <p className="text-slate-500 mt-1 text-sm">
+              <p className="text-muted-foreground mt-1 text-sm">
                 {[materie.slice(0, 3).join(", "), istituto].filter(Boolean).join(" · ")}
               </p>
             )}
