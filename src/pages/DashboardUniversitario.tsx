@@ -292,18 +292,18 @@ export default function DashboardUniversitario() {
                 const progressPct = Math.min(100, (sessioni / 10) * 100);
                 return (
                   <motion.div key={esame.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                    className="bg-white border border-slate-200 rounded-2xl p-5">
+                    className="bg-card border border-border rounded-2xl p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-slate-900 truncate">{esame.nome_esame}</p>
+                        <p className="font-semibold text-foreground truncate">{esame.nome_esame}</p>
                         {esame.data_prevista && (
-                          <p className="text-sm text-slate-400 mt-0.5">
+                          <p className="text-sm text-muted-foreground mt-0.5">
                             {format(new Date(esame.data_prevista), "d MMMM yyyy", { locale: it })}
                           </p>
                         )}
                         <div className="flex items-center gap-3 mt-3">
                           <Progress value={progressPct} className="flex-1 h-1.5" />
-                          <span className="text-xs text-slate-400 shrink-0">{sessioni}/10 sessioni</span>
+                          <span className="text-xs text-muted-foreground shrink-0">{sessioni}/10 sessioni</span>
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-2">
