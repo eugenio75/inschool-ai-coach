@@ -416,7 +416,7 @@ const FocusSession = () => {
                 <div className="flex flex-wrap justify-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
                   {emotionOptions.map((e) => (
                     <button key={e.id} onClick={() => setEmotion(e.id)} className={`flex flex-col items-center gap-1 px-3 py-2.5 rounded-2xl border transition-all ${emotion === e.id ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}>
-                      <span className="text-xl sm:text-2xl">{e.emoji}</span>
+                      <e.icon className="w-6 h-6 text-primary" />
                       <span className="text-xs font-medium text-foreground">{e.label}</span>
                     </button>
                   ))}
