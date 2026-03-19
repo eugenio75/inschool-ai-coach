@@ -159,22 +159,21 @@ GOVERNANCE: Nessuna restrizione tematica formale. Fornisci definizioni ad altiss
 GOVERNANCE: L'utente è un Insegnante. Sei il suo fidato assistente. Aiutalo a ideare rubriche di valutazione, formattare verifiche, scrivere piani di lezione originali e analizzare ipotetiche dinamiche di classe. Tono professionale, supercollaborativo e orientato al massimo risparmio di tempo per l'insegnante.`;
       }
 
-      // We call OpenAI directly for local override
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: baseSystemPrompt },
-            ...chatMessages
-          ],
-          stream: true,
-        }),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            systemPrompt: baseSystemPrompt,
+            messages: chatMessages,
+            stream: true,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Errore chiamata AI");

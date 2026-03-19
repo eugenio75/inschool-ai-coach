@@ -73,6 +73,7 @@ export type Database = {
           id: string
           interests: string[] | null
           name: string
+          onboarding_completed: boolean | null
           parent_id: string
           school_level: string | null
           school_name: string | null
@@ -94,6 +95,7 @@ export type Database = {
           id?: string
           interests?: string[] | null
           name: string
+          onboarding_completed?: boolean | null
           parent_id: string
           school_level?: string | null
           school_name?: string | null
@@ -115,6 +117,7 @@ export type Database = {
           id?: string
           interests?: string[] | null
           name?: string
+          onboarding_completed?: boolean | null
           parent_id?: string
           school_level?: string | null
           school_name?: string | null
@@ -123,6 +126,88 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      classi: {
+        Row: {
+          codice_invito: string | null
+          created_at: string | null
+          docente_profile_id: string
+          id: string
+          materia: string | null
+          nome: string
+          num_studenti: number | null
+          ordine_scolastico: string | null
+        }
+        Insert: {
+          codice_invito?: string | null
+          created_at?: string | null
+          docente_profile_id: string
+          id?: string
+          materia?: string | null
+          nome: string
+          num_studenti?: number | null
+          ordine_scolastico?: string | null
+        }
+        Update: {
+          codice_invito?: string | null
+          created_at?: string | null
+          docente_profile_id?: string
+          id?: string
+          materia?: string | null
+          nome?: string
+          num_studenti?: number | null
+          ordine_scolastico?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classi_docente_profile_id_fkey"
+            columns: ["docente_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_sessions: {
+        Row: {
+          created_at: string | null
+          id: string
+          materia: string | null
+          messaggi: Json | null
+          profile_id: string
+          ruolo_utente: string | null
+          titolo: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          materia?: string | null
+          messaggi?: Json | null
+          profile_id: string
+          ruolo_utente?: string | null
+          titolo?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          materia?: string | null
+          messaggi?: Json | null
+          profile_id?: string
+          ruolo_utente?: string | null
+          titolo?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_sessions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       daily_missions: {
         Row: {
@@ -250,6 +335,41 @@ export type Database = {
           {
             foreignKeyName: "emotional_checkins_child_profile_id_fkey"
             columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      esami_utente: {
+        Row: {
+          completato: boolean | null
+          created_at: string | null
+          data_prevista: string | null
+          id: string
+          nome_esame: string
+          profile_id: string
+        }
+        Insert: {
+          completato?: boolean | null
+          created_at?: string | null
+          data_prevista?: string | null
+          id?: string
+          nome_esame: string
+          profile_id: string
+        }
+        Update: {
+          completato?: boolean | null
+          created_at?: string | null
+          data_prevista?: string | null
+          id?: string
+          nome_esame?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "esami_utente_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "child_profiles"
             referencedColumns: ["id"]
@@ -489,6 +609,158 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      ricerche_bibliografiche: {
+        Row: {
+          argomento: string
+          created_at: string | null
+          id: string
+          num_fonti: number | null
+          profile_id: string
+          risultati: Json | null
+        }
+        Insert: {
+          argomento: string
+          created_at?: string | null
+          id?: string
+          num_fonti?: number | null
+          profile_id: string
+          risultati?: Json | null
+        }
+        Update: {
+          argomento?: string
+          created_at?: string | null
+          id?: string
+          num_fonti?: number | null
+          profile_id?: string
+          risultati?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ricerche_bibliografiche_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sessioni_studio: {
+        Row: {
+          created_at: string | null
+          durata_minuti: number
+          id: string
+          materia: string | null
+          profile_id: string
+          tipo: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          durata_minuti: number
+          id?: string
+          materia?: string | null
+          profile_id: string
+          tipo?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          durata_minuti?: number
+          id?: string
+          materia?: string | null
+          profile_id?: string
+          tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessioni_studio_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          current_step: number | null
+          data: Json | null
+          id: string
+          profile_id: string
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_step?: number | null
+          data?: Json | null
+          id?: string
+          profile_id: string
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_step?: number | null
+          data?: Json | null
+          id?: string
+          profile_id?: string
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_preferences_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verifiche: {
+        Row: {
+          argomento: string
+          contenuto: string | null
+          created_at: string | null
+          difficolta: string | null
+          docente_profile_id: string
+          id: string
+          materia: string | null
+          numero_domande: number | null
+          tipo: string | null
+        }
+        Insert: {
+          argomento: string
+          contenuto?: string | null
+          created_at?: string | null
+          difficolta?: string | null
+          docente_profile_id: string
+          id?: string
+          materia?: string | null
+          numero_domande?: number | null
+          tipo?: string | null
+        }
+        Update: {
+          argomento?: string
+          contenuto?: string | null
+          created_at?: string | null
+          difficolta?: string | null
+          docente_profile_id?: string
+          id?: string
+          materia?: string | null
+          numero_domande?: number | null
+          tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verifiche_docente_profile_id_fkey"
+            columns: ["docente_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

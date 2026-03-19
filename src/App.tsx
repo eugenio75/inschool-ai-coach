@@ -22,6 +22,7 @@ import Settings from "./pages/Settings";
 import StudentProfile from "./pages/StudentProfile";
 import EmotionalCheckin from "./pages/EmotionalCheckin";
 import NotFound from "./pages/NotFound";
+import ResetPassword from "./pages/ResetPassword";
 
 import Privacy from "./pages/Privacy";
 import Security from "./pages/Security";
@@ -102,6 +103,7 @@ const AppRoutes = () => (
       <Route path="/checkin" element={<AccessibleRoute><EmotionalCheckin /></AccessibleRoute>} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/security" element={<Security />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/dashboard" element={<AccessibleRoute><Dashboard /></AccessibleRoute>} />
       <Route path="/add-homework" element={<AccessibleRoute><AddHomework /></AccessibleRoute>} />
       <Route path="/homework/:taskId" element={<AccessibleRoute><HomeworkDetail /></AccessibleRoute>} />

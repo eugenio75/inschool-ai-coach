@@ -117,21 +117,22 @@ export default function DashboardDocente() {
     setGenError(false);
     const tipoLabel = { multipla: "risposta multipla", aperta: "domande aperte", vero_falso: "vero/falso", misto: "misto" }[genTipo] || genTipo;
     try {
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({
-          model: "gpt-4o-mini", max_tokens: 2000,
-          messages: [
-            {
-              role: "system",
-              content: `Sei un professore esperto di ${genMateria || "materia"} per ${ordine || "scuola secondaria"}. Genera una verifica completa e professionale su: ${genArgomento}. Struttura: ${genNumero} domande di tipo ${tipoLabel}, difficoltà ${genDifficolta}. Per ogni domanda fornisci: il testo, le opzioni di risposta (se multipla o vero/falso), la risposta corretta e una breve spiegazione. Formatta in modo chiaro con numerazione progressiva. Usa un linguaggio formale e appropriato al livello scolastico.`,
-            },
-            { role: "user", content: "Genera la verifica." },
-          ],
-        }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            stream: false,
+            maxTokens: 2000,
+            systemPrompt: `Sei un professore esperto di ${genMateria || "materia"} per ${ordine || "scuola secondaria"}. Genera una verifica completa e professionale su: ${genArgomento}. Struttura: ${genNumero} domande di tipo ${tipoLabel}, difficoltà ${genDifficolta}. Per ogni domanda fornisci: il testo, le opzioni di risposta (se multipla o vero/falso), la risposta corretta e una breve spiegazione. Formatta in modo chiaro con numerazione progressiva. Usa un linguaggio formale e appropriato al livello scolastico.`,
+            messages: [{ role: "user", content: "Genera la verifica." }],
+          }),
+        }
+      );
       if (!res.ok) throw new Error();
       const data = await res.json();
       setGenOutput(data.choices?.[0]?.message?.content?.trim() || null);

@@ -30,8 +30,8 @@ serve(async (req) => {
     if (isPdf) {
       const pdfResponse = await fetch(imageUrl);
       if (!pdfResponse.ok) throw new Error("Impossibile scaricare il PDF");
-      const pdfBuffer = new Uint8Array(await pdfResponse.arrayBuffer());
-      const base64 = base64Encode(pdfBuffer);
+      const pdfArrayBuffer = await pdfResponse.arrayBuffer();
+      const base64 = base64Encode(pdfArrayBuffer);
       finalImageUrl = `data:application/pdf;base64,${base64}`;
     }
 

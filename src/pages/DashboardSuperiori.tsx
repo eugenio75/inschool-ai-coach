@@ -151,21 +151,22 @@ export default function DashboardSuperiori() {
     setChallengeLoading(true);
     setChallengeError(false);
     try {
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({
-          model: "gpt-4o-mini", max_tokens: 120,
-          messages: [
-            {
-              role: "system",
-              content: `Sei un coach di studio per uno studente di ${indir}${a ? `, ${a} anno` : ""}. Genera UNA sfida di studio concisa per oggi, massimo 2 righe. Deve riguardare una di queste materie: ${m.join(", ")}. La sfida deve essere specifica, motivante e raggiungibile in 1 ora. Rispondi SOLO con la sfida, nessun preambolo, nessun titolo.`,
-            },
-            { role: "user", content: "Genera la sfida di oggi." },
-          ],
-        }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            stream: false,
+            maxTokens: 120,
+            systemPrompt: `Sei un coach di studio per uno studente di ${indir}${a ? `, ${a} anno` : ""}. Genera UNA sfida di studio concisa per oggi, massimo 2 righe. Deve riguardare una di queste materie: ${m.join(", ")}. La sfida deve essere specifica, motivante e raggiungibile in 1 ora. Rispondi SOLO con la sfida, nessun preambolo, nessun titolo.`,
+            messages: [{ role: "user", content: "Genera la sfida di oggi." }],
+          }),
+        }
+      );
       if (!res.ok) throw new Error();
       const data = await res.json();
       setChallenge(data.choices?.[0]?.message?.content?.trim() || null);
