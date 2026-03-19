@@ -266,7 +266,7 @@ export default function DashboardSuperiori() {
     if (isToday(d)) return { label: "Oggi", cls: "text-orange-500 font-medium" };
     if (isTomorrow(d)) return { label: "Domani", cls: "text-yellow-600 font-medium" };
     if (isPast(d)) return { label: `Scaduto ${formatDistanceToNow(d, { locale: it })} fa`, cls: "text-red-500 font-medium" };
-    return { label: format(d, "d MMM", { locale: it }), cls: "text-slate-400" };
+    return { label: format(d, "d MMM", { locale: it }), cls: "text-muted-foreground" };
   }
 
   return (
