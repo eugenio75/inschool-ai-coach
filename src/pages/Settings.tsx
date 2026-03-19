@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { LogoutButton } from "@/components/shared/LogoutButton";
 import { getChildSession } from "@/lib/childSession";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 // Avatar colors for profile customization
 const AVATAR_COLORS = [
