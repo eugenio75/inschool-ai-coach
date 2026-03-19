@@ -178,12 +178,12 @@ export const CelebrationOverlay = ({ show, onComplete, message, points, schoolLe
 
 // Social proof — cooperative, class-oriented, never competitive
 const socialProofMessages = [
-  "La tua classe ha completato 18 missioni questa settimana 📚",
-  "Insieme avete studiato per 3 ore oggi! 🌱",
-  "I tuoi compagni stanno lavorando sodo — unisciti a loro! 💪",
-  "La classe ha ripassato 12 concetti questa settimana 🧠",
-  "Oggi è un buon giorno per studiare insieme! 🌈",
-  "Insieme si impara meglio — la tua classe sta crescendo! ✨",
+  "La tua classe ha completato 18 missioni questa settimana",
+  "Insieme avete studiato per 3 ore oggi!",
+  "I tuoi compagni stanno lavorando sodo — unisciti a loro!",
+  "La classe ha ripassato 12 concetti questa settimana",
+  "Oggi è un buon giorno per studiare insieme!",
+  "Insieme si impara meglio — la tua classe sta crescendo!",
 ];
 
 export const SocialProofBanner = () => {
