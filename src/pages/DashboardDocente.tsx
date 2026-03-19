@@ -445,13 +445,13 @@ export default function DashboardDocente() {
         </section>
 
         {/* ATTIVITA STUDENTI */}
-        <section className="bg-white border border-slate-200 rounded-2xl p-5">
-          <h2 className="font-semibold text-slate-800 flex items-center gap-2 mb-3">
-            <Bell className="w-4 h-4 text-purple-600" /> Attività studenti
+        <section className="bg-card border border-border rounded-2xl p-5">
+          <h2 className="font-semibold text-foreground flex items-center gap-2 mb-3">
+            <Bell className="w-4 h-4 text-primary" /> Attivita studenti
           </h2>
           <div className="flex flex-col items-center py-6 text-center">
-            <Bell className="w-8 h-8 text-slate-200 mb-3" />
-            <p className="text-sm text-slate-500 max-w-sm leading-relaxed">
+            <Bell className="w-8 h-8 text-muted-foreground/30 mb-3" />
+            <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
               Collega i tuoi studenti alle classi condividendo il codice invito. Quando saranno attivi, 
               vedrai qui il loro andamento in tempo reale.
             </p>
