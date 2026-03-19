@@ -299,9 +299,9 @@ export default function DashboardDocente() {
         </section>
 
         {/* GENERATORE VERIFICHE */}
-        <section className="bg-white border border-slate-200 rounded-2xl p-5">
-          <h2 className="font-semibold text-slate-800 flex items-center gap-2 mb-4">
-            <FilePlus className="w-4 h-4 text-purple-600" /> Generatore Verifiche con AI
+        <section className="bg-card border border-border rounded-2xl p-5">
+          <h2 className="font-semibold text-foreground flex items-center gap-2 mb-4">
+            <FilePlus className="w-4 h-4 text-primary" /> Generatore Verifiche con AI
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
             <div>
