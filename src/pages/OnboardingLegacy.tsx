@@ -55,7 +55,7 @@ const OnboardingLegacy = () => {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<OnboardingData>({
-    name: "", avatar: "🧒", age: "", gender: "", schoolLevel: "", favoriteSubjects: [],
+    name: "", avatar: "A", age: "", gender: "", schoolLevel: "", favoriteSubjects: [],
     difficultSubjects: [], struggles: [], focusTime: "15", supportStyles: [],
   });
 
