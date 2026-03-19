@@ -77,6 +77,7 @@ export default function DashboardDocente() {
 
   async function loadAll() {
     setLoadingClassi(true);
+    setLoadingVerifiche(true);
     try {
       const { data: prefs } = await (supabase as any)
         .from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
@@ -91,8 +92,14 @@ export default function DashboardDocente() {
         .from("verifiche").select("id", { count: "exact", head: true })
         .eq("docente_profile_id", profileId);
       setVerificheCount(count || 0);
+
+      const { data: v } = await (supabase as any)
+        .from("verifiche").select("*").eq("docente_profile_id", profileId)
+        .order("created_at", { ascending: false }).limit(5);
+      setVerificheSalvate(v || []);
     } finally {
       setLoadingClassi(false);
+      setLoadingVerifiche(false);
     }
   }
 
