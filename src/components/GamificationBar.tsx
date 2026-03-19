@@ -48,8 +48,9 @@ export const GamificationBar = () => {
         </div>
         <StreakShieldBadge shields={shields} />
         {shields === 0 && streak > 0 && daysToShield <= 3 && (
-          <span className="text-[10px] text-muted-foreground">
-            🛡️ tra {daysToShield} {daysToShield === 1 ? 'giorno' : 'giorni'}
+          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            tra {daysToShield} {daysToShield === 1 ? 'giorno' : 'giorni'}
           </span>
         )}
       </div>
