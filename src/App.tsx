@@ -95,6 +95,13 @@ function RoleGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function MaybeAdultLayout({ children }: { children: React.ReactNode }) {
+  const session = getCS();
+  const isAdult = ["superiori", "universitario", "docente"].includes(session?.profile?.school_level || "");
+  if (isAdult) return <AdultLayout>{children}</AdultLayout>;
+  return <>{children}</>;
+}
+
 const AppRoutes = () => (
   <RoleGuard>
     <Routes>
@@ -106,15 +113,15 @@ const AppRoutes = () => (
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/security" element={<Security />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/dashboard" element={<AccessibleRoute><Dashboard /></AccessibleRoute>} />
-      <Route path="/add-homework" element={<AccessibleRoute><AddHomework /></AccessibleRoute>} />
+      <Route path="/dashboard" element={<AccessibleRoute><MaybeAdultLayout><Dashboard /></MaybeAdultLayout></AccessibleRoute>} />
+      <Route path="/add-homework" element={<AccessibleRoute><MaybeAdultLayout><AddHomework /></MaybeAdultLayout></AccessibleRoute>} />
       <Route path="/homework/:taskId" element={<AccessibleRoute><HomeworkDetail /></AccessibleRoute>} />
       <Route path="/focus/:taskId" element={<AccessibleRoute><FocusSession /></AccessibleRoute>} />
       <Route path="/challenge/:missionId" element={<AccessibleRoute><CoachChallenge /></AccessibleRoute>} />
-      <Route path="/memory" element={<AccessibleRoute><MemoryRecap /></AccessibleRoute>} />
+      <Route path="/memory" element={<AccessibleRoute><MaybeAdultLayout><MemoryRecap /></MaybeAdultLayout></AccessibleRoute>} />
       <Route path="/parent-dashboard" element={<ProtectedRoute><ParentDashboard /></ProtectedRoute>} />
       <Route path="/student-profile" element={<AccessibleRoute><StudentProfile /></AccessibleRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><MaybeAdultLayout><Settings /></MaybeAdultLayout></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </RoleGuard>
