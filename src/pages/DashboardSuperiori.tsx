@@ -263,9 +263,9 @@ export default function DashboardSuperiori() {
 
   function dueDateLabel(dueDate: string): { label: string; cls: string } {
     const d = new Date(dueDate);
-    if (isToday(d)) return { label: "Oggi", cls: "text-orange-500 font-medium" };
-    if (isTomorrow(d)) return { label: "Domani", cls: "text-yellow-600 font-medium" };
-    if (isPast(d)) return { label: `Scaduto ${formatDistanceToNow(d, { locale: it })} fa`, cls: "text-red-500 font-medium" };
+    if (isToday(d)) return { label: "Oggi", cls: "text-destructive font-medium" };
+    if (isTomorrow(d)) return { label: "Domani", cls: "text-secondary-foreground font-medium" };
+    if (isPast(d)) return { label: `Scaduto ${formatDistanceToNow(d, { locale: it })} fa`, cls: "text-destructive font-medium" };
     return { label: format(d, "d MMM", { locale: it }), cls: "text-muted-foreground" };
   }
 
@@ -287,10 +287,10 @@ export default function DashboardSuperiori() {
             )}
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-2xl px-3 py-2 shrink-0">
-              <Flame className="w-4 h-4 text-orange-500" />
-              <span className="font-bold text-orange-600">{streak}</span>
-              <span className="text-xs text-orange-500 hidden sm:block">giorni</span>
+            <div className="flex items-center gap-2 bg-destructive/10 border border-destructive/20 rounded-2xl px-3 py-2 shrink-0">
+              <Flame className="w-4 h-4 text-destructive" />
+              <span className="font-bold text-destructive">{streak}</span>
+              <span className="text-xs text-destructive/80 hidden sm:block">giorni</span>
             </div>
             <LogoutButton showLabel />
           </div>
@@ -366,9 +366,9 @@ export default function DashboardSuperiori() {
                 <SelectContent>
                   {(Object.entries(TIMER_CONFIGS) as [TimerType, { seconds: number; label: string }][]).map(([k, v]) => (
                     <SelectItem key={k} value={k}>
-                      {k === "pomodoro" ? <Timer className="w-4 h-4 inline mr-2 text-red-500" /> :
-                       k === "deep_work" ? <Brain className="w-4 h-4 inline mr-2 text-blue-500" /> :
-                       <Zap className="w-4 h-4 inline mr-2 text-purple-500" />}
+                      {k === "pomodoro" ? <Timer className="w-4 h-4 inline mr-2 text-destructive" /> :
+                       k === "deep_work" ? <Brain className="w-4 h-4 inline mr-2 text-primary" /> :
+                       <Zap className="w-4 h-4 inline mr-2 text-accent-foreground" />}
                       {v.label}
                     </SelectItem>
                   ))}
@@ -395,7 +395,7 @@ export default function DashboardSuperiori() {
             </div>
             <div className="flex gap-2">
               <Button onClick={toggleTimer}
-                className={`flex-1 rounded-xl font-semibold ${timerRunning ? "bg-slate-800 hover:bg-slate-700 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"}`}>
+                className={`flex-1 rounded-xl font-semibold ${timerRunning ? "bg-muted text-foreground hover:bg-muted/80" : ""}`}>
                 {timerRunning
                   ? <><Pause className="w-4 h-4 mr-1.5" />Pausa</>
                   : <><Play className="w-4 h-4 mr-1.5" />{timerStarted ? "Riprendi" : "Avvia"}</>}
@@ -455,14 +455,14 @@ export default function DashboardSuperiori() {
           </h2>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={weekData} barSize={28} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-              <XAxis dataKey="giorno" tick={{ fontSize: 12, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} unit="m" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
+              <XAxis dataKey="giorno" tick={{ fontSize: 12 }} className="fill-muted-foreground" axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" axisLine={false} tickLine={false} unit="m" />
               <Tooltip
-                contentStyle={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "12px" }}
+                contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px", color: "hsl(var(--foreground))" }}
                 formatter={(v: number) => [`${v} min`, "Studio"]}
               />
-              <Bar dataKey="minuti" fill="#2563eb" radius={[4, 4, 0, 0]} opacity={0.85} />
+              <Bar dataKey="minuti" className="fill-primary" radius={[4, 4, 0, 0]} opacity={0.85} />
             </BarChart>
           </ResponsiveContainer>
           {weekData.every(d => d.minuti === 0) && (

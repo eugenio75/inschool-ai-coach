@@ -305,7 +305,7 @@ export default function DashboardDocente() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
             <div>
-              <Label className="text-xs text-slate-500 mb-1 block">Materia</Label>
+              <Label className="text-xs text-muted-foreground mb-1 block">Materia</Label>
               {materie.length > 0 ? (
                 <Select value={genMateria} onValueChange={setGenMateria}>
                   <SelectTrigger className="rounded-xl"><SelectValue placeholder="Seleziona materia" /></SelectTrigger>
@@ -317,14 +317,14 @@ export default function DashboardDocente() {
               )}
             </div>
             <div>
-              <Label className="text-xs text-slate-500 mb-1 block">Argomento *</Label>
+              <Label className="text-xs text-muted-foreground mb-1 block">Argomento *</Label>
               <Input placeholder="es. Seconda legge della termodinamica" value={genArgomento}
                 onChange={e => setGenArgomento(e.target.value)} className="rounded-xl" />
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
             <div>
-              <Label className="text-xs text-slate-500 mb-1 block">Tipo domande</Label>
+              <Label className="text-xs text-muted-foreground mb-1 block">Tipo domande</Label>
               <Select value={genTipo} onValueChange={setGenTipo}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -336,17 +336,17 @@ export default function DashboardDocente() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs text-slate-500 mb-1 block">Numero domande</Label>
+              <Label className="text-xs text-muted-foreground mb-1 block">Numero domande</Label>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" className="h-9 w-9 p-0 rounded-xl"
                   onClick={() => setGenNumero(n => Math.max(5, n - 1))}><Minus className="w-3 h-3" /></Button>
-                <span className="flex-1 text-center font-semibold text-slate-800">{genNumero}</span>
+                <span className="flex-1 text-center font-semibold text-foreground">{genNumero}</span>
                 <Button variant="outline" size="sm" className="h-9 w-9 p-0 rounded-xl"
                   onClick={() => setGenNumero(n => Math.min(20, n + 1))}><Plus className="w-3 h-3" /></Button>
               </div>
             </div>
             <div>
-              <Label className="text-xs text-slate-500 mb-1 block">Difficoltà</Label>
+              <Label className="text-xs text-muted-foreground mb-1 block">Difficolta</Label>
               <Select value={genDifficolta} onValueChange={setGenDifficolta}>
                 <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -358,7 +358,7 @@ export default function DashboardDocente() {
             </div>
           </div>
           <Button onClick={generateVerifica} disabled={!genArgomento.trim() || genLoading}
-            className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold">
+            className="w-full rounded-xl font-semibold">
             {genLoading ? "Generazione in corso..." : "Genera con AI"}
           </Button>
 
@@ -370,7 +370,7 @@ export default function DashboardDocente() {
             </div>
           )}
           {genError && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
+            <div className="mt-4 p-4 bg-destructive/5 border border-destructive/20 rounded-xl text-sm text-destructive">
               Impossibile generare la verifica. Verifica la connessione e riprova.
               <button onClick={generateVerifica} className="underline ml-2">Riprova</button>
             </div>
@@ -378,11 +378,11 @@ export default function DashboardDocente() {
           {genOutput && (
             <div className="mt-4">
               <div id="verifica-preview"
-                className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto font-mono">
+                className="bg-muted/50 border border-border rounded-xl p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto font-mono">
                 {genOutput}
               </div>
               <div className="flex flex-wrap gap-2 mt-3">
-                <Button size="sm" className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white"
+                <Button size="sm" className="rounded-xl"
                   onClick={saveVerifica} disabled={savingVerifica}>
                   {savingVerifica ? "Salvataggio..." : "Salva verifica"}
                 </Button>
@@ -392,7 +392,7 @@ export default function DashboardDocente() {
                 <Button size="sm" variant="outline" className="rounded-xl" onClick={printVerifica}>
                   <Printer className="w-3 h-3 mr-1" />Stampa / PDF
                 </Button>
-                <Button size="sm" variant="ghost" className="rounded-xl text-slate-500" onClick={generateVerifica}>
+                <Button size="sm" variant="ghost" className="rounded-xl text-muted-foreground" onClick={generateVerifica}>
                   Rigenera
                 </Button>
               </div>
@@ -435,7 +435,7 @@ export default function DashboardDocente() {
                     </Button>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg"
                       onClick={() => setDeleteVerificaId(v.id)}>
-                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
                     </Button>
                   </div>
                 </div>
@@ -507,7 +507,7 @@ export default function DashboardDocente() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowClasseModal(false)} className="rounded-xl">Annulla</Button>
             <Button onClick={saveClasse} disabled={!newClasse.nome.trim() || savingClasse}
-              className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white">
+              className="rounded-xl">
               {savingClasse ? "Creazione..." : "Crea classe"}
             </Button>
           </DialogFooter>
@@ -517,15 +517,15 @@ export default function DashboardDocente() {
       {/* DIALOG — CLASSE CREATA CON CODICE */}
       <Dialog open={!!classeCreata} onOpenChange={() => { setClasseCreata(null); setShowClasseModal(false); }}>
         <DialogContent className="rounded-2xl text-center">
-          <CheckSquare className="w-10 h-10 text-green-500 mx-auto mt-2" />
+          <CheckSquare className="w-10 h-10 text-primary mx-auto mt-2" />
           <DialogHeader><DialogTitle className="text-center mt-2">Classe creata!</DialogTitle></DialogHeader>
-          <p className="text-sm text-slate-500">Condividi questo codice con i tuoi studenti</p>
-          <div className="bg-slate-100 rounded-2xl py-5 px-4 my-2">
-            <p className="font-mono font-black text-4xl tracking-[0.3em] text-slate-900">
+          <p className="text-sm text-muted-foreground">Condividi questo codice con i tuoi studenti</p>
+          <div className="bg-muted rounded-2xl py-5 px-4 my-2">
+            <p className="font-mono font-black text-4xl tracking-[0.3em] text-foreground">
               {classeCreata?.codice_invito}
             </p>
           </div>
-          <Button className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 text-white"
+          <Button className="w-full rounded-xl"
             onClick={() => {
               navigator.clipboard.writeText(classeCreata?.codice_invito);
               toast.success("Codice copiato!");
@@ -543,7 +543,7 @@ export default function DashboardDocente() {
           <DialogHeader>
             <DialogTitle>{verificaPreview?.argomento}</DialogTitle>
           </DialogHeader>
-          <div className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed font-mono bg-slate-50 rounded-xl p-4 border border-slate-200">
+          <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed font-mono bg-muted/50 rounded-xl p-4 border border-border">
             {verificaPreview?.contenuto}
           </div>
           <DialogFooter>
@@ -561,7 +561,7 @@ export default function DashboardDocente() {
       <Dialog open={!!deleteVerificaId} onOpenChange={() => setDeleteVerificaId(null)}>
         <DialogContent className="rounded-2xl">
           <DialogHeader><DialogTitle>Eliminare la verifica?</DialogTitle></DialogHeader>
-          <p className="text-sm text-slate-500">Questa azione non può essere annullata.</p>
+          <p className="text-sm text-muted-foreground">Questa azione non puo essere annullata.</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteVerificaId(null)} className="rounded-xl">Annulla</Button>
             <Button variant="destructive" onClick={() => deleteVerificaId && deleteVerifica(deleteVerificaId)} className="rounded-xl">

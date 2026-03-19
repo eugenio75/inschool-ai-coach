@@ -42,7 +42,7 @@ const Security = () => {
 
             <section className="bg-card p-8 rounded-3xl shadow-soft border border-border">
               <h2 className="text-2xl font-bold flex items-center gap-3 mb-4 text-foreground">
-                <Eye className="w-6 h-6 text-green-500" />
+                <Eye className="w-6 h-6 text-accent-foreground" />
                 Monitoraggio Genitoriale
               </h2>
               <p className="text-muted-foreground leading-relaxed">
@@ -52,7 +52,7 @@ const Security = () => {
 
             <section className="bg-card p-8 rounded-3xl shadow-soft border border-border">
               <h2 className="text-2xl font-bold flex items-center gap-3 mb-4 text-foreground">
-                <FileText className="w-6 h-6 text-purple-500" />
+                <FileText className="w-6 h-6 text-secondary-foreground" />
                 Anonimizzazione dei Dati
               </h2>
               <p className="text-muted-foreground leading-relaxed">
