@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
-const avatarOptions = ["🧒", "👦", "👧", "🧒🏻", "👦🏽", "👧🏾", "🦸", "🧙", "🦊", "🐱", "🐻", "🌟"];
+const avatarOptions = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
 
 const schoolLevels = [
   { id: "primaria-1-2", label: "Primaria 1ª-2ª" },
