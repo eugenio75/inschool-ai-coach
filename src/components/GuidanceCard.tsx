@@ -216,7 +216,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
       shouldAutoAnalyze = true;
     } else if (isPhotoTask && hasSourcePage) {
       const title = taskContext?.title || taskTitle || "";
-      initial = `Perfetto ${name}! Ho la pagina davanti${taskSubject ? ` di ${taskSubject}` : ""}. Lavoriamo su "${title}". Analizzo l'esercizio e ti preparo il ripasso... ⏳`;
+      initial = `Perfetto ${name}! Ho la pagina davanti${taskSubject ? ` di ${taskSubject}` : ""}. Lavoriamo su "${title}". Analizzo l'esercizio e ti preparo il ripasso...`;
       shouldAutoAnalyze = true;
     } else if (isPhotoTask) {
       initial = `Perfetto ${name}! Ho già il testo dell'attività${taskSubject ? ` di ${taskSubject}` : ""}. Partiamo da qui: ${taskContext?.description ? `"${taskContext.description}"` : `guardiamo insieme cosa chiede l'esercizio`}.`;
