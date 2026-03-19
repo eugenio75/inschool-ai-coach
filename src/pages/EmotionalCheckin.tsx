@@ -235,7 +235,7 @@ const EmotionalCheckin = () => {
             transition={spring}
             className="max-w-sm w-full text-center"
           >
-            <div className="text-4xl mb-6">🌟</div>
+            <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-6"><Star className="w-7 h-7 text-accent-foreground" /></div>
             <h2 className="font-display text-lg sm:text-xl font-bold text-foreground mb-2">
               Perfetto!
             </h2>
