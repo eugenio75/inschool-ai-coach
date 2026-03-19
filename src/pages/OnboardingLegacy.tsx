@@ -123,7 +123,7 @@ const OnboardingLegacy = () => {
               <div>
                 <label className="text-sm text-muted-foreground mb-2 block">Genere</label>
                 <div className="flex gap-3">
-                  {[{ id: "M", label: "👦 Maschio" }, { id: "F", label: "👧 Femmina" }].map((g) => (
+                  {[{ id: "M", label: "Maschio" }, { id: "F", label: "Femmina" }].map((g) => (
                     <button key={g.id} onClick={() => setData({ ...data, gender: g.id })} className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all ${data.gender === g.id ? "bg-primary text-primary-foreground shadow-soft" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{g.label}</button>
                   ))}
                 </div>
