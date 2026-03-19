@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   Flame, BookOpen, Timer, Brain, Zap, Sliders,
   Play, Pause, RotateCcw, CalendarCheck, Plus,
-  Target, BarChart3, ChevronRight, LogOut,
+  Target, BarChart3, ChevronRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Users, Plus, FilePlus, BarChart2, BookMarked, CheckSquare,
-  FileText, Mic, FolderOpen, Home, Users2, Bell, Copy, LogOut,
+  FileText, Mic, FolderOpen, Home, Users2, Bell, Copy,
   Minus, Printer, ChevronRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
