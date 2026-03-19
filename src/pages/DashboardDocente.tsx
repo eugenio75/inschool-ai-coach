@@ -340,7 +340,7 @@ export default function DashboardDocente() {
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" className="h-9 w-9 p-0 rounded-xl"
                   onClick={() => setGenNumero(n => Math.max(5, n - 1))}><Minus className="w-3 h-3" /></Button>
-                <span className="flex-1 text-center font-semibold text-slate-800">{genNumero}</span>
+                <span className="flex-1 text-center font-semibold text-foreground">{genNumero}</span>
                 <Button variant="outline" size="sm" className="h-9 w-9 p-0 rounded-xl"
                   onClick={() => setGenNumero(n => Math.min(20, n + 1))}><Plus className="w-3 h-3" /></Button>
               </div>
