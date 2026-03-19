@@ -443,6 +443,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     <p className="text-slate-500 mb-6">Il tuo cruscotto didattico ti attende</p>
                     <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 space-y-4 shadow-sm">
                         <div><span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Classe</span><p className="font-medium text-slate-800">{answers.docente_ordine}</p></div>
+                        <div><span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Materie</span><p className="font-medium text-slate-800">{(answers.docente_materie || []).join(", ")}</p></div>
                         <div><span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Automazioni IA</span><p className="font-medium text-slate-800">{(answers.docente_auto || []).join(", ")}</p></div>
                     </div>
                 </div>
