@@ -269,7 +269,7 @@ const EmotionalCheckin = () => {
             transition={spring}
             className="max-w-sm w-full text-center"
           >
-            <div className="text-4xl mb-6">💬</div>
+            <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-6"><MessageSquare className="w-7 h-7 text-muted-foreground" /></div>
             <h2 className="font-display text-lg font-bold text-foreground mb-2">
               Un'ultima cosa...
             </h2>
