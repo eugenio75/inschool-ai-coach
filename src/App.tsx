@@ -26,6 +26,8 @@ import ResetPassword from "./pages/ResetPassword";
 
 import Privacy from "./pages/Privacy";
 import Security from "./pages/Security";
+import { AdultLayout } from "@/components/AdultLayout";
+import { getChildSession as getCS } from "@/lib/childSession";
 
 const queryClient = new QueryClient();
 
