@@ -453,7 +453,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     const newMsg: ChatMessage = {
       id: `student-${Date.now()}`,
       role: "student",
-      text: trimmed || (pendingImage ? "📷 Ho fotografato i miei esercizi" : ""),
+      text: trimmed || (pendingImage ? "Ho fotografato i miei esercizi" : ""),
       imageUrl: pendingImage || undefined,
     };
     const updated = [...messages, newMsg];
