@@ -52,7 +52,7 @@ export default function DashboardDocente() {
 
   // Nuova classe modal
   const [showClasseModal, setShowClasseModal] = useState(false);
-  const [newClasse, setNewClasse] = useState({ nome: "", materia: "", ordine_scolastico: "" });
+  const [newClasse, setNewClasse] = useState({ nome: "", materia: "", ordine_scolastico: "", num_studenti: "" });
   const [savingClasse, setSavingClasse] = useState(false);
   const [classeCreata, setClasseCreata] = useState<any>(null);
 
@@ -112,11 +112,12 @@ export default function DashboardDocente() {
         nome: newClasse.nome,
         materia: newClasse.materia || null,
         ordine_scolastico: newClasse.ordine_scolastico || ordine || null,
+        num_studenti: newClasse.num_studenti ? parseInt(newClasse.num_studenti) : 0,
       }).select().single();
     setSavingClasse(false);
     if (!error && data) {
       setClasseCreata(data);
-      setNewClasse({ nome: "", materia: "", ordine_scolastico: "" });
+      setNewClasse({ nome: "", materia: "", ordine_scolastico: "", num_studenti: "" });
       loadAll();
     } else {
       toast.error("Errore nella creazione della classe.");
@@ -496,6 +497,11 @@ export default function DashboardDocente() {
                   <SelectItem value="Formazione Professionale">Formazione Professionale</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label>Numero studenti</Label>
+              <Input type="number" min="0" placeholder="es. 25" value={newClasse.num_studenti}
+                onChange={e => setNewClasse(p => ({ ...p, num_studenti: e.target.value }))} className="mt-1 rounded-xl" />
             </div>
           </div>
           <DialogFooter>

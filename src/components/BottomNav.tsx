@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Brain, User, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { getChildSession } from "@/lib/childSession";
 
 const navItems = [
   { path: "/dashboard", label: "Home", icon: Home },
@@ -9,12 +10,20 @@ const navItems = [
   { path: "/profiles", label: "Profilo", icon: User },
 ];
 
+const ADULT_ROLES = ["superiori", "universitario", "docente"];
+
 export const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
 
-  const hiddenPaths = ["/focus", "/homework", "/add-homework", "/auth", "/onboarding", "/"];
+  // Hide for adult roles — they use the desktop sidebar
+  const session = getChildSession();
+  if (ADULT_ROLES.includes(session?.profile?.school_level || "")) {
+    return null;
+  }
+
+  const hiddenPaths = ["/focus", "/homework", "/add-homework", "/auth", "/onboarding", "/", "/challenge"];
   if (hiddenPaths.some((p) => location.pathname.startsWith(p) && (p !== "/" || location.pathname === "/"))) {
     return null;
   }
