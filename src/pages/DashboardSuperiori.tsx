@@ -333,17 +333,17 @@ export default function DashboardSuperiori() {
             {challengeLoading ? (
               <div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div>
             ) : challengeError ? (
-              <p className="text-slate-400 text-sm">
+              <p className="text-muted-foreground text-sm">
                 Impossibile generare la sfida oggi.{" "}
-                <button onClick={() => generateChallenge(materie, indirizzo, anno)} className="text-blue-600 underline">Riprova</button>
+                <button onClick={() => generateChallenge(materie, indirizzo, anno)} className="text-primary underline">Riprova</button>
               </p>
             ) : challenge ? (
               <div className="flex gap-3">
-                <Target className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
-                <p className="text-slate-700 leading-relaxed">{challenge}</p>
+                <Target className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                <p className="text-foreground leading-relaxed">{challenge}</p>
               </div>
             ) : (
-              <p className="text-slate-400 text-sm">Completa l'onboarding per ricevere sfide personalizzate.</p>
+              <p className="text-muted-foreground text-sm">Completa l'onboarding per ricevere sfide personalizzate.</p>
             )}
           </div>
         </section>
