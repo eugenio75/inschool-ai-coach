@@ -380,7 +380,7 @@ export default function DashboardUniversitario() {
                     <SelectContent>{esami.map(e => <SelectItem key={e.id} value={e.nome_esame}>{e.nome_esame}</SelectItem>)}</SelectContent>
                   </Select>
                 )}
-                <Button onClick={startFocus} className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">
+                <Button onClick={startFocus} className="w-full rounded-xl font-semibold">
                   Avvia sessione
                 </Button>
               </motion.div>
