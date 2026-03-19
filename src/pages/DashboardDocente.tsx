@@ -231,8 +231,8 @@ export default function DashboardDocente() {
                 { label: `${classi.length} classi attive`, icon: <Users className="w-3.5 h-3.5" /> },
                 { label: `${verificheCount} verifiche generate`, icon: <FileText className="w-3.5 h-3.5" /> },
               ].map((k, i) => (
-                <div key={i} className="flex items-center gap-1.5 text-xs text-slate-500 bg-white border border-slate-200 rounded-full px-3 py-1.5">
-                  <span className="text-purple-500">{k.icon}</span>{k.label}
+                <div key={i} className="flex items-center gap-1.5 text-xs text-muted-foreground bg-card border border-border rounded-full px-3 py-1.5">
+                  <span className="text-primary">{k.icon}</span>{k.label}
                 </div>
               ))}
             </div>
