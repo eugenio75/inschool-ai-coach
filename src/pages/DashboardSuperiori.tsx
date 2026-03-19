@@ -28,6 +28,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { RecentConversations } from "@/components/shared/RecentConversations";
+import { LogoutButton } from "@/components/shared/LogoutButton";
 
 const TIMER_CONFIGS = {
   pomodoro:   { seconds: 25 * 60, label: "Pomodoro — 25 min" },
