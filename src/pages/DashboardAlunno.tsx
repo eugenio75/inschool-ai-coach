@@ -158,7 +158,7 @@ const DashboardAlunno = () => {
   };
 
   const name = profile?.name || "Studente";
-  const avatar = profile?.avatar_emoji || profile?.avatarEmoji || "🧒";
+  const avatarName = profile?.name || "S";
   const completedCount = tasks.filter((t) => t.completed).length;
   const totalMinutes = tasks.reduce((a: number, t: any) => a + (t.estimated_minutes || 0), 0);
 
