@@ -471,7 +471,7 @@ export default function DashboardUniversitario() {
       <Dialog open={showFocusConfirm} onOpenChange={setShowFocusConfirm}>
         <DialogContent className="rounded-2xl">
           <DialogHeader><DialogTitle>Terminare la sessione?</DialogTitle></DialogHeader>
-          <p className="text-sm text-slate-500 py-2">La sessione non verrà salvata se termini ora.</p>
+          <p className="text-sm text-muted-foreground py-2">La sessione non verrà salvata se termini ora.</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowFocusConfirm(false)} className="rounded-xl">Continua</Button>
             <Button variant="destructive" onClick={stopFocus} className="rounded-xl">Termina</Button>
