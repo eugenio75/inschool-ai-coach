@@ -243,7 +243,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     } else if (isReadingComprehensionTask) {
       initial = `Perfetto ${name}! Facciamo comprensione del testo. Raccontami in 2 frasi cosa hai letto e poi ti faccio domande mirate.`;
     } else if (taskTitle?.toLowerCase().includes("legg") || taskTitle?.toLowerCase().includes("lettura") || taskTitle?.toLowerCase().includes("libro")) {
-      initial = `Perfetto ${name}! Vedo che devi leggere. 📖 Quale libro o capitolo stai leggendo? Raccontami un po'!`;
+      initial = `Perfetto ${name}! Vedo che devi leggere. Quale libro o capitolo stai leggendo? Raccontami un po'!`;
     } else {
       initial = `Perfetto ${name}, iniziamo! ${taskTitle ? `Stiamo lavorando su "${taskTitle}"${taskSubject ? ` di ${taskSubject}` : ""}.` : ""} Cosa dice la consegna?`;
     }
