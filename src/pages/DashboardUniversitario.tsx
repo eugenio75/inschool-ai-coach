@@ -387,8 +387,8 @@ export default function DashboardUniversitario() {
             ) : (
               <motion.div key="active" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="text-center space-y-4">
-                <p className="text-xs text-slate-400 uppercase tracking-wider">{focusMateria || "Sessione Focus"}</p>
-                <span className="text-7xl font-mono font-bold text-slate-900 tabular-nums block">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">{focusMateria || "Sessione Focus"}</p>
+                <span className="text-7xl font-mono font-bold text-foreground tabular-nums block">
                   {fmtTime(focusSecondsLeft)}
                 </span>
                 <Progress value={focusProgress} className="h-2" />
