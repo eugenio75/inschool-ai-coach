@@ -418,10 +418,10 @@ export default function DashboardUniversitario() {
           ) : (
             <div className="space-y-2">
               {ricerche.map(r => (
-                <div key={r.id} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between gap-4">
+                <div key={r.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-800 text-sm truncate">{r.argomento}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="font-medium text-foreground text-sm truncate">{r.argomento}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {formatDistanceToNow(new Date(r.created_at), { locale: it, addSuffix: true })}
                       {r.num_fonti > 0 && ` · ${r.num_fonti} fonti`}
                     </p>
