@@ -162,9 +162,9 @@ export default function DashboardUniversitario() {
     if (!dataPrevista) return { label: "Data da definire", cls: "bg-muted text-muted-foreground" };
     const days = differenceInDays(new Date(dataPrevista), new Date());
     if (days < 0) return { label: "Concluso", cls: "bg-muted text-muted-foreground" };
-    if (days < 10) return { label: `tra ${days} giorni`, cls: "bg-red-100 text-red-700" };
-    if (days < 30) return { label: `tra ${days} giorni`, cls: "bg-yellow-100 text-yellow-700" };
-    return { label: `tra ${days} giorni`, cls: "bg-green-100 text-green-700" };
+    if (days < 10) return { label: `tra ${days} giorni`, cls: "bg-destructive/10 text-destructive" };
+    if (days < 30) return { label: `tra ${days} giorni`, cls: "bg-secondary/20 text-secondary-foreground" };
+    return { label: `tra ${days} giorni`, cls: "bg-accent text-accent-foreground" };
   }
 
   function startFocus() {
