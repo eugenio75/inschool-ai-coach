@@ -21,19 +21,19 @@ const schoolLevels = [
 const subjects = ["Italiano", "Matematica", "Scienze", "Storia", "Geografia", "Inglese", "Arte", "Musica", "Tecnologia"];
 
 const struggles = [
-  { id: "distraction", label: "Si distrae facilmente", emoji: "🦋" },
-  { id: "refusal", label: "Rifiuta di iniziare", emoji: "🛑" },
-  { id: "anxiety", label: "Ansia da prestazione", emoji: "😰" },
-  { id: "slowness", label: "È molto lento", emoji: "🐢" },
-  { id: "low-confidence", label: "Poca fiducia in sé", emoji: "🌧️" },
-  { id: "poor-memory", label: "Fatica a ricordare", emoji: "🧠" },
+  { id: "distraction", label: "Si distrae facilmente" },
+  { id: "refusal", label: "Rifiuta di iniziare" },
+  { id: "anxiety", label: "Ansia da prestazione" },
+  { id: "slowness", label: "È molto lento" },
+  { id: "low-confidence", label: "Poca fiducia in sé" },
+  { id: "poor-memory", label: "Fatica a ricordare" },
 ];
 
 const supportStyles = [
-  { id: "gentle", label: "Gentile e paziente", emoji: "🌿" },
-  { id: "playful", label: "Giocoso e leggero", emoji: "🎈" },
-  { id: "challenge", label: "Stimolante e sfidante", emoji: "🚀" },
-  { id: "calm", label: "Calmo e rassicurante", emoji: "☁️" },
+  { id: "gentle", label: "Gentile e paziente" },
+  { id: "playful", label: "Giocoso e leggero" },
+  { id: "challenge", label: "Stimolante e sfidante" },
+  { id: "calm", label: "Calmo e rassicurante" },
 ];
 
 interface OnboardingData {
