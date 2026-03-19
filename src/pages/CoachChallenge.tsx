@@ -356,9 +356,71 @@ export default function CoachChallenge() {
     setDeleteTarget(null);
   };
 
+  const sidebarContent = (
+    <>
+      <div className="p-4 border-b border-border flex items-center justify-between">
+        <h2 className="font-semibold text-foreground text-sm">Conversazioni</h2>
+        <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg hover:bg-muted transition-colors lg:hidden">
+          <PanelLeftClose className="w-4 h-4 text-muted-foreground" />
+        </button>
+      </div>
+      <div className="p-3">
+        <Button onClick={startNewChat} variant="outline" className="w-full rounded-xl text-sm" size="sm">
+          <Plus className="w-3.5 h-3.5 mr-1.5" /> Nuova chat
+        </Button>
+      </div>
+      <div className="flex-1 overflow-y-auto px-2 pb-4">
+        {loadingSessions ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : sessions.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-8">Nessuna conversazione</p>
+        ) : (
+          <div className="space-y-1">
+            {sessions.map(s => (
+              <div
+                key={s.id}
+                className={`group flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
+                  activeSessionId === s.id
+                    ? "bg-primary/10 text-primary"
+                    : "text-foreground hover:bg-muted"
+                }`}
+              >
+                <button
+                  onClick={() => loadSession(s)}
+                  className="flex-1 min-w-0 text-left"
+                >
+                  <p className="text-sm font-medium truncate">
+                    {s.titolo || "Nuova conversazione"}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {s.materia && <span className="mr-1.5">{s.materia}</span>}
+                    {formatDistanceToNow(new Date(s.updated_at), { locale: it, addSuffix: true })}
+                  </p>
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDeleteTarget(s.id); }}
+                  className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-background flex">
-      {/* SIDEBAR */}
+      {/* DESKTOP SIDEBAR — always visible on lg+ */}
+      <aside className="hidden lg:flex w-72 bg-card border-r border-border flex-col shrink-0">
+        {sidebarContent}
+      </aside>
+
+      {/* MOBILE SIDEBAR — overlay */}
       <AnimatePresence>
         {sidebarOpen && (
           <>
@@ -374,60 +436,9 @@ export default function CoachChallenge() {
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed left-0 top-0 bottom-0 w-72 bg-card border-r border-border z-50 flex flex-col"
+              className="fixed left-0 top-0 bottom-0 w-72 bg-card border-r border-border z-50 flex flex-col lg:hidden"
             >
-              <div className="p-4 border-b border-border flex items-center justify-between">
-                <h2 className="font-semibold text-foreground text-sm">Conversazioni</h2>
-                <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                  <PanelLeftClose className="w-4 h-4 text-muted-foreground" />
-                </button>
-              </div>
-              <div className="p-3">
-                <Button onClick={startNewChat} variant="outline" className="w-full rounded-xl text-sm" size="sm">
-                  <Plus className="w-3.5 h-3.5 mr-1.5" /> Nuova chat
-                </Button>
-              </div>
-              <div className="flex-1 overflow-y-auto px-2 pb-4">
-                {loadingSessions ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : sessions.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-8">Nessuna conversazione</p>
-                ) : (
-                  <div className="space-y-1">
-                    {sessions.map(s => (
-                      <div
-                        key={s.id}
-                        className={`group flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
-                          activeSessionId === s.id
-                            ? "bg-primary/10 text-primary"
-                            : "text-foreground hover:bg-muted"
-                        }`}
-                      >
-                        <button
-                          onClick={() => loadSession(s)}
-                          className="flex-1 min-w-0 text-left"
-                        >
-                          <p className="text-sm font-medium truncate">
-                            {s.titolo || "Nuova conversazione"}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">
-                            {s.materia && <span className="mr-1.5">{s.materia}</span>}
-                            {formatDistanceToNow(new Date(s.updated_at), { locale: it, addSuffix: true })}
-                          </p>
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(s.id); }}
-                          className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {sidebarContent}
             </motion.aside>
           </>
         )}
@@ -457,7 +468,7 @@ export default function CoachChallenge() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors"
+                className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors lg:hidden"
               >
                 <PanelLeftOpen className="w-4 h-4 text-muted-foreground" />
               </button>

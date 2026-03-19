@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -7,33 +8,43 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
-import Landing from "./pages/Landing";
-import Auth from "./pages/Auth";
-import ProfileSelector from "./pages/ProfileSelector";
-import Onboarding from "./pages/Onboarding";
-import Dashboard from "@/pages/Dashboard";
-import AddHomework from "./pages/AddHomework";
-import HomeworkDetail from "./pages/HomeworkDetail";
-import FocusSession from "./pages/FocusSession";
-import CoachChallenge from "./pages/CoachChallenge";
-import MemoryRecap from "./pages/MemoryRecap";
-import ParentDashboard from "./pages/ParentDashboard";
-import Settings from "./pages/Settings";
-import StudentProfile from "./pages/StudentProfile";
-import EmotionalCheckin from "./pages/EmotionalCheckin";
-import NotFound from "./pages/NotFound";
-import ResetPassword from "./pages/ResetPassword";
-
-import Privacy from "./pages/Privacy";
-import Security from "./pages/Security";
 import { AdultLayout } from "@/components/AdultLayout";
 import { getChildSession as getCS } from "@/lib/childSession";
+import { Loader2 } from "lucide-react";
+
+// Lazy-loaded pages
+const Landing = lazy(() => import("./pages/Landing"));
+const Auth = lazy(() => import("./pages/Auth"));
+const ProfileSelector = lazy(() => import("./pages/ProfileSelector"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const AddHomework = lazy(() => import("./pages/AddHomework"));
+const HomeworkDetail = lazy(() => import("./pages/HomeworkDetail"));
+const FocusSession = lazy(() => import("./pages/FocusSession"));
+const CoachChallenge = lazy(() => import("./pages/CoachChallenge"));
+const MemoryRecap = lazy(() => import("./pages/MemoryRecap"));
+const ParentDashboard = lazy(() => import("./pages/ParentDashboard"));
+const Settings = lazy(() => import("./pages/Settings"));
+const StudentProfile = lazy(() => import("./pages/StudentProfile"));
+const EmotionalCheckin = lazy(() => import("./pages/EmotionalCheckin"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Security = lazy(() => import("./pages/Security"));
 
 const queryClient = new QueryClient();
 
+function PageLoader() {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <Loader2 className="w-6 h-6 animate-spin text-primary" />
+    </div>
+  );
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   return <>{children}</>;
 }
@@ -42,7 +53,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AccessibleRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const childSession = isChildSession();
-  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) return <PageLoader />;
   if (!user && !childSession) return <Navigate to="/auth" replace />;
   return <>{children}</>;
 }
@@ -59,7 +70,7 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-// Global Guard for Intelligent Routing (Step 1)
+// Global Guard for Intelligent Routing
 function RoleGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const location = useLocation();
@@ -104,26 +115,28 @@ function MaybeAdultLayout({ children }: { children: React.ReactNode }) {
 
 const AppRoutes = () => (
   <RoleGuard>
-    <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
-      <Route path="/profiles" element={<ProtectedRoute><ProfileSelector /></ProtectedRoute>} />
-      <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-      <Route path="/checkin" element={<AccessibleRoute><EmotionalCheckin /></AccessibleRoute>} />
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/security" element={<Security />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/dashboard" element={<AccessibleRoute><MaybeAdultLayout><Dashboard /></MaybeAdultLayout></AccessibleRoute>} />
-      <Route path="/add-homework" element={<AccessibleRoute><MaybeAdultLayout><AddHomework /></MaybeAdultLayout></AccessibleRoute>} />
-      <Route path="/homework/:taskId" element={<AccessibleRoute><HomeworkDetail /></AccessibleRoute>} />
-      <Route path="/focus/:taskId" element={<AccessibleRoute><FocusSession /></AccessibleRoute>} />
-      <Route path="/challenge/:missionId" element={<AccessibleRoute><CoachChallenge /></AccessibleRoute>} />
-      <Route path="/memory" element={<AccessibleRoute><MaybeAdultLayout><MemoryRecap /></MaybeAdultLayout></AccessibleRoute>} />
-      <Route path="/parent-dashboard" element={<ProtectedRoute><ParentDashboard /></ProtectedRoute>} />
-      <Route path="/student-profile" element={<AccessibleRoute><StudentProfile /></AccessibleRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><MaybeAdultLayout><Settings /></MaybeAdultLayout></ProtectedRoute>} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
+        <Route path="/profiles" element={<ProtectedRoute><ProfileSelector /></ProtectedRoute>} />
+        <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+        <Route path="/checkin" element={<AccessibleRoute><EmotionalCheckin /></AccessibleRoute>} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/security" element={<Security />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/dashboard" element={<AccessibleRoute><MaybeAdultLayout><Dashboard /></MaybeAdultLayout></AccessibleRoute>} />
+        <Route path="/add-homework" element={<AccessibleRoute><MaybeAdultLayout><AddHomework /></MaybeAdultLayout></AccessibleRoute>} />
+        <Route path="/homework/:taskId" element={<AccessibleRoute><HomeworkDetail /></AccessibleRoute>} />
+        <Route path="/focus/:taskId" element={<AccessibleRoute><FocusSession /></AccessibleRoute>} />
+        <Route path="/challenge/:missionId" element={<AccessibleRoute><CoachChallenge /></AccessibleRoute>} />
+        <Route path="/memory" element={<AccessibleRoute><MaybeAdultLayout><MemoryRecap /></MaybeAdultLayout></AccessibleRoute>} />
+        <Route path="/parent-dashboard" element={<ProtectedRoute><ParentDashboard /></ProtectedRoute>} />
+        <Route path="/student-profile" element={<AccessibleRoute><StudentProfile /></AccessibleRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><MaybeAdultLayout><Settings /></MaybeAdultLayout></ProtectedRoute>} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   </RoleGuard>
 );
 
