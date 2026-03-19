@@ -348,8 +348,8 @@ const ParentDashboard = () => {
           {emotionalAlerts.filter(a => !a.read).map((alert) => {
             const levelConfig: Record<string, { bg: string; border: string; icon: any; text: string }> = {
               high: { bg: "bg-destructive/10", border: "border-destructive/30", icon: ShieldAlert, text: "text-destructive" },
-              medium: { bg: "bg-amber-50", border: "border-amber-300/30", icon: AlertTriangle, text: "text-amber-700" },
-              low: { bg: "bg-blue-50", border: "border-blue-300/30", icon: Info, text: "text-blue-700" },
+              medium: { bg: "bg-amber-500/10", border: "border-amber-500/30", icon: AlertTriangle, text: "text-amber-600 dark:text-amber-400" },
+              low: { bg: "bg-blue-500/10", border: "border-blue-500/30", icon: Info, text: "text-blue-600 dark:text-blue-400" },
             };
             const config = levelConfig[alert.alert_level] || levelConfig.low;
             const IconComp = config.icon;
