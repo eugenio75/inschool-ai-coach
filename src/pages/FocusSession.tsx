@@ -468,7 +468,7 @@ const FocusSession = () => {
                 <p className="text-sm text-sage-dark font-medium mb-4">Hai dimostrato costanza e impegno.</p>
                 
                 {!extracting && (
-                  <p className="text-xs text-muted-foreground mb-4">I concetti studiati sono stati salvati in Memoria e Ripasso 🧠</p>
+                  <p className="text-xs text-muted-foreground mb-4">I concetti studiati sono stati salvati in Memoria e Ripasso.</p>
                 )}
                 
                 <div className="flex flex-col gap-3">
