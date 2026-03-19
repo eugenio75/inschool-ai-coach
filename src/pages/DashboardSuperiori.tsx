@@ -287,10 +287,10 @@ export default function DashboardSuperiori() {
             )}
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-2xl px-3 py-2 shrink-0">
-              <Flame className="w-4 h-4 text-orange-500" />
-              <span className="font-bold text-orange-600">{streak}</span>
-              <span className="text-xs text-orange-500 hidden sm:block">giorni</span>
+            <div className="flex items-center gap-2 bg-destructive/10 border border-destructive/20 rounded-2xl px-3 py-2 shrink-0">
+              <Flame className="w-4 h-4 text-destructive" />
+              <span className="font-bold text-destructive">{streak}</span>
+              <span className="text-xs text-destructive/80 hidden sm:block">giorni</span>
             </div>
             <LogoutButton showLabel />
           </div>
