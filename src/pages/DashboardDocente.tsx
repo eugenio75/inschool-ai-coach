@@ -413,13 +413,13 @@ export default function DashboardDocente() {
           ) : (
             <div className="space-y-2">
               {verificheSalvate.map(v => (
-                <div key={v.id} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between gap-3">
+                <div key={v.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-800 text-sm truncate">{v.argomento}</p>
+                    <p className="font-medium text-foreground text-sm truncate">{v.argomento}</p>
                     <div className="flex items-center gap-2 mt-1">
                       {v.materia && <Badge variant="secondary" className="text-xs">{v.materia}</Badge>}
-                      {v.tipo && <span className="text-xs text-slate-400">{v.tipo}</span>}
-                      <span className="text-xs text-slate-400">
+                      {v.tipo && <span className="text-xs text-muted-foreground">{v.tipo}</span>}
+                      <span className="text-xs text-muted-foreground">
                         {format(new Date(v.created_at), "d MMM", { locale: it })}
                       </span>
                     </div>
