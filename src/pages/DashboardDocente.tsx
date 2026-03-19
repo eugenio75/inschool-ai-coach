@@ -52,7 +52,7 @@ export default function DashboardDocente() {
 
   // Nuova classe modal
   const [showClasseModal, setShowClasseModal] = useState(false);
-  const [newClasse, setNewClasse] = useState({ nome: "", materia: "", ordine_scolastico: "" });
+  const [newClasse, setNewClasse] = useState({ nome: "", materia: "", ordine_scolastico: "", num_studenti: "" });
   const [savingClasse, setSavingClasse] = useState(false);
   const [classeCreata, setClasseCreata] = useState<any>(null);
 
