@@ -498,6 +498,11 @@ export default function DashboardDocente() {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label>Numero studenti</Label>
+              <Input type="number" min="0" placeholder="es. 25" value={newClasse.num_studenti}
+                onChange={e => setNewClasse(p => ({ ...p, num_studenti: e.target.value }))} className="mt-1 rounded-xl" />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowClasseModal(false)} className="rounded-xl">Annulla</Button>
