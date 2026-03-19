@@ -254,7 +254,7 @@ const EmotionalCheckin = () => {
                 </button>
               ))}
             </div>
-            <button onClick={handleSkip} className="mt-6 text-xs text-muted-foreground hover:text-foreground">
+            <button onClick={handleSkip} className="mt-6 text-xs text-muted-foreground hover:text-foreground transition-colors">
               Salta →
             </button>
           </motion.div>
