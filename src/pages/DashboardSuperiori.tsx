@@ -466,7 +466,7 @@ export default function DashboardSuperiori() {
             </BarChart>
           </ResponsiveContainer>
           {weekData.every(d => d.minuti === 0) && (
-            <p className="text-center text-xs text-slate-400 mt-3">
+            <p className="text-center text-xs text-muted-foreground mt-3">
               Usa il Timer di Studio per registrare le tue sessioni e vedere i progressi
             </p>
           )}
