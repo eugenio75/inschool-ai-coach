@@ -358,7 +358,7 @@ export default function DashboardUniversitario() {
             {!focusActive ? (
               <motion.div key="inactive" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="space-y-3">
-                <p className="text-sm text-slate-500">Blocca le distrazioni e studia in profondità</p>
+                <p className="text-sm text-muted-foreground">Blocca le distrazioni e studia in profondità</p>
                 <div className="grid grid-cols-2 gap-3">
                   <Select value={String(focusDuration)} onValueChange={v => setFocusDuration(Number(v))}>
                     <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
