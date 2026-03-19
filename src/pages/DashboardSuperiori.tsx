@@ -309,17 +309,17 @@ export default function DashboardSuperiori() {
                 <motion.button key={m} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
                   onClick={() => navigate(`/challenge/new?subject=${encodeURIComponent(m)}`)}
-                  className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between group hover:border-blue-300 hover:shadow-md transition-all text-left">
+                  className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between group hover:border-primary/40 hover:shadow-md transition-all text-left">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                      <BookOpen className="w-4 h-4 text-blue-600" />
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <BookOpen className="w-4 h-4 text-primary" />
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-800 text-sm">{m}</p>
-                      <p className="text-xs text-slate-400">Studia ora</p>
+                      <p className="font-semibold text-foreground text-sm">{m}</p>
+                      <p className="text-xs text-muted-foreground">Studia ora</p>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-500 transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary transition-colors" />
                 </motion.button>
               ))}
             </div>
