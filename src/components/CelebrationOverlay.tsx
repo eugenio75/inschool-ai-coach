@@ -146,16 +146,16 @@ export const CelebrationOverlay = ({ show, onComplete, message, points, schoolLe
             transition={{ duration: primary ? 0.5 : 0.6, ease: "easeOut" }}
             className="bg-card rounded-3xl shadow-lg px-8 py-6 text-center border border-border"
           >
-            <motion.span 
-              className={`block mb-2 ${primary ? "text-6xl" : "text-5xl"}`}
+            <motion.div 
+              className={`flex items-center justify-center mb-2 ${primary ? "w-16 h-16" : "w-14 h-14"} rounded-2xl bg-primary/10 mx-auto`}
               animate={primary ? { 
                 scale: [1, 1.2, 1],
                 rotate: [0, 10, -10, 0],
               } : {}}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              {celebration.emoji}
-            </motion.span>
+              <celebration.icon className={`${primary ? "w-8 h-8" : "w-7 h-7"} text-primary`} />
+            </motion.div>
             <p className={`font-display font-bold text-foreground ${primary ? "text-2xl" : "text-xl"}`}>
               {message || celebration.text}
             </p>
