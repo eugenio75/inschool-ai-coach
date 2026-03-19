@@ -11,10 +11,12 @@ interface Message {
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
+import { Lightbulb, Compass, Target } from "lucide-react";
+
 const quickModes = [
-  { id: "explain", emoji: "💡", label: "Spiegami una cosa" },
-  { id: "guide", emoji: "🧭", label: "Guidami passo passo" },
-  { id: "quiz", emoji: "🎯", label: "Mini quiz veloce" },
+  { id: "explain", icon: Lightbulb, label: "Spiegami una cosa" },
+  { id: "guide", icon: Compass, label: "Guidami passo passo" },
+  { id: "quiz", icon: Target, label: "Mini quiz veloce" },
 ];
 
 export const QuickHelpButton = ({ onClick }: { onClick: () => void }) => (
