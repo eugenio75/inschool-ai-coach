@@ -31,6 +31,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Security = lazy(() => import("./pages/Security"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 
 const queryClient = new QueryClient();
 
@@ -125,6 +126,7 @@ const AppRoutes = () => (
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/security" element={<Security />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/dashboard" element={<AccessibleRoute><MaybeAdultLayout><Dashboard /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/add-homework" element={<AccessibleRoute><MaybeAdultLayout><AddHomework /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/homework/:taskId" element={<AccessibleRoute><HomeworkDetail /></AccessibleRoute>} />

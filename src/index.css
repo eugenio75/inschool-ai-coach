@@ -64,6 +64,63 @@
     --sidebar-border: 210 20% 92%;
     --sidebar-ring: 155 30% 45%;
   }
+
+  .dark {
+    --background: 230 20% 10%;
+    --foreground: 210 20% 92%;
+
+    --card: 230 18% 14%;
+    --card-foreground: 210 20% 92%;
+
+    --popover: 230 18% 14%;
+    --popover-foreground: 210 20% 92%;
+
+    --primary: 155 30% 50%;
+    --primary-foreground: 230 20% 10%;
+
+    --secondary: 45 30% 45%;
+    --secondary-foreground: 45 30% 92%;
+
+    --muted: 230 15% 18%;
+    --muted-foreground: 215 15% 55%;
+
+    --accent: 155 20% 18%;
+    --accent-foreground: 155 25% 75%;
+
+    --destructive: 30 45% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 230 15% 22%;
+    --input: 230 15% 22%;
+    --ring: 155 30% 50%;
+
+    /* Custom tokens */
+    --sage: 155 30% 50%;
+    --sage-light: 155 20% 18%;
+    --sage-dark: 155 25% 70%;
+    --clay: 45 30% 45%;
+    --clay-light: 45 20% 18%;
+    --clay-dark: 45 30% 70%;
+    --ink: 210 20% 92%;
+    --terracotta: 30 45% 50%;
+    --terracotta-light: 30 25% 18%;
+    --surface-muted: 230 15% 12%;
+
+    /* Shadows */
+    --shadow-soft: 0 2px 8px -2px rgba(0,0,0,0.3), 0 10px 15px -3px rgba(0,0,0,0.2);
+    --shadow-card: 0 4px 20px -4px rgba(0,0,0,0.3), 0 12px 24px -8px rgba(0,0,0,0.2);
+    --shadow-hover: 0 8px 30px -4px rgba(0,0,0,0.4), 0 16px 30px -8px rgba(0,0,0,0.25);
+
+    /* Sidebar */
+    --sidebar-background: 230 18% 12%;
+    --sidebar-foreground: 210 20% 85%;
+    --sidebar-primary: 155 30% 50%;
+    --sidebar-primary-foreground: 230 20% 10%;
+    --sidebar-accent: 155 20% 18%;
+    --sidebar-accent-foreground: 155 25% 75%;
+    --sidebar-border: 230 15% 22%;
+    --sidebar-ring: 155 30% 50%;
+  }
 }
 
 @layer base {

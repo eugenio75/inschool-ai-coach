@@ -257,8 +257,7 @@ const Auth = () => {
       } else {
         const { error } = await signUp(email, password);
         if (error) throw error;
-        toast({ title: "Genitore registrato! Crea subito il profilo per tuo figlio." });
-        navigate("/profiles");
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`);
       }
     } catch (err: any) {
       toast({ title: err.message || "Errore", variant: "destructive" });

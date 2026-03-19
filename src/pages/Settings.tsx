@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Lock, Loader2, Users, Shield, Pencil, Bell,
-  Eye, EyeOff, Trash2, RotateCcw,
+  Eye, EyeOff, Trash2, RotateCcw, Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { LogoutButton } from "@/components/shared/LogoutButton";
 import { getChildSession } from "@/lib/childSession";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 // Avatar colors for profile customization
 const AVATAR_COLORS = [
@@ -300,7 +301,18 @@ const Settings = () => {
             </div>
           </div>
 
-          {/* Navigation */}
+          {/* Aspetto */}
+          <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
+            <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2"><Moon className="w-4 h-4 text-primary" /> Aspetto</h3>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-foreground">Tema scuro</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Cambia tra tema chiaro e scuro</p>
+              </div>
+              <ThemeToggle />
+            </div>
+          </div>
+
           <div className="space-y-3">
             {!isAdult && (
               <Button variant="outline" onClick={() => navigate("/parent-dashboard")} className="w-full rounded-2xl border-border text-foreground">Area genitori</Button>
