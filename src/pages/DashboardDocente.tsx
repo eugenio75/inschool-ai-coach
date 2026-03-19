@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Users, Plus, FilePlus, BarChart2, BookMarked, CheckSquare,
-  FileText, Mic, FolderOpen, Home, Users2, Bell, Copy, LogOut,
+  FileText, Mic, FolderOpen, Home, Users2, Bell, Copy,
   Minus, Printer, ChevronRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
-import { useAuth } from "@/hooks/useAuth";
+
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,6 +24,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { RecentConversations } from "@/components/shared/RecentConversations";
+import { LogoutButton } from "@/components/shared/LogoutButton";
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -34,7 +36,7 @@ function getGreeting(): string {
 
 export default function DashboardDocente() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  
   const session = getChildSession();
   const profile = session?.profile;
   const profileId = session?.profileId;
@@ -207,10 +209,7 @@ export default function DashboardDocente() {
               ))}
             </div>
           </div>
-          <button onClick={() => { signOut(); navigate("/"); }}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white transition-colors shrink-0 mt-1">
-            <LogOut className="w-4 h-4" />
-          </button>
+          <LogoutButton showLabel />
         </motion.div>
 
         {/* CLASSI */}
@@ -386,6 +385,9 @@ export default function DashboardDocente() {
             </p>
           </div>
         </section>
+
+        {/* CONVERSAZIONI RECENTI */}
+        <RecentConversations profileId={profileId} title="Le tue sessioni con il Coach AI" />
 
       </div>
 

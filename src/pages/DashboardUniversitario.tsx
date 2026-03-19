@@ -4,11 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   GraduationCap, Lightbulb, ClipboardCheck, Search, Mic,
   PenLine, MessageSquare, Zap, Plus, Brain, Sliders, Timer,
-  CheckCircle2, LogOut, CalendarDays, TrendingUp, BookMarked,
+  CheckCircle2, CalendarDays, TrendingUp, BookMarked,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
-import { useAuth } from "@/hooks/useAuth";
+
 import { format, differenceInDays, formatDistanceToNow, subDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,6 +24,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { RecentConversations } from "@/components/shared/RecentConversations";
+import { LogoutButton } from "@/components/shared/LogoutButton";
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -74,7 +76,7 @@ const AI_ACTIONS: Record<string, { label: string; icon: React.ComponentType<{ cl
 
 export default function DashboardUniversitario() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  
   const session = getChildSession();
   const profile = session?.profile;
   const profileId = session?.profileId;
@@ -260,10 +262,7 @@ export default function DashboardUniversitario() {
               ))}
             </div>
           </div>
-          <button onClick={() => { signOut(); navigate("/"); }}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white transition-colors shrink-0 mt-1">
-            <LogOut className="w-4 h-4" />
-          </button>
+          <LogoutButton showLabel />
         </motion.div>
 
         {/* ESAMI IN VISTA */}
@@ -436,6 +435,9 @@ export default function DashboardUniversitario() {
             </div>
           )}
         </section>
+
+        {/* CONVERSAZIONI RECENTI */}
+        <RecentConversations profileId={profileId} title="Sessioni di studio recenti" />
 
       </div>
 

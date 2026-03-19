@@ -4,11 +4,11 @@ import { motion } from "framer-motion";
 import {
   Flame, BookOpen, Timer, Brain, Zap, Sliders,
   Play, Pause, RotateCcw, CalendarCheck, Plus,
-  Target, BarChart3, ChevronRight, LogOut,
+  Target, BarChart3, ChevronRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
-import { useAuth } from "@/hooks/useAuth";
+
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -28,6 +28,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { RecentConversations } from "@/components/shared/RecentConversations";
+import { LogoutButton } from "@/components/shared/LogoutButton";
 
 const TIMER_CONFIGS = {
   pomodoro:   { seconds: 25 * 60, label: "Pomodoro — 25 min" },
@@ -65,7 +67,7 @@ function playBeep() {
 
 export default function DashboardSuperiori() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  
   const session = getChildSession();
   const profile = session?.profile;
   const profileId = session?.profileId;
@@ -290,10 +292,7 @@ export default function DashboardSuperiori() {
               <span className="font-bold text-orange-600">{streak}</span>
               <span className="text-xs text-orange-500 hidden sm:block">giorni</span>
             </div>
-            <button onClick={() => { signOut(); navigate("/"); }}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white transition-colors">
-              <LogOut className="w-4 h-4" />
-            </button>
+            <LogoutButton showLabel />
           </div>
         </motion.div>
 
@@ -472,6 +471,9 @@ export default function DashboardSuperiori() {
             </p>
           )}
         </section>
+
+        {/* CONVERSAZIONI RECENTI */}
+        <RecentConversations profileId={profileId} />
 
       </div>
 
