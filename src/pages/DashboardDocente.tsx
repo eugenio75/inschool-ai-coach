@@ -243,7 +243,7 @@ export default function DashboardDocente() {
         {/* CLASSI */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Le tue classi</h2>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Le tue classi</h2>
             <Button variant="outline" size="sm" className="h-8 text-xs rounded-xl"
               onClick={() => setShowClasseModal(true)}>
               <Plus className="w-3 h-3 mr-1" />Nuova classe
