@@ -16,12 +16,14 @@ type Phase = "checkin" | "breathing" | "focus" | "break" | "recap";
 const BREAK_SECONDS = 5 * 60; // 5 minutes
 const MAX_POMODORO_CYCLES = 3;
 
+import { Smile, Moon, AlertTriangle, Minus, Frown } from "lucide-react";
+
 const emotionOptions = [
-  { id: "ready", emoji: "😊", label: "Pronto" },
-  { id: "tired", emoji: "😴", label: "Stanco" },
-  { id: "worried", emoji: "😟", label: "Preoccupato" },
-  { id: "bored", emoji: "😐", label: "Annoiato" },
-  { id: "frustrated", emoji: "😤", label: "Frustrato" },
+  { id: "ready", icon: Smile, label: "Pronto" },
+  { id: "tired", icon: Moon, label: "Stanco" },
+  { id: "worried", icon: AlertTriangle, label: "Preoccupato" },
+  { id: "bored", icon: Minus, label: "Annoiato" },
+  { id: "frustrated", icon: Frown, label: "Frustrato" },
 ];
 
 const breakMessages = [
