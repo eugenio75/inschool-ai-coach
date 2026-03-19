@@ -475,6 +475,9 @@ export default function DashboardSuperiori() {
           )}
         </section>
 
+        {/* CONVERSAZIONI RECENTI */}
+        <RecentConversations profileId={profileId} />
+
       </div>
 
       {/* MODAL AGGIUNGI TASK */}
