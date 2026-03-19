@@ -455,14 +455,14 @@ export default function DashboardSuperiori() {
           </h2>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={weekData} barSize={28} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-              <XAxis dataKey="giorno" tick={{ fontSize: 12, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} unit="m" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
+              <XAxis dataKey="giorno" tick={{ fontSize: 12 }} className="fill-muted-foreground" axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" axisLine={false} tickLine={false} unit="m" />
               <Tooltip
-                contentStyle={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "12px" }}
+                contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px", color: "hsl(var(--foreground))" }}
                 formatter={(v: number) => [`${v} min`, "Studio"]}
               />
-              <Bar dataKey="minuti" fill="#2563eb" radius={[4, 4, 0, 0]} opacity={0.85} />
+              <Bar dataKey="minuti" className="fill-primary" radius={[4, 4, 0, 0]} opacity={0.85} />
             </BarChart>
           </ResponsiveContainer>
           {weekData.every(d => d.minuti === 0) && (
