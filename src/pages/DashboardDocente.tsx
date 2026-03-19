@@ -305,7 +305,7 @@ export default function DashboardDocente() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
             <div>
-              <Label className="text-xs text-slate-500 mb-1 block">Materia</Label>
+              <Label className="text-xs text-muted-foreground mb-1 block">Materia</Label>
               {materie.length > 0 ? (
                 <Select value={genMateria} onValueChange={setGenMateria}>
                   <SelectTrigger className="rounded-xl"><SelectValue placeholder="Seleziona materia" /></SelectTrigger>
