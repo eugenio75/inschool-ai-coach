@@ -323,15 +323,15 @@ export default function DashboardUniversitario() {
 
         {/* AZIONI RAPIDE AI */}
         <section>
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Azioni rapide AI</h2>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Azioni rapide AI</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {aiKeys.map((key) => {
               if (key === "libero") {
                 return (
                   <button key="libero" onClick={() => navigate("/challenge/new")}
-                    className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-start gap-2 hover:border-indigo-300 hover:shadow-md transition-all text-left">
-                    <MessageSquare className="w-5 h-5 text-indigo-600" />
-                    <p className="text-sm font-medium text-slate-700">Chat libera</p>
+                    className="bg-card border border-border rounded-2xl p-4 flex flex-col items-start gap-2 hover:border-primary/40 hover:shadow-md transition-all text-left">
+                    <MessageSquare className="w-5 h-5 text-primary" />
+                    <p className="text-sm font-medium text-foreground">Chat libera</p>
                   </button>
                 );
               }
@@ -340,9 +340,9 @@ export default function DashboardUniversitario() {
               const Icon = action.icon;
               return (
                 <button key={key} onClick={() => openAiAction(key)}
-                  className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-start gap-2 hover:border-indigo-300 hover:shadow-md transition-all text-left">
-                  <Icon className="w-5 h-5 text-indigo-600" />
-                  <p className="text-sm font-medium text-slate-700">{action.label}</p>
+                  className="bg-card border border-border rounded-2xl p-4 flex flex-col items-start gap-2 hover:border-primary/40 hover:shadow-md transition-all text-left">
+                  <Icon className="w-5 h-5 text-primary" />
+                  <p className="text-sm font-medium text-foreground">{action.label}</p>
                 </button>
               );
             })}
