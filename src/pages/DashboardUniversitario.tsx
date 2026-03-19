@@ -276,10 +276,10 @@ export default function DashboardUniversitario() {
           {loadingEsami ? (
             <div className="space-y-3">{[1, 2].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}</div>
           ) : esami.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center">
-              <CalendarDays className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-              <p className="text-sm font-medium text-slate-500">Nessun esame configurato</p>
-              <p className="text-xs text-slate-400 mt-1">Aggiungili per tracciare i tuoi progressi</p>
+            <div className="bg-card border border-border rounded-2xl p-8 text-center">
+              <CalendarDays className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm font-medium text-muted-foreground">Nessun esame configurato</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Aggiungili per tracciare i tuoi progressi</p>
               <Button variant="outline" size="sm" className="mt-3 rounded-xl text-xs" onClick={() => setShowEsameModal(true)}>
                 <Plus className="w-3 h-3 mr-1" />Aggiungi esame
               </Button>
