@@ -517,11 +517,11 @@ export default function DashboardDocente() {
       {/* DIALOG — CLASSE CREATA CON CODICE */}
       <Dialog open={!!classeCreata} onOpenChange={() => { setClasseCreata(null); setShowClasseModal(false); }}>
         <DialogContent className="rounded-2xl text-center">
-          <CheckSquare className="w-10 h-10 text-green-500 mx-auto mt-2" />
+          <CheckSquare className="w-10 h-10 text-primary mx-auto mt-2" />
           <DialogHeader><DialogTitle className="text-center mt-2">Classe creata!</DialogTitle></DialogHeader>
-          <p className="text-sm text-slate-500">Condividi questo codice con i tuoi studenti</p>
-          <div className="bg-slate-100 rounded-2xl py-5 px-4 my-2">
-            <p className="font-mono font-black text-4xl tracking-[0.3em] text-slate-900">
+          <p className="text-sm text-muted-foreground">Condividi questo codice con i tuoi studenti</p>
+          <div className="bg-muted rounded-2xl py-5 px-4 my-2">
+            <p className="font-mono font-black text-4xl tracking-[0.3em] text-foreground">
               {classeCreata?.codice_invito}
             </p>
           </div>
