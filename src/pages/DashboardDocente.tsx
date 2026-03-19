@@ -378,7 +378,7 @@ export default function DashboardDocente() {
           {genOutput && (
             <div className="mt-4">
               <div id="verifica-preview"
-                className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto font-mono">
+                className="bg-muted/50 border border-border rounded-xl p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto font-mono">
                 {genOutput}
               </div>
               <div className="flex flex-wrap gap-2 mt-3">
