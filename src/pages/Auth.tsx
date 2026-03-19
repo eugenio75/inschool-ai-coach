@@ -18,6 +18,60 @@ const roleThemes: Record<string, { bg: string, text: string, button: string, bor
   docente: { bg: "bg-emerald-50", text: "text-emerald-600", button: "bg-emerald-600 hover:bg-emerald-700", border: "focus:border-emerald-500" },
 };
 
+function ForgotPasswordInline() {
+  const [show, setShow] = useState(false);
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + "/reset-password",
+    });
+    setLoading(false);
+    if (!error) setSent(true);
+  };
+
+  if (!show) {
+    return (
+      <button onClick={() => setShow(true)} className="block mx-auto mt-4 text-sm text-slate-500 hover:text-blue-600 transition-colors font-medium">
+        Password dimenticata?
+      </button>
+    );
+  }
+
+  if (sent) {
+    return (
+      <div className="mt-4 bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+        <MailCheck className="w-8 h-8 text-green-500 mx-auto mb-2" />
+        <p className="text-sm font-medium text-green-800">Email inviata!</p>
+        <p className="text-xs text-green-600 mt-1">Controlla la tua casella di posta e segui le istruzioni per reimpostare la password.</p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleReset} className="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+      <p className="text-sm font-medium text-slate-700">Recupera la tua password</p>
+      <div className="relative">
+        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="La tua email"
+          className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 outline-none focus:border-blue-500 text-sm" />
+      </div>
+      <p className="text-xs text-slate-500">Ti invieremo un link per reimpostare la password.</p>
+      <div className="flex gap-2">
+        <Button type="button" variant="ghost" size="sm" onClick={() => setShow(false)} className="text-slate-500 rounded-xl">Annulla</Button>
+        <Button type="submit" size="sm" disabled={loading || !email.trim()} className="bg-blue-600 text-white hover:bg-blue-700 rounded-xl flex-1">
+          {loading ? <Loader2 className="animate-spin w-4 h-4" /> : "Invia link di reset"}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
