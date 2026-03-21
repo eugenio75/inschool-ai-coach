@@ -289,7 +289,7 @@ const EmotionalCheckin = () => {
               className="w-full bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              {freeText ? "Invia e inizia!" : "Vai ai compiti"} <ArrowRight className="w-4 h-4 ml-1" />
+              {freeText ? "Invia e inizia!" : "Continua"} <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
           </motion.div>
         )}
