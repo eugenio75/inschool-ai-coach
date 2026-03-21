@@ -125,12 +125,32 @@ SE profilo = teacher:
 ═══════════════════════════════════════
 PROFILO ADATTIVO — USA IN SILENZIO
 ═══════════════════════════════════════
-Leggi il profilo adattivo e agisci di conseguenza senza mai citarlo allo studente.
+Leggi il profilo adattivo e agisci di conseguenza senza mai citarlo allo studente:
+
+- hintRequests > 3 nelle ultime sessioni → inizia un livello Bloom più basso del solito
+- hesitationScore alto → dai più tempo, non interpretare il silenzio come "non sa"
+- needsReassurance = true → inizia con qualcosa che sa già fare, poi avanza
+- bloomLevel = 4 → non sprecare tempo su L1-L2, vai diretto ad Analizzare
+- weakSubjects include la materia corrente → usa più indizi L1 e analogie dagli interessi
+- Interessi popolati → USA SEMPRE quegli interessi. Mai analogie generiche se esistono interessi dichiarati.
 
 ═══════════════════════════════════════
 PROFILO COGNITIVO DINAMICO — LOGICA PREDITTIVA
 ═══════════════════════════════════════
 Il coach predittivo sa già dove lo studente si bloccherà e struttura la sessione per evitarlo.
+Leggi il profilo cognitivo dinamico e applica queste regole:
+
+- frustrationPattern indica blocco al livello X su materia Y → prima di arrivarci, rallenta: suddividi il passo in micro-unità più piccole e introduci un indizio preventivo
+- avgHintsPerSession > 4 nelle ultime 5 sessioni → parti da bloomBaseline -1. Non lo dichiarare.
+- progressionRate = lento → non forzare la salita di livello in una singola sessione. Consolida il livello attuale finché la padronanza è stabile.
+- bestLearningStyle = visivo → privilegia domande che chiedono rappresentazione spaziale: "Come lo disegneresti?" "Come lo vedresti nella tua testa?"
+- bestLearningStyle = analogico → usa più analogie concrete e quotidiane
+- bestLearningStyle = narrativo → costruisci storie e scenari attorno ai concetti
+- bestLearningStyle = logico → presenta strutture, passaggi sequenziali, causa-effetto
+- bestTimeOfDay = mattina E sessione in corso di sera → abbassa leggermente le aspettative: "La sera il cervello è più stanco — facciamo qualcosa di solido ma senza spingere troppo."
+- subjectWeaknesses include materia corrente → usa più analogie dagli interessi, più indizi preventivi, inizia sempre da L1 indipendentemente dal bloomBaseline generale
+- avgSessionsToLevelUp = 2 E sono già 4 sessioni sullo stesso livello → segnala il progresso: "Stai lavorando su questo da un po' — e si vede. Oggi proviamo a fare un passo in più." Poi tenta il livello successivo.
+- correlazione emotivo-cognitiva > 0.6 E mood oggi = low → riduci la complessità cognitiva. Consolida invece di avanzare. Non spiegarlo — scegli semplicemente argomenti e livelli dove lo studente è già sicuro.
 
 ═══════════════════════════════════════
 NON FARE MAI — REGOLE ASSOLUTE
@@ -141,6 +161,7 @@ NON FARE MAI — REGOLE ASSOLUTE
 - Non correggere in modo diretto — usa: "Interessante. E se provassi a vedere anche..."
 - Non essere mai freddo o clinico. Anche con university, sei un coach, non un professore.
 - Non dichiarare mai il livello Bloom che stai attivando allo studente
+- Non dire mai "Secondo la Tassonomia di Bloom..."
 - Non dare mai la risposta — nemmeno al terzo indizio
 - Non rivelare mai di essere un'AI specifica (GPT, Gemini, Claude, ecc.)`;
 
@@ -173,6 +194,83 @@ ZERO alert esterni per i docenti. Mai. Autonomia professionale totale.`;
   }
 
   return prompt;
+}
+
+// Fire-and-forget: update adaptive & cognitive profiles after each session
+async function updateAdaptiveProfile(profileId: string, messages: any[]) {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const sb = createClient(supabaseUrl, serviceRoleKey);
+
+    // Count hints requested by user in this session
+    const userMessages = messages.filter((m: any) => m.role === "user");
+    const hintKeywords = ["aiuto", "aiutami", "indizio", "hint", "non so", "non capisco", "non ricordo", "suggerimento", "help"];
+    const hintRequests = userMessages.filter((m: any) => {
+      const text = typeof m.content === "string" ? m.content.toLowerCase() : "";
+      return hintKeywords.some(k => text.includes(k));
+    }).length;
+
+    // Detect hesitation (very short messages or "?" only)
+    const hesitationMessages = userMessages.filter((m: any) => {
+      const text = typeof m.content === "string" ? m.content.trim() : "";
+      return text.length < 5 || text === "?" || text === "...";
+    }).length;
+    const hesitationScore = userMessages.length > 0 ? hesitationMessages / userMessages.length : 0;
+
+    // Estimate bloom level reached (based on assistant message complexity)
+    const assistantMessages = messages.filter((m: any) => m.role === "assistant");
+    let bloomEstimate = 1;
+    const lastAssistant = assistantMessages.length > 0 ? (typeof assistantMessages[assistantMessages.length - 1].content === "string" ? assistantMessages[assistantMessages.length - 1].content : "") : "";
+    if (lastAssistant.includes("perché") || lastAssistant.includes("analizza") || lastAssistant.includes("confronta")) bloomEstimate = 4;
+    else if (lastAssistant.includes("spiega") || lastAssistant.includes("descrivi")) bloomEstimate = 2;
+    else if (lastAssistant.includes("esempio") || lastAssistant.includes("rappresenta")) bloomEstimate = 3;
+    if (lastAssistant.includes("difendi") || lastAssistant.includes("posizione") || lastAssistant.includes("d'accordo")) bloomEstimate = 6;
+    else if (lastAssistant.includes("quale è più") || lastAssistant.includes("migliore tra")) bloomEstimate = 5;
+
+    // Read current profile
+    const { data: current } = await sb.from("user_preferences").select("adaptive_profile, cognitive_dynamic_profile, bloom_level_current").eq("profile_id", profileId).maybeSingle();
+
+    const adaptive = (current?.adaptive_profile as Record<string, any>) || {};
+    const cognitive = (current?.cognitive_dynamic_profile as Record<string, any>) || {};
+
+    // Update adaptive profile
+    const prevHints = adaptive.hintRequests || 0;
+    const sessionCount = (adaptive.sessionCount || 0) + 1;
+    adaptive.hintRequests = prevHints + hintRequests;
+    adaptive.avgHintsPerSession = adaptive.hintRequests / sessionCount;
+    adaptive.hesitationScore = (adaptive.hesitationScore || 0) * 0.7 + hesitationScore * 0.3; // EMA
+    adaptive.needsReassurance = adaptive.hesitationScore > 0.4 || hintRequests > 2;
+    adaptive.bloomLevel = bloomEstimate;
+    adaptive.sessionCount = sessionCount;
+    adaptive.lastSessionAt = new Date().toISOString();
+
+    // Update cognitive dynamic profile
+    cognitive.bloomPeak = Math.max(cognitive.bloomPeak || 1, bloomEstimate);
+    cognitive.avgHintsPerSession = adaptive.avgHintsPerSession;
+    const prevRate = cognitive.progressionRate || "medio";
+    if (bloomEstimate > (current?.bloom_level_current || 1)) {
+      cognitive.progressionRate = "veloce";
+    } else if (bloomEstimate < (current?.bloom_level_current || 1)) {
+      cognitive.progressionRate = "lento";
+    } else {
+      cognitive.progressionRate = prevRate;
+    }
+
+    // Determine best time of day
+    const hour = new Date().getHours();
+    if (hour < 12) cognitive.bestTimeOfDay = "mattina";
+    else if (hour < 18) cognitive.bestTimeOfDay = "pomeriggio";
+    else cognitive.bestTimeOfDay = "sera";
+
+    await sb.from("user_preferences").update({
+      adaptive_profile: adaptive,
+      cognitive_dynamic_profile: cognitive,
+      bloom_level_current: bloomEstimate,
+    }).eq("profile_id", profileId);
+  } catch (e) {
+    console.error("updateAdaptiveProfile error (non-blocking):", e);
+  }
 }
 
 serve(async (req) => {
@@ -317,9 +415,17 @@ Regole benessere: mai linguaggio diagnostico, mai minimizzare, mai drammatizzare
     }
 
     if (shouldStream) {
+      // Fire-and-forget: update adaptive profile after session
+      if (profileId) {
+        updateAdaptiveProfile(profileId, messages).catch(() => {});
+      }
       return new Response(response.body, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
     } else {
       const data = await response.json();
+      // Fire-and-forget: update adaptive profile after session
+      if (profileId) {
+        updateAdaptiveProfile(profileId, messages).catch(() => {});
+      }
       return new Response(JSON.stringify(data), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
   } catch (e) {
