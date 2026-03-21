@@ -44,8 +44,8 @@ function getStateQuestions(gender?: string) {
 }
 
 const optionalQuestions = [
-  "C'è qualcosa che ti è rimasto in testa che vuoi raccontarmi?",
-  "Ti va di dirmi qualcosa che ti ha fatto pensare oggi?",
+  "Vuoi raccontarmi qualcosa prima di iniziare?",
+  "Vuoi raccontarmi qualcosa prima di iniziare?",
 ];
 
 // Answer options for structured responses
