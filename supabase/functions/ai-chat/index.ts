@@ -427,9 +427,13 @@ Regole benessere: mai linguaggio diagnostico, mai minimizzare, mai drammatizzare
       return new Response(response.body, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
     } else {
       const data = await response.json();
-      // Fire-and-forget: update adaptive profile after session
+      // Fire-and-forget: update adaptive profile + blockchain log
       if (profileId) {
         updateAdaptiveProfile(profileId, messages).catch(() => {});
+        try {
+          const { logAISession } = await import("../_shared/blockchainService.ts");
+          logAISession(profileId, "inschool-coach-v2", 0).catch(() => {});
+        } catch (_) {}
       }
       return new Response(JSON.stringify(data), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
