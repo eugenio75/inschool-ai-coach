@@ -364,14 +364,14 @@ export default function CoachChallenge() {
 
   const sidebarContent = (
     <>
-      <div className="p-4 border-b border-border flex items-center justify-between">
-        <h2 className="font-semibold text-foreground text-sm">Conversazioni</h2>
+      <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
+        <h2 className="font-display font-semibold text-foreground text-sm">Conversazioni</h2>
         <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg hover:bg-muted transition-colors lg:hidden">
           <PanelLeftClose className="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
       <div className="p-3">
-        <Button onClick={startNewChat} variant="outline" className="w-full rounded-xl text-sm" size="sm">
+        <Button onClick={startNewChat} variant="outline" className="w-full text-sm" size="sm">
           <Plus className="w-3.5 h-3.5 mr-1.5" /> Nuova chat
         </Button>
       </div>
@@ -383,14 +383,14 @@ export default function CoachChallenge() {
         ) : sessions.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center py-8">Nessuna conversazione</p>
         ) : (
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {sessions.map(s => (
               <div
                 key={s.id}
-                className={`group flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
+                className={`group flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
                   activeSessionId === s.id
-                    ? "bg-primary/10 text-primary"
-                    : "text-foreground hover:bg-muted"
+                    ? "bg-card border-l-2 border-primary shadow-soft"
+                    : "text-foreground hover:bg-card"
                 }`}
               >
                 <button
@@ -421,8 +421,8 @@ export default function CoachChallenge() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* DESKTOP SIDEBAR — always visible on lg+ */}
-      <aside className="hidden lg:flex w-72 bg-card border-r border-border flex-col shrink-0">
+      {/* DESKTOP SIDEBAR */}
+      <aside className="hidden lg:flex w-72 bg-muted/30 border-r border-border flex-col shrink-0">
         {sidebarContent}
       </aside>
 
@@ -452,14 +452,14 @@ export default function CoachChallenge() {
 
       {/* DELETE CONFIRM */}
       <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
-        <AlertDialogContent className="rounded-2xl">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminare la conversazione?</AlertDialogTitle>
             <AlertDialogDescription>Questa azione non può essere annullata.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">Annulla</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteTarget && deleteSession(deleteTarget)} className="rounded-xl bg-destructive text-destructive-foreground">
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteTarget && deleteSession(deleteTarget)} className="bg-destructive text-destructive-foreground">
               Elimina
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -474,29 +474,31 @@ export default function CoachChallenge() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors lg:hidden"
+                className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center hover:bg-accent transition-colors lg:hidden"
               >
                 <PanelLeftOpen className="w-4 h-4 text-muted-foreground" />
               </button>
               <button
                 onClick={() => navigate(-1)}
-                className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors"
+                className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center hover:bg-accent transition-colors"
               >
                 <ArrowLeft className="w-4 h-4 text-muted-foreground" />
               </button>
               <div>
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <h1 className="font-display text-sm font-bold text-foreground">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                  </div>
+                  <h1 className="font-display text-sm font-semibold text-foreground">
                     {activeSessionId
                       ? sessions.find(s => s.id === activeSessionId)?.titolo || "Chat AI"
                       : "Nuova Chat"}
                   </h1>
                 </div>
-                {subject && <p className="text-xs text-muted-foreground">{subject}</p>}
+                {subject && <span className="ml-10 inline-block text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{subject}</span>}
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={startNewChat} className="rounded-xl text-xs">
+            <Button variant="ghost" size="sm" onClick={startNewChat} className="text-xs">
               <Plus className="w-3.5 h-3.5 mr-1" /> Nuova
             </Button>
           </div>
@@ -523,14 +525,22 @@ export default function CoachChallenge() {
                 transition={{ duration: 0.2 }}
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
+                {msg.role === "assistant" && (
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mr-2 mt-1 shrink-0">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                )}
                 <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                  className={`max-w-[70%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
                     msg.role === "assistant"
-                      ? "bg-muted text-foreground rounded-bl-md"
-                      : "bg-primary text-primary-foreground rounded-br-md"
+                      ? "bg-muted text-foreground rounded-tl-sm"
+                      : "bg-primary text-primary-foreground rounded-tr-sm"
                   }`}
                 >
                   {msg.content}
+                  <p className="text-[10px] mt-1.5 opacity-50">
+                    {new Date(msg.timestamp).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}
+                  </p>
                 </div>
               </motion.div>
             ))}
@@ -561,7 +571,7 @@ export default function CoachChallenge() {
           <div className="max-w-3xl mx-auto flex items-center gap-2">
             <button
               onClick={toggleRecording}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+              className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
                 isRecording ? "bg-destructive text-destructive-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
               }`}
             >
@@ -573,13 +583,13 @@ export default function CoachChallenge() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Scrivi un messaggio..."
-              className="flex-1 bg-muted rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="flex-1 bg-muted rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               disabled={isTyping}
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || isTyping}
-              className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 disabled:opacity-50"
+              className="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 disabled:opacity-50 shadow-soft hover:shadow-card transition-all"
             >
               <Send className="w-4 h-4" />
             </button>

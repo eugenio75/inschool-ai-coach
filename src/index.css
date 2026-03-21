@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,120 +6,126 @@
 
 @layer base {
   :root {
-    /* Inschool Calm Tech Palette */
+    /* InSchool Professional Palette */
     --background: 210 20% 98%;
-    --foreground: 230 25% 15%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 230 25% 15%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 230 25% 15%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 155 30% 45%;
+    --primary: 207 100% 38%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 45 35% 55%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 210 15% 95%;
-    --muted-foreground: 215 15% 50%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 155 20% 92%;
-    --accent-foreground: 155 30% 30%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 30 45% 55%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 20% 90%;
-    --input: 210 20% 90%;
-    --ring: 155 30% 45%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 207 100% 38%;
 
-    --radius: 1rem;
+    --radius: 0.625rem;
 
-    /* Inschool custom tokens */
-    --sage: 155 30% 45%;
-    --sage-light: 155 25% 92%;
-    --sage-dark: 155 30% 30%;
-    --clay: 45 35% 55%;
+    /* InSchool custom tokens */
+    --sage: 207 100% 38%;
+    --sage-light: 207 80% 95%;
+    --sage-dark: 210 44% 24%;
+    --clay: 37 92% 50%;
     --clay-light: 45 30% 92%;
-    --clay-dark: 45 35% 40%;
-    --ink: 230 25% 15%;
-    --terracotta: 30 45% 55%;
+    --clay-dark: 37 80% 40%;
+    --ink: 222 47% 11%;
+    --terracotta: 25 95% 53%;
     --terracotta-light: 30 35% 92%;
-    --surface-muted: 210 15% 97%;
+    --surface-muted: 210 20% 97%;
+
+    /* Navy & Accent */
+    --color-navy: 210 52% 23%;
+    --color-accent: 207 100% 38%;
 
     /* Shadows */
-    --shadow-soft: 0 2px 8px -2px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.03);
-    --shadow-card: 0 4px 20px -4px rgba(0,0,0,0.06), 0 12px 24px -8px rgba(0,0,0,0.04);
-    --shadow-hover: 0 8px 30px -4px rgba(0,0,0,0.08), 0 16px 30px -8px rgba(0,0,0,0.05);
+    --shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+    --shadow-card: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+    --shadow-hover: 0 10px 30px -4px rgb(0 0 0 / 0.10), 0 4px 8px -4px rgb(0 0 0 / 0.06);
 
-    /* Sidebar */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 155 30% 45%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 155 20% 95%;
-    --sidebar-accent-foreground: 155 30% 30%;
-    --sidebar-border: 210 20% 92%;
-    --sidebar-ring: 155 30% 45%;
+    /* Sidebar — Navy */
+    --sidebar-background: 210 52% 23%;
+    --sidebar-foreground: 210 20% 92%;
+    --sidebar-primary: 207 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 28%;
+    --sidebar-accent-foreground: 210 20% 92%;
+    --sidebar-border: 210 40% 30%;
+    --sidebar-ring: 207 100% 50%;
   }
 
   .dark {
-    --background: 230 20% 10%;
+    --background: 222 47% 8%;
     --foreground: 210 20% 92%;
 
-    --card: 230 18% 14%;
+    --card: 222 40% 12%;
     --card-foreground: 210 20% 92%;
 
-    --popover: 230 18% 14%;
+    --popover: 222 40% 12%;
     --popover-foreground: 210 20% 92%;
 
-    --primary: 155 30% 50%;
-    --primary-foreground: 230 20% 10%;
+    --primary: 207 100% 50%;
+    --primary-foreground: 222 47% 8%;
 
-    --secondary: 45 30% 45%;
-    --secondary-foreground: 45 30% 92%;
+    --secondary: 222 30% 18%;
+    --secondary-foreground: 210 20% 85%;
 
-    --muted: 230 15% 18%;
+    --muted: 222 30% 18%;
     --muted-foreground: 215 15% 55%;
 
-    --accent: 155 20% 18%;
-    --accent-foreground: 155 25% 75%;
+    --accent: 222 30% 18%;
+    --accent-foreground: 210 20% 85%;
 
-    --destructive: 30 45% 50%;
+    --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 230 15% 22%;
-    --input: 230 15% 22%;
-    --ring: 155 30% 50%;
+    --border: 222 20% 22%;
+    --input: 222 20% 22%;
+    --ring: 207 100% 50%;
 
-    /* Custom tokens */
-    --sage: 155 30% 50%;
-    --sage-light: 155 20% 18%;
-    --sage-dark: 155 25% 70%;
-    --clay: 45 30% 45%;
-    --clay-light: 45 20% 18%;
-    --clay-dark: 45 30% 70%;
+    /* Custom tokens dark */
+    --sage: 207 100% 50%;
+    --sage-light: 207 30% 18%;
+    --sage-dark: 207 60% 70%;
+    --clay: 37 80% 50%;
+    --clay-light: 37 20% 18%;
+    --clay-dark: 37 60% 70%;
     --ink: 210 20% 92%;
-    --terracotta: 30 45% 50%;
-    --terracotta-light: 30 25% 18%;
-    --surface-muted: 230 15% 12%;
+    --terracotta: 25 80% 55%;
+    --terracotta-light: 25 25% 18%;
+    --surface-muted: 222 30% 10%;
 
-    /* Shadows */
-    --shadow-soft: 0 2px 8px -2px rgba(0,0,0,0.3), 0 10px 15px -3px rgba(0,0,0,0.2);
-    --shadow-card: 0 4px 20px -4px rgba(0,0,0,0.3), 0 12px 24px -8px rgba(0,0,0,0.2);
-    --shadow-hover: 0 8px 30px -4px rgba(0,0,0,0.4), 0 16px 30px -8px rgba(0,0,0,0.25);
+    --color-navy: 210 40% 18%;
+    --color-accent: 207 100% 50%;
 
-    /* Sidebar */
-    --sidebar-background: 230 18% 12%;
+    --shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
+    --shadow-card: 0 4px 12px -2px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+    --shadow-hover: 0 10px 30px -4px rgb(0 0 0 / 0.4), 0 4px 8px -4px rgb(0 0 0 / 0.25);
+
+    /* Sidebar dark */
+    --sidebar-background: 222 40% 10%;
     --sidebar-foreground: 210 20% 85%;
-    --sidebar-primary: 155 30% 50%;
-    --sidebar-primary-foreground: 230 20% 10%;
-    --sidebar-accent: 155 20% 18%;
-    --sidebar-accent-foreground: 155 25% 75%;
-    --sidebar-border: 230 15% 22%;
-    --sidebar-ring: 155 30% 50%;
+    --sidebar-primary: 207 100% 50%;
+    --sidebar-primary-foreground: 222 47% 8%;
+    --sidebar-accent: 222 30% 16%;
+    --sidebar-accent-foreground: 210 20% 85%;
+    --sidebar-border: 222 20% 18%;
+    --sidebar-ring: 207 100% 50%;
   }
 }
 
@@ -129,11 +135,14 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Geist', system-ui, -apple-system, sans-serif;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Bricolage Grotesque', system-ui, sans-serif;
-    @apply tracking-tight;
+    font-family: 'Sora', system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 }
 
@@ -150,15 +159,30 @@
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+  .font-display {
+    font-family: 'Sora', system-ui, sans-serif;
+  }
+  .font-body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
 }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+
+/* Selection */
+::selection { background: hsl(207 100% 38% / 0.15); color: hsl(var(--foreground)); }
 
 /* Google Maps Autocomplete Fixes */
 .pac-container {
   z-index: 99999 !important;
-  border-radius: 1rem !important;
-  border: 1px solid rgba(0,0,0,0.1) !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-  font-family: 'Geist', system-ui, sans-serif !important;
+  border-radius: 0.625rem !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: var(--shadow-card) !important;
+  font-family: 'DM Sans', system-ui, sans-serif !important;
   margin-top: 4px !important;
   padding: 8px 0 !important;
 }
@@ -166,41 +190,29 @@
   padding: 8px 16px !important;
   font-size: 14px !important;
   cursor: pointer !important;
-  color: #333 !important;
+  color: hsl(var(--foreground)) !important;
   border-top: none !important;
 }
 .pac-item:hover, .pac-item.pac-item-selected {
-  background-color: #f1f5f9 !important;
+  background-color: hsl(var(--muted)) !important;
 }
 .pac-item-query {
   font-weight: 600 !important;
-  color: #111 !important;
+  color: hsl(var(--foreground)) !important;
 }
 .pac-icon {
   margin-top: 2px !important;
 }
 
-/* Print styles for teacher verifiche */
+/* Print styles */
 @media print {
-  body * {
-    visibility: hidden !important;
-  }
-  [data-print-verifica],
-  [data-print-verifica] * {
-    visibility: visible !important;
-  }
+  body * { visibility: hidden !important; }
+  [data-print-verifica], [data-print-verifica] * { visibility: visible !important; }
   [data-print-verifica] {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 100% !important;
-    padding: 2rem !important;
-    font-size: 12pt !important;
-    line-height: 1.6 !important;
-    color: #000 !important;
-    background: #fff !important;
+    position: absolute !important; left: 0 !important; top: 0 !important;
+    width: 100% !important; padding: 2rem !important;
+    font-size: 12pt !important; line-height: 1.6 !important;
+    color: #000 !important; background: #fff !important;
   }
-  nav, header, .sidebar, [data-sidebar], footer, button {
-    display: none !important;
-  }
+  nav, header, .sidebar, [data-sidebar], footer, button { display: none !important; }
 }
