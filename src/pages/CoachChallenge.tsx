@@ -452,14 +452,14 @@ export default function CoachChallenge() {
 
       {/* DELETE CONFIRM */}
       <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
-        <AlertDialogContent className="rounded-2xl">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminare la conversazione?</AlertDialogTitle>
             <AlertDialogDescription>Questa azione non può essere annullata.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">Annulla</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteTarget && deleteSession(deleteTarget)} className="rounded-xl bg-destructive text-destructive-foreground">
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteTarget && deleteSession(deleteTarget)} className="bg-destructive text-destructive-foreground">
               Elimina
             </AlertDialogAction>
           </AlertDialogFooter>
