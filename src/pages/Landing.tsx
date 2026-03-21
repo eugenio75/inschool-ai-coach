@@ -171,10 +171,11 @@ const Landing = () => {
       <section className="py-10 px-6 border-y border-border/50 bg-card/30 relative z-10">
         <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-muted-foreground">
           {[
-            { num: "4", label: "Percorsi educativi" },
-            { num: "AI", label: "Adattiva per età" },
+            { num: "6", label: "Livelli Bloom integrati" },
+            { num: "AI", label: "Profilo cognitivo adattivo" },
             { num: "100%", label: "Sicurezza minori" },
-            { num: "24/7", label: "Tutor disponibile" },
+            { num: "24/7", label: "Coach disponibile" },
+            { num: "On-chain", label: "Credenziali verificabili" },
           ].map((s, i) => (
             <motion.div
               key={i}
