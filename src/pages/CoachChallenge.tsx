@@ -364,14 +364,14 @@ export default function CoachChallenge() {
 
   const sidebarContent = (
     <>
-      <div className="p-4 border-b border-border flex items-center justify-between">
-        <h2 className="font-semibold text-foreground text-sm">Conversazioni</h2>
+      <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
+        <h2 className="font-display font-semibold text-foreground text-sm">Conversazioni</h2>
         <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg hover:bg-muted transition-colors lg:hidden">
           <PanelLeftClose className="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
       <div className="p-3">
-        <Button onClick={startNewChat} variant="outline" className="w-full rounded-xl text-sm" size="sm">
+        <Button onClick={startNewChat} variant="outline" className="w-full text-sm" size="sm">
           <Plus className="w-3.5 h-3.5 mr-1.5" /> Nuova chat
         </Button>
       </div>
@@ -383,14 +383,14 @@ export default function CoachChallenge() {
         ) : sessions.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center py-8">Nessuna conversazione</p>
         ) : (
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {sessions.map(s => (
               <div
                 key={s.id}
-                className={`group flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
+                className={`group flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
                   activeSessionId === s.id
-                    ? "bg-primary/10 text-primary"
-                    : "text-foreground hover:bg-muted"
+                    ? "bg-card border-l-2 border-primary shadow-soft"
+                    : "text-foreground hover:bg-card"
                 }`}
               >
                 <button
