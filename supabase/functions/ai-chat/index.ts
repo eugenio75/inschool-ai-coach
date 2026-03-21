@@ -338,9 +338,17 @@ Regole benessere: mai linguaggio diagnostico, mai minimizzare, mai drammatizzare
     }
 
     if (shouldStream) {
+      // Fire-and-forget: update adaptive profile after session
+      if (profileId) {
+        updateAdaptiveProfile(profileId, messages).catch(() => {});
+      }
       return new Response(response.body, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
     } else {
       const data = await response.json();
+      // Fire-and-forget: update adaptive profile after session
+      if (profileId) {
+        updateAdaptiveProfile(profileId, messages).catch(() => {});
+      }
       return new Response(JSON.stringify(data), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
   } catch (e) {
