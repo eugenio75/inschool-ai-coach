@@ -60,6 +60,12 @@ const Landing = () => {
             >
               Funzionalità
             </button>
+            <button
+              onClick={() => navigate("/verify")}
+              className="hidden sm:block text-sm text-muted-foreground hover:text-foreground transition-colors font-medium"
+            >
+              Verifica Credenziali
+            </button>
             <Button
               variant="outline"
               className="rounded-full px-5 h-9 text-sm font-semibold border-border"
