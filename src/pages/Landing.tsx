@@ -5,7 +5,7 @@ import {
   ArrowRight, Hexagon, GraduationCap, Users, BookOpen,
   ShieldCheck, Zap, Laptop, BookMarked,
   Clock, Award, Lock, Brain, Target, Layers, Mic,
-  ChevronDown,
+  ChevronDown, Heart, Link2, BadgeCheck, Sparkles, BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isChildSession } from "@/lib/childSession";
