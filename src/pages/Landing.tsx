@@ -278,7 +278,7 @@ const Landing = () => {
               <p className="text-sm text-muted-foreground">PC, tablet, smartphone. I tuoi progressi ovunque, sincronizzati in tempo reale.</p>
             </motion.div>
 
-            {/* Medium card — Voice */}
+            {/* Card — Emotional Well-being */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -287,10 +287,91 @@ const Landing = () => {
               className="md:col-span-2 bg-card border border-border rounded-3xl p-8"
             >
               <div className="w-12 h-12 rounded-2xl bg-destructive/10 flex items-center justify-center mb-6">
+                <Heart className="w-6 h-6 text-destructive" />
+              </div>
+              <h3 className="font-display text-xl font-bold text-foreground mb-2">Benessere Emotivo</h3>
+              <p className="text-sm text-muted-foreground">Check-in giornaliero adattivo con protocollo PFA. L'AI monitora il mood e interviene con sensibilità.</p>
+            </motion.div>
+
+            {/* Card — Blockchain Credentials */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="md:col-span-2 bg-card border border-border rounded-3xl p-8"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+                <BadgeCheck className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="font-display text-xl font-bold text-foreground mb-2">Credenziali On-Chain</h3>
+              <p className="text-sm text-muted-foreground">Certificati Soulbound (ERC-5192) verificabili da chiunque. Le tue competenze, immutabili.</p>
+            </motion.div>
+
+            {/* Large card — Adaptive Profile */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.35 }}
+              className="md:col-span-4 bg-card border border-border rounded-3xl p-8 md:p-10 relative overflow-hidden group"
+            >
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2 group-hover:bg-accent/10 transition-colors duration-700" />
+              <div className="relative z-10">
+                <div className="w-12 h-12 rounded-2xl bg-accent flex items-center justify-center mb-6">
+                  <Sparkles className="w-6 h-6 text-accent-foreground" />
+                </div>
+                <h3 className="font-display text-2xl font-bold text-foreground mb-3">Profilo Cognitivo Dinamico</h3>
+                <p className="text-muted-foreground max-w-md leading-relaxed">
+                  L'AI costruisce un profilo invisibile del tuo stile di apprendimento: velocità, punti di blocco, 
+                  stile preferito, orario migliore. Ogni sessione diventa più precisa della precedente.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Card — Oral Prep */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              className="md:col-span-2 bg-card border border-border rounded-3xl p-8"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-destructive/10 flex items-center justify-center mb-6">
                 <Mic className="w-6 h-6 text-destructive" />
               </div>
               <h3 className="font-display text-xl font-bold text-foreground mb-2">Interrogazione Orale</h3>
-              <p className="text-sm text-muted-foreground">Simula l'interrogazione con l'AI via voce. Preparati come dal vivo.</p>
+              <p className="text-sm text-muted-foreground">Simula l'interrogazione con l'AI. Preparati come dal vivo, con feedback specifico.</p>
+            </motion.div>
+
+            {/* Card — Analytics */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.45 }}
+              className="md:col-span-2 bg-card border border-border rounded-3xl p-8"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-secondary/20 flex items-center justify-center mb-6">
+                <BarChart3 className="w-6 h-6 text-secondary-foreground" />
+              </div>
+              <h3 className="font-display text-xl font-bold text-foreground mb-2">Analytics Studio</h3>
+              <p className="text-sm text-muted-foreground">Visualizza i tuoi progressi settimanali, streak di studio e distribuzione per materia.</p>
+            </motion.div>
+
+            {/* Card — Verify */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 }}
+              className="md:col-span-2 bg-card border border-border rounded-3xl p-8"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mb-6">
+                <Link2 className="w-6 h-6 text-muted-foreground" />
+              </div>
+              <h3 className="font-display text-xl font-bold text-foreground mb-2">Verifica Pubblica</h3>
+              <p className="text-sm text-muted-foreground">Pagina pubblica per aziende e università: verifica credenziali singole o in blocco via CSV.</p>
             </motion.div>
           </div>
         </div>
