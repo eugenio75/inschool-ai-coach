@@ -526,21 +526,4 @@ const Landing = () => {
   );
 };
 
-/* ── Bento Card sub-component ── */
-function BentoCard({ cols, icon: Icon, title, desc, bg, i }: { cols: number; icon: React.ElementType; title: string; desc: string; bg?: string; i: number }) {
-  return (
-    <motion.div
-      {...stagger(i)}
-      className={`md:col-span-${cols} rounded-2xl p-6 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-default`}
-      style={{ background: bg || "white", border: `1px solid ${borderClr}` }}
-    >
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: `${accent}10` }}>
-        <Icon className="w-5 h-5" style={{ color: accent }} />
-      </div>
-      <h3 className="font-bold mb-1.5" style={{ color: navy }}>{title}</h3>
-      <p className="text-sm leading-relaxed" style={{ color: textSub }}>{desc}</p>
-    </motion.div>
-  );
-}
-
 export default Landing;
