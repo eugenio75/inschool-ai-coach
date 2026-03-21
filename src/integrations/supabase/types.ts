@@ -682,28 +682,43 @@ export type Database = {
       }
       user_preferences: {
         Row: {
+          adaptive_profile: Json | null
+          bloom_level_current: number | null
+          cognitive_dynamic_profile: Json | null
           created_at: string | null
           current_step: number | null
           data: Json | null
+          emotional_cognitive_correlation: number | null
           id: string
+          mood_streak: number | null
           profile_id: string
           role: string | null
           updated_at: string | null
         }
         Insert: {
+          adaptive_profile?: Json | null
+          bloom_level_current?: number | null
+          cognitive_dynamic_profile?: Json | null
           created_at?: string | null
           current_step?: number | null
           data?: Json | null
+          emotional_cognitive_correlation?: number | null
           id?: string
+          mood_streak?: number | null
           profile_id: string
           role?: string | null
           updated_at?: string | null
         }
         Update: {
+          adaptive_profile?: Json | null
+          bloom_level_current?: number | null
+          cognitive_dynamic_profile?: Json | null
           created_at?: string | null
           current_step?: number | null
           data?: Json | null
+          emotional_cognitive_correlation?: number | null
           id?: string
+          mood_streak?: number | null
           profile_id?: string
           role?: string | null
           updated_at?: string | null
