@@ -206,6 +206,47 @@ serve(async (req) => {
 
     // Build context-aware system prompt
     let contextPrompt = SYSTEM_PROMPT;
+
+    // Inject adaptive & cognitive profile context from Supabase
+    const profileId = studentProfile?.profileId || studentProfile?.id;
+    if (profileId) {
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const sb = createClient(supabaseUrl, serviceRoleKey);
+        const { data: prefs } = await sb.from("user_preferences").select("adaptive_profile, cognitive_dynamic_profile, emotional_cognitive_correlation, mood_streak, bloom_level_current").eq("profile_id", profileId).maybeSingle();
+        const { data: todayCheckin } = await sb.from("emotional_checkins").select("emotional_tone, energy_level").eq("child_profile_id", profileId).eq("checkin_date", new Date().toISOString().split("T")[0]).maybeSingle();
+        
+        if (prefs) {
+          let moodToday = "skipped";
+          if (todayCheckin) {
+            if (todayCheckin.emotional_tone === "positive" && todayCheckin.energy_level === "high") moodToday = "high";
+            else if (todayCheckin.emotional_tone === "low" || todayCheckin.energy_level === "low") moodToday = "low";
+            else moodToday = "medium";
+          }
+
+          contextPrompt += `\n\nPROFILO ADATTIVO (usa in silenzio, non citare allo studente):
+${JSON.stringify(prefs.adaptive_profile || {})}
+
+PROFILO COGNITIVO DINAMICO (logica predittiva):
+${JSON.stringify(prefs.cognitive_dynamic_profile || {})}
+
+Correlazione emotivo-cognitiva: ${prefs.emotional_cognitive_correlation ?? 0.5}
+Livello Bloom corrente: ${prefs.bloom_level_current ?? 1}
+Mood oggi: ${moodToday}
+Mood streak (giorni consecutivi umore basso): ${prefs.mood_streak ?? 0}
+
+REGOLE ADATTIVE:
+- Se correlazione emotivo-cognitiva > 0.6 E mood oggi = low → riduci complessità, consolida
+- Se mood_streak >= 3 → inizia con qualcosa che sa fare, tono più caldo
+- Se bloomLevel alto → salta i livelli bassi, vai diretto ad Analizzare/Ragionare
+- Usa il profilo cognitivo per prevenire i blocchi: rallenta PRIMA del punto di frustrazione`;
+        }
+      } catch (e) {
+        console.error("Error fetching adaptive profile for ai-coach:", e);
+      }
+    }
+
     if (studentProfile) {
       const interests = studentProfile.interests || [];
       contextPrompt += `\n\nPROFILO STUDENTE:
