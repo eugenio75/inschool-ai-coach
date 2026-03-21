@@ -534,6 +534,9 @@ const Landing = () => {
               <button onClick={() => navigate("/security")} className="hover:text-foreground transition-colors flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5" /> Protezione Minori
               </button>
+              <button onClick={() => navigate("/verify")} className="hover:text-foreground transition-colors flex items-center gap-1.5">
+                <BadgeCheck className="w-3.5 h-3.5" /> Verifica Credenziali
+              </button>
               <span className="flex items-center gap-1.5">
                 <Zap className="w-3.5 h-3.5 text-primary" /> AzarLabs AI
               </span>
