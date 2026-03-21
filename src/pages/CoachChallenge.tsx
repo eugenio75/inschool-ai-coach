@@ -571,7 +571,7 @@ export default function CoachChallenge() {
           <div className="max-w-3xl mx-auto flex items-center gap-2">
             <button
               onClick={toggleRecording}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+              className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
                 isRecording ? "bg-destructive text-destructive-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
               }`}
             >
@@ -583,13 +583,13 @@ export default function CoachChallenge() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Scrivi un messaggio..."
-              className="flex-1 bg-muted rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="flex-1 bg-muted rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               disabled={isTyping}
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || isTyping}
-              className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 disabled:opacity-50"
+              className="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0 disabled:opacity-50 shadow-soft hover:shadow-card transition-all"
             >
               <Send className="w-4 h-4" />
             </button>
