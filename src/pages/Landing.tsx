@@ -407,8 +407,9 @@ const Landing = () => {
                 features: [
                   { icon: ShieldCheck, text: "IA protetta e recintata" },
                   { icon: Award, text: "Gamification positiva" },
+                  { icon: Heart, text: "Check-in emotivo giornaliero" },
                 ],
-                desc: "IA blindata e controllata dal genitore. Risposte dolci, rigorose e 100% focalizzate sullo studio.",
+                desc: "IA blindata e controllata dal genitore. Metodo socratico adattivo, sistema di benessere con protocollo PFA integrato.",
               },
               {
                 role: "superiori",
