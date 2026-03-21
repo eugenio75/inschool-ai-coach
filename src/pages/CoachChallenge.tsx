@@ -525,17 +525,25 @@ export default function CoachChallenge() {
                 transition={{ duration: 0.2 }}
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
+                {msg.role === "assistant" && (
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mr-2 mt-1 shrink-0">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                )}
                 <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                  className={`max-w-[70%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
                     msg.role === "assistant"
-                      ? "bg-muted text-foreground rounded-bl-md"
-                      : "bg-primary text-primary-foreground rounded-br-md"
+                      ? "bg-muted text-foreground rounded-tl-sm"
+                      : "bg-primary text-primary-foreground rounded-tr-sm"
                   }`}
                 >
                   {msg.content}
+                  <p className="text-[10px] mt-1.5 opacity-50">
+                    {new Date(msg.timestamp).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}
+                  </p>
                 </div>
               </motion.div>
-            ))}
+            ))
 
             {streamingText && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
