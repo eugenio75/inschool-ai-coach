@@ -421,8 +421,8 @@ export default function CoachChallenge() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* DESKTOP SIDEBAR — always visible on lg+ */}
-      <aside className="hidden lg:flex w-72 bg-card border-r border-border flex-col shrink-0">
+      {/* DESKTOP SIDEBAR */}
+      <aside className="hidden lg:flex w-72 bg-muted/30 border-r border-border flex-col shrink-0">
         {sidebarContent}
       </aside>
 
