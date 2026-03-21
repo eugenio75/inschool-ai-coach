@@ -448,9 +448,10 @@ const Landing = () => {
                 btnLabel: "Area Docenti",
                 features: [
                   { icon: Laptop, text: "Cruscotto classe" },
-                  { icon: Layers, text: "Generatore verifiche" },
+                  { icon: Layers, text: "Generatore verifiche AI" },
+                  { icon: BarChart3, text: "Statistiche apprendimento" },
                 ],
-                desc: "Il tuo co-pilota didattico. Genera verifiche, monitora l'apprendimento e assisti 30 studenti in simultanea.",
+                desc: "Il tuo co-pilota didattico. Genera verifiche per livelli Bloom, monitora 30+ studenti in simultanea.",
               },
             ].map((card, i) => (
               <motion.div
