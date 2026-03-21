@@ -196,6 +196,83 @@ ZERO alert esterni per i docenti. Mai. Autonomia professionale totale.`;
   return prompt;
 }
 
+// Fire-and-forget: update adaptive & cognitive profiles after each session
+async function updateAdaptiveProfile(profileId: string, messages: any[]) {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const sb = createClient(supabaseUrl, serviceRoleKey);
+
+    // Count hints requested by user in this session
+    const userMessages = messages.filter((m: any) => m.role === "user");
+    const hintKeywords = ["aiuto", "aiutami", "indizio", "hint", "non so", "non capisco", "non ricordo", "suggerimento", "help"];
+    const hintRequests = userMessages.filter((m: any) => {
+      const text = typeof m.content === "string" ? m.content.toLowerCase() : "";
+      return hintKeywords.some(k => text.includes(k));
+    }).length;
+
+    // Detect hesitation (very short messages or "?" only)
+    const hesitationMessages = userMessages.filter((m: any) => {
+      const text = typeof m.content === "string" ? m.content.trim() : "";
+      return text.length < 5 || text === "?" || text === "...";
+    }).length;
+    const hesitationScore = userMessages.length > 0 ? hesitationMessages / userMessages.length : 0;
+
+    // Estimate bloom level reached (based on assistant message complexity)
+    const assistantMessages = messages.filter((m: any) => m.role === "assistant");
+    let bloomEstimate = 1;
+    const lastAssistant = assistantMessages.length > 0 ? (typeof assistantMessages[assistantMessages.length - 1].content === "string" ? assistantMessages[assistantMessages.length - 1].content : "") : "";
+    if (lastAssistant.includes("perché") || lastAssistant.includes("analizza") || lastAssistant.includes("confronta")) bloomEstimate = 4;
+    else if (lastAssistant.includes("spiega") || lastAssistant.includes("descrivi")) bloomEstimate = 2;
+    else if (lastAssistant.includes("esempio") || lastAssistant.includes("rappresenta")) bloomEstimate = 3;
+    if (lastAssistant.includes("difendi") || lastAssistant.includes("posizione") || lastAssistant.includes("d'accordo")) bloomEstimate = 6;
+    else if (lastAssistant.includes("quale è più") || lastAssistant.includes("migliore tra")) bloomEstimate = 5;
+
+    // Read current profile
+    const { data: current } = await sb.from("user_preferences").select("adaptive_profile, cognitive_dynamic_profile, bloom_level_current").eq("profile_id", profileId).maybeSingle();
+
+    const adaptive = (current?.adaptive_profile as Record<string, any>) || {};
+    const cognitive = (current?.cognitive_dynamic_profile as Record<string, any>) || {};
+
+    // Update adaptive profile
+    const prevHints = adaptive.hintRequests || 0;
+    const sessionCount = (adaptive.sessionCount || 0) + 1;
+    adaptive.hintRequests = prevHints + hintRequests;
+    adaptive.avgHintsPerSession = adaptive.hintRequests / sessionCount;
+    adaptive.hesitationScore = (adaptive.hesitationScore || 0) * 0.7 + hesitationScore * 0.3; // EMA
+    adaptive.needsReassurance = adaptive.hesitationScore > 0.4 || hintRequests > 2;
+    adaptive.bloomLevel = bloomEstimate;
+    adaptive.sessionCount = sessionCount;
+    adaptive.lastSessionAt = new Date().toISOString();
+
+    // Update cognitive dynamic profile
+    cognitive.bloomPeak = Math.max(cognitive.bloomPeak || 1, bloomEstimate);
+    cognitive.avgHintsPerSession = adaptive.avgHintsPerSession;
+    const prevRate = cognitive.progressionRate || "medio";
+    if (bloomEstimate > (current?.bloom_level_current || 1)) {
+      cognitive.progressionRate = "veloce";
+    } else if (bloomEstimate < (current?.bloom_level_current || 1)) {
+      cognitive.progressionRate = "lento";
+    } else {
+      cognitive.progressionRate = prevRate;
+    }
+
+    // Determine best time of day
+    const hour = new Date().getHours();
+    if (hour < 12) cognitive.bestTimeOfDay = "mattina";
+    else if (hour < 18) cognitive.bestTimeOfDay = "pomeriggio";
+    else cognitive.bestTimeOfDay = "sera";
+
+    await sb.from("user_preferences").update({
+      adaptive_profile: adaptive,
+      cognitive_dynamic_profile: cognitive,
+      bloom_level_current: bloomEstimate,
+    }).eq("profile_id", profileId);
+  } catch (e) {
+    console.error("updateAdaptiveProfile error (non-blocking):", e);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
