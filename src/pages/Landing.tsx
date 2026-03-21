@@ -419,10 +419,11 @@ const Landing = () => {
                 btnClass: "bg-accent text-accent-foreground hover:bg-primary hover:text-primary-foreground",
                 btnLabel: "Inizia Superiori",
                 features: [
-                  { icon: Target, text: "Sfide Pomodoro" },
-                  { icon: Clock, text: "Gestione task" },
+                  { icon: Target, text: "Timer Pomodoro / Deep Work" },
+                  { icon: Clock, text: "Gestione task e scadenze" },
+                  { icon: Sparkles, text: "Profilo cognitivo adattivo" },
                 ],
-                desc: "L'IA diventa un tutor esigente. Ti interroga su concetti complessi e scompone gli argomenti in sfide.",
+                desc: "L'IA diventa un tutor che si adatta al tuo stile. Tassonomia di Bloom invisibile, sfide personalizzate.",
               },
               {
                 role: "universitario",
