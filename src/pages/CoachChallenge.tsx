@@ -543,7 +543,7 @@ export default function CoachChallenge() {
                   </p>
                 </div>
               </motion.div>
-            ))
+            ))}
 
             {streamingText && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
