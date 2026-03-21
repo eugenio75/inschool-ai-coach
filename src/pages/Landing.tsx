@@ -245,29 +245,135 @@ const Landing = () => {
       </section>
 
       {/* ═══ 6. BENTO GRID ═══ */}
-      <section className="py-20 md:py-28 px-5" style={{ background: sectionAlt }}>
+      <section className="py-24 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
-          <motion.div {...fadeUp} className="mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold mb-3" style={{ color: navy }}>Tutto quello che ti serve, in un'unica piattaforma</h2>
-            <p style={{ color: textSub }}>Cognitivo. Emotivo. Certificato.</p>
+          <motion.div {...fadeUp} className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-3" style={{ color: textMain }}>
+              Tutto quello che ti serve,<br />in un'unica piattaforma
+            </h2>
+            <p className="text-lg" style={{ color: textSub }}>Cognitivo. Emotivo. Certificato.</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-            {/* Row 1 */}
-            <BentoCard cols={6} icon={Brain} title="AI Coach Socratico" desc="Non dà mai la risposta. Fa sempre la domanda giusta. Metodo Socratico + Tassonomia di Bloom in ogni interazione." i={0} />
-            <BentoCard cols={3} icon={Layers} title="6 Livelli Bloom" desc="Da Descrivere a Ragionare. Ogni sessione lavora sul livello cognitivo giusto per te." i={1} />
-            <BentoCard cols={3} icon={Heart} title="Benessere Emotivo" desc="Check-in giornaliero adattivo. Protocollo PFA integrato. Il coach vede anche come stai." i={2} />
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
 
-            {/* Row 2 */}
-            <BentoCard cols={4} icon={Sparkles} title="Profilo Cognitivo Dinamico" desc="L'AI costruisce invisibilmente il tuo profilo: stile di apprendimento, punti di blocco, orario migliore, velocità di progressione." bg={`${accent}08`} i={3} />
-            <BentoCard cols={4} icon={BadgeCheck} title="Credenziali On-Chain" desc="Soulbound Token (ERC-5192). Le tue competenze, certificate su blockchain privata. Verificabili da chiunque, immutabili per sempre." i={4} />
-            <BentoCard cols={4} icon={Shield} title="Conformità EU AI Act" desc="Governance AI certificata. Logging immutabile. Audit trail automatico. Conforme alla deadline del 2 agosto 2026." bg={`${navy}08`} i={5} />
+            {/* CARD 1 — 7 col — AI Coach Socratico */}
+            <motion.div {...stagger(0)} className="md:col-span-7 rounded-2xl border p-8 shadow-sm hover:shadow-md transition-shadow" style={{ borderColor: borderClr, background: "white" }}>
+              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-5">
+                <Brain className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-bold mb-3" style={{ color: textMain }}>AI Coach Socratico</h3>
+              <p className="leading-relaxed" style={{ color: textSub }}>
+                Non dà mai la risposta. Fa sempre la domanda giusta.
+                Il Metodo Socratico guida ogni interazione, mentre la
+                Tassonomia di Bloom — invisibile allo studente — calibra
+                il livello cognitivo in ogni sessione. Dal primo "Descrivere"
+                fino al "Ragionare" autonomo.
+              </p>
+              <div className="mt-6 rounded-xl border p-4 text-sm" style={{ background: sectionAlt, borderColor: borderClr }}>
+                <p className="text-blue-700 font-medium mb-1">Coach Marco</p>
+                <p className="mb-3" style={{ color: textSub }}>"L'ultima volta ti eri fermato sul discriminante. Cosa ricordi?"</p>
+                <p className="font-medium mb-1" style={{ color: "#94A3B8" }}>Studente</p>
+                <p style={{ color: textSub }}>"Serve per capire quante soluzioni ha l'equazione?"</p>
+                <span className="inline-block mt-3 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Bloom L4 · Analizzare</span>
+              </div>
+            </motion.div>
 
-            {/* Row 3 */}
-            <BentoCard cols={3} icon={Timer} title="Timer Focus" desc="Pomodoro, Deep Work, Ultra Focus. Con tracking materia." i={6} />
-            <BentoCard cols={3} icon={RefreshCw} title="Memoria Attiva" desc="Spaced repetition. Curva dell'oblio gestita dall'AI." i={7} />
-            <BentoCard cols={3} icon={Link2} title="Verifica Pubblica" desc="Aziende e università verificano le tue credenziali in un click. Senza login." i={8} />
-            <BentoCard cols={3} icon={Lock} title="Protezione Minori" desc="Consenso genitoriale on-chain. GDPR nativo. Nessun dato personale sulla blockchain." i={9} />
+            {/* CARD 2 — 5 col — Profilo Cognitivo Dinamico */}
+            <motion.div {...stagger(1)} className="md:col-span-5 rounded-2xl border p-8 shadow-sm hover:shadow-md transition-shadow" style={{ borderColor: "#BFDBFE", background: "#EFF6FF66" }}>
+              <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-5">
+                <Sparkles className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-bold mb-3" style={{ color: textMain }}>Profilo Cognitivo Dinamico</h3>
+              <p className="leading-relaxed" style={{ color: textSub }}>
+                L'AI costruisce invisibilmente un profilo unico per ogni studente:
+                stile di apprendimento, punti di blocco per materia, orario migliore,
+                velocità di progressione. Più lo usi, più diventa preciso e insostituibile.
+              </p>
+              <div className="mt-5 grid grid-cols-2 gap-2">
+                {["Stile visivo/logico", "Orario ottimale", "Materie deboli", "Velocità apprendimento"].map(tag => (
+                  <span key={tag} className="text-xs bg-white border border-blue-100 px-3 py-1.5 rounded-lg" style={{ color: textSub }}>{tag}</span>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* CARD 3 — 4 col — Benessere Emotivo */}
+            <motion.div {...stagger(2)} className="md:col-span-4 rounded-2xl border p-7 shadow-sm hover:shadow-md transition-shadow" style={{ borderColor: borderClr, background: "white" }}>
+              <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center mb-5">
+                <Heart className="w-6 h-6 text-red-500" />
+              </div>
+              <h3 className="text-lg font-bold mb-2" style={{ color: textMain }}>Benessere Emotivo</h3>
+              <p className="text-sm leading-relaxed" style={{ color: textSub }}>
+                Check-in giornaliero adattivo con protocollo PFA (OMS).
+                Il coach monitora il mood nel tempo e interviene con
+                sensibilità — calibrato per ogni fascia d'età.
+              </p>
+            </motion.div>
+
+            {/* CARD 4 — 4 col — Credenziali On-Chain */}
+            <motion.div {...stagger(3)} className="md:col-span-4 rounded-2xl border p-7 shadow-sm hover:shadow-md transition-shadow" style={{ borderColor: borderClr, background: "white" }}>
+              <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center mb-5">
+                <BadgeCheck className="w-6 h-6 text-green-600" />
+              </div>
+              <h3 className="text-lg font-bold mb-2" style={{ color: textMain }}>Credenziali On-Chain</h3>
+              <p className="text-sm leading-relaxed" style={{ color: textSub }}>
+                Soulbound Token (ERC-5192). Le tue competenze certificate
+                su blockchain privata — verificabili da chiunque in tempo
+                reale, immutabili per sempre.
+              </p>
+            </motion.div>
+
+            {/* CARD 5 — 4 col — Conformità EU AI Act (dark) */}
+            <motion.div {...stagger(4)} className="md:col-span-4 rounded-2xl border p-7 shadow-sm hover:shadow-md transition-shadow" style={{ borderColor: "#334155", background: "#0F172A" }}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{ background: "rgba(255,255,255,0.1)" }}>
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Conformità EU AI Act</h3>
+              <p className="text-sm leading-relaxed" style={{ color: "#94A3B8" }}>
+                Governance AI certificata on-chain. Logging immutabile.
+                Audit trail automatico. L'unica piattaforma educativa italiana
+                già conforme alla deadline del 2 agosto 2026.
+              </p>
+              <span className="inline-block mt-4 text-xs px-3 py-1 rounded-full" style={{ background: "rgba(249,115,22,0.15)", color: "#FB923C", border: "1px solid rgba(249,115,22,0.3)" }}>
+                Scadenza: 2 agosto 2026
+              </span>
+            </motion.div>
+
+            {/* CARD 6 — 3 col — Timer Focus */}
+            <motion.div {...stagger(5)} className="md:col-span-3 rounded-2xl border p-6 shadow-sm hover:shadow-md transition-shadow" style={{ borderColor: borderClr, background: "white" }}>
+              <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center mb-4">
+                <Timer className="w-5 h-5 text-purple-600" />
+              </div>
+              <h3 className="font-bold mb-1" style={{ color: textMain }}>Timer Focus</h3>
+              <p className="text-sm" style={{ color: textSub }}>Pomodoro, Deep Work, Ultra Focus. Con tracking materia.</p>
+            </motion.div>
+
+            {/* CARD 7 — 3 col — Memoria Attiva */}
+            <motion.div {...stagger(6)} className="md:col-span-3 rounded-2xl border p-6 shadow-sm hover:shadow-md transition-shadow" style={{ borderColor: borderClr, background: "white" }}>
+              <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mb-4">
+                <RefreshCw className="w-5 h-5 text-amber-600" />
+              </div>
+              <h3 className="font-bold mb-1" style={{ color: textMain }}>Memoria Attiva</h3>
+              <p className="text-sm" style={{ color: textSub }}>Spaced repetition. Curva dell'oblio gestita dall'AI.</p>
+            </motion.div>
+
+            {/* CARD 8 — 3 col — Verifica Pubblica */}
+            <motion.div {...stagger(7)} className="md:col-span-3 rounded-2xl border p-6 shadow-sm hover:shadow-md transition-shadow" style={{ borderColor: borderClr, background: "white" }}>
+              <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center mb-4">
+                <Link2 className="w-5 h-5 text-sky-600" />
+              </div>
+              <h3 className="font-bold mb-1" style={{ color: textMain }}>Verifica Pubblica</h3>
+              <p className="text-sm" style={{ color: textSub }}>Aziende e università verificano le credenziali in un click. Senza login.</p>
+            </motion.div>
+
+            {/* CARD 9 — 3 col — Protezione Minori */}
+            <motion.div {...stagger(8)} className="md:col-span-3 rounded-2xl border p-6 shadow-sm hover:shadow-md transition-shadow" style={{ borderColor: borderClr, background: "white" }}>
+              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center mb-4">
+                <Lock className="w-5 h-5 text-slate-600" />
+              </div>
+              <h3 className="font-bold mb-1" style={{ color: textMain }}>Protezione Minori</h3>
+              <p className="text-sm" style={{ color: textSub }}>Consenso genitoriale on-chain. GDPR nativo. Zero dati personali sulla blockchain.</p>
+            </motion.div>
+
           </div>
         </div>
       </section>
