@@ -433,10 +433,11 @@ const Landing = () => {
                 btnClass: "bg-secondary/20 text-secondary-foreground hover:bg-primary hover:text-primary-foreground",
                 btnLabel: "Modalità Sessione",
                 features: [
-                  { icon: Brain, text: "Ricerca profonda" },
-                  { icon: Zap, text: "Tunnel di Focus" },
+                  { icon: Brain, text: "Ricerca bibliografica AI" },
+                  { icon: Zap, text: "Tunnel di Focus avanzato" },
+                  { icon: BadgeCheck, text: "Credenziali Soulbound" },
                 ],
-                desc: "Sintesi profonda, ricerca bibliografica e interrogazioni STEM, Legale o Medico senza limiti.",
+                desc: "Mentor AI alla pari. Ricerca profonda, gestione esami, credenziali on-chain verificabili.",
               },
               {
                 role: "docente",
