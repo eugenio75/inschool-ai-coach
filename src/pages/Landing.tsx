@@ -97,7 +97,7 @@ const Landing = () => {
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-card/50 text-xs font-semibold text-muted-foreground mb-10 tracking-wide uppercase"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            AI Coach Educativo
+            AI Coach Educativo · Tassonomia di Bloom
           </motion.div>
 
           {/* Headline */}
