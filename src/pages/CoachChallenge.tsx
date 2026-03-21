@@ -242,7 +242,13 @@ export default function CoachChallenge() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ systemPrompt, messages: apiMessages, stream: true }),
+          body: JSON.stringify({
+            systemPrompt,
+            messages: apiMessages,
+            stream: true,
+            profileId: profileId || undefined,
+            subject: subject || undefined,
+          }),
         }
       );
 

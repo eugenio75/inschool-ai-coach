@@ -44,14 +44,15 @@ function getStateQuestions(gender?: string) {
 }
 
 const optionalQuestions = [
-  "C'è qualcosa che ti è rimasto in testa che vuoi raccontarmi?",
-  "Ti va di dirmi qualcosa che ti ha fatto pensare oggi?",
+  "Vuoi raccontarmi qualcosa prima di iniziare?",
+  "Vuoi raccontarmi qualcosa prima di iniziare?",
 ];
 
 // Answer options for structured responses
 const experienceAnswers = [
   { id: "smile", icon: Smile, label: "Qualcosa di bello" },
-  { id: "hard", icon: Frown, label: "Un po' complicata" },
+  { id: "hard", icon: Frown, label: "Difficile" },
+  { id: "sad", icon: Moon, label: "Un po' triste" },
   { id: "normal", icon: Minus, label: "Normale" },
   { id: "mixed", icon: Shuffle, label: "Un po' e un po'" },
 ];
@@ -82,6 +83,7 @@ const EmotionalCheckin = () => {
   const [answers, setAnswers] = useState<{ question: string; answer: string; answerId: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [freeText, setFreeText] = useState("");
+  const [moodStreak, setMoodStreak] = useState(0);
 
   const childSession = getChildSession();
   const savedProfile = useMemo(() => {
@@ -94,20 +96,40 @@ const EmotionalCheckin = () => {
   }, []);
   const name = childSession?.profile?.name || savedProfile?.name || "campione";
   const gender = (childSession?.profile?.gender || savedProfile?.gender) as string | undefined;
+  const profileId = childSession?.profileId || savedProfile?.id;
 
   const stateAnswers = useMemo(() => getStateAnswers(gender), [gender]);
+
+  // Load mood_streak from user_preferences
+  useEffect(() => {
+    if (!profileId) return;
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase
+        .from("user_preferences")
+        .select("mood_streak")
+        .eq("profile_id", profileId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.mood_streak) setMoodStreak(data.mood_streak);
+        });
+    });
+  }, [profileId]);
 
   // Pick today's questions based on day-of-year for rotation
   const { q1, q2, q3 } = useMemo(() => {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
     const expQ = getExperienceQuestions();
     const stQ = getStateQuestions(gender);
+    // Adaptive question for mood_streak >= 3
+    const adaptiveQ2 = moodStreak >= 3
+      ? "Sembra una settimana un po' pesante. Oggi come stai?"
+      : stQ[dayOfYear % stQ.length];
     return {
       q1: expQ[dayOfYear % expQ.length],
-      q2: stQ[dayOfYear % stQ.length],
+      q2: adaptiveQ2,
       q3: optionalQuestions[dayOfYear % optionalQuestions.length],
     };
-  }, [gender]);
+  }, [gender, moodStreak]);
 
   const handleAnswer = (question: string, answerId: string, label: string) => {
     setAnswers(prev => [...prev, { question, answer: label, answerId }]);
@@ -128,7 +150,7 @@ const EmotionalCheckin = () => {
 
       let emotionalTone: "positive" | "neutral" | "low" = "neutral";
       if (expAnswer?.answerId === "smile") emotionalTone = "positive";
-      else if (expAnswer?.answerId === "hard") emotionalTone = "low";
+      else if (expAnswer?.answerId === "hard" || expAnswer?.answerId === "sad") emotionalTone = "low";
 
       let energyLevel: "high" | "medium" | "low" = "medium";
       if (stateAnswer?.answerId === "charged") energyLevel = "high";
@@ -288,7 +310,7 @@ const EmotionalCheckin = () => {
               className="w-full bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              {freeText ? "Invia e inizia!" : "Vai ai compiti"} <ArrowRight className="w-4 h-4 ml-1" />
+              {freeText ? "Invia e inizia!" : "Continua"} <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
           </motion.div>
         )}

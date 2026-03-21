@@ -32,6 +32,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Security = lazy(() => import("./pages/Security"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const CredentialVerify = lazy(() => import("./pages/CredentialVerify"));
 
 const queryClient = new QueryClient();
 
@@ -125,6 +126,7 @@ const AppRoutes = () => (
         <Route path="/checkin" element={<AccessibleRoute><EmotionalCheckin /></AccessibleRoute>} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/security" element={<Security />} />
+        <Route path="/verify" element={<CredentialVerify />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/dashboard" element={<AccessibleRoute><MaybeAdultLayout><Dashboard /></MaybeAdultLayout></AccessibleRoute>} />
