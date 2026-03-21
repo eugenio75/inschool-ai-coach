@@ -5,7 +5,7 @@ import {
   ArrowRight, Hexagon, GraduationCap, Users, BookOpen,
   ShieldCheck, Zap, Laptop, BookMarked,
   Clock, Award, Lock, Brain, Target, Layers, Mic,
-  ChevronDown,
+  ChevronDown, Heart, Link2, BadgeCheck, Sparkles, BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isChildSession } from "@/lib/childSession";
@@ -60,6 +60,12 @@ const Landing = () => {
             >
               Funzionalità
             </button>
+            <button
+              onClick={() => navigate("/verify")}
+              className="hidden sm:block text-sm text-muted-foreground hover:text-foreground transition-colors font-medium"
+            >
+              Verifica Credenziali
+            </button>
             <Button
               variant="outline"
               className="rounded-full px-5 h-9 text-sm font-semibold border-border"
@@ -97,7 +103,7 @@ const Landing = () => {
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-card/50 text-xs font-semibold text-muted-foreground mb-10 tracking-wide uppercase"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            AI Coach Educativo
+            AI Coach Educativo · Tassonomia di Bloom
           </motion.div>
 
           {/* Headline */}
@@ -126,9 +132,9 @@ const Landing = () => {
             transition={{ ...spring, delay: 0.35 }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed font-medium"
           >
-            Un AI Coach che si adatta alla tua età, al tuo stile e ai tuoi obiettivi.
+            Un AI Coach che si adatta alla tua età, al tuo stile cognitivo e al tuo stato emotivo.
             <br className="hidden md:block" />
-            Dalla primaria all'università — niente stress, solo crescita.
+            Dalla primaria all'università — metodo socratico, profilo adattivo, credenziali verificabili.
           </motion.p>
 
           {/* CTAs */}
@@ -171,10 +177,11 @@ const Landing = () => {
       <section className="py-10 px-6 border-y border-border/50 bg-card/30 relative z-10">
         <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-muted-foreground">
           {[
-            { num: "4", label: "Percorsi educativi" },
-            { num: "AI", label: "Adattiva per età" },
+            { num: "6", label: "Livelli Bloom integrati" },
+            { num: "AI", label: "Profilo cognitivo adattivo" },
             { num: "100%", label: "Sicurezza minori" },
-            { num: "24/7", label: "Tutor disponibile" },
+            { num: "24/7", label: "Coach disponibile" },
+            { num: "On-chain", label: "Credenziali verificabili" },
           ].map((s, i) => (
             <motion.div
               key={i}
@@ -222,8 +229,8 @@ const Landing = () => {
                 </div>
                 <h3 className="font-display text-2xl font-bold text-foreground mb-3">AI Coach Socratico</h3>
                 <p className="text-muted-foreground max-w-md leading-relaxed">
-                  Non ti dà le risposte — ti guida a trovarle. Il metodo socratico applicato all'intelligenza artificiale,
-                  calibrato sulla tua età e livello.
+                  Non ti dà le risposte — ti guida a trovarle. Basato sulla Tassonomia di Bloom,
+                  il coach adatta ogni domanda al tuo livello cognitivo reale, sessione dopo sessione.
                 </p>
               </div>
             </motion.div>
@@ -277,7 +284,7 @@ const Landing = () => {
               <p className="text-sm text-muted-foreground">PC, tablet, smartphone. I tuoi progressi ovunque, sincronizzati in tempo reale.</p>
             </motion.div>
 
-            {/* Medium card — Voice */}
+            {/* Card — Emotional Well-being */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -286,10 +293,91 @@ const Landing = () => {
               className="md:col-span-2 bg-card border border-border rounded-3xl p-8"
             >
               <div className="w-12 h-12 rounded-2xl bg-destructive/10 flex items-center justify-center mb-6">
+                <Heart className="w-6 h-6 text-destructive" />
+              </div>
+              <h3 className="font-display text-xl font-bold text-foreground mb-2">Benessere Emotivo</h3>
+              <p className="text-sm text-muted-foreground">Check-in giornaliero adattivo con protocollo PFA. L'AI monitora il mood e interviene con sensibilità.</p>
+            </motion.div>
+
+            {/* Card — Blockchain Credentials */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="md:col-span-2 bg-card border border-border rounded-3xl p-8"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+                <BadgeCheck className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="font-display text-xl font-bold text-foreground mb-2">Credenziali On-Chain</h3>
+              <p className="text-sm text-muted-foreground">Certificati Soulbound (ERC-5192) verificabili da chiunque. Le tue competenze, immutabili.</p>
+            </motion.div>
+
+            {/* Large card — Adaptive Profile */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.35 }}
+              className="md:col-span-4 bg-card border border-border rounded-3xl p-8 md:p-10 relative overflow-hidden group"
+            >
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2 group-hover:bg-accent/10 transition-colors duration-700" />
+              <div className="relative z-10">
+                <div className="w-12 h-12 rounded-2xl bg-accent flex items-center justify-center mb-6">
+                  <Sparkles className="w-6 h-6 text-accent-foreground" />
+                </div>
+                <h3 className="font-display text-2xl font-bold text-foreground mb-3">Profilo Cognitivo Dinamico</h3>
+                <p className="text-muted-foreground max-w-md leading-relaxed">
+                  L'AI costruisce un profilo invisibile del tuo stile di apprendimento: velocità, punti di blocco, 
+                  stile preferito, orario migliore. Ogni sessione diventa più precisa della precedente.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Card — Oral Prep */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              className="md:col-span-2 bg-card border border-border rounded-3xl p-8"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-destructive/10 flex items-center justify-center mb-6">
                 <Mic className="w-6 h-6 text-destructive" />
               </div>
               <h3 className="font-display text-xl font-bold text-foreground mb-2">Interrogazione Orale</h3>
-              <p className="text-sm text-muted-foreground">Simula l'interrogazione con l'AI via voce. Preparati come dal vivo.</p>
+              <p className="text-sm text-muted-foreground">Simula l'interrogazione con l'AI. Preparati come dal vivo, con feedback specifico.</p>
+            </motion.div>
+
+            {/* Card — Analytics */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.45 }}
+              className="md:col-span-2 bg-card border border-border rounded-3xl p-8"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-secondary/20 flex items-center justify-center mb-6">
+                <BarChart3 className="w-6 h-6 text-secondary-foreground" />
+              </div>
+              <h3 className="font-display text-xl font-bold text-foreground mb-2">Analytics Studio</h3>
+              <p className="text-sm text-muted-foreground">Visualizza i tuoi progressi settimanali, streak di studio e distribuzione per materia.</p>
+            </motion.div>
+
+            {/* Card — Verify */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 }}
+              className="md:col-span-2 bg-card border border-border rounded-3xl p-8"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mb-6">
+                <Link2 className="w-6 h-6 text-muted-foreground" />
+              </div>
+              <h3 className="font-display text-xl font-bold text-foreground mb-2">Verifica Pubblica</h3>
+              <p className="text-sm text-muted-foreground">Pagina pubblica per aziende e università: verifica credenziali singole o in blocco via CSV.</p>
             </motion.div>
           </div>
         </div>
@@ -325,8 +413,9 @@ const Landing = () => {
                 features: [
                   { icon: ShieldCheck, text: "IA protetta e recintata" },
                   { icon: Award, text: "Gamification positiva" },
+                  { icon: Heart, text: "Check-in emotivo giornaliero" },
                 ],
-                desc: "IA blindata e controllata dal genitore. Risposte dolci, rigorose e 100% focalizzate sullo studio.",
+                desc: "IA blindata e controllata dal genitore. Metodo socratico adattivo, sistema di benessere con protocollo PFA integrato.",
               },
               {
                 role: "superiori",
@@ -336,10 +425,11 @@ const Landing = () => {
                 btnClass: "bg-accent text-accent-foreground hover:bg-primary hover:text-primary-foreground",
                 btnLabel: "Inizia Superiori",
                 features: [
-                  { icon: Target, text: "Sfide Pomodoro" },
-                  { icon: Clock, text: "Gestione task" },
+                  { icon: Target, text: "Timer Pomodoro / Deep Work" },
+                  { icon: Clock, text: "Gestione task e scadenze" },
+                  { icon: Sparkles, text: "Profilo cognitivo adattivo" },
                 ],
-                desc: "L'IA diventa un tutor esigente. Ti interroga su concetti complessi e scompone gli argomenti in sfide.",
+                desc: "L'IA diventa un tutor che si adatta al tuo stile. Tassonomia di Bloom invisibile, sfide personalizzate.",
               },
               {
                 role: "universitario",
@@ -349,10 +439,11 @@ const Landing = () => {
                 btnClass: "bg-secondary/20 text-secondary-foreground hover:bg-primary hover:text-primary-foreground",
                 btnLabel: "Modalità Sessione",
                 features: [
-                  { icon: Brain, text: "Ricerca profonda" },
-                  { icon: Zap, text: "Tunnel di Focus" },
+                  { icon: Brain, text: "Ricerca bibliografica AI" },
+                  { icon: Zap, text: "Tunnel di Focus avanzato" },
+                  { icon: BadgeCheck, text: "Credenziali Soulbound" },
                 ],
-                desc: "Sintesi profonda, ricerca bibliografica e interrogazioni STEM, Legale o Medico senza limiti.",
+                desc: "Mentor AI alla pari. Ricerca profonda, gestione esami, credenziali on-chain verificabili.",
               },
               {
                 role: "docente",
@@ -363,9 +454,10 @@ const Landing = () => {
                 btnLabel: "Area Docenti",
                 features: [
                   { icon: Laptop, text: "Cruscotto classe" },
-                  { icon: Layers, text: "Generatore verifiche" },
+                  { icon: Layers, text: "Generatore verifiche AI" },
+                  { icon: BarChart3, text: "Statistiche apprendimento" },
                 ],
-                desc: "Il tuo co-pilota didattico. Genera verifiche, monitora l'apprendimento e assisti 30 studenti in simultanea.",
+                desc: "Il tuo co-pilota didattico. Genera verifiche per livelli Bloom, monitora 30+ studenti in simultanea.",
               },
             ].map((card, i) => (
               <motion.div
@@ -441,6 +533,9 @@ const Landing = () => {
               </button>
               <button onClick={() => navigate("/security")} className="hover:text-foreground transition-colors flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5" /> Protezione Minori
+              </button>
+              <button onClick={() => navigate("/verify")} className="hover:text-foreground transition-colors flex items-center gap-1.5">
+                <BadgeCheck className="w-3.5 h-3.5" /> Verifica Credenziali
               </button>
               <span className="flex items-center gap-1.5">
                 <Zap className="w-3.5 h-3.5 text-primary" /> AzarLabs AI
