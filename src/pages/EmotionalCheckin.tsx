@@ -150,7 +150,7 @@ const EmotionalCheckin = () => {
 
       let emotionalTone: "positive" | "neutral" | "low" = "neutral";
       if (expAnswer?.answerId === "smile") emotionalTone = "positive";
-      else if (expAnswer?.answerId === "hard") emotionalTone = "low";
+      else if (expAnswer?.answerId === "hard" || expAnswer?.answerId === "sad") emotionalTone = "low";
 
       let energyLevel: "high" | "medium" | "low" = "medium";
       if (stateAnswer?.answerId === "charged") energyLevel = "high";
