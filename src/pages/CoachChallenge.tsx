@@ -474,29 +474,31 @@ export default function CoachChallenge() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors lg:hidden"
+                className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center hover:bg-accent transition-colors lg:hidden"
               >
                 <PanelLeftOpen className="w-4 h-4 text-muted-foreground" />
               </button>
               <button
                 onClick={() => navigate(-1)}
-                className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors"
+                className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center hover:bg-accent transition-colors"
               >
                 <ArrowLeft className="w-4 h-4 text-muted-foreground" />
               </button>
               <div>
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <h1 className="font-display text-sm font-bold text-foreground">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                  </div>
+                  <h1 className="font-display text-sm font-semibold text-foreground">
                     {activeSessionId
                       ? sessions.find(s => s.id === activeSessionId)?.titolo || "Chat AI"
                       : "Nuova Chat"}
                   </h1>
                 </div>
-                {subject && <p className="text-xs text-muted-foreground">{subject}</p>}
+                {subject && <span className="ml-10 inline-block text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{subject}</span>}
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={startNewChat} className="rounded-xl text-xs">
+            <Button variant="ghost" size="sm" onClick={startNewChat} className="text-xs">
               <Plus className="w-3.5 h-3.5 mr-1" /> Nuova
             </Button>
           </div>
