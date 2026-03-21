@@ -51,7 +51,8 @@ const optionalQuestions = [
 // Answer options for structured responses
 const experienceAnswers = [
   { id: "smile", icon: Smile, label: "Qualcosa di bello" },
-  { id: "hard", icon: Frown, label: "Un po' complicata" },
+  { id: "hard", icon: Frown, label: "Difficile" },
+  { id: "sad", icon: Moon, label: "Un po' triste" },
   { id: "normal", icon: Minus, label: "Normale" },
   { id: "mixed", icon: Shuffle, label: "Un po' e un po'" },
 ];
