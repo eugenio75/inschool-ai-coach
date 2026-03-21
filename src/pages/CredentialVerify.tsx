@@ -211,9 +211,9 @@ export default function CredentialVerify() {
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
-                  <CheckCircle2 className="w-8 h-8 text-green-600" />
+                  <CheckCircle2 className="w-8 h-8 text-primary" />
                 </motion.div>
-                <span className="font-semibold text-green-700">Credenziale verificata</span>
+                <span className="font-semibold text-primary">Credenziale verificata</span>
               </div>
 
               <div className="space-y-3 mb-6">
