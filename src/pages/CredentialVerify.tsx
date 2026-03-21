@@ -359,7 +359,7 @@ export default function CredentialVerify() {
                                 <td className="px-3 py-2 text-muted-foreground font-mono text-xs">{r.code}</td>
                                 <td className="px-3 py-2">
                                   {r.found ? (
-                                    <span className="text-green-600 flex items-center gap-1">
+                                    <span className="text-primary flex items-center gap-1">
                                       <CheckCircle2 className="w-3.5 h-3.5" /> Verificato
                                     </span>
                                   ) : (

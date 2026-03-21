@@ -91,7 +91,26 @@ serve(async (req) => {
     const tones14 = countTones(last14);
     const energy14 = countEnergy(last14);
 
-    // Determine alert level based on patterns
+    // Calculate consecutive low mood days (mood_streak)
+    let moodStreak = 0;
+    const sortedByDate = [...checkins].sort((a: any, b: any) => 
+      new Date(b.checkin_date).getTime() - new Date(a.checkin_date).getTime()
+    );
+    for (const c of sortedByDate) {
+      if ((c as any).emotional_tone === "low" || (c as any).energy_level === "low") {
+        moodStreak++;
+      } else {
+        break;
+      }
+    }
+
+    // Update mood_streak in user_preferences
+    await supabase
+      .from("user_preferences")
+      .update({ mood_streak: moodStreak })
+      .eq("profile_id", childProfileId);
+
+    // Determine alert level — enhanced with WATCH/CONCERN/URGENT
     let alertLevel: string | null = null;
     let alertTitle = "";
     let alertMessage = "";
@@ -99,17 +118,60 @@ serve(async (req) => {
       last7: { tones: tones7, energy: energy7, signals: signals7, count: last7.length },
       last14: { tones: tones14, energy: energy14, signals: signals14, count: last14.length },
       last30: { tones: countTones(checkins), energy: countEnergy(checkins), signals: signals30, count: checkins.length },
+      moodStreak,
     };
 
-    // HIGH: persistent distress over 14+ days
-    if (
+    // Check for text-based urgent signals from recent free text responses
+    const recentTexts = checkins.slice(0, 5).flatMap((c: any) => {
+      const responses = c.responses || [];
+      return responses
+        .filter((r: any) => r.answerId === "free_text" && r.answer)
+        .map((r: any) => r.answer.toLowerCase());
+    });
+
+    const urgentPhrases = [
+      "vorrei sparire", "non ce la faccio più", "mi faccio del male",
+      "farmi del male", "non voglio più vivere", "voglio morire",
+    ];
+    const concernPhrases = [
+      "non voglio fare niente", "sono sempre solo", "sono sempre sola",
+      "tanto non cambia niente", "non mi importa più", "nessuno mi capisce",
+    ];
+
+    const hasUrgentText = recentTexts.some((t: string) =>
+      urgentPhrases.some(p => t.includes(p))
+    );
+    const hasConcernText = recentTexts.some((t: string) =>
+      concernPhrases.some(p => t.includes(p))
+    );
+
+    // URGENT
+    if (hasUrgentText) {
+      alertLevel = "urgent";
+      alertTitle = "Segnale critico rilevato";
+      alertMessage = "Lo studente ha espresso frasi che richiedono attenzione immediata. È importante parlare con il bambino con calma e valutare se coinvolgere un professionista.";
+    }
+    // CONCERN — 7+ days low mood or concern phrases
+    else if (moodStreak >= 7 || hasConcernText) {
+      alertLevel = "concern";
+      alertTitle = "Segnali di disagio prolungato";
+      alertMessage = `Lo studente mostra segnali di disagio da ${moodStreak} giorni consecutivi. Non si tratta di una diagnosi, ma potrebbe essere utile parlare con il bambino per capire come si sente.`;
+    }
+    // WATCH — 3-4 consecutive low mood days
+    else if (moodStreak >= 3) {
+      alertLevel = "watch";
+      alertTitle = "Alcuni giorni di umore basso";
+      alertMessage = "Lo studente ha mostrato umore basso per alcuni giorni consecutivi. Vale la pena prestare attenzione e offrire supporto.";
+    }
+    // HIGH: persistent distress over 14+ days (legacy)
+    else if (
       (signals14.distress_combined && signals14.distress_combined >= 3) ||
       (signals14.anxiety && signals14.anxiety >= 4) ||
       (tones14.low >= Math.ceil(last14.length * 0.6) && last14.length >= 5)
     ) {
       alertLevel = "high";
       alertTitle = "Segnali di disagio persistente";
-      alertMessage = "Nelle ultime due settimane abbiamo notato segnali ripetuti di stanchezza, agitazione o difficoltà. Non si tratta di una diagnosi, ma potrebbe essere utile parlare con il bambino con dolcezza per capire come si sente rispetto alla scuola e alle attività quotidiane.";
+      alertMessage = "Nelle ultime due settimane abbiamo notato segnali ripetuti di stanchezza, agitazione o difficoltà. Potrebbe essere utile parlare con il bambino per capire come si sente.";
     }
     // MEDIUM: recurring frustration over 7 days
     else if (
@@ -119,7 +181,7 @@ serve(async (req) => {
     ) {
       alertLevel = "medium";
       alertTitle = "Alcuni segnali di fatica";
-      alertMessage = "Negli ultimi giorni il bambino ha mostrato segni di fatica o difficoltà più frequenti del solito. Questo potrebbe essere normale (es. un periodo impegnativo a scuola), ma vale la pena prestare attenzione e offrire un po' più di supporto.";
+      alertMessage = "Negli ultimi giorni il bambino ha mostrato segni di fatica più frequenti del solito.";
     }
     // LOW: mild signs
     else if (
@@ -128,12 +190,11 @@ serve(async (req) => {
     ) {
       alertLevel = "low";
       alertTitle = "Energia un po' bassa";
-      alertMessage = "Il bambino ha segnalato di sentirsi stanco o con poca energia in alcuni degli ultimi giorni. Potrebbe essere utile assicurarsi che riposi a sufficienza e che le sessioni di studio non siano troppo lunghe.";
+      alertMessage = "Il bambino ha segnalato di sentirsi stanco o con poca energia in alcuni degli ultimi giorni.";
     }
 
     // Save alert if detected (and no similar recent alert exists)
     if (alertLevel) {
-      // Check if a similar alert was already created in the last 7 days
       const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
       const { data: existingAlerts } = await supabase
         .from("emotional_alerts")
@@ -156,6 +217,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       analyzed: true,
       alertLevel,
+      moodStreak,
       patterns: patternData,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
