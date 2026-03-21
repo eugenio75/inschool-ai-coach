@@ -126,9 +126,9 @@ const Landing = () => {
             transition={{ ...spring, delay: 0.35 }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed font-medium"
           >
-            Un AI Coach che si adatta alla tua età, al tuo stile e ai tuoi obiettivi.
+            Un AI Coach che si adatta alla tua età, al tuo stile cognitivo e al tuo stato emotivo.
             <br className="hidden md:block" />
-            Dalla primaria all'università — niente stress, solo crescita.
+            Dalla primaria all'università — metodo socratico, profilo adattivo, credenziali verificabili.
           </motion.p>
 
           {/* CTAs */}
