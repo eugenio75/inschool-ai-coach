@@ -223,8 +223,8 @@ const Landing = () => {
                 </div>
                 <h3 className="font-display text-2xl font-bold text-foreground mb-3">AI Coach Socratico</h3>
                 <p className="text-muted-foreground max-w-md leading-relaxed">
-                  Non ti dà le risposte — ti guida a trovarle. Il metodo socratico applicato all'intelligenza artificiale,
-                  calibrato sulla tua età e livello.
+                  Non ti dà le risposte — ti guida a trovarle. Basato sulla Tassonomia di Bloom,
+                  il coach adatta ogni domanda al tuo livello cognitivo reale, sessione dopo sessione.
                 </p>
               </div>
             </motion.div>
