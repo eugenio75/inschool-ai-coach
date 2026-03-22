@@ -68,6 +68,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const role = searchParams.get("role") || "alunno";
+  const adultRoles = ["superiori", "universitario", "docente"];
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   
@@ -107,6 +108,45 @@ const Auth = () => {
 
   const isMinorRole = role === "alunno";
 
+  const ensureAdultProfile = async (userId: string, userEmail?: string | null, profiles: any[] = []) => {
+    if (!adultRoles.includes(role)) return null;
+
+    const matchingProfile = profiles.find((profile) => profile.school_level === role);
+    if (matchingProfile) {
+      localStorage.removeItem("inschool-signup-meta");
+      return matchingProfile;
+    }
+
+    const storedMeta = localStorage.getItem("inschool-signup-meta");
+    let meta: any = null;
+    try {
+      meta = storedMeta ? JSON.parse(storedMeta) : null;
+    } catch {
+      meta = null;
+    }
+
+    const { data: createdProfile, error } = await supabase
+      .from("child_profiles")
+      .insert({
+        parent_id: userId,
+        name: meta?.name || userEmail?.split("@")[0] || "Utente",
+        school_level: role,
+        onboarding_completed: false,
+        access_code: null,
+        avatar_emoji: null,
+        age: meta?.age || null,
+        city: meta?.city || null,
+        school_name: meta?.school_name || null,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    localStorage.removeItem("inschool-signup-meta");
+    return createdProfile;
+  };
+
   const getRoleTitle = () => {
     if (role === "alunno") return isLogin ? "Bentornato Genitore" : "Registrazione Genitore";
     if (role === "superiori") return isLogin ? "Bentornato Studente" : "Registrazione Superiori";
@@ -137,16 +177,13 @@ const Auth = () => {
         const { data, error } = await signIn(email, password);
         if (error) throw error;
         if (data.user) {
-          // Fetch all profiles for this user
           const { data: profiles } = await supabase
             .from("child_profiles")
             .select("*")
             .eq("parent_id", data.user.id);
 
-          const adultRoles = ["superiori", "universitario", "docente"];
-          const adultProfile = profiles?.find(p => adultRoles.includes(p.school_level || ""));
-
-          if (adultProfile) {
+          if (adultRoles.includes(role)) {
+            const adultProfile = await ensureAdultProfile(data.user.id, data.user.email, profiles || []);
             setChildSession({
               profileId: adultProfile.id,
               accessCode: adultProfile.access_code || "",
@@ -157,51 +194,14 @@ const Auth = () => {
             } else {
               navigate("/dashboard");
             }
-          } else if (profiles && profiles.length > 0) {
-            // Has child profiles (parent account)
+            return;
+          }
+
+          if (profiles && profiles.length > 0) {
             navigate("/profiles");
           } else {
-            // No profiles at all — check for stored signup metadata or URL role
-            const adultRoles2 = ["superiori", "universitario", "docente"];
-            const urlRole = new URLSearchParams(window.location.search).get("role") || "";
-            const storedMeta = localStorage.getItem("inschool-signup-meta");
-            let meta: any = null;
-            try { meta = storedMeta ? JSON.parse(storedMeta) : null; } catch {}
-
-            const targetRole = meta?.school_level || (adultRoles2.includes(urlRole) ? urlRole : "");
-
-            if (targetRole && adultRoles2.includes(targetRole)) {
-              const { data: newProfile, error: profileError } = await supabase
-                .from("child_profiles")
-                .insert({
-                  parent_id: data.user.id,
-                  name: meta?.name || data.user.email?.split("@")[0] || "Utente",
-                  school_level: targetRole,
-                  age: meta?.age || null,
-                  city: meta?.city || null,
-                  school_name: meta?.school_name || null,
-                  onboarding_completed: false,
-                })
-                .select()
-                .single();
-
-              localStorage.removeItem("inschool-signup-meta");
-
-              if (profileError || !newProfile) {
-                toast({ title: "Errore nella creazione del profilo. Riprova.", variant: "destructive" });
-                setLoading(false);
-                return;
-              }
-              setChildSession({
-                profileId: newProfile.id,
-                accessCode: newProfile.access_code || "",
-                profile: newProfile as any,
-              });
-              navigate("/onboarding");
-            } else {
-              localStorage.removeItem("inschool-signup-meta");
-              navigate("/profiles");
-            }
+            localStorage.removeItem("inschool-signup-meta");
+            navigate("/profiles");
           }
         }
       } else {
