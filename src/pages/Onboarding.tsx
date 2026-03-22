@@ -148,7 +148,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             if (currentSession?.profile) {
               setChildSession({
                 ...currentSession,
-                profile: { ...currentSession.profile, onboarding_completed: true },
+                profile: { ...currentSession.profile, onboarding_completed: true } as any,
               });
             }
             setSaving(false);
