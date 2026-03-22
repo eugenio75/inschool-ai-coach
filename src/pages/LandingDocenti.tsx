@@ -92,7 +92,7 @@ const LandingDocenti = () => {
 
           <motion.div {...fade} transition={{ duration: 0.3, delay: 0.2 }} className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
             <Button asChild size="lg" style={{ backgroundColor: "#0070C0" }} className="hover:opacity-90 px-8">
-              <Link to="/auth">{t("doc_hero_cta1")}</Link>
+              <Link to="/auth?role=docente">{t("doc_hero_cta1")}</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
               <a href="#come-funziona">{t("doc_hero_cta2")}</a>
@@ -203,7 +203,7 @@ const LandingDocenti = () => {
                     </li>
                   ))}
                 </ul>
-                <Link to="/auth" className="inline-flex items-center gap-1 text-sm font-medium mt-4" style={{ color: "#0070C0" }}>
+                <Link to="/auth?role=docente" className="inline-flex items-center gap-1 text-sm font-medium mt-4" style={{ color: "#0070C0" }}>
                   {t("doc_hero_cta1")} <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </motion.div>
@@ -247,10 +247,10 @@ const LandingDocenti = () => {
           </h2>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Button asChild size="lg" className="bg-white hover:bg-slate-100 px-8" style={{ color: "#1A3A5C" }}>
-              <Link to="/auth">{t("doc_final_cta1")}</Link>
+              <Link to="/auth?role=docente">{t("doc_final_cta1")}</Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 hover:text-white">
-              <Link to="/auth">{t("doc_final_cta2")}</Link>
+            <Button asChild size="lg" className="px-8 hover:opacity-90" style={{ backgroundColor: "rgba(255,255,255,0.15)", color: "#FFFFFF", border: "1px solid rgba(255,255,255,0.3)" }}>
+              <Link to="/auth?role=docente">{t("doc_final_cta2")}</Link>
             </Button>
           </div>
         </motion.div>
