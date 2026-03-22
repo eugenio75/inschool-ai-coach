@@ -92,6 +92,7 @@ export default function CoachChallenge() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   // Custom system prompt from localStorage (e.g. from dashboard AI actions)
   const [customSystemPrompt, setCustomSystemPrompt] = useState<string | null>(null);
