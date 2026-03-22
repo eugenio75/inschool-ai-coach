@@ -45,6 +45,7 @@ const Landing = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-5">
+            <LangToggle />
             <button onClick={() => navigate("/verify")} className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               <BadgeCheck className="w-4 h-4" /> Verifica Credenziali
             </button>
