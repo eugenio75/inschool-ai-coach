@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Send, Mic, MicOff, Sparkles, Plus, Trash2,
-  MessageSquare, PanelLeftClose, PanelLeftOpen, Loader2,
+  MessageSquare, PanelLeftClose, PanelLeftOpen, Loader2, Square,
 } from "lucide-react";
+import { SessionCelebration } from "@/components/SessionCelebration";
+import { playCelebrationSound } from "@/lib/celebrationSound";
 import { Button } from "@/components/ui/button";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
