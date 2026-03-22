@@ -5,6 +5,8 @@ import {
   ArrowRight, BadgeCheck, Brain, Sparkles, Shield, Check,
   Menu, ChevronRight, BookOpen, GraduationCap, BookMarked, Users,
 } from "lucide-react";
+import { LangToggle } from "@/components/LangToggle";
+import { useLang } from "@/contexts/LangContext";
 import { Button } from "@/components/ui/button";
 import { isChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
