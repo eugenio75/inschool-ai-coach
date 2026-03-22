@@ -51,7 +51,9 @@
 
     /* Navy & Accent */
     --color-navy: 210 52% 23%;
+    --navy: 210 52% 23%;
     --color-accent: 207 100% 38%;
+    --accent-blue: 207 100% 38%;
 
     /* Shadows */
     --shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
