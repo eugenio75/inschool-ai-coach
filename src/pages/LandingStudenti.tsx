@@ -224,7 +224,7 @@ const LandingStudenti = () => {
                     </li>
                   ))}
                 </ul>
-                <Link to="/auth?role=alunno" className="inline-flex items-center gap-1 text-sm font-medium mt-4" style={{ color: "#0070C0" }}>
+                <Link to={`/auth?role=${p.role}`} className="inline-flex items-center gap-1 text-sm font-medium mt-4" style={{ color: "#0070C0" }}>
                   {t("st_hero_cta1")} <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </motion.div>
