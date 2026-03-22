@@ -501,9 +501,24 @@ export default function CoachChallenge() {
                 {subject && <span className="ml-10 inline-block text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{subject}</span>}
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={startNewChat} className="text-xs">
-              <Plus className="w-3.5 h-3.5 mr-1" /> Nuova
-            </Button>
+            <div className="flex items-center gap-2">
+              {messages.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => {
+                    playCelebrationSound();
+                    setShowCelebration(true);
+                  }}
+                >
+                  <Square className="w-3 h-3 mr-1" /> Fine sessione
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={startNewChat} className="text-xs">
+                <Plus className="w-3.5 h-3.5 mr-1" /> Nuova
+              </Button>
+            </div>
           </div>
         </div>
 
