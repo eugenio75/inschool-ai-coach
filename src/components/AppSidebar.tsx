@@ -106,7 +106,8 @@ export function AppSidebar() {
 
         {/* Bottom: user info */}
         {!collapsed && (
-          <div className="mt-auto px-4 py-4 border-t border-sidebar-border">
+          <div className="mt-auto px-4 py-4 border-t border-sidebar-border space-y-3">
+            <LangToggle />
             <div className="flex items-center gap-2.5">
               <AvatarInitials name={name} size="sm" />
               <div className="min-w-0">
