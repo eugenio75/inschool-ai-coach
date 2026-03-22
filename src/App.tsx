@@ -123,6 +123,8 @@ const AppRoutes = () => (
     <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/studenti" element={<LandingStudenti />} />
+        <Route path="/docenti" element={<LandingDocenti />} />
         <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
         <Route path="/profiles" element={<ProtectedRoute><ProfileSelector /></ProtectedRoute>} />
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
