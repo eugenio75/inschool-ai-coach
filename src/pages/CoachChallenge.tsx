@@ -614,6 +614,15 @@ export default function CoachChallenge() {
           </div>
         </div>
       </div>
+
+      <SessionCelebration
+        isVisible={showCelebration}
+        onClose={() => setShowCelebration(false)}
+        studentName={profile?.name || "Studente"}
+        bloomLevel={3}
+        subject={subject}
+        isJunior={(profile?.school_level || profile?.schoolLevel) === "alunno"}
+      />
     </div>
   );
 }
