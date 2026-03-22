@@ -273,15 +273,15 @@ const Landing = () => {
               className="bg-white hover:bg-slate-100 px-8"
               style={{ color: "#1A3A5C" }}
             >
-              <Link to="/auth">{t("home_final_cta1")}</Link>
+              <Link to="/auth?role=alunno">{t("home_final_cta1")}</Link>
             </Button>
             <Button
               asChild
-              variant="outline"
               size="lg"
-              className="border-white/30 text-white hover:bg-white/10 hover:text-white"
+              className="px-8 hover:opacity-90"
+              style={{ backgroundColor: "rgba(255,255,255,0.15)", color: "#FFFFFF", border: "1px solid rgba(255,255,255,0.3)" }}
             >
-              <Link to="/docenti">{t("home_final_cta2")}</Link>
+              <Link to="/auth?role=docente">{t("home_final_cta2")}</Link>
             </Button>
           </div>
         </motion.div>
