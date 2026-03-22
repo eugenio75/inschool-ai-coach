@@ -33,6 +33,8 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Security = lazy(() => import("./pages/Security"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const CredentialVerify = lazy(() => import("./pages/CredentialVerify"));
+const LandingStudenti = lazy(() => import("./pages/LandingStudenti"));
+const LandingDocenti = lazy(() => import("./pages/LandingDocenti"));
 
 const queryClient = new QueryClient();
 
