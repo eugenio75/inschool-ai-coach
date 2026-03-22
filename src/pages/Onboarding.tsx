@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { getChildSession } from "@/lib/childSession";
+import { getChildSession, setChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
 import OnboardingLegacy from "./OnboardingLegacy";
 
@@ -40,8 +40,42 @@ export default function Onboarding() {
            setInitialStep(data.current_step);
            setInitialData(data.data || {});
         }
+         setLoadingData(false);
+         return;
       }
-      // Parent users without child session: show OnboardingLegacy to create a new child profile
+
+      if (user) {
+        const { data: profiles } = await supabase
+          .from("child_profiles")
+          .select("*")
+          .eq("parent_id", user.id)
+          .in("school_level", ["superiori", "universitario", "docente"])
+          .order("created_at", { ascending: false });
+
+        if (profiles && profiles.length > 0) {
+          const incompleteProfile = profiles.find((profile) => !profile.onboarding_completed) || profiles[0];
+          setChildSession({
+            profileId: incompleteProfile.id,
+            accessCode: incompleteProfile.access_code || "",
+            profile: incompleteProfile as any,
+          });
+          setRole(incompleteProfile.school_level);
+          setProfileId(incompleteProfile.id);
+
+          const { data } = await (supabase.from as any)("user_preferences")
+            .select("*")
+            .eq("profile_id", incompleteProfile.id)
+            .maybeSingle() as any;
+
+          if (data && data.current_step !== undefined) {
+            setInitialStep(data.current_step);
+            setInitialData(data.data || {});
+          }
+          setLoadingData(false);
+          return;
+        }
+      }
+
       setLoadingData(false);
     };
     check();
