@@ -143,6 +143,14 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                profile_id: profileId, role: role, current_step: step, data: answers
             });
             await supabase.from("child_profiles").update({ onboarding_completed: true } as any).eq("id", profileId);
+            // Update localStorage session so RoleGuard doesn't redirect back
+            const currentSession = getChildSession();
+            if (currentSession?.profile) {
+              setChildSession({
+                ...currentSession,
+                profile: { ...currentSession.profile, onboarding_completed: true } as any,
+              });
+            }
             setSaving(false);
             navigate("/dashboard");
         }
