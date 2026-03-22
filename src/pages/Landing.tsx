@@ -61,6 +61,10 @@ const Landing = () => {
               </SheetTrigger>
               <SheetContent side="right" className="bg-card pt-12 w-72">
                 <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-sm font-medium text-muted-foreground">Lingua</span>
+                    <LangToggle />
+                  </div>
                   <SheetClose asChild>
                     <button onClick={() => navigate("/verify")} className="flex items-center gap-2 text-sm font-medium py-2 text-foreground">
                       <BadgeCheck className="w-4 h-4" /> Verifica Credenziali
