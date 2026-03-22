@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Send, Mic, MicOff, Sparkles, Plus, Trash2,
-  MessageSquare, PanelLeftClose, PanelLeftOpen, Loader2,
+  MessageSquare, PanelLeftClose, PanelLeftOpen, Loader2, Square,
 } from "lucide-react";
+import { SessionCelebration } from "@/components/SessionCelebration";
+import { playCelebrationSound } from "@/lib/celebrationSound";
 import { Button } from "@/components/ui/button";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,6 +92,7 @@ export default function CoachChallenge() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   // Custom system prompt from localStorage (e.g. from dashboard AI actions)
   const [customSystemPrompt, setCustomSystemPrompt] = useState<string | null>(null);
@@ -498,9 +501,24 @@ export default function CoachChallenge() {
                 {subject && <span className="ml-10 inline-block text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{subject}</span>}
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={startNewChat} className="text-xs">
-              <Plus className="w-3.5 h-3.5 mr-1" /> Nuova
-            </Button>
+            <div className="flex items-center gap-2">
+              {messages.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => {
+                    playCelebrationSound();
+                    setShowCelebration(true);
+                  }}
+                >
+                  <Square className="w-3 h-3 mr-1" /> Fine sessione
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={startNewChat} className="text-xs">
+                <Plus className="w-3.5 h-3.5 mr-1" /> Nuova
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -596,6 +614,15 @@ export default function CoachChallenge() {
           </div>
         </div>
       </div>
+
+      <SessionCelebration
+        isVisible={showCelebration}
+        onClose={() => setShowCelebration(false)}
+        studentName={profile?.name || "Studente"}
+        bloomLevel={3}
+        subject={subject}
+        isJunior={(profile?.school_level || profile?.schoolLevel) === "alunno"}
+      />
     </div>
   );
 }
