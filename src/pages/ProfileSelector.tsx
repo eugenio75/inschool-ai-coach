@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildProfiles, setActiveChildProfileId } from "@/lib/database";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
+import { getChildSession, setChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
@@ -17,14 +18,14 @@ const ProfileSelector = () => {
 
   useEffect(() => {
     const load = async () => {
-      const data = await getChildProfiles();
-      if (data.length > 0) {
-        const role = data[0].school_level;
-        if (["superiori", "universitario", "docente"].includes(role)) {
-          navigate("/dashboard", { replace: true });
-          return;
-        }
+      const session = getChildSession();
+      const role = session?.profile?.school_level;
+      if (["superiori", "universitario", "docente"].includes(role || "")) {
+        navigate("/dashboard", { replace: true });
+        return;
       }
+
+      const data = await getChildProfiles();
       setProfiles(data);
       setLoading(false);
     };
@@ -35,6 +36,13 @@ const ProfileSelector = () => {
     setActiveChildProfileId(profileId);
     const profile = profiles.find(p => p.id === profileId);
     if (profile) {
+      if (["superiori", "universitario", "docente"].includes(profile.school_level || "")) {
+        setChildSession({
+          profileId: profile.id,
+          accessCode: profile.access_code || "",
+          profile,
+        });
+      }
       localStorage.setItem("inschool-profile", JSON.stringify({
         id: profile.id,
         name: profile.name,
