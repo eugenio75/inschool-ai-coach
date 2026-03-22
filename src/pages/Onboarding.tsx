@@ -396,6 +396,13 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
     }
 
     function renderDocente(step: number, answers: any, setAnswers: any, toggleMax: any, toggle: any, locRef: any) {
+        const addCustomMateria = () => {
+            const val = (answers._customMateria || "").trim();
+            if (val && !(answers.docente_materie || []).includes(val) && (answers.docente_materie || []).length < 5) {
+                setAnswers({ ...answers, docente_materie: [...(answers.docente_materie || []), val], _customMateria: "" });
+            }
+        };
+
         switch (step) {
             case 0:
               return (
@@ -406,7 +413,8 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 </div>
               );
             case 1:
-              const docenteMaterie = ["Matematica", "Fisica", "Chimica", "Italiano", "Latino", "Greco", "Storia", "Filosofia", "Inglese", "Francese", "Spagnolo", "Tedesco", "Informatica", "Scienze", "Arte", "Musica", "Educazione Fisica", "Diritto", "Economia", "Geografia", "Religione", "Tecnologia"];
+              const docenteMaterie = ["Matematica", "Fisica", "Chimica", "Italiano", "Latino", "Greco", "Storia", "Filosofia", "Inglese", "Francese", "Spagnolo", "Tedesco", "Informatica", "Scienze", "Arte", "Musica", "Educazione Fisica", "Educazione Civica", "Diritto", "Economia", "Geografia", "Religione", "Tecnologia"];
+              const regioni = ["Abruzzo","Basilicata","Calabria","Campania","Emilia-Romagna","Friuli Venezia Giulia","Lazio","Liguria","Lombardia","Marche","Molise","Piemonte","Puglia","Sardegna","Sicilia","Toscana","Trentino-Alto Adige","Umbria","Valle d'Aosta","Veneto"];
               return (
                 <div className="w-full space-y-6">
                     <h2 className="text-2xl font-bold text-foreground">Il tuo ruolo</h2>
@@ -416,6 +424,12 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                           {["Scuola Primaria", "Scuola Secondaria I grado", "Scuola Secondaria II grado", "Università", "Formazione Professionale"].map(a => <option key={a} value={a}>{a}</option>)}
                        </select>
                        <input ref={locRef} type="text" placeholder="Nome Istituto" className={inputClass} defaultValue={answers.docente_istituto || ""} />
+                       <select value={answers.docente_regione || ""} onChange={e => setAnswers({...answers, docente_regione: e.target.value})} className={inputClass}>
+                          <option value="" disabled>Regione</option>
+                          {regioni.map(r => <option key={r} value={r}>{r}</option>)}
+                       </select>
+                       <input type="text" placeholder="Provincia" value={answers.docente_provincia || ""} onChange={e => setAnswers({...answers, docente_provincia: e.target.value})} className={inputClass} />
+                       <input type="text" placeholder="Città" value={answers.docente_citta || ""} onChange={e => setAnswers({...answers, docente_citta: e.target.value})} className={inputClass} />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-foreground mb-2">Le tue materie (max 5)</p>
@@ -424,6 +438,14 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                           const isSel = (answers.docente_materie || []).includes(m);
                           return <button key={m} onClick={() => toggleMax("docente_materie", m, 5)} className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${isSel ? chipSelClass : chipUnselClass}`}>{m}</button>;
                         })}
+                        {/* Custom materie added by user */}
+                        {(answers.docente_materie || []).filter((m: string) => !docenteMaterie.includes(m)).map((m: string) => (
+                          <button key={m} onClick={() => toggleMax("docente_materie", m, 5)} className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${chipSelClass}`}>{m}</button>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 mt-3">
+                        <input type="text" placeholder="Altra materia..." value={answers._customMateria || ""} onChange={e => setAnswers({...answers, _customMateria: e.target.value})} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addCustomMateria(); } }} className="flex-1 p-3 rounded-xl border border-border bg-muted/50 outline-none text-sm text-foreground focus:border-primary" />
+                        <Button type="button" variant="outline" onClick={addCustomMateria} disabled={(answers.docente_materie || []).length >= 5} className="rounded-xl text-sm">Aggiungi</Button>
                       </div>
                     </div>
                 </div>
@@ -467,7 +489,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
               return (
                 <div className="w-full space-y-6">
                     <h2 className="text-2xl font-bold text-foreground">Cosa vuoi automatizzare?</h2>
-                    <p className="text-muted-foreground text-sm">Seleziona max 3 opzioni</p>
+                    <p className="text-muted-foreground text-sm">Seleziona max 4 opzioni</p>
                     <div className="grid grid-cols-2 gap-3">
                        {[
                          { id: "generare", title: "Generare prove", icon: FilePlus },
@@ -477,7 +499,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                          { id: "comunicazioni", title: "Comunicazioni", icon: Mail },
                        ].map(opt => {
                          const isSel = (answers.docente_auto || []).includes(opt.id);
-                         return <button key={opt.id} onClick={() => toggleMax("docente_auto", opt.id, 3)} className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-6 h-6 mb-2 ${isSel ? selIconClass : unselIconClass}`}/><span className={`font-medium text-xs text-center ${isSel ? selTextClass : unselTextClass}`}>{opt.title}</span></button>
+                         return <button key={opt.id} onClick={() => toggleMax("docente_auto", opt.id, 4)} className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-6 h-6 mb-2 ${isSel ? selIconClass : unselIconClass}`}/><span className={`font-medium text-xs text-center ${isSel ? selTextClass : unselTextClass}`}>{opt.title}</span></button>
                        })}
                     </div>
                 </div>
@@ -489,7 +511,10 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     <p className="text-muted-foreground mb-6">Il tuo cruscotto didattico ti attende</p>
                     <div className={summaryBoxClass}>
                         <div><span className={summaryLabelClass}>Classe</span><p className={summaryValueClass}>{answers.docente_ordine}</p></div>
+                        {answers.docente_istituto && <div><span className={summaryLabelClass}>Istituto</span><p className={summaryValueClass}>{answers.docente_istituto}</p></div>}
+                        {answers.docente_citta && <div><span className={summaryLabelClass}>Sede</span><p className={summaryValueClass}>{[answers.docente_citta, answers.docente_provincia, answers.docente_regione].filter(Boolean).join(", ")}</p></div>}
                         <div><span className={summaryLabelClass}>Materie</span><p className={summaryValueClass}>{(answers.docente_materie || []).join(", ")}</p></div>
+                        <div><span className={summaryLabelClass}>Strumenti usati</span><p className={summaryValueClass}>{(answers.docente_uso || []).join(", ")}</p></div>
                         <div><span className={summaryLabelClass}>Automazioni IA</span><p className={summaryValueClass}>{(answers.docente_auto || []).join(", ")}</p></div>
                     </div>
                 </div>
