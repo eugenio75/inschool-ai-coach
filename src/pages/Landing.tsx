@@ -21,6 +21,7 @@ const stagger = (i: number) => ({ ...fadeUp, transition: { duration: 0.5, delay:
 const Landing = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { t } = useLang();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -47,10 +48,10 @@ const Landing = () => {
           <div className="hidden md:flex items-center gap-5">
             <LangToggle />
             <button onClick={() => navigate("/verify")} className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              <BadgeCheck className="w-4 h-4" /> Verifica Credenziali
+              <BadgeCheck className="w-4 h-4" /> {t("nav_verify")}
             </button>
             <Button className="h-9 px-5 text-sm font-semibold" onClick={() => navigate("/auth")}>
-              Inizia gratis <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
+              {t("nav_start")} <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
             </Button>
           </div>
 
@@ -67,11 +68,11 @@ const Landing = () => {
                   </div>
                   <SheetClose asChild>
                     <button onClick={() => navigate("/verify")} className="flex items-center gap-2 text-sm font-medium py-2 text-foreground">
-                      <BadgeCheck className="w-4 h-4" /> Verifica Credenziali
+                      <BadgeCheck className="w-4 h-4" /> {t("nav_verify")}
                     </button>
                   </SheetClose>
                   <SheetClose asChild>
-                    <Button className="justify-center" onClick={() => navigate("/auth")}>Inizia gratis</Button>
+                    <Button className="justify-center" onClick={() => navigate("/auth")}>{t("nav_start")}</Button>
                   </SheetClose>
                 </div>
               </SheetContent>
@@ -85,25 +86,29 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto grid md:grid-cols-[55%_45%] gap-12 md:gap-16 items-center">
           <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wider mb-8 border border-border text-muted-foreground">
-              EU AI Act Compliant · Tassonomia di Bloom · Metodo Socratico
+              {t("hero_badge")}
             </div>
 
             <h1 className="font-display text-4xl sm:text-5xl lg:text-[52px] font-bold leading-[1.08] tracking-tight mb-6 text-[hsl(var(--navy))]">
-              Il Coach AI che insegna<br />a ragionare.
+              {t("hero_title_1")}<br />{t("hero_title_2")}
             </h1>
 
             <p className="text-base md:text-lg leading-relaxed mb-8 max-w-lg text-muted-foreground">
-              Non ti dà le risposte. Ti fa trovare le tue.<br />
-              Adattivo, certificato, conforme EU AI Act.
+              {t("hero_subtitle").split("\n").map((line, index) => (
+                <span key={`${line}-${index}`}>
+                  {index > 0 && <br />}
+                  {line}
+                </span>
+              ))}
             </p>
 
             <Button size="lg" className="h-13 px-8 text-sm font-bold w-full sm:w-auto mb-6" onClick={() => navigate("/auth")}>
-              Inizia gratis — nessuna carta di credito <ArrowRight className="ml-2 w-4 h-4" />
+              {t("hero_cta")} <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
 
             <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-muted-foreground">
-              {["Setup in 2 minuti", "Protezione minori", "Conforme EU AI Act 2026"].map((t) => (
-                <span key={t} className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-green-600" />{t}</span>
+              {[t("hero_trust_1"), t("hero_trust_2"), t("hero_trust_3")].map((item) => (
+                <span key={item} className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-green-600" />{item}</span>
               ))}
             </div>
           </motion.div>
@@ -167,11 +172,11 @@ const Landing = () => {
       <section className="bg-muted/50 border-y border-border py-6 px-5">
         <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
           {[
-            { big: "6", sub: "Livelli Bloom" },
-            { big: "4", sub: "Profili età" },
-            { big: "EU AI Act", sub: "Conforme 2026" },
-            { big: "On-Chain", sub: "Credenziali verificabili" },
-            { big: "PFA-OMS", sub: "Protocollo benessere" },
+              { big: "6", sub: t("proof_bloom") },
+              { big: "4", sub: t("proof_profiles") },
+              { big: "EU AI Act", sub: t("proof_euaiact") },
+              { big: "On-Chain", sub: t("proof_chain") },
+              { big: "PFA-OMS", sub: t("proof_pfa") },
           ].map((m, i) => (
             <motion.div key={i} {...stagger(i)} className="flex items-baseline gap-2 text-center">
               <span className="font-display text-xl font-bold text-[hsl(var(--navy))]">{m.big}</span>
@@ -187,16 +192,13 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-start">
           <motion.div {...fadeUp}>
             <span className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-6 bg-red-500/20 text-red-200 border border-red-500/30">
-              Scadenza obbligatoria: 2 Agosto 2026
+              {t("euai_badge")}
             </span>
             <h2 className="font-display text-3xl md:text-4xl font-bold text-white leading-tight mb-6">
-              Il tuo AI scolastico<br />è già conforme?
+              {t("euai_title_1")}<br />{t("euai_title_2")}
             </h2>
-            <p className="text-white/70 leading-relaxed mb-4">
-              L'EU AI Act classifica i sistemi AI usati in educazione come <strong className="text-white">SISTEMI AD ALTO RISCHIO</strong> (Annex III). Sanzioni fino a €15 milioni o il 3% del fatturato globale.
-            </p>
-            <p className="text-white font-semibold leading-relaxed mb-6">
-              InSchool è l'unica piattaforma educativa italiana progettata con governance blockchain nativa per soddisfare queste obbligazioni dal primo giorno.
+            <p className="text-white/70 leading-relaxed mb-6 whitespace-pre-line">
+              {t("euai_body")}
             </p>
             <button onClick={() => navigate("/verify")} className="text-white/90 underline underline-offset-4 text-sm font-medium hover:text-white transition-colors">
               Leggi la strategia tecnica <ChevronRight className="inline w-3.5 h-3.5" />
@@ -205,24 +207,24 @@ const Landing = () => {
 
           <motion.div {...fadeUp} transition={{ delay: 0.2 }}>
             <div className="rounded-2xl p-6 md:p-8 bg-white/[0.08] border border-white/[0.15]">
-              <h3 className="text-sm uppercase font-semibold text-white/70 tracking-wider mb-5">Come soddisfiamo le 7 obbligazioni</h3>
+              <h3 className="text-sm uppercase font-semibold text-white/70 tracking-wider mb-5">{t("euai_checklist_title")}</h3>
               <ul className="space-y-3">
                 {[
-                  "Sistema di gestione del rischio documentato",
-                  "Governance dei dati certificata on-chain",
-                  "Logging immutabile delle sessioni AI",
-                  "Trasparenza verso studenti e famiglie",
-                  "Supervisione umana garantita",
-                  "Audit trail automatico e verificabile",
-                  "Documentazione tecnica per le autorità",
-                ].map((t) => (
-                  <li key={t} className="flex items-start gap-2.5 text-sm text-white/80">
+                  t("euai_check_1"),
+                  t("euai_check_2"),
+                  t("euai_check_3"),
+                  t("euai_check_4"),
+                  t("euai_check_5"),
+                  t("euai_check_6"),
+                  t("euai_check_7"),
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2.5 text-sm text-white/80">
                     <Check className="w-4 h-4 mt-0.5 shrink-0 text-green-400" />
-                    {t}
+                    {item}
                   </li>
                 ))}
               </ul>
-              <p className="text-[11px] text-white/40 mt-5">Conforme anche alla Legge italiana n. 132/2025</p>
+              <p className="text-[11px] text-white/40 mt-5">{t("euai_footnote")}</p>
             </div>
           </motion.div>
         </div>
@@ -231,14 +233,14 @@ const Landing = () => {
       {/* ═══ 5. COME FUNZIONA ═══ */}
       <section className="py-20 md:py-28 px-5 bg-white">
         <div className="max-w-5xl mx-auto text-center mb-16">
-          <motion.h2 {...fadeUp} className="font-display text-3xl md:text-4xl font-bold text-[hsl(var(--navy))]">Come funziona</motion.h2>
-          <motion.p {...fadeUp} className="text-muted-foreground mt-3">Tre cose che nessun altro AI educativo fa insieme.</motion.p>
+          <motion.h2 {...fadeUp} className="font-display text-3xl md:text-4xl font-bold text-[hsl(var(--navy))]">{t("how_title")}</motion.h2>
+          <motion.p {...fadeUp} className="text-muted-foreground mt-3">{t("how_subtitle")}</motion.p>
         </div>
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-10">
           {[
-            { num: "01", icon: Brain, title: "Non ti dà la risposta", desc: "Ogni domanda del coach è calibrata sulla Tassonomia di Bloom. Tu arrivi alla risposta da solo." },
-            { num: "02", icon: Sparkles, title: "Impara da te", desc: "Il profilo cognitivo dinamico anticipa dove ti blocchi — prima che accada. Si affina sessione dopo sessione." },
-            { num: "03", icon: BadgeCheck, title: "Certifica i progressi", desc: "Le competenze diventano credenziali NFT verificabili da scuole, università e aziende. Immutabili." },
+            { num: "01", icon: Brain, title: t("how_1_title"), desc: t("how_1_body") },
+            { num: "02", icon: Sparkles, title: t("how_2_title"), desc: t("how_2_body") },
+            { num: "03", icon: BadgeCheck, title: t("how_3_title"), desc: t("how_3_body") },
           ].map((s, i) => (
             <motion.div key={i} {...stagger(i)} className="text-center">
               <span className="font-display text-5xl font-bold text-primary/20">{s.num}</span>
@@ -255,29 +257,29 @@ const Landing = () => {
       {/* ═══ 6. PER CHI È ═══ */}
       <section className="py-20 md:py-28 px-5 bg-muted/30">
         <div className="max-w-6xl mx-auto">
-          <motion.h2 {...fadeUp} className="font-display text-3xl md:text-4xl font-bold mb-14 text-center text-[hsl(var(--navy))]">Un coach per ogni fase</motion.h2>
+          <motion.h2 {...fadeUp} className="font-display text-3xl md:text-4xl font-bold mb-14 text-center text-[hsl(var(--navy))]">{t("profiles_title")}</motion.h2>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {[
               {
-                badge: "6 — 13 anni", title: "Alunno", icon: Users,
-                desc: "Metodo socratico con analogie dai tuoi interessi. Coach personalizzabile. Benessere con protocollo PFA.",
-                features: ["Coach con nome e avatar", "Gamification e badge", "Alert genitori integrato"],
+                badge: t("profile_junior_badge"), title: t("profile_junior_title"), icon: Users,
+                desc: t("profile_junior_body"),
+                features: [t("profile_feat_junior_1"), t("profile_feat_junior_2"), t("profile_feat_junior_3")],
               },
               {
-                badge: "14 — 19 anni", title: "Superiori", icon: BookOpen,
-                desc: "Profilo cognitivo adattivo. Il coach sa già dove ti bloccherai. Timer focus e gestione task.",
-                features: ["Profilo cognitivo dinamico", "Timer Pomodoro / Deep Work", "Spazio ascolto sicuro"],
+                badge: t("profile_high_badge"), title: t("profile_high_title"), icon: BookOpen,
+                desc: t("profile_high_body"),
+                features: [t("profile_feat_high_1"), t("profile_feat_high_2"), t("profile_feat_high_3")],
               },
               {
-                badge: "Università", title: "Universitario", icon: GraduationCap,
-                desc: "Mentor alla pari. Ricerca bibliografica, gestione esami, credenziali on-chain verificabili.",
-                features: ["Ricerca bibliografica AI", "Credenziali Soulbound", "Gestione esami"],
+                badge: t("profile_uni_badge"), title: t("profile_uni_title"), icon: GraduationCap,
+                desc: t("profile_uni_body"),
+                features: [t("profile_feat_uni_1"), t("profile_feat_uni_2"), t("profile_feat_uni_3")],
               },
               {
-                badge: "Docenti", title: "Docente", icon: BookMarked, borderClass: "border-l-[hsl(var(--navy))]",
-                desc: "Genera verifiche per livelli Bloom. Monitora la classe. Ricevi riconoscimento per il lavoro vero.",
-                features: ["Verifiche AI Bloom-based", "Cruscotto classe", "Spazio ascolto professionale"],
+                badge: t("profile_teacher_badge"), title: t("profile_teacher_title"), icon: BookMarked, borderClass: "border-l-[hsl(var(--navy))]",
+                desc: t("profile_teacher_body"),
+                features: [t("profile_feat_teacher_1"), t("profile_feat_teacher_2"), t("profile_feat_teacher_3")],
               },
             ].map((c, i) => (
               <motion.div
@@ -301,7 +303,7 @@ const Landing = () => {
                   ))}
                 </ul>
                 <span className="text-sm font-semibold flex items-center gap-1 text-primary">
-                  Inizia <ArrowRight className="w-3.5 h-3.5" />
+                  {t("profile_cta").replace(" →", "")} <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </motion.div>
             ))}
@@ -313,14 +315,14 @@ const Landing = () => {
       <section className="py-24 md:py-32 px-5 text-center" style={{ background: "linear-gradient(135deg, hsl(var(--navy)), hsl(var(--accent-blue)))" }}>
         <motion.div {...fadeUp} className="max-w-2xl mx-auto">
           <h2 className="font-display text-3xl md:text-5xl font-bold text-white leading-tight mb-6">
-            Inizia oggi.<br />Il tuo coach ti aspetta.
+            {t("cta_title_1")}<br />{t("cta_title_2")}
           </h2>
-          <p className="text-white/70 text-lg mb-10">Gratis. Nessuna carta di credito. Setup in 2 minuti.</p>
+          <p className="text-white/70 text-lg mb-10">{t("cta_subtitle")}</p>
           <Button size="lg" variant="secondary" className="h-14 px-10 text-base font-bold bg-white text-[hsl(var(--navy))] hover:bg-white/90" onClick={() => navigate("/auth")}>
-            Crea il tuo account gratuito <ArrowRight className="ml-2 w-4 h-4" />
+            {t("cta_button").replace(" →", "")} <ArrowRight className="ml-2 w-4 h-4" />
           </Button>
           <p className="mt-5">
-            <button onClick={() => navigate("/auth")} className="text-white/50 underline text-sm hover:text-white/80 transition-colors">Già registrato? Accedi</button>
+            <button onClick={() => navigate("/auth")} className="text-white/50 underline text-sm hover:text-white/80 transition-colors">{t("cta_login")}</button>
           </p>
         </motion.div>
       </section>
@@ -337,8 +339,8 @@ const Landing = () => {
           <div>
             <h4 className="font-display font-bold text-sm mb-3 text-white">Prodotto</h4>
             <ul className="space-y-2 text-sm text-slate-400">
-              <li><button onClick={() => navigate("/verify")} className="hover:text-white transition-colors flex items-center gap-1"><BadgeCheck className="w-3.5 h-3.5" /> Verifica Credenziali</button></li>
-              <li><button onClick={() => navigate("/auth")} className="hover:text-white transition-colors">Inizia gratis</button></li>
+              <li><button onClick={() => navigate("/verify")} className="hover:text-white transition-colors flex items-center gap-1"><BadgeCheck className="w-3.5 h-3.5" /> {t("nav_verify")}</button></li>
+              <li><button onClick={() => navigate("/auth")} className="hover:text-white transition-colors">{t("nav_start")}</button></li>
             </ul>
           </div>
           <div>
