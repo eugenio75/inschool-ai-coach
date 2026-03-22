@@ -5,6 +5,7 @@ import { ArrowRight, ArrowLeft, BookOpen, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createChildProfile, setActiveChildProfileId } from "@/lib/database";
 import { useAuth } from "@/hooks/useAuth";
+import { getChildSession, clearChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -54,6 +55,7 @@ const OnboardingLegacy = () => {
   const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
+  const adultSession = getChildSession();
   const [data, setData] = useState<OnboardingData>({
     name: "", avatar: "A", age: "", gender: "", schoolLevel: "", favoriteSubjects: [],
     difficultSubjects: [], struggles: [], focusTime: "15", supportStyles: [],
@@ -95,6 +97,9 @@ const OnboardingLegacy = () => {
       });
       setSaving(false);
       if (profile) {
+        if (adultSession?.profile?.school_level && ["superiori", "universitario", "docente"].includes(adultSession.profile.school_level)) {
+          clearChildSession();
+        }
         setActiveChildProfileId(profile.id);
         localStorage.setItem("inschool-profile", JSON.stringify({
           id: profile.id,
