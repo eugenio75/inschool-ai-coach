@@ -71,6 +71,7 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { LangProvider } from "@/contexts/LangContext";
 
 // Global Guard for Intelligent Routing
 function RoleGuard({ children }: { children: React.ReactNode }) {
