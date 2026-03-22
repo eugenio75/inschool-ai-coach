@@ -7,6 +7,7 @@ import {
 import { getChildSession } from "@/lib/childSession";
 import { NavLink } from "@/components/NavLink";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
+import { LangToggle } from "@/components/LangToggle";
 import {
   Sidebar,
   SidebarContent,
