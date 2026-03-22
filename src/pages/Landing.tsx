@@ -5,6 +5,8 @@ import {
   ArrowRight, BadgeCheck, Brain, Sparkles, Shield, Check,
   Menu, ChevronRight, BookOpen, GraduationCap, BookMarked, Users,
 } from "lucide-react";
+import { LangToggle } from "@/components/LangToggle";
+import { useLang } from "@/contexts/LangContext";
 import { Button } from "@/components/ui/button";
 import { isChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
@@ -43,6 +45,7 @@ const Landing = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-5">
+            <LangToggle />
             <button onClick={() => navigate("/verify")} className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               <BadgeCheck className="w-4 h-4" /> Verifica Credenziali
             </button>
@@ -58,6 +61,10 @@ const Landing = () => {
               </SheetTrigger>
               <SheetContent side="right" className="bg-card pt-12 w-72">
                 <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-sm font-medium text-muted-foreground">Lingua</span>
+                    <LangToggle />
+                  </div>
                   <SheetClose asChild>
                     <button onClick={() => navigate("/verify")} className="flex items-center gap-2 text-sm font-medium py-2 text-foreground">
                       <BadgeCheck className="w-4 h-4" /> Verifica Credenziali
