@@ -92,7 +92,7 @@ const LandingDocenti = () => {
 
           <motion.div {...fade} transition={{ duration: 0.3, delay: 0.2 }} className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
             <Button asChild size="lg" style={{ backgroundColor: "#0070C0" }} className="hover:opacity-90 px-8">
-              <Link to="/auth">{t("doc_hero_cta1")}</Link>
+              <Link to="/auth?role=docente">{t("doc_hero_cta1")}</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
               <a href="#come-funziona">{t("doc_hero_cta2")}</a>
