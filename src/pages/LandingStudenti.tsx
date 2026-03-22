@@ -36,26 +36,31 @@ const LandingStudenti = () => {
     title: TranslationKey;
     body: TranslationKey;
     features: TranslationKey[];
+    role: string;
   }[] = [
     {
       title: "st_who_elem_title",
       body: "st_who_elem_body",
       features: ["st_who_elem_1", "st_who_elem_2", "st_who_elem_3"],
+      role: "alunno",
     },
     {
       title: "st_who_medie_title",
       body: "st_who_medie_body",
       features: ["st_who_medie_1", "st_who_medie_2", "st_who_medie_3"],
+      role: "alunno",
     },
     {
       title: "st_who_sup_title",
       body: "st_who_sup_body",
       features: ["st_who_sup_1", "st_who_sup_2", "st_who_sup_3"],
+      role: "superiori",
     },
     {
       title: "st_who_uni_title",
       body: "st_who_uni_body",
       features: ["st_who_uni_1", "st_who_uni_2", "st_who_uni_3"],
+      role: "universitario",
     },
   ];
 
