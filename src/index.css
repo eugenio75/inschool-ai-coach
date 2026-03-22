@@ -113,7 +113,9 @@
     --surface-muted: 222 30% 10%;
 
     --color-navy: 210 40% 18%;
+    --navy: 210 40% 18%;
     --color-accent: 207 100% 50%;
+    --accent-blue: 207 100% 50%;
 
     --shadow-soft: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
     --shadow-card: 0 4px 12px -2px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
