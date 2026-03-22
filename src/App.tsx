@@ -33,6 +33,8 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Security = lazy(() => import("./pages/Security"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const CredentialVerify = lazy(() => import("./pages/CredentialVerify"));
+const LandingStudenti = lazy(() => import("./pages/LandingStudenti"));
+const LandingDocenti = lazy(() => import("./pages/LandingDocenti"));
 
 const queryClient = new QueryClient();
 
@@ -121,6 +123,8 @@ const AppRoutes = () => (
     <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/studenti" element={<LandingStudenti />} />
+        <Route path="/docenti" element={<LandingDocenti />} />
         <Route path="/auth" element={<PublicOnlyRoute><Auth /></PublicOnlyRoute>} />
         <Route path="/profiles" element={<ProtectedRoute><ProfileSelector /></ProtectedRoute>} />
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
