@@ -100,8 +100,8 @@ export default function ClassView() {
         
         // Build student name map from enrollments
         const studentNameMap: Record<string, string> = {};
-        (enrollments || []).forEach((e: any) => {
-          const prof = (profiles || []).find((p: any) => p.parent_id === e.student_id);
+        enrollments.forEach((e: any) => {
+          const prof = profilesList.find((p: any) => p.parent_id === e.student_id);
           if (prof) studentNameMap[e.student_id] = prof.name;
         });
         
