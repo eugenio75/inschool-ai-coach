@@ -152,15 +152,8 @@ const DashboardAlunno = () => {
         setSuggestion(pickSmartTask(pending, memoryItems));
       }
 
-      // Check library preference
-      const pid = getChildSession()?.profileId || profileId;
-      if (pid) {
-        try {
-          const { data: prefData } = await supabase
-            .from("user_preferences").select("data").eq("profile_id", pid).maybeSingle();
-          setShowLibrary(!!((prefData?.data as any)?.show_library));
-        } catch {}
-      }
+      // Library always visible on student dashboard
+      setShowLibrary(true);
 
       setLoading(false);
     };
