@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft, Users, Heart, BookOpen, MessageSquare,
   Plus, Mail, Copy, Shield, AlertTriangle, CheckCircle2,
-  FilePlus, Save, Trash2, Send, ChevronRight,
+  FilePlus, Save, Trash2, Send, ChevronRight, FileText, BarChart2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
@@ -30,6 +30,7 @@ export default function ClassView() {
   const [classe, setClasse] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
   const [materials, setMaterials] = useState<any[]>([]);
+  const [assignmentResults, setAssignmentResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("classe");
 
@@ -60,15 +61,17 @@ export default function ClassView() {
     
     // Fetch student profile names
     const enrollments = enr || [];
+    let profilesList: any[] = [];
     if (enrollments.length > 0) {
       const studentIds = enrollments.map((e: any) => e.student_id);
       const { data: profiles } = await (supabase as any)
         .from("child_profiles")
         .select("id, name, parent_id, avatar_emoji, school_level")
         .in("parent_id", studentIds);
+      profilesList = profiles || [];
       
       const profileMap: Record<string, any> = {};
-      (profiles || []).forEach((p: any) => { profileMap[p.parent_id] = p; });
+      profilesList.forEach((p: any) => { profileMap[p.parent_id] = p; });
       
       const enriched = enrollments.map((e: any) => ({
         ...e,
@@ -80,10 +83,40 @@ export default function ClassView() {
     }
 
     if (user) {
-      const { data: mats } = await (supabase as any)
-        .from("teacher_materials").select("*").eq("teacher_id", user.id)
-        .eq("class_id", classId).order("created_at", { ascending: false });
-      setMaterials(mats || []);
+      const [matsRes, assignRes] = await Promise.all([
+        (supabase as any).from("teacher_materials").select("*").eq("teacher_id", user.id)
+          .eq("class_id", classId).order("created_at", { ascending: false }),
+        (supabase as any).from("teacher_assignments").select("*").eq("teacher_id", user.id)
+          .eq("class_id", classId).order("assigned_at", { ascending: false }),
+      ]);
+      setMaterials(matsRes.data || []);
+      
+      // Fetch results for these assignments
+      const assignments = assignRes.data || [];
+      if (assignments.length > 0) {
+        const assignIds = assignments.map((a: any) => a.id);
+        const { data: results } = await (supabase as any)
+          .from("assignment_results").select("*").in("assignment_id", assignIds);
+        
+        // Build student name map from enrollments
+        const studentNameMap: Record<string, string> = {};
+        enrollments.forEach((e: any) => {
+          const prof = profilesList.find((p: any) => p.parent_id === e.student_id);
+          if (prof) studentNameMap[e.student_id] = prof.name;
+        });
+        
+        // Enrich assignments with results
+        const enrichedAssignments = assignments.map((a: any) => ({
+          ...a,
+          results: (results || []).filter((r: any) => r.assignment_id === a.id).map((r: any) => ({
+            ...r,
+            student_name: studentNameMap[r.student_id] || "Studente",
+          })),
+        }));
+        setAssignmentResults(enrichedAssignments.filter((a: any) => a.results.length > 0));
+      } else {
+        setAssignmentResults([]);
+      }
     }
     setLoading(false);
   }
@@ -217,7 +250,65 @@ export default function ClassView() {
               </Button>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-6">
+              {/* Risultati verifiche */}
+              {assignmentResults.length > 0 && (
+                <div className="bg-card border border-border rounded-2xl p-5">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <BarChart2 className="w-3.5 h-3.5" /> Risultati verifiche
+                  </p>
+                  <div className="max-h-[280px] overflow-y-auto space-y-2 pr-1 scrollbar-thin">
+                    {assignmentResults.map((a: any) => {
+                      const avgScore = a.results.length > 0
+                        ? Math.round(a.results.reduce((sum: number, r: any) => sum + (r.score || 0), 0) / a.results.length)
+                        : 0;
+                      const completed = a.results.filter((r: any) => r.status === 'completed').length;
+                      return (
+                        <div key={a.id} className="border border-border rounded-xl p-4 bg-muted/30">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {a.subject} · {a.type === 'verifica' ? 'Verifica' : 'Compito'}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                              <div className="text-center">
+                                <p className={`text-lg font-bold ${avgScore >= 70 ? 'text-green-600' : avgScore >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
+                                  {avgScore}%
+                                </p>
+                                <p className="text-[10px] text-muted-foreground">media</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-lg font-bold text-foreground">{completed}/{a.results.length}</p>
+                                <p className="text-[10px] text-muted-foreground">completati</p>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Student results */}
+                          <div className="space-y-1 mt-3 pt-3 border-t border-border">
+                            {a.results.map((r: any) => (
+                              <div key={r.id} className="flex items-center gap-2 text-xs">
+                                <AvatarInitials name={r.student_name} size="sm" />
+                                <span className="flex-1 text-foreground truncate">{r.student_name}</span>
+                                <span className={`font-semibold ${(r.score || 0) >= 70 ? 'text-green-600' : (r.score || 0) >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
+                                  {r.score != null ? `${Math.round(r.score)}%` : '—'}
+                                </span>
+                                <Badge variant={r.status === 'completed' ? 'default' : 'secondary'} className="text-[10px]">
+                                  {r.status === 'completed' ? 'Completato' : r.status === 'in_progress' ? 'In corso' : 'Assegnato'}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Lista studenti */}
+              <div className="space-y-2">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                 Studenti ({students.length})
               </p>
@@ -241,6 +332,7 @@ export default function ClassView() {
                   </button>
                 );
               })}
+              </div>
             </div>
           )}
         </TabsContent>
