@@ -206,7 +206,6 @@ export default function ClassView() {
       }
 
       toast.success(`Attività assegnata a ${targetStudents.length} studenti`);
-      setAssignOpen(false);
       resetAssignForm();
       loadClass();
     } catch (err: any) {
