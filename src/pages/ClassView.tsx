@@ -20,6 +20,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { toast } from "sonner";
 
+async function fetchTeacherClassData(classId: string) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/teacher-class-data`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    },
+    body: JSON.stringify({ classId }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || "Errore nel caricamento della classe");
+  }
+
+  return response.json();
+}
+
 export default function ClassView() {
   const { classId } = useParams();
   const navigate = useNavigate();
@@ -46,78 +66,66 @@ export default function ClassView() {
   const [materialFilter, setMaterialFilter] = useState("tutti");
 
   useEffect(() => {
-    if (!classId || !profileId) return;
+    if (!classId || (!profileId && !user)) return;
     loadClass();
-  }, [classId, profileId]);
+  }, [classId, profileId, user]);
 
   async function loadClass() {
     setLoading(true);
-    const { data: cl } = await (supabase as any)
-      .from("classi").select("*").eq("id", classId).single();
-    setClasse(cl);
+    try {
+      if (user) {
+        const data = await fetchTeacherClassData(classId!);
+        setClasse(data.classe);
+        setStudents(data.students || []);
+        setAssignmentResults(data.assignmentResults || []);
 
-    const { data: enr } = await (supabase as any)
-      .from("class_enrollments").select("*").eq("class_id", classId).eq("status", "active");
-    
-    // Fetch student profile names
-    const enrollments = enr || [];
-    let profilesList: any[] = [];
-    if (enrollments.length > 0) {
-      const studentIds = enrollments.map((e: any) => e.student_id);
-      const { data: profiles } = await (supabase as any)
-        .from("child_profiles")
-        .select("id, name, parent_id, avatar_emoji, school_level")
-        .in("parent_id", studentIds);
-      profilesList = profiles || [];
-      
-      const profileMap: Record<string, any> = {};
-      profilesList.forEach((p: any) => { profileMap[p.parent_id] = p; });
-      
-      const enriched = enrollments.map((e: any) => ({
-        ...e,
-        profile: profileMap[e.student_id] || null,
-      }));
-      setStudents(enriched);
-    } else {
-      setStudents([]);
-    }
-
-    if (user) {
-      const [matsRes, assignRes] = await Promise.all([
-        (supabase as any).from("teacher_materials").select("*").eq("teacher_id", user.id)
-          .eq("class_id", classId).order("created_at", { ascending: false }),
-        (supabase as any).from("teacher_assignments").select("*").eq("teacher_id", user.id)
-          .eq("class_id", classId).order("assigned_at", { ascending: false }),
-      ]);
-      setMaterials(matsRes.data || []);
-      
-      // Fetch results for these assignments
-      const assignments = assignRes.data || [];
-      if (assignments.length > 0) {
-        const assignIds = assignments.map((a: any) => a.id);
-        const { data: results } = await (supabase as any)
-          .from("assignment_results").select("*").in("assignment_id", assignIds);
-        
-        // Build student name map from enrollments
-        const studentNameMap: Record<string, string> = {};
-        enrollments.forEach((e: any) => {
-          const prof = profilesList.find((p: any) => p.parent_id === e.student_id);
-          if (prof) studentNameMap[e.student_id] = prof.name;
-        });
-        
-        // Enrich assignments with results
-        const enrichedAssignments = assignments.map((a: any) => ({
-          ...a,
-          results: (results || []).filter((r: any) => r.assignment_id === a.id).map((r: any) => ({
-            ...r,
-            student_name: studentNameMap[r.student_id] || "Studente",
-          })),
-        }));
-        setAssignmentResults(enrichedAssignments.filter((a: any) => a.results.length > 0));
+        const { data: mats } = await (supabase as any)
+          .from("teacher_materials")
+          .select("*")
+          .eq("teacher_id", user.id)
+          .eq("class_id", classId)
+          .order("created_at", { ascending: false });
+        setMaterials(mats || []);
       } else {
+        const { data: cl } = await (supabase as any)
+          .from("classi").select("*").eq("id", classId).single();
+        setClasse(cl);
+
+        const { data: enr } = await (supabase as any)
+          .from("class_enrollments").select("*").eq("class_id", classId).eq("status", "active");
+
+        const enrollments = enr || [];
+        let profilesList: any[] = [];
+        if (enrollments.length > 0) {
+          const studentIds = enrollments.map((e: any) => e.student_id);
+          const { data: profiles } = await (supabase as any)
+            .from("child_profiles")
+            .select("id, name, parent_id, avatar_emoji, school_level")
+            .in("parent_id", studentIds);
+          profilesList = profiles || [];
+
+          const profileMap: Record<string, any> = {};
+          profilesList.forEach((p: any) => { profileMap[p.parent_id] = p; });
+
+          const enriched = enrollments.map((e: any) => ({
+            ...e,
+            profile: profileMap[e.student_id] || null,
+          }));
+          setStudents(enriched);
+        } else {
+          setStudents([]);
+        }
+
         setAssignmentResults([]);
+        setMaterials([]);
       }
+    } catch (error) {
+      console.error("loadClass error:", error);
+      toast.error("Non sono riuscito a caricare studenti e risultati.");
+      setStudents([]);
+      setAssignmentResults([]);
     }
+
     setLoading(false);
   }
 
