@@ -224,6 +224,9 @@ const DashboardAlunno = () => {
         </div>
       </div>
 
+      {/* Teacher Assignments */}
+      <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto"><TeacherAssignments /></div></div>
+
       {/* Paused session banner */}
       {pausedSession && (
         <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
