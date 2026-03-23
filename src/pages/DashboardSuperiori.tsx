@@ -298,6 +298,9 @@ export default function DashboardSuperiori() {
           </div>
         </motion.div>
 
+        <CoachPresence />
+        <TeacherAssignments />
+
         {/* MATERIE IN FOCUS */}
         {loadingPrefs ? (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

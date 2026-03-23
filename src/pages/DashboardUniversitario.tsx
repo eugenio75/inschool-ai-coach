@@ -267,6 +267,9 @@ export default function DashboardUniversitario() {
           <LogoutButton showLabel />
         </motion.div>
 
+        <CoachPresence />
+        <TeacherAssignments />
+
         {/* ESAMI IN VISTA */}
         <section>
           <div className="flex items-center justify-between mb-3">

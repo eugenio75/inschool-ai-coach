@@ -205,6 +205,7 @@ const DashboardAlunno = () => {
           </motion.div>
 
           <div className="mt-5 space-y-3">
+            <CoachPresence />
             <GamificationBar />
             <SocialProofBanner />
           </div>
