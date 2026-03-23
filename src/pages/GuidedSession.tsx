@@ -528,7 +528,34 @@ export default function GuidedSession() {
 
       {/* Input toolbar */}
       <div className="border-t border-[var(--color-border)] bg-[var(--color-surface)] p-3">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <button onClick={() => {
+            try {
+              const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+              if (!SpeechRecognition) return;
+              const recognition = new SpeechRecognition();
+              recognition.lang = "it-IT";
+              recognition.continuous = false;
+              recognition.interimResults = false;
+              recognition.onresult = (e: any) => {
+                const transcript = e.results[0][0].transcript;
+                if (transcript) sendMessage(transcript);
+              };
+              recognition.start();
+            } catch {}
+          }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] text-xs font-medium hover:bg-[var(--color-bg)] transition-colors" disabled={sending}>
+            <Mic className="w-3.5 h-3.5" />
+            Voce
+          </button>
+          <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] text-xs font-medium hover:bg-[var(--color-bg)] transition-colors cursor-pointer">
+            <Paperclip className="w-3.5 h-3.5" />
+            Allega
+            <input type="file" accept="image/*,.pdf" className="hidden" onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              sendMessage(`[Ho allegato un file: ${file.name}] Analizzalo nel contesto di questo compito.`);
+            }} />
+          </label>
           <button onClick={handleHint} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--color-accent)] text-[var(--color-accent)] text-xs font-medium hover:bg-[var(--color-accent-light)] transition-colors" disabled={sending}>
             <Lightbulb className="w-3.5 h-3.5" />
             Indizio
@@ -537,6 +564,27 @@ export default function GuidedSession() {
             <AlertCircle className="w-3.5 h-3.5" />
             Bloccato
           </button>
+          <div className="relative group">
+            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] text-xs font-medium hover:bg-[var(--color-bg)] transition-colors" disabled={sending} onClick={() => setShowExplainOptions(!showExplainOptions)}>
+              <RefreshCw className="w-3.5 h-3.5" />
+              Spiega diversamente
+            </button>
+            {showExplainOptions && (
+              <div className="absolute bottom-full left-0 mb-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-lg py-1 z-10 min-w-[180px]">
+                {[
+                  { label: "Più semplice", msg: "Spiegamelo in modo più semplice." },
+                  { label: "Con un esempio", msg: "Fammi un esempio pratico per capire meglio." },
+                  { label: "Passo passo", msg: "Spiegamelo passo passo, più lentamente." },
+                  { label: "Più breve", msg: "Spiegamelo in modo più breve e diretto." },
+                ].map(opt => (
+                  <button key={opt.label} onClick={() => { setShowExplainOptions(false); sendMessage(opt.msg); }}
+                    className="w-full text-left px-3 py-2 text-xs text-[var(--color-text-primary)] hover:bg-[var(--color-bg)] transition-colors">
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         <form
           onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
