@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft, Users, Heart, BookOpen, MessageSquare,
   Plus, Mail, Copy, Shield, AlertTriangle, CheckCircle2,
-  FilePlus, Save, Trash2, Send, ChevronRight, FileText, BarChart2,
+  FilePlus, Save, Trash2, Send, ChevronRight, FileText, BarChart2, Download,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
@@ -492,6 +492,15 @@ export default function ClassView() {
                   <Button size="sm" className="rounded-xl" onClick={saveMaterial}><Save className="w-3 h-3 mr-1" /> Salva</Button>
                   <Button size="sm" variant="outline" className="rounded-xl" onClick={() => { navigator.clipboard.writeText(genOutput); toast.success("Copiato!"); }}>
                     <Copy className="w-3 h-3 mr-1" /> Copia
+                  </Button>
+                  <Button size="sm" variant="outline" className="rounded-xl" onClick={() => {
+                    const printWin = window.open("", "_blank");
+                    if (!printWin) { toast.error("Popup bloccato dal browser"); return; }
+                    printWin.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${genArgomento || "Materiale"} - ${classe?.materia || ""}</title><style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:20px;line-height:1.7;color:#1a1a1a}h1{font-size:1.4em;border-bottom:2px solid #1a3a5c;padding-bottom:8px;color:#1a3a5c}pre{white-space:pre-wrap;font-family:inherit;font-size:0.95em}footer{margin-top:40px;font-size:0.75em;color:#888;border-top:1px solid #ddd;padding-top:8px}</style></head><body><h1>${genArgomento || "Materiale didattico"}</h1><p style="color:#666;font-size:0.85em">${classe?.nome || ""} · ${classe?.materia || ""} · ${genTipo} · Livello: ${genLivello}</p><pre>${genOutput}</pre><footer>Generato con InSchool · ${new Date().toLocaleDateString("it-IT")}</footer></body></html>`);
+                    printWin.document.close();
+                    setTimeout(() => printWin.print(), 300);
+                  }}>
+                    <Download className="w-3 h-3 mr-1" /> Esporta PDF
                   </Button>
                   <Button size="sm" variant="ghost" className="rounded-xl" onClick={generateMaterial}>Rigenera</Button>
                 </div>
