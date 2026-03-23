@@ -471,35 +471,37 @@ export default function DashboardDocente() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {classi.map((cl, i) => (
-                <motion.div
-                  key={cl.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  onClick={() => navigate(`/classe/${cl.id}`)}
-                  className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer"
-                >
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-2 h-2 rounded-full flex-shrink-0 bg-green-400" />
-                    <span className="font-semibold text-slate-900 truncate flex-1">{cl.nome}</span>
-                    {cl.materia && (
-                      <span className="text-xs bg-[#0070C0]/10 text-[#0070C0] px-2 py-0.5 rounded-full flex-shrink-0">{cl.materia}</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 text-sm">
-                    <span className="text-slate-500"><span className="font-semibold text-slate-700">{cl.num_studenti || 0}</span> studenti</span>
-                    <span className="text-slate-300">·</span>
-                    <span className="text-slate-400">Codice: <span className="font-mono font-semibold text-slate-600">{cl.codice_invito}</span></span>
-                  </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(cl.codice_invito); toast.success("Codice copiato!"); }}
-                    className="mt-3 w-full flex items-center justify-center gap-1.5 text-xs text-slate-400 hover:text-[#0070C0] py-1.5 border border-slate-100 rounded-lg transition-colors"
+              {classi.map((cl, i) => {
+                const classUnread = feedItems.filter((f: any) => f.class_id === cl.id && !f.read_at && (f.severity === 'warning' || f.severity === 'urgent')).length;
+                const dotColor = classUnread > 0 ? 'bg-amber-400' : 'bg-green-400';
+                return (
+                  <motion.div
+                    key={cl.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    onClick={() => navigate(`/classe/${cl.id}`)}
+                    className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer"
                   >
-                    <Copy className="w-3 h-3" /> Copia codice
-                  </button>
-                </motion.div>
-              ))}
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${dotColor}`} />
+                      <span className="font-semibold text-slate-900 truncate flex-1">{cl.nome}</span>
+                      {cl.materia && (
+                        <span className="text-xs bg-[#0070C0]/10 text-[#0070C0] px-2 py-0.5 rounded-full flex-shrink-0">{cl.materia}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <span className="text-slate-500"><span className="font-semibold text-slate-700">{cl.num_studenti || 0}</span> studenti</span>
+                      <span className="text-slate-300">·</span>
+                      <span className="text-slate-500"><span className="font-semibold text-slate-700">{materialiCount}</span> materiali</span>
+                      <span className="text-slate-300">·</span>
+                      <span className={classUnread > 0 ? 'text-amber-600 font-semibold' : 'text-slate-400'}>
+                        {classUnread} da seguire
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </div>
