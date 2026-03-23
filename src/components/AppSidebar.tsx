@@ -26,16 +26,21 @@ const navByRole: Record<string, { title: string; url: string; icon: React.Compon
   superiori: [
     { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
     { title: "Studia con AI", url: "/challenge/new", icon: BookOpen },
+    { title: "Studio libero", url: "/study", icon: BookOpen },
     { title: "I miei task", url: "/add-homework", icon: LayoutDashboard },
     { title: "Memoria", url: "/memory", icon: BookOpen },
+    { title: "Agenda", url: "/agenda", icon: LayoutDashboard },
+    { title: "Progressi", url: "/progress", icon: BookOpen },
     { title: "Impostazioni", url: "/settings", icon: Settings },
   ],
   universitario: [
     { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
     { title: "Studia con AI", url: "/challenge/new", icon: BookOpen },
+    { title: "Studio libero", url: "/study", icon: BookOpen },
     { title: "Esami", url: "/dashboard", icon: BookOpen },
-    { title: "Tunnel Focus", url: "/dashboard", icon: BookOpen },
     { title: "Memoria", url: "/memory", icon: BookOpen },
+    { title: "Agenda", url: "/agenda", icon: LayoutDashboard },
+    { title: "Progressi", url: "/progress", icon: BookOpen },
     { title: "Impostazioni", url: "/settings", icon: Settings },
   ],
 };
