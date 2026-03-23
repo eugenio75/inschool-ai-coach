@@ -205,21 +205,10 @@ const DashboardAlunno = () => {
             </div>
           </motion.div>
 
-          <div className="mt-5 space-y-3">
-            <CoachPresence />
-            <GamificationBar />
-            <SocialProofBanner />
-          </div>
-
-          {!loading && tasks.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.1 }} className="flex items-center gap-4 mt-4">
-              <div className="flex items-center gap-4 flex-1">
-                <ProgressSun progress={tasks.length > 0 ? completedCount / tasks.length : 0} />
-                <div>
-                  <p className="text-sm font-medium text-foreground">{completedCount}/{tasks.length} completati</p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" />~{totalMinutes} min</p>
-                </div>
-              </div>
+          {/* KPI cards */}
+          {!loading && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.08 }} className="mt-4">
+              <GamificationKPI />
             </motion.div>
           )}
         </div>
