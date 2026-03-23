@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Target, Loader2, LogOut, Play, HelpCircle, MessageSquare } from "lucide-react";
+import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Target, Loader2, LogOut, Play, HelpCircle, MessageSquare, Flame, Star, Zap } from "lucide-react";
 import { CoachPresence } from "@/components/CoachPresence";
 import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { TaskCard } from "@/components/TaskCard";
-import { GamificationBar, DailyMissions } from "@/components/GamificationBar";
+import { GamificationKPI } from "@/components/GamificationBar";
+import { DailyMissions } from "@/components/GamificationBar";
 import { SocialProofBanner } from "@/components/CelebrationOverlay";
 import { QuickHelpButton, QuickHelpModal } from "@/components/QuickHelp";
 import { shouldShowCheckin } from "@/pages/EmotionalCheckin";
