@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Loader2, LogOut, Play, HelpCircle, MessageSquare, Flame, Star, Zap } from "lucide-react";
+import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Loader2, LogOut, Play, HelpCircle, MessageSquare, Flame, Star, Zap, FolderOpen } from "lucide-react";
 import { CoachPresence } from "@/components/CoachPresence";
 import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { QuickHelpButton, QuickHelpModal } from "@/components/QuickHelp";
 import { shouldShowCheckin } from "@/pages/EmotionalCheckin";
 import { getTasks, getActiveChildProfileId, getChildProfile, getMemoryItems, deleteTask } from "@/lib/database";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
+import { supabase } from "@/integrations/supabase/client";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -101,6 +102,7 @@ const DashboardAlunno = () => {
   const [suggestion, setSuggestion] = useState<{ task: any; reason: string } | null>(null);
   const [pausedSession, setPausedSession] = useState<{ task: any; state: any } | null>(null);
   const [quickHelpOpen, setQuickHelpOpen] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
   const isChild = isChildSession();
 
   // Redirect to check-in if not done today (only for child sessions)
@@ -150,6 +152,16 @@ const DashboardAlunno = () => {
         setSuggestion(pickSmartTask(pending, memoryItems));
       }
 
+      // Check library preference
+      const pid = getChildSession()?.profileId || profileId;
+      if (pid) {
+        try {
+          const { data: prefData } = await supabase
+            .from("user_preferences").select("data").eq("profile_id", pid).maybeSingle();
+          setShowLibrary(!!((prefData?.data as any)?.show_library));
+        } catch {}
+      }
+
       setLoading(false);
     };
     load();
@@ -183,6 +195,9 @@ const DashboardAlunno = () => {
               <span className="font-display text-lg sm:text-xl font-semibold text-foreground">Inschool</span>
             </div>
             <div className="flex items-center gap-2">
+              {showLibrary && (
+                <button onClick={() => navigate("/libreria")} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors" title="Libreria materiali"><FolderOpen className="w-4 h-4" /></button>
+              )}
               <button onClick={() => navigate("/memory")} className="w-9 h-9 rounded-xl bg-clay-light flex items-center justify-center text-clay-dark hover:bg-accent transition-colors" title="Memoria e ripasso"><Brain className="w-4 h-4" /></button>
               <button onClick={() => navigate("/student-profile")} className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-accent transition-colors text-xs font-bold text-primary" title="Il mio profilo">
                 {avatarName.charAt(0).toUpperCase()}

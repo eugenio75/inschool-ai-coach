@@ -83,6 +83,9 @@ const Settings = () => {
   // Notifications
   const [notifTimer, setNotifTimer] = useState(false);
 
+  // Library toggle per child profile
+  const [libraryFlags, setLibraryFlags] = useState<Record<string, boolean>>({});
+
   // Check if adult role
   const session = getChildSession();
   const isAdult = ["superiori", "universitario", "docente"].includes(session?.profile?.school_level || "");
@@ -93,10 +96,26 @@ const Settings = () => {
       setProfiles(p);
       const settings = await getParentSettings();
       if (settings) setParentPin(settings.parent_pin || "0000");
-      // Load notification pref
       if ("Notification" in window) {
         setNotifTimer(Notification.permission === "granted");
       }
+
+      // Load library flags for each child profile (alunno only)
+      const alunni = p.filter((pr: any) => pr.school_level === "alunno");
+      if (alunni.length > 0) {
+        const flags: Record<string, boolean> = {};
+        for (const a of alunni) {
+          const { data } = await supabase
+            .from("user_preferences")
+            .select("data")
+            .eq("profile_id", a.id)
+            .maybeSingle();
+          const prefs = (data?.data as any) || {};
+          flags[a.id] = !!prefs.show_library;
+        }
+        setLibraryFlags(flags);
+      }
+
       setLoading(false);
     };
     load();
@@ -150,10 +169,28 @@ const Settings = () => {
     }
   };
 
+  const handleToggleLibrary = async (profileId: string, checked: boolean) => {
+    setLibraryFlags(prev => ({ ...prev, [profileId]: checked }));
+    // Upsert user_preferences.data.show_library
+    const { data: existing } = await supabase
+      .from("user_preferences")
+      .select("id, data")
+      .eq("profile_id", profileId)
+      .maybeSingle();
+
+    const newData = { ...((existing?.data as any) || {}), show_library: checked };
+
+    if (existing) {
+      await supabase.from("user_preferences").update({ data: newData } as any).eq("id", existing.id);
+    } else {
+      await supabase.from("user_preferences").insert({ profile_id: profileId, data: newData } as any);
+    }
+    toast.success(checked ? "Libreria attivata" : "Libreria disattivata");
+  };
+
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== "DELETE") return;
     setDeleting(true);
-    // Delete all child profiles (cascade will clean up)
     if (user) {
       await supabase.from("child_profiles").delete().eq("parent_id", user.id);
     }
@@ -243,12 +280,26 @@ const Settings = () => {
               <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> Profili figli ({profiles.length})</h3>
               <div className="space-y-3">
                 {profiles.map((p) => (
-                  <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
-                    <AvatarInitials name={p.name || "U"} size="md" />
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">{p.age ? `${p.age} anni` : ""} {p.school_level ? `· ${p.school_level}` : ""}</p>
+                  <div key={p.id} className="p-3 rounded-xl bg-muted/50 space-y-2">
+                    <div className="flex items-center gap-3">
+                      <AvatarInitials name={p.name || "U"} size="md" />
+                      <div className="flex-1">
+                        <p className="font-medium text-foreground">{p.name}</p>
+                        <p className="text-xs text-muted-foreground">{p.age ? `${p.age} anni` : ""} {p.school_level ? `· ${p.school_level}` : ""}</p>
+                      </div>
                     </div>
+                    {p.school_level === "alunno" && (
+                      <div className="flex items-center justify-between pl-11">
+                        <div>
+                          <p className="text-xs font-medium text-foreground">Libreria materiali</p>
+                          <p className="text-[10px] text-muted-foreground">Mostra la Libreria nella dashboard</p>
+                        </div>
+                        <Switch
+                          checked={!!libraryFlags[p.id]}
+                          onCheckedChange={(checked) => handleToggleLibrary(p.id, checked)}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

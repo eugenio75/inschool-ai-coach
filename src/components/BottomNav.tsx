@@ -1,14 +1,9 @@
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Brain, User, Plus } from "lucide-react";
+import { Home, Brain, User, Plus, FolderOpen } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildSession } from "@/lib/childSession";
-
-const navItems = [
-  { path: "/dashboard", label: "Home", icon: Home },
-  { path: "/add-homework", label: "Aggiungi", icon: Plus, isAdd: true },
-  { path: "/memory", label: "Memoria", icon: Brain },
-  { path: "/profiles", label: "Profilo", icon: User },
-];
+import { supabase } from "@/integrations/supabase/client";
 
 const ADULT_ROLES = ["superiori", "universitario", "docente"];
 
@@ -16,12 +11,31 @@ export const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const [showLibrary, setShowLibrary] = useState(false);
+
+  const session = getChildSession();
+  const role = session?.profile?.school_level || "";
+  const profileId = session?.profileId;
+
+  // Check library preference
+  useEffect(() => {
+    if (!profileId || ADULT_ROLES.includes(role)) return;
+    const checkLibrary = async () => {
+      try {
+        const { data } = await supabase
+          .from("user_preferences")
+          .select("data")
+          .eq("profile_id", profileId)
+          .maybeSingle();
+        const prefs = (data?.data as any) || {};
+        setShowLibrary(!!prefs.show_library);
+      } catch {}
+    };
+    checkLibrary();
+  }, [profileId, role]);
 
   // Hide for adult roles — they use the desktop sidebar
-  const session = getChildSession();
-  if (ADULT_ROLES.includes(session?.profile?.school_level || "")) {
-    return null;
-  }
+  if (ADULT_ROLES.includes(role)) return null;
 
   const hiddenPaths = ["/focus", "/homework", "/add-homework", "/auth", "/onboarding", "/", "/challenge"];
   if (hiddenPaths.some((p) => location.pathname.startsWith(p) && (p !== "/" || location.pathname === "/"))) {
@@ -29,19 +43,23 @@ export const BottomNav = () => {
   }
 
   const isParentView = Boolean(user);
-  let items = navItems;
-  if (!isParentView) {
-    items = items.filter((i) => i.path !== "/profiles");
-  }
+
+  const navItems = [
+    { path: "/dashboard", label: "Home", icon: Home },
+    { path: "/add-homework", label: "Aggiungi", icon: Plus, isAdd: true },
+    ...(showLibrary ? [{ path: "/libreria", label: "Libreria", icon: FolderOpen }] : []),
+    { path: "/memory", label: "Memoria", icon: Brain },
+    ...(isParentView ? [{ path: "/profiles", label: "Profilo", icon: User }] : []),
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border safe-area-bottom sm:hidden">
       <div className="flex items-center justify-around px-2 py-1.5 max-w-lg mx-auto">
-        {items.map((item) => {
+        {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
 
-          if (item.isAdd) {
+          if ((item as any).isAdd) {
             return (
               <button
                 key={item.path}
