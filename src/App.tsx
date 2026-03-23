@@ -37,6 +37,8 @@ const LandingStudenti = lazy(() => import("./pages/LandingStudenti"));
 const LandingDocenti = lazy(() => import("./pages/LandingDocenti"));
 const GuidedSession = lazy(() => import("./pages/GuidedSession"));
 const PrepSession = lazy(() => import("./pages/PrepSession"));
+const ClassView = lazy(() => import("./pages/ClassView"));
+const StudentView = lazy(() => import("./pages/StudentView"));
 
 const queryClient = new QueryClient();
 
@@ -146,6 +148,8 @@ const AppRoutes = () => (
         <Route path="/memory" element={<AccessibleRoute><MaybeAdultLayout><MemoryRecap /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/parent-dashboard" element={<ProtectedRoute><ParentDashboard /></ProtectedRoute>} />
         <Route path="/student-profile" element={<AccessibleRoute><StudentProfile /></AccessibleRoute>} />
+        <Route path="/classe/:classId" element={<AccessibleRoute><MaybeAdultLayout><ClassView /></MaybeAdultLayout></AccessibleRoute>} />
+        <Route path="/studente/:studentId" element={<AccessibleRoute><MaybeAdultLayout><StudentView /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/settings" element={<ProtectedRoute><MaybeAdultLayout><Settings /></MaybeAdultLayout></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
