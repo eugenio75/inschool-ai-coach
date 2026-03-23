@@ -21,18 +21,19 @@ export const BottomNav = () => {
   useEffect(() => {
     if (!profileId || ADULT_ROLES.includes(role)) return;
     let cancelled = false;
-    supabase
-      .from("user_preferences")
-      .select("data")
-      .eq("profile_id", profileId)
-      .maybeSingle()
-      .then(({ data }) => {
+    const check = async () => {
+      try {
+        const { data } = await supabase
+          .from("user_preferences")
+          .select("data")
+          .eq("profile_id", profileId)
+          .maybeSingle();
         if (!cancelled) {
-          const prefs = (data?.data as any) || {};
-          setShowLibrary(!!prefs.show_library);
+          setShowLibrary(!!((data?.data as any)?.show_library));
         }
-      })
-      .catch(() => {});
+      } catch {}
+    };
+    check();
     return () => { cancelled = true; };
   }, [profileId, role]);
 
