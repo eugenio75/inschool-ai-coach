@@ -278,6 +278,23 @@ const DashboardAlunno = () => {
         </div></div>
       )}
 
+      {/* "Non so da dove iniziare" */}
+      {!loading && tasks.length > 0 && !suggestion && !pausedSession && (
+        <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
+          <motion.button
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 }}
+            onClick={() => navigate("/challenge/help-start")}
+            className="w-full flex items-center gap-3 p-4 rounded-2xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors text-left"
+          >
+            <MessageSquare className="w-5 h-5 text-primary flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Non so da dove iniziare</p>
+              <p className="text-xs text-muted-foreground">Il coach ti aiuta a scegliere il primo passo</p>
+            </div>
+          </motion.button>
+        </div></div>
+      )}
+
       <div className="px-4 sm:px-6 mt-5 sm:mt-6"><div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.25 }}>
           <div className="flex items-center gap-2 mb-3"><Target className="w-4 h-4 text-clay-dark" /><h3 className="font-display font-semibold text-foreground text-sm">Missioni del giorno</h3></div>
