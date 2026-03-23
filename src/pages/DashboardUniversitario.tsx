@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { CoachPresence } from "@/components/CoachPresence";
+import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   GraduationCap, Lightbulb, ClipboardCheck, Search, Mic,
@@ -264,6 +266,9 @@ export default function DashboardUniversitario() {
           </div>
           <LogoutButton showLabel />
         </motion.div>
+
+        <CoachPresence />
+        <TeacherAssignments />
 
         {/* ESAMI IN VISTA */}
         <section>

@@ -35,6 +35,8 @@ const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const CredentialVerify = lazy(() => import("./pages/CredentialVerify"));
 const LandingStudenti = lazy(() => import("./pages/LandingStudenti"));
 const LandingDocenti = lazy(() => import("./pages/LandingDocenti"));
+const GuidedSession = lazy(() => import("./pages/GuidedSession"));
+const PrepSession = lazy(() => import("./pages/PrepSession"));
 
 const queryClient = new QueryClient();
 
@@ -139,6 +141,8 @@ const AppRoutes = () => (
         <Route path="/homework/:taskId" element={<AccessibleRoute><HomeworkDetail /></AccessibleRoute>} />
         <Route path="/focus/:taskId" element={<AccessibleRoute><FocusSession /></AccessibleRoute>} />
         <Route path="/challenge/:missionId" element={<AccessibleRoute><CoachChallenge /></AccessibleRoute>} />
+        <Route path="/session/:homeworkId" element={<AccessibleRoute><GuidedSession /></AccessibleRoute>} />
+        <Route path="/prep/:subject?" element={<AccessibleRoute><MaybeAdultLayout><PrepSession /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/memory" element={<AccessibleRoute><MaybeAdultLayout><MemoryRecap /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/parent-dashboard" element={<ProtectedRoute><ParentDashboard /></ProtectedRoute>} />
         <Route path="/student-profile" element={<AccessibleRoute><StudentProfile /></AccessibleRoute>} />

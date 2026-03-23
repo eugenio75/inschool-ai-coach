@@ -26,3 +26,12 @@ verify_jwt = false
 
 [functions.ai-chat]
 verify_jwt = false
+
+[functions.generate-steps]
+verify_jwt = false
+
+[functions.generate-flashcards]
+verify_jwt = false
+
+[functions.coach-home-message]
+verify_jwt = false

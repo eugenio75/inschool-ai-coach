@@ -8,6 +8,7 @@ import { getChildSession } from "@/lib/childSession";
 import { NavLink } from "@/components/NavLink";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { LangToggle } from "@/components/LangToggle";
+import { CommandSearch } from "@/components/CommandSearch";
 import {
   Sidebar,
   SidebarContent,
@@ -76,6 +77,13 @@ export function AppSidebar() {
             )}
           </button>
         </div>
+
+        {/* Search */}
+        {!collapsed && (
+          <div className="px-3 mb-2">
+            <CommandSearch />
+          </div>
+        )}
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest">{collapsed ? "" : "Menu"}</SidebarGroupLabel>

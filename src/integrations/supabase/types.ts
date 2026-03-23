@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      assignment_results: {
+        Row: {
+          answers: Json | null
+          assignment_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          errors_summary: Json | null
+          id: string
+          score: number | null
+          session_id: string | null
+          status: string | null
+          student_id: string
+        }
+        Insert: {
+          answers?: Json | null
+          assignment_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          errors_summary?: Json | null
+          id?: string
+          score?: number | null
+          session_id?: string | null
+          status?: string | null
+          student_id: string
+        }
+        Update: {
+          answers?: Json | null
+          assignment_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          errors_summary?: Json | null
+          id?: string
+          score?: number | null
+          session_id?: string | null
+          status?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_results_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_results_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "guided_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       badges: {
         Row: {
           child_profile_id: string
@@ -376,6 +430,57 @@ export type Database = {
           },
         ]
       }
+      flashcards: {
+        Row: {
+          answer: string
+          created_at: string | null
+          difficulty: number | null
+          id: string
+          is_flagged: boolean | null
+          last_shown_at: string | null
+          next_review_at: string | null
+          question: string
+          source_session_id: string | null
+          subject: string
+          times_correct: number | null
+          times_shown: number | null
+          times_wrong: number | null
+          user_id: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string | null
+          difficulty?: number | null
+          id?: string
+          is_flagged?: boolean | null
+          last_shown_at?: string | null
+          next_review_at?: string | null
+          question: string
+          source_session_id?: string | null
+          subject: string
+          times_correct?: number | null
+          times_shown?: number | null
+          times_wrong?: number | null
+          user_id: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string | null
+          difficulty?: number | null
+          id?: string
+          is_flagged?: boolean | null
+          last_shown_at?: string | null
+          next_review_at?: string | null
+          question?: string
+          source_session_id?: string | null
+          subject?: string
+          times_correct?: number | null
+          times_shown?: number | null
+          times_wrong?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       focus_sessions: {
         Row: {
           autonomy_points: number | null
@@ -477,6 +582,69 @@ export type Database = {
           },
         ]
       }
+      guided_sessions: {
+        Row: {
+          bloom_level_reached: number | null
+          completed_at: string | null
+          conversation_id: string | null
+          current_step: number | null
+          emotional_checkin: string | null
+          homework_id: string | null
+          id: string
+          last_difficulty: string | null
+          started_at: string | null
+          status: string | null
+          total_steps: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          bloom_level_reached?: number | null
+          completed_at?: string | null
+          conversation_id?: string | null
+          current_step?: number | null
+          emotional_checkin?: string | null
+          homework_id?: string | null
+          id?: string
+          last_difficulty?: string | null
+          started_at?: string | null
+          status?: string | null
+          total_steps?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          bloom_level_reached?: number | null
+          completed_at?: string | null
+          conversation_id?: string | null
+          current_step?: number | null
+          emotional_checkin?: string | null
+          homework_id?: string | null
+          id?: string
+          last_difficulty?: string | null
+          started_at?: string | null
+          status?: string | null
+          total_steps?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guided_sessions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guided_sessions_homework_id_fkey"
+            columns: ["homework_id"]
+            isOneToOne: false
+            referencedRelation: "homework_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       homework_tasks: {
         Row: {
           child_profile_id: string
@@ -544,6 +712,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      learning_errors: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          error_type: string | null
+          id: string
+          resolved: boolean | null
+          session_id: string | null
+          subject: string | null
+          topic: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          error_type?: string | null
+          id?: string
+          resolved?: boolean | null
+          session_id?: string | null
+          subject?: string | null
+          topic?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          error_type?: string | null
+          id?: string
+          resolved?: boolean | null
+          session_id?: string | null
+          subject?: string | null
+          topic?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       memory_items: {
         Row: {
@@ -676,6 +880,113 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_steps: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_type: string | null
+          hint_count: number | null
+          homework_id: string | null
+          id: string
+          session_id: string | null
+          status: string | null
+          step_number: number
+          step_text: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_type?: string | null
+          hint_count?: number | null
+          homework_id?: string | null
+          id?: string
+          session_id?: string | null
+          status?: string | null
+          step_number: number
+          step_text: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_type?: string | null
+          hint_count?: number | null
+          homework_id?: string | null
+          id?: string
+          session_id?: string | null
+          status?: string | null
+          step_number?: number
+          step_text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_steps_homework_id_fkey"
+            columns: ["homework_id"]
+            isOneToOne: false
+            referencedRelation: "homework_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_steps_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "guided_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_assignments: {
+        Row: {
+          assigned_at: string | null
+          class_id: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          metadata: Json | null
+          student_id: string | null
+          subject: string | null
+          teacher_id: string
+          title: string
+          type: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          class_id?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          metadata?: Json | null
+          student_id?: string | null
+          subject?: string | null
+          teacher_id: string
+          title: string
+          type: string
+        }
+        Update: {
+          assigned_at?: string | null
+          class_id?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          metadata?: Json | null
+          student_id?: string | null
+          subject?: string | null
+          teacher_id?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_assignments_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classi"
             referencedColumns: ["id"]
           },
         ]

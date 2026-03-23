@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Target, Loader2, LogOut, Play, HelpCircle } from "lucide-react";
+import { CoachPresence } from "@/components/CoachPresence";
+import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { TaskCard } from "@/components/TaskCard";
@@ -203,6 +205,7 @@ const DashboardAlunno = () => {
           </motion.div>
 
           <div className="mt-5 space-y-3">
+            <CoachPresence />
             <GamificationBar />
             <SocialProofBanner />
           </div>
@@ -220,6 +223,9 @@ const DashboardAlunno = () => {
           )}
         </div>
       </div>
+
+      {/* Teacher Assignments */}
+      <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto"><TeacherAssignments /></div></div>
 
       {/* Paused session banner */}
       {pausedSession && (
