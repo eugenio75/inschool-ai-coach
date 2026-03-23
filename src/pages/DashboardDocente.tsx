@@ -394,6 +394,9 @@ export default function DashboardDocente() {
               </div>
             </div>
             <p className="font-display text-3xl font-bold text-[#1A3A5C]">{materialiCount}</p>
+            {materialiNonAssegnati > 0 && (
+              <p className="text-xs text-amber-600 mt-1">{materialiNonAssegnati} non assegnati</p>
+            )}
           </div>
           {/* Da seguire */}
           <div className={`rounded-xl p-5 shadow-sm border ${daSegurireCount > 0 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'}`}>
