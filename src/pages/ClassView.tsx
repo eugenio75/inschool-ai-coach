@@ -132,8 +132,9 @@ export default function ClassView() {
     setAssignSaving(false);
   }
 
-
+  useEffect(() => {
     if (!classId || (!profileId && !user)) return;
+
     loadClass();
   }, [classId, profileId, user]);
 
