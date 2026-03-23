@@ -126,42 +126,6 @@ export default function ClassView() {
       setAssignmentResults([]);
     }
 
-    if (user) {
-      const [matsRes, assignRes] = await Promise.all([
-        (supabase as any).from("teacher_materials").select("*").eq("teacher_id", user.id)
-          .eq("class_id", classId).order("created_at", { ascending: false }),
-        (supabase as any).from("teacher_assignments").select("*").eq("teacher_id", user.id)
-          .eq("class_id", classId).order("assigned_at", { ascending: false }),
-      ]);
-      setMaterials(matsRes.data || []);
-      
-      // Fetch results for these assignments
-      const assignments = assignRes.data || [];
-      if (assignments.length > 0) {
-        const assignIds = assignments.map((a: any) => a.id);
-        const { data: results } = await (supabase as any)
-          .from("assignment_results").select("*").in("assignment_id", assignIds);
-        
-        // Build student name map from enrollments
-        const studentNameMap: Record<string, string> = {};
-        enrollments.forEach((e: any) => {
-          const prof = profilesList.find((p: any) => p.parent_id === e.student_id);
-          if (prof) studentNameMap[e.student_id] = prof.name;
-        });
-        
-        // Enrich assignments with results
-        const enrichedAssignments = assignments.map((a: any) => ({
-          ...a,
-          results: (results || []).filter((r: any) => r.assignment_id === a.id).map((r: any) => ({
-            ...r,
-            student_name: studentNameMap[r.student_id] || "Studente",
-          })),
-        }));
-        setAssignmentResults(enrichedAssignments.filter((a: any) => a.results.length > 0));
-      } else {
-        setAssignmentResults([]);
-      }
-    }
     setLoading(false);
   }
 
