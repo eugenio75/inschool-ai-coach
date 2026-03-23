@@ -57,7 +57,27 @@ export default function ClassView() {
 
     const { data: enr } = await (supabase as any)
       .from("class_enrollments").select("*").eq("class_id", classId).eq("status", "active");
-    setStudents(enr || []);
+    
+    // Fetch student profile names
+    const enrollments = enr || [];
+    if (enrollments.length > 0) {
+      const studentIds = enrollments.map((e: any) => e.student_id);
+      const { data: profiles } = await (supabase as any)
+        .from("child_profiles")
+        .select("id, name, parent_id, avatar_emoji, school_level")
+        .in("parent_id", studentIds);
+      
+      const profileMap: Record<string, any> = {};
+      (profiles || []).forEach((p: any) => { profileMap[p.parent_id] = p; });
+      
+      const enriched = enrollments.map((e: any) => ({
+        ...e,
+        profile: profileMap[e.student_id] || null,
+      }));
+      setStudents(enriched);
+    } else {
+      setStudents([]);
+    }
 
     if (user) {
       const { data: mats } = await (supabase as any)
@@ -201,21 +221,26 @@ export default function ClassView() {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                 Studenti ({students.length})
               </p>
-              {students.map((s: any) => (
-                <button
-                  key={s.id}
-                  onClick={() => navigate(`/studente/${s.student_id}?classId=${classId}`)}
-                  className="w-full flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:bg-muted/50 hover:shadow-sm transition-all text-left"
-                >
-                  <AvatarInitials name="Studente" size="sm" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">Studente</p>
-                    <p className="text-xs text-muted-foreground">Iscritto</p>
-                  </div>
-                  <Badge variant="secondary" className="text-xs">Attivo</Badge>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                </button>
-              ))}
+              {students.map((s: any) => {
+                const name = s.profile?.name || "Studente";
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => navigate(`/studente/${s.student_id}?classId=${classId}`)}
+                    className="w-full flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:bg-muted/50 hover:shadow-sm transition-all text-left"
+                  >
+                    <AvatarInitials name={name} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">{name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {s.profile?.school_level || "Iscritto"}
+                      </p>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">Attivo</Badge>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                );
+              })}
             </div>
           )}
         </TabsContent>
