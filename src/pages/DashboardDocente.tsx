@@ -474,6 +474,75 @@ export default function DashboardDocente() {
           </div>
         </div>
 
+        {/* ━━━ BLOCCO 3.5 — CALENDARIO PROFESSIONALE ━━━ */}
+        {assignments.length > 0 && (
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xs uppercase tracking-widest font-semibold text-slate-400 flex items-center gap-2">
+                <CalendarDays className="w-4 h-4" /> Scadenze e impegni
+              </h2>
+            </div>
+            <div className="space-y-2">
+              {assignments
+                .filter(a => a.due_date)
+                .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+                .slice(0, 6)
+                .map((a: any) => {
+                  const dueDate = new Date(a.due_date);
+                  const now = new Date();
+                  const daysLeft = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                  const isOverdue = daysLeft < 0;
+                  const isUrgent = daysLeft >= 0 && daysLeft <= 2;
+                  const className = classi.find(c => c.id === a.class_id);
+
+                  return (
+                    <div
+                      key={a.id}
+                      onClick={() => a.class_id && navigate(`/classe/${a.class_id}?tab=materiali`)}
+                      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                        isOverdue ? 'bg-red-50 border border-red-200 hover:bg-red-100' :
+                        isUrgent ? 'bg-amber-50 border border-amber-200 hover:bg-amber-100' :
+                        'bg-slate-50 border border-slate-100 hover:bg-slate-100'
+                      }`}
+                    >
+                      <div className="text-center shrink-0 w-12">
+                        <p className={`text-lg font-bold ${isOverdue ? 'text-red-600' : isUrgent ? 'text-amber-600' : 'text-slate-700'}`}>
+                          {dueDate.getDate()}
+                        </p>
+                        <p className="text-[10px] uppercase text-slate-400">
+                          {dueDate.toLocaleDateString('it-IT', { month: 'short' })}
+                        </p>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">{a.title}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {a.subject && <span className="text-xs text-slate-500">{a.subject}</span>}
+                          {className && <span className="text-xs text-slate-400">· {className.nome}</span>}
+                        </div>
+                      </div>
+                      <div className="shrink-0 flex items-center gap-2">
+                        {isOverdue && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">Scaduto</span>}
+                        {isUrgent && !isOverdue && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">{daysLeft === 0 ? 'Oggi' : daysLeft === 1 ? 'Domani' : `${daysLeft}g`}</span>}
+                        <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${
+                          a.type === 'verifica' ? 'bg-purple-100 text-purple-700' :
+                          a.type === 'recupero' ? 'bg-orange-100 text-orange-700' :
+                          'bg-blue-100 text-blue-700'
+                        }`}>{a.type}</span>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+            {assignments.filter(a => a.due_date).length === 0 && (
+              <div className="text-center py-6">
+                <Calendar className="w-7 h-7 text-slate-300 mx-auto mb-2" />
+                <p className="text-sm text-slate-400">Nessuna scadenza imminente</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ━━━ BLOCCO 4 — CARD CLASSI ━━━ */}
         <div>
           <h2 className="text-xs uppercase tracking-widest font-semibold text-slate-400 mb-4">Le tue classi</h2>
