@@ -280,12 +280,26 @@ const Settings = () => {
               <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> Profili figli ({profiles.length})</h3>
               <div className="space-y-3">
                 {profiles.map((p) => (
-                  <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
-                    <AvatarInitials name={p.name || "U"} size="md" />
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">{p.age ? `${p.age} anni` : ""} {p.school_level ? `· ${p.school_level}` : ""}</p>
+                  <div key={p.id} className="p-3 rounded-xl bg-muted/50 space-y-2">
+                    <div className="flex items-center gap-3">
+                      <AvatarInitials name={p.name || "U"} size="md" />
+                      <div className="flex-1">
+                        <p className="font-medium text-foreground">{p.name}</p>
+                        <p className="text-xs text-muted-foreground">{p.age ? `${p.age} anni` : ""} {p.school_level ? `· ${p.school_level}` : ""}</p>
+                      </div>
                     </div>
+                    {p.school_level === "alunno" && (
+                      <div className="flex items-center justify-between pl-11">
+                        <div>
+                          <p className="text-xs font-medium text-foreground">Libreria materiali</p>
+                          <p className="text-[10px] text-muted-foreground">Mostra la Libreria nella dashboard</p>
+                        </div>
+                        <Switch
+                          checked={!!libraryFlags[p.id]}
+                          onCheckedChange={(checked) => handleToggleLibrary(p.id, checked)}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
