@@ -57,7 +57,27 @@ export default function ClassView() {
 
     const { data: enr } = await (supabase as any)
       .from("class_enrollments").select("*").eq("class_id", classId).eq("status", "active");
-    setStudents(enr || []);
+    
+    // Fetch student profile names
+    const enrollments = enr || [];
+    if (enrollments.length > 0) {
+      const studentIds = enrollments.map((e: any) => e.student_id);
+      const { data: profiles } = await (supabase as any)
+        .from("child_profiles")
+        .select("id, name, parent_id, avatar_emoji, school_level")
+        .in("parent_id", studentIds);
+      
+      const profileMap: Record<string, any> = {};
+      (profiles || []).forEach((p: any) => { profileMap[p.parent_id] = p; });
+      
+      const enriched = enrollments.map((e: any) => ({
+        ...e,
+        profile: profileMap[e.student_id] || null,
+      }));
+      setStudents(enriched);
+    } else {
+      setStudents([]);
+    }
 
     if (user) {
       const { data: mats } = await (supabase as any)
