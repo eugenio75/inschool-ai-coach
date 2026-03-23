@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Target, Loader2, LogOut, Play, HelpCircle, MessageSquare, Flame, Star, Zap } from "lucide-react";
+import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Loader2, LogOut, Play, HelpCircle, MessageSquare, Flame, Star, Zap } from "lucide-react";
 import { CoachPresence } from "@/components/CoachPresence";
 import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { Button } from "@/components/ui/button";
@@ -288,9 +288,8 @@ const DashboardAlunno = () => {
         </div></div>
       )}
 
-      <div className="px-4 sm:px-6 mt-5 sm:mt-6"><div className="max-w-3xl mx-auto">
+      <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.25 }}>
-          <div className="flex items-center gap-2 mb-3"><Target className="w-4 h-4 text-clay-dark" /><h3 className="font-display font-semibold text-foreground text-sm">Missioni del giorno</h3></div>
           <DailyMissions />
         </motion.div>
       </div></div>

@@ -174,53 +174,59 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
   }
 
   return (
-    <div className="space-y-2">
-      {missions.map((mission) => (
-        <button
-          key={mission.id}
-          onClick={() => handleMissionClick(mission)}
-          className={`w-full flex items-start gap-3 px-4 py-3 rounded-xl transition-all text-left ${
-            mission.completed
-              ? "bg-sage-light/30 border border-primary/10"
-              : "bg-card border border-border shadow-soft hover:border-primary/20"
-          }`}
-        >
-          <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5 ${
-            mission.completed ? "bg-primary" : "border-2 border-border"
-          }`}>
-            {mission.completed ? (
-              <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            ) : (
-              <MissionIcon type={mission.mission_type} />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className={`text-sm font-medium ${mission.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                {mission.title}
-              </span>
-              <MissionTag type={mission.mission_type} />
+    <div className="bg-card border border-border rounded-xl p-4 shadow-soft">
+      <div className="flex items-center gap-2 mb-3">
+        <Target className="w-4 h-4 text-primary" />
+        <h3 className="font-display font-semibold text-foreground text-sm">Missioni del giorno</h3>
+      </div>
+      <div className="space-y-2">
+        {missions.map((mission) => (
+          <button
+            key={mission.id}
+            onClick={() => handleMissionClick(mission)}
+            className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-lg transition-all text-left ${
+              mission.completed
+                ? "bg-muted/50"
+                : "bg-muted/30 hover:bg-accent"
+            }`}
+          >
+            <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5 ${
+              mission.completed ? "bg-primary" : "border-2 border-border"
+            }`}>
+              {mission.completed ? (
+                <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <MissionIcon type={mission.mission_type} />
+              )}
             </div>
-            {mission.description && (
-              <p className={`text-xs leading-relaxed ${mission.completed ? "text-muted-foreground/60" : "text-muted-foreground"}`}>
-                {mission.description}
-              </p>
-            )}
-          </div>
-          <div className="flex flex-col items-end gap-1.5 shrink-0 mt-0.5">
-            <span className={`text-xs font-bold ${mission.completed ? "text-primary/60" : "text-primary"}`}>
-              +{mission.points_reward}
-            </span>
-            {!mission.completed && (
-              <span className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
-                Inizia <ArrowRight className="w-3 h-3" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className={`text-sm font-medium ${mission.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                  {mission.title}
+                </span>
+                <MissionTag type={mission.mission_type} />
+              </div>
+              {mission.description && (
+                <p className={`text-xs leading-relaxed ${mission.completed ? "text-muted-foreground/60" : "text-muted-foreground"}`}>
+                  {mission.description}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-col items-end gap-1.5 shrink-0 mt-0.5">
+              <span className={`text-xs font-bold ${mission.completed ? "text-primary/60" : "text-primary"}`}>
+                +{mission.points_reward}
               </span>
-            )}
-          </div>
-        </button>
-      ))}
+              {!mission.completed && (
+                <span className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
+                  Inizia <ArrowRight className="w-3 h-3" />
+                </span>
+              )}
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 };
