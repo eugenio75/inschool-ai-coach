@@ -137,8 +137,14 @@ export default function CoachChallenge() {
 
   function getPromptMessage(prompt: string): string {
     switch (prompt) {
+      // Teacher prompts
       case "organizza": return "Aiutami a organizzare il lavoro di questa settimana. Quali sono le priorità tra classi, verifiche da preparare e materiali da completare?";
       case "priorita": return "Rivedi le mie priorità di oggi. Cosa dovrei affrontare prima tra verifiche, materiali, studenti da seguire e scadenze?";
+      // Student prompts
+      case "spiegami": return "Ho bisogno che mi spieghi un argomento che non ho capito bene. Puoi aiutarmi?";
+      case "aiuto-studio": return "Non so come organizzare lo studio di oggi. Mi aiuti a capire da dove iniziare e come dividere il tempo?";
+      case "esercizio": return "C'è un esercizio che non riesco a risolvere. Mi aiuti a capire come ragionare per arrivarci?";
+      case "come-stai": return "Oggi non mi sento molto bene e faccio fatica a concentrarmi. Puoi aiutarmi?";
       default: return "";
     }
   }
