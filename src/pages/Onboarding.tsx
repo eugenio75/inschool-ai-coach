@@ -277,6 +277,49 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
           );
         case 5:
           return (
+            <div className="w-full space-y-6">
+                <h2 className="text-2xl font-bold text-foreground">Come ti senti di solito a scuola?</h2>
+                <p className="text-muted-foreground text-sm">Questo aiuta il coach a supportarti meglio</p>
+                <div className="space-y-3">
+                   {[
+                     { id: "ansioso", title: "Spesso ansioso per verifiche", sub: "Ti senti sotto pressione prima degli esami" },
+                     { id: "svogliato", title: "Faccio fatica a motivarmi", sub: "Ti distrai facilmente o rimandi" },
+                     { id: "insicuro", title: "Non sono sicuro di me", sub: "Dubiti delle tue risposte anche quando sai" },
+                     { id: "tranquillo", title: "Generalmente tranquillo", sub: "Ti senti a tuo agio con lo studio" },
+                   ].map(opt => {
+                     const isSel = (answers.sfide_emotive || []).includes(opt.id);
+                     return <button key={opt.id} onClick={() => {
+                       const arr = answers.sfide_emotive || [];
+                       if (arr.includes(opt.id)) setAnswers({...answers, sfide_emotive: arr.filter((x: string) => x !== opt.id)});
+                       else if (arr.length < 2) setAnswers({...answers, sfide_emotive: [...arr, opt.id]});
+                     }} className={`w-full flex items-start p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}>
+                       <div className="text-left"><p className={`font-bold ${isSel ? selTextClass : "text-foreground"}`}>{opt.title}</p><p className="text-sm text-muted-foreground">{opt.sub}</p></div>
+                     </button>;
+                   })}
+                </div>
+            </div>
+          );
+        case 6:
+          return (
+            <div className="w-full space-y-6">
+                <h2 className="text-2xl font-bold text-foreground">Dai un nome al tuo coach</h2>
+                <p className="text-muted-foreground text-sm">Il tuo assistente AI ti accompagnerà ogni giorno nello studio</p>
+                <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2">
+                  <Brain className="w-10 h-10 text-primary" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Es. Coach, Maestro, Aria, Leo..."
+                  value={answers.coach_name || ""}
+                  onChange={e => setAnswers({...answers, coach_name: e.target.value})}
+                  className={inputClass}
+                  maxLength={20}
+                />
+                <p className="text-xs text-muted-foreground text-center">Puoi cambiarlo quando vuoi nelle impostazioni</p>
+            </div>
+          );
+        case 7:
+          return (
             <div className="text-left w-full space-y-6">
                 <h2 className="text-3xl font-bold text-foreground mb-2">Tutto pronto!</h2>
                 <p className="text-muted-foreground mb-6">Ecco il tuo profilo accademico</p>
@@ -284,6 +327,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     <div><span className={summaryLabelClass}>Percorso</span><p className={summaryValueClass}>{answers.superiori_anno} {answers.superiori_indirizzo}</p></div>
                     <div><span className={summaryLabelClass}>Materie Focus</span><p className={summaryValueClass}>{(answers.materie_critiche || []).join(", ")}</p></div>
                     <div><span className={summaryLabelClass}>Metodo</span><p className={summaryValueClass}>{answers.metodo_studio === "pomodoro" ? "Pomodoro" : answers.metodo_studio === "deep" ? "Deep Work" : "Flessibile"}</p></div>
+                    {answers.coach_name && <div><span className={summaryLabelClass}>Il tuo Coach</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
                 </div>
             </div>
           );
