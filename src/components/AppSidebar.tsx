@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
-  LayoutDashboard, BookOpen, Plus, LogOut, Settings,
+  LayoutDashboard, BookOpen, Plus, LogOut, Settings, CalendarDays,
 } from "lucide-react";
 import { getChildSession } from "@/lib/childSession";
 import { NavLink } from "@/components/NavLink";
