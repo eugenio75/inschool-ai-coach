@@ -289,7 +289,7 @@ export default function ClassView() {
                           <div className="space-y-1 mt-3 pt-3 border-t border-border">
                             {a.results.map((r: any) => (
                               <div key={r.id} className="flex items-center gap-2 text-xs">
-                                <AvatarInitials name={r.student_name} size="xs" />
+                                <AvatarInitials name={r.student_name} size="sm" />
                                 <span className="flex-1 text-foreground truncate">{r.student_name}</span>
                                 <span className={`font-semibold ${(r.score || 0) >= 70 ? 'text-green-600' : (r.score || 0) >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
                                   {r.score != null ? `${Math.round(r.score)}%` : '—'}
