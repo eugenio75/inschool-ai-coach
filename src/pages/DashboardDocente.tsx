@@ -490,14 +490,13 @@ export default function DashboardDocente() {
             </div>
             <div className="space-y-2">
               {assignments
-                .filter(a => a.due_date)
+                .filter(a => a.due_date && new Date(a.due_date) >= new Date(new Date().toDateString()))
                 .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
                 .slice(0, showAllScadenze ? undefined : 4)
                 .map((a: any) => {
                   const dueDate = new Date(a.due_date);
                   const now = new Date();
                   const daysLeft = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                  const isOverdue = daysLeft < 0;
                   const isUrgent = daysLeft >= 0 && daysLeft <= 2;
                   const className = classi.find(c => c.id === a.class_id);
 
@@ -506,13 +505,12 @@ export default function DashboardDocente() {
                       key={a.id}
                       onClick={() => a.class_id && navigate(`/classe/${a.class_id}?tab=materiali`)}
                       className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                        isOverdue ? 'bg-red-50 border border-red-200 hover:bg-red-100' :
                         isUrgent ? 'bg-amber-50 border border-amber-200 hover:bg-amber-100' :
                         'bg-slate-50 border border-slate-100 hover:bg-slate-100'
                       }`}
                     >
                       <div className="text-center shrink-0 w-12">
-                        <p className={`text-lg font-bold ${isOverdue ? 'text-red-600' : isUrgent ? 'text-amber-600' : 'text-slate-700'}`}>
+                        <p className={`text-lg font-bold ${isUrgent ? 'text-amber-600' : 'text-slate-700'}`}>
                           {dueDate.getDate()}
                         </p>
                         <p className="text-[10px] uppercase text-slate-400">
@@ -527,8 +525,7 @@ export default function DashboardDocente() {
                         </div>
                       </div>
                       <div className="shrink-0 flex items-center gap-2">
-                        {isOverdue && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">Scaduto</span>}
-                        {isUrgent && !isOverdue && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">{daysLeft === 0 ? 'Oggi' : daysLeft === 1 ? 'Domani' : `${daysLeft}g`}</span>}
+                        {isUrgent && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">{daysLeft === 0 ? 'Oggi' : daysLeft === 1 ? 'Domani' : `${daysLeft}g`}</span>}
                         <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${
                           a.type === 'verifica' ? 'bg-purple-100 text-purple-700' :
                           a.type === 'recupero' ? 'bg-orange-100 text-orange-700' :
@@ -540,13 +537,17 @@ export default function DashboardDocente() {
                   );
                 })}
             </div>
-            {assignments.filter(a => a.due_date).length > 4 && (
-              <button
-                onClick={() => setShowAllScadenze(v => !v)}
-                className="w-full text-center text-xs text-[#0070C0] font-medium hover:underline mt-3 py-1"
-              >
-                {showAllScadenze ? 'Mostra meno' : `Vedi tutte (${assignments.filter(a => a.due_date).length})`}
-              </button>
+            {(() => {
+              const futureCount = assignments.filter(a => a.due_date && new Date(a.due_date) >= new Date(new Date().toDateString())).length;
+              return futureCount > 4 ? (
+                <button
+                  onClick={() => setShowAllScadenze(v => !v)}
+                  className="w-full text-center text-xs text-[#0070C0] font-medium hover:underline mt-3 py-1"
+                >
+                  {showAllScadenze ? 'Mostra meno' : `Vedi tutte (${futureCount})`}
+                </button>
+              ) : null;
+            })()}
             )}
             {assignments.filter(a => a.due_date).length === 0 && (
               <div className="text-center py-6">
