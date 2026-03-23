@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import {
   LayoutDashboard, MessageSquare, CheckSquare, BarChart3,
   Settings, GraduationCap, Zap, Users, FilePlus,
-  FileText, BookOpen, Plus, LogOut,
+  FileText, BookOpen, Plus, LogOut, Search, Brain,
+  ClipboardList, Bell,
 } from "lucide-react";
 import { getChildSession } from "@/lib/childSession";
 import { NavLink } from "@/components/NavLink";
@@ -57,6 +58,7 @@ export function AppSidebar() {
   // Docente: load classes for sidebar
   const [classi, setClassi] = useState<any[]>([]);
   const [feedCounts, setFeedCounts] = useState<Record<string, number>>({});
+  const [totalUnread, setTotalUnread] = useState(0);
 
   useEffect(() => {
     if (role !== "docente" || !session?.profileId) return;
@@ -69,6 +71,27 @@ export function AppSidebar() {
       .eq("docente_profile_id", session?.profileId)
       .order("created_at", { ascending: false });
     setClassi(c || []);
+
+    // Load unread feed counts per class
+    if (c && c.length > 0) {
+      const { data: feed } = await (supabase as any)
+        .from("teacher_activity_feed")
+        .select("class_id")
+        .eq("teacher_id", session?.profileId)
+        .is("read_at", null);
+      if (feed) {
+        const counts: Record<string, number> = {};
+        let total = 0;
+        for (const f of feed) {
+          if (f.class_id) {
+            counts[f.class_id] = (counts[f.class_id] || 0) + 1;
+          }
+          total++;
+        }
+        setFeedCounts(counts);
+        setTotalUnread(total);
+      }
+    }
   }
 
   // Docente sidebar
@@ -91,36 +114,55 @@ export function AppSidebar() {
             </button>
           </div>
 
-          {/* Home */}
+          {/* Search */}
+          {!collapsed && (
+            <div className="px-3 pt-3 pb-1">
+              <CommandSearch />
+            </div>
+          )}
+
+          {/* Main Nav */}
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/dashboard"
-                      end
-                      className="text-white/70 hover:text-white hover:bg-white/10 transition-colors rounded-lg"
-                      activeClassName="bg-white/15 text-white font-medium border-l-2 border-white"
-                    >
-                      <LayoutDashboard className="mr-2.5 h-4 w-4" />
-                      {!collapsed && <span className="text-sm">Home</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                {[
+                  { title: "Home", url: "/dashboard", icon: LayoutDashboard },
+                  { title: "Coach AI", url: "/challenge/new", icon: Brain },
+                  { title: "Verifiche", url: "/dashboard#verifiche", icon: ClipboardList },
+                ].map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.url}
+                        end={item.url === "/dashboard"}
+                        className="text-white/70 hover:text-white hover:bg-white/10 transition-colors rounded-lg"
+                        activeClassName="bg-white/15 text-white font-medium border-l-2 border-white"
+                      >
+                        <item.icon className="mr-2.5 h-4 w-4" />
+                        {!collapsed && <span className="text-sm">{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
 
           {/* Classi */}
           <SidebarGroup>
-            <SidebarGroupLabel className="text-white/40 text-[10px] uppercase tracking-widest">
+            <SidebarGroupLabel className="text-white/40 text-[10px] uppercase tracking-widest flex items-center justify-between">
               {collapsed ? "" : "Classi"}
+              {!collapsed && totalUnread > 0 && (
+                <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                  {totalUnread}
+                </span>
+              )}
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {classi.map((cl) => {
                   const isActive = location.pathname === `/classe/${cl.id}`;
+                  const unread = feedCounts[cl.id] || 0;
                   return (
                     <SidebarMenuItem key={cl.id}>
                       <SidebarMenuButton asChild>
@@ -132,13 +174,25 @@ export function AppSidebar() {
                               : "text-white/70 hover:text-white hover:bg-white/10"
                           }`}
                         >
-                          <span className="w-2 h-2 rounded-full bg-green-400 shrink-0" />
-                          {!collapsed && <span className="truncate">{cl.nome}</span>}
+                          <span className={`w-2 h-2 rounded-full shrink-0 ${unread > 0 ? 'bg-amber-400' : 'bg-green-400'}`} />
+                          {!collapsed && (
+                            <>
+                              <span className="truncate flex-1">{cl.nome}</span>
+                              {unread > 0 && (
+                                <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center shrink-0">
+                                  {unread}
+                                </span>
+                              )}
+                            </>
+                          )}
                         </button>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
                 })}
+                {classi.length === 0 && !collapsed && (
+                  <p className="text-white/30 text-xs px-3 py-1">Nessuna classe</p>
+                )}
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <button
@@ -155,25 +209,31 @@ export function AppSidebar() {
           </SidebarGroup>
 
           {/* Bottom */}
-          {!collapsed && (
-            <div className="mt-auto px-4 py-4 border-t border-white/10 space-y-3">
-              <LangToggle />
-              <button
-                onClick={() => navigate("/settings")}
-                className="flex items-center gap-2.5 w-full text-white/60 hover:text-white/80 transition-colors text-sm"
-              >
-                <Settings className="w-4 h-4" />
-                <span>Impostazioni</span>
-              </button>
-              <div className="flex items-center gap-2.5">
-                <AvatarInitials name={name} size="sm" />
+          <div className="mt-auto px-4 py-4 border-t border-white/10 space-y-3">
+            {!collapsed && <LangToggle />}
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <button
+                    onClick={() => navigate("/settings")}
+                    className="flex items-center gap-2.5 w-full text-white/60 hover:text-white/80 transition-colors text-sm rounded-lg px-1 py-1.5"
+                  >
+                    <Settings className="w-4 h-4" />
+                    {!collapsed && <span>Impostazioni</span>}
+                  </button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+            <div className="flex items-center gap-2.5">
+              <AvatarInitials name={name} size="sm" />
+              {!collapsed && (
                 <div className="min-w-0">
                   <p className="text-xs font-medium text-white truncate">{name}</p>
                   <p className="text-[10px] text-white/50 capitalize">{roleLabel}</p>
                 </div>
-              </div>
+              )}
             </div>
-          )}
+          </div>
         </SidebarContent>
       </Sidebar>
     );
