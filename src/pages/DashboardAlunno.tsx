@@ -201,7 +201,7 @@ const DashboardAlunno = () => {
                 <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-1">Ciao {name}!</h1>
                 <p className="text-sm sm:text-base text-muted-foreground">{tasks.length > 0 ? "Vediamo cosa hai in programma oggi" : "Non ci sono compiti per oggi."}</p>
               </div>
-              {isChild && <QuickHelpButton onClick={() => setQuickHelpOpen(true)} />}
+              
             </div>
           </motion.div>
 
