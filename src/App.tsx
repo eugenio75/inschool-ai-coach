@@ -39,6 +39,9 @@ const GuidedSession = lazy(() => import("./pages/GuidedSession"));
 const PrepSession = lazy(() => import("./pages/PrepSession"));
 const ClassView = lazy(() => import("./pages/ClassView"));
 const StudentView = lazy(() => import("./pages/StudentView"));
+const StudentProgress = lazy(() => import("./pages/StudentProgress"));
+const Agenda = lazy(() => import("./pages/Agenda"));
+const FreeStudySession = lazy(() => import("./pages/FreeStudySession"));
 
 const queryClient = new QueryClient();
 
