@@ -486,11 +486,11 @@ export default function DashboardDocente() {
                 <CalendarDays className="w-4 h-4" /> Scadenze e impegni
               </h2>
             </div>
-            <div className="space-y-2">
+            <div className="max-h-[280px] overflow-y-auto space-y-2 pr-1 scrollbar-thin">
               {assignments
                 .filter(a => a.due_date)
                 .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-                .slice(0, 6)
+                .slice(0, 8)
                 .map((a: any) => {
                   const dueDate = new Date(a.due_date);
                   const now = new Date();
