@@ -117,13 +117,6 @@ export function AppSidebar() {
             </button>
           </div>
 
-          {/* Search */}
-          {!collapsed && (
-            <div className="px-3 pt-3 pb-1">
-              <CommandSearch />
-            </div>
-          )}
-
           {/* Home nav — ONLY Home link */}
           <SidebarGroup>
             <SidebarGroupContent>
