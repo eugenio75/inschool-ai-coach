@@ -332,6 +332,7 @@ export default function ClassView() {
                   </button>
                 );
               })}
+              </div>
             </div>
           )}
         </TabsContent>
