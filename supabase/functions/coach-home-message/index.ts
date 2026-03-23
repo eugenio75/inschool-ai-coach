@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { userName, schoolLevel, lastSession, pendingHomework, emotionalHistory, upcomingTests } = await req.json();
+    const { userName, schoolLevel, lastSession, pendingHomework, emotionalHistory, upcomingTests, streak, teacherAssignments, urgentCount, gamification } = await req.json();
 
     const toneMap: Record<string, string> = {
       alunno: "Tono caldo e giocoso ma non infantile. Frasi corte.",
@@ -31,15 +31,30 @@ ${tone}
 REGOLE ASSOLUTE:
 - MAI "Ciao! Come posso aiutarti oggi?" o saluti generici
 - Usa i dati forniti per dire qualcosa di SPECIFICO e VERO
+- Se ci sono compiti urgenti (scadenza oggi/domani), menzionali per primi
+- Se c'è uno streak attivo, riconoscilo brevemente
+- Se ci sono assegnazioni dal professore, segnalale
 - Se non ci sono dati, sii comunque specifico sul momento della giornata
+- Il suggestedAction deve essere AZIONABILE e specifico (es. "Inizia con Matematica", "Vedi i compiti urgenti")
 
-Output JSON: {"message":"...","suggestedAction":"testo bottone","actionRoute":"/percorso"}`;
+Output JSON: {"message":"...","suggestedAction":"testo bottone","actionRoute":"/percorso"}
+
+Route disponibili:
+- /dashboard (compiti)
+- /add-homework (aggiungi compiti)
+- /memory (ripasso memoria)
+- /checkin (check-in emotivo)
+- /challenge/new (chat col coach)`;
 
     const context = `
 Nome: ${userName}
 Livello: ${schoolLevel}
+Streak attuale: ${streak || 0} giorni consecutivi
+Punti gamification: ${gamification ? JSON.stringify(gamification) : "non disponibili"}
+Compiti urgenti (oggi/domani): ${urgentCount || 0}
 Ultima sessione: ${lastSession ? JSON.stringify(lastSession) : "nessuna"}
-Compiti in sospeso: ${pendingHomework ? JSON.stringify(pendingHomework) : "nessuno"}
+Compiti in sospeso: ${pendingHomework?.length ? JSON.stringify(pendingHomework) : "nessuno"}
+Assegnazioni dal professore: ${teacherAssignments?.length ? JSON.stringify(teacherAssignments) : "nessuna"}
 Storico emotivo recente: ${emotionalHistory ? JSON.stringify(emotionalHistory) : "non disponibile"}
 Verifiche imminenti: ${upcomingTests ? JSON.stringify(upcomingTests) : "nessuna"}
 Ora attuale: ${new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}
@@ -73,7 +88,6 @@ Giorno: ${new Date().toLocaleDateString("it-IT", { weekday: "long" })}`;
       });
     }
 
-    // Fallback
     return new Response(JSON.stringify({
       message: `Ciao ${userName}. Pronto per iniziare?`,
       suggestedAction: "Inizia a studiare",

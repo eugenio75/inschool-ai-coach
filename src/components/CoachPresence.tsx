@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Brain, ArrowRight, Send, Loader2 } from "lucide-react";
+import { Brain, ArrowRight, Send, Flame, BookOpen, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +14,13 @@ function getProfile() {
   } catch { return null; }
 }
 
+interface CoachContext {
+  streak: number;
+  pendingHomework: any[];
+  teacherAssignments: any[];
+  urgentCount: number;
+}
+
 export function CoachPresence() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -22,6 +29,7 @@ export function CoachPresence() {
   const [action, setAction] = useState<{ text: string; route: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [coachInput, setCoachInput] = useState("");
+  const [ctx, setCtx] = useState<CoachContext>({ streak: 0, pendingHomework: [], teacherAssignments: [], urgentCount: 0 });
 
   useEffect(() => {
     const cached = sessionStorage.getItem("inschool-coach-presence");
@@ -30,6 +38,7 @@ export function CoachPresence() {
         const parsed = JSON.parse(cached);
         setMessage(parsed.message);
         setAction(parsed.action || null);
+        if (parsed.ctx) setCtx(parsed.ctx);
         setLoading(false);
         return;
       } catch {}
@@ -41,13 +50,31 @@ export function CoachPresence() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const profileId = getChildSession()?.profileId || profile?.id;
+      const today = new Date().toISOString().split("T")[0];
 
-      const [homeworkRes, sessionsRes] = await Promise.all([
+      const [homeworkRes, sessionsRes, gamRes, assignRes] = await Promise.all([
         supabase.from("homework_tasks").select("title, subject, due_date, completed")
-          .eq("child_profile_id", profileId).eq("completed", false).order("due_date", { ascending: true }).limit(3),
+          .eq("child_profile_id", profileId).eq("completed", false).order("due_date", { ascending: true }).limit(5),
         supabase.from("guided_sessions").select("homework_id, completed_at, bloom_level_reached")
           .eq("user_id", user?.id || profileId).eq("status", "completed").order("completed_at", { ascending: false }).limit(1),
+        supabase.from("gamification").select("streak, focus_points, consistency_points, autonomy_points")
+          .eq("child_profile_id", profileId).maybeSingle(),
+        supabase.from("teacher_assignments").select("title, subject, type, due_date")
+          .eq("student_id", user?.id).order("assigned_at", { ascending: false }).limit(3),
       ]);
+
+      const pending = homeworkRes.data || [];
+      const streak = gamRes.data?.streak || 0;
+      const assignments = assignRes.data || [];
+      
+      // Count urgent (due today or tomorrow)
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split("T")[0];
+      const urgentCount = pending.filter(h => h.due_date && h.due_date <= tomorrowStr).length;
+
+      const contextData: CoachContext = { streak, pendingHomework: pending, teacherAssignments: assignments, urgentCount };
+      setCtx(contextData);
 
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/coach-home-message`,
@@ -62,9 +89,13 @@ export function CoachPresence() {
             userName: profile?.name || "Studente",
             schoolLevel: profile?.school_level || "superiori",
             lastSession: sessionsRes.data?.[0] || null,
-            pendingHomework: homeworkRes.data || [],
+            pendingHomework: pending,
             emotionalHistory: null,
             upcomingTests: null,
+            streak,
+            teacherAssignments: assignments,
+            urgentCount,
+            gamification: gamRes.data || null,
           }),
         }
       );
@@ -78,6 +109,7 @@ export function CoachPresence() {
         sessionStorage.setItem("inschool-coach-presence", JSON.stringify({
           message: data.message,
           action: data.suggestedAction ? { text: data.suggestedAction, route: data.actionRoute } : null,
+          ctx: contextData,
         }));
       }
     } catch (err) {
@@ -91,6 +123,21 @@ export function CoachPresence() {
     navigate(`/challenge/new?msg=${encodeURIComponent(coachInput)}`);
   };
 
+  // Build context pills
+  const pills: { icon: React.ReactNode; label: string; color: string; route?: string }[] = [];
+  if (ctx.streak > 0) {
+    pills.push({ icon: <Flame className="w-3 h-3" />, label: `${ctx.streak} giorni`, color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" });
+  }
+  if (ctx.urgentCount > 0) {
+    pills.push({ icon: <AlertTriangle className="w-3 h-3" />, label: `${ctx.urgentCount} urgenti`, color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400", route: "/dashboard" });
+  }
+  if (ctx.pendingHomework.length > 0) {
+    pills.push({ icon: <BookOpen className="w-3 h-3" />, label: `${ctx.pendingHomework.length} compiti`, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" });
+  }
+  if (ctx.teacherAssignments.length > 0) {
+    pills.push({ icon: <BookOpen className="w-3 h-3" />, label: `${ctx.teacherAssignments.length} dal prof`, color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" });
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -98,7 +145,7 @@ export function CoachPresence() {
       className="bg-card border border-border rounded-xl p-5"
     >
       {/* Coach message */}
-      <div className="flex items-start gap-3 mb-4">
+      <div className="flex items-start gap-3 mb-3">
         <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
           <Brain className="w-4 h-4 text-primary-foreground" />
         </div>
@@ -113,6 +160,22 @@ export function CoachPresence() {
               {message || "Ciao! Come posso aiutarti oggi?"}
             </p>
           )}
+          
+          {/* Context pills */}
+          {!loading && pills.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {pills.map((pill, i) => (
+                <span
+                  key={i}
+                  onClick={() => pill.route && navigate(pill.route)}
+                  className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${pill.color} ${pill.route ? 'cursor-pointer hover:opacity-80' : ''}`}
+                >
+                  {pill.icon} {pill.label}
+                </span>
+              ))}
+            </div>
+          )}
+
           {action && !loading && (
             <button
               onClick={() => navigate(action.route)}
@@ -125,12 +188,8 @@ export function CoachPresence() {
         </div>
       </div>
 
-      {/* Input + quick actions */}
-      <div className="border-t border-border pt-4">
-        <p className="font-semibold text-foreground text-sm mb-1">Hai bisogno di aiuto?</p>
-        <p className="text-xs text-muted-foreground mb-3">
-          Chiedi al coach di spiegarti un concetto, organizzare lo studio o prepararti per una verifica.
-        </p>
+      {/* Input */}
+      <div className="border-t border-border pt-3">
         <div className="flex gap-2">
           <input
             type="text"
@@ -148,7 +207,7 @@ export function CoachPresence() {
             <Send className="w-4 h-4" />
           </button>
         </div>
-        <div className="flex flex-wrap gap-2 mt-3">
+        <div className="flex flex-wrap gap-2 mt-2.5">
           {[
             { label: "Spiegami un argomento", prompt: "spiegami" },
             { label: "Aiutami a studiare", prompt: "aiuto-studio" },
