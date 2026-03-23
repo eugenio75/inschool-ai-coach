@@ -460,6 +460,9 @@ export default function DashboardDocente() {
           </div>
         </section>
 
+        {/* RISULTATI VERIFICHE ASSEGNATE */}
+        <TeacherResultsSection profileId={profileId} />
+
         {/* CONVERSAZIONI RECENTI */}
         <RecentConversations profileId={profileId} title="Le tue sessioni con il Coach AI" />
 
