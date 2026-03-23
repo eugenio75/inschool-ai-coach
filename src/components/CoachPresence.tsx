@@ -152,7 +152,7 @@ export function CoachPresence() {
           {[
             { label: "Spiegami un argomento", prompt: "spiegami" },
             { label: "Aiutami a studiare", prompt: "aiuto-studio" },
-            { label: "Prepara una verifica", prompt: "prepara-verifica" },
+            { label: "Non ho capito un esercizio", prompt: "esercizio" },
           ].map(({ label, prompt }) => (
             <button
               key={label}
