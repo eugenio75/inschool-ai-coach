@@ -220,3 +220,11 @@
   }
   nav, header, .sidebar, [data-sidebar], footer, button { display: none !important; }
 }
+
+/* Flashcard perspective */
+.perspective-1000 {
+  perspective: 1000px;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+}
