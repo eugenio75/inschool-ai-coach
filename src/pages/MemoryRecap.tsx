@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Brain, RefreshCw, ChevronDown, ChevronUp, Sparkles, Loader2, Send, MessageCircle, X, BookOpen, Calendar, BarChart3, Layers, ThumbsDown, Minus as MinusIcon, ThumbsUp, AlertCircle } from "lucide-react";
+import { ArrowLeft, Brain, RefreshCw, ChevronDown, ChevronUp, Sparkles, Loader2, Send, MessageCircle, X, BookOpen, Calendar, BarChart3, Layers, ThumbsDown, Minus as MinusIcon, ThumbsUp, AlertCircle, AlertTriangle } from "lucide-react";
+import { LearningErrorsTab } from "@/components/LearningErrorsTab";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -775,7 +776,7 @@ const FlashcardTab = () => {
 // ============ MAIN PAGE ============
 
 type ViewMode = "subjects" | "weekly";
-type MainTab = "ai" | "flashcard";
+type MainTab = "ai" | "flashcard" | "errors";
 
 const MemoryRecap = () => {
   const navigate = useNavigate();
@@ -859,6 +860,16 @@ const MemoryRecap = () => {
             >
               <Layers className="w-3.5 h-3.5" /> Flashcard
             </button>
+            <button
+              onClick={() => setMainTab("errors")}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                mainTab === "errors"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <AlertTriangle className="w-3.5 h-3.5" /> Errori
+            </button>
           </div>
 
           {/* View mode toggle (only for AI tab) */}
@@ -889,7 +900,9 @@ const MemoryRecap = () => {
         </div>
       </div>
 
-      {mainTab === "flashcard" ? (
+      {mainTab === "errors" ? (
+        <LearningErrorsTab />
+      ) : mainTab === "flashcard" ? (
         <FlashcardTab />
       ) : loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>

@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
-  LayoutDashboard, BookOpen, Plus, LogOut, Settings, CalendarDays,
+  LayoutDashboard, BookOpen, Plus, LogOut, Settings, CalendarDays, FolderOpen,
 } from "lucide-react";
 import { getChildSession } from "@/lib/childSession";
 import { NavLink } from "@/components/NavLink";
@@ -29,6 +29,7 @@ const navByRole: Record<string, { title: string; url: string; icon: React.Compon
     { title: "Studio libero", url: "/study", icon: BookOpen },
     { title: "I miei task", url: "/add-homework", icon: LayoutDashboard },
     { title: "Memoria", url: "/memory", icon: BookOpen },
+    { title: "Libreria", url: "/libreria", icon: FolderOpen },
     { title: "Agenda", url: "/agenda", icon: LayoutDashboard },
     { title: "Progressi", url: "/progress", icon: BookOpen },
     { title: "Impostazioni", url: "/settings", icon: Settings },
@@ -39,6 +40,7 @@ const navByRole: Record<string, { title: string; url: string; icon: React.Compon
     { title: "Studio libero", url: "/study", icon: BookOpen },
     { title: "Esami", url: "/dashboard", icon: BookOpen },
     { title: "Memoria", url: "/memory", icon: BookOpen },
+    { title: "Libreria", url: "/libreria", icon: FolderOpen },
     { title: "Agenda", url: "/agenda", icon: LayoutDashboard },
     { title: "Progressi", url: "/progress", icon: BookOpen },
     { title: "Impostazioni", url: "/settings", icon: Settings },

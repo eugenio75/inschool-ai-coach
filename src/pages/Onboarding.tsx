@@ -110,7 +110,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
     const [direction, setDirection] = useState(1);
     const [saving, setSaving] = useState(false);
     const locationInputRef = useRef<HTMLInputElement>(null);
-    const totalSteps = 6;
+    const totalSteps = 8;
 
     useEffect(() => {
         let autocomplete: any = null;
@@ -277,6 +277,49 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
           );
         case 5:
           return (
+            <div className="w-full space-y-6">
+                <h2 className="text-2xl font-bold text-foreground">Come ti senti di solito a scuola?</h2>
+                <p className="text-muted-foreground text-sm">Questo aiuta il coach a supportarti meglio</p>
+                <div className="space-y-3">
+                   {[
+                     { id: "ansioso", title: "Spesso ansioso per verifiche", sub: "Ti senti sotto pressione prima degli esami" },
+                     { id: "svogliato", title: "Faccio fatica a motivarmi", sub: "Ti distrai facilmente o rimandi" },
+                     { id: "insicuro", title: "Non sono sicuro di me", sub: "Dubiti delle tue risposte anche quando sai" },
+                     { id: "tranquillo", title: "Generalmente tranquillo", sub: "Ti senti a tuo agio con lo studio" },
+                   ].map(opt => {
+                     const isSel = (answers.sfide_emotive || []).includes(opt.id);
+                     return <button key={opt.id} onClick={() => {
+                       const arr = answers.sfide_emotive || [];
+                       if (arr.includes(opt.id)) setAnswers({...answers, sfide_emotive: arr.filter((x: string) => x !== opt.id)});
+                       else if (arr.length < 2) setAnswers({...answers, sfide_emotive: [...arr, opt.id]});
+                     }} className={`w-full flex items-start p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}>
+                       <div className="text-left"><p className={`font-bold ${isSel ? selTextClass : "text-foreground"}`}>{opt.title}</p><p className="text-sm text-muted-foreground">{opt.sub}</p></div>
+                     </button>;
+                   })}
+                </div>
+            </div>
+          );
+        case 6:
+          return (
+            <div className="w-full space-y-6">
+                <h2 className="text-2xl font-bold text-foreground">Dai un nome al tuo coach</h2>
+                <p className="text-muted-foreground text-sm">Il tuo assistente AI ti accompagnerà ogni giorno nello studio</p>
+                <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2">
+                  <Brain className="w-10 h-10 text-primary" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Es. Coach, Maestro, Aria, Leo..."
+                  value={answers.coach_name || ""}
+                  onChange={e => setAnswers({...answers, coach_name: e.target.value})}
+                  className={inputClass}
+                  maxLength={20}
+                />
+                <p className="text-xs text-muted-foreground text-center">Puoi cambiarlo quando vuoi nelle impostazioni</p>
+            </div>
+          );
+        case 7:
+          return (
             <div className="text-left w-full space-y-6">
                 <h2 className="text-3xl font-bold text-foreground mb-2">Tutto pronto!</h2>
                 <p className="text-muted-foreground mb-6">Ecco il tuo profilo accademico</p>
@@ -284,6 +327,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     <div><span className={summaryLabelClass}>Percorso</span><p className={summaryValueClass}>{answers.superiori_anno} {answers.superiori_indirizzo}</p></div>
                     <div><span className={summaryLabelClass}>Materie Focus</span><p className={summaryValueClass}>{(answers.materie_critiche || []).join(", ")}</p></div>
                     <div><span className={summaryLabelClass}>Metodo</span><p className={summaryValueClass}>{answers.metodo_studio === "pomodoro" ? "Pomodoro" : answers.metodo_studio === "deep" ? "Deep Work" : "Flessibile"}</p></div>
+                    {answers.coach_name && <div><span className={summaryLabelClass}>Il tuo Coach</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
                 </div>
             </div>
           );
@@ -389,6 +433,40 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
               );
             case 5:
               return (
+                <div className="w-full space-y-6">
+                    <h2 className="text-2xl font-bold text-foreground">Come ti senti di solito prima di studiare?</h2>
+                    <div className="space-y-3">
+                       {[
+                         { id: "ansioso", title: "Ansioso per gli esami" },
+                         { id: "procrastino", title: "Tendo a procrastinare" },
+                         { id: "solo", title: "Studio meglio in compagnia" },
+                         { id: "ok", title: "Generalmente motivato" },
+                       ].map(opt => {
+                         const isSel = (answers.sfide_emotive || []).includes(opt.id);
+                         return <button key={opt.id} onClick={() => {
+                           const arr = answers.sfide_emotive || [];
+                           if (arr.includes(opt.id)) setAnswers({...answers, sfide_emotive: arr.filter((x: string) => x !== opt.id)});
+                           else if (arr.length < 2) setAnswers({...answers, sfide_emotive: [...arr, opt.id]});
+                         }} className={`w-full text-left p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}>
+                           <p className={`font-bold ${isSel ? selTextClass : "text-foreground"}`}>{opt.title}</p>
+                         </button>;
+                       })}
+                    </div>
+                </div>
+              );
+            case 6:
+              return (
+                <div className="w-full space-y-6">
+                    <h2 className="text-2xl font-bold text-foreground">Dai un nome al tuo coach</h2>
+                    <p className="text-muted-foreground text-sm">Il tuo assistente AI personale per lo studio</p>
+                    <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2">
+                      <Brain className="w-10 h-10 text-primary" />
+                    </div>
+                    <input type="text" placeholder="Es. Coach, Aria, Leo..." value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
+                </div>
+              );
+            case 7:
+              return (
                 <div className="text-left w-full space-y-6">
                     <h2 className="text-3xl font-bold text-foreground mb-2">Tutto pronto!</h2>
                     <p className="text-muted-foreground mb-6">Ecco il tuo profilo Universitario</p>
@@ -397,6 +475,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                         {answers.uni_corso && <div><span className={summaryLabelClass}>Corso di laurea</span><p className={summaryValueClass}>{answers.uni_corso}</p></div>}
                         <div><span className={summaryLabelClass}>Skill IA</span><p className={summaryValueClass}>{(answers.serve_ai || []).join(", ")}</p></div>
                         <div><span className={summaryLabelClass}>Esami tracciati</span><p className={summaryValueClass}>{(answers.uni_esami || []).length} inseriti</p></div>
+                        {answers.coach_name && <div><span className={summaryLabelClass}>Il tuo Coach</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
                     </div>
                 </div>
               );
@@ -514,6 +593,40 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
               );
             case 5:
               return (
+                <div className="w-full space-y-6">
+                    <h2 className="text-2xl font-bold text-foreground">Quali sfide incontri con gli studenti?</h2>
+                    <div className="space-y-3">
+                       {[
+                         { id: "motivazione", title: "Scarsa motivazione" },
+                         { id: "lacune", title: "Lacune diffuse" },
+                         { id: "comportamento", title: "Problemi comportamentali" },
+                         { id: "inclusione", title: "Gestione inclusione/BES" },
+                       ].map(opt => {
+                         const isSel = (answers.sfide_docente || []).includes(opt.id);
+                         return <button key={opt.id} onClick={() => {
+                           const arr = answers.sfide_docente || [];
+                           if (arr.includes(opt.id)) setAnswers({...answers, sfide_docente: arr.filter((x: string) => x !== opt.id)});
+                           else if (arr.length < 3) setAnswers({...answers, sfide_docente: [...arr, opt.id]});
+                         }} className={`w-full text-left p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}>
+                           <p className={`font-bold ${isSel ? selTextClass : "text-foreground"}`}>{opt.title}</p>
+                         </button>;
+                       })}
+                    </div>
+                </div>
+              );
+            case 6:
+              return (
+                <div className="w-full space-y-6">
+                    <h2 className="text-2xl font-bold text-foreground">Nome del tuo assistente AI</h2>
+                    <p className="text-muted-foreground text-sm">Personalizza il nome del coach AI che ti aiuterà</p>
+                    <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2">
+                      <Brain className="w-10 h-10 text-primary" />
+                    </div>
+                    <input type="text" placeholder="Es. Assistente, Aria, Coach..." value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
+                </div>
+              );
+            case 7:
+              return (
                 <div className="text-left w-full space-y-6">
                     <h2 className="text-3xl font-bold text-foreground mb-2">Tutto pronto!</h2>
                     <p className="text-muted-foreground mb-6">Il tuo cruscotto didattico ti attende</p>
@@ -524,6 +637,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                         <div><span className={summaryLabelClass}>Materie</span><p className={summaryValueClass}>{(answers.docente_materie || []).join(", ")}</p></div>
                         <div><span className={summaryLabelClass}>Strumenti usati</span><p className={summaryValueClass}>{(answers.docente_uso || []).join(", ")}</p></div>
                         <div><span className={summaryLabelClass}>Automazioni IA</span><p className={summaryValueClass}>{(answers.docente_auto || []).join(", ")}</p></div>
+                        {answers.coach_name && <div><span className={summaryLabelClass}>Assistente AI</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
                     </div>
                 </div>
               );
