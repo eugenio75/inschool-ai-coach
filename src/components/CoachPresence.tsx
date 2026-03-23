@@ -36,6 +36,14 @@ export function CoachPresence() {
       } catch {}
     }
     fetchCoachMessage();
+    // Timeout fallback after 8 seconds
+    const timeout = setTimeout(() => {
+      if (!message) {
+        setMessage("Pronto per iniziare? Scegli un compito o chiedi aiuto al coach.");
+        setLoading(false);
+      }
+    }, 8000);
+    return () => clearTimeout(timeout);
   }, []);
 
   async function fetchCoachMessage() {
