@@ -706,7 +706,7 @@ export default function ClassView() {
                         <Checkbox checked={checked} onCheckedChange={(v) => {
                           setAssignSelectedStudents(prev => v ? [...prev, sid] : prev.filter(x => x !== sid));
                         }} />
-                        <span className="text-sm">{s.name || s.student_name || "Studente"}</span>
+                        <span className="text-sm">{s.profile?.name || s.name || s.student_name || "Studente"}</span>
                       </label>
                     );
                   })}
