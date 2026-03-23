@@ -110,7 +110,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
     const [direction, setDirection] = useState(1);
     const [saving, setSaving] = useState(false);
     const locationInputRef = useRef<HTMLInputElement>(null);
-    const totalSteps = 6;
+    const totalSteps = 8;
 
     useEffect(() => {
         let autocomplete: any = null;
