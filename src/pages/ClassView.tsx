@@ -320,7 +320,7 @@ export default function ClassView() {
       </div>
 
       <div className="flex justify-end mb-4">
-        <Button size="sm" className="rounded-xl">
+        <Button size="sm" className="rounded-xl" onClick={() => setAssignOpen(true)}>
           <Plus className="w-3.5 h-3.5 mr-1" /> Assegna attività
         </Button>
       </div>
