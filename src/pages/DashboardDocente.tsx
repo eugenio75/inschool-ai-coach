@@ -198,9 +198,11 @@ export default function DashboardDocente() {
   const [classi, setClassi] = useState<any[]>([]);
   const [loadingClassi, setLoadingClassi] = useState(true);
   const [materialiCount, setMaterialiCount] = useState(0);
+  const [materialiNonAssegnati, setMaterialiNonAssegnati] = useState(0);
   const [feedItems, setFeedItems] = useState<any[]>([]);
   const [daSegurireCount, setDaSegurireCount] = useState(0);
   const [classiConAlert, setClassiConAlert] = useState(0);
+  const [assignments, setAssignments] = useState<any[]>([]);
 
   // Coach presence
   const [coachInput, setCoachInput] = useState('');
@@ -218,8 +220,10 @@ export default function DashboardDocente() {
   const ordine: string = od?.docente_ordine || "";
   const cognome = profile?.name?.split(" ").slice(-1)[0] || profile?.name || "";
   const studentiCount = classi.reduce((s, c) => s + (c.num_studenti || 0), 0);
+  const { user } = useAuth();
+  const userId = user?.id; // auth.users.id for tables referencing auth.users
 
-  useEffect(() => { if (!profileId) return; loadAll(); }, [profileId]);
+  useEffect(() => { if (!profileId) return; loadAll(); }, [profileId, userId]);
 
   // Auto-open "Nuova classe" modal from sidebar link (?nuova=1) or custom event
   useEffect(() => {
@@ -243,14 +247,15 @@ export default function DashboardDocente() {
       setIsLoadingCoachMsg(false);
       return;
     }
-    if (!profileId) { setIsLoadingCoachMsg(false); return; }
+    if (!profileId || classi.length === 0) { setIsLoadingCoachMsg(false); return; }
     supabase.functions.invoke('coach-teacher-message', {
       body: {
         teacherName: profile?.name || '',
-        activeClasses: classi.map(c => ({ id: c.id, name: c.nome, subject: c.materia })),
+        activeClasses: classi.map(c => ({ id: c.id, name: c.nome, subject: c.materia, studentCount: c.num_studenti || 0 })),
+        recentFeed: feedItems.slice(0, 5).map(f => ({ type: f.type, message: f.message, severity: f.severity })),
         currentHour: new Date().getHours(),
         materialsThisWeek: materialiCount,
-        openVerifications: 0,
+        openVerifications: assignments.filter(a => a.type === 'verifica').length,
       }
     }).then(({ data }) => {
       const msg = data?.message || '';
@@ -258,7 +263,7 @@ export default function DashboardDocente() {
       if (msg) sessionStorage.setItem('teacher_coach_msg', msg);
       setIsLoadingCoachMsg(false);
     }).catch(() => setIsLoadingCoachMsg(false));
-  }, [classi.length]);
+  }, [classi.length, feedItems.length]);
 
   async function loadAll() {
     setLoadingClassi(true);
@@ -272,16 +277,28 @@ export default function DashboardDocente() {
         .order("created_at", { ascending: false });
       setClassi(c || []);
 
+      // Use userId (auth.users.id) for tables that reference auth.users
+      const teacherId = userId || profileId;
+
       // Materials count
-      const { count: mc } = await (supabase as any)
-        .from("teacher_materials").select("id", { count: "exact", head: true })
-        .eq("teacher_id", profileId);
-      setMaterialiCount(mc || 0);
+      const { data: mats } = await (supabase as any)
+        .from("teacher_materials").select("id, status")
+        .eq("teacher_id", teacherId);
+      setMaterialiCount(mats?.length || 0);
+      setMaterialiNonAssegnati(mats?.filter((m: any) => m.status === 'draft' || m.status === 'salvato').length || 0);
+
+      // Assignments
+      const { data: ta } = await (supabase as any)
+        .from("teacher_assignments").select("*")
+        .eq("teacher_id", teacherId)
+        .order("assigned_at", { ascending: false })
+        .limit(20);
+      setAssignments(ta || []);
 
       // Feed
       const { data: feed } = await (supabase as any)
         .from("teacher_activity_feed").select("*")
-        .eq("teacher_id", profileId)
+        .eq("teacher_id", teacherId)
         .order("created_at", { ascending: false })
         .limit(20);
       setFeedItems(feed || []);
