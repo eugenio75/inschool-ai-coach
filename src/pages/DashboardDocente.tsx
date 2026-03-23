@@ -1,16 +1,15 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Users, Plus, FilePlus, BarChart2, BookMarked, CheckSquare,
-  FileText, Mic, FolderOpen, Home, Users2, Bell, Copy,
-  Minus, Printer, ChevronRight, Trash2, Eye, ChevronDown,
-  ChevronUp, AlertTriangle, UserCheck, RefreshCw,
+  Users, Plus, FileText, BarChart2, Copy, CheckSquare,
+  Minus, Printer, Trash2, Eye, ChevronDown, ChevronUp,
+  AlertTriangle, UserCheck, RefreshCw, LayoutDashboard,
+  AlertCircle, Send, Brain, Shield, Link2, Clock,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
-
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,10 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { RecentConversations } from "@/components/shared/RecentConversations";
-import { LogoutButton } from "@/components/shared/LogoutButton";
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -59,8 +55,6 @@ function TeacherResultsSection({ profileId }: { profileId: string | undefined })
       .order("assigned_at", { ascending: false })
       .limit(20);
     setAssignments(ta || []);
-
-    // Load results for each assignment
     if (ta && ta.length > 0) {
       const ids = ta.map((a: any) => a.id);
       const { data: ar } = await supabase
@@ -69,8 +63,8 @@ function TeacherResultsSection({ profileId }: { profileId: string | undefined })
         .in("assignment_id", ids);
       const grouped: Record<string, any[]> = {};
       for (const r of (ar || [])) {
-        if (!grouped[r.assignment_id]) grouped[r.assignment_id] = [];
-        grouped[r.assignment_id].push(r);
+        if (!grouped[r.assignment_id!]) grouped[r.assignment_id!] = [];
+        grouped[r.assignment_id!].push(r);
       }
       setResults(grouped);
     }
@@ -95,28 +89,17 @@ function TeacherResultsSection({ profileId }: { profileId: string | undefined })
   if (loading) {
     return (
       <section>
-        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Risultati verifiche assegnate</h2>
+        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">Risultati verifiche</h2>
         <div className="space-y-2">{[1, 2].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
       </section>
     );
   }
 
-  if (assignments.length === 0) {
-    return (
-      <section>
-        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Risultati verifiche assegnate</h2>
-        <div className="bg-card border border-border rounded-2xl p-6 text-center">
-          <BarChart2 className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Nessuna verifica assegnata ancora</p>
-          <p className="text-xs text-muted-foreground/70 mt-1">Usa il generatore per creare verifiche e assegnarle alle classi</p>
-        </div>
-      </section>
-    );
-  }
+  if (assignments.length === 0) return null;
 
   return (
     <section>
-      <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Risultati verifiche assegnate</h2>
+      <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">Risultati verifiche</h2>
       <div className="space-y-3">
         {assignments.map(a => {
           const res = results[a.id] || [];
@@ -128,18 +111,18 @@ function TeacherResultsSection({ profileId }: { profileId: string | undefined })
             : null;
 
           return (
-            <div key={a.id} className="bg-card border border-border rounded-2xl overflow-hidden">
+            <div key={a.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
               <button
                 onClick={() => setExpandedId(isExpanded ? null : a.id)}
                 className="w-full p-4 flex items-center justify-between text-left"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-foreground text-sm truncate">{a.title}</p>
+                  <p className="font-medium text-slate-900 text-sm truncate">{a.title}</p>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                     {a.subject && <Badge variant="secondary" className="text-xs">{a.subject}</Badge>}
                     <Badge variant="outline" className="text-xs capitalize">{a.type}</Badge>
                     {a.assigned_at && (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-slate-400">
                         {format(new Date(a.assigned_at), "d MMM", { locale: it })}
                       </span>
                     )}
@@ -148,83 +131,46 @@ function TeacherResultsSection({ profileId }: { profileId: string | undefined })
                 <div className="flex items-center gap-3 shrink-0">
                   {total > 0 && (
                     <div className="text-right">
-                      <p className="text-xs text-muted-foreground">{completed}/{total} completati</p>
+                      <p className="text-xs text-slate-400">{completed}/{total} completati</p>
                       {avgScore !== null && (
-                        <p className="text-xs font-semibold text-foreground">Media: {avgScore}%</p>
+                        <p className="text-xs font-semibold text-slate-900">Media: {avgScore}%</p>
                       )}
                     </div>
                   )}
-                  {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                  {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                 </div>
               </button>
 
               <AnimatePresence>
                 {isExpanded && (
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={{ height: "auto" }}
-                    exit={{ height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
+                  <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+                    <div className="px-4 pb-4 space-y-3 border-t border-slate-100 pt-3">
                       {res.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-3">
-                          Nessuno studente ha ancora completato questa verifica
-                        </p>
+                        <p className="text-sm text-slate-400 text-center py-3">Nessuno studente ha completato questa verifica</p>
                       ) : (
-                        <>
-                          <div className="space-y-1.5">
-                            {res.map((r: any) => (
-                              <div key={r.id} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
-                                <div className="flex items-center gap-2">
-                                  <UserCheck className="w-3.5 h-3.5 text-muted-foreground" />
-                                  <span className="text-sm text-foreground">Studente</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Badge variant={r.status === "completed" ? "default" : "secondary"} className="text-xs capitalize">
-                                    {r.status === "completed" ? "Completato" : r.status === "in_progress" ? "In corso" : "Assegnato"}
-                                  </Badge>
-                                  {r.score != null && (
-                                    <span className="text-sm font-semibold text-foreground">{Math.round(r.score)}%</span>
-                                  )}
-                                </div>
+                        <div className="space-y-1.5">
+                          {res.map((r: any) => (
+                            <div key={r.id} className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">
+                              <div className="flex items-center gap-2">
+                                <UserCheck className="w-3.5 h-3.5 text-slate-400" />
+                                <span className="text-sm text-slate-700">Studente</span>
                               </div>
-                            ))}
-                          </div>
-
-                          {/* Error summary */}
-                          {res.some((r: any) => r.errors_summary && Object.keys(r.errors_summary).length > 0) && (
-                            <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl p-3">
-                              <div className="flex items-center gap-1.5 mb-2">
-                                <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                                <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">Errori più frequenti</span>
+                              <div className="flex items-center gap-2">
+                                <Badge variant={r.status === "completed" ? "default" : "secondary"} className="text-xs capitalize">
+                                  {r.status === "completed" ? "Completato" : r.status === "in_progress" ? "In corso" : "Assegnato"}
+                                </Badge>
+                                {r.score != null && <span className="text-sm font-semibold">{Math.round(r.score)}%</span>}
                               </div>
-                              <p className="text-xs text-amber-600 dark:text-amber-300">
-                                Analisi degli errori disponibile dopo il completamento delle verifiche
-                              </p>
                             </div>
-                          )}
-                        </>
+                          ))}
+                        </div>
                       )}
-
-                      {/* Follow-up actions */}
                       <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-xl text-xs flex-1"
-                          onClick={() => createFollowUp(a.id, "recupero")}
-                        >
-                          <RefreshCw className="w-3 h-3 mr-1" /> Assegna recupero
+                        <Button variant="outline" size="sm" className="rounded-lg text-xs flex-1" onClick={() => createFollowUp(a.id, "recupero")}>
+                          <RefreshCw className="w-3 h-3 mr-1" /> Recupero
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-xl text-xs flex-1"
-                          onClick={() => createFollowUp(a.id, "potenziamento")}
-                        >
-                          <Plus className="w-3 h-3 mr-1" /> Assegna potenziamento
+                        <Button variant="outline" size="sm" className="rounded-lg text-xs flex-1" onClick={() => createFollowUp(a.id, "potenziamento")}>
+                          <Plus className="w-3 h-3 mr-1" /> Potenziamento
                         </Button>
                       </div>
                     </div>
@@ -239,9 +185,9 @@ function TeacherResultsSection({ profileId }: { profileId: string | undefined })
   );
 }
 
+// ============ MAIN DASHBOARD ============
 export default function DashboardDocente() {
   const navigate = useNavigate();
-  
   const session = getChildSession();
   const profile = session?.profile;
   const profileId = session?.profileId;
@@ -249,40 +195,57 @@ export default function DashboardDocente() {
   const [onboarding, setOnboarding] = useState<any>({});
   const [classi, setClassi] = useState<any[]>([]);
   const [loadingClassi, setLoadingClassi] = useState(true);
-  const [verificheCount, setVerificheCount] = useState(0);
-  const [verificheSalvate, setVerificheSalvate] = useState<any[]>([]);
-  const [loadingVerifiche, setLoadingVerifiche] = useState(true);
-  const [verificaPreview, setVerificaPreview] = useState<any>(null);
-  const [deleteVerificaId, setDeleteVerificaId] = useState<string | null>(null);
+  const [materialiCount, setMaterialiCount] = useState(0);
+  const [feedItems, setFeedItems] = useState<any[]>([]);
+  const [daSegurireCount, setDaSegurireCount] = useState(0);
+  const [classiConAlert, setClassiConAlert] = useState(0);
 
-  // Nuova classe modal
+  // Coach presence
+  const [coachInput, setCoachInput] = useState('');
+  const [coachMessage, setCoachMessage] = useState('');
+  const [isLoadingCoachMsg, setIsLoadingCoachMsg] = useState(true);
+
+  // Modal nuova classe
   const [showClasseModal, setShowClasseModal] = useState(false);
   const [newClasse, setNewClasse] = useState({ nome: "", materia: "", ordine_scolastico: "", num_studenti: "" });
   const [savingClasse, setSavingClasse] = useState(false);
   const [classeCreata, setClasseCreata] = useState<any>(null);
 
-  // Generatore verifiche
-  const [genMateria, setGenMateria] = useState("");
-  const [genArgomento, setGenArgomento] = useState("");
-  const [genTipo, setGenTipo] = useState<string>("misto");
-  const [genNumero, setGenNumero] = useState(10);
-  const [genDifficolta, setGenDifficolta] = useState<string>("medio");
-  const [genLoading, setGenLoading] = useState(false);
-  const [genOutput, setGenOutput] = useState<string | null>(null);
-  const [genError, setGenError] = useState(false);
-  const [savingVerifica, setSavingVerifica] = useState(false);
-
   const od = onboarding;
   const materie: string[] = od?.docente_materie || [];
   const ordine: string = od?.docente_ordine || "";
-  const istituto: string = od?.docente_istituto || "";
   const cognome = profile?.name?.split(" ").slice(-1)[0] || profile?.name || "";
+  const studentiCount = classi.reduce((s, c) => s + (c.num_studenti || 0), 0);
 
   useEffect(() => { if (!profileId) return; loadAll(); }, [profileId]);
 
+  // Coach message
+  useEffect(() => {
+    const cached = sessionStorage.getItem('teacher_coach_msg');
+    if (cached) {
+      setCoachMessage(cached);
+      setIsLoadingCoachMsg(false);
+      return;
+    }
+    if (!profileId) { setIsLoadingCoachMsg(false); return; }
+    supabase.functions.invoke('coach-teacher-message', {
+      body: {
+        teacherName: profile?.name || '',
+        activeClasses: classi.map(c => ({ id: c.id, name: c.nome, subject: c.materia })),
+        currentHour: new Date().getHours(),
+        materialsThisWeek: materialiCount,
+        openVerifications: 0,
+      }
+    }).then(({ data }) => {
+      const msg = data?.message || '';
+      setCoachMessage(msg);
+      if (msg) sessionStorage.setItem('teacher_coach_msg', msg);
+      setIsLoadingCoachMsg(false);
+    }).catch(() => setIsLoadingCoachMsg(false));
+  }, [classi.length]);
+
   async function loadAll() {
     setLoadingClassi(true);
-    setLoadingVerifiche(true);
     try {
       const { data: prefs } = await (supabase as any)
         .from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
@@ -293,18 +256,27 @@ export default function DashboardDocente() {
         .order("created_at", { ascending: false });
       setClassi(c || []);
 
-      const { count } = await (supabase as any)
-        .from("verifiche").select("id", { count: "exact", head: true })
-        .eq("docente_profile_id", profileId);
-      setVerificheCount(count || 0);
+      // Materials count
+      const { count: mc } = await (supabase as any)
+        .from("teacher_materials").select("id", { count: "exact", head: true })
+        .eq("teacher_id", profileId);
+      setMaterialiCount(mc || 0);
 
-      const { data: v } = await (supabase as any)
-        .from("verifiche").select("*").eq("docente_profile_id", profileId)
-        .order("created_at", { ascending: false }).limit(5);
-      setVerificheSalvate(v || []);
+      // Feed
+      const { data: feed } = await (supabase as any)
+        .from("teacher_activity_feed").select("*")
+        .eq("teacher_id", profileId)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      setFeedItems(feed || []);
+
+      // Da seguire
+      const unread = (feed || []).filter((f: any) => !f.read_at && (f.severity === 'warning' || f.severity === 'urgent'));
+      setDaSegurireCount(unread.length);
+      const uniqueClasses = new Set(unread.map((f: any) => f.class_id).filter(Boolean));
+      setClassiConAlert(uniqueClasses.size);
     } finally {
       setLoadingClassi(false);
-      setLoadingVerifiche(false);
     }
   }
 
@@ -329,375 +301,331 @@ export default function DashboardDocente() {
     }
   }
 
-  async function generateVerifica() {
-    if (!genArgomento.trim()) { toast.error("Inserisci un argomento."); return; }
-    setGenLoading(true);
-    setGenOutput(null);
-    setGenError(false);
-    const tipoLabel = { multipla: "risposta multipla", aperta: "domande aperte", vero_falso: "vero/falso", misto: "misto" }[genTipo] || genTipo;
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            stream: false,
-            maxTokens: 2000,
-            systemPrompt: `Sei un professore esperto di ${genMateria || "materia"} per ${ordine || "scuola secondaria"}. Genera una verifica completa e professionale su: ${genArgomento}. Struttura: ${genNumero} domande di tipo ${tipoLabel}, difficoltà ${genDifficolta}. Per ogni domanda fornisci: il testo, le opzioni di risposta (se multipla o vero/falso), la risposta corretta e una breve spiegazione. Formatta in modo chiaro con numerazione progressiva. Usa un linguaggio formale e appropriato al livello scolastico.`,
-            messages: [{ role: "user", content: "Genera la verifica." }],
-          }),
-        }
-      );
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setGenOutput(data.choices?.[0]?.message?.content?.trim() || null);
-    } catch {
-      setGenError(true);
-    } finally {
-      setGenLoading(false);
-    }
-  }
-
-  async function saveVerifica() {
-    if (!genOutput || !profileId) return;
-    setSavingVerifica(true);
-    const { error } = await (supabase as any).from("verifiche").insert({
-      docente_profile_id: profileId,
-      materia: genMateria || null,
-      argomento: genArgomento,
-      contenuto: genOutput,
-      tipo: genTipo,
-      difficolta: genDifficolta,
-      numero_domande: genNumero,
-    });
-    setSavingVerifica(false);
-    if (!error) {
-      toast.success("Verifica salvata!");
-      setVerificheCount(c => c + 1);
-    } else {
-      toast.error("Errore nel salvataggio.");
-    }
-  }
-
-  function copyVerifica() {
-    if (!genOutput) return;
-    navigator.clipboard.writeText(genOutput);
-    toast.success("Verifica copiata negli appunti!");
-  }
-
-  function printVerifica() {
-    const el = document.getElementById("verifica-preview");
-    if (!el) return;
-    const w = window.open("", "_blank");
-    if (!w) return;
-    w.document.write(`<html><head><title>Verifica — ${genArgomento}</title><style>body{font-family:serif;max-width:720px;margin:40px auto;line-height:1.7;font-size:14px;}h1{font-size:18px;margin-bottom:4px;}p{margin:8px 0;}</style></head><body><h1>Verifica: ${genArgomento}</h1><hr/>${el.innerText.replace(/\n/g, "<br/>")}</body></html>`);
-    w.document.close();
-    w.print();
-  }
-
-  function printSavedVerifica(v: any) {
-    const w = window.open("", "_blank");
-    if (!w) return;
-    w.document.write(`<html><head><title>Verifica — ${v.argomento}</title><style>body{font-family:serif;max-width:720px;margin:40px auto;line-height:1.7;font-size:14px;}h1{font-size:18px;margin-bottom:4px;}p{margin:8px 0;}</style></head><body><h1>Verifica: ${v.argomento}</h1><hr/>${(v.contenuto || "").replace(/\n/g, "<br/>")}</body></html>`);
-    w.document.close();
-    w.print();
-  }
-
-  async function deleteVerifica(id: string) {
-    await (supabase as any).from("verifiche").delete().eq("id", id);
-    setVerificheSalvate(prev => prev.filter(v => v.id !== id));
-    setVerificheCount(c => c - 1);
-    setDeleteVerificaId(null);
-    toast.success("Verifica eliminata.");
-  }
+  const handleCoachSend = () => {
+    if (!coachInput.trim()) return;
+    navigate(`/challenge/new?msg=${encodeURIComponent(coachInput)}`);
+  };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+    <div className="min-h-screen bg-[#F8FAFC] pb-24">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
 
-        {/* HEADER */}
-        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
-          className="flex items-start justify-between gap-4">
+        {/* ━━━ BLOCCO 1 — TOPBAR ━━━ */}
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            <h1 className="font-display text-2xl font-bold text-slate-900">
               {getGreeting()}, Prof. {cognome}
             </h1>
-            {(materie.length > 0 || istituto) && (
-              <p className="text-muted-foreground mt-1 text-sm">
-                {[materie.slice(0, 3).join(", "), istituto].filter(Boolean).join(" · ")}
-              </p>
+            <p className="text-sm text-slate-500 mt-1">
+              {new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}
+              {' · '}{classi.length} {classi.length === 1 ? 'classe attiva' : 'classi attive'}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowClasseModal(true)}
+            className="flex items-center gap-2 bg-[#0070C0] hover:bg-[#005fa3] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Nuova classe
+          </button>
+        </div>
+
+        {/* ━━━ BLOCCO 2 — KPI ROW ━━━ */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Classi attive */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs uppercase tracking-wide font-semibold text-slate-400">Classi attive</span>
+              <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                <LayoutDashboard className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+            <p className="font-display text-3xl font-bold text-[#1A3A5C]">{classi.length}</p>
+          </div>
+          {/* Studenti */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs uppercase tracking-wide font-semibold text-slate-400">Studenti totali</span>
+              <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
+                <Users className="w-4 h-4 text-green-600" />
+              </div>
+            </div>
+            <p className="font-display text-3xl font-bold text-[#1A3A5C]">{studentiCount}</p>
+          </div>
+          {/* Materiali */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs uppercase tracking-wide font-semibold text-slate-400">Materiali</span>
+              <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center">
+                <FileText className="w-4 h-4 text-purple-600" />
+              </div>
+            </div>
+            <p className="font-display text-3xl font-bold text-[#1A3A5C]">{materialiCount}</p>
+          </div>
+          {/* Da seguire */}
+          <div className={`rounded-xl p-5 shadow-sm border ${daSegurireCount > 0 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'}`}>
+            <div className="flex items-center justify-between mb-3">
+              <span className={`text-xs uppercase tracking-wide font-semibold ${daSegurireCount > 0 ? 'text-amber-600' : 'text-green-600'}`}>Da seguire</span>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${daSegurireCount > 0 ? 'bg-amber-100' : 'bg-green-100'}`}>
+                <AlertCircle className={`w-4 h-4 ${daSegurireCount > 0 ? 'text-amber-600' : 'text-green-600'}`} />
+              </div>
+            </div>
+            <p className={`font-display text-3xl font-bold ${daSegurireCount > 0 ? 'text-amber-700' : 'text-green-700'}`}>{daSegurireCount}</p>
+            {daSegurireCount > 0 && (
+              <p className="text-xs text-amber-600 mt-1">In {classiConAlert} {classiConAlert === 1 ? 'classe' : 'classi'}</p>
             )}
-            <div className="flex items-center gap-3 mt-3 flex-wrap">
-              {[
-                { label: `${classi.length} classi attive`, icon: <Users className="w-3.5 h-3.5" /> },
-                { label: `${verificheCount} verifiche generate`, icon: <FileText className="w-3.5 h-3.5" /> },
-              ].map((k, i) => (
-                <div key={i} className="flex items-center gap-1.5 text-xs text-muted-foreground bg-card border border-border rounded-full px-3 py-1.5">
-                  <span className="text-primary">{k.icon}</span>{k.label}
+          </div>
+        </div>
+
+        {/* ━━━ BLOCCO 3 — COME STAI OGGI? ━━━ */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <div className="flex items-start gap-3 mb-5">
+            <div className="w-9 h-9 bg-[#1A3A5C] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Brain className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex-1">
+              {isLoadingCoachMsg ? (
+                <div className="space-y-2">
+                  <div className="h-4 bg-slate-100 rounded animate-pulse w-3/4" />
+                  <div className="h-4 bg-slate-100 rounded animate-pulse w-1/2" />
                 </div>
+              ) : (
+                <p className="text-sm text-slate-700 leading-relaxed font-medium">
+                  {coachMessage || 'Buongiorno. Da dove vuoi iniziare oggi?'}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="border-t border-slate-100 pt-5">
+            <p className="font-semibold text-[#1A3A5C] text-sm mb-1">Come stai oggi?</p>
+            <p className="text-xs text-slate-500 mb-4">
+              Uno spazio riservato per aiutarti a gestire meglio carico,
+              complessità e situazioni educative delicate.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={coachInput}
+                onChange={(e) => setCoachInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleCoachSend()}
+                placeholder="Parla con il tuo coach..."
+                className="flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0070C0] focus:ring-2 focus:ring-[#0070C0]/20 bg-slate-50"
+              />
+              <button
+                onClick={handleCoachSend}
+                disabled={!coachInput.trim()}
+                className="bg-[#0070C0] hover:bg-[#005fa3] disabled:opacity-40 text-white px-4 py-2.5 rounded-lg transition-colors"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-3">
+              {[
+                { label: 'Organizza il lavoro', prompt: 'organizza' },
+                { label: 'Chiedi un suggerimento', prompt: '' },
+                { label: 'Rivedi le priorità', prompt: 'priorita' },
+              ].map(({ label, prompt }) => (
+                <button
+                  key={label}
+                  onClick={() => navigate(`/challenge/new${prompt ? `?prompt=${prompt}` : ''}`)}
+                  className="text-xs border border-slate-200 hover:border-[#0070C0] hover:text-[#0070C0] text-slate-500 px-3 py-1.5 rounded-lg transition-colors bg-white"
+                >
+                  {label}
+                </button>
               ))}
             </div>
           </div>
-          <LogoutButton showLabel />
-        </motion.div>
+        </div>
 
-        {/* CLASSI */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Le tue classi</h2>
-            <Button variant="outline" size="sm" className="h-8 text-xs rounded-xl"
-              onClick={() => setShowClasseModal(true)}>
-              <Plus className="w-3 h-3 mr-1" />Nuova classe
-            </Button>
-          </div>
+        {/* ━━━ BLOCCO 4 — CARD CLASSI ━━━ */}
+        <div>
+          <h2 className="text-xs uppercase tracking-widest font-semibold text-slate-400 mb-4">Le tue classi</h2>
           {loadingClassi ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[1, 2].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}
             </div>
           ) : classi.length === 0 ? (
-            <div className="bg-card border border-border rounded-2xl p-8 text-center">
-              <Users className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-sm font-medium text-muted-foreground">Non hai ancora creato nessuna classe</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">
-                Crea la prima classe e condividi il codice con i tuoi studenti
-              </p>
-              <Button variant="outline" size="sm" className="mt-3 rounded-xl text-xs"
-                onClick={() => setShowClasseModal(true)}>
-                <Plus className="w-3 h-3 mr-1" />Crea la prima classe
-              </Button>
+            <div className="bg-white border-2 border-dashed border-slate-200 rounded-xl p-12 text-center">
+              <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+              <p className="font-medium text-slate-500 mb-1">Nessuna classe ancora</p>
+              <p className="text-sm text-slate-400 mb-4">Crea la prima classe e condividi il codice con i tuoi studenti</p>
+              <button onClick={() => setShowClasseModal(true)} className="text-sm text-[#0070C0] font-medium hover:underline">
+                + Crea la prima classe
+              </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {classi.map((cl, i) => (
-                <motion.div key={cl.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
+                <motion.div
+                  key={cl.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
                   onClick={() => navigate(`/classe/${cl.id}`)}
-                  className="bg-card border border-border rounded-2xl p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-bold text-foreground text-lg">{cl.nome}</p>
-                      {cl.materia && <Badge variant="secondary" className="mt-1">{cl.materia}</Badge>}
-                      <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                        <Users className="w-3 h-3" />{cl.num_studenti} studenti
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Creata il {format(new Date(cl.created_at), "d MMM yyyy", { locale: it })}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground mb-1">Codice</p>
-                      <span className="font-mono font-bold text-foreground bg-muted px-2 py-1 rounded-lg text-sm">
-                        {cl.codice_invito}
-                      </span>
-                    </div>
+                  className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-2 h-2 rounded-full flex-shrink-0 bg-green-400" />
+                    <span className="font-semibold text-slate-900 truncate flex-1">{cl.nome}</span>
+                    {cl.materia && (
+                      <span className="text-xs bg-[#0070C0]/10 text-[#0070C0] px-2 py-0.5 rounded-full flex-shrink-0">{cl.materia}</span>
+                    )}
                   </div>
-                  <Button variant="ghost" size="sm" className="mt-3 w-full rounded-xl text-xs text-muted-foreground"
-                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(cl.codice_invito); toast.success("Codice copiato!"); }}>
-                    <Copy className="w-3 h-3 mr-1" />Copia codice invito
-                  </Button>
+                  <div className="flex items-center gap-3 text-sm">
+                    <span className="text-slate-500"><span className="font-semibold text-slate-700">{cl.num_studenti || 0}</span> studenti</span>
+                    <span className="text-slate-300">·</span>
+                    <span className="text-slate-400">Codice: <span className="font-mono font-semibold text-slate-600">{cl.codice_invito}</span></span>
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(cl.codice_invito); toast.success("Codice copiato!"); }}
+                    className="mt-3 w-full flex items-center justify-center gap-1.5 text-xs text-slate-400 hover:text-[#0070C0] py-1.5 border border-slate-100 rounded-lg transition-colors"
+                  >
+                    <Copy className="w-3 h-3" /> Copia codice
+                  </button>
                 </motion.div>
               ))}
             </div>
           )}
-        </section>
+        </div>
 
-        {/* GENERATORE VERIFICHE */}
-        <section className="bg-card border border-border rounded-2xl p-5">
-          <h2 className="font-semibold text-foreground flex items-center gap-2 mb-4">
-            <FilePlus className="w-4 h-4 text-primary" /> Generatore Verifiche con AI
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">Materia</Label>
-              {materie.length > 0 ? (
-                <Select value={genMateria} onValueChange={setGenMateria}>
-                  <SelectTrigger className="rounded-xl"><SelectValue placeholder="Seleziona materia" /></SelectTrigger>
-                  <SelectContent>{materie.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-                </Select>
-              ) : (
-                <Input placeholder="es. Matematica, Fisica..." value={genMateria}
-                  onChange={e => setGenMateria(e.target.value)} className="rounded-xl" />
-              )}
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">Argomento *</Label>
-              <Input placeholder="es. Seconda legge della termodinamica" value={genArgomento}
-                onChange={e => setGenArgomento(e.target.value)} className="rounded-xl" />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">Tipo domande</Label>
-              <Select value={genTipo} onValueChange={setGenTipo}>
-                <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="multipla">Risposta multipla</SelectItem>
-                  <SelectItem value="aperta">Domande aperte</SelectItem>
-                  <SelectItem value="vero_falso">Vero e Falso</SelectItem>
-                  <SelectItem value="misto">Misto</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">Numero domande</Label>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="h-9 w-9 p-0 rounded-xl"
-                  onClick={() => setGenNumero(n => Math.max(5, n - 1))}><Minus className="w-3 h-3" /></Button>
-                <span className="flex-1 text-center font-semibold text-foreground">{genNumero}</span>
-                <Button variant="outline" size="sm" className="h-9 w-9 p-0 rounded-xl"
-                  onClick={() => setGenNumero(n => Math.min(20, n + 1))}><Plus className="w-3 h-3" /></Button>
-              </div>
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">Difficolta</Label>
-              <Select value={genDifficolta} onValueChange={setGenDifficolta}>
-                <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="facile">Facile</SelectItem>
-                  <SelectItem value="medio">Medio</SelectItem>
-                  <SelectItem value="difficile">Difficile</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <Button onClick={generateVerifica} disabled={!genArgomento.trim() || genLoading}
-            className="w-full rounded-xl font-semibold">
-            {genLoading ? "Generazione in corso..." : "Genera con AI"}
-          </Button>
-
-          {/* OUTPUT VERIFICA */}
-          {genLoading && (
-            <div className="mt-4 space-y-2">
-              {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-4 w-full" />)}
-              <Skeleton className="h-4 w-2/3" />
-            </div>
-          )}
-          {genError && (
-            <div className="mt-4 p-4 bg-destructive/5 border border-destructive/20 rounded-xl text-sm text-destructive">
-              Impossibile generare la verifica. Verifica la connessione e riprova.
-              <button onClick={generateVerifica} className="underline ml-2">Riprova</button>
-            </div>
-          )}
-          {genOutput && (
-            <div className="mt-4">
-              <div id="verifica-preview"
-                className="bg-muted/50 border border-border rounded-xl p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto font-mono">
-                {genOutput}
-              </div>
-              <div className="flex flex-wrap gap-2 mt-3">
-                <Button size="sm" className="rounded-xl"
-                  onClick={saveVerifica} disabled={savingVerifica}>
-                  {savingVerifica ? "Salvataggio..." : "Salva verifica"}
-                </Button>
-                <Button size="sm" variant="outline" className="rounded-xl" onClick={copyVerifica}>
-                  <Copy className="w-3 h-3 mr-1" />Copia testo
-                </Button>
-                <Button size="sm" variant="outline" className="rounded-xl" onClick={printVerifica}>
-                  <Printer className="w-3 h-3 mr-1" />Stampa / PDF
-                </Button>
-                <Button size="sm" variant="ghost" className="rounded-xl text-muted-foreground" onClick={generateVerifica}>
-                  Rigenera
-                </Button>
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* VERIFICHE SALVATE */}
-        <section>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Verifiche salvate</h2>
-          {loadingVerifiche ? (
-            <div className="space-y-2">{[1, 2].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
-          ) : verificheSalvate.length === 0 ? (
-            <div className="bg-card border border-border rounded-2xl p-6 text-center">
-              <FileText className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Nessuna verifica salvata ancora</p>
+        {/* ━━━ BLOCCO 5 — FEED ATTIVITÀ ━━━ */}
+        <div>
+          <h2 className="text-xs uppercase tracking-widest font-semibold text-slate-400 mb-4">Attività recenti</h2>
+          {feedItems.length === 0 ? (
+            <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
+              <Clock className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+              <p className="text-sm text-slate-400">Nessuna attività recente</p>
+              <p className="text-xs text-slate-300 mt-1">Le attività appariranno quando gli studenti useranno la piattaforma</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {verificheSalvate.map(v => (
-                <div key={v.id} className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between gap-3">
+            <div className="space-y-3">
+              {feedItems.slice(0, 8).map((item: any) => (
+                <div key={item.id} className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
+                  <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                    item.severity === 'urgent' ? 'bg-red-500' :
+                    item.severity === 'positive' ? 'bg-green-500' :
+                    item.severity === 'warning' ? 'bg-amber-500' : 'bg-blue-400'
+                  }`} />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground text-sm truncate">{v.argomento}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      {v.materia && <Badge variant="secondary" className="text-xs">{v.materia}</Badge>}
-                      {v.tipo && <span className="text-xs text-muted-foreground">{v.tipo}</span>}
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(v.created_at), "d MMM", { locale: it })}
-                      </span>
-                    </div>
+                    <p className="text-sm text-slate-700">{item.message}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {new Date(item.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg"
-                      onClick={() => setVerificaPreview(v)}>
-                      <Eye className="w-3.5 h-3.5 text-muted-foreground" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg"
-                      onClick={() => printSavedVerifica(v)}>
-                      <Printer className="w-3.5 h-3.5 text-muted-foreground" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg"
-                      onClick={() => setDeleteVerificaId(v.id)}>
-                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                    </Button>
-                  </div>
+                  {item.action_label && (
+                    <button onClick={() => navigate(item.action_route)} className="text-xs text-[#0070C0] font-medium hover:underline flex-shrink-0 ml-2">
+                      {item.action_label}
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
           )}
-        </section>
+        </div>
 
-        {/* ATTIVITA STUDENTI */}
-        <section className="bg-card border border-border rounded-2xl p-5">
-          <h2 className="font-semibold text-foreground flex items-center gap-2 mb-3">
-            <Bell className="w-4 h-4 text-primary" /> Attivita studenti
-          </h2>
-          <div className="flex flex-col items-center py-6 text-center">
-            <Bell className="w-8 h-8 text-muted-foreground/30 mb-3" />
-            <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
-              Collega i tuoi studenti alle classi condividendo il codice invito. Quando saranno attivi, 
-              vedrai qui il loro andamento in tempo reale.
-            </p>
+        {/* ━━━ BLOCCO 6 — BLOCKCHAIN PLACEHOLDERS ━━━ */}
+        <div>
+          <h2 className="text-xs uppercase tracking-widest font-semibold text-slate-400 mb-4">Certificazione & Conformità</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Credenziali On-Chain */}
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm relative overflow-hidden">
+              <div className="absolute top-3 right-3">
+                <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">In arrivo</span>
+              </div>
+              <div className="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center mb-4">
+                <Shield className="w-5 h-5 text-green-600" />
+              </div>
+              <h3 className="font-semibold text-slate-900 text-sm mb-1">Credenziali verificabili</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Le competenze dei tuoi studenti diventeranno certificati Soulbound verificabili su blockchain privata (ERC-5192).
+              </p>
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-slate-300" />
+                  <span className="text-xs text-slate-400 font-mono">Contratto: non configurato</span>
+                </div>
+              </div>
+            </div>
+
+            {/* AI Audit Trail */}
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm relative overflow-hidden">
+              <div className="absolute top-3 right-3">
+                <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">In arrivo</span>
+              </div>
+              <div className="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center mb-4">
+                <FileText className="w-5 h-5 text-blue-600" />
+              </div>
+              <h3 className="font-semibold text-slate-900 text-sm mb-1">AI Audit Trail</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Ogni sessione AI verrà registrata on-chain con hash immutabile. Conformità EU AI Act (scadenza: 2 agosto 2026).
+              </p>
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-slate-300" />
+                  <span className="text-xs text-slate-400 font-mono">Governance: non configurato</span>
+                </div>
+              </div>
+            </div>
+
+            {/* EU AI Act */}
+            <div className="bg-[#1A3A5C] border border-[#1A3A5C] rounded-xl p-5 shadow-sm relative overflow-hidden">
+              <div className="absolute top-3 right-3">
+                <span className="text-xs bg-orange-500/20 text-orange-300 border border-orange-500/30 px-2 py-0.5 rounded-full">Scadenza: ago 2026</span>
+              </div>
+              <div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center mb-4">
+                <Link2 className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="font-semibold text-white text-sm mb-1">EU AI Act — Conformità</h3>
+              <p className="text-xs text-white/60 leading-relaxed">
+                InSchool sarà conforme all'EU AI Act (Annex III — sistemi ad alto rischio in educazione) entro la deadline obbligatoria.
+              </p>
+              <div className="mt-4 pt-4 border-t border-white/10">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-orange-400" />
+                  <span className="text-xs text-white/40 font-mono">Compliance: non configurato</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </section>
+          <p className="text-xs text-slate-400 mt-3 text-center">
+            La blockchain privata è in fase di configurazione. Le variabili d'ambiente verranno aggiunte quando pronta.
+          </p>
+        </div>
 
-        {/* RISULTATI VERIFICHE ASSEGNATE */}
+        {/* ━━━ RISULTATI VERIFICHE ━━━ */}
         <TeacherResultsSection profileId={profileId} />
-
-        {/* CONVERSAZIONI RECENTI */}
-        <RecentConversations profileId={profileId} title="Le tue sessioni con il Coach AI" />
 
       </div>
 
-      {/* DIALOG — NUOVA CLASSE */}
+      {/* ═══ DIALOGS ═══ */}
+
+      {/* Nuova classe */}
       <Dialog open={showClasseModal && !classeCreata} onOpenChange={v => { setShowClasseModal(v); if (!v) setClasseCreata(null); }}>
-        <DialogContent className="rounded-2xl">
+        <DialogContent className="rounded-xl">
           <DialogHeader><DialogTitle>Nuova Classe</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div>
               <Label>Nome classe *</Label>
               <Input placeholder="es. 3A, 4B, 5C..." value={newClasse.nome}
-                onChange={e => setNewClasse(p => ({ ...p, nome: e.target.value }))} className="mt-1 rounded-xl" />
+                onChange={e => setNewClasse(p => ({ ...p, nome: e.target.value }))} className="mt-1" />
             </div>
             <div>
               <Label>Materia</Label>
               {materie.length > 0 ? (
                 <Select value={newClasse.materia} onValueChange={v => setNewClasse(p => ({ ...p, materia: v }))}>
-                  <SelectTrigger className="mt-1 rounded-xl"><SelectValue placeholder="Seleziona materia" /></SelectTrigger>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="Seleziona materia" /></SelectTrigger>
                   <SelectContent>{materie.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
                 </Select>
               ) : (
                 <Input placeholder="es. Matematica" value={newClasse.materia}
-                  onChange={e => setNewClasse(p => ({ ...p, materia: e.target.value }))} className="mt-1 rounded-xl" />
+                  onChange={e => setNewClasse(p => ({ ...p, materia: e.target.value }))} className="mt-1" />
               )}
             </div>
             <div>
               <Label>Ordine scolastico</Label>
               <Select value={newClasse.ordine_scolastico} onValueChange={v => setNewClasse(p => ({ ...p, ordine_scolastico: v }))}>
-                <SelectTrigger className="mt-1 rounded-xl"><SelectValue placeholder={ordine || "Seleziona..."} /></SelectTrigger>
+                <SelectTrigger className="mt-1"><SelectValue placeholder={ordine || "Seleziona..."} /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Scuola Primaria">Scuola Primaria</SelectItem>
                   <SelectItem value="Scuola Secondaria I grado">Scuola Secondaria I grado</SelectItem>
@@ -710,31 +638,30 @@ export default function DashboardDocente() {
             <div>
               <Label>Numero studenti</Label>
               <Input type="number" min="0" placeholder="es. 25" value={newClasse.num_studenti}
-                onChange={e => setNewClasse(p => ({ ...p, num_studenti: e.target.value }))} className="mt-1 rounded-xl" />
+                onChange={e => setNewClasse(p => ({ ...p, num_studenti: e.target.value }))} className="mt-1" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowClasseModal(false)} className="rounded-xl">Annulla</Button>
-            <Button onClick={saveClasse} disabled={!newClasse.nome.trim() || savingClasse}
-              className="rounded-xl">
+            <Button variant="outline" onClick={() => setShowClasseModal(false)}>Annulla</Button>
+            <Button onClick={saveClasse} disabled={!newClasse.nome.trim() || savingClasse}>
               {savingClasse ? "Creazione..." : "Crea classe"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* DIALOG — CLASSE CREATA CON CODICE */}
+      {/* Classe creata */}
       <Dialog open={!!classeCreata} onOpenChange={() => { setClasseCreata(null); setShowClasseModal(false); }}>
-        <DialogContent className="rounded-2xl text-center">
-          <CheckSquare className="w-10 h-10 text-primary mx-auto mt-2" />
+        <DialogContent className="rounded-xl text-center">
+          <CheckSquare className="w-10 h-10 text-[#0070C0] mx-auto mt-2" />
           <DialogHeader><DialogTitle className="text-center mt-2">Classe creata!</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">Condividi questo codice con i tuoi studenti</p>
-          <div className="bg-muted rounded-2xl py-5 px-4 my-2">
-            <p className="font-mono font-black text-4xl tracking-[0.3em] text-foreground">
+          <p className="text-sm text-slate-500">Condividi questo codice con i tuoi studenti</p>
+          <div className="bg-slate-50 rounded-xl py-5 px-4 my-2">
+            <p className="font-mono font-black text-4xl tracking-[0.3em] text-slate-900">
               {classeCreata?.codice_invito}
             </p>
           </div>
-          <Button className="w-full rounded-xl"
+          <Button className="w-full"
             onClick={() => {
               navigator.clipboard.writeText(classeCreata?.codice_invito);
               toast.success("Codice copiato!");
@@ -743,40 +670,6 @@ export default function DashboardDocente() {
             }}>
             <Copy className="w-4 h-4 mr-2" />Copia codice e chiudi
           </Button>
-        </DialogContent>
-      </Dialog>
-
-      {/* DIALOG — PREVIEW VERIFICA */}
-      <Dialog open={!!verificaPreview} onOpenChange={() => setVerificaPreview(null)}>
-        <DialogContent className="rounded-2xl max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{verificaPreview?.argomento}</DialogTitle>
-          </DialogHeader>
-          <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed font-mono bg-muted/50 rounded-xl p-4 border border-border">
-            {verificaPreview?.contenuto}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" className="rounded-xl" onClick={() => { printSavedVerifica(verificaPreview); }}>
-              <Printer className="w-3.5 h-3.5 mr-1.5" />Stampa
-            </Button>
-            <Button variant="outline" className="rounded-xl" onClick={() => { navigator.clipboard.writeText(verificaPreview?.contenuto || ""); toast.success("Copiato!"); }}>
-              <Copy className="w-3.5 h-3.5 mr-1.5" />Copia
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* DIALOG — ELIMINA VERIFICA */}
-      <Dialog open={!!deleteVerificaId} onOpenChange={() => setDeleteVerificaId(null)}>
-        <DialogContent className="rounded-2xl">
-          <DialogHeader><DialogTitle>Eliminare la verifica?</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">Questa azione non puo essere annullata.</p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteVerificaId(null)} className="rounded-xl">Annulla</Button>
-            <Button variant="destructive" onClick={() => deleteVerificaId && deleteVerifica(deleteVerificaId)} className="rounded-xl">
-              Elimina
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
