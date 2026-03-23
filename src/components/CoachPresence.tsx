@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Brain, ArrowRight, Send, Loader2 } from "lucide-react";
+import { Brain, ArrowRight, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
+import { getActiveChildProfileId } from "@/lib/database";
 
 function getProfile() {
   try {
@@ -40,14 +41,35 @@ export function CoachPresence() {
   async function fetchCoachMessage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const profileId = getChildSession()?.profileId || profile?.id;
+      const profileId = getChildSession()?.profileId || profile?.id || getActiveChildProfileId();
+      const userId = user?.id || profileId;
 
-      const [homeworkRes, sessionsRes] = await Promise.all([
+      // Fetch all context data in parallel
+      const [homeworkRes, sessionsRes, gamRes, teacherRes, checkinRes] = await Promise.all([
+        // Pending homework
         supabase.from("homework_tasks").select("title, subject, due_date, completed")
-          .eq("child_profile_id", profileId).eq("completed", false).order("due_date", { ascending: true }).limit(3),
+          .eq("child_profile_id", profileId).eq("completed", false)
+          .order("due_date", { ascending: true }).limit(5),
+        // Last completed session
         supabase.from("guided_sessions").select("homework_id, completed_at, bloom_level_reached")
-          .eq("user_id", user?.id || profileId).eq("status", "completed").order("completed_at", { ascending: false }).limit(1),
+          .eq("user_id", userId).eq("status", "completed")
+          .order("completed_at", { ascending: false }).limit(1),
+        // Gamification (streak)
+        supabase.from("gamification").select("streak, last_activity_date, focus_points, autonomy_points, consistency_points")
+          .eq("child_profile_id", profileId).maybeSingle(),
+        // Teacher assignments
+        user ? supabase.from("teacher_assignments").select("title, subject, type, due_date, metadata")
+          .eq("student_id", user.id).order("assigned_at", { ascending: false }).limit(3) : Promise.resolve({ data: [] }),
+        // Today's emotional checkin
+        supabase.from("emotional_checkins").select("emotional_tone, energy_level, signals")
+          .eq("child_profile_id", profileId)
+          .eq("checkin_date", new Date().toISOString().split("T")[0])
+          .maybeSingle(),
       ]);
+
+      const streak = gamRes.data?.streak || 0;
+      const lastActivity = gamRes.data?.last_activity_date;
+      const newTeacherAssignments = (teacherRes.data || []).filter((a: any) => a.metadata?.status !== "opened");
 
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/coach-home-message`,
@@ -60,11 +82,14 @@ export function CoachPresence() {
           },
           body: JSON.stringify({
             userName: profile?.name || "Studente",
-            schoolLevel: profile?.school_level || "superiori",
+            schoolLevel: profile?.school_level || "alunno",
             lastSession: sessionsRes.data?.[0] || null,
             pendingHomework: homeworkRes.data || [],
-            emotionalHistory: null,
+            emotionalHistory: checkinRes.data || null,
             upcomingTests: null,
+            streak,
+            lastActivityDate: lastActivity,
+            teacherAssignments: newTeacherAssignments,
           }),
         }
       );
@@ -127,10 +152,6 @@ export function CoachPresence() {
 
       {/* Input + quick actions */}
       <div className="border-t border-border pt-4">
-        <p className="font-semibold text-foreground text-sm mb-1">Hai bisogno di aiuto?</p>
-        <p className="text-xs text-muted-foreground mb-3">
-          Chiedi al coach di spiegarti un concetto, organizzare lo studio o prepararti per una verifica.
-        </p>
         <div className="flex gap-2">
           <input
             type="text"
