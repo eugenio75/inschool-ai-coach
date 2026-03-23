@@ -221,21 +221,26 @@ export default function ClassView() {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                 Studenti ({students.length})
               </p>
-              {students.map((s: any) => (
-                <button
-                  key={s.id}
-                  onClick={() => navigate(`/studente/${s.student_id}?classId=${classId}`)}
-                  className="w-full flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:bg-muted/50 hover:shadow-sm transition-all text-left"
-                >
-                  <AvatarInitials name="Studente" size="sm" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">Studente</p>
-                    <p className="text-xs text-muted-foreground">Iscritto</p>
-                  </div>
-                  <Badge variant="secondary" className="text-xs">Attivo</Badge>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                </button>
-              ))}
+              {students.map((s: any) => {
+                const name = s.profile?.name || "Studente";
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => navigate(`/studente/${s.student_id}?classId=${classId}`)}
+                    className="w-full flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:bg-muted/50 hover:shadow-sm transition-all text-left"
+                  >
+                    <AvatarInitials name={name} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">{name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {s.profile?.school_level || "Iscritto"}
+                      </p>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">Attivo</Badge>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                );
+              })}
             </div>
           )}
         </TabsContent>
