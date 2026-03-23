@@ -433,6 +433,40 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
               );
             case 5:
               return (
+                <div className="w-full space-y-6">
+                    <h2 className="text-2xl font-bold text-foreground">Come ti senti di solito prima di studiare?</h2>
+                    <div className="space-y-3">
+                       {[
+                         { id: "ansioso", title: "Ansioso per gli esami" },
+                         { id: "procrastino", title: "Tendo a procrastinare" },
+                         { id: "solo", title: "Studio meglio in compagnia" },
+                         { id: "ok", title: "Generalmente motivato" },
+                       ].map(opt => {
+                         const isSel = (answers.sfide_emotive || []).includes(opt.id);
+                         return <button key={opt.id} onClick={() => {
+                           const arr = answers.sfide_emotive || [];
+                           if (arr.includes(opt.id)) setAnswers({...answers, sfide_emotive: arr.filter((x: string) => x !== opt.id)});
+                           else if (arr.length < 2) setAnswers({...answers, sfide_emotive: [...arr, opt.id]});
+                         }} className={`w-full text-left p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}>
+                           <p className={`font-bold ${isSel ? selTextClass : "text-foreground"}`}>{opt.title}</p>
+                         </button>;
+                       })}
+                    </div>
+                </div>
+              );
+            case 6:
+              return (
+                <div className="w-full space-y-6">
+                    <h2 className="text-2xl font-bold text-foreground">Dai un nome al tuo coach</h2>
+                    <p className="text-muted-foreground text-sm">Il tuo assistente AI personale per lo studio</p>
+                    <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2">
+                      <Brain className="w-10 h-10 text-primary" />
+                    </div>
+                    <input type="text" placeholder="Es. Coach, Aria, Leo..." value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
+                </div>
+              );
+            case 7:
+              return (
                 <div className="text-left w-full space-y-6">
                     <h2 className="text-3xl font-bold text-foreground mb-2">Tutto pronto!</h2>
                     <p className="text-muted-foreground mb-6">Ecco il tuo profilo Universitario</p>
@@ -441,6 +475,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                         {answers.uni_corso && <div><span className={summaryLabelClass}>Corso di laurea</span><p className={summaryValueClass}>{answers.uni_corso}</p></div>}
                         <div><span className={summaryLabelClass}>Skill IA</span><p className={summaryValueClass}>{(answers.serve_ai || []).join(", ")}</p></div>
                         <div><span className={summaryLabelClass}>Esami tracciati</span><p className={summaryValueClass}>{(answers.uni_esami || []).length} inseriti</p></div>
+                        {answers.coach_name && <div><span className={summaryLabelClass}>Il tuo Coach</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
                     </div>
                 </div>
               );
