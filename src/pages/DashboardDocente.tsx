@@ -188,6 +188,7 @@ function TeacherResultsSection({ profileId }: { profileId: string | undefined })
 // ============ MAIN DASHBOARD ============
 export default function DashboardDocente() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const session = getChildSession();
   const profile = session?.profile;
   const profileId = session?.profileId;
