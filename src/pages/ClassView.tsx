@@ -61,15 +61,17 @@ export default function ClassView() {
     
     // Fetch student profile names
     const enrollments = enr || [];
+    let profilesList: any[] = [];
     if (enrollments.length > 0) {
       const studentIds = enrollments.map((e: any) => e.student_id);
       const { data: profiles } = await (supabase as any)
         .from("child_profiles")
         .select("id, name, parent_id, avatar_emoji, school_level")
         .in("parent_id", studentIds);
+      profilesList = profiles || [];
       
       const profileMap: Record<string, any> = {};
-      (profiles || []).forEach((p: any) => { profileMap[p.parent_id] = p; });
+      profilesList.forEach((p: any) => { profileMap[p.parent_id] = p; });
       
       const enriched = enrollments.map((e: any) => ({
         ...e,
