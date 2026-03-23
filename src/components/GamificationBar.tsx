@@ -170,7 +170,15 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
   }
 
   if (missions.length === 0) {
-    return null;
+    return (
+      <div className="bg-card border border-border rounded-xl p-4 shadow-soft">
+        <div className="flex items-center gap-2 mb-2">
+          <Target className="w-4 h-4 text-primary" />
+          <h3 className="font-display font-semibold text-foreground text-sm">Missioni del giorno</h3>
+        </div>
+        <p className="text-xs text-muted-foreground">Le missioni di oggi verranno generate al tuo primo accesso. Torna tra poco!</p>
+      </div>
+    );
   }
 
   return (
