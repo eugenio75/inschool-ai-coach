@@ -574,100 +574,131 @@ export default function DashboardDocente() {
                 + Crea la prima classe
               </button>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {classi.map((cl, i) => {
-                const classUnread = feedItems.filter((f: any) => f.class_id === cl.id && !f.read_at && (f.severity === 'warning' || f.severity === 'urgent')).length;
-                const dotColor = classUnread > 0 ? 'bg-amber-400' : 'bg-green-400';
+          ) : (() => {
+            // Sort classes by latest activity
+            const classiSorted = [...classi].sort((a, b) => {
+              const lastA = feedItems.find((f: any) => f.class_id === a.id)?.created_at || a.created_at || '';
+              const lastB = feedItems.find((f: any) => f.class_id === b.id)?.created_at || b.created_at || '';
+              return new Date(lastB).getTime() - new Date(lastA).getTime();
+            });
+            const visibleClassi = showAllClassi ? classiSorted : classiSorted.slice(0, 3);
 
-                // Gradient per materia
-                const matLower = (cl.materia || '').toLowerCase();
-                const gradientMap: Record<string, string> = {
-                  'musica': 'from-violet-500 to-fuchsia-500',
-                  'educazione civica': 'from-emerald-500 to-teal-500',
-                  'italiano': 'from-sky-500 to-blue-500',
-                  'matematica': 'from-orange-500 to-amber-500',
-                  'storia': 'from-rose-500 to-red-500',
-                  'scienze': 'from-green-500 to-lime-500',
-                  'inglese': 'from-indigo-500 to-blue-500',
-                };
-                const gradient = gradientMap[matLower] || 'from-[#1A3A5C] to-[#0070C0]';
+            return (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {visibleClassi.map((cl, i) => {
+                    const classUnread = feedItems.filter((f: any) => f.class_id === cl.id && !f.read_at && (f.severity === 'warning' || f.severity === 'urgent')).length;
+                    const dotColor = classUnread > 0 ? 'bg-amber-400' : 'bg-green-400';
 
-                // Prossima scadenza per questa classe
-                const nextDeadline = assignments
-                  .filter(a => a.class_id === cl.id && a.due_date && new Date(a.due_date) >= new Date())
-                  .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())[0];
-                const daysToDeadline = nextDeadline
-                  ? Math.ceil((new Date(nextDeadline.due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-                  : null;
+                    const matLower = (cl.materia || '').toLowerCase();
+                    const gradientMap: Record<string, string> = {
+                      'musica': 'from-violet-500 to-fuchsia-500',
+                      'educazione civica': 'from-emerald-500 to-teal-500',
+                      'italiano': 'from-sky-500 to-blue-500',
+                      'matematica': 'from-orange-500 to-amber-500',
+                      'storia': 'from-rose-500 to-red-500',
+                      'scienze': 'from-green-500 to-lime-500',
+                      'inglese': 'from-indigo-500 to-blue-500',
+                    };
+                    const gradient = gradientMap[matLower] || 'from-[#1A3A5C] to-[#0070C0]';
 
-                return (
-                  <motion.div
-                    key={cl.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    onClick={() => navigate(`/classe/${cl.id}`)}
-                    className="group bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-                  >
-                    {/* Gradient top bar */}
-                    <div className={`h-1.5 bg-gradient-to-r ${gradient} group-hover:h-2 transition-all duration-300`} />
+                    const nextDeadline = assignments
+                      .filter(a => a.class_id === cl.id && a.due_date && new Date(a.due_date) >= new Date())
+                      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())[0];
+                    const daysToDeadline = nextDeadline
+                      ? Math.ceil((new Date(nextDeadline.due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                      : null;
 
-                    <div className="p-5">
-                      {/* Header */}
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${dotColor} ring-2 ring-offset-1 ${classUnread > 0 ? 'ring-amber-200' : 'ring-green-200'}`} />
-                        <span className="font-semibold text-slate-900 truncate flex-1 text-[15px]">{cl.nome}</span>
-                        {cl.materia && (
-                          <span className={`text-xs bg-gradient-to-r ${gradient} text-white px-2.5 py-0.5 rounded-full flex-shrink-0 font-medium`}>
-                            {cl.materia}
-                          </span>
-                        )}
-                      </div>
+                    // Relative timestamp from latest feed activity
+                    const lastActivity = feedItems.find((f: any) => f.class_id === cl.id);
+                    const timeAgo = lastActivity ? (() => {
+                      const diffMs = Date.now() - new Date(lastActivity.created_at).getTime();
+                      const diffMin = Math.floor(diffMs / 60000);
+                      if (diffMin < 1) return 'Ora';
+                      if (diffMin < 60) return `${diffMin}min fa`;
+                      const diffH = Math.floor(diffMin / 60);
+                      if (diffH < 24) return `${diffH}h fa`;
+                      const diffD = Math.floor(diffH / 24);
+                      if (diffD === 1) return 'Ieri';
+                      if (diffD < 7) return `${diffD}g fa`;
+                      return `${Math.floor(diffD / 7)}sett fa`;
+                    })() : null;
 
-                      {/* Stats row */}
-                      <div className="flex items-center gap-4 text-sm mb-3">
-                        <div className="flex items-center gap-1.5">
-                          <Users className="w-3.5 h-3.5 text-slate-400" />
-                          <span className="font-semibold text-slate-700">{cl.num_studenti || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <FileText className="w-3.5 h-3.5 text-slate-400" />
-                          <span className="font-semibold text-slate-700">{materialiCount}</span>
-                        </div>
-                        {classUnread > 0 && (
-                          <div className="flex items-center gap-1.5">
-                            <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
-                            <span className="font-semibold text-amber-600">{classUnread}</span>
+                    return (
+                      <motion.div
+                        key={cl.id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        onClick={() => navigate(`/classe/${cl.id}`)}
+                        className="group bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                      >
+                        <div className={`h-1.5 bg-gradient-to-r ${gradient} group-hover:h-2 transition-all duration-300`} />
+                        <div className="p-5">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${dotColor} ring-2 ring-offset-1 ${classUnread > 0 ? 'ring-amber-200' : 'ring-green-200'}`} />
+                            <span className="font-semibold text-slate-900 truncate flex-1 text-[15px]">{cl.nome}</span>
+                            {cl.materia && (
+                              <span className={`text-xs bg-gradient-to-r ${gradient} text-white px-2.5 py-0.5 rounded-full flex-shrink-0 font-medium`}>
+                                {cl.materia}
+                              </span>
+                            )}
                           </div>
-                        )}
-                      </div>
-
-                      {/* Prossima scadenza */}
-                      {nextDeadline ? (
-                        <div className={`text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${
-                          daysToDeadline !== null && daysToDeadline <= 2
-                            ? 'bg-amber-50 text-amber-700'
-                            : 'bg-slate-50 text-slate-500'
-                        }`}>
-                          <Calendar className="w-3 h-3" />
-                          <span className="truncate font-medium">{nextDeadline.title}</span>
-                          <span className="ml-auto shrink-0">
-                            {daysToDeadline === 0 ? 'Oggi' : daysToDeadline === 1 ? 'Domani' : `tra ${daysToDeadline}g`}
-                          </span>
+                          <div className="flex items-center gap-4 text-sm mb-3">
+                            <div className="flex items-center gap-1.5">
+                              <Users className="w-3.5 h-3.5 text-slate-400" />
+                              <span className="font-semibold text-slate-700">{cl.num_studenti || 0}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <FileText className="w-3.5 h-3.5 text-slate-400" />
+                              <span className="font-semibold text-slate-700">{materialiCount}</span>
+                            </div>
+                            {classUnread > 0 && (
+                              <div className="flex items-center gap-1.5">
+                                <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+                                <span className="font-semibold text-amber-600">{classUnread}</span>
+                              </div>
+                            )}
+                            {timeAgo && (
+                              <span className="ml-auto text-[11px] text-slate-400 font-medium">
+                                Aggiornata {timeAgo}
+                              </span>
+                            )}
+                          </div>
+                          {nextDeadline ? (
+                            <div className={`text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${
+                              daysToDeadline !== null && daysToDeadline <= 2
+                                ? 'bg-amber-50 text-amber-700'
+                                : 'bg-slate-50 text-slate-500'
+                            }`}>
+                              <Calendar className="w-3 h-3" />
+                              <span className="truncate font-medium">{nextDeadline.title}</span>
+                              <span className="ml-auto shrink-0">
+                                {daysToDeadline === 0 ? 'Oggi' : daysToDeadline === 1 ? 'Domani' : `tra ${daysToDeadline}g`}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="text-xs px-3 py-1.5 rounded-lg bg-slate-50 text-slate-400 flex items-center gap-1.5">
+                              <Calendar className="w-3 h-3" />
+                              Nessuna scadenza
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <div className="text-xs px-3 py-1.5 rounded-lg bg-slate-50 text-slate-400 flex items-center gap-1.5">
-                          <Calendar className="w-3 h-3" />
-                          Nessuna scadenza
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+                {classiSorted.length > 3 && (
+                  <button
+                    onClick={() => setShowAllClassi(v => !v)}
+                    className="w-full text-center text-xs text-[#0070C0] font-medium hover:underline mt-3 py-1"
+                  >
+                    {showAllClassi ? 'Mostra meno' : `Vedi tutte (${classiSorted.length})`}
+                  </button>
+                )}
+              </>
+            );
+          })()}
         </div>
 
         {/* ━━━ BLOCCO 5 — FEED ATTIVITÀ ━━━ */}
