@@ -639,6 +639,89 @@ export default function ClassView() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Assign Activity Dialog */}
+      <Dialog open={assignOpen} onOpenChange={(v) => { setAssignOpen(v); if (!v) resetAssignForm(); }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Assegna attività alla classe</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label className="text-xs text-muted-foreground">Titolo *</Label>
+              <Input placeholder="es. Esercizi sulle equazioni" value={assignTitle}
+                onChange={e => setAssignTitle(e.target.value)} className="mt-1 rounded-xl" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-muted-foreground">Tipologia</Label>
+                <Select value={assignType} onValueChange={setAssignType}>
+                  <SelectTrigger className="mt-1 rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["esercizi", "verifica", "recupero", "potenziamento", "compito", "progetto"].map(t => (
+                      <SelectItem key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Scadenza</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full mt-1 rounded-xl justify-start text-left font-normal", !assignDueDate && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {assignDueDate ? format(assignDueDate, "dd MMM yyyy", { locale: it }) : "Seleziona data"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={assignDueDate} onSelect={setAssignDueDate}
+                      disabled={(date) => date < new Date()}
+                      initialFocus className={cn("p-3 pointer-events-auto")} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Descrizione (opzionale)</Label>
+              <Textarea placeholder="Istruzioni per gli studenti..." value={assignDesc}
+                onChange={e => setAssignDesc(e.target.value)} className="mt-1 rounded-xl min-h-[60px]" />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-2 block">Destinatari</Label>
+              <div className="flex gap-2 mb-2">
+                <Button size="sm" variant={assignTarget === "all" ? "default" : "outline"} className="rounded-xl text-xs"
+                  onClick={() => setAssignTarget("all")}>Tutta la classe</Button>
+                <Button size="sm" variant={assignTarget === "selected" ? "default" : "outline"} className="rounded-xl text-xs"
+                  onClick={() => setAssignTarget("selected")}>Studenti specifici</Button>
+              </div>
+              {assignTarget === "selected" && (
+                <div className="max-h-40 overflow-y-auto border border-border rounded-xl p-2 space-y-1">
+                  {students.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-2">Nessuno studente iscritto</p>
+                  ) : students.map(s => {
+                    const sid = s.student_id || s.id;
+                    const checked = assignSelectedStudents.includes(sid);
+                    return (
+                      <label key={sid} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/50 cursor-pointer">
+                        <Checkbox checked={checked} onCheckedChange={(v) => {
+                          setAssignSelectedStudents(prev => v ? [...prev, sid] : prev.filter(x => x !== sid));
+                        }} />
+                        <span className="text-sm">{s.name || s.student_name || "Studente"}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" className="rounded-xl" onClick={() => setAssignOpen(false)}>Annulla</Button>
+            <Button className="rounded-xl" onClick={handleAssignActivity} disabled={assignSaving}>
+              {assignSaving ? "Salvataggio..." : "Assegna"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
