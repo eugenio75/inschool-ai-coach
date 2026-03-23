@@ -214,6 +214,9 @@ const DashboardAlunno = () => {
         </div>
       </div>
 
+      {/* Coach card */}
+      <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto"><CoachPresence /></div></div>
+
       {/* Teacher Assignments */}
       <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto"><TeacherAssignments /></div></div>
 
