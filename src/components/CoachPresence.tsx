@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { MessageSquare, ArrowRight, Loader2 } from "lucide-react";
+import { Brain, ArrowRight, Send, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,9 +21,9 @@ export function CoachPresence() {
   const [message, setMessage] = useState<string | null>(null);
   const [action, setAction] = useState<{ text: string; route: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [coachInput, setCoachInput] = useState("");
 
   useEffect(() => {
-    // Check sessionStorage first to avoid re-calling
     const cached = sessionStorage.getItem("inschool-coach-presence");
     if (cached) {
       try {
@@ -34,7 +34,6 @@ export function CoachPresence() {
         return;
       } catch {}
     }
-
     fetchCoachMessage();
   }, []);
 
@@ -43,7 +42,6 @@ export function CoachPresence() {
       const { data: { session } } = await supabase.auth.getSession();
       const profileId = getChildSession()?.profileId || profile?.id;
 
-      // Gather context
       const [homeworkRes, sessionsRes] = await Promise.all([
         supabase.from("homework_tasks").select("title, subject, due_date, completed")
           .eq("child_profile_id", profileId).eq("completed", false).order("due_date", { ascending: true }).limit(3),
@@ -77,7 +75,6 @@ export function CoachPresence() {
         if (data.suggestedAction && data.actionRoute) {
           setAction({ text: data.suggestedAction, route: data.actionRoute });
         }
-        // Cache
         sessionStorage.setItem("inschool-coach-presence", JSON.stringify({
           message: data.message,
           action: data.suggestedAction ? { text: data.suggestedAction, route: data.actionRoute } : null,
@@ -89,45 +86,82 @@ export function CoachPresence() {
     setLoading(false);
   }
 
-  if (loading) {
-    return (
-      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5 mb-6 animate-pulse">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-slate-200" />
-          <div className="flex-1 space-y-2">
-            <div className="h-4 bg-slate-200 rounded w-3/4" />
-            <div className="h-3 bg-slate-200 rounded w-1/2" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!message) return null;
+  const handleSend = () => {
+    if (!coachInput.trim()) return;
+    navigate(`/challenge/new?msg=${encodeURIComponent(coachInput)}`);
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5 mb-6"
+      className="bg-card border border-border rounded-xl p-5"
     >
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full bg-[var(--color-navy)] flex items-center justify-center flex-shrink-0">
-          <MessageSquare className="w-5 h-5 text-white" />
+      {/* Coach message */}
+      <div className="flex items-start gap-3 mb-4">
+        <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Brain className="w-4 h-4 text-primary-foreground" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-[var(--color-text-primary)] leading-relaxed">
-            {message}
-          </p>
-          {action && (
+          {loading ? (
+            <div className="space-y-2">
+              <div className="h-4 bg-muted rounded animate-pulse w-3/4" />
+              <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
+            </div>
+          ) : (
+            <p className="text-sm text-foreground leading-relaxed font-medium">
+              {message || "Ciao! Come posso aiutarti oggi?"}
+            </p>
+          )}
+          {action && !loading && (
             <button
               onClick={() => navigate(action.route)}
-              className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-accent)] hover:underline"
+              className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
             >
               {action.text}
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           )}
+        </div>
+      </div>
+
+      {/* Input + quick actions */}
+      <div className="border-t border-border pt-4">
+        <p className="font-semibold text-foreground text-sm mb-1">Hai bisogno di aiuto?</p>
+        <p className="text-xs text-muted-foreground mb-3">
+          Chiedi al coach di spiegarti un concetto, organizzare lo studio o prepararti per una verifica.
+        </p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={coachInput}
+            onChange={(e) => setCoachInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Scrivi al coach..."
+            className="flex-1 text-sm border border-border rounded-lg px-3 py-2.5 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 bg-muted/50"
+          />
+          <button
+            onClick={handleSend}
+            disabled={!coachInput.trim()}
+            className="bg-primary hover:bg-primary/90 disabled:opacity-40 text-primary-foreground px-4 py-2.5 rounded-lg transition-colors"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-3">
+          {[
+            { label: "Spiegami un argomento", prompt: "spiegami" },
+            { label: "Aiutami a studiare", prompt: "aiuto-studio" },
+            { label: "Prepara una verifica", prompt: "prepara-verifica" },
+          ].map(({ label, prompt }) => (
+            <button
+              key={label}
+              onClick={() => navigate(`/challenge/new?prompt=${prompt}`)}
+              className="text-xs border border-border hover:border-primary hover:text-primary text-muted-foreground px-3 py-1.5 rounded-lg transition-colors bg-card"
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
     </motion.div>
