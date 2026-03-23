@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -64,7 +64,7 @@ export default function ClassView() {
   const [materialFilter, setMaterialFilter] = useState("tutti");
 
   // Unified assign dialog
-  const [assignOpen, setAssignOpen] = useState(false);
+  // Unified assign form (inline in Materiali tab)
   const [assignMode, setAssignMode] = useState<"text" | "ai" | "file">("text");
   const [assignTitle, setAssignTitle] = useState("");
   const [assignType, setAssignType] = useState("esercizi");
@@ -206,7 +206,6 @@ export default function ClassView() {
       }
 
       toast.success(`Attività assegnata a ${targetStudents.length} studenti`);
-      setAssignOpen(false);
       resetAssignForm();
       loadClass();
     } catch (err: any) {
@@ -352,11 +351,6 @@ export default function ClassView() {
         </div>
       </div>
 
-      <div className="flex justify-end mb-4">
-        <Button size="sm" className="rounded-xl" onClick={() => setAssignOpen(true)}>
-          <Plus className="w-3.5 h-3.5 mr-1" /> Assegna attività
-        </Button>
-      </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -524,116 +518,37 @@ export default function ClassView() {
           )}
         </TabsContent>
 
-        {/* Tab 3: Materiali — now shows saved materials only */}
-        <TabsContent value="materiali" className="mt-6 space-y-6">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Materiali e attività ({materials.length})
+        {/* Tab 3: Materiali */}
+        <TabsContent value="materiali" className="mt-6 space-y-8">
+          {/* === Sezione: Assegna attività === */}
+          <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+              <Send className="w-3.5 h-3.5" /> Assegna attività alla classe
             </p>
-            <div className="flex gap-1">
-              {["tutti", "draft", "assigned"].map(f => (
+
+            {/* Mode selector */}
+            <div className="flex gap-1 bg-muted p-1 rounded-xl">
+              {([
+                { key: "text" as const, icon: PenLine, label: "Testo" },
+                { key: "ai" as const, icon: Sparkles, label: "Genera con AI" },
+                { key: "file" as const, icon: Upload, label: "Allega file" },
+              ]).map(({ key, icon: Icon, label }) => (
                 <button
-                  key={f}
-                  onClick={() => setMaterialFilter(f)}
-                  className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
-                    materialFilter === f
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
+                  key={key}
+                  onClick={() => setAssignMode(key)}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium transition-all",
+                    assignMode === key
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
                 >
-                  {f === "tutti" ? "Tutti" : f === "draft" ? "Bozze" : "Assegnati"}
+                  <Icon className="w-3.5 h-3.5" />
+                  {label}
                 </button>
               ))}
             </div>
-          </div>
-          {filteredMaterials.length === 0 ? (
-            <div className="bg-card border border-border rounded-xl p-6 text-center">
-              <BookOpen className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground mb-3">
-                Nessun materiale ancora. Usa "Assegna attività" per creare e assegnare contenuti.
-              </p>
-              <Button size="sm" className="rounded-xl" onClick={() => setAssignOpen(true)}>
-                <Plus className="w-3.5 h-3.5 mr-1" /> Assegna attività
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {filteredMaterials.map(m => (
-                <div key={m.id} className="flex items-center p-4 bg-card border border-border rounded-xl hover:shadow-sm transition-shadow">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{m.title}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      {m.type && <Badge variant="secondary" className="text-xs">{m.type}</Badge>}
-                      {m.level && <Badge variant="outline" className="text-xs">{m.level}</Badge>}
-                      <Badge variant={m.status === "draft" ? "outline" : "default"} className="text-xs capitalize">{m.status}</Badge>
-                    </div>
-                  </div>
-                  {m.content && (
-                    <Button size="sm" variant="ghost" className="rounded-xl shrink-0" onClick={() => {
-                      const printWin = window.open("", "_blank");
-                      if (!printWin) { toast.error("Popup bloccato dal browser"); return; }
-                      printWin.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${m.title}</title><style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:20px;line-height:1.7;color:#1a1a1a}h1{font-size:1.4em;border-bottom:2px solid #1a3a5c;padding-bottom:8px;color:#1a3a5c}pre{white-space:pre-wrap;font-family:inherit;font-size:0.95em}footer{margin-top:40px;font-size:0.75em;color:#888;border-top:1px solid #ddd;padding-top:8px}</style></head><body><h1>${m.title}</h1><p style="color:#666;font-size:0.85em">${classe?.nome || ""} · ${classe?.materia || ""} · ${m.type || ""}</p><pre>${m.content}</pre><footer>Generato con InSchool · ${new Date().toLocaleDateString("it-IT")}</footer></body></html>`);
-                      printWin.document.close();
-                      setTimeout(() => printWin.print(), 300);
-                    }}>
-                      <Download className="w-3.5 h-3.5 mr-1" /> PDF
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </TabsContent>
 
-        {/* Tab 4: Coach AI */}
-        <TabsContent value="coach" className="mt-6">
-          <div className="bg-card border border-border rounded-2xl p-8 text-center">
-            <MessageSquare className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="font-medium text-foreground mb-1">Coach AI per {classe.nome}</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              {students.length === 0
-                ? "La classe è vuota ma puoi già generare materiali e pianificare attività."
-                : "Chiedi consigli su questa classe, piani di recupero o strategie didattiche."
-              }
-            </p>
-            <Button className="rounded-xl" onClick={() => navigate("/challenge/new")}>
-              <MessageSquare className="w-4 h-4 mr-1" /> Apri il Coach AI
-            </Button>
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      {/* Unified Assign Activity Dialog */}
-      <Dialog open={assignOpen} onOpenChange={(v) => { setAssignOpen(v); if (!v) resetAssignForm(); }}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Assegna attività alla classe</DialogTitle>
-          </DialogHeader>
-
-          {/* Mode selector */}
-          <div className="flex gap-1 bg-muted p-1 rounded-xl">
-            {([
-              { key: "text" as const, icon: PenLine, label: "Testo" },
-              { key: "ai" as const, icon: Sparkles, label: "Genera con AI" },
-              { key: "file" as const, icon: Upload, label: "Allega file" },
-            ]).map(({ key, icon: Icon, label }) => (
-              <button
-                key={key}
-                onClick={() => setAssignMode(key)}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium transition-all",
-                  assignMode === key
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <div className="space-y-4 py-2">
             {/* Common fields */}
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
@@ -797,16 +712,90 @@ export default function ClassView() {
                 </div>
               )}
             </div>
+
+            <Button className="w-full rounded-xl" onClick={handleAssignActivity} disabled={assignSaving}>
+              <Send className="w-3.5 h-3.5 mr-1" />
+              {assignSaving ? "Salvataggio..." : "Assegna attività"}
+            </Button>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" className="rounded-xl" onClick={() => setAssignOpen(false)}>Annulla</Button>
-            <Button className="rounded-xl" onClick={handleAssignActivity} disabled={assignSaving}>
-              {assignSaving ? "Salvataggio..." : "Assegna"}
+          {/* === Sezione: Materiali salvati === */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Materiali salvati ({materials.length})
+              </p>
+              <div className="flex gap-1">
+                {["tutti", "draft", "assigned"].map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setMaterialFilter(f)}
+                    className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
+                      materialFilter === f
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {f === "tutti" ? "Tutti" : f === "draft" ? "Bozze" : "Assegnati"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {filteredMaterials.length === 0 ? (
+              <div className="bg-card border border-border rounded-xl p-6 text-center">
+                <BookOpen className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Nessun materiale salvato. I materiali generati con AI appariranno qui.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredMaterials.map(m => (
+                  <div key={m.id} className="flex items-center p-4 bg-card border border-border rounded-xl hover:shadow-sm transition-shadow">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{m.title}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        {m.type && <Badge variant="secondary" className="text-xs">{m.type}</Badge>}
+                        {m.level && <Badge variant="outline" className="text-xs">{m.level}</Badge>}
+                        <Badge variant={m.status === "draft" ? "outline" : "default"} className="text-xs capitalize">{m.status}</Badge>
+                      </div>
+                    </div>
+                    {m.content && (
+                      <Button size="sm" variant="ghost" className="rounded-xl shrink-0" onClick={() => {
+                        const printWin = window.open("", "_blank");
+                        if (!printWin) { toast.error("Popup bloccato dal browser"); return; }
+                        printWin.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${m.title}</title><style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:20px;line-height:1.7;color:#1a1a1a}h1{font-size:1.4em;border-bottom:2px solid #1a3a5c;padding-bottom:8px;color:#1a3a5c}pre{white-space:pre-wrap;font-family:inherit;font-size:0.95em}footer{margin-top:40px;font-size:0.75em;color:#888;border-top:1px solid #ddd;padding-top:8px}</style></head><body><h1>${m.title}</h1><p style="color:#666;font-size:0.85em">${classe?.nome || ""} · ${classe?.materia || ""} · ${m.type || ""}</p><pre>${m.content}</pre><footer>Generato con InSchool · ${new Date().toLocaleDateString("it-IT")}</footer></body></html>`);
+                        printWin.document.close();
+                        setTimeout(() => printWin.print(), 300);
+                      }}>
+                        <Download className="w-3.5 h-3.5 mr-1" /> PDF
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Tab 4: Coach AI */}
+        <TabsContent value="coach" className="mt-6">
+          <div className="bg-card border border-border rounded-2xl p-8 text-center">
+            <MessageSquare className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="font-medium text-foreground mb-1">Coach AI per {classe.nome}</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              {students.length === 0
+                ? "La classe è vuota ma puoi già generare materiali e pianificare attività."
+                : "Chiedi consigli su questa classe, piani di recupero o strategie didattiche."
+              }
+            </p>
+            <Button className="rounded-xl" onClick={() => navigate("/challenge/new")}>
+              <MessageSquare className="w-4 h-4 mr-1" /> Apri il Coach AI
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </TabsContent>
+      </Tabs>
+
     </div>
   );
 }
