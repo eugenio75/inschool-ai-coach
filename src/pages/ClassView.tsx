@@ -352,11 +352,6 @@ export default function ClassView() {
         </div>
       </div>
 
-      <div className="flex justify-end mb-4">
-        <Button size="sm" className="rounded-xl" onClick={() => setAssignOpen(true)}>
-          <Plus className="w-3.5 h-3.5 mr-1" /> Assegna attività
-        </Button>
-      </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -524,65 +519,264 @@ export default function ClassView() {
           )}
         </TabsContent>
 
-        {/* Tab 3: Materiali — now shows saved materials only */}
-        <TabsContent value="materiali" className="mt-6 space-y-6">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Materiali e attività ({materials.length})
+        {/* Tab 3: Materiali */}
+        <TabsContent value="materiali" className="mt-6 space-y-8">
+          {/* === Sezione: Assegna attività === */}
+          <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+              <Send className="w-3.5 h-3.5" /> Assegna attività alla classe
             </p>
-            <div className="flex gap-1">
-              {["tutti", "draft", "assigned"].map(f => (
+
+            {/* Mode selector */}
+            <div className="flex gap-1 bg-muted p-1 rounded-xl">
+              {([
+                { key: "text" as const, icon: PenLine, label: "Testo" },
+                { key: "ai" as const, icon: Sparkles, label: "Genera con AI" },
+                { key: "file" as const, icon: Upload, label: "Allega file" },
+              ]).map(({ key, icon: Icon, label }) => (
                 <button
-                  key={f}
-                  onClick={() => setMaterialFilter(f)}
-                  className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
-                    materialFilter === f
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
+                  key={key}
+                  onClick={() => setAssignMode(key)}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium transition-all",
+                    assignMode === key
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
                 >
-                  {f === "tutti" ? "Tutti" : f === "draft" ? "Bozze" : "Assegnati"}
+                  <Icon className="w-3.5 h-3.5" />
+                  {label}
                 </button>
               ))}
             </div>
-          </div>
-          {filteredMaterials.length === 0 ? (
-            <div className="bg-card border border-border rounded-xl p-6 text-center">
-              <BookOpen className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground mb-3">
-                Nessun materiale ancora. Usa "Assegna attività" per creare e assegnare contenuti.
-              </p>
-              <Button size="sm" className="rounded-xl" onClick={() => setAssignOpen(true)}>
-                <Plus className="w-3.5 h-3.5 mr-1" /> Assegna attività
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {filteredMaterials.map(m => (
-                <div key={m.id} className="flex items-center p-4 bg-card border border-border rounded-xl hover:shadow-sm transition-shadow">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{m.title}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      {m.type && <Badge variant="secondary" className="text-xs">{m.type}</Badge>}
-                      {m.level && <Badge variant="outline" className="text-xs">{m.level}</Badge>}
-                      <Badge variant={m.status === "draft" ? "outline" : "default"} className="text-xs capitalize">{m.status}</Badge>
-                    </div>
-                  </div>
-                  {m.content && (
-                    <Button size="sm" variant="ghost" className="rounded-xl shrink-0" onClick={() => {
-                      const printWin = window.open("", "_blank");
-                      if (!printWin) { toast.error("Popup bloccato dal browser"); return; }
-                      printWin.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${m.title}</title><style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:20px;line-height:1.7;color:#1a1a1a}h1{font-size:1.4em;border-bottom:2px solid #1a3a5c;padding-bottom:8px;color:#1a3a5c}pre{white-space:pre-wrap;font-family:inherit;font-size:0.95em}footer{margin-top:40px;font-size:0.75em;color:#888;border-top:1px solid #ddd;padding-top:8px}</style></head><body><h1>${m.title}</h1><p style="color:#666;font-size:0.85em">${classe?.nome || ""} · ${classe?.materia || ""} · ${m.type || ""}</p><pre>${m.content}</pre><footer>Generato con InSchool · ${new Date().toLocaleDateString("it-IT")}</footer></body></html>`);
-                      printWin.document.close();
-                      setTimeout(() => printWin.print(), 300);
-                    }}>
-                      <Download className="w-3.5 h-3.5 mr-1" /> PDF
+
+            {/* Common fields */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <Label className="text-xs text-muted-foreground">Titolo *</Label>
+                <Input placeholder="es. Esercizi sulle equazioni" value={assignTitle}
+                  onChange={e => setAssignTitle(e.target.value)} className="mt-1 rounded-xl" />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Tipologia</Label>
+                <Select value={assignType} onValueChange={setAssignType}>
+                  <SelectTrigger className="mt-1 rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["esercizi", "verifica", "recupero", "potenziamento", "compito", "progetto"].map(t => (
+                      <SelectItem key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Scadenza</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full mt-1 rounded-xl justify-start text-left font-normal", !assignDueDate && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {assignDueDate ? format(assignDueDate, "dd MMM yyyy", { locale: it }) : "Seleziona data"}
                     </Button>
-                  )}
-                </div>
-              ))}
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={assignDueDate} onSelect={setAssignDueDate}
+                      disabled={(date) => date < new Date()}
+                      initialFocus className={cn("p-3 pointer-events-auto")} />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
-          )}
+
+            {/* Mode-specific content */}
+            {assignMode === "text" && (
+              <div>
+                <Label className="text-xs text-muted-foreground">Descrizione / Istruzioni</Label>
+                <Textarea placeholder="Scrivi le istruzioni per gli studenti..." value={assignDesc}
+                  onChange={e => setAssignDesc(e.target.value)} className="mt-1 rounded-xl min-h-[80px]" />
+              </div>
+            )}
+
+            {assignMode === "ai" && (
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Descrivi cosa vuoi generare</Label>
+                  <Textarea
+                    placeholder="Es: 'Crea 5 domande sul Risorgimento per una terza media, difficoltà media'"
+                    value={aiPrompt}
+                    onChange={e => setAiPrompt(e.target.value)}
+                    className="mt-1 rounded-xl min-h-[60px]"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Livello</Label>
+                    <Select value={aiLivello} onValueChange={setAiLivello}>
+                      <SelectTrigger className="mt-1 rounded-xl"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="base">Base</SelectItem>
+                        <SelectItem value="intermedio">Intermedio</SelectItem>
+                        <SelectItem value="avanzato">Avanzato</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">N. domande</Label>
+                    <Input type="number" min={1} max={20} value={aiNumero}
+                      onChange={e => setAiNumero(Number(e.target.value))} className="mt-1 rounded-xl" />
+                  </div>
+                </div>
+                <Button onClick={generateAiContent} disabled={aiLoading} variant="outline" className="w-full rounded-xl">
+                  <Sparkles className="w-3.5 h-3.5 mr-1" />
+                  {aiLoading ? "Generazione in corso..." : "Genera contenuto"}
+                </Button>
+                {aiOutput && (
+                  <div className="bg-muted/50 border border-border rounded-xl p-3 text-sm whitespace-pre-wrap max-h-48 overflow-y-auto">
+                    {aiOutput}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {assignMode === "file" && (
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Descrizione (opzionale)</Label>
+                  <Textarea placeholder="Istruzioni per gli studenti..." value={assignDesc}
+                    onChange={e => setAssignDesc(e.target.value)} className="mt-1 rounded-xl min-h-[60px]" />
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  className="hidden"
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFileUpload(file);
+                  }}
+                />
+                {!uploadFile ? (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="w-full border-2 border-dashed border-border rounded-xl p-6 text-center hover:bg-muted/30 transition-colors"
+                  >
+                    <Upload className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
+                    <p className="text-sm font-medium text-foreground">
+                      {uploading ? "Caricamento..." : "Carica PDF, immagine o documento"}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">PDF, JPG, PNG, DOC (max 20MB)</p>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-3 p-3 bg-muted/50 border border-border rounded-xl">
+                    <FileText className="w-8 h-8 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{uploadFile.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(uploadFile.size / 1024 / 1024).toFixed(1)} MB
+                      </p>
+                    </div>
+                    <Button size="sm" variant="ghost" className="shrink-0" onClick={() => {
+                      setUploadFile(null);
+                      setUploadUrl(null);
+                    }}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Destinatari */}
+            <div>
+              <Label className="text-xs text-muted-foreground mb-2 block">Destinatari</Label>
+              <div className="flex gap-2 mb-2">
+                <Button size="sm" variant={assignTarget === "all" ? "default" : "outline"} className="rounded-xl text-xs"
+                  onClick={() => setAssignTarget("all")}>Tutta la classe</Button>
+                <Button size="sm" variant={assignTarget === "selected" ? "default" : "outline"} className="rounded-xl text-xs"
+                  onClick={() => setAssignTarget("selected")}>Studenti specifici</Button>
+              </div>
+              {assignTarget === "selected" && (
+                <div className="max-h-40 overflow-y-auto border border-border rounded-xl p-2 space-y-1">
+                  {students.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-2">Nessuno studente iscritto</p>
+                  ) : students.map(s => {
+                    const sid = s.student_id || s.id;
+                    const checked = assignSelectedStudents.includes(sid);
+                    return (
+                      <label key={sid} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/50 cursor-pointer">
+                        <Checkbox checked={checked} onCheckedChange={(v) => {
+                          setAssignSelectedStudents(prev => v ? [...prev, sid] : prev.filter(x => x !== sid));
+                        }} />
+                        <span className="text-sm">{s.profile?.name || s.name || "Studente"}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <Button className="w-full rounded-xl" onClick={handleAssignActivity} disabled={assignSaving}>
+              <Send className="w-3.5 h-3.5 mr-1" />
+              {assignSaving ? "Salvataggio..." : "Assegna attività"}
+            </Button>
+          </div>
+
+          {/* === Sezione: Materiali salvati === */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Materiali salvati ({materials.length})
+              </p>
+              <div className="flex gap-1">
+                {["tutti", "draft", "assigned"].map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setMaterialFilter(f)}
+                    className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
+                      materialFilter === f
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {f === "tutti" ? "Tutti" : f === "draft" ? "Bozze" : "Assegnati"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {filteredMaterials.length === 0 ? (
+              <div className="bg-card border border-border rounded-xl p-6 text-center">
+                <BookOpen className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Nessun materiale salvato. I materiali generati con AI appariranno qui.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredMaterials.map(m => (
+                  <div key={m.id} className="flex items-center p-4 bg-card border border-border rounded-xl hover:shadow-sm transition-shadow">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{m.title}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        {m.type && <Badge variant="secondary" className="text-xs">{m.type}</Badge>}
+                        {m.level && <Badge variant="outline" className="text-xs">{m.level}</Badge>}
+                        <Badge variant={m.status === "draft" ? "outline" : "default"} className="text-xs capitalize">{m.status}</Badge>
+                      </div>
+                    </div>
+                    {m.content && (
+                      <Button size="sm" variant="ghost" className="rounded-xl shrink-0" onClick={() => {
+                        const printWin = window.open("", "_blank");
+                        if (!printWin) { toast.error("Popup bloccato dal browser"); return; }
+                        printWin.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${m.title}</title><style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:20px;line-height:1.7;color:#1a1a1a}h1{font-size:1.4em;border-bottom:2px solid #1a3a5c;padding-bottom:8px;color:#1a3a5c}pre{white-space:pre-wrap;font-family:inherit;font-size:0.95em}footer{margin-top:40px;font-size:0.75em;color:#888;border-top:1px solid #ddd;padding-top:8px}</style></head><body><h1>${m.title}</h1><p style="color:#666;font-size:0.85em">${classe?.nome || ""} · ${classe?.materia || ""} · ${m.type || ""}</p><pre>${m.content}</pre><footer>Generato con InSchool · ${new Date().toLocaleDateString("it-IT")}</footer></body></html>`);
+                        printWin.document.close();
+                        setTimeout(() => printWin.print(), 300);
+                      }}>
+                        <Download className="w-3.5 h-3.5 mr-1" /> PDF
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </TabsContent>
 
         {/* Tab 4: Coach AI */}
