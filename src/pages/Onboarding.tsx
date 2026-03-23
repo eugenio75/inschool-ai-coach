@@ -593,6 +593,40 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
               );
             case 5:
               return (
+                <div className="w-full space-y-6">
+                    <h2 className="text-2xl font-bold text-foreground">Quali sfide incontri con gli studenti?</h2>
+                    <div className="space-y-3">
+                       {[
+                         { id: "motivazione", title: "Scarsa motivazione" },
+                         { id: "lacune", title: "Lacune diffuse" },
+                         { id: "comportamento", title: "Problemi comportamentali" },
+                         { id: "inclusione", title: "Gestione inclusione/BES" },
+                       ].map(opt => {
+                         const isSel = (answers.sfide_docente || []).includes(opt.id);
+                         return <button key={opt.id} onClick={() => {
+                           const arr = answers.sfide_docente || [];
+                           if (arr.includes(opt.id)) setAnswers({...answers, sfide_docente: arr.filter((x: string) => x !== opt.id)});
+                           else if (arr.length < 3) setAnswers({...answers, sfide_docente: [...arr, opt.id]});
+                         }} className={`w-full text-left p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}>
+                           <p className={`font-bold ${isSel ? selTextClass : "text-foreground"}`}>{opt.title}</p>
+                         </button>;
+                       })}
+                    </div>
+                </div>
+              );
+            case 6:
+              return (
+                <div className="w-full space-y-6">
+                    <h2 className="text-2xl font-bold text-foreground">Nome del tuo assistente AI</h2>
+                    <p className="text-muted-foreground text-sm">Personalizza il nome del coach AI che ti aiuterà</p>
+                    <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2">
+                      <Brain className="w-10 h-10 text-primary" />
+                    </div>
+                    <input type="text" placeholder="Es. Assistente, Aria, Coach..." value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
+                </div>
+              );
+            case 7:
+              return (
                 <div className="text-left w-full space-y-6">
                     <h2 className="text-3xl font-bold text-foreground mb-2">Tutto pronto!</h2>
                     <p className="text-muted-foreground mb-6">Il tuo cruscotto didattico ti attende</p>
@@ -603,6 +637,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                         <div><span className={summaryLabelClass}>Materie</span><p className={summaryValueClass}>{(answers.docente_materie || []).join(", ")}</p></div>
                         <div><span className={summaryLabelClass}>Strumenti usati</span><p className={summaryValueClass}>{(answers.docente_uso || []).join(", ")}</p></div>
                         <div><span className={summaryLabelClass}>Automazioni IA</span><p className={summaryValueClass}>{(answers.docente_auto || []).join(", ")}</p></div>
+                        {answers.coach_name && <div><span className={summaryLabelClass}>Assistente AI</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
                     </div>
                 </div>
               );
