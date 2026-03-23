@@ -50,6 +50,7 @@ export default function GuidedSession() {
   const [showPauseDialog, setShowPauseDialog] = useState(false);
   const [emotionalCheckin, setEmotionalCheckin] = useState<string | null>(null);
   const [showCheckin, setShowCheckin] = useState(false);
+  const [showExplainOptions, setShowExplainOptions] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
