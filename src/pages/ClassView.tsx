@@ -73,7 +73,66 @@ export default function ClassView() {
   const [genOutput, setGenOutput] = useState<string | null>(null);
   const [materialFilter, setMaterialFilter] = useState("tutti");
 
-  useEffect(() => {
+  // Assign activity dialog
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignTitle, setAssignTitle] = useState("");
+  const [assignType, setAssignType] = useState("esercizi");
+  const [assignDesc, setAssignDesc] = useState("");
+  const [assignDueDate, setAssignDueDate] = useState<Date | undefined>(undefined);
+  const [assignTarget, setAssignTarget] = useState<"all" | "selected">("all");
+  const [assignSelectedStudents, setAssignSelectedStudents] = useState<string[]>([]);
+  const [assignSaving, setAssignSaving] = useState(false);
+
+  function resetAssignForm() {
+    setAssignTitle("");
+    setAssignType("esercizi");
+    setAssignDesc("");
+    setAssignDueDate(undefined);
+    setAssignTarget("all");
+    setAssignSelectedStudents([]);
+  }
+
+  async function handleAssignActivity() {
+    if (!assignTitle.trim() || !user || !classId) {
+      toast.error("Inserisci almeno un titolo");
+      return;
+    }
+    setAssignSaving(true);
+    try {
+      const targetStudents = assignTarget === "all"
+        ? students
+        : students.filter(s => assignSelectedStudents.includes(s.student_id || s.id));
+
+      if (targetStudents.length === 0) {
+        toast.error("Nessuno studente selezionato");
+        setAssignSaving(false);
+        return;
+      }
+
+      const inserts = targetStudents.map(s => ({
+        teacher_id: user.id,
+        class_id: classId,
+        student_id: s.student_id || s.id,
+        title: assignTitle.trim(),
+        type: assignType,
+        subject: classe?.materia || null,
+        description: assignDesc.trim() || null,
+        due_date: assignDueDate ? assignDueDate.toISOString() : null,
+      }));
+
+      const { error } = await supabase.from("teacher_assignments").insert(inserts);
+      if (error) throw error;
+
+      toast.success(`Attività assegnata a ${targetStudents.length} studenti`);
+      setAssignOpen(false);
+      resetAssignForm();
+    } catch (err: any) {
+      toast.error("Errore: " + (err.message || "Riprova"));
+    }
+    setAssignSaving(false);
+  }
+
+
     if (!classId || (!profileId && !user)) return;
     loadClass();
   }, [classId, profileId, user]);
