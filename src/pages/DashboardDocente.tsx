@@ -637,8 +637,6 @@ export default function DashboardDocente() {
           )}
         </div>
 
-        {/* ━━━ RISULTATI VERIFICHE ━━━ */}
-        <TeacherResultsSection profileId={profileId} />
 
       </div>
 
