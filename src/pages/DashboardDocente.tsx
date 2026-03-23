@@ -217,6 +217,8 @@ export default function DashboardDocente() {
   const [showClasseModal, setShowClasseModal] = useState(false);
   const [newClasse, setNewClasse] = useState({ nome: "", materia: "", ordine_scolastico: "", num_studenti: "" });
   const [savingClasse, setSavingClasse] = useState(false);
+  const [showAllScadenze, setShowAllScadenze] = useState(false);
+  const [showAllFeed, setShowAllFeed] = useState(false);
   const [classeCreata, setClasseCreata] = useState<any>(null);
 
   const od = onboarding;
