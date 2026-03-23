@@ -219,6 +219,7 @@ export default function DashboardDocente() {
   const [savingClasse, setSavingClasse] = useState(false);
   const [showAllScadenze, setShowAllScadenze] = useState(false);
   const [showAllFeed, setShowAllFeed] = useState(false);
+  const [showAllClassi, setShowAllClassi] = useState(false);
   const [classeCreata, setClasseCreata] = useState<any>(null);
 
   const od = onboarding;
