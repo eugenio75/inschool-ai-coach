@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Brain, RefreshCw, ChevronDown, ChevronUp, Sparkles, Loader2, Send, MessageCircle, X, BookOpen, Calendar, BarChart3 } from "lucide-react";
+import { ArrowLeft, Brain, RefreshCw, ChevronDown, ChevronUp, Sparkles, Loader2, Send, MessageCircle, X, BookOpen, Calendar, BarChart3, Layers, ThumbsDown, Minus as MinusIcon, ThumbsUp, AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { getMemoryItems, updateMemoryStrength, getDailyMissions, completeMission } from "@/lib/database";
 import { subjectColors } from "@/lib/mockData";
