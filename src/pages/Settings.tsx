@@ -169,10 +169,28 @@ const Settings = () => {
     }
   };
 
+  const handleToggleLibrary = async (profileId: string, checked: boolean) => {
+    setLibraryFlags(prev => ({ ...prev, [profileId]: checked }));
+    // Upsert user_preferences.data.show_library
+    const { data: existing } = await supabase
+      .from("user_preferences")
+      .select("id, data")
+      .eq("profile_id", profileId)
+      .maybeSingle();
+
+    const newData = { ...((existing?.data as any) || {}), show_library: checked };
+
+    if (existing) {
+      await supabase.from("user_preferences").update({ data: newData } as any).eq("id", existing.id);
+    } else {
+      await supabase.from("user_preferences").insert({ profile_id: profileId, data: newData } as any);
+    }
+    toast.success(checked ? "Libreria attivata" : "Libreria disattivata");
+  };
+
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== "DELETE") return;
     setDeleting(true);
-    // Delete all child profiles (cascade will clean up)
     if (user) {
       await supabase.from("child_profiles").delete().eq("parent_id", user.id);
     }
