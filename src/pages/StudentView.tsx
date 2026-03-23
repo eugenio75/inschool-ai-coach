@@ -3,7 +3,7 @@ import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, BarChart2, AlertTriangle, CheckCircle2,
-  Flame, Brain, Mail, MessageSquare,
+  Flame, Brain, Mail, MessageSquare, Send,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
