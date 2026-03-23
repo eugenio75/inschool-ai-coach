@@ -15,20 +15,12 @@ export const BottomNav = () => {
 
   const session = getChildSession();
   const role = session?.profile?.school_level || "";
-
-  // Hide for adult roles — they use the desktop sidebar
-  if (ADULT_ROLES.includes(role)) return null;
-
-  const hiddenPaths = ["/focus", "/homework", "/add-homework", "/auth", "/onboarding", "/", "/challenge"];
-  if (hiddenPaths.some((p) => location.pathname.startsWith(p) && (p !== "/" || location.pathname === "/"))) {
-    return null;
-  }
+  const profileId = session?.profileId;
 
   // Check library preference
   useEffect(() => {
+    if (!profileId || ADULT_ROLES.includes(role)) return;
     const checkLibrary = async () => {
-      const profileId = session?.profileId;
-      if (!profileId) return;
       try {
         const { data } = await supabase
           .from("user_preferences")
@@ -40,7 +32,15 @@ export const BottomNav = () => {
       } catch {}
     };
     checkLibrary();
-  }, [session?.profileId]);
+  }, [profileId, role]);
+
+  // Hide for adult roles — they use the desktop sidebar
+  if (ADULT_ROLES.includes(role)) return null;
+
+  const hiddenPaths = ["/focus", "/homework", "/add-homework", "/auth", "/onboarding", "/", "/challenge"];
+  if (hiddenPaths.some((p) => location.pathname.startsWith(p) && (p !== "/" || location.pathname === "/"))) {
+    return null;
+  }
 
   const isParentView = Boolean(user);
 
