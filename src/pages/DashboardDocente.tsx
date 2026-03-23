@@ -220,13 +220,19 @@ export default function DashboardDocente() {
 
   useEffect(() => { if (!profileId) return; loadAll(); }, [profileId]);
 
-  // Auto-open "Nuova classe" modal from sidebar link (?nuova=1)
+  // Auto-open "Nuova classe" modal from sidebar link (?nuova=1) or custom event
   useEffect(() => {
     if (searchParams.get('nuova') === '1') {
       setShowClasseModal(true);
       setSearchParams({}, { replace: true });
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const handler = () => setShowClasseModal(true);
+    window.addEventListener("inschool:nuova-classe", handler);
+    return () => window.removeEventListener("inschool:nuova-classe", handler);
+  }, []);
 
   // Coach message
   useEffect(() => {
