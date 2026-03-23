@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
-  LayoutDashboard, BookOpen, Plus, LogOut, Settings,
+  LayoutDashboard, BookOpen, Plus, LogOut, Settings, CalendarDays,
 } from "lucide-react";
 import { getChildSession } from "@/lib/childSession";
 import { NavLink } from "@/components/NavLink";
@@ -138,6 +138,19 @@ export function AppSidebar() {
                     >
                       <LayoutDashboard className="mr-2.5 h-4 w-4" />
                       {!collapsed && <span className="text-sm">Home</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/agenda-docente"
+                      end
+                      className="text-white/70 hover:text-white hover:bg-white/10 transition-colors rounded-lg"
+                      activeClassName="bg-white/15 text-white font-medium border-l-2 border-white"
+                    >
+                      <CalendarDays className="mr-2.5 h-4 w-4" />
+                      {!collapsed && <span className="text-sm">Agenda</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

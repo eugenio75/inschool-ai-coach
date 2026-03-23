@@ -1117,6 +1117,59 @@ export type Database = {
           },
         ]
       }
+      teacher_calendar_events: {
+        Row: {
+          class_id: string | null
+          color: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          event_date: string
+          event_time: string | null
+          event_type: string
+          id: string
+          teacher_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          class_id?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          event_date: string
+          event_time?: string | null
+          event_type?: string
+          id?: string
+          teacher_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          event_date?: string
+          event_time?: string | null
+          event_type?: string
+          id?: string
+          teacher_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_calendar_events_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classi"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teacher_materials: {
         Row: {
           assigned_at: string | null
