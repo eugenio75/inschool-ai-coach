@@ -222,6 +222,11 @@ export function AppSidebar() {
                   </button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <div className="text-white/60 hover:text-white/80">
+                  <LogoutButton showLabel={!collapsed} />
+                </div>
+              </SidebarMenuItem>
             </SidebarMenu>
             <div className="flex items-center gap-2.5">
               <AvatarInitials name={name} size="sm" />
