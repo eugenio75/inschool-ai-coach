@@ -6,6 +6,7 @@ import {
   Minus, Printer, Trash2, Eye, ChevronDown, ChevronUp,
   AlertTriangle, UserCheck, RefreshCw, LayoutDashboard,
   AlertCircle, Send, Brain, Shield, Link2, Clock,
+  Calendar, CalendarDays, ChevronRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
@@ -197,9 +198,11 @@ export default function DashboardDocente() {
   const [classi, setClassi] = useState<any[]>([]);
   const [loadingClassi, setLoadingClassi] = useState(true);
   const [materialiCount, setMaterialiCount] = useState(0);
+  const [materialiNonAssegnati, setMaterialiNonAssegnati] = useState(0);
   const [feedItems, setFeedItems] = useState<any[]>([]);
   const [daSegurireCount, setDaSegurireCount] = useState(0);
   const [classiConAlert, setClassiConAlert] = useState(0);
+  const [assignments, setAssignments] = useState<any[]>([]);
 
   // Coach presence
   const [coachInput, setCoachInput] = useState('');
@@ -217,8 +220,10 @@ export default function DashboardDocente() {
   const ordine: string = od?.docente_ordine || "";
   const cognome = profile?.name?.split(" ").slice(-1)[0] || profile?.name || "";
   const studentiCount = classi.reduce((s, c) => s + (c.num_studenti || 0), 0);
+  const { user } = useAuth();
+  const userId = user?.id; // auth.users.id for tables referencing auth.users
 
-  useEffect(() => { if (!profileId) return; loadAll(); }, [profileId]);
+  useEffect(() => { if (!profileId) return; loadAll(); }, [profileId, userId]);
 
   // Auto-open "Nuova classe" modal from sidebar link (?nuova=1) or custom event
   useEffect(() => {
@@ -242,14 +247,15 @@ export default function DashboardDocente() {
       setIsLoadingCoachMsg(false);
       return;
     }
-    if (!profileId) { setIsLoadingCoachMsg(false); return; }
+    if (!profileId || classi.length === 0) { setIsLoadingCoachMsg(false); return; }
     supabase.functions.invoke('coach-teacher-message', {
       body: {
         teacherName: profile?.name || '',
-        activeClasses: classi.map(c => ({ id: c.id, name: c.nome, subject: c.materia })),
+        activeClasses: classi.map(c => ({ id: c.id, name: c.nome, subject: c.materia, studentCount: c.num_studenti || 0 })),
+        recentFeed: feedItems.slice(0, 5).map(f => ({ type: f.type, message: f.message, severity: f.severity })),
         currentHour: new Date().getHours(),
         materialsThisWeek: materialiCount,
-        openVerifications: 0,
+        openVerifications: assignments.filter(a => a.type === 'verifica').length,
       }
     }).then(({ data }) => {
       const msg = data?.message || '';
@@ -257,7 +263,7 @@ export default function DashboardDocente() {
       if (msg) sessionStorage.setItem('teacher_coach_msg', msg);
       setIsLoadingCoachMsg(false);
     }).catch(() => setIsLoadingCoachMsg(false));
-  }, [classi.length]);
+  }, [classi.length, feedItems.length]);
 
   async function loadAll() {
     setLoadingClassi(true);
@@ -271,16 +277,28 @@ export default function DashboardDocente() {
         .order("created_at", { ascending: false });
       setClassi(c || []);
 
+      // Use userId (auth.users.id) for tables that reference auth.users
+      const teacherId = userId || profileId;
+
       // Materials count
-      const { count: mc } = await (supabase as any)
-        .from("teacher_materials").select("id", { count: "exact", head: true })
-        .eq("teacher_id", profileId);
-      setMaterialiCount(mc || 0);
+      const { data: mats } = await (supabase as any)
+        .from("teacher_materials").select("id, status")
+        .eq("teacher_id", teacherId);
+      setMaterialiCount(mats?.length || 0);
+      setMaterialiNonAssegnati(mats?.filter((m: any) => m.status === 'draft' || m.status === 'salvato').length || 0);
+
+      // Assignments
+      const { data: ta } = await (supabase as any)
+        .from("teacher_assignments").select("*")
+        .eq("teacher_id", teacherId)
+        .order("assigned_at", { ascending: false })
+        .limit(20);
+      setAssignments(ta || []);
 
       // Feed
       const { data: feed } = await (supabase as any)
         .from("teacher_activity_feed").select("*")
-        .eq("teacher_id", profileId)
+        .eq("teacher_id", teacherId)
         .order("created_at", { ascending: false })
         .limit(20);
       setFeedItems(feed || []);
@@ -376,6 +394,9 @@ export default function DashboardDocente() {
               </div>
             </div>
             <p className="font-display text-3xl font-bold text-[#1A3A5C]">{materialiCount}</p>
+            {materialiNonAssegnati > 0 && (
+              <p className="text-xs text-amber-600 mt-1">{materialiNonAssegnati} non assegnati</p>
+            )}
           </div>
           {/* Da seguire */}
           <div className={`rounded-xl p-5 shadow-sm border ${daSegurireCount > 0 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'}`}>
@@ -452,6 +473,75 @@ export default function DashboardDocente() {
             </div>
           </div>
         </div>
+
+        {/* ━━━ BLOCCO 3.5 — CALENDARIO PROFESSIONALE ━━━ */}
+        {assignments.length > 0 && (
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xs uppercase tracking-widest font-semibold text-slate-400 flex items-center gap-2">
+                <CalendarDays className="w-4 h-4" /> Scadenze e impegni
+              </h2>
+            </div>
+            <div className="space-y-2">
+              {assignments
+                .filter(a => a.due_date)
+                .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+                .slice(0, 6)
+                .map((a: any) => {
+                  const dueDate = new Date(a.due_date);
+                  const now = new Date();
+                  const daysLeft = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                  const isOverdue = daysLeft < 0;
+                  const isUrgent = daysLeft >= 0 && daysLeft <= 2;
+                  const className = classi.find(c => c.id === a.class_id);
+
+                  return (
+                    <div
+                      key={a.id}
+                      onClick={() => a.class_id && navigate(`/classe/${a.class_id}?tab=materiali`)}
+                      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                        isOverdue ? 'bg-red-50 border border-red-200 hover:bg-red-100' :
+                        isUrgent ? 'bg-amber-50 border border-amber-200 hover:bg-amber-100' :
+                        'bg-slate-50 border border-slate-100 hover:bg-slate-100'
+                      }`}
+                    >
+                      <div className="text-center shrink-0 w-12">
+                        <p className={`text-lg font-bold ${isOverdue ? 'text-red-600' : isUrgent ? 'text-amber-600' : 'text-slate-700'}`}>
+                          {dueDate.getDate()}
+                        </p>
+                        <p className="text-[10px] uppercase text-slate-400">
+                          {dueDate.toLocaleDateString('it-IT', { month: 'short' })}
+                        </p>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">{a.title}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {a.subject && <span className="text-xs text-slate-500">{a.subject}</span>}
+                          {className && <span className="text-xs text-slate-400">· {className.nome}</span>}
+                        </div>
+                      </div>
+                      <div className="shrink-0 flex items-center gap-2">
+                        {isOverdue && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">Scaduto</span>}
+                        {isUrgent && !isOverdue && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">{daysLeft === 0 ? 'Oggi' : daysLeft === 1 ? 'Domani' : `${daysLeft}g`}</span>}
+                        <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${
+                          a.type === 'verifica' ? 'bg-purple-100 text-purple-700' :
+                          a.type === 'recupero' ? 'bg-orange-100 text-orange-700' :
+                          'bg-blue-100 text-blue-700'
+                        }`}>{a.type}</span>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+            {assignments.filter(a => a.due_date).length === 0 && (
+              <div className="text-center py-6">
+                <Calendar className="w-7 h-7 text-slate-300 mx-auto mb-2" />
+                <p className="text-sm text-slate-400">Nessuna scadenza imminente</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ━━━ BLOCCO 4 — CARD CLASSI ━━━ */}
         <div>

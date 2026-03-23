@@ -71,6 +71,8 @@ export default function CoachChallenge() {
   const { missionId } = useParams();
   const [searchParams] = useSearchParams();
   const subject = searchParams.get("subject") || "";
+  const msgParam = searchParams.get("msg") || "";
+  const promptParam = searchParams.get("prompt") || "";
 
   const profile = getProfile();
   const profileId = getChildSession()?.profileId || profile?.id;
@@ -84,6 +86,7 @@ export default function CoachChallenge() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
+  const autoSentRef = useRef(false);
 
   // Conversation sessions
   const [sessions, setSessions] = useState<ConversationSession[]>([]);
@@ -104,6 +107,41 @@ export default function CoachChallenge() {
       localStorage.removeItem("inschool-ai-prompt");
     }
   }, []);
+
+  // Auto-send message from ?msg= or ?prompt= query param
+  useEffect(() => {
+    if (autoSentRef.current || loadingSessions) return;
+    const autoMsg = msgParam || (promptParam ? getPromptMessage(promptParam) : "");
+    if (!autoMsg) return;
+    autoSentRef.current = true;
+
+    // Build the prompt context for teachers
+    const role = profile?.school_level || "";
+    if (role === "docente" && promptParam) {
+      // Set a contextual system prompt for teacher quick actions
+      const teacherContext = `Sei il coach personale di un docente su InSchool. Conosci le sue classi, i materiali, le verifiche e le scadenze. Rispondi in modo contestuale, concreto e specifico. Non usare frasi generiche. Massimo 3-4 frasi per risposta.`;
+      setCustomSystemPrompt(teacherContext);
+    }
+
+    // Simulate sending
+    const userMsg: ChatMessage = { role: "user", content: autoMsg, timestamp: new Date().toISOString() };
+    setMessages([userMsg]);
+    createSession(autoMsg).then((sessionId) => {
+      if (sessionId) {
+        setActiveSessionId(sessionId);
+        saveMessages(sessionId, [userMsg]);
+      }
+      streamReply([userMsg]);
+    });
+  }, [loadingSessions, msgParam, promptParam]);
+
+  function getPromptMessage(prompt: string): string {
+    switch (prompt) {
+      case "organizza": return "Aiutami a organizzare il lavoro di questa settimana. Quali sono le priorità tra classi, verifiche da preparare e materiali da completare?";
+      case "priorita": return "Rivedi le mie priorità di oggi. Cosa dovrei affrontare prima tra verifiche, materiali, studenti da seguire e scadenze?";
+      default: return "";
+    }
+  }
 
   // Load session from query param
   const sessionIdParam = searchParams.get("session");
