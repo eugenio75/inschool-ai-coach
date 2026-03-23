@@ -250,7 +250,65 @@ export default function ClassView() {
               </Button>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-6">
+              {/* Risultati verifiche */}
+              {assignmentResults.length > 0 && (
+                <div className="bg-card border border-border rounded-2xl p-5">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <BarChart2 className="w-3.5 h-3.5" /> Risultati verifiche
+                  </p>
+                  <div className="max-h-[280px] overflow-y-auto space-y-2 pr-1 scrollbar-thin">
+                    {assignmentResults.map((a: any) => {
+                      const avgScore = a.results.length > 0
+                        ? Math.round(a.results.reduce((sum: number, r: any) => sum + (r.score || 0), 0) / a.results.length)
+                        : 0;
+                      const completed = a.results.filter((r: any) => r.status === 'completed').length;
+                      return (
+                        <div key={a.id} className="border border-border rounded-xl p-4 bg-muted/30">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {a.subject} · {a.type === 'verifica' ? 'Verifica' : 'Compito'}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                              <div className="text-center">
+                                <p className={`text-lg font-bold ${avgScore >= 70 ? 'text-green-600' : avgScore >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
+                                  {avgScore}%
+                                </p>
+                                <p className="text-[10px] text-muted-foreground">media</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-lg font-bold text-foreground">{completed}/{a.results.length}</p>
+                                <p className="text-[10px] text-muted-foreground">completati</p>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Student results */}
+                          <div className="space-y-1 mt-3 pt-3 border-t border-border">
+                            {a.results.map((r: any) => (
+                              <div key={r.id} className="flex items-center gap-2 text-xs">
+                                <AvatarInitials name={r.student_name} size="xs" />
+                                <span className="flex-1 text-foreground truncate">{r.student_name}</span>
+                                <span className={`font-semibold ${(r.score || 0) >= 70 ? 'text-green-600' : (r.score || 0) >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
+                                  {r.score != null ? `${Math.round(r.score)}%` : '—'}
+                                </span>
+                                <Badge variant={r.status === 'completed' ? 'default' : 'secondary'} className="text-[10px]">
+                                  {r.status === 'completed' ? 'Completato' : r.status === 'in_progress' ? 'In corso' : 'Assegnato'}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Lista studenti */}
+              <div className="space-y-2">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                 Studenti ({students.length})
               </p>
