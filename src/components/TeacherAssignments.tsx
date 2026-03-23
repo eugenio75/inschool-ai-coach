@@ -31,16 +31,7 @@ export function TeacherAssignments() {
     setLoading(false);
   }
 
-  if (loading) {
-    return (
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="h-4 w-32 bg-slate-200 animate-pulse rounded" />
-        </div>
-        <div className="h-20 bg-slate-100 animate-pulse rounded-xl" />
-      </div>
-    );
-  }
+  if (loading) return null;
 
   if (assignments.length === 0) return null;
 

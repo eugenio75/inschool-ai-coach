@@ -170,9 +170,7 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
   }
 
   if (missions.length === 0) {
-    return (
-      <div className="text-center py-3">
-        <p className="text-xs text-muted-foreground">Le missioni di oggi arriveranno presto.</p>
+    return null;
       </div>
     );
   }
