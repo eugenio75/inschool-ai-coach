@@ -171,8 +171,6 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
 
   if (missions.length === 0) {
     return null;
-      </div>
-    );
   }
 
   return (
