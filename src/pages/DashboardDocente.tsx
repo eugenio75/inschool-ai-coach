@@ -219,7 +219,6 @@ export default function DashboardDocente() {
   const [savingClasse, setSavingClasse] = useState(false);
   const [showAllScadenze, setShowAllScadenze] = useState(false);
   const [showAllFeed, setShowAllFeed] = useState(false);
-  const [showAllClassi, setShowAllClassi] = useState(false);
   const [classeCreata, setClasseCreata] = useState<any>(null);
 
   const od = onboarding;
@@ -558,185 +557,84 @@ export default function DashboardDocente() {
           </div>
         )}
 
-        {/* ━━━ BLOCCO 4 — CARD CLASSI ━━━ */}
-        <div>
-          <h2 className="text-xs uppercase tracking-widest font-semibold text-slate-400 mb-4">Le tue classi</h2>
-          {loadingClassi ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-xl" />)}
-            </div>
-          ) : classi.length === 0 ? (
-            <div className="bg-white border-2 border-dashed border-slate-200 rounded-xl p-12 text-center">
-              <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-              <p className="font-medium text-slate-500 mb-1">Nessuna classe ancora</p>
-              <p className="text-sm text-slate-400 mb-4">Crea la prima classe e condividi il codice con i tuoi studenti</p>
-              <button onClick={() => setShowClasseModal(true)} className="text-sm text-[#0070C0] font-medium hover:underline">
-                + Crea la prima classe
-              </button>
-            </div>
-          ) : (() => {
-            // Sort classes by latest activity
-            const classiSorted = [...classi].sort((a, b) => {
-              const lastA = feedItems.find((f: any) => f.class_id === a.id)?.created_at || a.created_at || '';
-              const lastB = feedItems.find((f: any) => f.class_id === b.id)?.created_at || b.created_at || '';
-              return new Date(lastB).getTime() - new Date(lastA).getTime();
-            });
-            const visibleClassi = showAllClassi ? classiSorted : classiSorted.slice(0, 3);
-
-            return (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {visibleClassi.map((cl, i) => {
-                    const classUnread = feedItems.filter((f: any) => f.class_id === cl.id && !f.read_at && (f.severity === 'warning' || f.severity === 'urgent')).length;
-                    const dotColor = classUnread > 0 ? 'bg-amber-400' : 'bg-green-400';
-
-                    const matLower = (cl.materia || '').toLowerCase();
-                    const gradientMap: Record<string, string> = {
-                      'musica': 'from-violet-500 to-fuchsia-500',
-                      'educazione civica': 'from-emerald-500 to-teal-500',
-                      'italiano': 'from-sky-500 to-blue-500',
-                      'matematica': 'from-orange-500 to-amber-500',
-                      'storia': 'from-rose-500 to-red-500',
-                      'scienze': 'from-green-500 to-lime-500',
-                      'inglese': 'from-indigo-500 to-blue-500',
-                    };
-                    const gradient = gradientMap[matLower] || 'from-[#1A3A5C] to-[#0070C0]';
-
-                    const nextDeadline = assignments
-                      .filter(a => a.class_id === cl.id && a.due_date && new Date(a.due_date) >= new Date())
-                      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())[0];
-                    const daysToDeadline = nextDeadline
-                      ? Math.ceil((new Date(nextDeadline.due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-                      : null;
-
-                    // Relative timestamp from latest feed activity
-                    const lastActivity = feedItems.find((f: any) => f.class_id === cl.id);
-                    const timeAgo = lastActivity ? (() => {
-                      const diffMs = Date.now() - new Date(lastActivity.created_at).getTime();
-                      const diffMin = Math.floor(diffMs / 60000);
-                      if (diffMin < 1) return 'Ora';
-                      if (diffMin < 60) return `${diffMin}min fa`;
-                      const diffH = Math.floor(diffMin / 60);
-                      if (diffH < 24) return `${diffH}h fa`;
-                      const diffD = Math.floor(diffH / 24);
-                      if (diffD === 1) return 'Ieri';
-                      if (diffD < 7) return `${diffD}g fa`;
-                      return `${Math.floor(diffD / 7)}sett fa`;
-                    })() : null;
-
-                    return (
-                      <motion.div
-                        key={cl.id}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        onClick={() => navigate(`/classe/${cl.id}`)}
-                        className="group bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-                      >
-                        <div className={`h-1.5 bg-gradient-to-r ${gradient} group-hover:h-2 transition-all duration-300`} />
-                        <div className="p-5">
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${dotColor} ring-2 ring-offset-1 ${classUnread > 0 ? 'ring-amber-200' : 'ring-green-200'}`} />
-                            <span className="font-semibold text-slate-900 truncate flex-1 text-[15px]">{cl.nome}</span>
-                            {cl.materia && (
-                              <span className={`text-xs bg-gradient-to-r ${gradient} text-white px-2.5 py-0.5 rounded-full flex-shrink-0 font-medium`}>
-                                {cl.materia}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-4 text-sm mb-3">
-                            <div className="flex items-center gap-1.5">
-                              <Users className="w-3.5 h-3.5 text-slate-400" />
-                              <span className="font-semibold text-slate-700">{cl.num_studenti || 0}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <FileText className="w-3.5 h-3.5 text-slate-400" />
-                              <span className="font-semibold text-slate-700">{materialiCount}</span>
-                            </div>
-                            {classUnread > 0 && (
-                              <div className="flex items-center gap-1.5">
-                                <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
-                                <span className="font-semibold text-amber-600">{classUnread}</span>
-                              </div>
-                            )}
-                            {timeAgo && (
-                              <span className="ml-auto text-[11px] text-slate-400 font-medium">
-                                Aggiornata {timeAgo}
-                              </span>
-                            )}
-                          </div>
-                          {nextDeadline ? (
-                            <div className={`text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${
-                              daysToDeadline !== null && daysToDeadline <= 2
-                                ? 'bg-amber-50 text-amber-700'
-                                : 'bg-slate-50 text-slate-500'
-                            }`}>
-                              <Calendar className="w-3 h-3" />
-                              <span className="truncate font-medium">{nextDeadline.title}</span>
-                              <span className="ml-auto shrink-0">
-                                {daysToDeadline === 0 ? 'Oggi' : daysToDeadline === 1 ? 'Domani' : `tra ${daysToDeadline}g`}
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="text-xs px-3 py-1.5 rounded-lg bg-slate-50 text-slate-400 flex items-center gap-1.5">
-                              <Calendar className="w-3 h-3" />
-                              Nessuna scadenza
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-                {classiSorted.length > 3 && (
-                  <button
-                    onClick={() => setShowAllClassi(v => !v)}
-                    className="w-full text-center text-xs text-[#0070C0] font-medium hover:underline mt-3 py-1"
-                  >
-                    {showAllClassi ? 'Mostra meno' : `Vedi tutte (${classiSorted.length})`}
-                  </button>
-                )}
-              </>
-            );
-          })()}
-        </div>
-
-        {/* ━━━ BLOCCO 5 — FEED ATTIVITÀ ━━━ */}
+        {/* ━━━ BLOCCO 4 — FEED ATTIVITÀ RECENTI ━━━ */}
         <div className="bg-white border border-slate-200 rounded-xl p-6">
           <h2 className="text-xs uppercase tracking-widest font-semibold text-slate-400 mb-4 flex items-center gap-2">
             <Clock className="w-4 h-4" /> Attività recenti
           </h2>
           {feedItems.length === 0 ? (
-            <div className="text-center py-6">
-              <Clock className="w-7 h-7 text-slate-300 mx-auto mb-2" />
-              <p className="text-sm text-slate-400">Nessuna attività recente</p>
+            <div className="text-center py-8">
+              <Clock className="w-8 h-8 text-slate-200 mx-auto mb-3" />
+              <p className="text-sm font-medium text-slate-400">Nessuna attività recente</p>
               <p className="text-xs text-slate-300 mt-1">Le attività appariranno quando gli studenti useranno la piattaforma</p>
             </div>
           ) : (
             <>
-              <div className="space-y-2">
-                {feedItems.slice(0, showAllFeed ? undefined : 4).map((item: any) => (
-                  <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
-                    <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
-                      item.severity === 'urgent' ? 'bg-red-500' :
-                      item.severity === 'positive' ? 'bg-green-500' :
-                      item.severity === 'warning' ? 'bg-amber-500' : 'bg-blue-400'
-                    }`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-slate-700">{item.message}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {new Date(item.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </p>
+              <div className="space-y-1">
+                {feedItems.slice(0, showAllFeed ? undefined : 6).map((item: any) => {
+                  const relatedClass = classi.find(c => c.id === item.class_id);
+                  const severityStyles: Record<string, { bg: string; dot: string; icon: string }> = {
+                    urgent:  { bg: 'bg-red-50 border-red-100', dot: 'bg-red-500', icon: 'text-red-500' },
+                    warning: { bg: 'bg-amber-50 border-amber-100', dot: 'bg-amber-400', icon: 'text-amber-500' },
+                    positive:{ bg: 'bg-green-50 border-green-100', dot: 'bg-green-500', icon: 'text-green-500' },
+                    info:    { bg: 'bg-slate-50 border-slate-100', dot: 'bg-blue-400', icon: 'text-blue-400' },
+                  };
+                  const style = severityStyles[item.severity] || severityStyles.info;
+                  const typeIcon: Record<string, typeof AlertTriangle> = {
+                    alert: AlertTriangle,
+                    completion: CheckSquare,
+                    enrollment: Users,
+                    submission: FileText,
+                  };
+                  const IconComp = typeIcon[item.type] || Clock;
+
+                  // Time ago
+                  const diffMs = Date.now() - new Date(item.created_at).getTime();
+                  const diffMin = Math.floor(diffMs / 60000);
+                  let timeLabel = '';
+                  if (diffMin < 1) timeLabel = 'Ora';
+                  else if (diffMin < 60) timeLabel = `${diffMin}min fa`;
+                  else if (diffMin < 1440) timeLabel = `${Math.floor(diffMin / 60)}h fa`;
+                  else {
+                    const d = Math.floor(diffMin / 1440);
+                    timeLabel = d === 1 ? 'Ieri' : `${d}g fa`;
+                  }
+
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => item.action_route ? navigate(item.action_route) : (item.class_id && navigate(`/classe/${item.class_id}`))}
+                      className={`flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer hover:shadow-sm transition-all ${style.bg} ${!item.read_at ? '' : 'opacity-70'}`}
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        item.severity === 'urgent' ? 'bg-red-100' :
+                        item.severity === 'warning' ? 'bg-amber-100' :
+                        item.severity === 'positive' ? 'bg-green-100' : 'bg-blue-50'
+                      }`}>
+                        <IconComp className={`w-4 h-4 ${style.icon}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-slate-800 leading-snug">{item.message}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {relatedClass && (
+                            <span className="text-[11px] font-semibold text-slate-500 bg-white/80 px-2 py-0.5 rounded-md border border-slate-200">
+                              {relatedClass.nome}{relatedClass.materia ? ` · ${relatedClass.materia}` : ''}
+                            </span>
+                          )}
+                          <span className="text-[11px] text-slate-400">{timeLabel}</span>
+                        </div>
+                      </div>
+                      {item.action_label && (
+                        <span className="text-xs text-[#0070C0] font-semibold shrink-0 hover:underline">
+                          {item.action_label}
+                        </span>
+                      )}
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
                     </div>
-                    {item.action_label && (
-                      <button onClick={() => navigate(item.action_route)} className="text-xs text-[#0070C0] font-medium hover:underline flex-shrink-0 ml-2">
-                        {item.action_label}
-                      </button>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-              {feedItems.length > 4 && (
+              {feedItems.length > 6 && (
                 <button
                   onClick={() => setShowAllFeed(v => !v)}
                   className="w-full text-center text-xs text-[#0070C0] font-medium hover:underline mt-3 py-1"
