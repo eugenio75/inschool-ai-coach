@@ -8,7 +8,7 @@ import { StreakShieldBadge } from "@/components/CelebrationOverlay";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
-export const GamificationBar = () => {
+export const GamificationKPI = () => {
   const [g, setG] = useState<any>(null);
 
   useEffect(() => {
@@ -28,54 +28,60 @@ export const GamificationBar = () => {
   const daysToShield = Math.max(0, nextShieldAt - streak);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ ...spring, delay: 0.15 }}
-      className="space-y-2"
-    >
-      {/* Main row: streak + total + shields */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-1.5 bg-terracotta-light rounded-xl px-3 py-2">
-          <Flame className="w-4 h-4 text-terracotta" />
-          <span className="text-sm font-display font-bold text-terracotta">{streak}</span>
-          <span className="text-xs text-terracotta/80">giorni</span>
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* Streak */}
+      <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Streak</span>
+          <div className="w-7 h-7 bg-terracotta-light rounded-lg flex items-center justify-center">
+            <Flame className="w-3.5 h-3.5 text-terracotta" />
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 bg-primary/10 rounded-xl px-3 py-2">
-          <Star className="w-4 h-4 text-primary" />
-          <span className="text-sm font-display font-bold text-primary">{total}</span>
-          <span className="text-xs text-primary/80">punti</span>
+        <p className="font-display text-2xl font-bold text-foreground">{streak}</p>
+        <p className="text-[10px] text-muted-foreground">giorni</p>
+      </div>
+
+      {/* Punti totali */}
+      <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Punti</span>
+          <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
+            <Star className="w-3.5 h-3.5 text-primary" />
+          </div>
         </div>
-        <StreakShieldBadge shields={shields} />
+        <p className="font-display text-2xl font-bold text-foreground">{total}</p>
+        {shields > 0 && <StreakShieldBadge shields={shields} />}
         {shields === 0 && streak > 0 && daysToShield <= 3 && (
-          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            tra {daysToShield} {daysToShield === 1 ? 'giorno' : 'giorni'}
-          </span>
+          <p className="text-[10px] text-muted-foreground mt-0.5">Scudo tra {daysToShield}g</p>
         )}
       </div>
 
-      {/* Detail row: 3 sub-scores */}
-      <div className="flex items-center gap-3 overflow-x-auto">
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Zap className="w-3 h-3 text-sage-dark" />
-          <span className="font-medium text-sage-dark">{g.focus_points || 0}</span>
-          <span>impegno</span>
+      {/* Impegno */}
+      <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Impegno</span>
+          <div className="w-7 h-7 bg-sage-light rounded-lg flex items-center justify-center">
+            <Zap className="w-3.5 h-3.5 text-sage-dark" />
+          </div>
         </div>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Star className="w-3 h-3 text-clay-dark" />
-          <span className="font-medium text-clay-dark">{g.autonomy_points || 0}</span>
-          <span>indipendenza</span>
-        </div>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Target className="w-3 h-3 text-muted-foreground" />
-          <span className="font-medium">{g.consistency_points || 0}</span>
-          <span>costanza</span>
-        </div>
+        <p className="font-display text-2xl font-bold text-foreground">{g.focus_points || 0}</p>
       </div>
-    </motion.div>
+
+      {/* Costanza */}
+      <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Costanza</span>
+          <div className="w-7 h-7 bg-clay-light rounded-lg flex items-center justify-center">
+            <Target className="w-3.5 h-3.5 text-clay-dark" />
+          </div>
+        </div>
+        <p className="font-display text-2xl font-bold text-foreground">{g.consistency_points || 0}</p>
+      </div>
+    </div>
   );
 };
+
+export const GamificationBar = GamificationKPI;
 
 const MissionIcon = ({ type }: { type: string }) => {
   switch (type) {
@@ -129,8 +135,6 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
       return;
     }
     
-    // For complete_task, study_session, study_minutes:
-    // Find a matching incomplete task and navigate to its focus session
     try {
       const tasks = await getTasks();
       const incompleteTasks = tasks.filter((t: any) => !t.completed);

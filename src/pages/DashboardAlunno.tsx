@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Target, Loader2, LogOut, Play, HelpCircle, MessageSquare } from "lucide-react";
+import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Target, Loader2, LogOut, Play, HelpCircle, MessageSquare, Flame, Star, Zap } from "lucide-react";
 import { CoachPresence } from "@/components/CoachPresence";
 import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { Button } from "@/components/ui/button";
 import { ProgressSun } from "@/components/ProgressSun";
 import { TaskCard } from "@/components/TaskCard";
-import { GamificationBar, DailyMissions } from "@/components/GamificationBar";
+import { GamificationKPI } from "@/components/GamificationBar";
+import { DailyMissions } from "@/components/GamificationBar";
 import { SocialProofBanner } from "@/components/CelebrationOverlay";
 import { QuickHelpButton, QuickHelpModal } from "@/components/QuickHelp";
 import { shouldShowCheckin } from "@/pages/EmotionalCheckin";
@@ -204,25 +205,17 @@ const DashboardAlunno = () => {
             </div>
           </motion.div>
 
-          <div className="mt-5 space-y-3">
-            <CoachPresence />
-            <GamificationBar />
-            <SocialProofBanner />
-          </div>
-
-          {!loading && tasks.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.1 }} className="flex items-center gap-4 mt-4">
-              <div className="flex items-center gap-4 flex-1">
-                <ProgressSun progress={tasks.length > 0 ? completedCount / tasks.length : 0} />
-                <div>
-                  <p className="text-sm font-medium text-foreground">{completedCount}/{tasks.length} completati</p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" />~{totalMinutes} min</p>
-                </div>
-              </div>
+          {/* KPI cards */}
+          {!loading && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.08 }} className="mt-4">
+              <GamificationKPI />
             </motion.div>
           )}
         </div>
       </div>
+
+      {/* Coach card */}
+      <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto"><CoachPresence /></div></div>
 
       {/* Teacher Assignments */}
       <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto"><TeacherAssignments /></div></div>
