@@ -30,6 +30,7 @@ export default function ClassView() {
   const [classe, setClasse] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
   const [materials, setMaterials] = useState<any[]>([]);
+  const [assignmentResults, setAssignmentResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("classe");
 
