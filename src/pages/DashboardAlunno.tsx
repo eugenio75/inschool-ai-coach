@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Target, Loader2, LogOut, Play, HelpCircle } from "lucide-react";
+import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Target, Loader2, LogOut, Play, HelpCircle, MessageSquare } from "lucide-react";
 import { CoachPresence } from "@/components/CoachPresence";
 import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { Button } from "@/components/ui/button";
