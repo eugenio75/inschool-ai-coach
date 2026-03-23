@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Brain, RefreshCw, ChevronDown, ChevronUp, Sparkles, Loader2, Send, MessageCircle, X, BookOpen, Calendar, BarChart3 } from "lucide-react";
+import { ArrowLeft, Brain, RefreshCw, ChevronDown, ChevronUp, Sparkles, Loader2, Send, MessageCircle, X, BookOpen, Calendar, BarChart3, Layers, ThumbsDown, Minus as MinusIcon, ThumbsUp, AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { getMemoryItems, updateMemoryStrength, getDailyMissions, completeMission } from "@/lib/database";
 import { subjectColors } from "@/lib/mockData";
@@ -485,15 +487,302 @@ const WeeklySummary = ({ items, onUpdate }: { items: any[]; onUpdate: (id: strin
   );
 };
 
+// ============ FLASHCARD TAB ============
+
+const FlashcardTab = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [cards, setCards] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [subjectFilter, setSubjectFilter] = useState<string>("all");
+  const [sessionStats, setSessionStats] = useState({ correct: 0, almost: 0, wrong: 0 });
+  const [sessionDone, setSessionDone] = useState(false);
+  const [coachIntervention, setCoachIntervention] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadCards();
+  }, [user]);
+
+  const loadCards = async () => {
+    if (!user) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from("flashcards")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("is_flagged", { ascending: false })
+      .order("next_review_at", { ascending: true, nullsFirst: true });
+    
+    // Prioritize: flagged first, then due for review, then unseen
+    const sorted = (data || []).sort((a: any, b: any) => {
+      if (a.is_flagged && !b.is_flagged) return -1;
+      if (!a.is_flagged && b.is_flagged) return 1;
+      const now = new Date().toISOString();
+      const aDue = !a.next_review_at || a.next_review_at <= now;
+      const bDue = !b.next_review_at || b.next_review_at <= now;
+      if (aDue && !bDue) return -1;
+      if (!aDue && bDue) return 1;
+      return (a.times_shown || 0) - (b.times_shown || 0);
+    });
+    setCards(sorted);
+    setLoading(false);
+  };
+
+  const filteredCards = useMemo(() => {
+    if (subjectFilter === "all") return cards;
+    return cards.filter(c => c.subject === subjectFilter);
+  }, [cards, subjectFilter]);
+
+  const subjects = useMemo(() => {
+    const s = new Set(cards.map(c => c.subject));
+    return Array.from(s).sort();
+  }, [cards]);
+
+  const currentCard = filteredCards[currentIndex];
+
+  const handleRate = async (rating: "wrong" | "almost" | "correct") => {
+    if (!currentCard || !user) return;
+    setCoachIntervention(null);
+
+    const updates: any = {
+      times_shown: (currentCard.times_shown || 0) + 1,
+      last_shown_at: new Date().toISOString(),
+    };
+
+    if (rating === "correct") {
+      updates.times_correct = (currentCard.times_correct || 0) + 1;
+      // SRS: next review in days based on streak
+      const streak = (currentCard.times_correct || 0) + 1;
+      const days = Math.min(streak * 2, 30);
+      updates.next_review_at = new Date(Date.now() + days * 86400000).toISOString();
+      updates.is_flagged = false;
+      setSessionStats(s => ({ ...s, correct: s.correct + 1 }));
+    } else if (rating === "wrong") {
+      const newWrong = (currentCard.times_wrong || 0) + 1;
+      updates.times_wrong = newWrong;
+      updates.next_review_at = new Date(Date.now() + 3600000).toISOString(); // 1 hour
+      updates.is_flagged = newWrong >= 3;
+      setSessionStats(s => ({ ...s, wrong: s.wrong + 1 }));
+      if (newWrong >= 3) {
+        setCoachIntervention(currentCard.subject);
+      }
+    } else {
+      updates.next_review_at = new Date(Date.now() + 86400000).toISOString(); // 1 day
+      setSessionStats(s => ({ ...s, almost: s.almost + 1 }));
+    }
+
+    await supabase.from("flashcards").update(updates).eq("id", currentCard.id);
+    
+    // Update local state
+    setCards(prev => prev.map(c => c.id === currentCard.id ? { ...c, ...updates } : c));
+    setFlipped(false);
+
+    if (currentIndex < filteredCards.length - 1) {
+      setTimeout(() => setCurrentIndex(i => i + 1), 200);
+    } else {
+      setSessionDone(true);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (cards.length === 0) {
+    return (
+      <div className="text-center py-16 px-6">
+        <Layers className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+        <p className="text-muted-foreground font-medium">Nessuna flashcard ancora</p>
+        <p className="text-muted-foreground text-sm mt-1">Completa sessioni di studio per generare carte automaticamente!</p>
+      </div>
+    );
+  }
+
+  if (sessionDone) {
+    const total = sessionStats.correct + sessionStats.almost + sessionStats.wrong;
+    return (
+      <div className="max-w-md mx-auto px-6 py-12 text-center">
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Brain className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="font-display text-xl font-bold text-foreground mb-2">Sessione completata!</h2>
+          <div className="grid grid-cols-3 gap-3 mt-6 mb-6">
+            <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-3">
+              <p className="text-2xl font-bold text-green-600">{sessionStats.correct}</p>
+              <p className="text-xs text-green-600/70">Corrette</p>
+            </div>
+            <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3">
+              <p className="text-2xl font-bold text-amber-600">{sessionStats.almost}</p>
+              <p className="text-xs text-amber-600/70">Quasi</p>
+            </div>
+            <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-3">
+              <p className="text-2xl font-bold text-red-600">{sessionStats.wrong}</p>
+              <p className="text-xs text-red-600/70">Da ripassare</p>
+            </div>
+          </div>
+          {sessionStats.wrong > 0 && (
+            <p className="text-sm text-muted-foreground mb-4">Le carte difficili sono state salvate per il prossimo ripasso</p>
+          )}
+          <button
+            onClick={() => { setSessionDone(false); setCurrentIndex(0); setSessionStats({ correct: 0, almost: 0, wrong: 0 }); loadCards(); }}
+            className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium text-sm"
+          >
+            Ricomincia
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-lg mx-auto px-6 py-6 space-y-5">
+      {/* Subject filter */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <button
+          onClick={() => { setSubjectFilter("all"); setCurrentIndex(0); setFlipped(false); }}
+          className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
+            subjectFilter === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+          }`}
+        >
+          Tutte ({cards.length})
+        </button>
+        {subjects.map(s => {
+          const count = cards.filter(c => c.subject === s).length;
+          return (
+            <button
+              key={s}
+              onClick={() => { setSubjectFilter(s); setCurrentIndex(0); setFlipped(false); }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
+                subjectFilter === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {s} ({count})
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Progress */}
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <span>{currentIndex + 1} / {filteredCards.length}</span>
+        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${((currentIndex + 1) / filteredCards.length) * 100}%` }} />
+        </div>
+      </div>
+
+      {/* Flashcard */}
+      {currentCard && (
+        <div className="perspective-1000">
+          <motion.div
+            className="relative w-full cursor-pointer"
+            style={{ minHeight: 240 }}
+            onClick={() => setFlipped(!flipped)}
+            animate={{ rotateY: flipped ? 180 : 0 }}
+            transition={{ duration: 0.4, type: "spring", stiffness: 200, damping: 25 }}
+          >
+            {/* Front */}
+            <div
+              className={`absolute inset-0 rounded-2xl border-2 p-6 flex flex-col justify-center items-center text-center backface-hidden ${
+                currentCard.is_flagged ? "border-red-300 bg-red-50/50 dark:bg-red-900/10" : "border-primary/30 bg-card"
+              } shadow-md`}
+              style={{ backfaceVisibility: "hidden" }}
+            >
+              {currentCard.is_flagged && (
+                <span className="absolute top-3 right-3 text-xs bg-red-100 dark:bg-red-900/30 text-red-600 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> Da rafforzare
+                </span>
+              )}
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground mb-3 font-semibold">{currentCard.subject}</span>
+              <p className="font-display text-lg font-semibold text-foreground leading-snug">{currentCard.question}</p>
+              <p className="text-xs text-muted-foreground mt-4">Tocca per girare</p>
+            </div>
+
+            {/* Back */}
+            <div
+              className="absolute inset-0 rounded-2xl border-2 border-primary/20 bg-primary/5 p-6 flex flex-col justify-center items-center text-center shadow-md"
+              style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+            >
+              <span className="text-[10px] uppercase tracking-wider text-primary mb-3 font-semibold">Risposta</span>
+              <p className="text-base text-foreground leading-relaxed">{currentCard.answer}</p>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Coach intervention */}
+      <AnimatePresence>
+        {coachIntervention && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4"
+          >
+            <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
+              Questo concetto ti crea difficoltà — vuoi che ci lavoriamo insieme?
+            </p>
+            <button
+              onClick={() => navigate(`/challenge/new?subject=${encodeURIComponent(coachIntervention)}`)}
+              className="mt-2 px-4 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-medium hover:bg-amber-700 transition-colors"
+            >
+              Apri sessione guidata
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Rating buttons */}
+      {currentCard && flipped && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid grid-cols-3 gap-3"
+        >
+          <button
+            onClick={() => handleRate("wrong")}
+            className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 hover:bg-red-100 transition-colors"
+          >
+            <ThumbsDown className="w-5 h-5 text-red-500" />
+            <span className="text-xs font-medium text-red-600">Non sapevo</span>
+          </button>
+          <button
+            onClick={() => handleRate("almost")}
+            className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 transition-colors"
+          >
+            <MinusIcon className="w-5 h-5 text-amber-500" />
+            <span className="text-xs font-medium text-amber-600">Quasi</span>
+          </button>
+          <button
+            onClick={() => handleRate("correct")}
+            className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 hover:bg-green-100 transition-colors"
+          >
+            <ThumbsUp className="w-5 h-5 text-green-500" />
+            <span className="text-xs font-medium text-green-600">Lo sapevo</span>
+          </button>
+        </motion.div>
+      )}
+    </div>
+  );
+};
+
 // ============ MAIN PAGE ============
 
 type ViewMode = "subjects" | "weekly";
+type MainTab = "ai" | "flashcard";
 
 const MemoryRecap = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("subjects");
+  const [mainTab, setMainTab] = useState<MainTab>("ai");
   const [activeSubject, setActiveSubject] = useState<string | null>(null);
 
   useEffect(() => {
@@ -548,12 +837,36 @@ const MemoryRecap = () => {
             <p className="text-muted-foreground text-sm">Organizzato per materia, giorno per giorno</p>
           </motion.div>
 
-          {/* View mode toggle */}
-          {items.length > 0 && (
-            <div className="flex gap-1 mt-4 bg-muted/50 rounded-xl p-1">
+          {/* Main tab toggle: AI Chat vs Flashcard */}
+          <div className="flex gap-1 mt-4 bg-muted/50 rounded-xl p-1">
+            <button
+              onClick={() => setMainTab("ai")}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                mainTab === "ai"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <MessageCircle className="w-3.5 h-3.5" /> Chat AI
+            </button>
+            <button
+              onClick={() => setMainTab("flashcard")}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                mainTab === "flashcard"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" /> Flashcard
+            </button>
+          </div>
+
+          {/* View mode toggle (only for AI tab) */}
+          {mainTab === "ai" && items.length > 0 && (
+            <div className="flex gap-1 mt-2 bg-muted/30 rounded-xl p-1">
               <button
                 onClick={() => setViewMode("subjects")}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   viewMode === "subjects"
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -563,7 +876,7 @@ const MemoryRecap = () => {
               </button>
               <button
                 onClick={() => setViewMode("weekly")}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   viewMode === "weekly"
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -576,7 +889,9 @@ const MemoryRecap = () => {
         </div>
       </div>
 
-      {loading ? (
+      {mainTab === "flashcard" ? (
+        <FlashcardTab />
+      ) : loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
       ) : items.length === 0 ? (
         <div className="text-center py-16 px-6">

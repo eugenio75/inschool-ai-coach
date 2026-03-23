@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Plus, FilePlus, BarChart2, BookMarked, CheckSquare,
   FileText, Mic, FolderOpen, Home, Users2, Bell, Copy,
-  Minus, Printer, ChevronRight, Trash2, Eye,
+  Minus, Printer, ChevronRight, Trash2, Eye, ChevronDown,
+  ChevronUp, AlertTriangle, UserCheck, RefreshCw,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
+import { useAuth } from "@/hooks/useAuth";
 
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -32,6 +34,209 @@ function getGreeting(): string {
   if (h >= 5 && h < 12) return "Buongiorno";
   if (h < 18) return "Buon pomeriggio";
   return "Buonasera";
+}
+
+// ============ TEACHER RESULTS SECTION ============
+function TeacherResultsSection({ profileId }: { profileId: string | undefined }) {
+  const { user } = useAuth();
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [results, setResults] = useState<Record<string, any[]>>({});
+  const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    loadAssignments();
+  }, [user]);
+
+  async function loadAssignments() {
+    setLoading(true);
+    const { data: ta } = await supabase
+      .from("teacher_assignments")
+      .select("*")
+      .eq("teacher_id", user!.id)
+      .in("type", ["verifica", "compito", "esercizi"])
+      .order("assigned_at", { ascending: false })
+      .limit(20);
+    setAssignments(ta || []);
+
+    // Load results for each assignment
+    if (ta && ta.length > 0) {
+      const ids = ta.map((a: any) => a.id);
+      const { data: ar } = await supabase
+        .from("assignment_results")
+        .select("*")
+        .in("assignment_id", ids);
+      const grouped: Record<string, any[]> = {};
+      for (const r of (ar || [])) {
+        if (!grouped[r.assignment_id]) grouped[r.assignment_id] = [];
+        grouped[r.assignment_id].push(r);
+      }
+      setResults(grouped);
+    }
+    setLoading(false);
+  }
+
+  async function createFollowUp(assignmentId: string, type: "recupero" | "potenziamento") {
+    const original = assignments.find(a => a.id === assignmentId);
+    if (!original || !user) return;
+    await supabase.from("teacher_assignments").insert({
+      teacher_id: user.id,
+      class_id: original.class_id,
+      title: `${type === "recupero" ? "Recupero" : "Potenziamento"}: ${original.title}`,
+      type,
+      subject: original.subject,
+      description: `${type === "recupero" ? "Attività di recupero" : "Attività di potenziamento"} basata su: ${original.title}`,
+    });
+    toast.success(`${type === "recupero" ? "Recupero" : "Potenziamento"} assegnato!`);
+    loadAssignments();
+  }
+
+  if (loading) {
+    return (
+      <section>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Risultati verifiche assegnate</h2>
+        <div className="space-y-2">{[1, 2].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
+      </section>
+    );
+  }
+
+  if (assignments.length === 0) {
+    return (
+      <section>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Risultati verifiche assegnate</h2>
+        <div className="bg-card border border-border rounded-2xl p-6 text-center">
+          <BarChart2 className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">Nessuna verifica assegnata ancora</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">Usa il generatore per creare verifiche e assegnarle alle classi</p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section>
+      <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Risultati verifiche assegnate</h2>
+      <div className="space-y-3">
+        {assignments.map(a => {
+          const res = results[a.id] || [];
+          const completed = res.filter((r: any) => r.status === "completed").length;
+          const total = res.length || 0;
+          const isExpanded = expandedId === a.id;
+          const avgScore = completed > 0
+            ? Math.round(res.filter((r: any) => r.score != null).reduce((s: number, r: any) => s + (r.score || 0), 0) / completed)
+            : null;
+
+          return (
+            <div key={a.id} className="bg-card border border-border rounded-2xl overflow-hidden">
+              <button
+                onClick={() => setExpandedId(isExpanded ? null : a.id)}
+                className="w-full p-4 flex items-center justify-between text-left"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground text-sm truncate">{a.title}</p>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    {a.subject && <Badge variant="secondary" className="text-xs">{a.subject}</Badge>}
+                    <Badge variant="outline" className="text-xs capitalize">{a.type}</Badge>
+                    {a.assigned_at && (
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(a.assigned_at), "d MMM", { locale: it })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  {total > 0 && (
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">{completed}/{total} completati</p>
+                      {avgScore !== null && (
+                        <p className="text-xs font-semibold text-foreground">Media: {avgScore}%</p>
+                      )}
+                    </div>
+                  )}
+                  {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                </div>
+              </button>
+
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0 }}
+                    animate={{ height: "auto" }}
+                    exit={{ height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
+                      {res.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-3">
+                          Nessuno studente ha ancora completato questa verifica
+                        </p>
+                      ) : (
+                        <>
+                          <div className="space-y-1.5">
+                            {res.map((r: any) => (
+                              <div key={r.id} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
+                                <div className="flex items-center gap-2">
+                                  <UserCheck className="w-3.5 h-3.5 text-muted-foreground" />
+                                  <span className="text-sm text-foreground">Studente</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant={r.status === "completed" ? "default" : "secondary"} className="text-xs capitalize">
+                                    {r.status === "completed" ? "Completato" : r.status === "in_progress" ? "In corso" : "Assegnato"}
+                                  </Badge>
+                                  {r.score != null && (
+                                    <span className="text-sm font-semibold text-foreground">{Math.round(r.score)}%</span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Error summary */}
+                          {res.some((r: any) => r.errors_summary && Object.keys(r.errors_summary).length > 0) && (
+                            <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl p-3">
+                              <div className="flex items-center gap-1.5 mb-2">
+                                <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                                <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">Errori più frequenti</span>
+                              </div>
+                              <p className="text-xs text-amber-600 dark:text-amber-300">
+                                Analisi degli errori disponibile dopo il completamento delle verifiche
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {/* Follow-up actions */}
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-xl text-xs flex-1"
+                          onClick={() => createFollowUp(a.id, "recupero")}
+                        >
+                          <RefreshCw className="w-3 h-3 mr-1" /> Assegna recupero
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-xl text-xs flex-1"
+                          onClick={() => createFollowUp(a.id, "potenziamento")}
+                        >
+                          <Plus className="w-3 h-3 mr-1" /> Assegna potenziamento
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
 }
 
 export default function DashboardDocente() {
@@ -457,6 +662,9 @@ export default function DashboardDocente() {
             </p>
           </div>
         </section>
+
+        {/* RISULTATI VERIFICHE ASSEGNATE */}
+        <TeacherResultsSection profileId={profileId} />
 
         {/* CONVERSAZIONI RECENTI */}
         <RecentConversations profileId={profileId} title="Le tue sessioni con il Coach AI" />
