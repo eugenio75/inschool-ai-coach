@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Users, Heart, BookOpen, MessageSquare,
   Plus, Mail, Copy, Shield, AlertTriangle, CheckCircle2,
   FilePlus, Save, Trash2, Send, ChevronRight, FileText, BarChart2, Download,
+  Upload, Sparkles, PenLine, CalendarIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
@@ -26,7 +27,6 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { CalendarIcon } from "lucide-react";
 
 async function fetchTeacherClassData(classId: string) {
   const { data: { session } } = await supabase.auth.getSession();
@@ -61,20 +61,11 @@ export default function ClassView() {
   const [assignmentResults, setAssignmentResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("classe");
-
-  // Material generation
-  const [genArgomento, setGenArgomento] = useState("");
-  const [genTipo, setGenTipo] = useState("esercizi");
-  const [genLivello, setGenLivello] = useState("intermedio");
-  const [genTarget, setGenTarget] = useState("");
-  const [genNumero, setGenNumero] = useState(5);
-  const [genFreeText, setGenFreeText] = useState("");
-  const [genLoading, setGenLoading] = useState(false);
-  const [genOutput, setGenOutput] = useState<string | null>(null);
   const [materialFilter, setMaterialFilter] = useState("tutti");
 
-  // Assign activity dialog
+  // Unified assign dialog
   const [assignOpen, setAssignOpen] = useState(false);
+  const [assignMode, setAssignMode] = useState<"text" | "ai" | "file">("text");
   const [assignTitle, setAssignTitle] = useState("");
   const [assignType, setAssignType] = useState("esercizi");
   const [assignDesc, setAssignDesc] = useState("");
@@ -83,6 +74,19 @@ export default function ClassView() {
   const [assignSelectedStudents, setAssignSelectedStudents] = useState<string[]>([]);
   const [assignSaving, setAssignSaving] = useState(false);
 
+  // AI generation within dialog
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiLivello, setAiLivello] = useState("intermedio");
+  const [aiNumero, setAiNumero] = useState(5);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiOutput, setAiOutput] = useState<string | null>(null);
+
+  // File upload within dialog
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadUrl, setUploadUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   function resetAssignForm() {
     setAssignTitle("");
     setAssignType("esercizi");
@@ -90,6 +94,63 @@ export default function ClassView() {
     setAssignDueDate(undefined);
     setAssignTarget("all");
     setAssignSelectedStudents([]);
+    setAssignMode("text");
+    setAiPrompt("");
+    setAiOutput(null);
+    setAiLoading(false);
+    setUploadFile(null);
+    setUploadUrl(null);
+  }
+
+  async function handleFileUpload(file: File) {
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "pdf";
+      const path = `assignments/${classId}/${Date.now()}_${file.name}`;
+      const { error } = await supabase.storage.from("homework-images").upload(path, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("homework-images").getPublicUrl(path);
+      setUploadUrl(urlData.publicUrl);
+      setUploadFile(file);
+      if (!assignTitle) setAssignTitle(file.name.replace(/\.[^.]+$/, ""));
+      toast.success("File caricato!");
+    } catch (err: any) {
+      toast.error("Errore upload: " + (err.message || "Riprova"));
+    }
+    setUploading(false);
+  }
+
+  async function generateAiContent() {
+    if (!aiPrompt.trim()) { toast.error("Descrivi cosa vuoi generare"); return; }
+    setAiLoading(true);
+    setAiOutput(null);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            stream: false,
+            maxTokens: 2000,
+            systemPrompt: `Sei un docente esperto. Genera materiale didattico: ${assignType}, livello ${aiLivello}, ${aiNumero} elementi. Classe: ${classe?.nome || ""}. Materia: ${classe?.materia || ""}.`,
+            messages: [{ role: "user", content: aiPrompt }],
+          }),
+        }
+      );
+      const data = await res.json();
+      const content = data.choices?.[0]?.message?.content?.trim() || "Errore nella generazione.";
+      setAiOutput(content);
+      if (!assignTitle) setAssignTitle(aiPrompt.slice(0, 60));
+      setAssignDesc(content);
+    } catch {
+      toast.error("Errore nella generazione.");
+    } finally {
+      setAiLoading(false);
+    }
   }
 
   async function handleAssignActivity() {
@@ -109,6 +170,11 @@ export default function ClassView() {
         return;
       }
 
+      const metadata: any = {};
+      if (uploadUrl) metadata.attachment_url = uploadUrl;
+      if (uploadFile) metadata.attachment_name = uploadFile.name;
+      if (aiOutput) metadata.ai_generated = true;
+
       const inserts = targetStudents.map(s => ({
         teacher_id: user.id,
         class_id: classId,
@@ -118,14 +184,31 @@ export default function ClassView() {
         subject: classe?.materia || null,
         description: assignDesc.trim() || null,
         due_date: assignDueDate ? assignDueDate.toISOString() : null,
+        metadata,
       }));
 
       const { error } = await supabase.from("teacher_assignments").insert(inserts);
       if (error) throw error;
 
+      // Also save as material if AI-generated
+      if (aiOutput) {
+        await supabase.from("teacher_materials").insert({
+          teacher_id: user.id,
+          class_id: classId,
+          title: assignTitle.trim(),
+          subject: classe?.materia,
+          type: assignType,
+          level: aiLivello,
+          content: aiOutput,
+          status: "assigned",
+          assigned_at: new Date().toISOString(),
+        });
+      }
+
       toast.success(`Attività assegnata a ${targetStudents.length} studenti`);
       setAssignOpen(false);
       resetAssignForm();
+      loadClass();
     } catch (err: any) {
       toast.error("Errore: " + (err.message || "Riprova"));
     }
@@ -134,7 +217,6 @@ export default function ClassView() {
 
   useEffect(() => {
     if (!classId || (!profileId && !user)) return;
-
     loadClass();
   }, [classId, profileId, user]);
 
@@ -197,54 +279,6 @@ export default function ClassView() {
     setLoading(false);
   }
 
-  async function generateMaterial() {
-    const prompt = genFreeText.trim() || genArgomento.trim();
-    if (!prompt) { toast.error("Inserisci un argomento o una descrizione."); return; }
-    setGenLoading(true);
-    setGenOutput(null);
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            stream: false,
-            maxTokens: 2000,
-            systemPrompt: `Sei un docente esperto. Genera materiale didattico: ${genTipo}, livello ${genLivello}, ${genNumero} elementi. Classe: ${classe?.nome || ""}. Materia: ${classe?.materia || ""}. Target: ${genTarget || "generico"}.`,
-            messages: [{ role: "user", content: genFreeText.trim() || `Genera ${genTipo} su: ${genArgomento}` }],
-          }),
-        }
-      );
-      const data = await res.json();
-      setGenOutput(data.choices?.[0]?.message?.content?.trim() || "Errore nella generazione.");
-    } catch {
-      toast.error("Errore nella generazione.");
-    } finally {
-      setGenLoading(false);
-    }
-  }
-
-  async function saveMaterial() {
-    if (!genOutput || !user) return;
-    await (supabase as any).from("teacher_materials").insert({
-      teacher_id: user.id,
-      class_id: classId,
-      title: genArgomento || genFreeText.slice(0, 50) || "Materiale",
-      subject: classe?.materia,
-      type: genTipo,
-      level: genLivello,
-      target_profile: genTarget || null,
-      content: genOutput,
-      status: "draft",
-    });
-    toast.success("Materiale salvato!");
-    loadClass();
-  }
-
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-4">
@@ -267,7 +301,6 @@ export default function ClassView() {
     ? materials
     : materials.filter(m => m.status === materialFilter);
 
-  // Gradient per materia
   const matLower = (classe.materia || '').toLowerCase();
   const gradientMap: Record<string, string> = {
     'musica': 'from-violet-500 to-fuchsia-500',
@@ -398,7 +431,6 @@ export default function ClassView() {
                               </div>
                             </div>
                           </div>
-                          {/* Student results */}
                           <div className="space-y-1 mt-3 pt-3 border-t border-border">
                             {a.results.map((r: any) => (
                               <div key={r.id} className="flex items-center gap-2 text-xs">
@@ -462,7 +494,6 @@ export default function ClassView() {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Traffic light */}
               <div className="flex flex-col items-center py-6">
                 <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-3">
                   <CheckCircle2 className="w-10 h-10 text-green-600" />
@@ -493,133 +524,65 @@ export default function ClassView() {
           )}
         </TabsContent>
 
-        {/* Tab 3: Materiali */}
+        {/* Tab 3: Materiali — now shows saved materials only */}
         <TabsContent value="materiali" className="mt-6 space-y-6">
-          {/* Generation form */}
-          <div className="bg-muted/50 border border-border rounded-2xl p-6">
-            <h3 className="font-semibold text-foreground mb-4">Genera nuovo materiale</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              <div>
-                <Label className="text-xs text-muted-foreground">Argomento</Label>
-                <Input placeholder="es. Equazioni di secondo grado" value={genArgomento}
-                  onChange={e => setGenArgomento(e.target.value)} className="mt-1 rounded-xl" />
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Tipologia</Label>
-                <Select value={genTipo} onValueChange={setGenTipo}>
-                  <SelectTrigger className="mt-1 rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {["Verifica", "Esercizi", "Schema", "Spiegazione", "Recupero", "Potenziamento", "Altro"].map(t => (
-                      <SelectItem key={t.toLowerCase()} value={t.toLowerCase()}>{t}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Livello</Label>
-                <Select value={genLivello} onValueChange={setGenLivello}>
-                  <SelectTrigger className="mt-1 rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="base">Base</SelectItem>
-                    <SelectItem value="intermedio">Intermedio</SelectItem>
-                    <SelectItem value="avanzato">Avanzato</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">N. domande/step</Label>
-                <Input type="number" min={1} max={20} value={genNumero}
-                  onChange={e => setGenNumero(Number(e.target.value))} className="mt-1 rounded-xl" />
-              </div>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Materiali e attività ({materials.length})
+            </p>
+            <div className="flex gap-1">
+              {["tutti", "draft", "assigned"].map(f => (
+                <button
+                  key={f}
+                  onClick={() => setMaterialFilter(f)}
+                  className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
+                    materialFilter === f
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  {f === "tutti" ? "Tutti" : f === "draft" ? "Bozze" : "Assegnati"}
+                </button>
+              ))}
             </div>
-
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-              <div className="relative flex justify-center text-xs text-muted-foreground">
-                <span className="bg-muted/50 px-2">oppure</span>
-              </div>
-            </div>
-
-            <Textarea
-              placeholder="Descrivi liberamente cosa ti serve... Es: 'Crea 5 domande sul Risorgimento per una terza media, difficoltà media'"
-              value={genFreeText}
-              onChange={e => setGenFreeText(e.target.value)}
-              className="rounded-xl min-h-[80px]"
-            />
-
-            <Button onClick={generateMaterial} disabled={genLoading} className="w-full rounded-xl mt-4">
-              {genLoading ? "Generazione in corso..." : "Genera materiale"}
-            </Button>
-
-            {genOutput && (
-              <div className="mt-4">
-                <div className="bg-card border border-primary/20 rounded-xl p-4 text-sm whitespace-pre-wrap max-h-80 overflow-y-auto">
-                  {genOutput}
-                </div>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  <Button size="sm" className="rounded-xl" onClick={saveMaterial}><Save className="w-3 h-3 mr-1" /> Salva</Button>
-                  <Button size="sm" variant="outline" className="rounded-xl" onClick={() => { navigator.clipboard.writeText(genOutput); toast.success("Copiato!"); }}>
-                    <Copy className="w-3 h-3 mr-1" /> Copia
-                  </Button>
-                  <Button size="sm" variant="outline" className="rounded-xl" onClick={() => {
-                    const printWin = window.open("", "_blank");
-                    if (!printWin) { toast.error("Popup bloccato dal browser"); return; }
-                    printWin.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${genArgomento || "Materiale"} - ${classe?.materia || ""}</title><style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:20px;line-height:1.7;color:#1a1a1a}h1{font-size:1.4em;border-bottom:2px solid #1a3a5c;padding-bottom:8px;color:#1a3a5c}pre{white-space:pre-wrap;font-family:inherit;font-size:0.95em}footer{margin-top:40px;font-size:0.75em;color:#888;border-top:1px solid #ddd;padding-top:8px}</style></head><body><h1>${genArgomento || "Materiale didattico"}</h1><p style="color:#666;font-size:0.85em">${classe?.nome || ""} · ${classe?.materia || ""} · ${genTipo} · Livello: ${genLivello}</p><pre>${genOutput}</pre><footer>Generato con InSchool · ${new Date().toLocaleDateString("it-IT")}</footer></body></html>`);
-                    printWin.document.close();
-                    setTimeout(() => printWin.print(), 300);
-                  }}>
-                    <Download className="w-3 h-3 mr-1" /> Esporta PDF
-                  </Button>
-                  <Button size="sm" variant="ghost" className="rounded-xl" onClick={generateMaterial}>Rigenera</Button>
-                </div>
-              </div>
-            )}
           </div>
-
-          {/* Saved materials */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Materiali salvati ({materials.length})
+          {filteredMaterials.length === 0 ? (
+            <div className="bg-card border border-border rounded-xl p-6 text-center">
+              <BookOpen className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground mb-3">
+                Nessun materiale ancora. Usa "Assegna attività" per creare e assegnare contenuti.
               </p>
-              <div className="flex gap-1">
-                {["tutti", "draft", "assigned"].map(f => (
-                  <button
-                    key={f}
-                    onClick={() => setMaterialFilter(f)}
-                    className={`text-xs px-2.5 py-1 rounded-full transition-colors ${
-                      materialFilter === f
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80"
-                    }`}
-                  >
-                    {f === "tutti" ? "Tutti" : f === "draft" ? "Bozze" : "Assegnati"}
-                  </button>
-                ))}
-              </div>
+              <Button size="sm" className="rounded-xl" onClick={() => setAssignOpen(true)}>
+                <Plus className="w-3.5 h-3.5 mr-1" /> Assegna attività
+              </Button>
             </div>
-            {filteredMaterials.length === 0 ? (
-              <div className="bg-card border border-border rounded-xl p-6 text-center">
-                <BookOpen className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">Nessun materiale ancora. Generane uno sopra.</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {filteredMaterials.map(m => (
-                  <div key={m.id} className="flex items-center p-4 bg-card border border-border rounded-xl hover:shadow-sm transition-shadow">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{m.title}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        {m.type && <Badge variant="secondary" className="text-xs">{m.type}</Badge>}
-                        {m.level && <Badge variant="outline" className="text-xs">{m.level}</Badge>}
-                        <Badge variant={m.status === "draft" ? "outline" : "default"} className="text-xs capitalize">{m.status}</Badge>
-                      </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredMaterials.map(m => (
+                <div key={m.id} className="flex items-center p-4 bg-card border border-border rounded-xl hover:shadow-sm transition-shadow">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{m.title}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {m.type && <Badge variant="secondary" className="text-xs">{m.type}</Badge>}
+                      {m.level && <Badge variant="outline" className="text-xs">{m.level}</Badge>}
+                      <Badge variant={m.status === "draft" ? "outline" : "default"} className="text-xs capitalize">{m.status}</Badge>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  {m.content && (
+                    <Button size="sm" variant="ghost" className="rounded-xl shrink-0" onClick={() => {
+                      const printWin = window.open("", "_blank");
+                      if (!printWin) { toast.error("Popup bloccato dal browser"); return; }
+                      printWin.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${m.title}</title><style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:20px;line-height:1.7;color:#1a1a1a}h1{font-size:1.4em;border-bottom:2px solid #1a3a5c;padding-bottom:8px;color:#1a3a5c}pre{white-space:pre-wrap;font-family:inherit;font-size:0.95em}footer{margin-top:40px;font-size:0.75em;color:#888;border-top:1px solid #ddd;padding-top:8px}</style></head><body><h1>${m.title}</h1><p style="color:#666;font-size:0.85em">${classe?.nome || ""} · ${classe?.materia || ""} · ${m.type || ""}</p><pre>${m.content}</pre><footer>Generato con InSchool · ${new Date().toLocaleDateString("it-IT")}</footer></body></html>`);
+                      printWin.document.close();
+                      setTimeout(() => printWin.print(), 300);
+                    }}>
+                      <Download className="w-3.5 h-3.5 mr-1" /> PDF
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         {/* Tab 4: Coach AI */}
@@ -640,19 +603,44 @@ export default function ClassView() {
         </TabsContent>
       </Tabs>
 
-      {/* Assign Activity Dialog */}
+      {/* Unified Assign Activity Dialog */}
       <Dialog open={assignOpen} onOpenChange={(v) => { setAssignOpen(v); if (!v) resetAssignForm(); }}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Assegna attività alla classe</DialogTitle>
           </DialogHeader>
+
+          {/* Mode selector */}
+          <div className="flex gap-1 bg-muted p-1 rounded-xl">
+            {([
+              { key: "text" as const, icon: PenLine, label: "Testo" },
+              { key: "ai" as const, icon: Sparkles, label: "Genera con AI" },
+              { key: "file" as const, icon: Upload, label: "Allega file" },
+            ]).map(({ key, icon: Icon, label }) => (
+              <button
+                key={key}
+                onClick={() => setAssignMode(key)}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-medium transition-all",
+                  assignMode === key
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
+
           <div className="space-y-4 py-2">
-            <div>
-              <Label className="text-xs text-muted-foreground">Titolo *</Label>
-              <Input placeholder="es. Esercizi sulle equazioni" value={assignTitle}
-                onChange={e => setAssignTitle(e.target.value)} className="mt-1 rounded-xl" />
-            </div>
+            {/* Common fields */}
             <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <Label className="text-xs text-muted-foreground">Titolo *</Label>
+                <Input placeholder="es. Esercizi sulle equazioni" value={assignTitle}
+                  onChange={e => setAssignTitle(e.target.value)} className="mt-1 rounded-xl" />
+              </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Tipologia</Label>
                 <Select value={assignType} onValueChange={setAssignType}>
@@ -681,11 +669,107 @@ export default function ClassView() {
                 </Popover>
               </div>
             </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">Descrizione (opzionale)</Label>
-              <Textarea placeholder="Istruzioni per gli studenti..." value={assignDesc}
-                onChange={e => setAssignDesc(e.target.value)} className="mt-1 rounded-xl min-h-[60px]" />
-            </div>
+
+            {/* Mode-specific content */}
+            {assignMode === "text" && (
+              <div>
+                <Label className="text-xs text-muted-foreground">Descrizione / Istruzioni</Label>
+                <Textarea placeholder="Scrivi le istruzioni per gli studenti..." value={assignDesc}
+                  onChange={e => setAssignDesc(e.target.value)} className="mt-1 rounded-xl min-h-[80px]" />
+              </div>
+            )}
+
+            {assignMode === "ai" && (
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Descrivi cosa vuoi generare</Label>
+                  <Textarea
+                    placeholder="Es: 'Crea 5 domande sul Risorgimento per una terza media, difficoltà media'"
+                    value={aiPrompt}
+                    onChange={e => setAiPrompt(e.target.value)}
+                    className="mt-1 rounded-xl min-h-[60px]"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Livello</Label>
+                    <Select value={aiLivello} onValueChange={setAiLivello}>
+                      <SelectTrigger className="mt-1 rounded-xl"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="base">Base</SelectItem>
+                        <SelectItem value="intermedio">Intermedio</SelectItem>
+                        <SelectItem value="avanzato">Avanzato</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">N. domande</Label>
+                    <Input type="number" min={1} max={20} value={aiNumero}
+                      onChange={e => setAiNumero(Number(e.target.value))} className="mt-1 rounded-xl" />
+                  </div>
+                </div>
+                <Button onClick={generateAiContent} disabled={aiLoading} variant="outline" className="w-full rounded-xl">
+                  <Sparkles className="w-3.5 h-3.5 mr-1" />
+                  {aiLoading ? "Generazione in corso..." : "Genera contenuto"}
+                </Button>
+                {aiOutput && (
+                  <div className="bg-muted/50 border border-border rounded-xl p-3 text-sm whitespace-pre-wrap max-h-48 overflow-y-auto">
+                    {aiOutput}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {assignMode === "file" && (
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Descrizione (opzionale)</Label>
+                  <Textarea placeholder="Istruzioni per gli studenti..." value={assignDesc}
+                    onChange={e => setAssignDesc(e.target.value)} className="mt-1 rounded-xl min-h-[60px]" />
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  className="hidden"
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFileUpload(file);
+                  }}
+                />
+                {!uploadFile ? (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="w-full border-2 border-dashed border-border rounded-xl p-6 text-center hover:bg-muted/30 transition-colors"
+                  >
+                    <Upload className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
+                    <p className="text-sm font-medium text-foreground">
+                      {uploading ? "Caricamento..." : "Carica PDF, immagine o documento"}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">PDF, JPG, PNG, DOC (max 20MB)</p>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-3 p-3 bg-muted/50 border border-border rounded-xl">
+                    <FileText className="w-8 h-8 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{uploadFile.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(uploadFile.size / 1024 / 1024).toFixed(1)} MB
+                      </p>
+                    </div>
+                    <Button size="sm" variant="ghost" className="shrink-0" onClick={() => {
+                      setUploadFile(null);
+                      setUploadUrl(null);
+                    }}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Destinatari */}
             <div>
               <Label className="text-xs text-muted-foreground mb-2 block">Destinatari</Label>
               <div className="flex gap-2 mb-2">
@@ -706,7 +790,7 @@ export default function ClassView() {
                         <Checkbox checked={checked} onCheckedChange={(v) => {
                           setAssignSelectedStudents(prev => v ? [...prev, sid] : prev.filter(x => x !== sid));
                         }} />
-                        <span className="text-sm">{s.profile?.name || s.name || s.student_name || "Studente"}</span>
+                        <span className="text-sm">{s.profile?.name || s.name || "Studente"}</span>
                       </label>
                     );
                   })}
@@ -714,6 +798,7 @@ export default function ClassView() {
               )}
             </div>
           </div>
+
           <DialogFooter>
             <Button variant="outline" className="rounded-xl" onClick={() => setAssignOpen(false)}>Annulla</Button>
             <Button className="rounded-xl" onClick={handleAssignActivity} disabled={assignSaving}>
