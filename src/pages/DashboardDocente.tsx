@@ -671,7 +671,7 @@ export default function DashboardDocente() {
               <p className="text-xs text-slate-300 mt-1">Le attività appariranno quando gli studenti useranno la piattaforma</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="max-h-[280px] overflow-y-auto space-y-2 pr-1 scrollbar-thin">
               {feedItems.slice(0, 8).map((item: any) => (
                 <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
                   <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
