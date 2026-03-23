@@ -191,22 +191,59 @@ export default function ClassView() {
     ? materials
     : materials.filter(m => m.status === materialFilter);
 
+  // Gradient per materia
+  const matLower = (classe.materia || '').toLowerCase();
+  const gradientMap: Record<string, string> = {
+    'musica': 'from-violet-500 to-fuchsia-500',
+    'educazione civica': 'from-emerald-500 to-teal-500',
+    'italiano': 'from-sky-500 to-blue-500',
+    'matematica': 'from-orange-500 to-amber-500',
+    'storia': 'from-rose-500 to-red-500',
+    'scienze': 'from-green-500 to-lime-500',
+    'inglese': 'from-indigo-500 to-blue-500',
+  };
+  const gradient = gradientMap[matLower] || 'from-[#1A3A5C] to-[#0070C0]';
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 pb-24">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="rounded-xl">
-            <ArrowLeft className="w-4 h-4 mr-1" /> Home
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">{classe.nome}</h1>
-            <div className="flex items-center gap-2 mt-0.5">
-              {classe.materia && <Badge variant="secondary" className="text-xs">{classe.materia}</Badge>}
-              <span className="text-xs text-muted-foreground">{students.length} studenti</span>
+      <div className="mb-6">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="rounded-xl mb-4">
+          <ArrowLeft className="w-4 h-4 mr-1" /> Home
+        </Button>
+
+        <div className={`bg-gradient-to-r ${gradient} rounded-2xl p-6 text-white`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white/70 text-xs font-medium uppercase tracking-wider mb-1">Classe</p>
+              <h1 className="text-2xl font-bold">{classe.nome}</h1>
+              <div className="flex items-center gap-3 mt-2">
+                {classe.materia && (
+                  <span className="text-sm bg-white/20 px-3 py-0.5 rounded-full font-medium">{classe.materia}</span>
+                )}
+                <span className="text-sm text-white/80">{students.length} studenti</span>
+                {classe.ordine_scolastico && (
+                  <span className="text-sm text-white/60">{classe.ordine_scolastico}</span>
+                )}
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-white/60 text-[10px] uppercase tracking-wider mb-1">Codice classe</p>
+              <div className="flex items-center gap-2">
+                <span className="font-mono font-bold text-2xl tracking-[0.2em]">{classe.codice_invito}</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(classe.codice_invito); toast.success("Codice copiato!"); }}
+                  className="bg-white/20 hover:bg-white/30 p-1.5 rounded-lg transition-colors"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="flex justify-end mb-4">
         <Button size="sm" className="rounded-xl">
           <Plus className="w-3.5 h-3.5 mr-1" /> Assegna attività
         </Button>
