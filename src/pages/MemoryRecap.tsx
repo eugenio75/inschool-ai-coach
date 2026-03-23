@@ -837,12 +837,36 @@ const MemoryRecap = () => {
             <p className="text-muted-foreground text-sm">Organizzato per materia, giorno per giorno</p>
           </motion.div>
 
-          {/* View mode toggle */}
-          {items.length > 0 && (
-            <div className="flex gap-1 mt-4 bg-muted/50 rounded-xl p-1">
+          {/* Main tab toggle: AI Chat vs Flashcard */}
+          <div className="flex gap-1 mt-4 bg-muted/50 rounded-xl p-1">
+            <button
+              onClick={() => setMainTab("ai")}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                mainTab === "ai"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <MessageCircle className="w-3.5 h-3.5" /> Chat AI
+            </button>
+            <button
+              onClick={() => setMainTab("flashcard")}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                mainTab === "flashcard"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" /> Flashcard
+            </button>
+          </div>
+
+          {/* View mode toggle (only for AI tab) */}
+          {mainTab === "ai" && items.length > 0 && (
+            <div className="flex gap-1 mt-2 bg-muted/30 rounded-xl p-1">
               <button
                 onClick={() => setViewMode("subjects")}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   viewMode === "subjects"
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -852,7 +876,7 @@ const MemoryRecap = () => {
               </button>
               <button
                 onClick={() => setViewMode("weekly")}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   viewMode === "weekly"
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
