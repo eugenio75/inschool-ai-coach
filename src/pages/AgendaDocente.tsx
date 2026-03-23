@@ -469,10 +469,10 @@ export default function AgendaDocente() {
               </div>
               <div>
                 <Label className="text-xs">Classe</Label>
-                <Select value={newEvent.class_id} onValueChange={v => setNewEvent(p => ({ ...p, class_id: v }))}>
+                <Select value={newEvent.class_id || "none"} onValueChange={v => setNewEvent(p => ({ ...p, class_id: v === "none" ? "" : v }))}>
                   <SelectTrigger className="mt-1 rounded-xl"><SelectValue placeholder="Nessuna" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nessuna</SelectItem>
+                    <SelectItem value="none">Nessuna</SelectItem>
                     {classi.map((c: any) => (
                       <SelectItem key={c.id} value={c.id}>{c.nome} — {c.materia}</SelectItem>
                     ))}
