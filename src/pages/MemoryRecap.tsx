@@ -889,7 +889,9 @@ const MemoryRecap = () => {
         </div>
       </div>
 
-      {loading ? (
+      {mainTab === "flashcard" ? (
+        <FlashcardTab />
+      ) : loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
       ) : items.length === 0 ? (
         <div className="text-center py-16 px-6">
