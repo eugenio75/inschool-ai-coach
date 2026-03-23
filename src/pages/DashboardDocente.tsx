@@ -474,7 +474,8 @@ export default function DashboardDocente() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {classi.map((cl, i) => (
                 <motion.div key={cl.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                  className="bg-card border border-border rounded-2xl p-5">
+                  onClick={() => navigate(`/classe/${cl.id}`)}
+                  className="bg-card border border-border rounded-2xl p-5 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="font-bold text-foreground text-lg">{cl.nome}</p>
@@ -494,7 +495,7 @@ export default function DashboardDocente() {
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" className="mt-3 w-full rounded-xl text-xs text-muted-foreground"
-                    onClick={() => { navigator.clipboard.writeText(cl.codice_invito); toast.success("Codice copiato!"); }}>
+                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(cl.codice_invito); toast.success("Codice copiato!"); }}>
                     <Copy className="w-3 h-3 mr-1" />Copia codice invito
                   </Button>
                 </motion.div>
