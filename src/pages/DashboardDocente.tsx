@@ -186,7 +186,7 @@ function TeacherResultsSection({ profileId }: { profileId: string | undefined })
           );
         })}
       </div>
-    </section>
+    </div>
   );
 }
 
