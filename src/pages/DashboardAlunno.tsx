@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Target, Loader2, LogOut, Play, HelpCircle } from "lucide-react";
+import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Target, Loader2, LogOut, Play, HelpCircle, MessageSquare } from "lucide-react";
 import { CoachPresence } from "@/components/CoachPresence";
 import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { Button } from "@/components/ui/button";
@@ -275,6 +275,23 @@ const DashboardAlunno = () => {
               </Button>
             </div>
           </motion.div>
+        </div></div>
+      )}
+
+      {/* "Non so da dove iniziare" */}
+      {!loading && tasks.length > 0 && !suggestion && !pausedSession && (
+        <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
+          <motion.button
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 }}
+            onClick={() => navigate("/challenge/help-start")}
+            className="w-full flex items-center gap-3 p-4 rounded-2xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors text-left"
+          >
+            <MessageSquare className="w-5 h-5 text-primary flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Non so da dove iniziare</p>
+              <p className="text-xs text-muted-foreground">Il coach ti aiuta a scegliere il primo passo</p>
+            </div>
+          </motion.button>
         </div></div>
       )}
 
