@@ -50,28 +50,55 @@ export function CoachPresence() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const profileId = getChildSession()?.profileId || profile?.id;
-      const today = new Date().toISOString().split("T")[0];
+      const childSession = getChildSession();
+      const isChild = isChildSession();
 
-      const [homeworkRes, sessionsRes, gamRes, assignRes] = await Promise.all([
-        supabase.from("homework_tasks").select("title, subject, due_date, completed")
-          .eq("child_profile_id", profileId).eq("completed", false).order("due_date", { ascending: true }).limit(5),
-        supabase.from("guided_sessions").select("homework_id, completed_at, bloom_level_reached")
-          .eq("user_id", user?.id || profileId).eq("status", "completed").order("completed_at", { ascending: false }).limit(1),
-        supabase.from("gamification").select("streak, focus_points, consistency_points, autonomy_points")
-          .eq("child_profile_id", profileId).maybeSingle(),
-        supabase.from("teacher_assignments").select("title, subject, type, due_date")
-          .eq("student_id", user?.id).order("assigned_at", { ascending: false }).limit(3),
-      ]);
+      let pending: any[] = [];
+      let streak = 0;
+      let assignments: any[] = [];
+      let lastSession: any = null;
+      let gamData: any = null;
 
-      const pending = homeworkRes.data || [];
-      const streak = gamRes.data?.streak || 0;
-      const assignments = assignRes.data || [];
-      
+      if (isChild && childSession) {
+        // Use child-api for child sessions (bypasses RLS)
+        const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/child-api`;
+        const childBody = { accessCode: childSession.accessCode, childProfileId: childSession.profileId };
+
+        const [tasksRes, gamRes] = await Promise.all([
+          fetch(baseUrl, { method: "POST", headers: { "Content-Type": "application/json", apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY }, body: JSON.stringify({ ...childBody, action: "get-tasks" }) }),
+          fetch(baseUrl, { method: "POST", headers: { "Content-Type": "application/json", apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY }, body: JSON.stringify({ ...childBody, action: "get-gamification" }) }),
+        ]);
+
+        const tasksData = await tasksRes.json();
+        const gamJson = await gamRes.json();
+
+        pending = (Array.isArray(tasksData) ? tasksData : []).filter((t: any) => !t.completed).slice(0, 5).map((t: any) => ({ title: t.title, subject: t.subject, due_date: t.due_date }));
+        streak = gamJson?.streak || 0;
+        gamData = gamJson;
+      } else {
+        // Use direct Supabase queries for authenticated users
+        const [homeworkRes, sessionsRes, gamRes, assignRes] = await Promise.all([
+          supabase.from("homework_tasks").select("title, subject, due_date, completed")
+            .eq("child_profile_id", profileId).eq("completed", false).order("due_date", { ascending: true }).limit(5),
+          supabase.from("guided_sessions").select("homework_id, completed_at, bloom_level_reached")
+            .eq("user_id", user?.id || profileId).eq("status", "completed").order("completed_at", { ascending: false }).limit(1),
+          supabase.from("gamification").select("streak, focus_points, consistency_points, autonomy_points")
+            .eq("child_profile_id", profileId).maybeSingle(),
+          supabase.from("teacher_assignments").select("title, subject, type, due_date")
+            .eq("student_id", user?.id || "").order("assigned_at", { ascending: false }).limit(3),
+        ]);
+        pending = homeworkRes.data || [];
+        streak = gamRes.data?.streak || 0;
+        assignments = assignRes.data || [];
+        lastSession = sessionsRes.data?.[0] || null;
+        gamData = gamRes.data;
+      }
+
       // Count urgent (due today or tomorrow)
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowStr = tomorrow.toISOString().split("T")[0];
-      const urgentCount = pending.filter(h => h.due_date && h.due_date <= tomorrowStr).length;
+      const urgentCount = pending.filter((h: any) => h.due_date && h.due_date <= tomorrowStr).length;
 
       const contextData: CoachContext = { streak, pendingHomework: pending, teacherAssignments: assignments, urgentCount };
       setCtx(contextData);
@@ -88,14 +115,14 @@ export function CoachPresence() {
           body: JSON.stringify({
             userName: profile?.name || "Studente",
             schoolLevel: profile?.school_level || "superiori",
-            lastSession: sessionsRes.data?.[0] || null,
+            lastSession,
             pendingHomework: pending,
             emotionalHistory: null,
             upcomingTests: null,
             streak,
             teacherAssignments: assignments,
             urgentCount,
-            gamification: gamRes.data || null,
+            gamification: gamData,
           }),
         }
       );
