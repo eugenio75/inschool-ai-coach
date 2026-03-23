@@ -488,11 +488,11 @@ export default function DashboardDocente() {
                 <CalendarDays className="w-4 h-4" /> Scadenze e impegni
               </h2>
             </div>
-            <div className="max-h-[280px] overflow-y-auto space-y-2 pr-1 scrollbar-thin">
+            <div className="space-y-2">
               {assignments
                 .filter(a => a.due_date)
                 .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-                .slice(0, 8)
+                .slice(0, showAllScadenze ? undefined : 4)
                 .map((a: any) => {
                   const dueDate = new Date(a.due_date);
                   const now = new Date();
@@ -540,6 +540,14 @@ export default function DashboardDocente() {
                   );
                 })}
             </div>
+            {assignments.filter(a => a.due_date).length > 4 && (
+              <button
+                onClick={() => setShowAllScadenze(v => !v)}
+                className="w-full text-center text-xs text-[#0070C0] font-medium hover:underline mt-3 py-1"
+              >
+                {showAllScadenze ? 'Mostra meno' : `Vedi tutte (${assignments.filter(a => a.due_date).length})`}
+              </button>
+            )}
             {assignments.filter(a => a.due_date).length === 0 && (
               <div className="text-center py-6">
                 <Calendar className="w-7 h-7 text-slate-300 mx-auto mb-2" />
