@@ -547,9 +547,7 @@ export default function DashboardDocente() {
                   {showAllScadenze ? 'Mostra meno' : `Vedi tutte (${futureCount})`}
                 </button>
               ) : null;
-            })()}
-            )}
-            {assignments.filter(a => a.due_date).length === 0 && (
+            {assignments.filter(a => a.due_date && new Date(a.due_date) >= new Date(new Date().toDateString())).length === 0 && (
               <div className="text-center py-6">
                 <Calendar className="w-7 h-7 text-slate-300 mx-auto mb-2" />
                 <p className="text-sm text-slate-400">Nessuna scadenza imminente</p>
