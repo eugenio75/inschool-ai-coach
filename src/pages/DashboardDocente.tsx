@@ -6,6 +6,7 @@ import {
   Minus, Printer, Trash2, Eye, ChevronDown, ChevronUp,
   AlertTriangle, UserCheck, RefreshCw, LayoutDashboard,
   AlertCircle, Send, Brain, Shield, Link2, Clock,
+  Calendar, CalendarDays, ChevronRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
