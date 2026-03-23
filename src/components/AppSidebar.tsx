@@ -188,7 +188,7 @@ export function AppSidebar() {
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <button
-                      onClick={() => navigate("/dashboard")}
+                      onClick={() => navigate("/dashboard?nuova=1")}
                       className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-white/40 hover:text-white/60 transition-colors text-sm"
                     >
                       <Plus className="w-4 h-4" />

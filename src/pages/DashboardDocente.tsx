@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Plus, FileText, BarChart2, Copy, CheckSquare,
@@ -188,6 +188,7 @@ function TeacherResultsSection({ profileId }: { profileId: string | undefined })
 // ============ MAIN DASHBOARD ============
 export default function DashboardDocente() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const session = getChildSession();
   const profile = session?.profile;
   const profileId = session?.profileId;
@@ -218,6 +219,14 @@ export default function DashboardDocente() {
   const studentiCount = classi.reduce((s, c) => s + (c.num_studenti || 0), 0);
 
   useEffect(() => { if (!profileId) return; loadAll(); }, [profileId]);
+
+  // Auto-open "Nuova classe" modal from sidebar link (?nuova=1)
+  useEffect(() => {
+    if (searchParams.get('nuova') === '1') {
+      setShowClasseModal(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams]);
 
   // Coach message
   useEffect(() => {
