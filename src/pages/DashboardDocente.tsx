@@ -217,6 +217,8 @@ export default function DashboardDocente() {
   const [showClasseModal, setShowClasseModal] = useState(false);
   const [newClasse, setNewClasse] = useState({ nome: "", materia: "", ordine_scolastico: "", num_studenti: "" });
   const [savingClasse, setSavingClasse] = useState(false);
+  const [showAllScadenze, setShowAllScadenze] = useState(false);
+  const [showAllFeed, setShowAllFeed] = useState(false);
   const [classeCreata, setClasseCreata] = useState<any>(null);
 
   const od = onboarding;
@@ -486,11 +488,11 @@ export default function DashboardDocente() {
                 <CalendarDays className="w-4 h-4" /> Scadenze e impegni
               </h2>
             </div>
-            <div className="max-h-[280px] overflow-y-auto space-y-2 pr-1 scrollbar-thin">
+            <div className="space-y-2">
               {assignments
                 .filter(a => a.due_date)
                 .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-                .slice(0, 8)
+                .slice(0, showAllScadenze ? undefined : 4)
                 .map((a: any) => {
                   const dueDate = new Date(a.due_date);
                   const now = new Date();
@@ -538,6 +540,14 @@ export default function DashboardDocente() {
                   );
                 })}
             </div>
+            {assignments.filter(a => a.due_date).length > 4 && (
+              <button
+                onClick={() => setShowAllScadenze(v => !v)}
+                className="w-full text-center text-xs text-[#0070C0] font-medium hover:underline mt-3 py-1"
+              >
+                {showAllScadenze ? 'Mostra meno' : `Vedi tutte (${assignments.filter(a => a.due_date).length})`}
+              </button>
+            )}
             {assignments.filter(a => a.due_date).length === 0 && (
               <div className="text-center py-6">
                 <Calendar className="w-7 h-7 text-slate-300 mx-auto mb-2" />
@@ -671,28 +681,38 @@ export default function DashboardDocente() {
               <p className="text-xs text-slate-300 mt-1">Le attività appariranno quando gli studenti useranno la piattaforma</p>
             </div>
           ) : (
-            <div className="max-h-[280px] overflow-y-auto space-y-2 pr-1 scrollbar-thin">
-              {feedItems.slice(0, 8).map((item: any) => (
-                <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
-                  <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
-                    item.severity === 'urgent' ? 'bg-red-500' :
-                    item.severity === 'positive' ? 'bg-green-500' :
-                    item.severity === 'warning' ? 'bg-amber-500' : 'bg-blue-400'
-                  }`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-slate-700">{item.message}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      {new Date(item.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                    </p>
+            <>
+              <div className="space-y-2">
+                {feedItems.slice(0, showAllFeed ? undefined : 4).map((item: any) => (
+                  <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                    <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                      item.severity === 'urgent' ? 'bg-red-500' :
+                      item.severity === 'positive' ? 'bg-green-500' :
+                      item.severity === 'warning' ? 'bg-amber-500' : 'bg-blue-400'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-slate-700">{item.message}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        {new Date(item.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    {item.action_label && (
+                      <button onClick={() => navigate(item.action_route)} className="text-xs text-[#0070C0] font-medium hover:underline flex-shrink-0 ml-2">
+                        {item.action_label}
+                      </button>
+                    )}
                   </div>
-                  {item.action_label && (
-                    <button onClick={() => navigate(item.action_route)} className="text-xs text-[#0070C0] font-medium hover:underline flex-shrink-0 ml-2">
-                      {item.action_label}
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              {feedItems.length > 4 && (
+                <button
+                  onClick={() => setShowAllFeed(v => !v)}
+                  className="w-full text-center text-xs text-[#0070C0] font-medium hover:underline mt-3 py-1"
+                >
+                  {showAllFeed ? 'Mostra meno' : `Vedi tutte (${feedItems.length})`}
+                </button>
+              )}
+            </>
           )}
         </div>
 
