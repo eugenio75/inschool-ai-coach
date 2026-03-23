@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Plus, FilePlus, BarChart2, BookMarked, CheckSquare,
   FileText, Mic, FolderOpen, Home, Users2, Bell, Copy,
-  Minus, Printer, ChevronRight, Trash2, Eye,
+  Minus, Printer, ChevronRight, Trash2, Eye, ChevronDown,
+  ChevronUp, AlertTriangle, UserCheck, RefreshCw,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
+import { useAuth } from "@/hooks/useAuth";
 
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
