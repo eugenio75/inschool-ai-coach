@@ -571,7 +571,7 @@ export default function DashboardDocente() {
           ) : (
             <>
               <div className="space-y-1">
-                {feedItems.slice(0, showAllFeed ? undefined : 6).map((item: any) => {
+                {feedItems.slice(0, showAllFeed ? undefined : 4).map((item: any) => {
                   const relatedClass = classi.find(c => c.id === item.class_id);
                   const severityStyles: Record<string, { bg: string; dot: string; icon: string }> = {
                     urgent:  { bg: 'bg-red-50 border-red-100', dot: 'bg-red-500', icon: 'text-red-500' },
@@ -634,7 +634,7 @@ export default function DashboardDocente() {
                   );
                 })}
               </div>
-              {feedItems.length > 6 && (
+              {feedItems.length > 4 && (
                 <button
                   onClick={() => setShowAllFeed(v => !v)}
                   className="w-full text-center text-xs text-[#0070C0] font-medium hover:underline mt-3 py-1"
