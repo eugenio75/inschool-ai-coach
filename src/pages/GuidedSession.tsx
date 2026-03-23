@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowLeft, Send, Lightbulb, AlertCircle, Loader2, Paperclip, Mic,
+  ArrowLeft, Send, Lightbulb, AlertCircle, Loader2, Paperclip, Mic, RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SessionCelebration } from "@/components/SessionCelebration";
