@@ -1,9 +1,7 @@
-import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Brain, User, Plus, FolderOpen } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildSession } from "@/lib/childSession";
-import { supabase } from "@/integrations/supabase/client";
 
 const ADULT_ROLES = ["superiori", "universitario", "docente"];
 
@@ -11,30 +9,10 @@ export const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const [showLibrary, setShowLibrary] = useState(false);
 
   const session = getChildSession();
   const role = session?.profile?.school_level || "";
-  const profileId = session?.profileId;
 
-  // Check library preference
-  useEffect(() => {
-    if (!profileId || ADULT_ROLES.includes(role)) return;
-    const checkLibrary = async () => {
-      try {
-        const { data } = await supabase
-          .from("user_preferences")
-          .select("data")
-          .eq("profile_id", profileId)
-          .maybeSingle();
-        const prefs = (data?.data as any) || {};
-        setShowLibrary(!!prefs.show_library);
-      } catch {}
-    };
-    checkLibrary();
-  }, [profileId, role]);
-
-  // Hide for adult roles — they use the desktop sidebar
   if (ADULT_ROLES.includes(role)) return null;
 
   const hiddenPaths = ["/focus", "/homework", "/add-homework", "/auth", "/onboarding", "/", "/challenge"];
@@ -47,7 +25,7 @@ export const BottomNav = () => {
   const navItems = [
     { path: "/dashboard", label: "Home", icon: Home },
     { path: "/add-homework", label: "Aggiungi", icon: Plus, isAdd: true },
-    ...(showLibrary ? [{ path: "/libreria", label: "Libreria", icon: FolderOpen }] : []),
+    { path: "/libreria", label: "Libreria", icon: FolderOpen },
     { path: "/memory", label: "Memoria", icon: Brain },
     ...(isParentView ? [{ path: "/profiles", label: "Profilo", icon: User }] : []),
   ];
