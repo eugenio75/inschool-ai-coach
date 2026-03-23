@@ -83,6 +83,9 @@ const Settings = () => {
   // Notifications
   const [notifTimer, setNotifTimer] = useState(false);
 
+  // Library toggle per child profile
+  const [libraryFlags, setLibraryFlags] = useState<Record<string, boolean>>({});
+
   // Check if adult role
   const session = getChildSession();
   const isAdult = ["superiori", "universitario", "docente"].includes(session?.profile?.school_level || "");
@@ -93,10 +96,26 @@ const Settings = () => {
       setProfiles(p);
       const settings = await getParentSettings();
       if (settings) setParentPin(settings.parent_pin || "0000");
-      // Load notification pref
       if ("Notification" in window) {
         setNotifTimer(Notification.permission === "granted");
       }
+
+      // Load library flags for each child profile (alunno only)
+      const alunni = p.filter((pr: any) => pr.school_level === "alunno");
+      if (alunni.length > 0) {
+        const flags: Record<string, boolean> = {};
+        for (const a of alunni) {
+          const { data } = await supabase
+            .from("user_preferences")
+            .select("data")
+            .eq("profile_id", a.id)
+            .maybeSingle();
+          const prefs = (data?.data as any) || {};
+          flags[a.id] = !!prefs.show_library;
+        }
+        setLibraryFlags(flags);
+      }
+
       setLoading(false);
     };
     load();
