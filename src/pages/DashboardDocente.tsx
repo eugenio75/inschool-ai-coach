@@ -89,10 +89,12 @@ function TeacherResultsSection({ profileId }: { profileId: string | undefined })
 
   if (loading) {
     return (
-      <section>
-        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">Risultati verifiche</h2>
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <BarChart2 className="w-4 h-4" /> Risultati verifiche
+        </h2>
         <div className="space-y-2">{[1, 2].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
-      </section>
+      </div>
     );
   }
 
