@@ -1,10 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
-  LayoutDashboard, MessageSquare, CheckSquare, BarChart3,
-  Settings, GraduationCap, Zap, Users, FilePlus,
-  FileText, BookOpen, Plus, LogOut, Search, Brain,
-  ClipboardList, Bell,
+  LayoutDashboard, BookOpen, Plus, LogOut, Settings,
 } from "lucide-react";
 import { getChildSession } from "@/lib/childSession";
 import { NavLink } from "@/components/NavLink";
@@ -28,16 +25,16 @@ import {
 const navByRole: Record<string, { title: string; url: string; icon: React.ComponentType<{ className?: string }> }[]> = {
   superiori: [
     { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-    { title: "Studia con AI", url: "/challenge/new", icon: MessageSquare },
-    { title: "I miei task", url: "/add-homework", icon: CheckSquare },
+    { title: "Studia con AI", url: "/challenge/new", icon: BookOpen },
+    { title: "I miei task", url: "/add-homework", icon: LayoutDashboard },
     { title: "Memoria", url: "/memory", icon: BookOpen },
     { title: "Impostazioni", url: "/settings", icon: Settings },
   ],
   universitario: [
     { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-    { title: "Studia con AI", url: "/challenge/new", icon: MessageSquare },
-    { title: "Esami", url: "/dashboard", icon: GraduationCap },
-    { title: "Tunnel Focus", url: "/dashboard", icon: Zap },
+    { title: "Studia con AI", url: "/challenge/new", icon: BookOpen },
+    { title: "Esami", url: "/dashboard", icon: BookOpen },
+    { title: "Tunnel Focus", url: "/dashboard", icon: BookOpen },
     { title: "Memoria", url: "/memory", icon: BookOpen },
     { title: "Impostazioni", url: "/settings", icon: Settings },
   ],
@@ -72,7 +69,6 @@ export function AppSidebar() {
       .order("created_at", { ascending: false });
     setClassi(c || []);
 
-    // Load unread feed counts per class
     if (c && c.length > 0) {
       const { data: feed } = await (supabase as any)
         .from("teacher_activity_feed")
@@ -94,7 +90,9 @@ export function AppSidebar() {
     }
   }
 
-  // Docente sidebar
+  // ═══════════════════════════════════════
+  // SIDEBAR DOCENTE
+  // ═══════════════════════════════════════
   if (role === "docente") {
     return (
       <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -121,29 +119,23 @@ export function AppSidebar() {
             </div>
           )}
 
-          {/* Main Nav */}
+          {/* Home nav — ONLY Home link */}
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                {[
-                  { title: "Home", url: "/dashboard", icon: LayoutDashboard },
-                  { title: "Coach AI", url: "/challenge/new", icon: Brain },
-                  { title: "Verifiche", url: "/dashboard#verifiche", icon: ClipboardList },
-                ].map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to={item.url}
-                        end={item.url === "/dashboard"}
-                        className="text-white/70 hover:text-white hover:bg-white/10 transition-colors rounded-lg"
-                        activeClassName="bg-white/15 text-white font-medium border-l-2 border-white"
-                      >
-                        <item.icon className="mr-2.5 h-4 w-4" />
-                        {!collapsed && <span className="text-sm">{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/dashboard"
+                      end
+                      className="text-white/70 hover:text-white hover:bg-white/10 transition-colors rounded-lg"
+                      activeClassName="bg-white/15 text-white font-medium border-l-2 border-white"
+                    >
+                      <LayoutDashboard className="mr-2.5 h-4 w-4" />
+                      {!collapsed && <span className="text-sm">Home</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -239,7 +231,9 @@ export function AppSidebar() {
     );
   }
 
-  // Default sidebar for other roles
+  // ═══════════════════════════════════════
+  // DEFAULT SIDEBAR (superiori, universitario)
+  // ═══════════════════════════════════════
   const items = navByRole[role] || navByRole.superiori;
 
   return (
