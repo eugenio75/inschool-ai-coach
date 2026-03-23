@@ -568,6 +568,28 @@ export default function DashboardDocente() {
               {classi.map((cl, i) => {
                 const classUnread = feedItems.filter((f: any) => f.class_id === cl.id && !f.read_at && (f.severity === 'warning' || f.severity === 'urgent')).length;
                 const dotColor = classUnread > 0 ? 'bg-amber-400' : 'bg-green-400';
+
+                // Gradient per materia
+                const matLower = (cl.materia || '').toLowerCase();
+                const gradientMap: Record<string, string> = {
+                  'musica': 'from-violet-500 to-fuchsia-500',
+                  'educazione civica': 'from-emerald-500 to-teal-500',
+                  'italiano': 'from-sky-500 to-blue-500',
+                  'matematica': 'from-orange-500 to-amber-500',
+                  'storia': 'from-rose-500 to-red-500',
+                  'scienze': 'from-green-500 to-lime-500',
+                  'inglese': 'from-indigo-500 to-blue-500',
+                };
+                const gradient = gradientMap[matLower] || 'from-[#1A3A5C] to-[#0070C0]';
+
+                // Prossima scadenza per questa classe
+                const nextDeadline = assignments
+                  .filter(a => a.class_id === cl.id && a.due_date && new Date(a.due_date) >= new Date())
+                  .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())[0];
+                const daysToDeadline = nextDeadline
+                  ? Math.ceil((new Date(nextDeadline.due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                  : null;
+
                 return (
                   <motion.div
                     key={cl.id}
@@ -575,23 +597,60 @@ export default function DashboardDocente() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
                     onClick={() => navigate(`/classe/${cl.id}`)}
-                    className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer"
+                    className="group bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
                   >
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${dotColor}`} />
-                      <span className="font-semibold text-slate-900 truncate flex-1">{cl.nome}</span>
-                      {cl.materia && (
-                        <span className="text-xs bg-[#0070C0]/10 text-[#0070C0] px-2 py-0.5 rounded-full flex-shrink-0">{cl.materia}</span>
+                    {/* Gradient top bar */}
+                    <div className={`h-1.5 bg-gradient-to-r ${gradient} group-hover:h-2 transition-all duration-300`} />
+
+                    <div className="p-5">
+                      {/* Header */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${dotColor} ring-2 ring-offset-1 ${classUnread > 0 ? 'ring-amber-200' : 'ring-green-200'}`} />
+                        <span className="font-semibold text-slate-900 truncate flex-1 text-[15px]">{cl.nome}</span>
+                        {cl.materia && (
+                          <span className={`text-xs bg-gradient-to-r ${gradient} text-white px-2.5 py-0.5 rounded-full flex-shrink-0 font-medium`}>
+                            {cl.materia}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Stats row */}
+                      <div className="flex items-center gap-4 text-sm mb-3">
+                        <div className="flex items-center gap-1.5">
+                          <Users className="w-3.5 h-3.5 text-slate-400" />
+                          <span className="font-semibold text-slate-700">{cl.num_studenti || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <FileText className="w-3.5 h-3.5 text-slate-400" />
+                          <span className="font-semibold text-slate-700">{materialiCount}</span>
+                        </div>
+                        {classUnread > 0 && (
+                          <div className="flex items-center gap-1.5">
+                            <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+                            <span className="font-semibold text-amber-600">{classUnread}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Prossima scadenza */}
+                      {nextDeadline ? (
+                        <div className={`text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${
+                          daysToDeadline !== null && daysToDeadline <= 2
+                            ? 'bg-amber-50 text-amber-700'
+                            : 'bg-slate-50 text-slate-500'
+                        }`}>
+                          <Calendar className="w-3 h-3" />
+                          <span className="truncate font-medium">{nextDeadline.title}</span>
+                          <span className="ml-auto shrink-0">
+                            {daysToDeadline === 0 ? 'Oggi' : daysToDeadline === 1 ? 'Domani' : `tra ${daysToDeadline}g`}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="text-xs px-3 py-1.5 rounded-lg bg-slate-50 text-slate-400 flex items-center gap-1.5">
+                          <Calendar className="w-3 h-3" />
+                          Nessuna scadenza
+                        </div>
                       )}
-                    </div>
-                    <div className="flex items-center gap-3 text-sm">
-                      <span className="text-slate-500"><span className="font-semibold text-slate-700">{cl.num_studenti || 0}</span> studenti</span>
-                      <span className="text-slate-300">·</span>
-                      <span className="text-slate-500"><span className="font-semibold text-slate-700">{materialiCount}</span> materiali</span>
-                      <span className="text-slate-300">·</span>
-                      <span className={classUnread > 0 ? 'text-amber-600 font-semibold' : 'text-slate-400'}>
-                        {classUnread} da seguire
-                      </span>
                     </div>
                   </motion.div>
                 );
