@@ -188,7 +188,14 @@ export function AppSidebar() {
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <button
-                      onClick={() => navigate("/dashboard?nuova=1")}
+                      onClick={() => {
+                        if (location.pathname === "/dashboard") {
+                          // Already on dashboard — dispatch custom event to open modal
+                          window.dispatchEvent(new CustomEvent("inschool:nuova-classe"));
+                        } else {
+                          navigate("/dashboard?nuova=1");
+                        }
+                      }}
                       className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-white/40 hover:text-white/60 transition-colors text-sm"
                     >
                       <Plus className="w-4 h-4" />
@@ -214,6 +221,11 @@ export function AppSidebar() {
                     {!collapsed && <span>Impostazioni</span>}
                   </button>
                 </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <div className="text-white/60 hover:text-white/80">
+                  <LogoutButton showLabel={!collapsed} />
+                </div>
               </SidebarMenuItem>
             </SidebarMenu>
             <div className="flex items-center gap-2.5">
