@@ -35,3 +35,9 @@ verify_jwt = false
 
 [functions.coach-home-message]
 verify_jwt = false
+
+[functions.coach-teacher-message]
+verify_jwt = false
+
+[functions.teacher-feedback-loop]
+verify_jwt = false
