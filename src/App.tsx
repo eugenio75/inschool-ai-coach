@@ -149,6 +149,9 @@ const AppRoutes = () => (
         <Route path="/session/:homeworkId" element={<AccessibleRoute><GuidedSession /></AccessibleRoute>} />
         <Route path="/prep/:subject?" element={<AccessibleRoute><MaybeAdultLayout><PrepSession /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/memory" element={<AccessibleRoute><MaybeAdultLayout><MemoryRecap /></MaybeAdultLayout></AccessibleRoute>} />
+        <Route path="/progress" element={<AccessibleRoute><MaybeAdultLayout><StudentProgress /></MaybeAdultLayout></AccessibleRoute>} />
+        <Route path="/agenda" element={<AccessibleRoute><MaybeAdultLayout><Agenda /></MaybeAdultLayout></AccessibleRoute>} />
+        <Route path="/study" element={<AccessibleRoute><MaybeAdultLayout><FreeStudySession /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/parent-dashboard" element={<ProtectedRoute><ParentDashboard /></ProtectedRoute>} />
         <Route path="/student-profile" element={<AccessibleRoute><StudentProfile /></AccessibleRoute>} />
         <Route path="/classe/:classId" element={<AccessibleRoute><MaybeAdultLayout><ClassView /></MaybeAdultLayout></AccessibleRoute>} />
