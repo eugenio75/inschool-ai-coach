@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft, Users, Heart, BookOpen, MessageSquare,
   Plus, Mail, Copy, Shield, AlertTriangle, CheckCircle2,
-  FilePlus, Save, Trash2, Send, ChevronRight,
+  FilePlus, Save, Trash2, Send, ChevronRight, FileText, BarChart2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
