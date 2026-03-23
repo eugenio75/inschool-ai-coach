@@ -597,18 +597,20 @@ export default function DashboardDocente() {
         </div>
 
         {/* ━━━ BLOCCO 5 — FEED ATTIVITÀ ━━━ */}
-        <div>
-          <h2 className="text-xs uppercase tracking-widest font-semibold text-slate-400 mb-4">Attività recenti</h2>
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <h2 className="text-xs uppercase tracking-widest font-semibold text-slate-400 mb-4 flex items-center gap-2">
+            <Clock className="w-4 h-4" /> Attività recenti
+          </h2>
           {feedItems.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
-              <Clock className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <div className="text-center py-6">
+              <Clock className="w-7 h-7 text-slate-300 mx-auto mb-2" />
               <p className="text-sm text-slate-400">Nessuna attività recente</p>
               <p className="text-xs text-slate-300 mt-1">Le attività appariranno quando gli studenti useranno la piattaforma</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {feedItems.slice(0, 8).map((item: any) => (
-                <div key={item.id} className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
+                <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
                   <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
                     item.severity === 'urgent' ? 'bg-red-500' :
                     item.severity === 'positive' ? 'bg-green-500' :
