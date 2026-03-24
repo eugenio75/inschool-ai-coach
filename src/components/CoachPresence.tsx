@@ -5,6 +5,7 @@ import { Brain, ArrowRight, Send, Flame, BookOpen, AlertTriangle, Heart, Battery
 import { supabase } from "@/integrations/supabase/client";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
+import { getCoachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
 
 function getProfile() {
   try {
@@ -96,6 +97,8 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
   const [showMood, setShowMood] = useState(false);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const moodRef = useRef<HTMLDivElement>(null);
+  const [coachAvatar, setCoachAvatar] = useState<string | null>(null);
+  const [coachName, setCoachName] = useState<string | null>(null);
   const [ctx, setCtx] = useState<CoachContext>({
     streak: 0, pendingHomework: [], teacherAssignments: [],
     urgentCount: 0, recentEmotions: [], recentErrors: [], recentSessions: [],
@@ -118,6 +121,16 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
 
   useEffect(() => {
     fetchCoachMessage();
+    // Load coach preferences
+    const loadCoachPrefs = async () => {
+      const profileId = getChildSession()?.profileId || profile?.id;
+      if (!profileId) return;
+      const { data } = await supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
+      const prefs = (data?.data as any) || {};
+      if (prefs.coach_avatar) setCoachAvatar(prefs.coach_avatar);
+      if (prefs.coach_name) setCoachName(prefs.coach_name);
+    };
+    loadCoachPrefs();
   }, []);
 
   async function fetchCoachMessage() {
@@ -272,10 +285,13 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border rounded-2xl p-4 sm:p-5">
       <div className="flex items-start gap-3 mb-3">
-        <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-          <Brain className="w-4 h-4 text-primary-foreground" />
+        <div className="w-9 h-9 rounded-full flex-shrink-0 mt-0.5 overflow-hidden bg-primary/10">
+          <img src={getCoachAvatarSrc(coachAvatar)} alt={coachName || "Coach"} className="w-full h-full object-cover" width={36} height={36} />
         </div>
         <div className="flex-1 min-w-0">
+          {coachName && !loading && (
+            <p className="text-[10px] font-semibold text-primary mb-0.5 uppercase tracking-wider">{coachName}</p>
+          )}
           {loading ? (
             <div className="space-y-2">
               <div className="h-4 bg-muted rounded animate-pulse w-3/4" />

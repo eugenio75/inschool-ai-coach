@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getChildSession, setChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
 import OnboardingLegacy from "./OnboardingLegacy";
+import { CoachAvatarPicker } from "@/components/shared/CoachAvatarPicker";
 
 const variants = {
   enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0 }),
@@ -302,11 +303,9 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         case 6:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">Dai un nome al tuo coach</h2>
-                <p className="text-muted-foreground text-sm">Il tuo assistente AI ti accompagnerà ogni giorno nello studio</p>
-                <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2">
-                  <Brain className="w-10 h-10 text-primary" />
-                </div>
+                <h2 className="text-2xl font-bold text-foreground">Personalizza il tuo coach</h2>
+                <p className="text-muted-foreground text-sm">Scegli un avatar e un nome per il tuo assistente AI</p>
+                <CoachAvatarPicker selected={answers.coach_avatar || null} onSelect={(id) => setAnswers({...answers, coach_avatar: id})} />
                 <input
                   type="text"
                   placeholder="Es. Coach, Maestro, Aria, Leo..."
@@ -457,11 +456,9 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             case 6:
               return (
                 <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Dai un nome al tuo coach</h2>
-                    <p className="text-muted-foreground text-sm">Il tuo assistente AI personale per lo studio</p>
-                    <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2">
-                      <Brain className="w-10 h-10 text-primary" />
-                    </div>
+                    <h2 className="text-2xl font-bold text-foreground">Personalizza il tuo coach</h2>
+                    <p className="text-muted-foreground text-sm">Scegli un avatar e un nome per il tuo assistente AI</p>
+                    <CoachAvatarPicker selected={answers.coach_avatar || null} onSelect={(id) => setAnswers({...answers, coach_avatar: id})} />
                     <input type="text" placeholder="Es. Coach, Aria, Leo..." value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
                 </div>
               );
@@ -617,11 +614,9 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             case 6:
               return (
                 <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Nome del tuo assistente AI</h2>
-                    <p className="text-muted-foreground text-sm">Personalizza il nome del coach AI che ti aiuterà</p>
-                    <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-2">
-                      <Brain className="w-10 h-10 text-primary" />
-                    </div>
+                    <h2 className="text-2xl font-bold text-foreground">Personalizza il tuo assistente AI</h2>
+                    <p className="text-muted-foreground text-sm">Scegli un avatar e un nome per il tuo coach</p>
+                    <CoachAvatarPicker selected={answers.coach_avatar || null} onSelect={(id) => setAnswers({...answers, coach_avatar: id})} />
                     <input type="text" placeholder="Es. Assistente, Aria, Coach..." value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
                 </div>
               );
