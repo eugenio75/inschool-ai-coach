@@ -330,7 +330,7 @@ const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
 
 // ─── Summary Card with expandable detail ───
 
-const SummaryCard = ({ item, index, showStrength }: { item: any; index: number; showStrength: boolean }) => {
+const SummaryCard = ({ item, index, showStrength, compact = false }: { item: any; index: number; showStrength: boolean; compact?: boolean }) => {
   const [expanded, setExpanded] = useState(false);
   const [deepSummary, setDeepSummary] = useState<string | null>(null);
   const [loadingDeep, setLoadingDeep] = useState(false);
@@ -393,7 +393,8 @@ const SummaryCard = ({ item, index, showStrength }: { item: any; index: number; 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
       transition={{ ...spring, delay: index * 0.03 }}
-      className="bg-card rounded-xl border border-border p-3.5">
+      className={compact ? "py-2 first:pt-0" : "bg-card rounded-xl border border-border p-3.5"}>
+      {compact && index > 0 && <div className="border-t border-border/40 -mt-2 mb-2" />}
       <p className="text-sm font-semibold text-foreground">{item.concept}</p>
       {item.summary && (
         <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{item.summary}</p>
@@ -868,26 +869,9 @@ const MemoryRecap = () => {
                           </div>
 
                           {/* Concepts inside */}
-                          <div className="px-4 py-3 space-y-3">
+                          <div className="px-4 py-3 space-y-2">
                             {group.items.map((item: any, i: number) => (
-                              <div key={item.id} className={i > 0 ? "pt-3 border-t border-border/40" : ""}>
-                                <p className="text-sm font-medium text-foreground">{item.concept}</p>
-                                {item.summary && (
-                                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{item.summary}</p>
-                                )}
-                                {!item.summary && (
-                                  <p className="text-sm text-muted-foreground mt-1 italic">Argomento studiato</p>
-                                )}
-                                {showStrength && (
-                                  <div className="mt-2 flex items-center gap-2">
-                                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                                      <div className={`h-full rounded-full ${(item.strength || 0) < 30 ? "bg-destructive" : (item.strength || 0) < 60 ? "bg-amber-500" : "bg-primary"}`}
-                                        style={{ width: `${item.strength || 0}%` }} />
-                                    </div>
-                                    <span className="text-[10px] text-muted-foreground">{item.strength || 0}%</span>
-                                  </div>
-                                )}
-                              </div>
+                              <SummaryCard key={item.id} item={item} index={i} showStrength={showStrength} compact />
                             ))}
                           </div>
 
