@@ -5,8 +5,7 @@ import {
   ArrowLeft, Brain, RefreshCw, ChevronDown, ChevronUp, Sparkles,
   Loader2, Send, MessageCircle, X, BookOpen, Calendar, BarChart3,
   Layers, ThumbsDown, Minus as MinusIcon, ThumbsUp, AlertCircle,
-  AlertTriangle, CalendarDays, GraduationCap, TrendingUp, Flame,
-  Target, ChevronRight,
+  AlertTriangle, CalendarDays, GraduationCap, Target, ChevronRight,
 } from "lucide-react";
 import { LearningErrorsTab } from "@/components/LearningErrorsTab";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,40 +18,21 @@ import { isChildSession, getChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
+// ─── Types ───
+type Section = "ripasso" | "rinforza" | "errori";
+type ContentType = "today" | "cumulative" | "specific";
+type StudyMethod = "coach" | "flashcard";
+
+interface WizardState {
+  step: "section" | "content" | "subject-pick" | "method" | "study";
+  section: Section | null;
+  contentType: ContentType | null;
+  subject: string | null;
+  specificTopic: string | null;
+  method: StudyMethod | null;
+}
+
 // ─── Helpers ───
-
-function getMonday(d: Date): Date {
-  const date = new Date(d);
-  const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-  date.setDate(diff);
-  date.setHours(0, 0, 0, 0);
-  return date;
-}
-
-function getSunday(d: Date): Date {
-  const monday = getMonday(d);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  sunday.setHours(23, 59, 59, 999);
-  return sunday;
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("it-IT", { day: "numeric", month: "short" });
-}
-
-function getDayLabel(dateStr: string): string {
-  const d = new Date(dateStr);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const itemDate = new Date(d);
-  itemDate.setHours(0, 0, 0, 0);
-  const diffDays = Math.floor((today.getTime() - itemDate.getTime()) / 86400000);
-  if (diffDays === 0) return "Oggi";
-  if (diffDays === 1) return "Ieri";
-  return d.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
-}
 
 function getProfile() {
   try {
@@ -62,35 +42,18 @@ function getProfile() {
   } catch { return null; }
 }
 
-function getPrepLabel(schoolLevel: string) {
-  switch (schoolLevel) {
-    case "alunno": case "medie": return "Prepara l'interrogazione";
-    case "universitario": return "Prepara l'esame";
-    default: return "Prepara la verifica";
-  }
+function getTodayStart(): string {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
 }
 
-// ─── StrengthBar ───
-
-const StrengthBar = ({ strength }: { strength: number }) => {
-  const color = strength >= 70 ? "bg-primary" : strength >= 40 ? "bg-secondary" : "bg-terracotta";
-  const label = strength >= 70 ? "Forte" : strength >= 40 ? "Da rivedere" : "Da rafforzare";
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-        <motion.div className={`h-full rounded-full ${color}`} initial={{ width: 0 }} animate={{ width: `${strength}%` }} transition={spring} />
-      </div>
-      <span className="text-xs text-muted-foreground w-24 text-right">{label}</span>
-    </div>
-  );
-};
-
-// ─── ReviewChat ───
+// ─── ReviewChat (Coach chat) ───
 
 interface ReviewMessage { role: "assistant" | "user"; content: string; }
 
-const ReviewChat = ({ item, onStrengthUpdate, onClose }: {
-  item: any; onStrengthUpdate: (n: number) => void; onClose: () => void;
+const ReviewChat = ({ topic, subject, onClose }: {
+  topic: string; subject: string; onClose: () => void;
 }) => {
   const [messages, setMessages] = useState<ReviewMessage[]>([]);
   const [input, setInput] = useState("");
@@ -111,7 +74,7 @@ const ReviewChat = ({ item, onStrengthUpdate, onClose }: {
         {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-          body: JSON.stringify({ messages: allMessages, concept: item.concept, summary: item.summary, subject: item.subject, strength: item.strength, studentProfile: profile }),
+          body: JSON.stringify({ messages: allMessages, concept: topic, summary: "", subject, strength: 50, studentProfile: profile }),
         }
       );
       if (!response.ok || !response.body) throw new Error("Errore");
@@ -140,11 +103,7 @@ const ReviewChat = ({ item, onStrengthUpdate, onClose }: {
         }
       }
       if (assistantText) {
-        const strengthMatch = assistantText.match(/\[STRENGTH_UPDATE:\s*(\d+)\]/);
-        if (strengthMatch) {
-          onStrengthUpdate(Math.max(0, Math.min(100, parseInt(strengthMatch[1]))));
-          assistantText = assistantText.replace(/\[STRENGTH_UPDATE:\s*\d+\]/, "").trim();
-        }
+        assistantText = assistantText.replace(/\[STRENGTH_UPDATE:\s*\d+\]/, "").trim();
         setMessages(prev => [...prev, { role: "assistant", content: assistantText }]);
       }
     } catch { setMessages(prev => [...prev, { role: "assistant", content: "Oops, c'è stato un problema. Riprova!" }]); }
@@ -161,25 +120,26 @@ const ReviewChat = ({ item, onStrengthUpdate, onClose }: {
   };
 
   return (
-    <div className="mt-3 bg-muted/30 rounded-xl border border-border overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2.5 bg-sage-light/30 border-b border-border">
+    <div className="flex flex-col h-[calc(100vh-180px)] max-w-2xl mx-auto">
+      <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
         <div className="flex items-center gap-2">
           <MessageCircle className="w-4 h-4 text-primary" />
-          <span className="text-xs font-semibold text-foreground">Ripasso attivo</span>
+          <span className="text-sm font-semibold text-foreground">{topic}</span>
+          <span className="text-xs text-muted-foreground">· {subject}</span>
         </div>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
       </div>
-      <div ref={scrollRef} className="max-h-60 overflow-y-auto p-3 space-y-2.5">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.map((msg, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${msg.role === "assistant" ? "bg-card text-foreground rounded-bl-md border border-border" : "bg-primary text-primary-foreground rounded-br-md"}`}>
+            <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${msg.role === "assistant" ? "bg-card text-foreground rounded-bl-md border border-border" : "bg-primary text-primary-foreground rounded-br-md"}`}>
               {msg.content}
             </div>
           </motion.div>
         ))}
         {streamingText && (
           <div className="flex justify-start">
-            <div className="max-w-[85%] bg-card text-foreground rounded-2xl rounded-bl-md border border-border px-3.5 py-2 text-sm leading-relaxed">
+            <div className="max-w-[85%] bg-card text-foreground rounded-2xl rounded-bl-md border border-border px-4 py-2.5 text-sm leading-relaxed">
               {streamingText.replace(/\[STRENGTH_UPDATE:\s*\d+\]/, "")}
               <span className="inline-block w-1.5 h-4 bg-primary/40 ml-0.5 animate-pulse" />
             </div>
@@ -195,14 +155,14 @@ const ReviewChat = ({ item, onStrengthUpdate, onClose }: {
           </div>
         )}
       </div>
-      <div className="p-3 border-t border-border flex gap-2">
+      <div className="p-3 border-t border-border bg-card flex gap-2">
         <input type="text" value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
           placeholder="Scrivi la tua risposta..." disabled={isTyping}
-          className="flex-1 min-w-0 bg-card border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+          className="flex-1 min-w-0 bg-background border border-border rounded-xl px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
         />
         <button onClick={handleSend} disabled={!input.trim() || isTyping}
-          className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 disabled:opacity-40 transition-colors shrink-0">
+          className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 disabled:opacity-40 transition-colors shrink-0">
           <Send className="w-4 h-4" />
         </button>
       </div>
@@ -210,381 +170,21 @@ const ReviewChat = ({ item, onStrengthUpdate, onClose }: {
   );
 };
 
-// ─── RecapCard ───
+// ─── Flashcard Session (inline) ───
 
-const RecapCard = ({ item, onUpdate, compact = false }: { item: any; onUpdate: (id: string, s: number) => void; compact?: boolean }) => {
-  const [expanded, setExpanded] = useState(false);
-  const [reviewMode, setReviewMode] = useState(false);
-  const colors = subjectColors[item.subject] || subjectColors.Matematica;
-
-  const handleStrengthUpdate = async (newStrength: number) => {
-    await updateMemoryStrength(item.id, newStrength);
-    onUpdate(item.id, newStrength);
-    try {
-      const missions = await getDailyMissions();
-      const reviewMission = missions.find((m: any) => (m.mission_type === "review_concept" || m.mission_type === "review_weak_concept") && !m.completed);
-      if (reviewMission) await completeMission(reviewMission.id, reviewMission.points_reward);
-    } catch {}
-  };
-
-  return (
-    <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
-      <button onClick={() => setExpanded(!expanded)} className="w-full flex items-start gap-3 p-4 text-left">
-        {!compact && (
-          <div className={`w-9 h-9 rounded-xl ${colors.bg} flex items-center justify-center flex-shrink-0`}>
-            <Brain className={`w-4 h-4 ${colors.text}`} />
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          {compact && <p className="text-[10px] text-muted-foreground mb-0.5">{formatDate(item.created_at)}</p>}
-          <h3 className="font-display font-semibold text-foreground text-sm">{item.concept}</h3>
-          <div className="mt-1.5"><StrengthBar strength={item.strength || 0} /></div>
-        </div>
-        {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" /> : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />}
-      </button>
-      <AnimatePresence>
-        {expanded && (
-          <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-            <div className="px-4 pb-4 space-y-3">
-              {item.summary && (
-                <div className="bg-sage-light/50 rounded-xl px-4 py-3">
-                  <p className="text-xs font-medium text-sage-dark uppercase tracking-wider mb-1">Quello che hai studiato</p>
-                  <p className="text-sm text-foreground leading-relaxed">{item.summary}</p>
-                </div>
-              )}
-              {!reviewMode ? (
-                <Button onClick={() => setReviewMode(true)} className="w-full bg-primary text-primary-foreground hover:bg-sage-dark rounded-xl" size="sm">
-                  <MessageCircle className="w-4 h-4 mr-2" /> Ripassa con il Coach
-                </Button>
-              ) : (
-                <ReviewChat item={item} onStrengthUpdate={handleStrengthUpdate} onClose={() => setReviewMode(false)} />
-              )}
-              <p className="text-xs text-muted-foreground">
-                Ultimo ripasso: {item.last_reviewed ? new Date(item.last_reviewed).toLocaleDateString("it-IT", { day: "numeric", month: "long" }) : "mai"}
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
-// ═══════════════════════════════════════════
-// SECTION: Weekly Summary
-// ═══════════════════════════════════════════
-
-const WeeklySummaryCard = ({ items, focusSessions }: { items: any[]; focusSessions: number }) => {
-  const now = new Date();
-  const monday = getMonday(now);
-  const sunday = getSunday(now);
-
-  const weekItems = useMemo(() =>
-    items.filter(i => { const d = new Date(i.created_at); return d >= monday && d <= sunday; }),
-    [items, monday.getTime(), sunday.getTime()]
-  );
-
-  const weekReviewed = useMemo(() =>
-    items.filter(i => {
-      if (!i.last_reviewed) return false;
-      const d = new Date(i.last_reviewed);
-      return d >= monday && d <= sunday;
-    }),
-    [items, monday.getTime(), sunday.getTime()]
-  );
-
-  const avgStrength = items.length > 0 ? Math.round(items.reduce((s, i) => s + (i.strength || 0), 0) / items.length) : 0;
-  const weekLabel = `${monday.toLocaleDateString("it-IT", { day: "numeric", month: "short" })} – ${sunday.toLocaleDateString("it-IT", { day: "numeric", month: "short" })}`;
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}
-      className="bg-card rounded-2xl border border-border p-4 shadow-soft">
-      <div className="flex items-center gap-2 mb-3">
-        <BarChart3 className="w-4 h-4 text-primary" />
-        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{weekLabel}</span>
-      </div>
-      <div className="grid grid-cols-4 gap-2">
-        <div className="bg-muted/50 rounded-xl p-2.5 text-center">
-          <p className="text-xl font-bold text-foreground">{weekItems.length}</p>
-          <p className="text-[10px] text-muted-foreground">Nuovi concetti</p>
-        </div>
-        <div className="bg-muted/50 rounded-xl p-2.5 text-center">
-          <p className="text-xl font-bold text-foreground">{weekReviewed.length}</p>
-          <p className="text-[10px] text-muted-foreground">Ripassati</p>
-        </div>
-        <div className="bg-muted/50 rounded-xl p-2.5 text-center">
-          <p className="text-xl font-bold text-foreground">{focusSessions}</p>
-          <p className="text-[10px] text-muted-foreground">Sessioni</p>
-        </div>
-        <div className="bg-muted/50 rounded-xl p-2.5 text-center">
-          <p className="text-xl font-bold text-foreground">{avgStrength}%</p>
-          <p className="text-[10px] text-muted-foreground">Forza media</p>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
-// ═══════════════════════════════════════════
-// SECTION: Weak Concepts
-// ═══════════════════════════════════════════
-
-const WeakConceptsSection = ({ items, onUpdate }: { items: any[]; onUpdate: (id: string, s: number) => void }) => {
-  const weakItems = useMemo(() =>
-    items.filter(i => (i.strength || 0) < 50).sort((a, b) => (a.strength || 0) - (b.strength || 0)),
-    [items]
-  );
-  const [showAll, setShowAll] = useState(false);
-
-  if (weakItems.length === 0) return null;
-
-  const displayed = showAll ? weakItems : weakItems.slice(0, 3);
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.1 }}>
-      <div className="flex items-center gap-2 mb-3">
-        <Target className="w-4 h-4 text-terracotta" />
-        <h3 className="font-display font-semibold text-sm text-foreground">Concetti da rafforzare</h3>
-        <span className="text-xs bg-terracotta-light text-terracotta px-2 py-0.5 rounded-full font-medium">{weakItems.length}</span>
-      </div>
-      <div className="space-y-2">
-        {displayed.map((item, i) => (
-          <motion.div key={item.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: i * 0.04 }}>
-            <RecapCard item={item} onUpdate={onUpdate} />
-          </motion.div>
-        ))}
-      </div>
-      {weakItems.length > 3 && (
-        <button onClick={() => setShowAll(!showAll)}
-          className="mt-2 text-xs text-primary font-medium hover:underline">
-          {showAll ? "Mostra meno" : `Vedi tutti (${weakItems.length})`}
-        </button>
-      )}
-    </motion.div>
-  );
-};
-
-// ═══════════════════════════════════════════
-// SECTION: Subjects Overview
-// ═══════════════════════════════════════════
-
-const SubjectsOverview = ({ items, onSelect }: { items: any[]; onSelect: (subject: string) => void }) => {
-  const subjects = useMemo(() => {
-    const map: Record<string, { count: number; weak: number; avgStrength: number }> = {};
-    for (const item of items) {
-      if (!map[item.subject]) map[item.subject] = { count: 0, weak: 0, avgStrength: 0 };
-      map[item.subject].count++;
-      if ((item.strength || 0) < 50) map[item.subject].weak++;
-      map[item.subject].avgStrength += (item.strength || 0);
-    }
-    return Object.entries(map)
-      .map(([name, data]) => ({ name, ...data, avgStrength: Math.round(data.avgStrength / data.count) }))
-      .sort((a, b) => b.count - a.count);
-  }, [items]);
-
-  if (subjects.length === 0) return null;
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.15 }}>
-      <div className="flex items-center gap-2 mb-3">
-        <BookOpen className="w-4 h-4 text-primary" />
-        <h3 className="font-display font-semibold text-sm text-foreground">Per materia</h3>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        {subjects.map((s) => {
-          const colors = subjectColors[s.name] || subjectColors.Matematica;
-          return (
-            <button key={s.name} onClick={() => onSelect(s.name)}
-              className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
-              <div className={`w-9 h-9 rounded-xl ${colors.bg} flex items-center justify-center flex-shrink-0`}>
-                <BookOpen className={`w-4 h-4 ${colors.text}`} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{s.name}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[11px] text-muted-foreground">{s.count} concetti</span>
-                  {s.weak > 0 && <span className="text-[10px] text-terracotta font-medium">{s.weak} deboli</span>}
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-            </button>
-          );
-        })}
-      </div>
-    </motion.div>
-  );
-};
-
-// ═══════════════════════════════════════════
-// SECTION: Subject Detail View
-// ═══════════════════════════════════════════
-
-const SubjectDetail = ({ subject, items, onUpdate, onBack }: {
-  subject: string; items: any[]; onUpdate: (id: string, s: number) => void; onBack: () => void;
+const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
+  cards: any[]; subject: string; onClose: () => void;
 }) => {
-  const colors = subjectColors[subject] || subjectColors.Matematica;
-  const dayGroups = useMemo(() => {
-    const groups: Record<string, any[]> = {};
-    const sorted = [...items].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    for (const item of sorted) {
-      const dayKey = new Date(item.created_at).toISOString().split("T")[0];
-      if (!groups[dayKey]) groups[dayKey] = [];
-      groups[dayKey].push(item);
-    }
-    for (const key of Object.keys(groups)) {
-      groups[key].sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-    }
-    return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
-  }, [items]);
-
-  const weakCount = items.filter(i => (i.strength || 0) < 50).length;
-  const avgStrength = Math.round(items.reduce((s, i) => s + (i.strength || 0), 0) / items.length);
-
-  return (
-    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
-      <button onClick={onBack} className="flex items-center gap-2 text-sm text-primary font-medium hover:underline">
-        <ArrowLeft className="w-4 h-4" /> Tutte le materie
-      </button>
-      <div className={`${colors.bg} rounded-2xl p-4 flex items-center gap-3`}>
-        <div className="w-10 h-10 rounded-xl bg-card/60 flex items-center justify-center">
-          <Brain className={`w-5 h-5 ${colors.text}`} />
-        </div>
-        <div className="flex-1">
-          <p className={`text-base font-bold ${colors.text}`}>{subject}</p>
-          <p className="text-xs text-muted-foreground">{items.length} concetti · forza media {avgStrength}%</p>
-        </div>
-        {weakCount > 0 && (
-          <span className="text-[10px] bg-terracotta-light text-terracotta px-2 py-0.5 rounded-full font-medium">
-            {weakCount} da rafforzare
-          </span>
-        )}
-      </div>
-
-      {dayGroups.map(([dayKey, dayItems]) => (
-        <div key={dayKey}>
-          <div className="flex items-center gap-2 mb-2 px-1">
-            <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{getDayLabel(dayKey)}</span>
-          </div>
-          <div className="space-y-2">
-            {dayItems.map((item: any, i: number) => (
-              <motion.div key={item.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: i * 0.05 }}>
-                <RecapCard item={item} onUpdate={onUpdate} compact />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </motion.div>
-  );
-};
-
-// ═══════════════════════════════════════════
-// SECTION: Study Mode Cards
-// ═══════════════════════════════════════════
-
-const StudyModeCards = ({ onStartReview, onStartFlashcard }: {
-  onStartReview: (topic: string, subject: string) => void;
-  onStartFlashcard: (mode: string) => void;
-}) => {
-  const navigate = useNavigate();
-  const profile = getProfile();
-  const schoolLevel = profile?.school_level || "superiori";
-  const [freeInput, setFreeInput] = useState("");
-
-  const modes = [
-    { id: "today", label: "Ripassa quello di oggi", icon: CalendarDays, color: "bg-primary/10 text-primary" },
-    { id: "cumulative", label: "Ripasso cumulativo", icon: Brain, color: "bg-clay-light text-clay-dark" },
-    { id: "prep", label: getPrepLabel(schoolLevel), icon: GraduationCap, color: "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400" },
-  ];
-
-  const handleModeClick = (id: string) => {
-    if (id === "today" || id === "cumulative") {
-      onStartFlashcard(id);
-    } else if (id === "prep") {
-      onStartFlashcard("program");
-    }
-  };
-
-  const handleFreeSubmit = () => {
-    const trimmed = freeInput.trim();
-    if (!trimmed) return;
-    onStartFlashcard("topic:" + trimmed);
-  };
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 }}>
-      <div className="flex items-center gap-2 mb-3">
-        <Sparkles className="w-4 h-4 text-primary" />
-        <h3 className="font-display font-semibold text-sm text-foreground">Inizia una sessione</h3>
-      </div>
-      <div className="grid grid-cols-1 gap-2 mb-3">
-        {modes.map((m) => (
-          <button key={m.id} onClick={() => handleModeClick(m.id)}
-            className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left">
-            <div className={`w-9 h-9 rounded-xl ${m.color} flex items-center justify-center flex-shrink-0`}>
-              <m.icon className="w-4 h-4" />
-            </div>
-            <p className="text-sm font-semibold text-foreground">{m.label}</p>
-          </button>
-        ))}
-      </div>
-      <div className="relative">
-        <div className="absolute left-3 top-1/2 -translate-y-1/2">
-          <Sparkles className="w-4 h-4 text-muted-foreground" />
-        </div>
-        <Input
-          value={freeInput}
-          onChange={e => setFreeInput(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && handleFreeSubmit()}
-          placeholder="Oppure scrivi un argomento specifico..."
-          className="text-sm pl-9"
-        />
-      </div>
-    </motion.div>
-  );
-};
-
-// ═══════════════════════════════════════════
-// SECTION: Flashcard Tab (inline from old MemoryRecap)
-// ═══════════════════════════════════════════
-
-const FlashcardTab = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [cards, setCards] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [cards, setCards] = useState(initialCards);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
-  const [subjectFilter, setSubjectFilter] = useState<string>("all");
   const [sessionStats, setSessionStats] = useState({ correct: 0, almost: 0, wrong: 0 });
   const [sessionDone, setSessionDone] = useState(false);
   const [coachIntervention, setCoachIntervention] = useState<string | null>(null);
 
-  useEffect(() => { loadCards(); }, [user]);
-
-  const loadCards = async () => {
-    if (!user) return;
-    setLoading(true);
-    const { data } = await supabase.from("flashcards").select("*").eq("user_id", user.id)
-      .order("is_flagged", { ascending: false }).order("next_review_at", { ascending: true, nullsFirst: true });
-    const sorted = (data || []).sort((a: any, b: any) => {
-      if (a.is_flagged && !b.is_flagged) return -1;
-      if (!a.is_flagged && b.is_flagged) return 1;
-      const now = new Date().toISOString();
-      const aDue = !a.next_review_at || a.next_review_at <= now;
-      const bDue = !b.next_review_at || b.next_review_at <= now;
-      if (aDue && !bDue) return -1;
-      if (!aDue && bDue) return 1;
-      return (a.times_shown || 0) - (b.times_shown || 0);
-    });
-    setCards(sorted);
-    setLoading(false);
-  };
-
-  const filteredCards = useMemo(() => subjectFilter === "all" ? cards : cards.filter(c => c.subject === subjectFilter), [cards, subjectFilter]);
-  const subjects = useMemo(() => Array.from(new Set(cards.map(c => c.subject))).sort(), [cards]);
-  const currentCard = filteredCards[currentIndex];
+  const currentCard = cards[currentIndex];
 
   const handleRate = async (rating: "wrong" | "almost" | "correct") => {
     if (!currentCard || !user) return;
@@ -610,19 +210,9 @@ const FlashcardTab = () => {
     await supabase.from("flashcards").update(updates).eq("id", currentCard.id);
     setCards(prev => prev.map(c => c.id === currentCard.id ? { ...c, ...updates } : c));
     setFlipped(false);
-    if (currentIndex < filteredCards.length - 1) setTimeout(() => setCurrentIndex(i => i + 1), 200);
+    if (currentIndex < cards.length - 1) setTimeout(() => setCurrentIndex(i => i + 1), 200);
     else setSessionDone(true);
   };
-
-  if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
-
-  if (cards.length === 0) return (
-    <div className="text-center py-16 px-6">
-      <Layers className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-      <p className="text-muted-foreground font-medium">Nessuna flashcard ancora</p>
-      <p className="text-muted-foreground text-sm mt-1">Completa sessioni di studio per generare carte automaticamente!</p>
-    </div>
-  );
 
   if (sessionDone) {
     return (
@@ -646,32 +236,38 @@ const FlashcardTab = () => {
               <p className="text-xs text-red-600/70">Da ripassare</p>
             </div>
           </div>
-          <button onClick={() => { setSessionDone(false); setCurrentIndex(0); setSessionStats({ correct: 0, almost: 0, wrong: 0 }); loadCards(); }}
-            className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium text-sm">Ricomincia</button>
+          <button onClick={onClose} className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium text-sm">
+            Torna indietro
+          </button>
         </motion.div>
+      </div>
+    );
+  }
+
+  if (cards.length === 0) {
+    return (
+      <div className="text-center py-16 px-6">
+        <Layers className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+        <p className="text-muted-foreground font-medium">Nessuna flashcard disponibile</p>
+        <p className="text-muted-foreground text-sm mt-1">Completa sessioni di studio per generare carte!</p>
+        <button onClick={onClose} className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium">Torna indietro</button>
       </div>
     );
   }
 
   return (
     <div className="max-w-lg mx-auto px-6 py-6 space-y-5">
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-        <button onClick={() => { setSubjectFilter("all"); setCurrentIndex(0); setFlipped(false); }}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${subjectFilter === "all" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-          Tutte ({cards.length})
+      <div className="flex items-center justify-between">
+        <button onClick={onClose} className="flex items-center gap-2 text-sm text-primary font-medium">
+          <ArrowLeft className="w-4 h-4" /> Indietro
         </button>
-        {subjects.map(s => (
-          <button key={s} onClick={() => { setSubjectFilter(s); setCurrentIndex(0); setFlipped(false); }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${subjectFilter === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-            {s} ({cards.filter(c => c.subject === s).length})
-          </button>
-        ))}
+        <span className="text-xs text-muted-foreground font-medium">{subject}</span>
       </div>
 
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <span>{currentIndex + 1} / {filteredCards.length}</span>
+        <span>{currentIndex + 1} / {cards.length}</span>
         <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${((currentIndex + 1) / filteredCards.length) * 100}%` }} />
+          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${((currentIndex + 1) / cards.length) * 100}%` }} />
         </div>
       </div>
 
@@ -733,140 +329,399 @@ const FlashcardTab = () => {
 };
 
 // ═══════════════════════════════════════════
-// MAIN PAGE
+// MAIN PAGE — Wizard Flow
 // ═══════════════════════════════════════════
-
-type MainTab = "overview" | "flashcard" | "errors";
 
 const MemoryRecap = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
+  const [flashcards, setFlashcards] = useState<any[]>([]);
+  const [errors, setErrors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mainTab, setMainTab] = useState<MainTab>("overview");
-  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [focusSessionCount, setFocusSessionCount] = useState(0);
+  const [wizard, setWizard] = useState<WizardState>({
+    step: "section", section: null, contentType: null, subject: null, specificTopic: null, method: null,
+  });
+  const [specificInput, setSpecificInput] = useState("");
 
+  // Load data
   useEffect(() => {
     const load = async () => {
-      const data = await getMemoryItems();
-      setItems(data);
-      setLoading(false);
+      const memoryData = await getMemoryItems();
+      setItems(memoryData);
 
-      // Load weekly focus sessions count
-      const profileId = getChildSession()?.profileId;
-      if (profileId) {
-        const now = new Date();
-        const monday = getMonday(now);
-        const { count } = await supabase
-          .from("focus_sessions")
-          .select("id", { count: "exact", head: true })
-          .eq("child_profile_id", profileId)
-          .gte("completed_at", monday.toISOString());
-        setFocusSessionCount(count || 0);
+      if (user) {
+        const { data: fc } = await supabase.from("flashcards").select("*").eq("user_id", user.id)
+          .order("next_review_at", { ascending: true, nullsFirst: true });
+        setFlashcards(fc || []);
+
+        const { data: le } = await supabase.from("learning_errors").select("*").eq("user_id", user.id)
+          .eq("resolved", false).order("created_at", { ascending: false }).limit(100);
+        setErrors(le || []);
       }
+      setLoading(false);
     };
     load();
-  }, []);
+  }, [user]);
 
-  const handleItemUpdate = (id: string, newStrength: number) => {
-    setItems(prev => prev.map(item =>
-      item.id === id ? { ...item, strength: newStrength, last_reviewed: new Date().toISOString() } : item
-    ));
+  // Derived data
+  const todayItems = useMemo(() => {
+    const todayStart = getTodayStart();
+    return items.filter(i => i.created_at >= todayStart);
+  }, [items]);
+
+  const weakItems = useMemo(() =>
+    items.filter(i => (i.strength || 0) < 50).sort((a, b) => (a.strength || 0) - (b.strength || 0)),
+    [items]
+  );
+
+  const todayErrors = useMemo(() => {
+    const todayStart = getTodayStart();
+    return errors.filter(e => e.created_at >= todayStart);
+  }, [errors]);
+
+  // Get subjects for the current section + content type
+  const getRelevantItems = (): any[] => {
+    if (wizard.section === "ripasso") {
+      if (wizard.contentType === "today") return todayItems;
+      if (wizard.contentType === "cumulative") return items;
+      return [];
+    }
+    if (wizard.section === "rinforza") {
+      if (wizard.contentType === "today") return weakItems.filter(i => i.created_at >= getTodayStart());
+      if (wizard.contentType === "cumulative") return weakItems;
+      return [];
+    }
+    if (wizard.section === "errori") {
+      if (wizard.contentType === "today") return todayErrors;
+      if (wizard.contentType === "cumulative") return errors;
+      return [];
+    }
+    return [];
   };
 
-  const handleStartFlashcard = (mode: string) => {
-    if (mode.startsWith("topic:")) {
-      navigate(`/flashcards?mode=topic&topic=${encodeURIComponent(mode.slice(6))}`);
+  const relevantSubjects = useMemo(() => {
+    const relevant = getRelevantItems();
+    const subjectMap: Record<string, number> = {};
+    for (const item of relevant) {
+      const s = item.subject || "Altro";
+      subjectMap[s] = (subjectMap[s] || 0) + 1;
+    }
+    return Object.entries(subjectMap).sort(([, a], [, b]) => b - a);
+  }, [wizard.section, wizard.contentType, items, weakItems, errors, todayItems, todayErrors]);
+
+  // Get flashcards filtered by the wizard context
+  const getFilteredFlashcards = (): any[] => {
+    if (wizard.specificTopic) {
+      const topic = wizard.specificTopic.toLowerCase();
+      return flashcards.filter(c =>
+        c.subject?.toLowerCase().includes(topic) ||
+        c.question?.toLowerCase().includes(topic) ||
+        c.answer?.toLowerCase().includes(topic)
+      );
+    }
+    if (wizard.subject) {
+      return flashcards.filter(c => c.subject === wizard.subject);
+    }
+    if (wizard.contentType === "today") {
+      const todayStart = getTodayStart();
+      return flashcards.filter(c => c.created_at >= todayStart);
+    }
+    return flashcards;
+  };
+
+  // Navigation helpers
+  const goBack = () => {
+    if (wizard.step === "study") setWizard(w => ({ ...w, step: "method", method: null }));
+    else if (wizard.step === "method") {
+      if (wizard.contentType === "specific") setWizard(w => ({ ...w, step: "content", specificTopic: null, subject: null }));
+      else setWizard(w => ({ ...w, step: "subject-pick", subject: null }));
+    }
+    else if (wizard.step === "subject-pick") setWizard(w => ({ ...w, step: "content", contentType: null }));
+    else if (wizard.step === "content") setWizard(w => ({ ...w, step: "section", section: null }));
+    else navigate("/dashboard");
+  };
+
+  const selectSection = (section: Section) => {
+    setWizard({ step: "content", section, contentType: null, subject: null, specificTopic: null, method: null });
+  };
+
+  const selectContentType = (ct: ContentType) => {
+    if (ct === "specific") {
+      setWizard(w => ({ ...w, step: "content", contentType: ct }));
     } else {
-      navigate(`/flashcards?mode=${mode}`);
+      setWizard(w => ({ ...w, step: "subject-pick", contentType: ct, specificTopic: null }));
     }
   };
 
-  const handleStartReview = (topic: string, subject: string) => {
-    navigate(`/us?type=review&subject=${encodeURIComponent(subject)}`);
+  const selectSubject = (subject: string) => {
+    setWizard(w => ({ ...w, step: "method", subject }));
   };
 
-  const activeSubjectItems = useMemo(() =>
-    selectedSubject ? items.filter(i => i.subject === selectedSubject) : [],
-    [items, selectedSubject]
-  );
+  const submitSpecificTopic = () => {
+    const trimmed = specificInput.trim();
+    if (!trimmed) return;
+    setWizard(w => ({ ...w, step: "method", contentType: "specific", specificTopic: trimmed, subject: trimmed }));
+  };
+
+  const selectMethod = (method: StudyMethod) => {
+    if (method === "flashcard" && wizard.specificTopic) {
+      // For specific topic, navigate to flashcard generation
+      navigate(`/flashcards?mode=topic&topic=${encodeURIComponent(wizard.specificTopic)}`);
+      return;
+    }
+    setWizard(w => ({ ...w, step: "study", method }));
+  };
+
+  // ─── Section labels & styles ───
+  const sectionConfig: Record<Section, { label: string; description: string; icon: any; color: string }> = {
+    ripasso: { label: "Ripasso", description: "Rivedi quello che hai già studiato", icon: RefreshCw, color: "bg-primary/10 text-primary" },
+    rinforza: { label: "Concetti da rinforzare", description: "Rafforza gli argomenti dove hai più bisogno", icon: Target, color: "bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400" },
+    errori: { label: "Errori", description: "Trasforma gli errori in punti di forza", icon: AlertTriangle, color: "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400" },
+  };
+
+  // Header text
+  const getHeaderText = (): string => {
+    if (wizard.step === "section") return "Scegli cosa vuoi ripassare e fallo nel modo più adatto a te.";
+    if (wizard.step === "content") return sectionConfig[wizard.section!].label;
+    if (wizard.step === "subject-pick") return `${sectionConfig[wizard.section!].label} · ${wizard.contentType === "today" ? "Di oggi" : "Cumulativo"}`;
+    if (wizard.step === "method") return `Come vuoi ripassare?`;
+    return "";
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="bg-card border-b border-border px-6 pt-6 pb-4">
-        <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-3 mb-3">
-            <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground transition-colors">
+      <div className="bg-card border-b border-border px-6 pt-6 pb-5">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center gap-3 mb-1">
+            <button onClick={goBack} className="text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <span className="font-display text-lg font-semibold text-foreground">Memoria e Ripasso</span>
+            <h1 className="font-display text-lg font-bold text-foreground">Ripassa e Rafforza</h1>
           </div>
-
-          {/* Main tabs */}
-          <div className="flex gap-1 mt-3 bg-muted/50 rounded-xl p-1">
-            <button onClick={() => setMainTab("overview")}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${mainTab === "overview" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-              <Brain className="w-3.5 h-3.5" /> Panoramica
-            </button>
-            <button onClick={() => setMainTab("flashcard")}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${mainTab === "flashcard" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-              <Layers className="w-3.5 h-3.5" /> Flashcard
-            </button>
-            <button onClick={() => setMainTab("errors")}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${mainTab === "errors" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-              <AlertTriangle className="w-3.5 h-3.5" /> Errori
-            </button>
-          </div>
+          {wizard.step !== "study" && (
+            <p className="text-sm text-muted-foreground ml-8">{getHeaderText()}</p>
+          )}
         </div>
       </div>
 
       {/* Content */}
-      {mainTab === "errors" ? (
-        <LearningErrorsTab />
-      ) : mainTab === "flashcard" ? (
-        <FlashcardTab />
-      ) : loading ? (
-        <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
-      ) : (
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-5 pb-6 space-y-6">
-          {/* Weekly Summary */}
-          <WeeklySummaryCard items={items} focusSessions={focusSessionCount} />
+      <div className="max-w-2xl mx-auto px-5 pt-5">
+        <AnimatePresence mode="wait">
 
-          {/* Weak Concepts */}
-          <WeakConceptsSection items={items} onUpdate={handleItemUpdate} />
+          {/* ═══ STEP 1: Choose Section ═══ */}
+          {wizard.step === "section" && (
+            <motion.div key="section" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
+              className="space-y-3">
+              {(["ripasso", "rinforza", "errori"] as Section[]).map((section, i) => {
+                const cfg = sectionConfig[section];
+                const Icon = cfg.icon;
+                // Show count badge
+                let count = 0;
+                if (section === "ripasso") count = items.length;
+                if (section === "rinforza") count = weakItems.length;
+                if (section === "errori") count = errors.length;
 
-          {/* Subject Detail or Subjects Overview */}
-          {selectedSubject ? (
-            <AnimatePresence mode="wait">
-              <SubjectDetail
-                key={selectedSubject}
-                subject={selectedSubject}
-                items={activeSubjectItems}
-                onUpdate={handleItemUpdate}
-                onBack={() => setSelectedSubject(null)}
-              />
-            </AnimatePresence>
-          ) : (
-            <SubjectsOverview items={items} onSelect={setSelectedSubject} />
+                return (
+                  <motion.button key={section} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ ...spring, delay: i * 0.06 }}
+                    onClick={() => selectSection(section)}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
+                    <div className={`w-11 h-11 rounded-xl ${cfg.color} flex items-center justify-center flex-shrink-0`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">{cfg.label}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{cfg.description}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {count > 0 && (
+                        <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{count}</span>
+                      )}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </motion.div>
           )}
 
-          {/* Study Mode Cards */}
-          <StudyModeCards
-            onStartReview={handleStartReview}
-            onStartFlashcard={handleStartFlashcard}
-          />
+          {/* ═══ STEP 2: Choose Content Type ═══ */}
+          {wizard.step === "content" && (
+            <motion.div key="content" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
+              className="space-y-3">
+              {/* Today */}
+              <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0 }}
+                onClick={() => selectContentType("today")}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
+                <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                  <CalendarDays className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">Quello che hai studiato oggi</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              </motion.button>
 
-          {items.length === 0 && (
-            <div className="text-center py-8 px-6">
-              <Brain className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nessun concetto salvato ancora.</p>
-              <p className="text-muted-foreground text-sm mt-1">Completa delle sessioni di studio per iniziare!</p>
-            </div>
+              {/* Cumulative */}
+              <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.06 }}
+                onClick={() => selectContentType("cumulative")}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
+                <div className="w-11 h-11 rounded-xl bg-secondary/30 text-secondary-foreground flex items-center justify-center flex-shrink-0">
+                  <Brain className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">Ripasso cumulativo</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              </motion.button>
+
+              {/* Specific topic — inline input */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.12 }}
+                className="rounded-2xl border border-border bg-card p-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-11 h-11 rounded-xl bg-accent/50 text-accent-foreground flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">Argomento specifico</p>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <Input
+                    value={specificInput}
+                    onChange={e => setSpecificInput(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && submitSpecificTopic()}
+                    placeholder="Es: frazioni, rivoluzione francese..."
+                    className="text-sm"
+                  />
+                  <Button onClick={submitSpecificTopic} disabled={!specificInput.trim()} size="sm" className="shrink-0 px-4">
+                    Vai
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
           )}
-        </div>
-      )}
+
+          {/* ═══ STEP 2.5: Choose Subject ═══ */}
+          {wizard.step === "subject-pick" && (
+            <motion.div key="subject-pick" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
+              className="space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Scegli la materia</p>
+              {relevantSubjects.length === 0 ? (
+                <div className="text-center py-12 px-6">
+                  <BookOpen className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground font-medium">
+                    {wizard.contentType === "today"
+                      ? "Nessun contenuto studiato oggi"
+                      : "Nessun contenuto disponibile"}
+                  </p>
+                  <button onClick={goBack} className="mt-3 text-sm text-primary font-medium">Torna indietro</button>
+                </div>
+              ) : (
+                <>
+                  {/* "All subjects" option */}
+                  <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring }}
+                    onClick={() => selectSubject("all")}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Layers className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-foreground">Tutte le materie</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </motion.button>
+
+                  {relevantSubjects.map(([subject, count], i) => {
+                    const colors = subjectColors[subject] || subjectColors.Matematica;
+                    return (
+                      <motion.button key={subject} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                        transition={{ ...spring, delay: (i + 1) * 0.04 }}
+                        onClick={() => selectSubject(subject)}
+                        className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
+                        <div className={`w-10 h-10 rounded-xl ${colors.bg} flex items-center justify-center`}>
+                          <BookOpen className={`w-4 h-4 ${colors.text}`} />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-foreground">{subject}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">{count}</span>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </>
+              )}
+            </motion.div>
+          )}
+
+          {/* ═══ STEP 3: Choose Method ═══ */}
+          {wizard.step === "method" && (
+            <motion.div key="method" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
+              className="space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                {wizard.subject === "all" ? "Tutte le materie" : wizard.subject}
+              </p>
+
+              <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring }}
+                onClick={() => selectMethod("coach")}
+                className="w-full flex items-center gap-4 p-5 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                  <MessageCircle className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-base font-semibold text-foreground">Ripassa con il Coach</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Il coach ti guida con domande e ti aiuta a ricordare</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              </motion.button>
+
+              <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.06 }}
+                onClick={() => selectMethod("flashcard")}
+                className="w-full flex items-center gap-4 p-5 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
+                <div className="w-12 h-12 rounded-xl bg-secondary/30 text-secondary-foreground flex items-center justify-center flex-shrink-0">
+                  <Layers className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-base font-semibold text-foreground">Usa le Flashcard</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Carte rapide per memorizzare e ripassare velocemente</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              </motion.button>
+            </motion.div>
+          )}
+
+          {/* ═══ STEP 4: Study ═══ */}
+          {wizard.step === "study" && (
+            <motion.div key="study" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
+              {wizard.method === "coach" ? (
+                <ReviewChat
+                  topic={wizard.specificTopic || wizard.subject || "Ripasso generale"}
+                  subject={wizard.subject === "all" ? "Generale" : (wizard.subject || "Generale")}
+                  onClose={goBack}
+                />
+              ) : (
+                <FlashcardSession
+                  cards={getFilteredFlashcards()}
+                  subject={wizard.subject === "all" ? "Tutte le materie" : (wizard.subject || "")}
+                  onClose={goBack}
+                />
+              )}
+            </motion.div>
+          )}
+
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
