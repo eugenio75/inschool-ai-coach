@@ -328,6 +328,116 @@ const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
   );
 };
 
+// ─── Summary Card with expandable detail ───
+
+const SummaryCard = ({ item, index, showStrength }: { item: any; index: number; showStrength: boolean }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [deepSummary, setDeepSummary] = useState<string | null>(null);
+  const [loadingDeep, setLoadingDeep] = useState(false);
+
+  const fetchDeepSummary = async () => {
+    if (deepSummary) { setExpanded(true); return; }
+    setLoadingDeep(true);
+    setExpanded(true);
+    try {
+      const profile = getProfile();
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/review-memory`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+          body: JSON.stringify({
+            messages: [],
+            concept: item.concept,
+            summary: item.summary || "",
+            subject: item.subject,
+            strength: item.strength || 50,
+            studentProfile: profile,
+            mode: "deep-summary",
+          }),
+        }
+      );
+      if (!response.ok || !response.body) throw new Error("Errore");
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = "";
+      let fullText = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        textBuffer += decoder.decode(value, { stream: true });
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) { fullText += content; setDeepSummary(fullText); }
+          } catch { textBuffer = line + "\n" + textBuffer; break; }
+        }
+      }
+      if (fullText) setDeepSummary(fullText.replace(/\[STRENGTH_UPDATE:\s*\d+\]/, "").trim());
+    } catch {
+      setDeepSummary("Non è stato possibile generare il riassunto. Riprova più tardi.");
+    } finally {
+      setLoadingDeep(false);
+    }
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ ...spring, delay: index * 0.03 }}
+      className="bg-card rounded-xl border border-border p-3.5">
+      <p className="text-sm font-semibold text-foreground">{item.concept}</p>
+      {item.summary && (
+        <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{item.summary}</p>
+      )}
+      {!item.summary && (
+        <p className="text-sm text-muted-foreground mt-1.5 italic">Argomento studiato — espandi per un ripasso completo.</p>
+      )}
+
+      {/* Expanded deep summary */}
+      <AnimatePresence>
+        {expanded && deepSummary && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+            className="mt-3 pt-3 border-t border-border">
+            <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{deepSummary}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {expanded && loadingDeep && (
+        <div className="mt-3 pt-3 border-t border-border flex items-center gap-2">
+          <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+          <span className="text-xs text-muted-foreground">Genero un ripasso dettagliato...</span>
+        </div>
+      )}
+
+      {/* Scopri di più button */}
+      <button onClick={() => expanded ? setExpanded(false) : fetchDeepSummary()}
+        className="mt-2 text-xs font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+        {expanded ? "Chiudi" : "Scopri di più"}
+        <ChevronRight className={`w-3 h-3 transition-transform ${expanded ? "rotate-90" : ""}`} />
+      </button>
+
+      {showStrength && (
+        <div className="mt-2 flex items-center gap-2">
+          <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+            <div className={`h-full rounded-full ${(item.strength || 0) < 30 ? "bg-destructive" : "bg-amber-500"}`}
+              style={{ width: `${item.strength || 0}%` }} />
+          </div>
+          <span className="text-[10px] text-muted-foreground">{item.strength || 0}%</span>
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
 // ═══════════════════════════════════════════
 // MAIN PAGE — Single Page Layout
 // ═══════════════════════════════════════════
