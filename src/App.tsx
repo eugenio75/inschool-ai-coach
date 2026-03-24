@@ -161,6 +161,7 @@ const AppRoutes = () => (
         <Route path="/agenda" element={<AccessibleRoute><MaybeAdultLayout><Agenda /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/study" element={<AccessibleRoute><MaybeAdultLayout><FreeStudySession /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/us" element={<AccessibleRoute><UnifiedSession /></AccessibleRoute>} />
+        <Route path="/flashcards" element={<AccessibleRoute><FlashcardSession /></AccessibleRoute>} />
         <Route path="/libreria" element={<AccessibleRoute><MaybeAdultLayout><MaterialLibrary /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/agenda-docente" element={<AccessibleRoute><MaybeAdultLayout><AgendaDocente /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/parent-dashboard" element={<ProtectedRoute><ParentDashboard /></ProtectedRoute>} />
