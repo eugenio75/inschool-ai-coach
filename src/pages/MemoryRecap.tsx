@@ -338,6 +338,7 @@ const MemoryRecap = () => {
   const [items, setItems] = useState<any[]>([]);
   const [flashcards, setFlashcards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<Section>("ripasso");
   const [wizard, setWizard] = useState<WizardState>({
     step: "home", section: null, contentType: null, subject: null, specificTopic: null, method: null,
   });
@@ -472,27 +473,11 @@ const MemoryRecap = () => {
   // ─── Section block builder ───
   const renderSectionBlock = (section: Section) => {
     const isRipasso = section === "ripasso";
-    const label = isRipasso ? "Ripasso" : "Rafforza";
-    const description = isRipasso ? "Rivedi quello che hai già studiato" : "Rafforza gli argomenti dove hai più bisogno";
-    const Icon = isRipasso ? RefreshCw : Target;
-    const iconColor = isRipasso ? "bg-primary/10 text-primary" : "bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400";
     const specificInput = isRipasso ? specificInputRipasso : specificInputRinforza;
     const setSpecificInput = isRipasso ? setSpecificInputRipasso : setSpecificInputRinforza;
 
     return (
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ ...spring, delay: isRipasso ? 0 : 0.1 }}
-        className="space-y-2.5">
-        {/* Section header */}
-        <div className="flex items-center gap-3 mb-1">
-          <div className={`w-9 h-9 rounded-xl ${iconColor} flex items-center justify-center flex-shrink-0`}>
-            <Icon className="w-4 h-4" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-foreground">{label}</p>
-            <p className="text-xs text-muted-foreground">{description}</p>
-          </div>
-        </div>
+      <div className="space-y-2.5">
 
         {/* Option: Today */}
         <button onClick={() => pickOption(section, "today")}
@@ -529,14 +514,14 @@ const MemoryRecap = () => {
             </Button>
           </div>
         </div>
-      </motion.div>
+      </div>
     );
   };
 
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="bg-card border-b border-border px-6 pt-6 pb-5">
+      <div className="bg-card border-b border-border px-6 pt-6 pb-0">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-1">
             <button onClick={goBack} className="text-muted-foreground hover:text-foreground transition-colors">
@@ -545,7 +530,25 @@ const MemoryRecap = () => {
             <h1 className="font-display text-lg font-bold text-foreground">Ripassa e Rafforza</h1>
           </div>
           {wizard.step !== "study" && (
-            <p className="text-sm text-muted-foreground ml-8">{getSubtitle()}</p>
+            <p className="text-sm text-muted-foreground ml-8 mb-3">{getSubtitle()}</p>
+          )}
+          {/* Tab menu — only on home */}
+          {wizard.step === "home" && (
+            <div className="flex ml-8 gap-1">
+              {(["ripasso", "rinforza"] as Section[]).map(tab => (
+                <button key={tab} onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg transition-colors relative ${
+                    activeTab === tab
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}>
+                  {tab === "ripasso" ? "Ripasso" : "Rafforza"}
+                  {activeTab === tab && (
+                    <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+                  )}
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -556,11 +559,9 @@ const MemoryRecap = () => {
 
           {/* ═══ HOME: Both sections on one page ═══ */}
           {wizard.step === "home" && (
-            <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -12 }}
-              className="space-y-8">
-              {renderSectionBlock("ripasso")}
-              <div className="border-t border-border" />
-              {renderSectionBlock("rinforza")}
+            <motion.div key={`home-${activeTab}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+              className="space-y-2.5 pt-1">
+              {renderSectionBlock(activeTab)}
             </motion.div>
           )}
 
