@@ -97,7 +97,7 @@ const DashboardAlunno = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-1">Ciao {name}!</h1>
-                <p className="text-sm sm:text-base text-muted-foreground">{tasks.length > 0 ? "Vediamo cosa hai in programma oggi" : "Non ci sono compiti per oggi."}</p>
+                <p className="text-sm sm:text-base text-muted-foreground">{tasks.length > 0 ? "" : "Non ci sono compiti per oggi."}</p>
               </div>
               
             </div>
