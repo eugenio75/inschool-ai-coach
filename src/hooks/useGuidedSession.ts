@@ -460,12 +460,35 @@ Sii breve: 2-3 frasi + una domanda`;
 4. Sii breve: 2-3 frasi + una domanda`;
       }
 
+      // Build emotion-aware context for AI
+      let emotionContext = "";
+      if (sessionEmotion) {
+        const lowEnergyEmotions = ["stanco", "confuso", "agitato", "bloccato"];
+        const highEnergyEmotions = ["concentrato", "carico", "curioso"];
+        if (lowEnergyEmotions.includes(sessionEmotion)) {
+          emotionContext = `\n\nSTATO EMOTIVO SESSIONE: Lo studente ha dichiarato di sentirsi "${sessionEmotion}" all'inizio di questa sessione.
+ADATTAMENTO TONO (applica in silenzio):
+- Usa frasi più brevi e rassicuranti
+- Riduci la complessità delle domande
+- Offri più supporto e indizi preventivi
+- Se è "stanco": non forzare, proponi micro-passi leggeri
+- Se è "confuso": riformula con parole diverse prima di avanzare
+- Se è "agitato": rallenta, normalizza ("è normale, facciamo con calma")
+- Se è "bloccato": parti da qualcosa che sa già fare`;
+        } else if (highEnergyEmotions.includes(sessionEmotion)) {
+          emotionContext = `\n\nSTATO EMOTIVO SESSIONE: Lo studente ha dichiarato di sentirsi "${sessionEmotion}".
+ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre sfide più stimolanti.`;
+        } else {
+          emotionContext = `\n\nSTATO EMOTIVO SESSIONE: Lo studente ha dichiarato di sentirsi "${sessionEmotion}". Adatta il tono di conseguenza.`;
+        }
+      }
+
       const fullText = await streamChat({
         messages: newMessages,
         onDelta: (full) => setStreamingText(full),
         onDone: () => {},
         extraBody: {
-          systemPrompt: `${coachBehavior}\n\nCompito: ${homework?.title}. Materia: ${homework?.subject}. Livello: ${schoolLevel}.\n${homework?.description ? `Testo/descrizione del compito già disponibile qui sotto. NON chiedere allo studente di copiarlo o riscriverlo. Usa direttamente questo testo per guidarlo passo passo:\n${homework.description}` : ""}${systemAddition}\n\nSe lo studente completa lo step correttamente, scrivi [STEP_COMPLETATO: ${currentStep}]. Se tutti gli step sono completati, scrivi [SESSIONE_COMPLETATA]. Se lo studente mostra una difficoltà specifica, scrivi [SEGNALA_DIFFICOLTÀ: descrizione].`,
+          systemPrompt: `${coachBehavior}\n\nCompito: ${homework?.title}. Materia: ${homework?.subject}. Livello: ${schoolLevel}.\n${homework?.description ? `Testo/descrizione del compito già disponibile qui sotto. NON chiedere allo studente di copiarlo o riscriverlo. Usa direttamente questo testo per guidarlo passo passo:\n${homework.description}` : ""}${systemAddition}${emotionContext}\n\nSe lo studente completa lo step correttamente, scrivi [STEP_COMPLETATO: ${currentStep}]. Se tutti gli step sono completati, scrivi [SESSIONE_COMPLETATA]. Se lo studente mostra una difficoltà specifica, scrivi [SEGNALA_DIFFICOLTÀ: descrizione].`,
         },
       });
 
