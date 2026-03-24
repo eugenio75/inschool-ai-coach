@@ -71,7 +71,7 @@ function buildLocalCoachMessage(profileName: string, ctx: CoachContext) {
   };
 }
 
-export function CoachPresence() {
+export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const profile = getProfile();
@@ -238,11 +238,14 @@ export function CoachPresence() {
     { label: "Aiutami a organizzarmi", icon: <PenLine className="w-3 h-3" />, msg: "Aiutami a organizzare lo studio di oggi" },
   ];
 
+  const showPills = variant === "full";
   const pills: { icon: JSX.Element; label: string; color: string }[] = [];
-  if (ctx.streak > 0) pills.push({ icon: <Flame className="w-3 h-3" />, label: `${ctx.streak} giorni`, color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" });
-  if (ctx.urgentCount > 0) pills.push({ icon: <AlertTriangle className="w-3 h-3" />, label: `${ctx.urgentCount} urgenti`, color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" });
-  if (ctx.pendingHomework.length > 0) pills.push({ icon: <BookOpen className="w-3 h-3" />, label: `${ctx.pendingHomework.length} compiti`, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" });
-  if (ctx.teacherAssignments.length > 0) pills.push({ icon: <BookOpen className="w-3 h-3" />, label: `${ctx.teacherAssignments.length} dal prof`, color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" });
+  if (showPills) {
+    if (ctx.streak > 0) pills.push({ icon: <Flame className="w-3 h-3" />, label: `${ctx.streak} giorni`, color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" });
+    if (ctx.urgentCount > 0) pills.push({ icon: <AlertTriangle className="w-3 h-3" />, label: `${ctx.urgentCount} urgenti`, color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" });
+    if (ctx.pendingHomework.length > 0) pills.push({ icon: <BookOpen className="w-3 h-3" />, label: `${ctx.pendingHomework.length} compiti`, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" });
+    if (ctx.teacherAssignments.length > 0) pills.push({ icon: <BookOpen className="w-3 h-3" />, label: `${ctx.teacherAssignments.length} dal prof`, color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" });
+  }
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border rounded-2xl p-4 sm:p-5">
