@@ -34,18 +34,15 @@ export function detectCoachMood(ctx: {
   recentEmotions?: any[];
   messageType?: "celebration" | "concern" | "encouragement" | "question" | "neutral";
 }): CoachMood {
-  // Explicit message type overrides
+  // Explicit message type overrides (used during exercises/sessions)
   if (ctx.messageType === "celebration") return "celebrating";
   if (ctx.messageType === "concern") return "concerned";
   if (ctx.messageType === "encouragement") return "encouraging";
   if (ctx.messageType === "question") return "thinking";
 
-  // Context-based detection
+  // Default: always happy on dashboard/home
+  // Only celebrating for high streaks
   if ((ctx.streak || 0) >= 5) return "celebrating";
-  if ((ctx.urgentCount || 0) > 2) return "concerned";
-  if ((ctx.recentErrors || []).length > 0) return "encouraging";
-  if ((ctx.pendingHomework || []).length === 0 && (ctx.streak || 0) > 0) return "happy";
-  if ((ctx.pendingHomework || []).length > 0) return "thinking";
 
   return "happy";
 }
