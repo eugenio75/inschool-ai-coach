@@ -5,7 +5,7 @@ import { Brain, ArrowRight, Send, Flame, BookOpen, AlertTriangle, Heart, Battery
 import { supabase } from "@/integrations/supabase/client";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
-import { coachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
+import { getCoachMoodSrc, detectCoachMood, type CoachMood } from "@/components/shared/CoachAvatarPicker";
 
 function getProfile() {
   try {
@@ -98,6 +98,7 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const moodRef = useRef<HTMLDivElement>(null);
   const [coachName, setCoachName] = useState<string | null>(null);
+  const [coachMood, setCoachMood] = useState<CoachMood>("happy");
   const [ctx, setCtx] = useState<CoachContext>({
     streak: 0, pendingHomework: [], teacherAssignments: [],
     urgentCount: 0, recentEmotions: [], recentErrors: [], recentSessions: [],
@@ -220,6 +221,7 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
         urgentCount, recentEmotions, recentErrors, recentSessions,
       };
       setCtx(contextData);
+      setCoachMood(detectCoachMood(contextData));
 
       const localFallback = buildLocalCoachMessage(profile?.name || "", contextData);
 
@@ -283,9 +285,15 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border rounded-2xl p-4 sm:p-5">
       <div className="flex items-start gap-3 mb-3">
-        <div className="w-9 h-9 rounded-full flex-shrink-0 mt-0.5 overflow-hidden bg-primary/10">
-          <img src={coachAvatarSrc} alt={coachName || "Coach"} className="w-full h-full object-cover" width={36} height={36} />
-        </div>
+        <motion.div
+          key={coachMood}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex-shrink-0 mt-0.5 overflow-hidden bg-primary/5"
+        >
+          <img src={getCoachMoodSrc(coachMood)} alt={coachName || "Coach"} className="w-full h-full object-cover" width={64} height={64} />
+        </motion.div>
         <div className="flex-1 min-w-0">
           {coachName && !loading && (
             <p className="text-[10px] font-semibold text-primary mb-0.5 uppercase tracking-wider">{coachName}</p>
