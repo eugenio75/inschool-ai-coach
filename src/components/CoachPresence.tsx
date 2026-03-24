@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Brain, ArrowRight, Send, Flame, BookOpen, AlertTriangle, Sparkles, MessageCircle, PenLine } from "lucide-react";
+import { Brain, ArrowRight, Send, Flame, BookOpen, AlertTriangle, Sparkles, MessageCircle, PenLine, Heart, BatteryLow, CloudRain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
@@ -234,8 +234,13 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
 
   const quickActions = [
     { label: "Spiegami un argomento", icon: <Sparkles className="w-3 h-3" />, msg: "Vorrei capire meglio un argomento" },
-    { label: "Come mi sento", icon: <MessageCircle className="w-3 h-3" />, msg: "Voglio parlarti di come mi sento oggi" },
     { label: "Aiutami a organizzarmi", icon: <PenLine className="w-3 h-3" />, msg: "Aiutami a organizzare lo studio di oggi" },
+  ];
+
+  const emotionalChips = [
+    { label: "Non mi va oggi", icon: <CloudRain className="w-3 h-3" />, msg: "Oggi non ho proprio voglia di studiare, non me la sento", color: "border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300" },
+    { label: "Sono stanco", icon: <BatteryLow className="w-3 h-3" />, msg: "Mi sento stanco e senza energie oggi", color: "border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300" },
+    { label: "Ho bisogno di parlare", icon: <Heart className="w-3 h-3" />, msg: "Ho bisogno di parlare con qualcuno di come mi sento", color: "border-rose-200 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300" },
   ];
 
   const showPills = variant === "full";
@@ -283,7 +288,7 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
 
       {/* Quick action chips */}
       {!loading && (
-        <div className="flex flex-wrap gap-1.5 mb-3">
+        <div className="flex flex-wrap gap-1.5 mb-2">
           {quickActions.map((qa) => (
             <button
               key={qa.label}
@@ -291,6 +296,21 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
               className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-full border border-border bg-muted/50 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
             >
               {qa.icon}{qa.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Emotional chips */}
+      {!loading && (
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {emotionalChips.map((ec) => (
+            <button
+              key={ec.label}
+              onClick={() => navigate(`/us?type=study&msg=${encodeURIComponent(ec.msg)}`)}
+              className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-full border transition-colors hover:opacity-80 ${ec.color}`}
+            >
+              {ec.icon}{ec.label}
             </button>
           ))}
         </div>
