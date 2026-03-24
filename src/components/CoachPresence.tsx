@@ -5,6 +5,8 @@ import { Brain, ArrowRight, Send, Flame, BookOpen, AlertTriangle, Heart, Battery
 import { supabase } from "@/integrations/supabase/client";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
+import { getCoachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
+import { useAuth } from "@/hooks/useAuth";
 
 function getProfile() {
   try {
