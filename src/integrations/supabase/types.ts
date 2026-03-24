@@ -690,6 +690,7 @@ export type Database = {
           key_concepts: string[] | null
           micro_steps: Json | null
           recall_questions: string[] | null
+          source_files: Json | null
           source_image_url: string | null
           source_type: string | null
           subject: string
@@ -709,6 +710,7 @@ export type Database = {
           key_concepts?: string[] | null
           micro_steps?: Json | null
           recall_questions?: string[] | null
+          source_files?: Json | null
           source_image_url?: string | null
           source_type?: string | null
           subject: string
@@ -728,6 +730,7 @@ export type Database = {
           key_concepts?: string[] | null
           micro_steps?: Json | null
           recall_questions?: string[] | null
+          source_files?: Json | null
           source_image_url?: string | null
           source_type?: string | null
           subject?: string

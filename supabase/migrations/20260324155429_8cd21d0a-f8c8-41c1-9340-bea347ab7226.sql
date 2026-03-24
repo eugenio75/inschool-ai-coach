@@ -1,0 +1,1 @@
+ALTER TABLE public.homework_tasks ADD COLUMN source_files jsonb DEFAULT '[]'::jsonb;

@@ -12,44 +12,58 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, sourceType, userNote } = await req.json();
+    const body = await req.json();
+    // Support both old single imageUrl and new imageUrls array
+    const imageUrls: string[] = body.imageUrls || (body.imageUrl ? [body.imageUrl] : []);
+    const { sourceType, userNote } = body;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    if (!imageUrl) {
-      throw new Error("imageUrl is required");
+    if (imageUrls.length === 0) {
+      throw new Error("imageUrl or imageUrls is required");
     }
 
-    // Check if it's a PDF - if so, download and convert to base64 data URL
-    const isPdf = imageUrl.toLowerCase().endsWith(".pdf") || imageUrl.includes(".pdf");
-    let finalImageUrl = imageUrl;
+    // Build content parts for all images/PDFs
+    const contentParts: any[] = [];
 
-    if (isPdf) {
-      const pdfResponse = await fetch(imageUrl);
-      if (!pdfResponse.ok) throw new Error("Impossibile scaricare il PDF");
-      const pdfArrayBuffer = await pdfResponse.arrayBuffer();
-      const base64 = base64Encode(pdfArrayBuffer);
-      finalImageUrl = `data:application/pdf;base64,${base64}`;
+    for (const imageUrl of imageUrls) {
+      const isPdf = imageUrl.toLowerCase().endsWith(".pdf") || imageUrl.includes(".pdf");
+      let finalUrl = imageUrl;
+
+      if (isPdf) {
+        const pdfResponse = await fetch(imageUrl);
+        if (!pdfResponse.ok) throw new Error("Impossibile scaricare il PDF");
+        const pdfArrayBuffer = await pdfResponse.arrayBuffer();
+        const base64 = base64Encode(pdfArrayBuffer);
+        finalUrl = `data:application/pdf;base64,${base64}`;
+      }
+
+      contentParts.push({
+        type: "image_url",
+        image_url: { url: finalUrl },
+      });
     }
 
     const contextNote = sourceType === "photo-book"
-      ? "L'immagine è una foto di un LIBRO DI TESTO. Analizza TUTTO il contenuto della pagina: testo narrativo, spiegazioni, didascalie, immagini, tabelle E eventuali esercizi."
-      : "L'immagine è una foto del DIARIO SCOLASTICO. Leggi i compiti scritti a mano o stampati.";
+      ? "Le immagini sono foto di un LIBRO DI TESTO. Analizza TUTTO il contenuto delle pagine: testo narrativo, spiegazioni, didascalie, immagini, tabelle E eventuali esercizi."
+      : "Le immagini sono foto del DIARIO SCOLASTICO. Leggi i compiti scritti a mano o stampati.";
 
     const userInstruction = userNote
       ? `\n\nIMPORTANTE - INDICAZIONE DELLO STUDENTE: "${userNote}"\nConcentrati SOLO sugli esercizi/attività indicati dallo studente. Se lo studente specifica numeri di esercizi, pagine o attività particolari, estrai SOLO quelli e ignora il resto.`
       : "";
 
-    // Different prompt based on source type
     const isBookPage = sourceType === "photo-book";
+    const multiFileNote = imageUrls.length > 1
+      ? `\n\nATTENZIONE: Stai analizzando ${imageUrls.length} immagini/pagine che fanno parte dello STESSO compito. Analizzale TUTTE insieme e crea un elenco unificato di task. Se le pagine trattano lo stesso argomento, raggruppale in modo logico.`
+      : "";
 
     const systemPrompt = isBookPage
-      ? `Sei un assistente che analizza foto di pagine di libri scolastici per bambini delle scuole primarie e medie italiane.
+      ? `Sei un assistente che analizza foto di pagine di libri scolastici per studenti italiani (primarie, medie, superiori e università).
 
-${contextNote}${userInstruction}
+${contextNote}${userInstruction}${multiFileNote}
 
 ANALISI DELLA PAGINA - DISTINGUI TRA CONTENUTO DA STUDIARE ED ESERCIZI:
 
@@ -65,46 +79,51 @@ REGOLE:
 
 Per ogni elemento trovato, restituisci un oggetto JSON con:
 - "task_type": "study" per contenuto da studiare, "exercise" per esercizi
-- "subject": la materia (una tra: Italiano, Matematica, Scienze, Storia, Geografia, Inglese, Arte, Musica, Tecnologia)
-- "title": per study → "Studia: [titolo argomento/pagina]"; per exercise → titolo breve dell'esercizio (es. "Esercizio 2 - Vero o Falso")
+- "subject": la materia (una tra: Italiano, Matematica, Scienze, Storia, Geografia, Inglese, Arte, Musica, Tecnologia, Filosofia, Fisica, Chimica, Latino, Greco, Diritto, Economia)
+- "title": per study → "Studia: [titolo argomento/pagina]"; per exercise → titolo breve dell'esercizio
 - "description": per study → testo COMPLETO E LETTERALE della pagina; per exercise → testo COMPLETO dell'esercizio
 - "exerciseText": SOLO per exercise → il TESTO COMPLETO E LETTERALE dell'esercizio. Per study lascia vuoto.
 - "estimatedMinutes": stima del tempo (studio: 15-30 min; esercizio: 5-15 min)
 - "difficulty": difficoltà da 1 a 3
 
-REGOLA CRITICA per il contenuto "study": trascrivi OGNI parola, OGNI paragrafo, OGNI didascalia esattamente come appare nella pagina. Il bambino userà questo testo per studiare e ripetere. NON riassumere, NON parafrasare.
+REGOLA CRITICA per il contenuto "study": trascrivi OGNI parola, OGNI paragrafo, OGNI didascalia esattamente come appare nella pagina.
+REGOLA CRITICA per gli "exercise": trascrivi il testo PAROLA PER PAROLA come appare nel libro.
 
-REGOLA CRITICA per gli "exercise": trascrivi il testo PAROLA PER PAROLA come appare nel libro. Se non riesci a leggere una parte, scrivi [illeggibile].
-
-ORDINE: metti PRIMA i compiti "study" (nell'ordine in cui appaiono nella pagina), POI gli "exercise".
+ORDINE: metti PRIMA i compiti "study", POI gli "exercise".
 
 RISPONDI ESCLUSIVAMENTE con un JSON valido nel formato:
-{"tasks": [{"task_type": "study", "subject": "...", "title": "...", "description": "...", "exerciseText": "", "estimatedMinutes": 20, "difficulty": 1}, {"task_type": "exercise", "subject": "...", "title": "...", "description": "...", "exerciseText": "...", "estimatedMinutes": 10, "difficulty": 2}]}
+{"tasks": [{"task_type": "study", "subject": "...", "title": "...", "description": "...", "exerciseText": "", "estimatedMinutes": 20, "difficulty": 1}]}
 
 Nessun altro testo, solo il JSON.`
-      : `Sei un assistente che analizza foto di compiti scolastici per bambini delle scuole primarie e medie italiane.
+      : `Sei un assistente che analizza foto di compiti scolastici per studenti italiani (primarie, medie, superiori e università).
 
 ${contextNote}
 
-Analizza TUTTA l'immagine con attenzione, anche i bordi e le parti meno nitide.${userInstruction}
+Analizza TUTTE le immagini con attenzione, anche i bordi e le parti meno nitide.${userInstruction}${multiFileNote}
 
 Per ogni compito/esercizio trovato, restituisci un oggetto JSON con:
 - "task_type": "exercise"
-- "subject": la materia (una tra: Italiano, Matematica, Scienze, Storia, Geografia, Inglese, Arte, Musica, Tecnologia)
-- "title": titolo breve del compito (es. "Esercizio 2 - Vero o Falso")
+- "subject": la materia (una tra: Italiano, Matematica, Scienze, Storia, Geografia, Inglese, Arte, Musica, Tecnologia, Filosofia, Fisica, Chimica, Latino, Greco, Diritto, Economia)
+- "title": titolo breve del compito
 - "description": dettagli generali (pagine, cosa fare)
-- "exerciseText": il TESTO COMPLETO E LETTERALE dell'esercizio come appare nell'immagine. Trascrivi OGNI parola, OGNI domanda, OGNI opzione esattamente come scritte. NON riassumere, NON parafrasare, NON omettere nulla. Se ci sono sotto-domande (a, b, c...) o affermazioni da valutare, trascrivile TUTTE.
-- "estimatedMinutes": stima del tempo necessario (numero intero)
-- "difficulty": difficoltà da 1 a 3 (numero intero)
+- "exerciseText": il TESTO COMPLETO E LETTERALE dell'esercizio come appare nell'immagine
+- "estimatedMinutes": stima del tempo necessario
+- "difficulty": difficoltà da 1 a 3
 
-REGOLA CRITICA per "exerciseText": devi trascrivere il testo PAROLA PER PAROLA come appare nel libro/quaderno. Se non riesci a leggere una parte, scrivi [illeggibile]. Non inventare MAI testo che non vedi.
-
-Se non riesci a leggere chiaramente qualcosa, indica [illeggibile] nelle parti non chiare.
+REGOLA CRITICA per "exerciseText": trascrivi il testo PAROLA PER PAROLA come appare.
 
 RISPONDI ESCLUSIVAMENTE con un JSON valido nel formato:
 {"tasks": [{"task_type": "exercise", "subject": "...", "title": "...", "description": "...", "exerciseText": "...", "estimatedMinutes": 15, "difficulty": 1}]}
 
 Nessun altro testo, solo il JSON.`;
+
+    // Add text instruction after all images
+    contentParts.push({
+      type: "text",
+      text: isBookPage
+        ? `Analizza ${imageUrls.length > 1 ? "tutte queste pagine del libro" : "questa pagina del libro"}. Trascrivi TUTTO il contenuto testuale come compito di studio, e se ci sono esercizi creali come compiti separati. Rispondi SOLO con il JSON.`
+        : `Analizza ${imageUrls.length > 1 ? "tutte queste foto" : "questa foto"} e estrai tutti i compiti che vedi. Rispondi SOLO con il JSON.`,
+    });
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -116,21 +135,7 @@ Nessun altro testo, solo il JSON.`;
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: [
-              {
-                type: "image_url",
-                image_url: { url: finalImageUrl },
-              },
-              {
-                type: "text",
-                text: isBookPage
-                  ? "Analizza questa pagina del libro. Trascrivi TUTTO il contenuto testuale come compito di studio, e se ci sono esercizi creali come compiti separati. Rispondi SOLO con il JSON."
-                  : "Analizza questa foto e estrai tutti i compiti che vedi. Rispondi SOLO con il JSON.",
-              },
-            ],
-          },
+          { role: "user", content: contentParts },
         ],
       }),
     });
@@ -138,28 +143,24 @@ Nessun altro testo, solo il JSON.`;
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Troppe richieste. Aspetta un momento e riprova." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
         return new Response(JSON.stringify({ error: "Crediti esauriti. Ricarica il tuo account." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const errorText = await response.text();
       console.error("OCR AI error:", response.status, errorText);
       return new Response(JSON.stringify({ error: "Errore nell'analisi dell'immagine" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
     
-    // Parse JSON from response
     let tasks = null;
     const cleaned = content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
     
@@ -169,12 +170,8 @@ Nessun altro testo, solo il JSON.`;
     } catch {
       const objMatch = cleaned.match(/\{[\s\S]*"tasks"[\s\S]*\}/);
       if (objMatch) {
-        try {
-          const parsed = JSON.parse(objMatch[0]);
-          tasks = parsed.tasks;
-        } catch {}
+        try { tasks = JSON.parse(objMatch[0]).tasks; } catch {}
       }
-      
       if (!tasks) {
         const arrMatch = cleaned.match(/\[[\s\S]*\]/);
         if (arrMatch) {
@@ -184,26 +181,19 @@ Nessun altro testo, solo il JSON.`;
     }
 
     if (tasks && Array.isArray(tasks) && tasks.length > 0) {
-      // Ensure task_type is set
-      tasks = tasks.map((t: any) => ({
-        ...t,
-        task_type: t.task_type || "exercise",
-      }));
-
+      tasks = tasks.map((t: any) => ({ ...t, task_type: t.task_type || "exercise" }));
       return new Response(JSON.stringify({ tasks }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     return new Response(JSON.stringify({ error: "Non sono riuscito a estrarre i compiti dalla foto. Prova con un'immagine più chiara." }), {
-      status: 422,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("ocr-homework error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Errore sconosciuto" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

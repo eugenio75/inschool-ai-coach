@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Type, BookOpen, Plus, X, Sparkles, Check, Loader2, CalendarDays, ChevronDown, Pencil } from "lucide-react";
+import { ArrowLeft, Camera, Type, BookOpen, Plus, X, Sparkles, Check, Loader2, CalendarDays, ChevronDown, Pencil, FileText, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createTask, uploadHomeworkImage, extractTasksFromImage } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +19,12 @@ interface ExtractedTask {
   difficulty: number;
   selected: boolean;
   task_type: string;
+}
+
+interface UploadedFile {
+  file: File;
+  preview: string; // data URL for images, "pdf" for PDFs
+  uploadedUrl?: string;
 }
 
 const TASK_TYPE_OPTIONS = [
@@ -66,30 +72,38 @@ const AddHomework = () => {
   const [manualDescription, setManualDescription] = useState("");
   const [dueDate, setDueDate] = useState(getToday());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  // Multi-file state
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
   const [extractedTasks, setExtractedTasks] = useState<ExtractedTask[]>([]);
   const [extractedSourceType, setExtractedSourceType] = useState<"photo-book" | "photo-diary" | null>(null);
   const [saving, setSaving] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [photoNote, setPhotoNote] = useState("");
-  // Step 2 state
   const [showFullTypeList, setShowFullTypeList] = useState<Record<string, boolean>>({});
   const [customTypeText, setCustomTypeText] = useState<Record<string, string>>({});
 
   const handlePhotoAnalysis = async () => {
-    if (!photoFile) return;
+    if (uploadedFiles.length === 0) return;
     const sourceType = mode === "photo-book" ? "photo-book" : "photo-diary";
     setExtractedSourceType(sourceType);
     setMode("processing");
 
     try {
-      const imageUrl = await uploadHomeworkImage(photoFile);
-      if (!imageUrl) throw new Error("Upload fallito");
-      setUploadedImageUrl(imageUrl);
+      // Upload all files
+      const urls: string[] = [];
+      for (const uf of uploadedFiles) {
+        if (uf.uploadedUrl) {
+          urls.push(uf.uploadedUrl);
+        } else {
+          const url = await uploadHomeworkImage(uf.file);
+          if (!url) throw new Error("Upload fallito");
+          urls.push(url);
+        }
+      }
+      setUploadedImageUrls(urls);
 
-      const result = await extractTasksFromImage(imageUrl, sourceType, photoNote.trim() || undefined);
+      const result = await extractTasksFromImage(urls, sourceType, photoNote.trim() || undefined);
 
       if (result.tasks && result.tasks.length > 0) {
         setExtractedTasks(
@@ -115,32 +129,39 @@ const AddHomework = () => {
         description: err.message || "Non sono riuscito ad analizzare la foto. Riprova con un'immagine più chiara.",
         variant: "destructive",
       });
-      setMode(photoFile ? sourceType : "choose");
+      setMode(sourceType);
     }
   };
 
-  const processFile = (file: File) => {
-    const isImage = file.type.startsWith("image/");
-    const isPdf = file.type === "application/pdf";
-    if (!isImage && !isPdf) return;
-    setPhotoFile(file);
-    setUploadedImageUrl(null);
-    setExtractedSourceType(null);
-    if (isImage) {
-      const reader = new FileReader();
-      reader.onload = (ev) => setPhotoPreview(ev.target?.result as string);
-      reader.readAsDataURL(file);
-    } else {
-      setPhotoPreview("pdf");
+  const processFiles = (files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    for (const file of fileArray) {
+      const isImage = file.type.startsWith("image/");
+      const isPdf = file.type === "application/pdf";
+      if (!isImage && !isPdf) continue;
+
+      if (isImage) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          setUploadedFiles(prev => [...prev, { file, preview: ev.target?.result as string }]);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setUploadedFiles(prev => [...prev, { file, preview: "pdf" }]);
+      }
     }
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) processFile(file);
+    const files = e.target.files;
+    if (files && files.length > 0) processFiles(files);
   };
 
-  const handleDrop = (e: React.DragEvent) => { e.preventDefault(); setDragActive(false); const file = e.dataTransfer.files?.[0]; if (file) processFile(file); };
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDrop = (e: React.DragEvent) => { e.preventDefault(); setDragActive(false); const files = e.dataTransfer.files; if (files.length > 0) processFiles(files); };
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragActive(true); };
   const handleDragLeave = (e: React.DragEvent) => { e.preventDefault(); setDragActive(false); };
 
@@ -165,7 +186,9 @@ const AddHomework = () => {
         await createTask({
           subject: task.subject, title: task.title, description: task.description,
           estimated_minutes: task.estimatedMinutes, difficulty: task.difficulty,
-          source_type: extractedSourceType || "photo", source_image_url: uploadedImageUrl || undefined,
+          source_type: extractedSourceType || "photo",
+          source_image_url: uploadedImageUrls[0] || undefined,
+          source_files: uploadedImageUrls.length > 0 ? uploadedImageUrls : undefined,
           due_date: dueDate, task_type: task.task_type,
         });
       }
@@ -184,8 +207,8 @@ const AddHomework = () => {
     switch (mode) {
       case "choose": return "Come vuoi inserire i compiti di oggi?";
       case "manual": return "Scrivi i dettagli del compito";
-      case "photo-diary": case "photo-book": return "Fotografa o carica un'immagine";
-      case "processing": return "Sto analizzando la foto con l'AI...";
+      case "photo-diary": case "photo-book": return "Carica una o più foto, oppure un PDF";
+      case "processing": return "Sto analizzando i file con l'AI...";
       case "task-type": return "Step 2 — Controlla il tipo di attività";
       case "review": return "Step 3 — Modifica e conferma i compiti";
       default: return "";
@@ -196,7 +219,7 @@ const AddHomework = () => {
     if (mode === "review") setMode("task-type");
     else if (mode === "task-type") setMode(extractedSourceType || "choose");
     else if (mode === "choose") navigate("/dashboard");
-    else setMode("choose");
+    else { setUploadedFiles([]); setMode("choose"); }
   };
 
   const DatePickerRow = () => (
@@ -225,7 +248,6 @@ const AddHomework = () => {
             <button onClick={goBack} className="text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft className="w-5 h-5" /></button>
             <span className="font-display text-lg font-semibold text-foreground">Aggiungi compiti</span>
           </div>
-          {/* Step indicator for photo flow */}
           {(mode === "task-type" || mode === "review") && (
             <div className="flex items-center gap-2 mb-3">
               {[1, 2, 3].map(step => {
@@ -259,11 +281,11 @@ const AddHomework = () => {
                 </button>
                 <button onClick={() => setMode("photo-diary")} className="w-full flex items-center gap-4 px-5 py-5 rounded-2xl border border-border bg-card hover:bg-muted transition-colors text-left shadow-soft">
                   <div className="w-12 h-12 rounded-xl bg-clay-light flex items-center justify-center"><Camera className="w-5 h-5 text-clay-dark" /></div>
-                  <div className="flex-1"><p className="font-display font-semibold text-foreground">Fotografa il diario</p><p className="text-sm text-muted-foreground">Scatta una foto dei compiti scritti sul diario</p></div>
+                  <div className="flex-1"><p className="font-display font-semibold text-foreground">Fotografa il diario</p><p className="text-sm text-muted-foreground">Scatta una o più foto dei compiti scritti sul diario</p></div>
                 </button>
                 <button onClick={() => setMode("photo-book")} className="w-full flex items-center gap-4 px-5 py-5 rounded-2xl border border-border bg-card hover:bg-muted transition-colors text-left shadow-soft">
                   <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center"><BookOpen className="w-5 h-5 text-muted-foreground" /></div>
-                  <div className="flex-1"><p className="font-display font-semibold text-foreground">Fotografa il libro</p><p className="text-sm text-muted-foreground">Scatta una foto delle pagine da studiare</p></div>
+                  <div className="flex-1"><p className="font-display font-semibold text-foreground">Fotografa il libro</p><p className="text-sm text-muted-foreground">Scatta una o più foto delle pagine da studiare</p></div>
                 </button>
               </motion.div>
             )}
@@ -294,30 +316,54 @@ const AddHomework = () => {
               </motion.div>
             )}
 
-            {/* Photo upload */}
+            {/* Photo upload — multi-file */}
             {(mode === "photo-diary" || mode === "photo-book") && (
               <motion.div key="photo" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={spring} className="space-y-5">
-                {!photoPreview ? (
-                  <label className="block cursor-pointer" onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}>
-                    <div className={`border-2 border-dashed rounded-2xl p-12 text-center transition-colors ${dragActive ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}>
-                      <div className="w-16 h-16 rounded-2xl bg-sage-light flex items-center justify-center mx-auto mb-4"><Camera className="w-7 h-7 text-sage-dark" /></div>
-                      <p className="font-display font-semibold text-foreground mb-1">{mode === "photo-diary" ? "Fotografa il diario" : "Fotografa il libro"}</p>
-                      <p className="text-sm text-muted-foreground">Tocca per scattare, carica un'immagine/PDF o trascinala qui</p>
+                {/* File upload area — always visible to allow adding more */}
+                <label className="block cursor-pointer" onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}>
+                  <div className={`border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${dragActive ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}>
+                    <div className="w-14 h-14 rounded-2xl bg-sage-light flex items-center justify-center mx-auto mb-3">
+                      <Camera className="w-6 h-6 text-sage-dark" />
                     </div>
-                    <input type="file" accept="image/*,application/pdf" capture="environment" className="hidden" onChange={handlePhotoUpload} />
-                  </label>
-                ) : (
+                    <p className="font-display font-semibold text-foreground mb-1">
+                      {uploadedFiles.length === 0
+                        ? (mode === "photo-diary" ? "Fotografa il diario" : "Fotografa il libro")
+                        : "Aggiungi altri file"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Puoi caricare <strong>più foto</strong> o un <strong>PDF multipagina</strong>
+                    </p>
+                  </div>
+                  <input type="file" accept="image/*,application/pdf" capture="environment" multiple className="hidden" onChange={handlePhotoUpload} />
+                </label>
+
+                {/* Thumbnails of uploaded files */}
+                {uploadedFiles.length > 0 && (
                   <div className="space-y-4">
-                    <div className="relative rounded-2xl overflow-hidden border border-border">
-                      {photoPreview === "pdf" ? (
-                        <div className="w-full py-16 flex flex-col items-center justify-center bg-muted/30">
-                          <BookOpen className="w-12 h-12 text-muted-foreground mb-3" /><p className="font-medium text-foreground">{photoFile?.name}</p><p className="text-sm text-muted-foreground mt-1">PDF pronto per l'analisi</p>
-                        </div>
-                      ) : (
-                        <img src={photoPreview!} alt="Foto caricata" className="w-full max-h-[70vh] object-contain bg-muted/30" />
-                      )}
-                      <button onClick={() => { setPhotoPreview(null); setPhotoFile(null); setUploadedImageUrl(null); }} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-foreground/60 text-background flex items-center justify-center"><X className="w-4 h-4" /></button>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-foreground">
+                        {uploadedFiles.length} {uploadedFiles.length === 1 ? "file caricato" : "file caricati"}
+                      </span>
                     </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      {uploadedFiles.map((uf, i) => (
+                        <div key={i} className="relative rounded-xl overflow-hidden border border-border bg-muted/30 aspect-square">
+                          {uf.preview === "pdf" ? (
+                            <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-2">
+                              <FileText className="w-8 h-8 text-muted-foreground" />
+                              <p className="text-[10px] text-muted-foreground text-center truncate w-full">{uf.file.name}</p>
+                            </div>
+                          ) : (
+                            <img src={uf.preview} alt={`File ${i + 1}`} className="w-full h-full object-cover" />
+                          )}
+                          <button onClick={(e) => { e.preventDefault(); removeFile(i); }}
+                            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-foreground/70 text-background flex items-center justify-center hover:bg-foreground transition-colors">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
                     <div>
                       <label className="text-sm font-medium text-foreground mb-2 block">Cosa devi fare? (opzionale)</label>
                       <textarea value={photoNote} onChange={(e) => setPhotoNote(e.target.value)} placeholder="Es: Esercizio 3 e 4 a pagina 52, solo le domande vero/falso..." rows={2}
@@ -325,7 +371,8 @@ const AddHomework = () => {
                     </div>
                     <div className="bg-muted/50 rounded-2xl px-4 py-3"><DatePickerRow /></div>
                     <Button onClick={handlePhotoAnalysis} className="w-full bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5 text-base">
-                      <Sparkles className="w-4 h-4 mr-2" />Analizza con AI e trova i compiti
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Analizza {uploadedFiles.length === 1 ? "il file" : `${uploadedFiles.length} file`} con AI
                     </Button>
                   </div>
                 )}
@@ -338,7 +385,9 @@ const AddHomework = () => {
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="w-16 h-16 rounded-2xl bg-sage-light flex items-center justify-center mx-auto mb-6">
                   <Sparkles className="w-7 h-7 text-sage-dark" />
                 </motion.div>
-                <h3 className="font-display text-xl font-bold text-foreground mb-2">Sto analizzando la foto...</h3>
+                <h3 className="font-display text-xl font-bold text-foreground mb-2">
+                  Sto analizzando {uploadedFiles.length === 1 ? "il file" : `${uploadedFiles.length} file`}...
+                </h3>
                 <p className="text-muted-foreground">Riconosco il testo, trovo le materie e organizzo tutto per te.</p>
               </motion.div>
             )}
@@ -349,7 +398,7 @@ const AddHomework = () => {
                 <div className="bg-sage-light/50 rounded-2xl px-4 py-3 flex items-center gap-3">
                   <Sparkles className="w-4 h-4 text-sage-dark flex-shrink-0" />
                   <p className="text-sm text-foreground">
-                    Ho trovato <strong>{extractedTasks.length} {extractedTasks.length === 1 ? "compito" : "compiti"}</strong>. Controlla che il tipo sia giusto.
+                    Ho trovato <strong>{extractedTasks.length} {extractedTasks.length === 1 ? "compito" : "compiti"}</strong> da {uploadedFiles.length === 1 ? "1 file" : `${uploadedFiles.length} file`}. Controlla che il tipo sia giusto.
                   </p>
                 </div>
 
@@ -399,7 +448,6 @@ const AddHomework = () => {
                               {opt.label}
                             </button>
                           ))}
-                          {/* Custom text field */}
                           <div className="flex gap-2 mt-1">
                             <input type="text" value={customTypeText[task.id] || ""} onChange={(e) => setCustomTypeText(prev => ({ ...prev, [task.id]: e.target.value }))}
                               placeholder="Scrivi tu stesso..."
