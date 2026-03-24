@@ -401,6 +401,8 @@ Regole benessere: mai linguaggio diagnostico, mai minimizzare, mai drammatizzare
           const enhancedPrompt = buildEnhancedSystemPrompt({
             coachName,
             profile: role,
+            gender: prof.gender || null,
+            age: prof.age || null,
             studentInterests: interests,
             sessionHistory,
             adaptiveProfile: JSON.stringify(adaptiveProfile),
