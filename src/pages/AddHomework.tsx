@@ -462,7 +462,7 @@ const AddHomework = () => {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-bold text-primary uppercase tracking-wider bg-primary/10 px-2 py-0.5 rounded-full">
-                          {getTaskTypeLabel(task.task_type)}
+                          {getTaskTypesLabel(task.task_types)}
                         </span>
                         <span className="text-xs text-muted-foreground">~{task.estimatedMinutes} min</span>
                       </div>
