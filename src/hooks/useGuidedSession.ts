@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getTask as fetchTask } from "@/lib/database";
+import { isChildSession, childApi } from "@/lib/childSession";
 import { ChatMsg, streamChat } from "@/lib/streamChat";
 import { playCelebrationSound } from "@/lib/celebrationSound";
 
@@ -30,6 +31,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
 
   const progressPercent = totalSteps > 0 ? ((currentStep - 1) / totalSteps) * 100 : 0;
   const progressLabel = totalSteps > 0 ? `Step ${currentStep} di ${totalSteps}` : undefined;
+  const isChild = isChildSession();
 
   async function loadSession() {
     if (!homeworkId) { setLoading(false); return; }
@@ -39,35 +41,54 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       if (!hw) { navigate("/dashboard"); return; }
       setHomework(hw);
 
-      // Check for existing paused session
-      const { data: existing } = await supabase
-        .from("guided_sessions")
-        .select("*")
-        .eq("homework_id", homeworkId)
-        .eq("status", "paused")
-        .order("updated_at", { ascending: false })
-        .limit(1);
-
-      if (existing && existing.length > 0) {
-        const sess = existing[0];
-        setSessionId(sess.id);
-        setCurrentStep(sess.current_step || 1);
-        setTotalSteps(sess.total_steps || 0);
-
-        const { data: savedSteps } = await supabase
-          .from("study_steps")
-          .select("*")
-          .eq("session_id", sess.id)
-          .order("step_number", { ascending: true });
-        setSteps(savedSteps || []);
-
-        const resumeMsg = sess.last_difficulty
-          ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}. Riprendiamo dallo step ${sess.current_step}.`
-          : `Bentornato! Ripartiamo dallo step ${sess.current_step}.`;
-        setMessages([{ role: "assistant", content: resumeMsg }]);
-        setSetupDone(true);
+      if (isChild) {
+        // Use child-api for paused session check
+        const result = await childApi("get-paused-session", { homeworkId });
+        if (result.session) {
+          const sess = result.session;
+          setSessionId(sess.id);
+          setCurrentStep(sess.current_step || 1);
+          setTotalSteps(sess.total_steps || 0);
+          setSteps(result.steps || []);
+          const resumeMsg = sess.last_difficulty
+            ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}. Riprendiamo dallo step ${sess.current_step}.`
+            : `Bentornato! Ripartiamo dallo step ${sess.current_step}.`;
+          setMessages([{ role: "assistant", content: resumeMsg }]);
+          setSetupDone(true);
+        } else {
+          setShowCheckin(true);
+        }
       } else {
-        setShowCheckin(true);
+        // Check for existing paused session via Supabase directly
+        const { data: existing } = await supabase
+          .from("guided_sessions")
+          .select("*")
+          .eq("homework_id", homeworkId)
+          .eq("status", "paused")
+          .order("updated_at", { ascending: false })
+          .limit(1);
+
+        if (existing && existing.length > 0) {
+          const sess = existing[0];
+          setSessionId(sess.id);
+          setCurrentStep(sess.current_step || 1);
+          setTotalSteps(sess.total_steps || 0);
+
+          const { data: savedSteps } = await supabase
+            .from("study_steps")
+            .select("*")
+            .eq("session_id", sess.id)
+            .order("step_number", { ascending: true });
+          setSteps(savedSteps || []);
+
+          const resumeMsg = sess.last_difficulty
+            ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}. Riprendiamo dallo step ${sess.current_step}.`
+            : `Bentornato! Ripartiamo dallo step ${sess.current_step}.`;
+          setMessages([{ role: "assistant", content: resumeMsg }]);
+          setSetupDone(true);
+        } else {
+          setShowCheckin(true);
+        }
       }
     } catch (err) {
       console.error("loadSession error:", err);
@@ -80,6 +101,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     setLoading(true);
 
     try {
+      // Generate steps via edge function
       const { data: { session: authSession } } = await supabase.auth.getSession();
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-steps`,
@@ -116,32 +138,56 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
 
       setTotalSteps(generatedSteps.length);
 
-      const { data: newSession } = await supabase
-        .from("guided_sessions")
-        .insert({
+      let newSessionId: string;
+
+      if (isChild) {
+        const newSession = await childApi("create-session", {
+          homeworkId,
+          totalSteps: generatedSteps.length,
+          emotion,
+        });
+        if (!newSession?.id) throw new Error("Failed to create session");
+        newSessionId = newSession.id;
+        setSessionId(newSessionId);
+
+        const stepRows = generatedSteps.map((s: any) => ({
           user_id: userId,
           homework_id: homeworkId,
-          status: "active",
-          current_step: 1,
-          total_steps: generatedSteps.length,
-          emotional_checkin: emotion,
-        })
-        .select()
-        .single();
+          session_id: newSessionId,
+          step_number: s.number,
+          step_text: s.text,
+          status: s.number === 1 ? "active" : "pending",
+        }));
+        await childApi("insert-steps", { steps: stepRows });
+      } else {
+        const { data: newSession } = await supabase
+          .from("guided_sessions")
+          .insert({
+            user_id: userId,
+            homework_id: homeworkId,
+            status: "active",
+            current_step: 1,
+            total_steps: generatedSteps.length,
+            emotional_checkin: emotion,
+          })
+          .select()
+          .single();
 
-      if (!newSession) throw new Error("Failed to create session");
-      setSessionId(newSession.id);
+        if (!newSession) throw new Error("Failed to create session");
+        newSessionId = newSession.id;
+        setSessionId(newSessionId);
 
-      const stepRows = generatedSteps.map((s: any) => ({
-        user_id: userId,
-        homework_id: homeworkId,
-        session_id: newSession.id,
-        step_number: s.number,
-        step_text: s.text,
-        status: s.number === 1 ? "active" : "pending",
-      }));
+        const stepRows = generatedSteps.map((s: any) => ({
+          user_id: userId,
+          homework_id: homeworkId,
+          session_id: newSessionId,
+          step_number: s.number,
+          step_text: s.text,
+          status: s.number === 1 ? "active" : "pending",
+        }));
+        await supabase.from("study_steps").insert(stepRows);
+      }
 
-      await supabase.from("study_steps").insert(stepRows);
       setSteps(generatedSteps);
       setCurrentStep(1);
 
@@ -205,29 +251,45 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
 
       if (stepComplete && sessionId) {
         const stepNum = parseInt(stepComplete[1]);
-        await supabase.from("study_steps").update({ status: "completed", completed_at: new Date().toISOString() })
-          .eq("session_id", sessionId).eq("step_number", stepNum);
+        if (isChild) {
+          await childApi("update-step", { sessionId, stepNumber: stepNum, updates: { status: "completed", completed_at: new Date().toISOString() } });
+        } else {
+          await supabase.from("study_steps").update({ status: "completed", completed_at: new Date().toISOString() })
+            .eq("session_id", sessionId).eq("step_number", stepNum);
+        }
         if (stepNum < totalSteps) {
           const next = stepNum + 1;
           setCurrentStep(next);
-          await supabase.from("guided_sessions").update({ current_step: next, updated_at: new Date().toISOString() })
-            .eq("id", sessionId);
+          if (isChild) {
+            await childApi("update-session", { sessionId, updates: { current_step: next, updated_at: new Date().toISOString() } });
+          } else {
+            await supabase.from("guided_sessions").update({ current_step: next, updated_at: new Date().toISOString() })
+              .eq("id", sessionId);
+          }
         }
       }
 
       if (difficultySignal) {
-        await supabase.from("learning_errors").insert({
-          user_id: userId,
-          subject: homework?.subject,
-          topic: difficultySignal[1],
-          error_type: "incomprensione",
-          session_id: sessionId,
-        });
+        if (isChild) {
+          await childApi("insert-learning-error", { subject: homework?.subject, topic: difficultySignal[1], sessionId });
+        } else {
+          await supabase.from("learning_errors").insert({
+            user_id: userId,
+            subject: homework?.subject,
+            topic: difficultySignal[1],
+            error_type: "incomprensione",
+            session_id: sessionId,
+          });
+        }
       }
 
       if (sessionComplete && sessionId) {
-        await supabase.from("guided_sessions").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", sessionId);
-        await supabase.from("homework_tasks").update({ completed: true, updated_at: new Date().toISOString() }).eq("id", homeworkId);
+        if (isChild) {
+          await childApi("complete-session", { sessionId, homeworkId });
+        } else {
+          await supabase.from("guided_sessions").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", sessionId);
+          await supabase.from("homework_tasks").update({ completed: true, updated_at: new Date().toISOString() }).eq("id", homeworkId);
+        }
 
         // Generate flashcards in background
         try {
@@ -272,25 +334,33 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       setMessages(prev => [...prev, { role: "assistant", content: "Si è verificato un errore. Riprova." }]);
     }
     setSending(false);
-  }, [messages, sending, steps, currentStep, totalSteps, sessionId, homework, userId, schoolLevel, homeworkId]);
+  }, [messages, sending, steps, currentStep, totalSteps, sessionId, homework, userId, schoolLevel, homeworkId, isChild]);
 
   async function pauseSession() {
     if (sessionId) {
-      await supabase.from("guided_sessions").update({
-        status: "paused",
-        current_step: currentStep,
-        updated_at: new Date().toISOString(),
-      }).eq("id", sessionId);
+      if (isChild) {
+        await childApi("update-session", { sessionId, updates: { status: "paused", current_step: currentStep, updated_at: new Date().toISOString() } });
+      } else {
+        await supabase.from("guided_sessions").update({
+          status: "paused",
+          current_step: currentStep,
+          updated_at: new Date().toISOString(),
+        }).eq("id", sessionId);
+      }
     }
     navigate("/dashboard");
   }
 
   async function abandonSession() {
     if (sessionId) {
-      await supabase.from("guided_sessions").update({
-        status: "abandoned",
-        updated_at: new Date().toISOString(),
-      }).eq("id", sessionId);
+      if (isChild) {
+        await childApi("update-session", { sessionId, updates: { status: "abandoned", updated_at: new Date().toISOString() } });
+      } else {
+        await supabase.from("guided_sessions").update({
+          status: "abandoned",
+          updated_at: new Date().toISOString(),
+        }).eq("id", sessionId);
+      }
     }
     navigate("/dashboard");
   }
