@@ -14,7 +14,7 @@ interface ChatShellProps {
   messages: ChatMsg[];
   streamingText: string;
   sending: boolean;
-  onSend: (text: string) => void;
+  onSend?: (text: string) => void;
   onBack: () => void;
   onAction?: (value: string) => void;
   progress?: number;
@@ -28,6 +28,7 @@ interface ChatShellProps {
   pomodoroMinutes?: number;
   extraFooter?: React.ReactNode;
   inputPlaceholder?: string;
+  disabled?: boolean;
 }
 
 export function ChatShell({
