@@ -302,7 +302,8 @@ serve(async (req) => {
     }
 
     // Build enhanced system prompt if profileId is provided
-    let finalSystemPrompt = systemPrompt || "";
+    const clientSystemPrompt = systemPrompt || "";
+    let finalSystemPrompt = clientSystemPrompt;
 
     if (profileId) {
       try {
@@ -368,7 +369,7 @@ Passo 5 — NON CHIUDERE LA CONVERSAZIONE. Rimani presente.
 
 Regole benessere: mai linguaggio diagnostico, mai minimizzare, mai drammatizzare, mai due domande nello stesso messaggio durante momenti emotivi.`;
 
-          finalSystemPrompt = buildEnhancedSystemPrompt({
+          const enhancedPrompt = buildEnhancedSystemPrompt({
             coachName,
             profile: role,
             studentInterests: interests,
@@ -381,6 +382,15 @@ Regole benessere: mai linguaggio diagnostico, mai minimizzare, mai drammatizzare
             alertContext,
             isDocente: prof.school_level === "docente",
           });
+
+          finalSystemPrompt = clientSystemPrompt
+            ? `${enhancedPrompt}
+
+═══════════════════════════════════════
+CONTESTO SESSIONE SPECIFICO (prioritario)
+═══════════════════════════════════════
+${clientSystemPrompt}`
+            : enhancedPrompt;
         }
       } catch (e) {
         console.error("Error building enhanced prompt:", e);
