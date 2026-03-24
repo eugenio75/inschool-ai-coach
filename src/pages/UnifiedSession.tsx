@@ -368,211 +368,54 @@ Inizia con la prima domanda.`;
   // NON-GUIDED SETUP SCREEN
   // ════════════════════════════════════════════
   if (!setupDone) {
-    // ─── Review: multi-step setup ───
-    if (type === "review") {
-      const isExamLevel = schoolLevel === "universitario" || schoolLevel === "superiori";
+    const isExamLevel = schoolLevel === "universitario" || schoolLevel === "superiori";
 
-      // Step 1: Choose what to review
-      if (!reviewContentType) {
-        const contentOptions = [
-          {
-            id: "today" as const,
-            icon: CalendarDays,
-            label: "Ripassa quello di oggi",
-            desc: "Carte generate dalle sessioni di studio odierne",
-            color: "bg-primary/10 text-primary",
-          },
-          {
-            id: "cumulative" as const,
-            icon: Brain,
-            label: "Ripasso cumulativo",
-            desc: "Tutte le carte ordinate per priorità SRS",
-            color: "bg-clay-light text-clay-dark",
-          },
-          {
-            id: "topic" as const,
-            icon: Search,
-            label: "Genera su un argomento",
-            desc: "Scegli un tema e l'AI crea carte mirate",
-            color: "bg-sage-light text-sage-dark",
-          },
-          {
-            id: "program" as const,
-            icon: isExamLevel ? GraduationCap : Sparkles,
-            label: isExamLevel ? "Preparati per l'esame" : "Preparati per la verifica",
-            desc: isExamLevel
-              ? "Carte allineate al programma d'esame della tua classe"
-              : "Carte sui programmi ministeriali della tua classe",
-            color: "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400",
-          },
-        ];
-
-        return (
-          <div className="min-h-screen bg-background flex flex-col">
-            <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3">
-              <button onClick={() => navigate(-1)} className="p-1.5 rounded-lg hover:bg-muted">
-                <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-              </button>
-              <h1 className="font-display text-base font-semibold text-foreground">{getTitle()}</h1>
-            </div>
-            <div className="flex-1 flex flex-col items-center justify-center px-6">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
-                <h2 className="font-display text-xl font-bold text-foreground mb-1 text-center">Cosa vuoi ripassare?</h2>
-                <p className="text-sm text-muted-foreground mb-6 text-center">Scegli la modalità di ripasso</p>
-                <div className="flex flex-col gap-2.5">
-                  {contentOptions.map((m, i) => (
-                    <motion.button
-                      key={m.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ type: "spring", stiffness: 260, damping: 30, delay: 0.05 * i }}
-                      onClick={() => setReviewContentType(m.id)}
-                      className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all text-left w-full"
-                    >
-                      <div className={`w-10 h-10 rounded-xl ${m.color} flex items-center justify-center shrink-0`}>
-                        <m.icon className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-foreground">{m.label}</p>
-                        <p className="text-[11px] text-muted-foreground leading-snug">{m.desc}</p>
-                      </div>
-                    </motion.button>
-                  ))}
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        );
-      }
-
-      // Step 1b: If "topic" chosen, ask for the topic
-      if (reviewContentType === "topic" && !topic.trim()) {
-        return (
-          <div className="min-h-screen bg-background flex flex-col">
-            <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3">
-              <button onClick={() => setReviewContentType(null)} className="p-1.5 rounded-lg hover:bg-muted">
-                <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-              </button>
-              <h1 className="font-display text-base font-semibold text-foreground">Su che argomento?</h1>
-            </div>
-            <div className="flex-1 flex flex-col items-center justify-center px-6">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
-                <p className="text-sm text-muted-foreground mb-4 text-center">
-                  Scrivi l'argomento e l'AI preparerà il ripasso
-                </p>
-                <Input
-                  autoFocus
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && topic.trim() && setReviewContentType("topic")}
-                  placeholder="Es. La Rivoluzione Francese, Equazioni di secondo grado..."
-                  className="text-sm mb-3"
-                />
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {subjects.map((s: string) => (
-                    <button
-                      key={s}
-                      onClick={() => { setSubject(s); setTopic(`Ripasso ${s}`); }}
-                      className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                        subject === s
-                          ? "bg-foreground text-background border-foreground"
-                          : "bg-card text-muted-foreground border-border hover:border-foreground/40"
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        );
-      }
-
-      // Step 2: Choose method (Ripasso approfondito vs Flashcard)
-      return (
-        <div className="min-h-screen bg-background flex flex-col">
-          <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3">
-            <button onClick={() => { setReviewContentType(null); setTopic(""); }} className="p-1.5 rounded-lg hover:bg-muted">
-              <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-            </button>
-            <h1 className="font-display text-base font-semibold text-foreground">{getTitle()}</h1>
-          </div>
-          <div className="flex-1 flex flex-col items-center justify-center px-6">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm">
-              <h2 className="font-display text-lg font-bold text-foreground mb-1 text-center">Come vuoi ripassare?</h2>
-              <p className="text-sm text-muted-foreground mb-6 text-center">
-                {reviewContentType === "today" && "Ripasso di oggi"}
-                {reviewContentType === "cumulative" && "Ripasso cumulativo SRS"}
-                {reviewContentType === "topic" && topic}
-                {reviewContentType === "program" && (isExamLevel ? "Preparazione esame" : "Preparazione verifica")}
-              </p>
-              <div className="flex flex-col gap-3">
-                <motion.button
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.05 }}
-                  onClick={() => {
-                    setReviewMode("chat");
-                    // Set topic based on content type
-                    if (!topic.trim()) {
-                      if (reviewContentType === "today") setTopic("Ripasso degli argomenti studiati oggi");
-                      else if (reviewContentType === "cumulative") setTopic("Ripasso cumulativo degli argomenti");
-                      else if (reviewContentType === "program") setTopic(isExamLevel ? "Ripasso programma d'esame" : "Ripasso programma per la verifica");
-                    }
-                    startSession();
-                  }}
-                  className="flex items-center gap-3 px-4 py-4 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all text-left w-full"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                    <MessageCircle className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground">Ripasso approfondito</p>
-                    <p className="text-[11px] text-muted-foreground leading-snug">Il coach fa domande aperte — ideale per concetti complessi</p>
-                  </div>
-                </motion.button>
-
-                <motion.button
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  onClick={() => {
-                    const params = new URLSearchParams();
-                    if (reviewContentType) params.set("mode", reviewContentType);
-                    if (subject) params.set("subject", subject);
-                    if (topic.trim()) params.set("topic", topic.trim());
-                    navigate(`/flashcards?${params.toString()}`);
-                  }}
-                  className="flex items-center gap-3 px-4 py-4 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all text-left w-full"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-clay-light text-clay-dark flex items-center justify-center shrink-0">
-                    <Brain className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground">Flashcard</p>
-                    <p className="text-[11px] text-muted-foreground leading-snug">Carte rapide con autovalutazione — ideale per memorizzare</p>
-                  </div>
-                </motion.button>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      );
-    }
-
-    // ─── Non-review setup screens (study, prep) ───
     return (
       <div className="min-h-screen bg-background pb-24">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
-          <button onClick={() => navigate(-1)}><BookOpen className="w-5 h-5 text-muted-foreground" /></button>
+          <button onClick={() => navigate(-1)} className="p-1.5 rounded-lg hover:bg-muted"><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
           <h1 className="font-display text-lg font-bold text-foreground">{getTitle()}</h1>
         </div>
         <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
-          {type !== "prep" && (
+
+          {/* ─── Review: content type selector ─── */}
+          {type === "review" && (
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">Cosa vuoi ripassare?</label>
+              <div className="flex flex-col gap-2">
+                {([
+                  { id: "today", icon: CalendarDays, label: "Ripassa quello di oggi", desc: "Carte generate dalle sessioni di studio odierne", color: "bg-primary/10 text-primary" },
+                  { id: "cumulative", icon: Brain, label: "Ripasso cumulativo", desc: "Tutte le carte ordinate per priorità SRS", color: "bg-clay-light text-clay-dark" },
+                  { id: "topic", icon: Search, label: "Genera su un argomento", desc: "Scegli un tema e l'AI crea carte mirate", color: "bg-sage-light text-sage-dark" },
+                  { id: "program", icon: isExamLevel ? GraduationCap : Sparkles, label: isExamLevel ? "Preparati per l'esame" : "Preparati per la verifica", desc: isExamLevel ? "Carte allineate al programma d'esame della tua classe" : "Carte sui programmi ministeriali della tua classe", color: "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400" },
+                ] as const).map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => setReviewContentType(m.id)}
+                    className={`flex items-center gap-3 px-3.5 py-3 rounded-xl border text-left w-full transition-all ${
+                      reviewContentType === m.id
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                        : "border-border bg-card hover:bg-muted hover:border-foreground/20"
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-lg ${m.color} flex items-center justify-center shrink-0`}>
+                      <m.icon className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">{m.label}</p>
+                      <p className="text-[11px] text-muted-foreground leading-snug">{m.desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ─── Topic input (review topic mode OR study) ─── */}
+          {(type === "study" || (type === "review" && reviewContentType === "topic")) && (
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">
-                Cosa vuoi studiare?
+                {type === "review" ? "Su che argomento?" : "Cosa vuoi studiare?"}
               </label>
               <Input
                 value={topic}
@@ -584,6 +427,7 @@ Inizia con la prima domanda.`;
             </div>
           )}
 
+          {/* ─── Subject chips ─── */}
           <div>
             <label className="text-sm font-medium text-foreground mb-2 block">
               {type === "prep" ? "Materia" : "Materia (opzionale)"}
@@ -605,6 +449,43 @@ Inizia con la prima domanda.`;
             </div>
           </div>
 
+          {/* ─── Review: method selector (chat vs flashcard) ─── */}
+          {type === "review" && reviewContentType && (
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">Scegli la modalità</label>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setReviewMode("chat")}
+                  className={`flex-1 flex flex-col items-center gap-2 py-4 rounded-xl border text-sm font-medium transition-colors ${
+                    reviewMode === "chat"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-muted-foreground border-border hover:border-primary/40"
+                  }`}
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  Ripasso approfondito
+                </button>
+                <button
+                  onClick={() => setReviewMode("flashcard")}
+                  className={`flex-1 flex flex-col items-center gap-2 py-4 rounded-xl border text-sm font-medium transition-colors ${
+                    reviewMode === "flashcard"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-muted-foreground border-border hover:border-primary/40"
+                  }`}
+                >
+                  <Brain className="w-5 h-5" />
+                  Flashcard
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {reviewMode === "chat"
+                  ? "Il coach fa domande aperte — ideale per concetti complessi"
+                  : "Carte rapide con autovalutazione — ideale per memorizzare"}
+              </p>
+            </div>
+          )}
+
+          {/* ─── Prep: mode selector ─── */}
           {type === "prep" && (
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">Tipo di simulazione</label>
@@ -638,12 +519,44 @@ Inizia con la prima domanda.`;
             </div>
           )}
 
+          {/* ─── Start button ─── */}
           <Button
-            onClick={() => startSession()}
-            disabled={type === "prep" ? !subject : !topic.trim()}
+            onClick={() => {
+              if (type === "review") {
+                // Set auto-topic based on content type
+                let reviewTopic = topic;
+                if (!topic.trim()) {
+                  if (reviewContentType === "today") reviewTopic = "Ripasso degli argomenti studiati oggi";
+                  else if (reviewContentType === "cumulative") reviewTopic = "Ripasso cumulativo degli argomenti";
+                  else if (reviewContentType === "program") reviewTopic = isExamLevel ? "Ripasso programma d'esame" : "Ripasso programma per la verifica";
+                  setTopic(reviewTopic);
+                }
+                if (reviewMode === "flashcard") {
+                  const params = new URLSearchParams();
+                  if (reviewContentType) params.set("mode", reviewContentType);
+                  if (subject) params.set("subject", subject);
+                  if (reviewTopic.trim()) params.set("topic", reviewTopic.trim());
+                  navigate(`/flashcards?${params.toString()}`);
+                  return;
+                }
+                // Chat mode — topic is set, proceed
+                if (!reviewTopic.trim() && subject) {
+                  reviewTopic = `Ripasso ${subject}`;
+                  setTopic(reviewTopic);
+                }
+              }
+              startSession();
+            }}
+            disabled={
+              type === "prep" ? !subject
+                : type === "review" ? !reviewContentType || (reviewContentType === "topic" && !topic.trim())
+                : !topic.trim()
+            }
             className="w-full"
           >
-            {type === "prep" ? "Inizia la simulazione" : "Inizia a studiare"}
+            {type === "prep" ? "Inizia la simulazione"
+              : type === "review" ? (reviewMode === "flashcard" ? "Inizia le flashcard" : "Inizia il ripasso")
+              : "Inizia a studiare"}
           </Button>
         </div>
       </div>
