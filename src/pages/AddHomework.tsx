@@ -80,6 +80,7 @@ const AddHomework = () => {
   const [saving, setSaving] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [photoNote, setPhotoNote] = useState("");
+  const [photoTags, setPhotoTags] = useState<string[]>([]);
   const [showFullTypeList, setShowFullTypeList] = useState<Record<string, boolean>>({});
   const [customTypeText, setCustomTypeText] = useState<Record<string, string>>({});
 
@@ -103,7 +104,8 @@ const AddHomework = () => {
       }
       setUploadedImageUrls(urls);
 
-      const result = await extractTasksFromImage(urls, sourceType, photoNote.trim() || undefined);
+      const combinedNote = [...photoTags, photoNote.trim()].filter(Boolean).join(". ") || undefined;
+      const result = await extractTasksFromImage(urls, sourceType, combinedNote);
 
       if (result.tasks && result.tasks.length > 0) {
         setExtractedTasks(
@@ -374,12 +376,12 @@ const AddHomework = () => {
                           { value: "Riassumere", emoji: "📝" },
                           { value: "Memorizzare", emoji: "🧠" },
                         ].map((opt) => {
-                          const isSelected = photoNote === opt.value;
+                          const isSelected = photoTags.includes(opt.value);
                           return (
                             <button
                               key={opt.value}
                               type="button"
-                              onClick={() => setPhotoNote(isSelected ? "" : opt.value)}
+                              onClick={() => setPhotoTags(prev => isSelected ? prev.filter(v => v !== opt.value) : [...prev, opt.value])}
                               className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
                                 isSelected
                                   ? "bg-primary text-primary-foreground"
