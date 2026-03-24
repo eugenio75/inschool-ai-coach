@@ -46,3 +46,28 @@ export function detectCoachMood(ctx: {
 
   return "happy";
 }
+
+/**
+ * Detect mood from a coach message text (for chat bubbles).
+ */
+export function detectMoodFromText(text: string): CoachMood {
+  const lower = text.toLowerCase();
+
+  // Celebrating patterns
+  if (/bravo|bravissim[ao]|ottimo|perfetto|eccellente|fantastico|complimenti|ben fatto|hai completato|🎉|✅|💪|🌟/i.test(lower))
+    return "celebrating";
+
+  // Concerned patterns
+  if (/difficolt[àa]|errore|sbagliato|attenzione|non è corrett|riprova|non proprio|purtroppo|hmm/i.test(lower))
+    return "concerned";
+
+  // Encouraging patterns
+  if (/forza|dai che|ci sei quasi|continua|non mollare|stai andando|bene così|quasi giusto|buon lavoro|ci siamo/i.test(lower))
+    return "encouraging";
+
+  // Thinking/question patterns
+  if (/\?|pensa|rifletti|secondo te|prova a|cosa ne pensi|come faresti|perché|qual è/i.test(lower))
+    return "thinking";
+
+  return "happy";
+}
