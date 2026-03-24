@@ -63,6 +63,10 @@ function getTaskTypeLabel(value: string): string {
   return TASK_TYPE_OPTIONS.find(o => o.value === value)?.label || value;
 }
 
+function getTaskTypesLabel(values: string[]): string {
+  return values.map(v => getTaskTypeLabel(v)).join(", ");
+}
+
 const AddHomework = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
