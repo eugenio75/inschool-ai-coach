@@ -48,6 +48,8 @@ export default function UnifiedSession() {
   const [searchParams] = useSearchParams();
   const type = (searchParams.get("type") || "study") as SessionType;
   const homeworkId = searchParams.get("hw");
+  const urlSubject = searchParams.get("subject");
+  const urlMsg = searchParams.get("msg");
   const profile = getProfile();
   const schoolLevel = profile?.school_level || "superiori";
   const { user } = useAuth();
@@ -74,7 +76,7 @@ export default function UnifiedSession() {
   // ─── Free-form session state (study/review/prep) ───
   const [setupDone, setSetupDone] = useState(false);
   const [topic, setTopic] = useState("");
-  const [subject, setSubject] = useState("");
+  const [subject, setSubject] = useState(urlSubject || "");
   const [mode, setMode] = useState<"scritta" | "orale">("scritta");
   const [reviewMode, setReviewMode] = useState<"chat" | "flashcard">("chat");
   const [messages, setMessages] = useState<ChatMsg[]>([]);
