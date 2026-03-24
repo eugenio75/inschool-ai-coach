@@ -455,6 +455,8 @@ const MemoryRecap = () => {
   const [specificInputRipasso, setSpecificInputRipasso] = useState("");
   const [specificInputRinforza, setSpecificInputRinforza] = useState("");
   const [autoNavigated, setAutoNavigated] = useState(false);
+  const [activeGroupStudy, setActiveGroupStudy] = useState<{ subject: string; concepts: any[]; method: StudyMethod } | null>(null);
+  const [generatingFlashcards, setGeneratingFlashcards] = useState(false);
 
   // Load data
   useEffect(() => {
