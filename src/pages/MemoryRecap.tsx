@@ -752,7 +752,7 @@ const MemoryRecap = () => {
               </div>
 
               {(() => {
-                const summaryItems = wizard.specificTopic
+                let summaryItems = wizard.specificTopic
                   ? items.filter(i => i.concept?.toLowerCase().includes(wizard.specificTopic!.toLowerCase()) || i.subject?.toLowerCase().includes(wizard.specificTopic!.toLowerCase()))
                   : wizard.section === "rinforza"
                     ? (wizard.contentType === "today"
@@ -761,6 +761,11 @@ const MemoryRecap = () => {
                     : (wizard.contentType === "today"
                         ? todayItems.filter(i => wizard.subject === "all" || i.subject === wizard.subject)
                         : items.filter(i => wizard.subject === "all" || i.subject === wizard.subject));
+
+                // Sort newest first
+                summaryItems = [...summaryItems].sort((a, b) => 
+                  new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                );
 
                 if (summaryItems.length === 0) {
                   return (
@@ -772,33 +777,79 @@ const MemoryRecap = () => {
                   );
                 }
 
-                const grouped: Record<string, any[]> = {};
+                // Group items by subject + time proximity (within 10 minutes = same exercise)
+                const exerciseGroups: { subject: string; items: any[]; latestAt: Date }[] = [];
                 for (const item of summaryItems) {
-                  const key = item.subject || "Altro";
-                  if (!grouped[key]) grouped[key] = [];
-                  grouped[key].push(item);
+                  const itemTime = new Date(item.created_at).getTime();
+                  const existing = exerciseGroups.find(g => 
+                    g.subject === (item.subject || "Altro") && 
+                    Math.abs(g.latestAt.getTime() - itemTime) < 10 * 60 * 1000
+                  );
+                  if (existing) {
+                    existing.items.push(item);
+                    if (itemTime > existing.latestAt.getTime()) existing.latestAt = new Date(item.created_at);
+                  } else {
+                    exerciseGroups.push({
+                      subject: item.subject || "Altro",
+                      items: [item],
+                      latestAt: new Date(item.created_at),
+                    });
+                  }
                 }
 
+                // Sort groups newest first
+                exerciseGroups.sort((a, b) => b.latestAt.getTime() - a.latestAt.getTime());
+
                 return (
-                  <div className="space-y-4">
-                    {Object.entries(grouped).map(([subject, subjectItems]) => {
-                      const colors = subjectColors[subject] || subjectColors.Matematica;
+                  <div className="space-y-3">
+                    {exerciseGroups.map((group, gi) => {
+                      const colors = subjectColors[group.subject] || subjectColors.Matematica;
+                      const timeLabel = new Date(group.latestAt).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+                      const showStrength = wizard.section === "rinforza";
+
                       return (
-                        <div key={subject}>
-                          {wizard.subject === "all" && (
-                            <div className="flex items-center gap-2 mb-2">
-                              <div className={`w-6 h-6 rounded-lg ${colors.bg} flex items-center justify-center`}>
-                                <BookOpen className={`w-3 h-3 ${colors.text}`} />
-                              </div>
-                              <span className={`text-xs font-semibold ${colors.text}`}>{subject}</span>
+                        <motion.div
+                          key={`${group.subject}-${gi}`}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ ...spring, delay: gi * 0.05 }}
+                          className="rounded-2xl border border-border bg-card overflow-hidden"
+                        >
+                          {/* Exercise card header */}
+                          <div className={`flex items-center gap-3 px-4 py-3 ${colors.bg || "bg-muted/30"} border-b border-border/50`}>
+                            <div className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center`}>
+                              <BookOpen className={`w-4 h-4 ${colors.text}`} />
                             </div>
-                          )}
-                          <div className="space-y-2">
-                            {subjectItems.map((item: any, i: number) => (
-                              <SummaryCard key={item.id} item={item} index={i} showStrength={wizard.section === "rinforza"} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate">{group.subject}</p>
+                              <p className="text-[11px] text-muted-foreground">{group.items.length} concett{group.items.length === 1 ? "o" : "i"} · {timeLabel}</p>
+                            </div>
+                          </div>
+
+                          {/* Concepts inside */}
+                          <div className="px-4 py-3 space-y-3">
+                            {group.items.map((item: any, i: number) => (
+                              <div key={item.id} className={i > 0 ? "pt-3 border-t border-border/40" : ""}>
+                                <p className="text-sm font-medium text-foreground">{item.concept}</p>
+                                {item.summary && (
+                                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{item.summary}</p>
+                                )}
+                                {!item.summary && (
+                                  <p className="text-sm text-muted-foreground mt-1 italic">Argomento studiato</p>
+                                )}
+                                {showStrength && (
+                                  <div className="mt-2 flex items-center gap-2">
+                                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                                      <div className={`h-full rounded-full ${(item.strength || 0) < 30 ? "bg-destructive" : (item.strength || 0) < 60 ? "bg-amber-500" : "bg-primary"}`}
+                                        style={{ width: `${item.strength || 0}%` }} />
+                                    </div>
+                                    <span className="text-[10px] text-muted-foreground">{item.strength || 0}%</span>
+                                  </div>
+                                )}
+                              </div>
                             ))}
                           </div>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
