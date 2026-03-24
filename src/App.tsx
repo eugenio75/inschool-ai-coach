@@ -43,6 +43,7 @@ const StudentProgress = lazy(() => import("./pages/StudentProgress"));
 const Agenda = lazy(() => import("./pages/Agenda"));
 const AgendaDocente = lazy(() => import("./pages/AgendaDocente"));
 const FreeStudySession = lazy(() => import("./pages/FreeStudySession"));
+const UnifiedSession = lazy(() => import("./pages/UnifiedSession"));
 const MaterialLibrary = lazy(() => import("./pages/MaterialLibrary"));
 
 const queryClient = new QueryClient();
@@ -154,6 +155,7 @@ const AppRoutes = () => (
         <Route path="/progress" element={<AccessibleRoute><MaybeAdultLayout><StudentProgress /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/agenda" element={<AccessibleRoute><MaybeAdultLayout><Agenda /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/study" element={<AccessibleRoute><MaybeAdultLayout><FreeStudySession /></MaybeAdultLayout></AccessibleRoute>} />
+        <Route path="/us" element={<AccessibleRoute><UnifiedSession /></AccessibleRoute>} />
         <Route path="/libreria" element={<AccessibleRoute><MaybeAdultLayout><MaterialLibrary /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/agenda-docente" element={<AccessibleRoute><MaybeAdultLayout><AgendaDocente /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/parent-dashboard" element={<ProtectedRoute><ParentDashboard /></ProtectedRoute>} />

@@ -50,7 +50,7 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
       icon: BookOpen,
       color: "bg-sage-light text-sage-dark",
       iconColor: "text-sage-dark",
-      action: () => navigate("/study"),
+      action: () => navigate("/us?type=study"),
       disabled: false,
     },
     {
@@ -60,7 +60,7 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
       icon: Brain,
       color: "bg-clay-light text-clay-dark",
       iconColor: "text-clay-dark",
-      action: () => navigate("/memory"),
+      action: () => navigate("/us?type=review"),
       disabled: false,
     },
     {
@@ -70,7 +70,7 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
       icon: GraduationCap,
       color: "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400",
       iconColor: "text-amber-600 dark:text-amber-400",
-      action: () => navigate("/prep"),
+      action: () => navigate("/us?type=prep"),
       disabled: false,
     },
   ];
