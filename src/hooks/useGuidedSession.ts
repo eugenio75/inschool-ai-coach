@@ -213,6 +213,14 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   }
 
   function handleMethodAction(value: string) {
+    // Handle finish session action
+    if (value === "finish_session") {
+      setMessages(prev => prev.map(m => ({ ...m, actions: undefined })));
+      playCelebrationSound();
+      setShowCelebration(true);
+      return;
+    }
+
     if (methodPhase === "ask_familiarity") {
       const fam = value as Familiarity;
       setFamiliarity(fam);
@@ -222,7 +230,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       const proposal = getMethodProposal(fam, homework?.task_type || "study", homework?.title || "");
 
       setMessages(prev => [
-        ...prev.map(m => ({ ...m, actions: undefined })), // clear old actions
+        ...prev.map(m => ({ ...m, actions: undefined })),
         { role: "user", content: familiarityLabel },
         {
           role: "assistant",
