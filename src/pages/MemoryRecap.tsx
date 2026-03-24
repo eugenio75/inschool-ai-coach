@@ -486,7 +486,8 @@ const MemoryRecap = () => {
     if (wizard.step === "section") return "Scegli cosa vuoi ripassare e fallo nel modo più adatto a te.";
     if (wizard.step === "content") return sectionConfig[wizard.section!].label;
     if (wizard.step === "subject-pick") return `${sectionConfig[wizard.section!].label} · ${wizard.contentType === "today" ? "Di oggi" : "Cumulativo"}`;
-    if (wizard.step === "method") return `Come vuoi ripassare?`;
+    if (wizard.step === "summary") return "Ecco cosa hai studiato";
+    if (wizard.step === "method") return "Come vuoi ripassare?";
     return "";
   };
 
