@@ -1,8 +1,16 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export interface ChatAction {
+  label: string;
+  icon?: string; // emoji
+  value: string;
+  primary?: boolean;
+}
+
 export interface ChatMsg {
   role: "user" | "assistant";
   content: string;
+  actions?: ChatAction[];
 }
 
 /**
