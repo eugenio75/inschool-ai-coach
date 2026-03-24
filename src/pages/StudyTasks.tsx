@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Plus, Loader2, ArrowLeft } from "lucide-react";
+import { BookOpen, Plus, Loader2, ArrowLeft, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskCard } from "@/components/TaskCard";
 import { CoachPresence } from "@/components/CoachPresence";
@@ -10,10 +10,26 @@ import { getTasks, deleteTask } from "@/lib/database";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
+const subjectEmojis: Record<string, string> = {
+  Matematica: "📐", Italiano: "📖", Scienze: "🔬", Storia: "🏛️",
+  Geografia: "🌍", Inglese: "🇬🇧", Fisica: "⚡", Chimica: "🧪",
+  Filosofia: "💭", Arte: "🎨", Musica: "🎵", Educazione_Fisica: "⚽",
+  Informatica: "💻", Latino: "📜", Greco: "🏺",
+};
+
+const subjectBgColors: Record<string, string> = {
+  Matematica: "bg-sage-light/50 border-sage/30",
+  Italiano: "bg-clay-light/50 border-clay/30",
+  Scienze: "bg-accent/10 border-accent/30",
+  Storia: "bg-terracotta-light/50 border-terracotta/30",
+  Inglese: "bg-sage-light/50 border-sage/30",
+};
+
 const StudyTasks = () => {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const load = async () => {
@@ -24,11 +40,32 @@ const StudyTasks = () => {
     load();
   }, []);
 
+  const groupedBySubject = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    for (const t of tasks) {
+      const subj = t.subject || "Altro";
+      if (!groups[subj]) groups[subj] = [];
+      groups[subj].push(t);
+    }
+    // Sort subjects alphabetically
+    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+  }, [tasks]);
+
+  const toggleSubject = (subject: string) => {
+    setCollapsed((prev) => ({ ...prev, [subject]: !prev[subject] }));
+  };
+
   const mapTask = (t: any) => ({
     id: t.id, subject: t.subject, title: t.title, description: t.description || "",
     estimatedMinutes: t.estimated_minutes || 15, difficulty: t.difficulty || 1,
     steps: Array.isArray(t.micro_steps) ? t.micro_steps.length : 0, completed: t.completed || false,
   });
+
+  const handleDelete = async (taskId: string) => {
+    await deleteTask(taskId);
+    const dbTasks = await getTasks();
+    setTasks(dbTasks);
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20 sm:pb-8 font-sans">
@@ -44,8 +81,6 @@ const StudyTasks = () => {
               <p className="text-xs text-muted-foreground">Scegli un compito e il coach ti guida passo passo</p>
             </div>
           </div>
-
-          {/* Coach AI */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
             <CoachPresence />
           </motion.div>
@@ -59,7 +94,7 @@ const StudyTasks = () => {
         </div>
       </div>
 
-      {/* Task list */}
+      {/* Task list grouped by subject */}
       <div className="px-4 sm:px-6 mt-4 pb-4">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between mb-3">
@@ -83,19 +118,61 @@ const StudyTasks = () => {
             </motion.div>
           ) : (
             <div className="space-y-3">
-              {tasks.map((task, i) => (
-                <motion.div key={task.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: i * 0.06 }}>
-                  <TaskCard
-                    task={mapTask(task)}
-                    onClick={() => navigate(`/us?type=guided&hw=${task.id}`)}
-                    onDelete={async (taskId) => {
-                      await deleteTask(taskId);
-                      const dbTasks = await getTasks();
-                      setTasks(dbTasks);
-                    }}
-                  />
-                </motion.div>
-              ))}
+              {groupedBySubject.map(([subject, subjectTasks], gi) => {
+                const isCollapsed = collapsed[subject];
+                const emoji = subjectEmojis[subject] || "📚";
+                const bgClass = subjectBgColors[subject] || "bg-muted/40 border-border";
+                const pendingCount = subjectTasks.filter((t: any) => !t.completed).length;
+
+                return (
+                  <motion.div
+                    key={subject}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ ...spring, delay: gi * 0.06 }}
+                    className={`rounded-2xl border ${bgClass} overflow-hidden`}
+                  >
+                    {/* Subject header */}
+                    <button
+                      onClick={() => toggleSubject(subject)}
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-accent/5 transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-lg">{emoji}</span>
+                        <span className="font-display font-semibold text-foreground text-sm">{subject}</span>
+                        <span className="text-xs text-muted-foreground bg-background/60 px-2 py-0.5 rounded-full">
+                          {pendingCount > 0 ? `${pendingCount} da fare` : "✓ Tutti fatti"}
+                        </span>
+                      </div>
+                      <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`} />
+                    </button>
+
+                    {/* Tasks inside */}
+                    <AnimatePresence initial={false}>
+                      {!isCollapsed && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-3 pb-3 space-y-2">
+                            {subjectTasks.map((task: any) => (
+                              <TaskCard
+                                key={task.id}
+                                task={mapTask(task)}
+                                onClick={() => navigate(`/us?type=guided&hw=${task.id}`)}
+                                onDelete={handleDelete}
+                              />
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </div>
