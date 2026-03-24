@@ -454,6 +454,7 @@ const MemoryRecap = () => {
   });
   const [specificInputRipasso, setSpecificInputRipasso] = useState("");
   const [specificInputRinforza, setSpecificInputRinforza] = useState("");
+  const [autoNavigated, setAutoNavigated] = useState(false);
 
   // Load data
   useEffect(() => {
