@@ -249,16 +249,82 @@ REGOLE ADATTIVE:
 
     if (studentProfile) {
       const interests = studentProfile.interests || [];
+      const gender = studentProfile.gender || studentProfile.gender || null;
+      const age = studentProfile.age || null;
+      const schoolLevel = studentProfile.schoolLevel || studentProfile.school_level || "alunno";
+      
       contextPrompt += `\n\nPROFILO STUDENTE:
 - Nome: ${studentProfile.name || "Studente"}
-- Età: ${studentProfile.age || "non specificata"}
-- Classe: ${studentProfile.schoolLevel || studentProfile.school_level || "non specificata"}
+- Genere: ${gender === "M" ? "maschio" : gender === "F" ? "femmina" : "non specificato"}
+- Età: ${age || "non specificata"}
+- Classe: ${schoolLevel}
 - Difficoltà principali: ${studentProfile.struggles?.join(", ") || "non specificate"}
 - Stile preferito: ${studentProfile.supportStyle || studentProfile.support_style || "gentile"}
 - Tempo di focus: ${studentProfile.focusTime || studentProfile.focus_time || 15} minuti
 - Materie che trova difficili/non piacevoli: ${studentProfile.difficultSubjects?.join(", ") || studentProfile.difficult_subjects?.join(", ") || "nessuna"}
 - Materie preferite: ${studentProfile.favoriteSubjects?.join(", ") || studentProfile.favorite_subjects?.join(", ") || "nessuna"}
 - Interessi personali: ${interests.length > 0 ? interests.join(", ") : "non specificati"}`;
+
+      // Gender-aware language rules
+      if (gender) {
+        contextPrompt += `\n\nDECLINAZIONE DI GENERE (OBBLIGATORIO):
+Lo studente è ${gender === "M" ? "maschio" : "femmina"}. Declina SEMPRE correttamente:
+${gender === "M" 
+  ? '- "Bravo!", "Sei stato attento", "concentrato", "sicuro", "pronto", "bloccato"'
+  : '- "Brava!", "Sei stata attenta", "concentrata", "sicura", "pronta", "bloccata"'}
+- NON usare MAI la forma con slash (bravo/a, attento/a). Scegli SEMPRE la forma corretta.`;
+      }
+
+      // Age-band linguistic adaptation
+      if (age || schoolLevel) {
+        let ageBand = "";
+        const numAge = typeof age === "number" ? age : parseInt(age || "0");
+        
+        if (schoolLevel === "universitario" || numAge >= 19) {
+          ageBand = "university";
+        } else if (schoolLevel === "superiori" || (numAge >= 14 && numAge < 19)) {
+          ageBand = "highschool";
+        } else if (numAge >= 11 && numAge < 14) {
+          ageBand = "medie";
+        } else if (numAge >= 8 && numAge < 11) {
+          ageBand = "primaria-alta";
+        } else {
+          ageBand = "primaria-bassa";
+        }
+
+        const ageBandRules: Record<string, string> = {
+          "primaria-bassa": `FASCIA ETÀ 6-7 ANNI:
+- Frasi MOLTO corte (max 10 parole per frase). Parole semplici e quotidiane.
+- Usa "tu" e il nome. Niente termini tecnici.
+- Paragoni concreti: oggetti, animali, giochi che conosce.
+- Massimo 2 righe per messaggio. Una sola domanda semplicissima.
+- Tono: come un amico grande gentile e paziente.`,
+          "primaria-alta": `FASCIA ETÀ 8-10 ANNI:
+- Frasi corte ma puoi usare qualche connettivo in più.
+- Introduci termini tecnici UNO alla volta, spiegandoli subito.
+- Analogie dal mondo reale: sport, cartoni, videogiochi, natura.
+- Max 3 righe. Una domanda chiara.
+- Tono: amichevole, incoraggiante, un po' giocoso.`,
+          "medie": `FASCIA ETÀ 11-13 ANNI:
+- Linguaggio chiaro ma non infantile. Puoi usare termini tecnici della materia.
+- Stimola il ragionamento autonomo: "Secondo te perché...?"
+- Max 3-4 righe. Una domanda che fa pensare.
+- Tono: rispettoso, motivante, da mentore giovane. Niente condiscendenza.`,
+          "highschool": `FASCIA ETÀ 14-18 ANNI:
+- Linguaggio diretto e maturo. Usa terminologia disciplinare.
+- Spingi verso l'analisi critica e i collegamenti interdisciplinari.
+- Max 4-5 righe. Domande che sfidano.
+- Tono: da tutor rispettoso, niente paternalismo. Puoi essere ironico con leggerezza.`,
+          "university": `FASCIA UNIVERSITARIA (19+ ANNI):
+- Registro accademico. Terminologia specialistica della disciplina.
+- Sfida le posizioni, proponi controesempi, chiedi di argomentare.
+- Messaggi più articolati se il contenuto lo richiede.
+- Tono: da mentor/collega. Dialogo alla pari. Nessun tono didattico.
+- Dai del "tu" ma con rispetto accademico.`,
+        };
+
+        contextPrompt += `\n\n${ageBandRules[ageBand] || ageBandRules["medie"]}`;
+      }
 
       if (interests.length > 0) {
         contextPrompt += `\n\n🎯 INTERESSI DELLO STUDENTE: ${interests.join(", ")}
