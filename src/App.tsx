@@ -45,6 +45,7 @@ const AgendaDocente = lazy(() => import("./pages/AgendaDocente"));
 const FreeStudySession = lazy(() => import("./pages/FreeStudySession"));
 const UnifiedSession = lazy(() => import("./pages/UnifiedSession"));
 const MaterialLibrary = lazy(() => import("./pages/MaterialLibrary"));
+const FlashcardSession = lazy(() => import("./pages/FlashcardSession"));
 
 const queryClient = new QueryClient();
 
