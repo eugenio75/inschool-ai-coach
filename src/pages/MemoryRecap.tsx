@@ -547,6 +547,7 @@ const MemoryRecap = () => {
 
   // Navigation
   const goBack = () => {
+    if (activeGroupStudy) { setActiveGroupStudy(null); return; }
     if (wizard.step === "study") setWizard(w => ({ ...w, step: "summary", method: null }));
     else if (wizard.step === "summary") {
       if (wizard.contentType === "specific") setWizard(w => ({ ...w, step: "home", section: null, contentType: null, specificTopic: null, subject: null }));
