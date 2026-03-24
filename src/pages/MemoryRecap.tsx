@@ -487,7 +487,9 @@ const MemoryRecap = () => {
 
   const todayItems = useMemo(() => {
     const todayStart = getTodayStart();
-    return items.filter(i => i.created_at >= todayStart);
+    return items.filter(i => i.created_at >= todayStart).sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
   }, [items]);
 
   const weakItems = useMemo(() =>
