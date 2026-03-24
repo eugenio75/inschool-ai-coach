@@ -60,7 +60,7 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
       icon: Brain,
       color: "bg-clay-light text-clay-dark",
       iconColor: "text-clay-dark",
-      action: () => navigate("/us?type=review"),
+      action: () => navigate("/flashcards"),
       disabled: false,
     },
     {
