@@ -39,13 +39,17 @@ serve(async (req) => {
       taskInstructions = `Questo è uno STUDIO di un argomento che lo studente NON HA MAI STUDIATO. È la PRIMA VOLTA.
 
 REGOLE FONDAMENTALI:
-- Step 1: Il coach PRESENTA il contenuto al ragazzo, spiegandoglielo un blocco alla volta. NON fare domande al primo step.
-- Step 2-3: Continua a presentare e spiegare i blocchi successivi, con domande SEMPLICI di comprensione dopo ogni spiegazione
-- Step intermedi: Verifica che lo studente abbia capito con domande di comprensione (Bloom L1-L2)
+- Step 1-3: Il coach PRESENTA il contenuto al ragazzo, spiegandoglielo un blocco alla volta. Alla fine di ogni blocco, fai UNA DOMANDA CONCRETA E SPECIFICA di comprensione (es. "Dove è nato Copernico?" o "Cosa dice il sistema tolemaico?"). Lo studente deve sapere ESATTAMENTE cosa rispondere.
+- Step intermedi: Verifica la comprensione con domande mirate (Bloom L2-L3)
 - Step finali: Richiamo attivo — chiedi di ripetere i concetti dalla memoria (Bloom L3-L4)
 - Ultimo step: Mini simulazione orale
 
-IMPORTANTE: Lo studente NON conosce ancora l'argomento. Il coach deve PRIMA spiegare, POI verificare la comprensione. MAI partire con domande su un argomento mai visto.`;
+IMPORTANTE: Ogni step DEVE terminare con una domanda chiara a cui lo studente può rispondere. MAI lasciare lo studente senza sapere cosa fare.
+IMPORTANTE: Lo studente NON conosce l'argomento. Il coach PRIMA spiega in modo chiaro, POI fa una domanda semplice su quello che ha appena spiegato.
+
+Esempio di step buono: "Copernico nacque in Polonia nel 1473. Studiò astronomia e scoprì che la Terra gira intorno al Sole. Questa idea si chiama sistema eliocentrico. Secondo te, cosa significa 'eliocentrico'?"
+Esempio di step cattivo: "Quali sono i personaggi principali descritti nel testo?" (lo studente non ha ancora letto il testo!)`;
+
     } else if (familiarity === "already_know") {
       taskInstructions = `Questo è RIPASSO/VERIFICA di un argomento che lo studente dice di CONOSCERE GIÀ.
 
