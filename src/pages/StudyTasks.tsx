@@ -20,7 +20,7 @@ const subjectEmojis: Record<string, string> = {
 const subjectBgColors: Record<string, string> = {
   Matematica: "bg-sage-light/50 border-sage/30",
   Italiano: "bg-clay-light/50 border-clay/30",
-  Scienze: "bg-accent/10 border-accent/30",
+  Scienze: "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800/40",
   Storia: "bg-terracotta-light/50 border-terracotta/30",
   Inglese: "bg-sage-light/50 border-sage/30",
 };
