@@ -280,6 +280,25 @@ async function updateAdaptiveProfile(profileId: string, messages: any[]) {
     if (lastAssistant.includes("difendi") || lastAssistant.includes("posizione") || lastAssistant.includes("d'accordo")) bloomEstimate = 6;
     else if (lastAssistant.includes("quale è più") || lastAssistant.includes("migliore tra")) bloomEstimate = 5;
 
+    // Detect Method Block usage (familiarity case)
+    const familiarityKeywords = { first_time: ["prima volta", "Prima volta"], already_know: ["lo conosco", "Lo conosco già"], partial: ["solo in parte", "Solo in parte"] };
+    let detectedFamiliarity: string | null = null;
+    for (const um of userMessages) {
+      const text = typeof um.content === "string" ? um.content : "";
+      for (const [key, phrases] of Object.entries(familiarityKeywords)) {
+        if (phrases.some(p => text.includes(p))) { detectedFamiliarity = key; break; }
+      }
+      if (detectedFamiliarity) break;
+    }
+
+    // Detect voice usage (messages from voice input are typically shorter and more conversational)
+    const voiceIndicators = userMessages.filter((m: any) => {
+      const text = typeof m.content === "string" ? m.content : "";
+      // Voice messages tend to lack punctuation and capitalization
+      return text.length > 10 && text.length < 200 && !text.includes(".") && text[0] === text[0].toLowerCase();
+    }).length;
+    const voiceUsageRatio = userMessages.length > 0 ? voiceIndicators / userMessages.length : 0;
+
     // Read current profile
     const { data: current } = await sb.from("user_preferences").select("adaptive_profile, cognitive_dynamic_profile, bloom_level_current").eq("profile_id", profileId).maybeSingle();
 
@@ -296,6 +315,33 @@ async function updateAdaptiveProfile(profileId: string, messages: any[]) {
     adaptive.bloomLevel = bloomEstimate;
     adaptive.sessionCount = sessionCount;
     adaptive.lastSessionAt = new Date().toISOString();
+
+    // Track Method Block usage history
+    if (detectedFamiliarity) {
+      const methodHistory = adaptive.methodBlockHistory || [];
+      methodHistory.push({
+        familiarity: detectedFamiliarity,
+        voiceUsed: voiceUsageRatio > 0.3,
+        voiceRatio: Math.round(voiceUsageRatio * 100),
+        bloomReached: bloomEstimate,
+        timestamp: new Date().toISOString(),
+      });
+      // Keep last 20 entries
+      adaptive.methodBlockHistory = methodHistory.slice(-20);
+      adaptive.lastFamiliarity = detectedFamiliarity;
+      adaptive.prefersVoice = voiceUsageRatio > 0.3;
+
+      // Track which method works best per familiarity case
+      const methodStats = adaptive.methodStats || {};
+      const caseStats = methodStats[detectedFamiliarity] || { count: 0, avgBloom: 0, voiceSuccessRate: 0 };
+      caseStats.count += 1;
+      caseStats.avgBloom = ((caseStats.avgBloom * (caseStats.count - 1)) + bloomEstimate) / caseStats.count;
+      if (voiceUsageRatio > 0.3) {
+        caseStats.voiceSuccessRate = ((caseStats.voiceSuccessRate * (caseStats.count - 1)) + bloomEstimate) / caseStats.count;
+      }
+      methodStats[detectedFamiliarity] = caseStats;
+      adaptive.methodStats = methodStats;
+    }
 
     // Update cognitive dynamic profile
     cognitive.bloomPeak = Math.max(cognitive.bloomPeak || 1, bloomEstimate);
