@@ -432,8 +432,7 @@ const MemoryRecap = () => {
 
   // Navigation helpers
   const goBack = () => {
-    if (wizard.step === "study") setWizard(w => ({ ...w, step: "method", method: null }));
-    else if (wizard.step === "method") setWizard(w => ({ ...w, step: "summary" }));
+    if (wizard.step === "study") setWizard(w => ({ ...w, step: "summary", method: null }));
     else if (wizard.step === "summary") {
       if (wizard.contentType === "specific") setWizard(w => ({ ...w, step: "content", specificTopic: null, subject: null }));
       else setWizard(w => ({ ...w, step: "subject-pick", subject: null }));
