@@ -487,6 +487,13 @@ Inizia spiegando il concetto.`;
                   <p className={`font-display font-semibold text-foreground text-center leading-relaxed ${isJunior ? "text-xl" : "text-lg"}`}>
                     {currentCard?.answer}
                   </p>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); if (currentCard) triggerCoachIntervention(currentCard); }}
+                    className="mt-4 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors text-xs font-medium text-primary"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    Spiegami meglio
+                  </button>
                 </div>
               </div>
             </button>
