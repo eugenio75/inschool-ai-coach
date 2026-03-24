@@ -99,6 +99,7 @@ export default function UnifiedSession() {
   const [topic, setTopic] = useState(urlSubject ? `Ripasso ${urlSubject}` : "");
   const [subject, setSubject] = useState(urlSubject || "");
   const [mode, setMode] = useState<"scritta" | "orale">("scritta");
+  const [learningGaps, setLearningGaps] = useState<string[]>([]);
   const [reviewMode, setReviewMode] = useState<"chat" | "flashcard">("chat");
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [streamingText, setStreamingText] = useState("");
