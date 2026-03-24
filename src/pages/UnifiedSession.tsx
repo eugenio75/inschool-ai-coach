@@ -284,7 +284,23 @@ Inizia con la prima domanda.`;
       messages: newMessages,
       onDelta: (full) => setStreamingText(full),
       onDone: (full) => {
-        setMessages(prev => [...prev, { role: "assistant", content: full }]);
+        setMessages(prev => {
+          const updated = [...prev, { role: "assistant" as const, content: full }];
+          // Complete missions after meaningful engagement (4+ messages)
+          if (!missionsCompletedRef.current && updated.length >= 4) {
+            missionsCompletedRef.current = true;
+            getDailyMissions().then(missions => {
+              for (const mission of missions) {
+                if (mission.completed) continue;
+                const t = mission.mission_type;
+                if (t === "study_session" || (t === "review_concept" && type === "review") || (t === "review_weak_concept" && type === "review")) {
+                  completeMission(mission.id, mission.points_reward).catch(() => {});
+                }
+              }
+            }).catch(() => {});
+          }
+          return updated;
+        });
         setStreamingText("");
         setSending(false);
       },
