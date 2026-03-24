@@ -65,7 +65,7 @@ export function TeacherAssignments() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
-            onClick={() => navigate(`/session/${a.id}`)}
+            onClick={() => navigate(`/us?type=guided&hw=${a.id}`)}
             className="bg-[var(--color-surface)] border border-[var(--color-border)] border-l-4 border-l-orange-400 rounded-xl p-4 cursor-pointer hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all"
           >
             <div className="flex items-start justify-between gap-3">

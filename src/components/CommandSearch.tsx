@@ -80,7 +80,7 @@ export function CommandSearch() {
           icon: FileText,
           title: h.title,
           subtitle: h.subject,
-          route: `/session/${h.id}`,
+          route: `/us?type=guided&hw=${h.id}`,
         }));
       }
 
