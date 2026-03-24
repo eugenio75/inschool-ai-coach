@@ -581,6 +581,8 @@ const MemoryRecap = () => {
   };
 
   // Start study for a specific exercise group
+  const [generatedGroupCards, setGeneratedGroupCards] = useState<any[]>([]);
+
   const startGroupStudy = async (subject: string, concepts: any[], method: StudyMethod) => {
     if (method === "flashcard") {
       setGeneratingFlashcards(true);
@@ -596,16 +598,16 @@ const MemoryRecap = () => {
         );
         if (response.ok) {
           const data = await response.json();
-          const generatedCards = (data.flashcards || data.cards || []).map((c: any, i: number) => ({
+          const cards = (data.flashcards || data.cards || []).map((c: any, i: number) => ({
             id: `gen-${Date.now()}-${i}`,
             subject,
             question: c.question || c.front || "",
             answer: c.answer || c.back || "",
             times_shown: 0, times_correct: 0, times_wrong: 0,
           }));
-          if (generatedCards.length > 0) {
+          if (cards.length > 0) {
+            setGeneratedGroupCards(cards);
             setActiveGroupStudy({ subject, concepts, method: "flashcard" });
-            setFlashcards(prev => [...generatedCards, ...prev]);
           }
         }
       } catch (e) {
@@ -783,7 +785,7 @@ const MemoryRecap = () => {
           )}
 
           {/* ═══ SUMMARY ═══ */}
-          {wizard.step === "summary" && (
+          {wizard.step === "summary" && !activeGroupStudy && (
             <motion.div key="summary" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
               className="space-y-4">
               <div className="flex items-center gap-2 mb-1">
@@ -912,9 +914,9 @@ const MemoryRecap = () => {
                 />
               ) : (
                 <FlashcardSession
-                  cards={flashcards.filter(c => c.id?.toString().startsWith("gen-") && c.subject === activeGroupStudy.subject)}
+                  cards={generatedGroupCards}
                   subject={activeGroupStudy.subject}
-                  onClose={() => setActiveGroupStudy(null)}
+                  onClose={() => { setActiveGroupStudy(null); setGeneratedGroupCards([]); }}
                 />
               )}
             </motion.div>
