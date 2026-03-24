@@ -98,9 +98,8 @@ const DashboardAlunno = () => {
   const [profile, setProfile] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [suggestion, setSuggestion] = useState<{ task: any; reason: string } | null>(null);
+  const isChild = isChildSession();
 
-  // Redirect to check-in if not done today (only for child sessions)
   useEffect(() => {
     if (isChild && shouldShowCheckin()) {
       navigate("/checkin", { replace: true });
@@ -125,31 +124,6 @@ const DashboardAlunno = () => {
       }
       const dbTasks = await getTasks();
       setTasks(dbTasks);
-
-      // Detect paused focus session
-      for (const t of dbTasks) {
-        try {
-          const saved = sessionStorage.getItem(`focus-session-${t.id}`);
-          if (saved) {
-            const state = JSON.parse(saved);
-            if (state.phase === "focus" || state.phase === "checkin" || state.phase === "breathing") {
-              setPausedSession({ task: t, state });
-              break;
-            }
-          }
-        } catch {}
-      }
-
-      // Smart suggestion
-      const pending = dbTasks.filter((t: any) => !t.completed);
-      if (pending.length > 0) {
-        const memoryItems = await getMemoryItems();
-        setSuggestion(pickSmartTask(pending, memoryItems));
-      }
-
-      // Library always visible on student dashboard
-      setShowLibrary(true);
-
       setLoading(false);
     };
     load();
@@ -183,9 +157,7 @@ const DashboardAlunno = () => {
               <span className="font-display text-lg sm:text-xl font-semibold text-foreground">Inschool</span>
             </div>
             <div className="flex items-center gap-2">
-              {showLibrary && (
-                <button onClick={() => navigate("/libreria")} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors" title="Libreria materiali"><FolderOpen className="w-4 h-4" /></button>
-              )}
+              <button onClick={() => navigate("/libreria")} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors" title="Libreria materiali"><FolderOpen className="w-4 h-4" /></button>
               <button onClick={() => navigate("/memory")} className="w-9 h-9 rounded-xl bg-clay-light flex items-center justify-center text-clay-dark hover:bg-accent transition-colors" title="Memoria e ripasso"><Brain className="w-4 h-4" /></button>
               <button onClick={() => navigate("/student-profile")} className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-accent transition-colors text-xs font-bold text-primary" title="Il mio profilo">
                 {avatarName.charAt(0).toUpperCase()}
@@ -267,7 +239,7 @@ const DashboardAlunno = () => {
           <Plus className="w-6 h-6" />
         </motion.button>
       </div>
-      <QuickHelpModal open={quickHelpOpen} onClose={() => setQuickHelpOpen(false)} />
+      
     </div>
   );
 };
