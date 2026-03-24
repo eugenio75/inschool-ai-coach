@@ -614,7 +614,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
               chatMessages: chatForExtract,
               taskSubject: homework?.subject,
               taskTitle: homework?.title,
-              childProfileId: isChild ? childSession?.profileId : (profileId || undefined),
+              childProfileId: isChild ? childSession?.profileId : (homework?.child_profile_id || undefined),
               accessCode: isChild ? childSession?.accessCode : undefined,
             }),
           }).catch(() => {});
