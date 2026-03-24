@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Pause, Play, Coffee, RotateCcw } from "lucide-react";
 import { playPomodoroSound } from "@/lib/pomodoroSound";
 
@@ -22,7 +22,7 @@ export function PomodoroTimer({
   const [seconds, setSeconds] = useState(focusMinutes * 60);
   const [isRunning, setIsRunning] = useState(false);
   const hasAutoStarted = useRef(false);
-  const [phase, setPhase] = useState<"focus" | "break">("focus");
+  const [phase, setPhase] = useState<"focus" | "break" | "break-done">("focus");
   const [cycle, setCycle] = useState(1);
   const [breakSeconds, setBreakSeconds] = useState(breakMinutes * 60);
 
@@ -48,9 +48,7 @@ export function PomodoroTimer({
     if (phase === "focus" && seconds <= 0 && isRunning) {
       setIsRunning(false);
       playPomodoroSound("break");
-      if (cycle >= maxCycles) {
-        return;
-      }
+      if (cycle >= maxCycles) return;
       setPhase("break");
       setBreakSeconds(breakMinutes * 60);
     }
@@ -63,27 +61,32 @@ export function PomodoroTimer({
     return () => clearInterval(id);
   }, [phase, breakSeconds]);
 
-  // Break ended → next focus (with sound)
+  // Break ended → wait for user to resume
   useEffect(() => {
     if (phase === "break" && breakSeconds <= 0) {
       playPomodoroSound("focus");
-      setCycle(c => c + 1);
-      setSeconds(totalFocusSeconds);
-      setPhase("focus");
-      setIsRunning(true);
+      setPhase("break-done");
     }
-  }, [phase, breakSeconds, totalFocusSeconds]);
+  }, [phase, breakSeconds]);
+
+  const handleResume = useCallback(() => {
+    setCycle(c => c + 1);
+    setSeconds(totalFocusSeconds);
+    setPhase("focus");
+    setIsRunning(true);
+  }, [totalFocusSeconds]);
 
   const formatTime = (s: number) =>
     `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
   const progress = phase === "focus"
     ? 1 - seconds / totalFocusSeconds
-    : 1 - breakSeconds / (breakMinutes * 60);
+    : phase === "break"
+      ? 1 - breakSeconds / (breakMinutes * 60)
+      : 1;
 
   const toggleRunning = useCallback(() => {
     if (phase === "focus" && seconds <= 0) {
-      // Reset
       setSeconds(totalFocusSeconds);
       setCycle(1);
       setIsRunning(true);
@@ -100,61 +103,89 @@ export function PomodoroTimer({
     setBreakSeconds(breakMinutes * 60);
   }, [totalFocusSeconds, breakMinutes]);
 
+  const circleSize = compact ? 72 : 96;
+  const svgViewBox = compact ? "0 0 72 72" : "0 0 36 36";
+  const svgR = compact ? 31 : 15;
+  const svgCx = compact ? 36 : 18;
+  const svgStroke = compact ? 4 : 2;
+  const circumference = 2 * Math.PI * svgR;
+
   if (compact) {
     return (
-      <div className="flex items-center gap-2.5">
-        {/* Circular progress */}
-        <div className="relative w-14 h-14 flex items-center justify-center">
-          <svg className="w-14 h-14 -rotate-90" viewBox="0 0 56 56">
-            <circle cx="28" cy="28" r="24" fill="none" stroke="hsl(var(--muted))" strokeWidth="3.5" />
+      <div className="flex items-center gap-3">
+        {/* Circular progress — bigger */}
+        <div className="relative flex items-center justify-center" style={{ width: circleSize, height: circleSize }}>
+          <svg className="-rotate-90" width={circleSize} height={circleSize} viewBox={svgViewBox}>
+            <circle cx={svgCx} cy={svgCx} r={svgR} fill="none" stroke="hsl(var(--muted))" strokeWidth={svgStroke} />
             <motion.circle
-              cx="28" cy="28" r="24" fill="none"
-              stroke={phase === "break" ? "hsl(var(--accent))" : "hsl(var(--primary))"}
-              strokeWidth="3.5"
+              cx={svgCx} cy={svgCx} r={svgR} fill="none"
+              stroke={phase === "focus" ? "hsl(var(--primary))" : "hsl(var(--accent))"}
+              strokeWidth={svgStroke}
               strokeLinecap="round"
-              strokeDasharray={150.8}
-              animate={{ strokeDashoffset: 150.8 * (1 - progress) }}
+              strokeDasharray={circumference}
+              animate={{ strokeDashoffset: circumference * (1 - progress) }}
               transition={{ duration: 0.5 }}
             />
           </svg>
-          <span className="absolute text-sm font-mono font-bold text-foreground">
-            {phase === "break" ? formatTime(breakSeconds) : formatTime(seconds)}
-          </span>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={toggleRunning}
-              className="p-1.5 rounded-lg hover:bg-muted transition-colors"
-              title={isRunning ? "Pausa" : "Avvia"}
-            >
-              {isRunning ? (
-                <Pause className="w-5 h-5 text-foreground" />
-              ) : (
-                <Play className="w-5 h-5 text-foreground" />
-              )}
-            </button>
-
-            <button
-              onClick={reset}
-              className="p-1.5 rounded-lg hover:bg-muted transition-colors"
-              title="Reset timer"
-            >
-              <RotateCcw className="w-4 h-4 text-muted-foreground" />
-            </button>
-
+          <div className="absolute flex flex-col items-center">
+            <span className="text-base font-mono font-bold text-foreground leading-none">
+              {phase === "break" ? formatTime(breakSeconds) : phase === "break-done" ? "0:00" : formatTime(seconds)}
+            </span>
             {phase === "break" && (
-              <Coffee className="w-4 h-4 text-accent animate-pulse" />
+              <span className="text-[9px] text-accent font-semibold mt-0.5">PAUSA</span>
             )}
           </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          {/* Break done — show "Riprendi" button */}
+          <AnimatePresence mode="wait">
+            {phase === "break-done" ? (
+              <motion.button
+                key="resume"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                onClick={handleResume}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shadow-sm"
+              >
+                <Play className="w-3.5 h-3.5" /> Riprendi
+              </motion.button>
+            ) : (
+              <motion.div key="controls" className="flex items-center gap-1.5">
+                <button
+                  onClick={toggleRunning}
+                  className="p-2 rounded-xl hover:bg-muted transition-colors"
+                  title={isRunning ? "Pausa" : "Avvia"}
+                >
+                  {isRunning ? (
+                    <Pause className="w-5 h-5 text-foreground" />
+                  ) : (
+                    <Play className="w-5 h-5 text-foreground" />
+                  )}
+                </button>
+
+                <button
+                  onClick={reset}
+                  className="p-2 rounded-xl hover:bg-muted transition-colors"
+                  title="Reset timer"
+                >
+                  <RotateCcw className="w-4 h-4 text-muted-foreground" />
+                </button>
+
+                {phase === "break" && (
+                  <Coffee className="w-5 h-5 text-accent animate-pulse" />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Cycle dots */}
-          <div className="flex gap-1 justify-center">
+          <div className="flex gap-1.5 justify-center">
             {Array.from({ length: maxCycles }).map((_, i) => (
               <div
                 key={i}
-                className={`w-2 h-2 rounded-full ${
+                className={`w-2.5 h-2.5 rounded-full transition-colors ${
                   i < cycle ? "bg-primary" : "bg-muted-foreground/30"
                 }`}
               />
@@ -165,7 +196,7 @@ export function PomodoroTimer({
     );
   }
 
-  // Full version (not used in chat, but available)
+  // Full version
   return (
     <div className="flex flex-col items-center gap-3 p-4">
       <div className="relative w-24 h-24 flex items-center justify-center">
@@ -173,24 +204,32 @@ export function PomodoroTimer({
           <circle cx="18" cy="18" r="15" fill="none" stroke="hsl(var(--muted))" strokeWidth="2" />
           <motion.circle
             cx="18" cy="18" r="15" fill="none"
-            stroke={phase === "break" ? "hsl(var(--accent))" : "hsl(var(--primary))"}
+            stroke={phase === "focus" ? "hsl(var(--primary))" : "hsl(var(--accent))"}
             strokeWidth="2"
             strokeLinecap="round"
             strokeDasharray={94.25}
             animate={{ strokeDashoffset: 94.25 * (1 - progress) }}
           />
         </svg>
-        <span className="absolute text-lg font-mono font-bold text-foreground">
-          {phase === "break" ? formatTime(breakSeconds) : formatTime(seconds)}
-        </span>
+        <div className="absolute flex flex-col items-center">
+          <span className="text-lg font-mono font-bold text-foreground">
+            {phase === "break" ? formatTime(breakSeconds) : phase === "break-done" ? "0:00" : formatTime(seconds)}
+          </span>
+        </div>
       </div>
       <p className="text-xs text-muted-foreground">
-        {phase === "break" ? "Pausa ☕" : `Ciclo ${cycle}/${maxCycles}`}
+        {phase === "break" ? "Pausa ☕" : phase === "break-done" ? "Pausa finita!" : `Ciclo ${cycle}/${maxCycles}`}
       </p>
       <div className="flex gap-2">
-        <button onClick={toggleRunning} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
-          {isRunning ? "Pausa" : "Avvia"}
-        </button>
+        {phase === "break-done" ? (
+          <button onClick={handleResume} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
+            Riprendi
+          </button>
+        ) : (
+          <button onClick={toggleRunning} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
+            {isRunning ? "Pausa" : "Avvia"}
+          </button>
+        )}
         <button onClick={reset} className="px-4 py-2 rounded-xl border border-border text-sm text-muted-foreground">
           Reset
         </button>
