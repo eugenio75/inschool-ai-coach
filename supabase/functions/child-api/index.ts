@@ -344,6 +344,7 @@ serve(async (req) => {
       }
 
       case "get-paused-session": {
+        // First check for paused sessions
         const { data } = await supabase
           .from("guided_sessions")
           .select("*")
@@ -362,7 +363,20 @@ serve(async (req) => {
             .order("step_number", { ascending: true });
           result = { session: sess, steps: savedSteps || [] };
         } else {
-          result = { session: null, steps: [] };
+          // Check for completed sessions (to show conversation history)
+          const { data: completedData } = await supabase
+            .from("guided_sessions")
+            .select("*, conversation_sessions(messaggi)")
+            .eq("homework_id", payload.homeworkId)
+            .eq("user_id", ownerUserId)
+            .eq("status", "completed")
+            .order("completed_at", { ascending: false })
+            .limit(1);
+          if (completedData && completedData.length > 0) {
+            result = { session: completedData[0], steps: [], completed: true };
+          } else {
+            result = { session: null, steps: [] };
+          }
         }
         break;
       }
@@ -433,9 +447,33 @@ serve(async (req) => {
       }
 
       case "complete-session": {
+        // Save conversation to conversation_sessions
+        let conversationId: string | null = null;
+        if (payload.chatMessages && Array.isArray(payload.chatMessages) && payload.chatMessages.length > 0) {
+          // Get homework info for title/subject
+          const { data: hwData } = await supabase
+            .from("homework_tasks")
+            .select("title, subject")
+            .eq("id", payload.homeworkId)
+            .maybeSingle();
+
+          const { data: convSession } = await supabase
+            .from("conversation_sessions")
+            .insert({
+              profile_id: childProfileId,
+              titolo: hwData?.title || "Sessione guidata",
+              materia: hwData?.subject,
+              messaggi: payload.chatMessages,
+            })
+            .select("id")
+            .single();
+          conversationId = convSession?.id || null;
+        }
+
         await supabase.from("guided_sessions").update({
           status: "completed",
           completed_at: new Date().toISOString(),
+          conversation_id: conversationId,
         }).eq("id", payload.sessionId).eq("user_id", ownerUserId);
 
         if (payload.homeworkId) {
@@ -444,6 +482,103 @@ serve(async (req) => {
             updated_at: new Date().toISOString(),
           }).eq("id", payload.homeworkId).eq("child_profile_id", childProfileId);
         }
+
+        // Trigger extract-concepts in background
+        if (payload.chatMessages && payload.chatMessages.length >= 3) {
+          const { data: hwInfo } = await supabase
+            .from("homework_tasks")
+            .select("subject, title")
+            .eq("id", payload.homeworkId)
+            .maybeSingle();
+
+          const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+          if (LOVABLE_API_KEY && hwInfo) {
+            // Extract concepts inline (same logic as extract-concepts function)
+            try {
+              const { data: childProfile } = await supabase
+                .from("child_profiles")
+                .select("name")
+                .eq("id", childProfileId)
+                .maybeSingle();
+              const studentName = childProfile?.name || "Lo studente";
+
+              const conversationText = payload.chatMessages
+                .filter((m: any) => typeof m.text === "string" && m.text.trim())
+                .map((m: any) => `${m.role === "coach" || m.role === "assistant" ? "Coach" : "Studente"}: ${m.text}`)
+                .join("\n");
+
+              const extractPrompt = `Analizza questa conversazione di studio tra un coach AI e ${studentName}.
+Estrai i CONCETTI CHIAVE che ${studentName} ha imparato o su cui ha lavorato durante la sessione.
+
+Materia: ${hwInfo.subject || "non specificata"}
+Argomento: ${hwInfo.title || "non specificato"}
+
+Conversazione:
+${conversationText}
+
+Rispondi SOLO con un JSON array di oggetti, ognuno con:
+- "concept": il nome breve del concetto (max 6 parole)
+- "summary": un riassunto di 1-2 frasi di cosa ${studentName} ha capito/lavorato. Usa SEMPRE il nome "${studentName}" e mai "lo studente".
+- "recall_questions": array di 2-3 domande di ripasso
+- "strength": un numero da 20 a 80
+
+Estrai da 1 a 4 concetti. Rispondi SOLO con il JSON, senza markdown.`;
+
+              const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  model: "google/gemini-2.5-flash-lite",
+                  messages: [{ role: "user", content: extractPrompt }],
+                }),
+              });
+
+              if (aiResponse.ok) {
+                const aiData = await aiResponse.json();
+                let rawText = aiData.choices?.[0]?.message?.content || "[]";
+                rawText = rawText.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+                let concepts: any[] = [];
+                try { concepts = JSON.parse(rawText); if (!Array.isArray(concepts)) concepts = []; } catch { concepts = []; }
+
+                for (const c of concepts) {
+                  const item = {
+                    child_profile_id: childProfileId,
+                    subject: hwInfo.subject || "Generale",
+                    concept: c.concept || "Concetto",
+                    summary: c.summary || "",
+                    recall_questions: c.recall_questions || [],
+                    strength: Math.max(20, Math.min(80, c.strength || 50)),
+                  };
+
+                  const { data: existing } = await supabase
+                    .from("memory_items")
+                    .select("id, strength")
+                    .eq("child_profile_id", childProfileId)
+                    .eq("subject", item.subject)
+                    .eq("concept", item.concept)
+                    .maybeSingle();
+
+                  if (existing) {
+                    await supabase.from("memory_items").update({
+                      strength: Math.round((existing.strength + item.strength) / 2),
+                      last_reviewed: new Date().toISOString(),
+                      summary: item.summary,
+                      recall_questions: item.recall_questions,
+                    }).eq("id", existing.id);
+                  } else {
+                    await supabase.from("memory_items").insert(item);
+                  }
+                }
+              }
+            } catch (e) {
+              console.error("extract-concepts inline error:", e);
+            }
+          }
+        }
+
         result = { success: true };
         break;
       }
