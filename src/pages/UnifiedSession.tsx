@@ -396,7 +396,6 @@ Inizia con la prima domanda.`;
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-foreground">{opt.label}</p>
-                      <p className="text-xs text-muted-foreground">{opt.desc}</p>
                     </div>
                   </button>
                 ))}
