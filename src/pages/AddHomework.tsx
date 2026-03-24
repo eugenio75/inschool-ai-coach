@@ -121,7 +121,7 @@ const AddHomework = () => {
             estimatedMinutes: t.estimatedMinutes || 15,
             difficulty: t.difficulty || 1,
             selected: true,
-            task_type: t.task_type || "exercise",
+            task_types: [t.task_type || "exercise"],
           }))
         );
         setMode("task-type");
