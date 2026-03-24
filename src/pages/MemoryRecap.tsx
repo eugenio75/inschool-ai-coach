@@ -433,7 +433,8 @@ const MemoryRecap = () => {
   // Navigation helpers
   const goBack = () => {
     if (wizard.step === "study") setWizard(w => ({ ...w, step: "method", method: null }));
-    else if (wizard.step === "method") {
+    else if (wizard.step === "method") setWizard(w => ({ ...w, step: "summary" }));
+    else if (wizard.step === "summary") {
       if (wizard.contentType === "specific") setWizard(w => ({ ...w, step: "content", specificTopic: null, subject: null }));
       else setWizard(w => ({ ...w, step: "subject-pick", subject: null }));
     }
@@ -455,13 +456,13 @@ const MemoryRecap = () => {
   };
 
   const selectSubject = (subject: string) => {
-    setWizard(w => ({ ...w, step: "method", subject }));
+    setWizard(w => ({ ...w, step: "summary", subject }));
   };
 
   const submitSpecificTopic = () => {
     const trimmed = specificInput.trim();
     if (!trimmed) return;
-    setWizard(w => ({ ...w, step: "method", contentType: "specific", specificTopic: trimmed, subject: trimmed }));
+    setWizard(w => ({ ...w, step: "summary", contentType: "specific", specificTopic: trimmed, subject: trimmed }));
   };
 
   const selectMethod = (method: StudyMethod) => {
