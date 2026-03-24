@@ -270,11 +270,11 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
         const isExercise = homework.task_type !== "study" && !isOralStudyTask(homework.task_type, homework.title);
         if (isExercise) {
           generatedSteps = [
-            { number: 1, text: "Leggi bene il testo dell'esercizio: quali sono i dati che hai a disposizione e cosa ti viene chiesto di trovare?", bloomLevel: 1 },
-            { number: 2, text: "Quale formula, regola o procedimento pensi si possa applicare qui? Se non lo sai, chiedimi una mini-ripetizione.", bloomLevel: 2 },
-            { number: 3, text: "Prova ad impostare il primo passaggio della risoluzione. Cosa ottieni?", bloomLevel: 3 },
-            { number: 4, text: "Controlla il risultato: ha senso? Come puoi verificarlo?", bloomLevel: 4 },
-          ];
+              { number: 1, text: "Leggiamo insieme l'esercizio. Ti presento il problema e vediamo cosa ci viene chiesto.", bloomLevel: 1 },
+              { number: 2, text: "Quale formula, regola o procedimento pensi si possa applicare qui? Se non lo sai, chiedimi una mini-ripetizione.", bloomLevel: 2 },
+              { number: 3, text: "Prova ad impostare il primo passaggio della risoluzione. Cosa ottieni?", bloomLevel: 3 },
+              { number: 4, text: "Controlla il risultato: ha senso? Come puoi verificarlo?", bloomLevel: 4 },
+            ];
         } else {
           // Oral study fallback steps based on familiarity
           if (fam === "already_know") {
