@@ -149,7 +149,7 @@ const AppRoutes = () => (
         <Route path="/homework/:taskId" element={<AccessibleRoute><HomeworkDetail /></AccessibleRoute>} />
         <Route path="/focus/:taskId" element={<AccessibleRoute><FocusSession /></AccessibleRoute>} />
         <Route path="/challenge/:missionId" element={<AccessibleRoute><CoachChallenge /></AccessibleRoute>} />
-        <Route path="/session/:homeworkId" element={<AccessibleRoute><GuidedSession /></AccessibleRoute>} />
+        <Route path="/session/:homeworkId" element={<AccessibleRoute><Navigate to={`/us?type=guided&hw=${window.location.pathname.split('/session/')[1]}`} replace /></AccessibleRoute>} />
         <Route path="/prep/:subject?" element={<AccessibleRoute><MaybeAdultLayout><PrepSession /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/memory" element={<AccessibleRoute><MaybeAdultLayout><MemoryRecap /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/progress" element={<AccessibleRoute><MaybeAdultLayout><StudentProgress /></MaybeAdultLayout></AccessibleRoute>} />
