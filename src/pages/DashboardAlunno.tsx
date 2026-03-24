@@ -99,10 +99,6 @@ const DashboardAlunno = () => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [suggestion, setSuggestion] = useState<{ task: any; reason: string } | null>(null);
-  const [pausedSession, setPausedSession] = useState<{ task: any; state: any } | null>(null);
-  const [quickHelpOpen, setQuickHelpOpen] = useState(false);
-  const [showLibrary, setShowLibrary] = useState(false);
-  const isChild = isChildSession();
 
   // Redirect to check-in if not done today (only for child sessions)
   useEffect(() => {
@@ -221,81 +217,19 @@ const DashboardAlunno = () => {
         </div>
       </div>
 
-      {/* Coach card */}
-      <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto"><CoachPresence /></div></div>
+      {/* Session entry cards */}
+      <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.15 }}>
+          <h3 className="font-display font-semibold text-foreground text-sm mb-3">Cosa vuoi fare?</h3>
+          <SessionEntryCards hasTasks={tasks.length > 0} />
+        </motion.div>
+      </div></div>
 
       {/* Teacher Assignments */}
-      <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto"><TeacherAssignments /></div></div>
+      <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto"><TeacherAssignments /></div></div>
 
-      {/* Paused session banner */}
-      {pausedSession && (
-        <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={spring}
-            className="bg-clay-light border border-clay-dark/20 rounded-2xl p-4 sm:p-5"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2 h-2 rounded-full bg-clay-dark animate-pulse" />
-                  <span className="text-xs font-medium text-clay-dark uppercase tracking-wider">Sessione in pausa</span>
-                </div>
-                <p className="text-sm font-medium text-foreground">
-                  Stavi lavorando su <strong>{pausedSession.task.title}</strong>
-                </p>
-                <p className="text-xs text-clay-dark/80 mt-0.5">{pausedSession.task.subject}</p>
-              </div>
-              <Button
-                onClick={() => navigate(`/focus/${pausedSession.task.id}`)}
-                className="bg-clay-dark text-white hover:bg-clay-dark/90 rounded-xl px-3 sm:px-4 py-2 text-sm flex-shrink-0"
-              >
-                <Play className="w-3.5 h-3.5 mr-1" /> Riprendi
-              </Button>
-            </div>
-          </motion.div>
-        </div></div>
-      )}
-
-      {suggestion && !pausedSession && (
-        <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 }} className="bg-sage-light border border-primary/20 rounded-2xl p-4 sm:p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <Sparkles className="w-4 h-4 text-sage-dark flex-shrink-0" />
-                  <span className="text-xs font-medium text-sage-dark uppercase tracking-wider">Consiglio del coach</span>
-                </div>
-                <p className="text-sm font-medium text-foreground">Inizia con <strong>{suggestion.task.title}</strong></p>
-                <p className="text-xs text-sage-dark/80 mt-1">{suggestion.reason}</p>
-              </div>
-              <Button onClick={() => navigate(`/homework/${suggestion.task.id}`)} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-xl px-3 sm:px-4 py-2 text-sm flex-shrink-0">
-                Vedi <ArrowRight className="ml-1 w-3.5 h-3.5" />
-              </Button>
-            </div>
-          </motion.div>
-        </div></div>
-      )}
-
-      {/* "Non so da dove iniziare" */}
-      {!loading && tasks.length > 0 && !suggestion && !pausedSession && (
-        <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
-          <motion.button
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 }}
-            onClick={() => navigate("/challenge/help-start")}
-            className="w-full flex items-center gap-3 p-4 rounded-2xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors text-left"
-          >
-            <MessageSquare className="w-5 h-5 text-primary flex-shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-foreground">Non so da dove iniziare</p>
-              <p className="text-xs text-muted-foreground">Il coach ti aiuta a scegliere il primo passo</p>
-            </div>
-          </motion.button>
-        </div></div>
-      )}
-
-      <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto">
+      {/* Daily Missions */}
+      <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.25 }}>
           <DailyMissions />
         </motion.div>
