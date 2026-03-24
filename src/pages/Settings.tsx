@@ -196,7 +196,7 @@ const Settings = () => {
     toast.success("Coach aggiornato!");
   };
 
-
+  const handleNotifToggle = async (checked: boolean) => {
     if (checked && "Notification" in window) {
       const perm = await Notification.requestPermission();
       setNotifTimer(perm === "granted");
