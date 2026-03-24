@@ -97,6 +97,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   const [methodPhase, setMethodPhase] = useState<MethodPhase>("none");
   const [familiarity, setFamiliarity] = useState<Familiarity | null>(null);
   const [pendingEmotion, setPendingEmotion] = useState<string>("");
+  const [sessionEmotion, setSessionEmotion] = useState<string>("");
 
   const progressPercent = totalSteps > 0 ? ((currentStep - 1) / totalSteps) * 100 : 0;
   const progressLabel = totalSteps > 0 ? `Step ${currentStep} di ${totalSteps}` : undefined;
