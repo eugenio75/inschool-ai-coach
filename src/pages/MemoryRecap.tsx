@@ -330,7 +330,7 @@ const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
 
 // ─── Summary Card with expandable detail ───
 
-const SummaryCard = ({ item, index, showStrength }: { item: any; index: number; showStrength: boolean }) => {
+const SummaryCard = ({ item, index, showStrength, compact = false }: { item: any; index: number; showStrength: boolean; compact?: boolean }) => {
   const [expanded, setExpanded] = useState(false);
   const [deepSummary, setDeepSummary] = useState<string | null>(null);
   const [loadingDeep, setLoadingDeep] = useState(false);
@@ -393,7 +393,8 @@ const SummaryCard = ({ item, index, showStrength }: { item: any; index: number; 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
       transition={{ ...spring, delay: index * 0.03 }}
-      className="bg-card rounded-xl border border-border p-3.5">
+      className={compact ? "py-2 first:pt-0" : "bg-card rounded-xl border border-border p-3.5"}>
+      {compact && index > 0 && <div className="border-t border-border/40 -mt-2 mb-2" />}
       <p className="text-sm font-semibold text-foreground">{item.concept}</p>
       {item.summary && (
         <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{item.summary}</p>
