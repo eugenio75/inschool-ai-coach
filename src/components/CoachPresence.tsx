@@ -286,9 +286,15 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
           )}
 
           {action && !loading && (
-            <button onClick={() => navigate(action.route)} className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
+            <motion.button
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+              onClick={() => navigate(action.route)}
+              className="mt-3 inline-flex items-center gap-2 text-xs font-semibold bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-colors shadow-sm"
+            >
               {action.text}<ArrowRight className="w-3.5 h-3.5" />
-            </button>
+            </motion.button>
           )}
         </div>
       </div>
