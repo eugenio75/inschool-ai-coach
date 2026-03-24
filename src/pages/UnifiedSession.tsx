@@ -15,74 +15,9 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-function getProfile() {
-  try {
-    if (isChildSession()) return getChildSession()?.profile || null;
-    const saved = localStorage.getItem("inschool-profile");
-    return saved ? JSON.parse(saved) : null;
-  } catch { return null; }
-}
-
-function getPrepLabel(schoolLevel: string) {
-  switch (schoolLevel) {
-    case "alunno": case "medie": return "Prepara l'interrogazione";
-    case "universitario": return "Prepara l'esame";
-    default: return "Prepara la verifica";
-  }
-}
-
-const OUTPUT_TYPES = [
-  { id: "schema", label: "Schema", icon: List },
-  { id: "mappa", label: "Mappa concettuale", icon: Map },
-  { id: "sintesi_breve", label: "Sintesi breve", icon: FileText },
-  { id: "sintesi_estesa", label: "Sintesi estesa", icon: BookOpen },
-  { id: "glossario", label: "Glossario", icon: Key },
-  { id: "punti_chiave", label: "Punti chiave", icon: Layers },
-];
-
-type SessionType = "study" | "review" | "prep" | "guided";
-
-export default function UnifiedSession() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const type = (searchParams.get("type") || "study") as SessionType;
-  const homeworkId = searchParams.get("hw");
-  const urlSubject = searchParams.get("subject");
-  const urlMsg = searchParams.get("msg");
-  const profile = getProfile();
-  const schoolLevel = profile?.school_level || "superiori";
-  const { user } = useAuth();
-  const studentName = profile?.name || "Studente";
-  const profileId = profile?.id || getChildSession()?.profileId;
-  const userId = user?.id || profileId;
-  const isJunior = schoolLevel === "alunno" || schoolLevel === "medie";
-
-  // ─── Guided session hook ───
-  const guided = useGuidedSession({
-    homeworkId,
-    userId,
-    schoolLevel,
-    profileName: studentName,
-  });
-
-  // Load guided session on mount
-  useEffect(() => {
-    if (type === "guided" && homeworkId) {
-      guided.loadSession();
-    }
-  }, [type, homeworkId]);
-
-  // ─── Free-form session state (study/review/prep) ───
-  const [setupDone, setSetupDone] = useState(false);
-  const [topic, setTopic] = useState(urlSubject ? `Ripasso ${urlSubject}` : "");
-  const [subject, setSubject] = useState(urlSubject || "");
-  const [mode, setMode] = useState<"scritta" | "orale">("scritta");
-  const [reviewMode, setReviewMode] = useState<"chat" | "flashcard">("chat");
-  const [messages, setMessages] = useState<ChatMsg[]>([]);
-  const [streamingText, setStreamingText] = useState("");
-  const [sending, setSending] = useState(false);
+...
   const [showPauseDialog, setShowPauseDialog] = useState(false);
+  const [guidedCustomEmotion, setGuidedCustomEmotion] = useState("");
 
   // Auto-start when subject is provided via URL for review
   useEffect(() => {
@@ -91,182 +26,25 @@ export default function UnifiedSession() {
       return () => clearTimeout(t);
     }
   }, [urlSubject, type]);
-
-  // Auto-start when msg is provided via URL (e.g. from coach mood chips)
-  useEffect(() => {
-    if (urlMsg && !setupDone && !sending) {
-      setTopic(urlMsg);
-      const t = setTimeout(() => {
-        const systemPrompt = getSystemPrompt();
-        setSetupDone(true);
-        setMessages([]);
-        setSending(true);
-        setStreamingText("");
-
-        streamChat({
-          messages: [
-            { role: "user", content: systemPrompt },
-            { role: "user", content: urlMsg },
-          ],
-          onDelta: (full) => setStreamingText(full),
-          onDone: (full) => {
-            setMessages([
-              { role: "user", content: urlMsg },
-              { role: "assistant", content: full },
-            ]);
-            setStreamingText("");
-            setSending(false);
-          },
-          extraBody: { profileId, subject: subject || undefined },
-        });
-      }, 150);
-      return () => clearTimeout(t);
-    }
-  }, [urlMsg]);
-
-  const subjects = profile?.favorite_subjects || profile?.difficult_subjects || ["Matematica", "Italiano", "Inglese", "Storia", "Scienze"];
-
-  // ─── System prompts for non-guided types ───
-  function getSystemPrompt(): string {
-    switch (type) {
-      case "study":
-        return `Sei un coach di studio per ${studentName} (livello ${schoolLevel}).
-L'argomento è: "${topic}" (${subject || "materia non specificata"}).
-Dividi l'argomento in blocchi logici. Per ogni blocco:
-1. Presenta brevemente il concetto
-2. Fai una domanda di comprensione
-3. Attendi la risposta prima di proseguire
-4. Costruisci connessioni tra i blocchi
-Non dare mai la risposta finale direttamente. Guida lo studente a ragionare.
-Inizia presentando il primo blocco dell'argomento.`;
-      case "review":
-        return `Sei il Coach AI di ${studentName}. Stai facendo un RIPASSO PROFONDO.
-MATERIA: ${subject || "generale"}
-ARGOMENTO: ${topic}
-LIVELLO: ${schoolLevel}
-
-REGOLE:
-- Fai domande aperte e profonde — mai rilettura passiva
-- Richiamo attivo: lo studente deve ricordare, non rileggere
-- Una domanda alla volta
-- Dopo la risposta: conferma cosa è giusto, correggi cosa no
-- Dopo 3-4 scambi: riassumi i punti forti e deboli emersi
-- Sii socratico e incoraggiante
-Inizia con la prima domanda sull'argomento.`;
-      case "prep":
-        return `Sei il Coach AI di ${studentName}. Stai conducendo una SIMULAZIONE DI ${mode === "orale" ? "INTERROGAZIONE ORALE" : "VERIFICA SCRITTA"}.
-MATERIA: ${subject}
-LIVELLO: ${schoolLevel}
-
-REGOLE:
-- Fai domande calibrate sulla materia — NON domande generiche
-- ${mode === "orale" ? "Simula un'interrogazione: una domanda alla volta, attendi risposta, fai follow-up" : "Fai domande di diverso tipo: definizioni, problemi, ragionamento"}
-- Adatta la difficoltà: se risponde bene alza, se sbaglia abbassa
-- Dopo 5-6 domande, fornisci un REPORT finale strutturato con:
-  [REPORT]
-  Punti forti: ...
-  Punti deboli: ...
-  Priorità di ripasso: ...
-  [/REPORT]
-- Non dare mai la risposta — guida con indizi se bloccato
-Inizia con la prima domanda.`;
-      default:
-        return "";
-    }
-  }
-
-  function getTitle(): string {
-    if (type === "guided") return guided.homework?.title || "Sessione guidata";
-    switch (type) {
-      case "study": return "Studio libero";
-      case "review": return "Ripasso profondo";
-      case "prep": return getPrepLabel(schoolLevel);
-      default: return "Sessione";
-    }
-  }
-
-  // ─── Non-guided session start ───
-  function startSession() {
-    if (!topic.trim() && type !== "prep" && type !== "review") return;
-    if (!topic.trim() && type === "review" && subject) {
-      // Auto-fill topic for review with subject
-      setTopic(`Ripasso ${subject}`);
-    }
-    if (!subject && type === "prep") return;
-
-    const systemPrompt = getSystemPrompt();
-    setSetupDone(true);
-    setMessages([]);
-    setSending(true);
-    setStreamingText("");
-
-    streamChat({
-      messages: [{ role: "user", content: systemPrompt }],
-      onDelta: (full) => setStreamingText(full),
-      onDone: (full) => {
-        setMessages([{ role: "assistant", content: full }]);
-        setStreamingText("");
-        setSending(false);
-      },
-      extraBody: { profileId, subject: subject || undefined },
-    }).catch(() => {
-      setMessages([{ role: "assistant", content: "Mi dispiace, c'è stato un problema. Riprova." }]);
-      setStreamingText("");
-      setSending(false);
-    });
-  }
-
-  const handleSend = useCallback((text: string) => {
-    if (sending) return;
-    const userMsg: ChatMsg = { role: "user", content: text };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
-    setSending(true);
-    setStreamingText("");
-
-    streamChat({
-      messages: newMessages,
-      onDelta: (full) => setStreamingText(full),
-      onDone: (full) => {
-        setMessages(prev => [...prev, { role: "assistant", content: full }]);
-        setStreamingText("");
-        setSending(false);
-      },
-      extraBody: { profileId, subject: subject || undefined },
-    }).catch(() => {
-      setMessages(prev => [...prev, { role: "assistant", content: "Errore. Riprova." }]);
-      setStreamingText("");
-      setSending(false);
-    });
-  }, [messages, sending, profileId, subject]);
-
-  async function generateOutput(outputType: string) {
-    const outputPrompts: Record<string, string> = {
-      schema: `Genera uno schema strutturato dell'argomento "${topic}" basandoti sulla conversazione. Usa punti e sottopunti.`,
-      mappa: `Genera una mappa concettuale testuale dell'argomento "${topic}". Mostra le connessioni tra i concetti principali.`,
-      sintesi_breve: `Genera una sintesi breve (max 200 parole) dell'argomento "${topic}" basandoti sulla conversazione.`,
-      sintesi_estesa: `Genera una sintesi estesa e dettagliata dell'argomento "${topic}" basandoti sulla conversazione.`,
-      glossario: `Genera un glossario con i termini chiave dell'argomento "${topic}" emersi dalla conversazione, con definizioni concise.`,
-      punti_chiave: `Elenca i 5-10 punti chiave dell'argomento "${topic}" emersi dalla conversazione. Ogni punto in una frase.`,
-    };
-    handleSend(outputPrompts[outputType] || outputPrompts.schema);
-  }
-
-  // ════════════════════════════════════════════
-  // GUIDED MODE
-  // ════════════════════════════════════════════
-  if (type === "guided") {
-    // Loading
-    if (guided.loading) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
-        </div>
-      );
-    }
-
-    // Emotional checkin
+...
     if (guided.showCheckin) {
+      const guidedEmotionOptions = [
+        { key: "concentrato", label: "Concentrato", icon: "🎯" },
+        { key: "curioso", label: "Curioso", icon: "🤔" },
+        { key: "carico", label: "Carico", icon: "⚡" },
+        { key: "tranquillo", label: "Tranquillo", icon: "🙂" },
+        { key: "stanco", label: "Un po' stanco", icon: "😴" },
+        { key: "confuso", label: "Confuso", icon: "😵" },
+        { key: "agitato", label: "Agitato", icon: "😬" },
+        { key: "bloccato", label: "Bloccato in partenza", icon: "😕" },
+      ];
+
+      const submitCustomEmotion = () => {
+        const value = guidedCustomEmotion.trim();
+        if (!value) return;
+        guided.startNewSession(value);
+      };
+
       return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
           <motion.div
@@ -280,12 +58,8 @@ Inizia con la prima domanda.`;
             <p className="text-sm text-muted-foreground mb-6">
               {guided.homework?.title}
             </p>
-            <div className="flex flex-col gap-3">
-              {[
-                { key: "concentrato", label: "Concentrato", icon: "🎯" },
-                { key: "stanco", label: "Un po' stanco", icon: "😴" },
-                { key: "bloccato", label: "Bloccato in partenza", icon: "😕" },
-              ].map(opt => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              {guidedEmotionOptions.map((opt) => (
                 <button
                   key={opt.key}
                   onClick={() => guided.startNewSession(opt.key)}
@@ -295,6 +69,20 @@ Inizia con la prima domanda.`;
                   <span className="font-medium text-foreground">{opt.label}</span>
                 </button>
               ))}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Input
+                value={guidedCustomEmotion}
+                onChange={(e) => setGuidedCustomEmotion(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") submitCustomEmotion();
+                }}
+                placeholder="Se non trovi l'opzione giusta, scrivila qui"
+                className="flex-1"
+              />
+              <Button onClick={submitCustomEmotion} disabled={!guidedCustomEmotion.trim()}>
+                Continua
+              </Button>
             </div>
           </motion.div>
         </div>
