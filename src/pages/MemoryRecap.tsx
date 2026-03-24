@@ -24,7 +24,7 @@ type ContentType = "today" | "cumulative" | "specific";
 type StudyMethod = "coach" | "flashcard";
 
 interface WizardState {
-  step: "section" | "content" | "subject-pick" | "method" | "study";
+  step: "section" | "content" | "subject-pick" | "summary" | "method" | "study";
   section: Section | null;
   contentType: ContentType | null;
   subject: string | null;
