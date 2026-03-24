@@ -88,7 +88,7 @@ export default function Agenda() {
       agendaItems.push({
         id: a.id, type: "assignment", title: a.title, subject: a.subject || "",
         date: a.due_date?.split("T")[0] || startStr, completed: false,
-        route: `/session/${a.id}`,
+        route: `/us?type=guided&hw=${a.id}`,
       });
     }
 
