@@ -130,7 +130,6 @@ const Settings = () => {
           .eq("profile_id", profileId)
           .maybeSingle();
         const prefs = (prefData?.data as any) || {};
-        if (prefs.coach_avatar) setCoachAvatar(prefs.coach_avatar);
         if (prefs.coach_name) setCoachNameSetting(prefs.coach_name);
       }
 
@@ -185,7 +184,7 @@ const Settings = () => {
       .select("id, data")
       .eq("profile_id", session.profileId)
       .maybeSingle();
-    const newData = { ...((existing?.data as any) || {}), coach_avatar: coachAvatar, coach_name: coachNameSetting };
+    const newData = { ...((existing?.data as any) || {}), coach_name: coachNameSetting };
     if (existing) {
       await supabase.from("user_preferences").update({ data: newData } as any).eq("id", existing.id);
     } else {
