@@ -669,39 +669,150 @@ const MemoryRecap = () => {
             </motion.div>
           )}
 
-          {/* ═══ STEP 3: Choose Method ═══ */}
-          {wizard.step === "method" && (
-            <motion.div key="method" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
-              className="space-y-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                {wizard.subject === "all" ? "Tutte le materie" : wizard.subject}
-              </p>
+          {/* ═══ STEP 3: Summary ═══ */}
+          {wizard.step === "summary" && (
+            <motion.div key="summary" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
+              className="space-y-4">
+              <div className="flex items-center gap-2 mb-1">
+                <BookOpen className="w-4 h-4 text-primary" />
+                <p className="text-sm font-semibold text-foreground">
+                  {wizard.subject === "all" ? "Tutte le materie" : wizard.subject}
+                </p>
+              </div>
 
-              <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring }}
-                onClick={() => selectMethod("coach")}
-                className="w-full flex items-center gap-4 p-5 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-                  <MessageCircle className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-base font-semibold text-foreground">Ripassa con il Coach</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Il coach ti guida con domande e ti aiuta a ricordare</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-              </motion.button>
+              {/* Concept summaries */}
+              {(() => {
+                const summaryItems = wizard.specificTopic
+                  ? items.filter(i => i.concept?.toLowerCase().includes(wizard.specificTopic!.toLowerCase()) || i.subject?.toLowerCase().includes(wizard.specificTopic!.toLowerCase()))
+                  : wizard.section === "rinforza"
+                    ? (wizard.contentType === "today"
+                        ? weakItems.filter(i => i.created_at >= getTodayStart() && (wizard.subject === "all" || i.subject === wizard.subject))
+                        : weakItems.filter(i => wizard.subject === "all" || i.subject === wizard.subject))
+                    : wizard.section === "errori"
+                      ? (wizard.contentType === "today"
+                          ? todayErrors.filter(e => wizard.subject === "all" || e.subject === wizard.subject)
+                          : errors.filter(e => wizard.subject === "all" || e.subject === wizard.subject))
+                      : (wizard.contentType === "today"
+                          ? todayItems.filter(i => wizard.subject === "all" || i.subject === wizard.subject)
+                          : items.filter(i => wizard.subject === "all" || i.subject === wizard.subject));
 
-              <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.06 }}
-                onClick={() => selectMethod("flashcard")}
-                className="w-full flex items-center gap-4 p-5 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
-                <div className="w-12 h-12 rounded-xl bg-secondary/30 text-secondary-foreground flex items-center justify-center flex-shrink-0">
-                  <Layers className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-base font-semibold text-foreground">Usa le Flashcard</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Carte rapide per memorizzare e ripassare velocemente</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-              </motion.button>
+                if (summaryItems.length === 0) {
+                  return (
+                    <div className="text-center py-10 px-6">
+                      <Brain className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground font-medium">Nessun contenuto trovato</p>
+                      <p className="text-xs text-muted-foreground mt-1">Prova con un'altra selezione</p>
+                    </div>
+                  );
+                }
+
+                // For errors section, show error summaries
+                if (wizard.section === "errori") {
+                  return (
+                    <div className="space-y-2">
+                      {summaryItems.map((err: any, i: number) => (
+                        <motion.div key={err.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                          transition={{ ...spring, delay: i * 0.03 }}
+                          className="bg-card rounded-xl border border-border p-3.5">
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <AlertTriangle className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground">{err.topic || "Errore generico"}</p>
+                              {err.description && <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{err.description}</p>}
+                              <div className="flex items-center gap-2 mt-1.5">
+                                <span className="text-[10px] text-muted-foreground">{err.subject}</span>
+                                {err.error_type && (
+                                  <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-full text-muted-foreground">{err.error_type}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  );
+                }
+
+                // For memory items (ripasso / rinforza), show concept summaries
+                // Group by subject
+                const grouped: Record<string, any[]> = {};
+                for (const item of summaryItems) {
+                  const key = item.subject || "Altro";
+                  if (!grouped[key]) grouped[key] = [];
+                  grouped[key].push(item);
+                }
+
+                return (
+                  <div className="space-y-4">
+                    {Object.entries(grouped).map(([subject, subjectItems]) => {
+                      const colors = subjectColors[subject] || subjectColors.Matematica;
+                      return (
+                        <div key={subject}>
+                          {wizard.subject === "all" && (
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className={`w-6 h-6 rounded-lg ${colors.bg} flex items-center justify-center`}>
+                                <BookOpen className={`w-3 h-3 ${colors.text}`} />
+                              </div>
+                              <span className={`text-xs font-semibold ${colors.text}`}>{subject}</span>
+                            </div>
+                          )}
+                          <div className="space-y-2">
+                            {subjectItems.map((item: any, i: number) => (
+                              <motion.div key={item.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                                transition={{ ...spring, delay: i * 0.03 }}
+                                className="bg-card rounded-xl border border-border p-3.5">
+                                <p className="text-sm font-semibold text-foreground">{item.concept}</p>
+                                {item.summary && (
+                                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{item.summary}</p>
+                                )}
+                                {wizard.section === "rinforza" && (
+                                  <div className="mt-2 flex items-center gap-2">
+                                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                                      <div className={`h-full rounded-full ${(item.strength || 0) < 30 ? "bg-destructive" : "bg-amber-500"}`}
+                                        style={{ width: `${item.strength || 0}%` }} />
+                                    </div>
+                                    <span className="text-[10px] text-muted-foreground">{item.strength || 0}%</span>
+                                  </div>
+                                )}
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+
+              {/* CTA buttons */}
+              <div className="pt-2 space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Come vuoi ripassare?</p>
+                <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.1 }}
+                  onClick={() => selectMethod("coach")}
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                    <MessageCircle className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-foreground">Ripassa con il Coach</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                </motion.button>
+
+                <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.16 }}
+                  onClick={() => selectMethod("flashcard")}
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
+                  <div className="w-11 h-11 rounded-xl bg-secondary/30 text-secondary-foreground flex items-center justify-center flex-shrink-0">
+                    <Layers className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-foreground">Usa le Flashcard</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                </motion.button>
+              </div>
             </motion.div>
           )}
 
