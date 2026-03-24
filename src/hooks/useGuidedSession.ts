@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getTask as fetchTask } from "@/lib/database";
 import { ChatMsg, streamChat } from "@/lib/streamChat";
 import { playCelebrationSound } from "@/lib/celebrationSound";
 
@@ -34,11 +35,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     if (!homeworkId) { setLoading(false); return; }
     setLoading(true);
     try {
-      const { data: hw } = await supabase
-        .from("homework_tasks")
-        .select("*")
-        .eq("id", homeworkId)
-        .single();
+      const hw = await fetchTask(homeworkId);
       if (!hw) { navigate("/dashboard"); return; }
       setHomework(hw);
 
