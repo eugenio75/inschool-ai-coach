@@ -192,7 +192,8 @@ const AddHomework = () => {
     try {
       for (const task of selected) {
         await createTask({
-          subject: task.subject, title: task.title, description: task.description,
+          subject: task.subject, title: task.title,
+          description: [task.description, task.customNote].filter(Boolean).join("\n\nNota: "),
           estimated_minutes: task.estimatedMinutes, difficulty: task.difficulty,
           source_type: extractedSourceType || "photo",
           source_image_url: uploadedImageUrls[0] || undefined,
