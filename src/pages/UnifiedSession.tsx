@@ -107,6 +107,28 @@ export default function UnifiedSession() {
   const [showPauseDialog, setShowPauseDialog] = useState(false);
   const [guidedCustomEmotion, setGuidedCustomEmotion] = useState("");
 
+  // Fetch learning gaps for prep mode
+  useEffect(() => {
+    if (type !== "prep" || !userId) return;
+    const fetchGaps = async () => {
+      const query = supabase
+        .from("learning_errors")
+        .select("subject, topic, description, error_type")
+        .eq("user_id", userId)
+        .eq("resolved", false)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (subject) query.eq("subject", subject);
+      const { data } = await query;
+      if (data && data.length > 0) {
+        setLearningGaps(data.map(e => `[${e.subject}] ${e.topic || ""}: ${e.description || e.error_type || ""}`).filter(Boolean));
+      } else {
+        setLearningGaps([]);
+      }
+    };
+    fetchGaps();
+  }, [type, subject, userId]);
+
   useEffect(() => {
     if (urlSubject && type === "review" && !setupDone && !sending) {
       const t = setTimeout(() => startSession(), 100);
