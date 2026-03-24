@@ -273,7 +273,7 @@ const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
 
       {currentCard && (
         <div className="perspective-1000">
-          <motion.div className="relative w-full cursor-pointer" style={{ minHeight: 240 }} onClick={() => setFlipped(!flipped)}
+          <motion.div className="relative w-full cursor-pointer transform-style-3d" style={{ minHeight: 240 }} onClick={() => setFlipped(!flipped)}
             animate={{ rotateY: flipped ? 180 : 0 }} transition={{ duration: 0.4, type: "spring", stiffness: 200, damping: 25 }}>
             <div className={`absolute inset-0 rounded-2xl border-2 p-6 flex flex-col justify-center items-center text-center backface-hidden ${currentCard.is_flagged ? "border-destructive/30 bg-destructive/5" : "border-primary/30 bg-card"} shadow-md`}
               style={{ backfaceVisibility: "hidden" }}>
