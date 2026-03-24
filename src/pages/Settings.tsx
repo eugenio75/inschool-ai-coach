@@ -88,7 +88,6 @@ const Settings = () => {
   const [libraryFlags, setLibraryFlags] = useState<Record<string, boolean>>({});
 
   // Coach customization
-  const [coachAvatar, setCoachAvatar] = useState<string | null>(null);
   const [coachNameSetting, setCoachNameSetting] = useState("");
   const [savingCoach, setSavingCoach] = useState(false);
 
