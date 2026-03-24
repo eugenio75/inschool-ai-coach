@@ -357,12 +357,13 @@ Inizia con la prima domanda.`;
         <ChatShell
           title={guided.homework?.title || "Sessione guidata"}
           subtitle={guided.homework?.subject}
-          progress={guided.progressPercent}
-          progressLabel={guided.progressLabel}
+          progress={guided.methodPhase === "none" || guided.methodPhase === "ready" ? guided.progressPercent : undefined}
+          progressLabel={guided.methodPhase === "none" || guided.methodPhase === "ready" ? guided.progressLabel : undefined}
           messages={guided.messages}
           streamingText={guided.streamingText}
           sending={guided.sending}
           onSend={guided.handleSend}
+          onAction={guided.handleMethodAction}
           onBack={handleGuidedBack}
           showHint={true}
           showStuck={true}
@@ -399,7 +400,7 @@ Inizia con la prima domanda.`;
           subject={guided.homework?.subject || ""}
           isJunior={isJunior}
         />
-      </>
+      </>;
     );
   }
 
