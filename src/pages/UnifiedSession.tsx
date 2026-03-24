@@ -87,11 +87,42 @@ export default function UnifiedSession() {
   // Auto-start when subject is provided via URL for review
   useEffect(() => {
     if (urlSubject && type === "review" && !setupDone && !sending) {
-      // Small delay to let state settle
       const t = setTimeout(() => startSession(), 100);
       return () => clearTimeout(t);
     }
   }, [urlSubject, type]);
+
+  // Auto-start when msg is provided via URL (e.g. from coach mood chips)
+  useEffect(() => {
+    if (urlMsg && !setupDone && !sending) {
+      setTopic(urlMsg);
+      const t = setTimeout(() => {
+        const systemPrompt = getSystemPrompt();
+        setSetupDone(true);
+        setMessages([]);
+        setSending(true);
+        setStreamingText("");
+
+        streamChat({
+          messages: [
+            { role: "user", content: systemPrompt },
+            { role: "user", content: urlMsg },
+          ],
+          onDelta: (full) => setStreamingText(full),
+          onDone: (full) => {
+            setMessages([
+              { role: "user", content: urlMsg },
+              { role: "assistant", content: full },
+            ]);
+            setStreamingText("");
+            setSending(false);
+          },
+          extraBody: { profileId, subject: subject || undefined },
+        });
+      }, 150);
+      return () => clearTimeout(t);
+    }
+  }, [urlMsg]);
 
   const subjects = profile?.favorite_subjects || profile?.difficult_subjects || ["Matematica", "Italiano", "Inglese", "Storia", "Scienze"];
 
