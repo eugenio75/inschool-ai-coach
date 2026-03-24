@@ -581,6 +581,8 @@ const MemoryRecap = () => {
   };
 
   // Start study for a specific exercise group
+  const [generatedGroupCards, setGeneratedGroupCards] = useState<any[]>([]);
+
   const startGroupStudy = async (subject: string, concepts: any[], method: StudyMethod) => {
     if (method === "flashcard") {
       setGeneratingFlashcards(true);
@@ -596,16 +598,16 @@ const MemoryRecap = () => {
         );
         if (response.ok) {
           const data = await response.json();
-          const generatedCards = (data.flashcards || data.cards || []).map((c: any, i: number) => ({
+          const cards = (data.flashcards || data.cards || []).map((c: any, i: number) => ({
             id: `gen-${Date.now()}-${i}`,
             subject,
             question: c.question || c.front || "",
             answer: c.answer || c.back || "",
             times_shown: 0, times_correct: 0, times_wrong: 0,
           }));
-          if (generatedCards.length > 0) {
+          if (cards.length > 0) {
+            setGeneratedGroupCards(cards);
             setActiveGroupStudy({ subject, concepts, method: "flashcard" });
-            setFlashcards(prev => [...generatedCards, ...prev]);
           }
         }
       } catch (e) {
