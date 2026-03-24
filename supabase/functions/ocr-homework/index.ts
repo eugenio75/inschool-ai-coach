@@ -181,7 +181,10 @@ Nessun altro testo, solo il JSON.`;
     }
 
     if (tasks && Array.isArray(tasks) && tasks.length > 0) {
-      tasks = tasks.map((t: any) => ({ ...t, task_type: t.task_type || "exercise" }));
+      tasks = tasks.map((t: any) => ({
+        ...t,
+        task_types: Array.isArray(t.task_types) ? t.task_types : (t.task_type ? [t.task_type] : ["exercise"]),
+      }));
       return new Response(JSON.stringify({ tasks }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
