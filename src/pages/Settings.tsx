@@ -122,6 +122,19 @@ const Settings = () => {
         setLibraryFlags(flags);
       }
 
+      // Load coach prefs
+      const profileId = session?.profileId;
+      if (profileId) {
+        const { data: prefData } = await supabase
+          .from("user_preferences")
+          .select("data")
+          .eq("profile_id", profileId)
+          .maybeSingle();
+        const prefs = (prefData?.data as any) || {};
+        if (prefs.coach_avatar) setCoachAvatar(prefs.coach_avatar);
+        if (prefs.coach_name) setCoachNameSetting(prefs.coach_name);
+      }
+
       setLoading(false);
     };
     load();
