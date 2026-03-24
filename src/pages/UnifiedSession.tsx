@@ -397,6 +397,10 @@ Inizia con la prima domanda.`;
             guided.setShowCelebration(false);
             navigate("/dashboard");
           }}
+          onGoToReview={() => {
+            guided.setShowCelebration(false);
+            navigate("/memory");
+          }}
           studentName={studentName}
           bloomLevel={guided.currentStep}
           subject={guided.homework?.subject || ""}
