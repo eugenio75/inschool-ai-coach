@@ -302,7 +302,8 @@ serve(async (req) => {
     }
 
     // Build enhanced system prompt if profileId is provided
-    let finalSystemPrompt = systemPrompt || "";
+    const clientSystemPrompt = systemPrompt || "";
+    let finalSystemPrompt = clientSystemPrompt;
 
     if (profileId) {
       try {
