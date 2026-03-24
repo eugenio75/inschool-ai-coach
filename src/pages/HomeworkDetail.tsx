@@ -192,8 +192,8 @@ const HomeworkDetail = () => {
               </Button>
             </>
           ) : (
-            <Button onClick={() => navigate(`/focus/${task.id}`)} className="flex-1 bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5 text-base">
-              <Play className="w-4 h-4 mr-2" /> Inizia sessione di focus
+            <Button onClick={() => navigate(`/us?type=guided&hw=${task.id}`)} className="flex-1 bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5 text-base">
+              <Play className="w-4 h-4 mr-2" /> Inizia sessione guidata
             </Button>
           )}
         </div>
