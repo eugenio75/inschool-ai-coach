@@ -103,13 +103,6 @@ const DashboardAlunno = () => {
             </div>
           </motion.div>
 
-          {/* AI Coach */}
-          {!loading && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.08 }} className="mt-4">
-              <CoachPresence />
-            </motion.div>
-          )}
-
           {/* KPI cards */}
           {!loading && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.12 }} className="mt-4">
@@ -119,9 +112,18 @@ const DashboardAlunno = () => {
         </div>
       </div>
 
+      {/* AI Coach - above session cards */}
+      <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto">
+        {!loading && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.14 }}>
+            <CoachPresence variant="home" />
+          </motion.div>
+        )}
+      </div></div>
+
       {/* Session entry cards */}
       <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.15 }}>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.18 }}>
           <h3 className="font-display font-semibold text-foreground text-sm mb-3">Cosa vuoi fare?</h3>
           <SessionEntryCards hasTasks={tasks.length > 0} />
         </motion.div>
