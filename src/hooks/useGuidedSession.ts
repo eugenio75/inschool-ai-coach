@@ -182,6 +182,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
 
   async function startNewSession(emotion: string) {
     setShowCheckin(false);
+    setSessionEmotion(emotion);
     
     // Check if this is an oral study task — if so, show method block first
     if (homework && isOralStudyTask(homework.task_type, homework.title)) {
