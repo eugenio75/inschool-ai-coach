@@ -632,6 +632,7 @@ export default function GuidedSession() {
       <SessionCelebration
         isVisible={showCelebration}
         onClose={() => { setShowCelebration(false); navigate("/dashboard"); }}
+        onGoToReview={() => { setShowCelebration(false); navigate("/memory?section=ripasso&content=today"); }}
         studentName={profile?.name || "Studente"}
         bloomLevel={currentStep}
         subject={homework?.subject || ""}

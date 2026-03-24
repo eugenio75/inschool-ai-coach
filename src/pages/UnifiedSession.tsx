@@ -402,7 +402,7 @@ Inizia con la prima domanda.`;
           }}
           onGoToReview={() => {
             guided.setShowCelebration(false);
-            navigate("/memory");
+            navigate("/memory?section=ripasso&content=today");
           }}
           studentName={studentName}
           bloomLevel={guided.currentStep}
