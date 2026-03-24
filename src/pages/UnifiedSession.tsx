@@ -588,7 +588,12 @@ Inizia con la prima domanda.`;
 
           {type === "prep" && (
             <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Argomento specifico (opzionale)</label>
+              <label className="text-sm font-medium text-foreground mb-1 block">Argomento specifico (opzionale)</label>
+              <p className="text-xs text-muted-foreground mb-2">
+                {topic.trim()
+                  ? "Le domande saranno focalizzate su questo argomento, tenendo conto delle tue lacune"
+                  : "Senza argomento, la simulazione si concentra sugli argomenti dove hai più lacune"}
+              </p>
               <Input
                 value={topic}
                 onChange={e => setTopic(e.target.value)}
