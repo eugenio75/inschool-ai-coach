@@ -361,6 +361,34 @@ const Settings = () => {
             </div>
           )}
 
+          {/* Coach Customization */}
+          <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
+            <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2"><Brain className="w-4 h-4 text-primary" /> Il tuo Coach AI</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-primary/10 shrink-0">
+                  <img src={getCoachAvatarSrc(coachAvatar)} alt="Coach" className="w-full h-full object-cover" width={48} height={48} />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">{coachNameSetting || "Coach AI"}</p>
+                  <p className="text-xs text-muted-foreground">Il tuo assistente personale</p>
+                </div>
+              </div>
+              <CoachAvatarPicker selected={coachAvatar} onSelect={setCoachAvatar} size="sm" />
+              <Input
+                type="text"
+                placeholder="Nome del coach..."
+                value={coachNameSetting}
+                onChange={(e) => setCoachNameSetting(e.target.value)}
+                maxLength={20}
+                className="rounded-xl"
+              />
+              <Button onClick={handleSaveCoach} disabled={savingCoach} className="rounded-xl w-full">
+                {savingCoach ? "Salvataggio..." : "Salva coach"}
+              </Button>
+            </div>
+          </div>
+
           {/* Study preferences reset (adult only) */}
           {isAdult && (
             <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
