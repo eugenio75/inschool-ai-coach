@@ -914,9 +914,9 @@ const MemoryRecap = () => {
                 />
               ) : (
                 <FlashcardSession
-                  cards={flashcards.filter(c => c.id?.toString().startsWith("gen-") && c.subject === activeGroupStudy.subject)}
+                  cards={generatedGroupCards}
                   subject={activeGroupStudy.subject}
-                  onClose={() => setActiveGroupStudy(null)}
+                  onClose={() => { setActiveGroupStudy(null); setGeneratedGroupCards([]); }}
                 />
               )}
             </motion.div>
