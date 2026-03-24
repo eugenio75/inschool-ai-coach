@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getTask as fetchTask } from "@/lib/database";
-import { isChildSession, childApi } from "@/lib/childSession";
+import { isChildSession, childApi, getChildSession } from "@/lib/childSession";
 import { ChatMsg, ChatAction, streamChat } from "@/lib/streamChat";
 import { playCelebrationSound } from "@/lib/celebrationSound";
 
@@ -566,16 +566,19 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
           await supabase.from("homework_tasks").update({ completed: true, updated_at: new Date().toISOString() }).eq("id", homeworkId);
         }
 
-        // Generate flashcards in background
+        // Generate flashcards + extract concepts in background
         try {
           const { data: { session: s } } = await supabase.auth.getSession();
+          const headers = {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${s?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          };
+
+          // Flashcards
           fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-flashcards`, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${s?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            },
+            headers,
             body: JSON.stringify({
               subject: homework?.subject,
               conversationHistory: newMessages,
@@ -596,6 +599,24 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
                 await supabase.from("flashcards").insert(rows);
               }
             }
+          }).catch(() => {});
+
+          // Extract concepts → memory_items (for "Ripasso di oggi")
+          const chatForExtract = newMessages
+            .filter((m: ChatMsg) => m.content?.trim())
+            .map((m: ChatMsg) => ({ role: m.role === "assistant" ? "coach" : "student", text: m.content }));
+
+          const childSession = isChild ? getChildSession() : null;
+          fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-concepts`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              chatMessages: chatForExtract,
+              taskSubject: homework?.subject,
+              taskTitle: homework?.title,
+              childProfileId: isChild ? childSession?.profileId : (homework?.child_profile_id || undefined),
+              accessCode: isChild ? childSession?.accessCode : undefined,
+            }),
           }).catch(() => {});
         } catch {}
 
