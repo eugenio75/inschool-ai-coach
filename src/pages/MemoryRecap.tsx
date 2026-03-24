@@ -455,6 +455,8 @@ const MemoryRecap = () => {
   const [specificInputRipasso, setSpecificInputRipasso] = useState("");
   const [specificInputRinforza, setSpecificInputRinforza] = useState("");
   const [autoNavigated, setAutoNavigated] = useState(false);
+  const [activeGroupStudy, setActiveGroupStudy] = useState<{ subject: string; concepts: any[]; method: StudyMethod } | null>(null);
+  const [generatingFlashcards, setGeneratingFlashcards] = useState(false);
 
   // Load data
   useEffect(() => {
@@ -545,6 +547,7 @@ const MemoryRecap = () => {
 
   // Navigation
   const goBack = () => {
+    if (activeGroupStudy) { setActiveGroupStudy(null); return; }
     if (wizard.step === "study") setWizard(w => ({ ...w, step: "summary", method: null }));
     else if (wizard.step === "summary") {
       if (wizard.contentType === "specific") setWizard(w => ({ ...w, step: "home", section: null, contentType: null, specificTopic: null, subject: null }));
@@ -576,7 +579,45 @@ const MemoryRecap = () => {
     setWizard(w => ({ ...w, step: "study", method }));
   };
 
-  // Header
+  // Start study for a specific exercise group
+  const startGroupStudy = async (subject: string, concepts: any[], method: StudyMethod) => {
+    if (method === "flashcard") {
+      setGeneratingFlashcards(true);
+      try {
+        const conceptTexts = concepts.map(c => `Concetto: ${c.concept}\nRiassunto: ${c.summary || "N/A"}`).join("\n\n");
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-flashcards`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+            body: JSON.stringify({ subject, conversationHistory: conceptTexts }),
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          const generatedCards = (data.flashcards || data.cards || []).map((c: any, i: number) => ({
+            id: `gen-${Date.now()}-${i}`,
+            subject,
+            question: c.question || c.front || "",
+            answer: c.answer || c.back || "",
+            times_shown: 0, times_correct: 0, times_wrong: 0,
+          }));
+          if (generatedCards.length > 0) {
+            setActiveGroupStudy({ subject, concepts, method: "flashcard" });
+            setFlashcards(prev => [...generatedCards, ...prev]);
+          }
+        }
+      } catch (e) {
+        console.error("Error generating flashcards:", e);
+      } finally {
+        setGeneratingFlashcards(false);
+      }
+    } else {
+      setActiveGroupStudy({ subject, concepts, method: "coach" });
+    }
+  };
+
+
   const getSubtitle = (): string => {
     if (wizard.step === "home") return "Scegli cosa vuoi ripassare e fallo nel modo più adatto a te.";
     if (wizard.step === "subject-pick") {
@@ -849,41 +890,54 @@ const MemoryRecap = () => {
                               </div>
                             ))}
                           </div>
+
+                          {/* Per-card CTA buttons */}
+                          <div className="px-4 pb-3 flex gap-2">
+                            <button
+                              onClick={() => startGroupStudy(group.subject, group.items, "coach")}
+                              className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-colors text-xs font-semibold"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" /> Ripassa con il Coach
+                            </button>
+                            <button
+                              onClick={() => startGroupStudy(group.subject, group.items, "flashcard")}
+                              disabled={generatingFlashcards}
+                              className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl border border-border bg-muted/30 text-foreground hover:bg-muted/60 transition-colors text-xs font-semibold disabled:opacity-50"
+                            >
+                              {generatingFlashcards ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Layers className="w-3.5 h-3.5" />}
+                              Usa le Flashcard
+                            </button>
+                          </div>
                         </motion.div>
                       );
                     })}
                   </div>
                 );
               })()}
-
-              {/* CTA buttons */}
-              <div className="pt-2 space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Come vuoi ripassare?</p>
-                <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.1 }}
-                  onClick={() => selectMethod("coach")}
-                  className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
-                  <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-                    <MessageCircle className="w-5 h-5" />
-                  </div>
-                  <p className="text-sm font-semibold text-foreground flex-1">Ripassa con il Coach</p>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                </motion.button>
-
-                <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.16 }}
-                  onClick={() => selectMethod("flashcard")}
-                  className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
-                  <div className="w-11 h-11 rounded-xl bg-secondary/30 text-secondary-foreground flex items-center justify-center flex-shrink-0">
-                    <Layers className="w-5 h-5" />
-                  </div>
-                  <p className="text-sm font-semibold text-foreground flex-1">Usa le Flashcard</p>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                </motion.button>
-              </div>
             </motion.div>
           )}
 
-          {/* ═══ STUDY ═══ */}
-          {wizard.step === "study" && (
+          {/* ═══ STUDY (from specific card) ═══ */}
+          {activeGroupStudy && (
+            <motion.div key="group-study" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
+              {activeGroupStudy.method === "coach" ? (
+                <ReviewChat
+                  topic={activeGroupStudy.concepts.map(c => c.concept).join(", ")}
+                  subject={activeGroupStudy.subject}
+                  onClose={() => setActiveGroupStudy(null)}
+                />
+              ) : (
+                <FlashcardSession
+                  cards={flashcards.filter(c => c.id?.toString().startsWith("gen-") && c.subject === activeGroupStudy.subject)}
+                  subject={activeGroupStudy.subject}
+                  onClose={() => setActiveGroupStudy(null)}
+                />
+              )}
+            </motion.div>
+          )}
+
+          {/* ═══ STUDY (global, from wizard) ═══ */}
+          {wizard.step === "study" && !activeGroupStudy && (
             <motion.div key="study" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
               {wizard.method === "coach" ? (
                 <ReviewChat
