@@ -397,12 +397,16 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
 
       if (isExercise) {
         coachBehavior = `Sei un tutor che guida lo studente a RISOLVERE un esercizio. Il tuo metodo:
-1. NON dare mai la soluzione diretta, ma guida il ragionamento passo-passo
-2. Se lo studente non sa come procedere, offri una MINI-RIPETIZIONE della regola/formula necessaria (breve, 2-3 frasi + esempio)
-3. Se lo studente sbaglia, spiega PERCHÉ è sbagliato e rilancia con un indizio (Bloom L1→L2→L3)
-4. Se lo studente è bloccato dopo 2 tentativi, dai un indizio più esplicito
-5. Quando risponde correttamente, conferma e passa allo step successivo
-6. Sii breve e diretto: 2-3 frasi + una domanda`;
+1. All'inizio PRESENTA tu il problema allo studente: riporta il testo dell'esercizio e spiega cosa viene chiesto
+2. Guida il ragionamento passo-passo: fai domande mirate per portare lo studente alla soluzione
+3. NON dare mai la soluzione diretta — usa indizi progressivi
+4. Se lo studente non sa come procedere, offri una MINI-RIPETIZIONE della regola/formula necessaria (breve, 2-3 frasi + esempio)
+5. Se lo studente sbaglia, spiega PERCHÉ è sbagliato e rilancia con un indizio (Bloom L1→L2→L3)
+6. Se lo studente è bloccato dopo 2 tentativi, dai un indizio più esplicito
+7. Quando risponde correttamente, conferma e passa allo step successivo
+8. Sii breve e diretto: 2-3 frasi + una domanda
+
+IMPORTANTE: Sei TU a dover guidare. Non chiedere allo studente di elencare i dati — presentaglieli tu e poi chiedi di ragionare.`;
       } else if (isOral && familiarity) {
         coachBehavior = `Sei un tutor che aiuta lo studente a STUDIARE, CAPIRE e RIPETERE un argomento per l'orale.
 
@@ -443,7 +447,7 @@ Sii breve: 2-3 frasi + una domanda`;
         onDelta: (full) => setStreamingText(full),
         onDone: () => {},
         extraBody: {
-          systemPrompt: `${coachBehavior}\n\nCompito: ${homework?.title}. Materia: ${homework?.subject}. Livello: ${schoolLevel}.${systemAddition}\n\nSe lo studente completa lo step correttamente, scrivi [STEP_COMPLETATO: ${currentStep}]. Se tutti gli step sono completati, scrivi [SESSIONE_COMPLETATA]. Se lo studente mostra una difficoltà specifica, scrivi [SEGNALA_DIFFICOLTÀ: descrizione].`,
+          systemPrompt: `${coachBehavior}\n\nCompito: ${homework?.title}. Materia: ${homework?.subject}. Livello: ${schoolLevel}.\n${homework?.description ? `Testo/descrizione del compito: ${homework.description}` : ""}${systemAddition}\n\nSe lo studente completa lo step correttamente, scrivi [STEP_COMPLETATO: ${currentStep}]. Se tutti gli step sono completati, scrivi [SESSIONE_COMPLETATA]. Se lo studente mostra una difficoltà specifica, scrivi [SEGNALA_DIFFICOLTÀ: descrizione].`,
         },
       });
 
