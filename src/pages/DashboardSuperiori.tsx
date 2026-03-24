@@ -437,13 +437,15 @@ export default function DashboardSuperiori() {
                 {tasks.map(task => {
                   const due = task.due_date ? dueDateLabel(task.due_date) : null;
                   return (
-                    <li key={task.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted transition-colors">
-                      <button onClick={() => completeTask(task.id)}
+                    <li key={task.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted transition-colors cursor-pointer"
+                      onClick={() => navigate(`/us?type=guided&hw=${task.id}`)}>
+                      <button onClick={(e) => { e.stopPropagation(); completeTask(task.id); }}
                         className="w-5 h-5 rounded-full border-2 border-border hover:border-primary hover:bg-primary/10 transition-colors shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{task.title}</p>
                         {task.subject && <Badge variant="secondary" className="text-xs mt-0.5">{task.subject}</Badge>}
                       </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                       {due && <span className={`text-xs shrink-0 ${due.cls}`}>{due.label}</span>}
                     </li>
                   );
