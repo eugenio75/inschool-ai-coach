@@ -80,6 +80,7 @@ const AddHomework = () => {
   const [saving, setSaving] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [photoNote, setPhotoNote] = useState("");
+  const [photoTags, setPhotoTags] = useState<string[]>([]);
   const [showFullTypeList, setShowFullTypeList] = useState<Record<string, boolean>>({});
   const [customTypeText, setCustomTypeText] = useState<Record<string, string>>({});
 
