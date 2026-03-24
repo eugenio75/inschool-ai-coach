@@ -166,8 +166,15 @@ export function ChatShell({
 
         {streamingText && (
           <div className="flex justify-start">
-            <div className="w-7 h-7 rounded-full bg-[hsl(var(--navy))] flex items-center justify-center mr-2 mt-1 flex-shrink-0">
-              <span className="text-white text-xs font-bold">C</span>
+            <div className="w-8 h-8 rounded-full flex-shrink-0 mr-2 mt-1 overflow-hidden bg-primary/5">
+              <motion.img
+                src={getCoachMoodSrc("thinking")}
+                alt="Coach"
+                className="w-full h-full object-cover"
+                width={32} height={32}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+              />
             </div>
             <div className="max-w-[80%] rounded-xl rounded-bl-sm bg-muted px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap text-foreground">
               {streamingText}
@@ -178,8 +185,15 @@ export function ChatShell({
 
         {sending && !streamingText && (
           <div className="flex justify-start">
-            <div className="w-7 h-7 rounded-full bg-[hsl(var(--navy))] flex items-center justify-center mr-2 flex-shrink-0">
-              <span className="text-white text-xs font-bold">C</span>
+            <div className="w-8 h-8 rounded-full flex-shrink-0 mr-2 overflow-hidden bg-primary/5">
+              <motion.img
+                src={getCoachMoodSrc("thinking")}
+                alt="Coach"
+                className="w-full h-full object-cover"
+                width={32} height={32}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+              />
             </div>
             <div className="bg-muted rounded-xl rounded-bl-sm px-4 py-3">
               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
