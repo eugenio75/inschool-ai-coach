@@ -25,6 +25,7 @@ serve(async (req) => {
     };
 
     const config = levelConfig[schoolLevel] || levelConfig.superiori;
+    const hasContent = !!description;
 
     let taskInstructions: string;
 
@@ -37,18 +38,19 @@ serve(async (req) => {
 - NON chiedere "cosa sai già" o "descrivi con parole tue" — vai dritto al problema`;
     } else if (familiarity === "first_time") {
       taskInstructions = `Questo è uno STUDIO di un argomento che lo studente NON HA MAI STUDIATO. È la PRIMA VOLTA.
-
+${hasContent ? `\nHai a disposizione il TESTO COMPLETO dell'argomento (vedi sotto). DEVI creare step che seguono il contenuto reale del testo, diviso in blocchi logici.\n` : ""}
 REGOLE FONDAMENTALI:
-- Step 1-3: Il coach PRESENTA il contenuto al ragazzo, spiegandoglielo un blocco alla volta. Alla fine di ogni blocco, fai UNA DOMANDA CONCRETA E SPECIFICA di comprensione (es. "Dove è nato Copernico?" o "Cosa dice il sistema tolemaico?"). Lo studente deve sapere ESATTAMENTE cosa rispondere.
-- Step intermedi: Verifica la comprensione con domande mirate (Bloom L2-L3)
-- Step finali: Richiamo attivo — chiedi di ripetere i concetti dalla memoria (Bloom L3-L4)
+- Step 1-3: Il coach PRESENTA il contenuto${hasContent ? " USANDO IL TESTO ALLEGATO" : ""}, spiegandolo un blocco alla volta. Ogni step deve indicare QUALE PARTE del testo presentare. Alla fine di ogni blocco, fai UNA DOMANDA CONCRETA E SPECIFICA su quello che hai appena spiegato.
+- Step intermedi: Verifica la comprensione con domande mirate sul contenuto reale (Bloom L2-L3)
+- Step finali: Richiamo attivo — chiedi di ripetere i concetti dalla memoria SENZA guardare il testo (Bloom L3-L4)
 - Ultimo step: Mini simulazione orale
 
-IMPORTANTE: Ogni step DEVE terminare con una domanda chiara a cui lo studente può rispondere. MAI lasciare lo studente senza sapere cosa fare.
-IMPORTANTE: Lo studente NON conosce l'argomento. Il coach PRIMA spiega in modo chiaro, POI fa una domanda semplice su quello che ha appena spiegato.
+IMPORTANTE: Ogni step DEVE terminare con una domanda chiara.
+IMPORTANTE: Gli step devono essere SPECIFICI per il contenuto del testo, NON generici.
+IMPORTANTE: Il coach PRESENTA E SPIEGA il testo allo studente (che non lo ha mai letto). POI fa una domanda.
 
-Esempio di step buono: "Copernico nacque in Polonia nel 1473. Studiò astronomia e scoprì che la Terra gira intorno al Sole. Questa idea si chiama sistema eliocentrico. Secondo te, cosa significa 'eliocentrico'?"
-Esempio di step cattivo: "Quali sono i personaggi principali descritti nel testo?" (lo studente non ha ancora letto il testo!)`;
+Esempio di step buono: "Ti presento la prima parte: chi era Copernico. Spiega che nacque in Polonia nel 1473 e studiò astronomia. Domanda: In che secolo visse Copernico?"
+Esempio di step cattivo: "Leggiamo insieme l'argomento. Dimmi di cosa parla." (troppo generico!)`;
 
     } else if (familiarity === "already_know") {
       taskInstructions = `Questo è RIPASSO/VERIFICA di un argomento che lo studente dice di CONOSCERE GIÀ.
@@ -75,12 +77,21 @@ REGOLE:
 - Ogni step è una domanda aperta che verifica la padronanza`;
     }
 
+    // Build goal string from task types
+    const goalStr = taskTypes.length > 0
+      ? `OBIETTIVO della sessione: ${taskTypes.map((t: string) => {
+          const labels: Record<string, string> = { study: "studiare e capire", memorize: "memorizzare", read: "leggere e comprendere", summarize: "riassumere", exercise: "fare esercizi", questions: "rispondere a domande", write: "scrivere un testo", problem: "risolvere problemi" };
+          return labels[t] || t;
+        }).join(" + ")}. Gli step devono portare lo studente a raggiungere TUTTI questi obiettivi.`
+      : "";
+
     const systemPrompt = `Sei un esperto di progettazione didattica. Scomponi il seguente compito in micro-step progressivi per lo studio guidato.
 
 Regole:
 - Massimo ${config.maxSteps} step
 - ${config.style}
 - ${taskInstructions}
+${goalStr ? `- ${goalStr}` : ""}
 - Segui la Tassonomia di Bloom: parti da L1 e sali progressivamente
 - Output SOLO JSON valido, nessun testo extra
 
@@ -91,7 +102,7 @@ Formato output:
 Tipo: ${homeworkType || "exercise"}
 Materia: ${subject}
 Familiarità studente: ${familiarity || "non specificata"}
-${description ? `Descrizione/Contenuto: ${description}` : ""}`;
+${description ? `\nTESTO/CONTENUTO ALLEGATO AL COMPITO (questo è il materiale da studiare):\n---\n${description}\n---` : ""}`;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
