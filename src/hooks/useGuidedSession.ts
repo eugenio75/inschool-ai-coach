@@ -138,6 +138,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
           setShowCheckin(true);
         }
       } else {
+        // Check for paused sessions first
         const { data: existing } = await supabase
           .from("guided_sessions")
           .select("*")
@@ -172,6 +173,38 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
               : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
             setMessages([{ role: "assistant", content: resumeMsg }]);
             setSetupDone(true);
+          }
+        } else if (hw.completed) {
+          // Task is completed — load conversation history if available
+          const { data: completedSession } = await supabase
+            .from("guided_sessions")
+            .select("*, conversation_sessions(messaggi)")
+            .eq("homework_id", homeworkId)
+            .eq("status", "completed")
+            .order("completed_at", { ascending: false })
+            .limit(1);
+
+          if (completedSession && completedSession.length > 0) {
+            const sess = completedSession[0];
+            const conv = (sess as any).conversation_sessions;
+            const savedMessages = conv?.messaggi;
+
+            if (Array.isArray(savedMessages) && savedMessages.length > 0) {
+              const chatMsgs: ChatMsg[] = savedMessages.map((m: any) => ({
+                role: m.role === "coach" || m.role === "assistant" ? "assistant" as const : "user" as const,
+                content: m.text || m.content || "",
+              }));
+              setMessages(chatMsgs);
+              setSessionCompleted(true);
+              setSessionId(sess.id);
+              setCurrentStep(sess.total_steps || 1);
+              setTotalSteps(sess.total_steps || 0);
+              setSetupDone(true);
+            } else {
+              setShowCheckin(true);
+            }
+          } else {
+            setShowCheckin(true);
           }
         } else {
           setShowCheckin(true);
