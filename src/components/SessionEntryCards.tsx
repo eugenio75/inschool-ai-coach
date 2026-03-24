@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, PenLine, Brain, GraduationCap } from "lucide-react";
+import { BookOpen, PenLine, Brain, GraduationCap, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
@@ -36,12 +37,20 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
     {
       id: "guided",
       label: "Studia un compito",
-      desc: "Apri un compito e il coach ti guida passo passo",
+      desc: hasTasks
+        ? "Apri un compito e il coach ti guida passo passo"
+        : "Non hai ancora compiti: aggiungine uno per iniziare",
       icon: PenLine,
       color: "bg-primary/10 text-primary",
       iconColor: "text-primary",
-      action: () => navigate("/study-tasks"),
+      action: () => navigate(hasTasks ? "/study-tasks" : "/add-homework"),
       disabled: false,
+      extraAction: !hasTasks
+        ? {
+            label: "Aggiungi un compito",
+            onClick: () => navigate("/add-homework"),
+          }
+        : null,
     },
     {
       id: "study",
@@ -52,6 +61,7 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
       iconColor: "text-sage-dark",
       action: () => navigate("/us?type=study"),
       disabled: false,
+      extraAction: null,
     },
     {
       id: "review",
@@ -62,6 +72,7 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
       iconColor: "text-clay-dark",
       action: () => navigate("/memory"),
       disabled: false,
+      extraAction: null,
     },
     {
       id: "prep",
@@ -72,6 +83,7 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
       iconColor: "text-amber-600 dark:text-amber-400",
       action: () => navigate("/us?type=prep"),
       disabled: false,
+      extraAction: null,
     },
   ];
 
@@ -85,13 +97,29 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
           transition={{ ...spring, delay: 0.1 + i * 0.05 }}
           onClick={s.action}
           disabled={s.disabled}
-          className={`flex flex-col items-start p-3.5 rounded-2xl border border-border/60 bg-card hover:shadow-soft transition-all text-left group disabled:opacity-40`}
+          className="flex flex-col items-start p-3.5 rounded-2xl border border-border/60 bg-card hover:shadow-soft transition-all text-left group disabled:opacity-40"
         >
           <div className={`w-9 h-9 rounded-xl ${s.color} flex items-center justify-center mb-2.5`}>
             <s.icon className={`w-4.5 h-4.5 ${s.iconColor}`} />
           </div>
           <p className="text-sm font-semibold text-foreground leading-tight mb-0.5">{s.label}</p>
           <p className="text-[11px] text-muted-foreground leading-snug">{s.desc}</p>
+
+          {s.extraAction ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-3 rounded-xl text-[11px]"
+              onClick={(event) => {
+                event.stopPropagation();
+                s.extraAction?.onClick();
+              }}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {s.extraAction.label}
+            </Button>
+          ) : null}
         </motion.button>
       ))}
     </div>
