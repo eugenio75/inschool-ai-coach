@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { BookOpen, FileText, Map, List, Key, Layers, Loader2 } from "lucide-react";
+import { BookOpen, FileText, Map, List, Key, Layers, Loader2, Brain, MessageCircle } from "lucide-react";
 import { ChatShell } from "@/components/ChatShell";
 import { ChatMsg, streamChat } from "@/lib/streamChat";
 import { SessionCelebration } from "@/components/SessionCelebration";
@@ -76,6 +76,7 @@ export default function UnifiedSession() {
   const [topic, setTopic] = useState("");
   const [subject, setSubject] = useState("");
   const [mode, setMode] = useState<"scritta" | "orale">("scritta");
+  const [reviewMode, setReviewMode] = useState<"chat" | "flashcard">("chat");
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [streamingText, setStreamingText] = useState("");
   const [sending, setSending] = useState(false);
@@ -360,6 +361,42 @@ Inizia con la prima domanda.`;
             </div>
           </div>
 
+          {/* Review: mode selector */}
+          {type === "review" && (
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">Modalità di ripasso</label>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setReviewMode("chat")}
+                  className={`flex-1 flex flex-col items-center gap-2 py-4 rounded-xl border text-sm font-medium transition-colors ${
+                    reviewMode === "chat"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-muted-foreground border-border hover:border-primary/40"
+                  }`}
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  Ripasso profondo
+                </button>
+                <button
+                  onClick={() => setReviewMode("flashcard")}
+                  className={`flex-1 flex flex-col items-center gap-2 py-4 rounded-xl border text-sm font-medium transition-colors ${
+                    reviewMode === "flashcard"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-muted-foreground border-border hover:border-primary/40"
+                  }`}
+                >
+                  <Brain className="w-5 h-5" />
+                  Flashcard
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {reviewMode === "chat"
+                  ? "Il coach fa domande aperte — ideale per concetti complessi"
+                  : "Carte rapide con autovalutazione — ideale per memorizzare"}
+              </p>
+            </div>
+          )}
+
           {type === "prep" && (
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">Tipo di simulazione</label>
@@ -394,11 +431,17 @@ Inizia con la prima domanda.`;
           )}
 
           <Button
-            onClick={startSession}
-            disabled={type === "prep" ? !subject : !topic.trim()}
+            onClick={() => {
+              if (type === "review" && reviewMode === "flashcard") {
+                navigate(`/flashcards${subject ? `?subject=${encodeURIComponent(subject)}` : ""}`);
+                return;
+              }
+              startSession();
+            }}
+            disabled={type === "prep" ? !subject : type === "review" && reviewMode === "flashcard" ? false : !topic.trim()}
             className="w-full"
           >
-            {type === "prep" ? "Inizia la simulazione" : type === "review" ? "Inizia il ripasso" : "Inizia a studiare"}
+            {type === "prep" ? "Inizia la simulazione" : type === "review" ? (reviewMode === "flashcard" ? "Inizia le flashcard" : "Inizia il ripasso") : "Inizia a studiare"}
           </Button>
         </div>
       </div>
