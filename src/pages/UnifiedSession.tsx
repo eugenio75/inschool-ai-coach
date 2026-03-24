@@ -75,7 +75,7 @@ export default function UnifiedSession() {
 
   // ─── Free-form session state (study/review/prep) ───
   const [setupDone, setSetupDone] = useState(false);
-  const [topic, setTopic] = useState("");
+  const [topic, setTopic] = useState(urlSubject ? `Ripasso ${urlSubject}` : "");
   const [subject, setSubject] = useState(urlSubject || "");
   const [mode, setMode] = useState<"scritta" | "orale">("scritta");
   const [reviewMode, setReviewMode] = useState<"chat" | "flashcard">("chat");
@@ -83,6 +83,15 @@ export default function UnifiedSession() {
   const [streamingText, setStreamingText] = useState("");
   const [sending, setSending] = useState(false);
   const [showPauseDialog, setShowPauseDialog] = useState(false);
+
+  // Auto-start when subject is provided via URL for review
+  useEffect(() => {
+    if (urlSubject && type === "review" && !setupDone && !sending) {
+      // Small delay to let state settle
+      const t = setTimeout(() => startSession(), 100);
+      return () => clearTimeout(t);
+    }
+  }, [urlSubject, type]);
 
   const subjects = profile?.favorite_subjects || profile?.difficult_subjects || ["Matematica", "Italiano", "Inglese", "Storia", "Scienze"];
 
