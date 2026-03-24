@@ -337,7 +337,7 @@ export async function getMemoryItems(childProfileId?: string) {
     .from("memory_items")
     .select("*")
     .eq("child_profile_id", profileId)
-    .order("strength", { ascending: true });
+    .order("created_at", { ascending: false });
   if (error) console.error("getMemoryItems error:", error);
   return data || [];
 }
