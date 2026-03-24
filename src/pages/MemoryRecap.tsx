@@ -669,23 +669,7 @@ const MemoryRecap = () => {
                           )}
                           <div className="space-y-2">
                             {subjectItems.map((item: any, i: number) => (
-                              <motion.div key={item.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                                transition={{ ...spring, delay: i * 0.03 }}
-                                className="bg-card rounded-xl border border-border p-3.5">
-                                <p className="text-sm font-semibold text-foreground">{item.concept}</p>
-                                {item.summary && (
-                                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{item.summary}</p>
-                                )}
-                                {wizard.section === "rinforza" && (
-                                  <div className="mt-2 flex items-center gap-2">
-                                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                                      <div className={`h-full rounded-full ${(item.strength || 0) < 30 ? "bg-destructive" : "bg-amber-500"}`}
-                                        style={{ width: `${item.strength || 0}%` }} />
-                                    </div>
-                                    <span className="text-[10px] text-muted-foreground">{item.strength || 0}%</span>
-                                  </div>
-                                )}
-                              </motion.div>
+                              <SummaryCard key={item.id} item={item} index={i} showStrength={wizard.section === "rinforza"} />
                             ))}
                           </div>
                         </div>
