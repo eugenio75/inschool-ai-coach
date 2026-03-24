@@ -68,31 +68,31 @@ ${contextNote}${userInstruction}${multiFileNote}
 ANALISI DELLA PAGINA - DISTINGUI TRA CONTENUTO DA STUDIARE ED ESERCIZI:
 
 La pagina può contenere DUE tipi di contenuto:
-1. **CONTENUTO DA STUDIARE** (testo narrativo, spiegazioni, paragrafi informativi, didascalie, definizioni, regole) → task_type: "study"
-2. **ESERCIZI** (domande, completamenti, vero/falso, calcoli, attività pratiche) → task_type: "exercise"
+1. **CONTENUTO DA STUDIARE** (testo narrativo, spiegazioni, paragrafi informativi, didascalie, definizioni, regole)
+2. **ESERCIZI** (domande, completamenti, vero/falso, calcoli, attività pratiche)
 
 REGOLE:
-- Se la pagina contiene testo da studiare (paragrafi, spiegazioni, storia, scienze, geografia...), crea PRIMA un compito di tipo "study" con la trascrizione COMPLETA e LETTERALE di TUTTO il testo della pagina.
-- Se la pagina contiene anche esercizi, crea compiti SEPARATI di tipo "exercise" per ciascun esercizio.
-- Se la pagina contiene SOLO esercizi (es. pagina di esercizi di matematica), crea solo compiti "exercise".
-- Il compito "study" DEVE contenere TUTTO il testo visibile nella pagina: titoli, sottotitoli, paragrafi, didascalie, note, definizioni. NON riassumere, NON omettere nulla.
+- Se la pagina contiene testo da studiare (paragrafi, spiegazioni, storia, scienze, geografia...), crea PRIMA un compito con la trascrizione COMPLETA e LETTERALE di TUTTO il testo della pagina.
+- Se la pagina contiene anche esercizi, crea compiti SEPARATI per ciascun esercizio.
+- Se la pagina contiene SOLO esercizi (es. pagina di esercizi di matematica), crea solo compiti esercizio.
+- Il compito studio DEVE contenere TUTTO il testo visibile nella pagina: titoli, sottotitoli, paragrafi, didascalie, note, definizioni. NON riassumere, NON omettere nulla.
 
 Per ogni elemento trovato, restituisci un oggetto JSON con:
-- "task_type": "study" per contenuto da studiare, "exercise" per esercizi
+- "task_types": un ARRAY di stringhe che indica cosa lo studente deve fare con questo contenuto. Valori possibili: "study", "exercise", "memorize", "summarize", "read", "questions", "write", "problem". Puoi suggerire PIÙ DI UNO (es. ["study", "memorize"] per un testo da studiare e memorizzare, oppure ["exercise"] per un esercizio semplice).
 - "subject": la materia (una tra: Italiano, Matematica, Scienze, Storia, Geografia, Inglese, Arte, Musica, Tecnologia, Filosofia, Fisica, Chimica, Latino, Greco, Diritto, Economia)
-- "title": per study → "Studia: [titolo argomento/pagina]"; per exercise → titolo breve dell'esercizio
-- "description": per study → testo COMPLETO E LETTERALE della pagina; per exercise → testo COMPLETO dell'esercizio
+- "title": titolo breve del compito
+- "description": per studio → testo COMPLETO E LETTERALE della pagina; per exercise → testo COMPLETO dell'esercizio
 - "exerciseText": SOLO per exercise → il TESTO COMPLETO E LETTERALE dell'esercizio. Per study lascia vuoto.
 - "estimatedMinutes": stima del tempo (studio: 15-30 min; esercizio: 5-15 min)
 - "difficulty": difficoltà da 1 a 3
 
-REGOLA CRITICA per il contenuto "study": trascrivi OGNI parola, OGNI paragrafo, OGNI didascalia esattamente come appare nella pagina.
-REGOLA CRITICA per gli "exercise": trascrivi il testo PAROLA PER PAROLA come appare nel libro.
+REGOLA CRITICA per il contenuto studio: trascrivi OGNI parola, OGNI paragrafo, OGNI didascalia esattamente come appare nella pagina.
+REGOLA CRITICA per gli exercise: trascrivi il testo PAROLA PER PAROLA come appare nel libro.
 
-ORDINE: metti PRIMA i compiti "study", POI gli "exercise".
+ORDINE: metti PRIMA i compiti studio, POI gli exercise.
 
 RISPONDI ESCLUSIVAMENTE con un JSON valido nel formato:
-{"tasks": [{"task_type": "study", "subject": "...", "title": "...", "description": "...", "exerciseText": "", "estimatedMinutes": 20, "difficulty": 1}]}
+{"tasks": [{"task_types": ["study", "memorize"], "subject": "...", "title": "...", "description": "...", "exerciseText": "", "estimatedMinutes": 20, "difficulty": 1}]}
 
 Nessun altro testo, solo il JSON.`
       : `Sei un assistente che analizza foto di compiti scolastici per studenti italiani (primarie, medie, superiori e università).
@@ -102,7 +102,7 @@ ${contextNote}
 Analizza TUTTE le immagini con attenzione, anche i bordi e le parti meno nitide.${userInstruction}${multiFileNote}
 
 Per ogni compito/esercizio trovato, restituisci un oggetto JSON con:
-- "task_type": "exercise"
+- "task_types": un ARRAY di stringhe che indica cosa lo studente deve fare. Valori possibili: "study", "exercise", "memorize", "summarize", "read", "questions", "write", "problem". Puoi suggerire PIÙ DI UNO se appropriato.
 - "subject": la materia (una tra: Italiano, Matematica, Scienze, Storia, Geografia, Inglese, Arte, Musica, Tecnologia, Filosofia, Fisica, Chimica, Latino, Greco, Diritto, Economia)
 - "title": titolo breve del compito
 - "description": dettagli generali (pagine, cosa fare)
@@ -113,7 +113,7 @@ Per ogni compito/esercizio trovato, restituisci un oggetto JSON con:
 REGOLA CRITICA per "exerciseText": trascrivi il testo PAROLA PER PAROLA come appare.
 
 RISPONDI ESCLUSIVAMENTE con un JSON valido nel formato:
-{"tasks": [{"task_type": "exercise", "subject": "...", "title": "...", "description": "...", "exerciseText": "...", "estimatedMinutes": 15, "difficulty": 1}]}
+{"tasks": [{"task_types": ["exercise"], "subject": "...", "title": "...", "description": "...", "exerciseText": "...", "estimatedMinutes": 15, "difficulty": 1}]}
 
 Nessun altro testo, solo il JSON.`;
 
