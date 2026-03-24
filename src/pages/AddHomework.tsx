@@ -123,6 +123,7 @@ const AddHomework = () => {
             difficulty: t.difficulty || 1,
             selected: true,
             task_types: Array.isArray(t.task_types) ? t.task_types : [t.task_type || "exercise"],
+            customNote: "",
           }))
         );
         setMode("task-type");
