@@ -2,12 +2,11 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowLeft, Brain, RefreshCw, ChevronDown, ChevronUp, Sparkles,
-  Loader2, Send, MessageCircle, X, BookOpen, Calendar, BarChart3,
+  ArrowLeft, Brain, RefreshCw, Sparkles,
+  Loader2, Send, MessageCircle, X, BookOpen,
   Layers, ThumbsDown, Minus as MinusIcon, ThumbsUp, AlertCircle,
-  AlertTriangle, CalendarDays, GraduationCap, Target, ChevronRight,
+  CalendarDays, Target, ChevronRight,
 } from "lucide-react";
-import { LearningErrorsTab } from "@/components/LearningErrorsTab";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
