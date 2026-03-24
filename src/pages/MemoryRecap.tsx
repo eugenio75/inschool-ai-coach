@@ -328,7 +328,7 @@ const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
 };
 
 // ═══════════════════════════════════════════
-// MAIN PAGE — Wizard Flow
+// MAIN PAGE — Single Page Layout
 // ═══════════════════════════════════════════
 
 const MemoryRecap = () => {
@@ -339,143 +339,10 @@ const MemoryRecap = () => {
   
   const [loading, setLoading] = useState(true);
   const [wizard, setWizard] = useState<WizardState>({
-    step: "section", section: null, contentType: null, subject: null, specificTopic: null, method: null,
+    step: "home", section: null, contentType: null, subject: null, specificTopic: null, method: null,
   });
-  const [specificInput, setSpecificInput] = useState("");
-
-  // Load data
-  useEffect(() => {
-    const load = async () => {
-      const memoryData = await getMemoryItems();
-      setItems(memoryData);
-
-      if (user) {
-        const { data: fc } = await supabase.from("flashcards").select("*").eq("user_id", user.id)
-          .order("next_review_at", { ascending: true, nullsFirst: true });
-        setFlashcards(fc || []);
-
-      }
-      setLoading(false);
-    };
-    load();
-  }, [user]);
-
-  // Derived data
-  const todayItems = useMemo(() => {
-    const todayStart = getTodayStart();
-    return items.filter(i => i.created_at >= todayStart);
-  }, [items]);
-
-  const weakItems = useMemo(() =>
-    items.filter(i => (i.strength || 0) < 50).sort((a, b) => (a.strength || 0) - (b.strength || 0)),
-    [items]
-  );
-
-
-  // Get subjects for the current section + content type
-  const getRelevantItems = (): any[] => {
-    if (wizard.section === "ripasso") {
-      if (wizard.contentType === "today") return todayItems;
-      if (wizard.contentType === "cumulative") return items;
-      return [];
-    }
-    if (wizard.section === "rinforza") {
-      if (wizard.contentType === "today") return weakItems.filter(i => i.created_at >= getTodayStart());
-      if (wizard.contentType === "cumulative") return weakItems;
-      return [];
-    }
-    return [];
-    return [];
-  };
-
-  const relevantSubjects = useMemo(() => {
-    const relevant = getRelevantItems();
-    const subjectMap: Record<string, number> = {};
-    for (const item of relevant) {
-      const s = item.subject || "Altro";
-      subjectMap[s] = (subjectMap[s] || 0) + 1;
-    }
-    return Object.entries(subjectMap).sort(([, a], [, b]) => b - a);
-  }, [wizard.section, wizard.contentType, items, weakItems, todayItems]);
-
-  // Get flashcards filtered by the wizard context
-  const getFilteredFlashcards = (): any[] => {
-    if (wizard.specificTopic) {
-      const topic = wizard.specificTopic.toLowerCase();
-      return flashcards.filter(c =>
-        c.subject?.toLowerCase().includes(topic) ||
-        c.question?.toLowerCase().includes(topic) ||
-        c.answer?.toLowerCase().includes(topic)
-      );
-    }
-    if (wizard.subject) {
-      return flashcards.filter(c => c.subject === wizard.subject);
-    }
-    if (wizard.contentType === "today") {
-      const todayStart = getTodayStart();
-      return flashcards.filter(c => c.created_at >= todayStart);
-    }
-    return flashcards;
-  };
-
-  // Navigation helpers
-  const goBack = () => {
-    if (wizard.step === "study") setWizard(w => ({ ...w, step: "summary", method: null }));
-    else if (wizard.step === "summary") {
-      if (wizard.contentType === "specific") setWizard(w => ({ ...w, step: "content", specificTopic: null, subject: null }));
-      else setWizard(w => ({ ...w, step: "subject-pick", subject: null }));
-    }
-    else if (wizard.step === "subject-pick") setWizard(w => ({ ...w, step: "content", contentType: null }));
-    else if (wizard.step === "content") setWizard(w => ({ ...w, step: "section", section: null }));
-    else navigate("/dashboard");
-  };
-
-  const selectSection = (section: Section) => {
-    setWizard({ step: "content", section, contentType: null, subject: null, specificTopic: null, method: null });
-  };
-
-  const selectContentType = (ct: ContentType) => {
-    if (ct === "specific") {
-      setWizard(w => ({ ...w, step: "content", contentType: ct }));
-    } else {
-      setWizard(w => ({ ...w, step: "subject-pick", contentType: ct, specificTopic: null }));
-    }
-  };
-
-  const selectSubject = (subject: string) => {
-    setWizard(w => ({ ...w, step: "summary", subject }));
-  };
-
-  const submitSpecificTopic = () => {
-    const trimmed = specificInput.trim();
-    if (!trimmed) return;
-    setWizard(w => ({ ...w, step: "summary", contentType: "specific", specificTopic: trimmed, subject: trimmed }));
-  };
-
-  const selectMethod = (method: StudyMethod) => {
-    if (method === "flashcard" && wizard.specificTopic) {
-      // For specific topic, navigate to flashcard generation
-      navigate(`/flashcards?mode=topic&topic=${encodeURIComponent(wizard.specificTopic)}`);
-      return;
-    }
-    setWizard(w => ({ ...w, step: "study", method }));
-  };
-
-  // ─── Section labels & styles ───
-  const sectionConfig: Record<Section, { label: string; description: string; icon: any; color: string }> = {
-    ripasso: { label: "Ripasso", description: "Rivedi quello che hai già studiato", icon: RefreshCw, color: "bg-primary/10 text-primary" },
-    rinforza: { label: "Concetti da rinforzare", description: "Rafforza gli argomenti dove hai più bisogno", icon: Target, color: "bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400" },
-  };
-
-  // Header text
-  const getHeaderText = (): string => {
-    if (wizard.step === "section") return "Scegli cosa vuoi ripassare e fallo nel modo più adatto a te.";
-    if (wizard.step === "content") return sectionConfig[wizard.section!].label;
-    if (wizard.step === "subject-pick") return `${sectionConfig[wizard.section!].label} · ${wizard.contentType === "today" ? "Di oggi" : "Cumulativo"}`;
-    if (wizard.step === "summary") return "Ecco cosa hai studiato";
-    if (wizard.step === "method") return "Come vuoi ripassare?";
-    return "";
-  };
+  const [specificInputRipasso, setSpecificInputRipasso] = useState("");
+  const [specificInputRinforza, setSpecificInputRinforza] = useState("");
 
   if (loading) {
     return (
