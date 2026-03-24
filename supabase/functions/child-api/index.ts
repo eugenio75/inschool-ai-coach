@@ -315,6 +315,38 @@ serve(async (req) => {
         break;
       }
 
+      case "get-flashcards": {
+        // Flashcards use parent_id as user_id, get it from profile
+        const { data: cp } = await supabase.from("child_profiles").select("parent_id").eq("id", childProfileId).single();
+        if (cp) {
+          let query = supabase
+            .from("flashcards")
+            .select("*")
+            .eq("user_id", cp.parent_id)
+            .order("next_review_at", { ascending: true, nullsFirst: true })
+            .limit(20);
+          if (payload?.subject) {
+            query = query.eq("subject", payload.subject);
+          }
+          const { data } = await query;
+          result = data || [];
+        } else {
+          result = [];
+        }
+        break;
+      }
+
+      case "update-flashcard": {
+        const { data: cp2 } = await supabase.from("child_profiles").select("parent_id").eq("id", childProfileId).single();
+        if (cp2) {
+          await supabase.from("flashcards").update(payload.updates)
+            .eq("id", payload.cardId)
+            .eq("user_id", cp2.parent_id);
+        }
+        result = { success: true };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Azione non supportata" }), {
           status: 400,
