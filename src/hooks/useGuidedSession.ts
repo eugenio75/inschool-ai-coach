@@ -559,10 +559,31 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
       }
 
       if (sessionComplete && sessionId) {
+        // Save conversation history
+        const chatToSave = newMessages
+          .filter((m: ChatMsg) => m.content?.trim())
+          .map((m: ChatMsg) => ({ role: m.role, text: m.content }));
+
         if (isChild) {
-          await childApi("complete-session", { sessionId, homeworkId });
+          await childApi("complete-session", { sessionId, homeworkId, chatMessages: chatToSave });
         } else {
-          await supabase.from("guided_sessions").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", sessionId);
+          // Save conversation to conversation_sessions
+          const { data: convSession } = await supabase
+            .from("conversation_sessions")
+            .insert({
+              profile_id: homework?.child_profile_id,
+              titolo: homework?.title || "Sessione guidata",
+              materia: homework?.subject,
+              messaggi: chatToSave,
+            })
+            .select("id")
+            .single();
+
+          await supabase.from("guided_sessions").update({
+            status: "completed",
+            completed_at: new Date().toISOString(),
+            conversation_id: convSession?.id || null,
+          }).eq("id", sessionId);
           await supabase.from("homework_tasks").update({ completed: true, updated_at: new Date().toISOString() }).eq("id", homeworkId);
         }
 
