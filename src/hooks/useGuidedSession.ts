@@ -718,6 +718,20 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
 
         // Mark session as completed — add "Fine" button instead of auto-celebration
         setSessionCompleted(true);
+
+        // Complete relevant daily missions
+        try {
+          const missions = await getDailyMissions();
+          for (const mission of missions) {
+            if (mission.completed) continue;
+            const t = mission.mission_type;
+            if (t === "study_session" || t === "complete_task" || t === "review_weak_concept" || t === "review_concept") {
+              await completeMission(mission.id, mission.points_reward);
+            }
+          }
+        } catch (err) {
+          console.error("Mission completion error:", err);
+        }
         // Append the finish action to the last message
         setMessages(prev => {
           const updated = [...prev];
