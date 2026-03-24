@@ -51,14 +51,16 @@ function getCoachBehaviorForFamiliarity(familiarity: Familiarity): string {
     case "first_time":
       return `CASO: Prima volta — Lo studente non ha mai studiato questo argomento.
 REGOLE:
-- Lo studente NON conosce ancora l'argomento, quindi NON partire con domande
-- Guida una lettura attiva: presenta tu il contenuto un blocco alla volta, spiega i concetti chiave
-- Dopo ogni blocco, fai UNA domanda semplice di comprensione per verificare che abbia capito
+- Lo studente NON conosce ancora l'argomento, quindi PRIMA spiega, POI fai domande
+- Presenta il contenuto un blocco alla volta, con parole semplici e chiare
+- Alla fine di OGNI blocco che presenti, fai UNA DOMANDA CONCRETA e SPECIFICA su quello che hai appena spiegato (es. "Dove è nato Copernico?" o "Cosa significa sistema eliocentrico?")
+- Lo studente deve sapere ESATTAMENTE cosa rispondere — mai lasciarlo senza sapere cosa fare
 - Se non capisce, riformula con parole più semplici e NON andare avanti
-- Solo DOPO aver presentato tutti i blocchi, passa al richiamo attivo
+- Dopo aver presentato tutti i blocchi, passa al richiamo attivo
 - Chiedi allo studente di spiegare i concetti A VOCE o in UNA FRASE
 - Alla fine fai una mini simulazione orale
 - Non far mai rileggere passivamente — sei tu che presenti e spieghi`;
+
 
     case "already_know":
       return `CASO: Lo conosco già — Lo studente dice di conoscere l'argomento.
