@@ -377,10 +377,12 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
               { number: 3, text: "Adesso proviamo a ripetere tutto l'argomento dalla memoria.", bloomLevel: 4 },
             ];
           } else {
+            // first_time: guide reading, don't ask questions yet
             generatedSteps = [
-              { number: 1, text: "Leggiamo insieme questo argomento. Dimmi di cosa parla questa prima parte.", bloomLevel: 1 },
-              { number: 2, text: "Quali sono i punti chiave da ricordare? Prova a dirmeli.", bloomLevel: 2 },
-              { number: 3, text: "Sapresti fare un esempio concreto di quello che hai studiato?", bloomLevel: 3 },
+              { number: 1, text: "Iniziamo a leggere insieme l'argomento. Ti presento il contenuto un pezzo alla volta e ti spiego i punti importanti.", bloomLevel: 1 },
+              { number: 2, text: "Ora che abbiamo letto, proviamo a richiamare i concetti principali. Cosa ti ricordi?", bloomLevel: 2 },
+              { number: 3, text: "Colleghiamo le idee tra loro. Sapresti spiegarmi il filo logico dell'argomento?", bloomLevel: 3 },
+              { number: 4, text: "Mini simulazione: prova a ripetere l'argomento come se fossi davanti al professore.", bloomLevel: 5 },
             ];
           }
         }
