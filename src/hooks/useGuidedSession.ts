@@ -120,6 +120,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
           if (!hasRealProgress) {
             setShowCheckin(true);
           } else {
+            setSessionEmotion(sess.emotional_checkin || "");
             setSessionId(sess.id);
             setCurrentStep(sess.current_step || 1);
             setTotalSteps(sess.total_steps || 0);
@@ -151,6 +152,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
           if (!hasRealProgress) {
             setShowCheckin(true);
           } else {
+            setSessionEmotion(sess.emotional_checkin || "");
             setSessionId(sess.id);
             setCurrentStep(sess.current_step || 1);
             setTotalSteps(sess.total_steps || 0);
