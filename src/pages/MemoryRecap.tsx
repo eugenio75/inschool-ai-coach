@@ -514,7 +514,7 @@ const MemoryRecap = () => {
             </Button>
           </div>
         </div>
-      </motion.div>
+      </div>
     );
   };
 
