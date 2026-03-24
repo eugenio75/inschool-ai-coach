@@ -575,11 +575,9 @@ const MemoryRecap = () => {
 
           {/* ═══ HOME: Both sections on one page ═══ */}
           {wizard.step === "home" && (
-            <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -12 }}
-              className="space-y-8">
-              {renderSectionBlock("ripasso")}
-              <div className="border-t border-border" />
-              {renderSectionBlock("rinforza")}
+            <motion.div key={`home-${activeTab}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+              className="space-y-2.5 pt-1">
+              {renderSectionBlock(activeTab)}
             </motion.div>
           )}
 
