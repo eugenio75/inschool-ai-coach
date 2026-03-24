@@ -396,7 +396,7 @@ const MemoryRecap = () => {
       subjectMap[s] = (subjectMap[s] || 0) + 1;
     }
     return Object.entries(subjectMap).sort(([, a], [, b]) => b - a);
-  }, [wizard.section, wizard.contentType, items, weakItems, errors, todayItems, todayErrors]);
+  }, [wizard.section, wizard.contentType, items, weakItems, todayItems]);
 
   // Get flashcards filtered by the wizard context
   const getFilteredFlashcards = (): any[] => {
