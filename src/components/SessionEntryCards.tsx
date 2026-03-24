@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, PenLine, Brain, GraduationCap } from "lucide-react";
+import { BookOpen, PenLine, Brain, GraduationCap, Layers } from "lucide-react";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
@@ -61,6 +61,16 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
       color: "bg-clay-light text-clay-dark",
       iconColor: "text-clay-dark",
       action: () => navigate("/us?type=review"),
+      disabled: false,
+    },
+    {
+      id: "flashcard",
+      label: "Flashcard",
+      desc: "Ripasso rapido con carte interattive",
+      icon: Layers,
+      color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      action: () => navigate("/flashcards"),
       disabled: false,
     },
     {
