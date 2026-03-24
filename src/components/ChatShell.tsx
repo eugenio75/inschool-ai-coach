@@ -175,8 +175,8 @@ export function ChatShell({
       {/* Extra footer */}
       {extraFooter}
 
-      {/* Input toolbar - hide when actions are showing */}
-      {!hasActions && (
+      {/* Input toolbar - hide when actions are showing or disabled (read-only) */}
+      {!hasActions && !disabled && onSend && (
         <div className="border-t border-border bg-card p-3 shrink-0">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {showVoice && (
