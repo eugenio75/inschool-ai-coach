@@ -53,7 +53,7 @@ export function ChatShell({
 
   function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
-    if (!input.trim() || sending) return;
+    if (!input.trim() || sending || !onSend) return;
     onSend(input.trim());
     setInput("");
   }
