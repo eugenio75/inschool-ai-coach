@@ -680,13 +680,9 @@ const MemoryRecap = () => {
                     ? (wizard.contentType === "today"
                         ? weakItems.filter(i => i.created_at >= getTodayStart() && (wizard.subject === "all" || i.subject === wizard.subject))
                         : weakItems.filter(i => wizard.subject === "all" || i.subject === wizard.subject))
-                    : wizard.section === "errori"
-                      ? (wizard.contentType === "today"
-                          ? todayErrors.filter(e => wizard.subject === "all" || e.subject === wizard.subject)
-                          : errors.filter(e => wizard.subject === "all" || e.subject === wizard.subject))
-                      : (wizard.contentType === "today"
-                          ? todayItems.filter(i => wizard.subject === "all" || i.subject === wizard.subject)
-                          : items.filter(i => wizard.subject === "all" || i.subject === wizard.subject));
+                    : (wizard.contentType === "today"
+                        ? todayItems.filter(i => wizard.subject === "all" || i.subject === wizard.subject)
+                        : items.filter(i => wizard.subject === "all" || i.subject === wizard.subject));
 
                 if (summaryItems.length === 0) {
                   return (
@@ -694,35 +690,6 @@ const MemoryRecap = () => {
                       <Brain className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                       <p className="text-sm text-muted-foreground font-medium">Nessun contenuto trovato</p>
                       <p className="text-xs text-muted-foreground mt-1">Prova con un'altra selezione</p>
-                    </div>
-                  );
-                }
-
-                // For errors section, show error summaries
-                if (wizard.section === "errori") {
-                  return (
-                    <div className="space-y-2">
-                      {summaryItems.map((err: any, i: number) => (
-                        <motion.div key={err.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                          transition={{ ...spring, delay: i * 0.03 }}
-                          className="bg-card rounded-xl border border-border p-3.5">
-                          <div className="flex items-start gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                              <AlertTriangle className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-foreground">{err.topic || "Errore generico"}</p>
-                              {err.description && <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{err.description}</p>}
-                              <div className="flex items-center gap-2 mt-1.5">
-                                <span className="text-[10px] text-muted-foreground">{err.subject}</span>
-                                {err.error_type && (
-                                  <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-full text-muted-foreground">{err.error_type}</span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
                     </div>
                   );
                 }
