@@ -92,6 +92,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   const [showCelebration, setShowCelebration] = useState(false);
   const [showCheckin, setShowCheckin] = useState(false);
   const [setupDone, setSetupDone] = useState(false);
+  const [sessionCompleted, setSessionCompleted] = useState(false);
 
   // Method block state
   const [methodPhase, setMethodPhase] = useState<MethodPhase>("none");
