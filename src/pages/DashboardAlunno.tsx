@@ -1,111 +1,27 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Clock, Plus, ArrowRight, Sparkles, Brain, Loader2, LogOut, Play, HelpCircle, MessageSquare, Flame, Star, Zap, FolderOpen } from "lucide-react";
-import { CoachPresence } from "@/components/CoachPresence";
+import { BookOpen, Plus, Loader2, LogOut, Brain, FolderOpen } from "lucide-react";
 import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { Button } from "@/components/ui/button";
-import { ProgressSun } from "@/components/ProgressSun";
 import { TaskCard } from "@/components/TaskCard";
 import { GamificationKPI } from "@/components/GamificationBar";
 import { DailyMissions } from "@/components/GamificationBar";
-import { SocialProofBanner } from "@/components/CelebrationOverlay";
-import { QuickHelpButton, QuickHelpModal } from "@/components/QuickHelp";
+import { SessionEntryCards } from "@/components/SessionEntryCards";
 import { shouldShowCheckin } from "@/pages/EmotionalCheckin";
-import { getTasks, getActiveChildProfileId, getChildProfile, getMemoryItems, deleteTask } from "@/lib/database";
+import { getTasks, getActiveChildProfileId, getChildProfile, deleteTask } from "@/lib/database";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
-import { supabase } from "@/integrations/supabase/client";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
-/** Score each pending task and return the best one with a reason */
-function pickSmartTask(
-  pendingTasks: any[],
-  memoryItems: any[]
-): { task: any; reason: string } {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Build a map: subject → average memory strength
-  const subjectStrength: Record<string, { total: number; count: number }> = {};
-  for (const m of memoryItems) {
-    const s = m.subject?.toLowerCase();
-    if (!s) continue;
-    if (!subjectStrength[s]) subjectStrength[s] = { total: 0, count: 0 };
-    subjectStrength[s].total += m.strength ?? 50;
-    subjectStrength[s].count += 1;
-  }
-  const avgStrength = (subject: string): number | null => {
-    const entry = subjectStrength[subject?.toLowerCase()];
-    if (!entry || entry.count === 0) return null;
-    return entry.total / entry.count;
-  };
-
-  let bestTask = pendingTasks[0];
-  let bestScore = -Infinity;
-  let bestReason = "";
-
-  for (const task of pendingTasks) {
-    let score = 0;
-    let reason = "";
-
-    // 1. Due date urgency (highest priority)
-    if (task.due_date) {
-      const due = new Date(task.due_date);
-      due.setHours(0, 0, 0, 0);
-      const daysUntil = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysUntil <= 0) {
-        score += 100;
-        reason = "Questo compito scade oggi!";
-      } else if (daysUntil === 1) {
-        score += 80;
-        reason = "Questo compito scade domani";
-      } else if (daysUntil <= 3) {
-        score += 50;
-        reason = `Scade tra ${daysUntil} giorni`;
-      }
-    }
-
-    // 2. Weak memory in this subject
-    const strength = avgStrength(task.subject);
-    if (strength !== null && strength < 40) {
-      score += 60;
-      if (!reason) reason = `Hai bisogno di rinforzare ${task.subject} — la tua memoria è al ${Math.round(strength)}%`;
-      else reason += ` e hai bisogno di rinforzare ${task.subject}`;
-    } else if (strength !== null && strength < 60) {
-      score += 30;
-      if (!reason) reason = `${task.subject} ha bisogno di un po' di pratica — memoria al ${Math.round(strength)}%`;
-    }
-
-    // 3. Fallback: prefer easier tasks slightly (lower friction to start)
-    score += Math.max(0, 3 - (task.difficulty || 1)) * 5;
-
-    if (!reason) {
-      reason = "Un buon punto di partenza per oggi";
-    }
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestTask = task;
-      bestReason = reason;
-    }
-  }
-
-  return { task: bestTask, reason: bestReason };
-}
 
 const DashboardAlunno = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [suggestion, setSuggestion] = useState<{ task: any; reason: string } | null>(null);
-  const [pausedSession, setPausedSession] = useState<{ task: any; state: any } | null>(null);
-  const [quickHelpOpen, setQuickHelpOpen] = useState(false);
-  const [showLibrary, setShowLibrary] = useState(false);
   const isChild = isChildSession();
 
-  // Redirect to check-in if not done today (only for child sessions)
   useEffect(() => {
     if (isChild && shouldShowCheckin()) {
       navigate("/checkin", { replace: true });
@@ -130,31 +46,6 @@ const DashboardAlunno = () => {
       }
       const dbTasks = await getTasks();
       setTasks(dbTasks);
-
-      // Detect paused focus session
-      for (const t of dbTasks) {
-        try {
-          const saved = sessionStorage.getItem(`focus-session-${t.id}`);
-          if (saved) {
-            const state = JSON.parse(saved);
-            if (state.phase === "focus" || state.phase === "checkin" || state.phase === "breathing") {
-              setPausedSession({ task: t, state });
-              break;
-            }
-          }
-        } catch {}
-      }
-
-      // Smart suggestion
-      const pending = dbTasks.filter((t: any) => !t.completed);
-      if (pending.length > 0) {
-        const memoryItems = await getMemoryItems();
-        setSuggestion(pickSmartTask(pending, memoryItems));
-      }
-
-      // Library always visible on student dashboard
-      setShowLibrary(true);
-
       setLoading(false);
     };
     load();
@@ -188,9 +79,7 @@ const DashboardAlunno = () => {
               <span className="font-display text-lg sm:text-xl font-semibold text-foreground">Inschool</span>
             </div>
             <div className="flex items-center gap-2">
-              {showLibrary && (
-                <button onClick={() => navigate("/libreria")} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors" title="Libreria materiali"><FolderOpen className="w-4 h-4" /></button>
-              )}
+              <button onClick={() => navigate("/libreria")} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors" title="Libreria materiali"><FolderOpen className="w-4 h-4" /></button>
               <button onClick={() => navigate("/memory")} className="w-9 h-9 rounded-xl bg-clay-light flex items-center justify-center text-clay-dark hover:bg-accent transition-colors" title="Memoria e ripasso"><Brain className="w-4 h-4" /></button>
               <button onClick={() => navigate("/student-profile")} className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-accent transition-colors text-xs font-bold text-primary" title="Il mio profilo">
                 {avatarName.charAt(0).toUpperCase()}
@@ -222,81 +111,19 @@ const DashboardAlunno = () => {
         </div>
       </div>
 
-      {/* Coach card */}
-      <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto"><CoachPresence /></div></div>
+      {/* Session entry cards */}
+      <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.15 }}>
+          <h3 className="font-display font-semibold text-foreground text-sm mb-3">Cosa vuoi fare?</h3>
+          <SessionEntryCards hasTasks={tasks.length > 0} />
+        </motion.div>
+      </div></div>
 
       {/* Teacher Assignments */}
-      <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto"><TeacherAssignments /></div></div>
+      <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto"><TeacherAssignments /></div></div>
 
-      {/* Paused session banner */}
-      {pausedSession && (
-        <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={spring}
-            className="bg-clay-light border border-clay-dark/20 rounded-2xl p-4 sm:p-5"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2 h-2 rounded-full bg-clay-dark animate-pulse" />
-                  <span className="text-xs font-medium text-clay-dark uppercase tracking-wider">Sessione in pausa</span>
-                </div>
-                <p className="text-sm font-medium text-foreground">
-                  Stavi lavorando su <strong>{pausedSession.task.title}</strong>
-                </p>
-                <p className="text-xs text-clay-dark/80 mt-0.5">{pausedSession.task.subject}</p>
-              </div>
-              <Button
-                onClick={() => navigate(`/focus/${pausedSession.task.id}`)}
-                className="bg-clay-dark text-white hover:bg-clay-dark/90 rounded-xl px-3 sm:px-4 py-2 text-sm flex-shrink-0"
-              >
-                <Play className="w-3.5 h-3.5 mr-1" /> Riprendi
-              </Button>
-            </div>
-          </motion.div>
-        </div></div>
-      )}
-
-      {suggestion && !pausedSession && (
-        <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 }} className="bg-sage-light border border-primary/20 rounded-2xl p-4 sm:p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <Sparkles className="w-4 h-4 text-sage-dark flex-shrink-0" />
-                  <span className="text-xs font-medium text-sage-dark uppercase tracking-wider">Consiglio del coach</span>
-                </div>
-                <p className="text-sm font-medium text-foreground">Inizia con <strong>{suggestion.task.title}</strong></p>
-                <p className="text-xs text-sage-dark/80 mt-1">{suggestion.reason}</p>
-              </div>
-              <Button onClick={() => navigate(`/homework/${suggestion.task.id}`)} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-xl px-3 sm:px-4 py-2 text-sm flex-shrink-0">
-                Vedi <ArrowRight className="ml-1 w-3.5 h-3.5" />
-              </Button>
-            </div>
-          </motion.div>
-        </div></div>
-      )}
-
-      {/* "Non so da dove iniziare" */}
-      {!loading && tasks.length > 0 && !suggestion && !pausedSession && (
-        <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
-          <motion.button
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.2 }}
-            onClick={() => navigate("/challenge/help-start")}
-            className="w-full flex items-center gap-3 p-4 rounded-2xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors text-left"
-          >
-            <MessageSquare className="w-5 h-5 text-primary flex-shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-foreground">Non so da dove iniziare</p>
-              <p className="text-xs text-muted-foreground">Il coach ti aiuta a scegliere il primo passo</p>
-            </div>
-          </motion.button>
-        </div></div>
-      )}
-
-      <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto">
+      {/* Daily Missions */}
+      <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.25 }}>
           <DailyMissions />
         </motion.div>
@@ -334,7 +161,7 @@ const DashboardAlunno = () => {
           <Plus className="w-6 h-6" />
         </motion.button>
       </div>
-      <QuickHelpModal open={quickHelpOpen} onClose={() => setQuickHelpOpen(false)} />
+      
     </div>
   );
 };
