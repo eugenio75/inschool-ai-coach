@@ -77,13 +77,17 @@ REGOLE ASSOLUTE:
 
 Output JSON: {"message":"...","suggestedAction":"testo bottone","actionRoute":"/percorso"}
 
-Route disponibili:
+Route disponibili (IMPORTANTISSIMO — usa il parametro subject quando specifichi una materia):
 - /us?type=guided&hw=ID (sessione guidata su un compito specifico)
-- /us?type=study (studio libero)
-- /us?type=review (ripasso)
-- /us?type=prep (preparazione verifica)
+- /us?type=study&subject=Matematica (studio libero su materia specifica)
+- /us?type=review&subject=Matematica (ripasso su materia specifica)
+- /us?type=prep&subject=Matematica (preparazione verifica su materia specifica)
+- /study-tasks (lista compiti dello studente)
 - /add-homework (aggiungi compiti)
-- /memory (memoria e ripasso)`;
+- /memory (memoria e ripasso)
+- /flashcards?subject=Matematica (flashcard su materia specifica)
+
+REGOLA ROUTE: quando suggerisci un'azione su una materia specifica, SEMPRE includere &subject=NomeMateria nella route.`;
 
     const context = `
 Nome: ${userName}

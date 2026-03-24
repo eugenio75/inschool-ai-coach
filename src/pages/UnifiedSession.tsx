@@ -48,6 +48,8 @@ export default function UnifiedSession() {
   const [searchParams] = useSearchParams();
   const type = (searchParams.get("type") || "study") as SessionType;
   const homeworkId = searchParams.get("hw");
+  const urlSubject = searchParams.get("subject");
+  const urlMsg = searchParams.get("msg");
   const profile = getProfile();
   const schoolLevel = profile?.school_level || "superiori";
   const { user } = useAuth();
@@ -73,14 +75,23 @@ export default function UnifiedSession() {
 
   // ─── Free-form session state (study/review/prep) ───
   const [setupDone, setSetupDone] = useState(false);
-  const [topic, setTopic] = useState("");
-  const [subject, setSubject] = useState("");
+  const [topic, setTopic] = useState(urlSubject ? `Ripasso ${urlSubject}` : "");
+  const [subject, setSubject] = useState(urlSubject || "");
   const [mode, setMode] = useState<"scritta" | "orale">("scritta");
   const [reviewMode, setReviewMode] = useState<"chat" | "flashcard">("chat");
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [streamingText, setStreamingText] = useState("");
   const [sending, setSending] = useState(false);
   const [showPauseDialog, setShowPauseDialog] = useState(false);
+
+  // Auto-start when subject is provided via URL for review
+  useEffect(() => {
+    if (urlSubject && type === "review" && !setupDone && !sending) {
+      // Small delay to let state settle
+      const t = setTimeout(() => startSession(), 100);
+      return () => clearTimeout(t);
+    }
+  }, [urlSubject, type]);
 
   const subjects = profile?.favorite_subjects || profile?.difficult_subjects || ["Matematica", "Italiano", "Inglese", "Storia", "Scienze"];
 
@@ -145,7 +156,11 @@ Inizia con la prima domanda.`;
 
   // ─── Non-guided session start ───
   function startSession() {
-    if (!topic.trim() && type !== "prep") return;
+    if (!topic.trim() && type !== "prep" && type !== "review") return;
+    if (!topic.trim() && type === "review" && subject) {
+      // Auto-fill topic for review with subject
+      setTopic(`Ripasso ${subject}`);
+    }
     if (!subject && type === "prep") return;
 
     const systemPrompt = getSystemPrompt();

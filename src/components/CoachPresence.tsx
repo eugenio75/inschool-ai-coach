@@ -30,9 +30,10 @@ function buildLocalCoachMessage(profileName: string, ctx: CoachContext) {
   const firstName = profileName || "campione";
 
   if (ctx.urgentCount > 0 && ctx.pendingHomework[0]?.subject) {
+    const hw = ctx.pendingHomework[0];
     return {
-      message: `${firstName}, ci sono ${ctx.urgentCount} compiti urgenti — il primo è di ${ctx.pendingHomework[0].subject}. Vuoi partire da quello?`,
-      action: { text: `Inizia ${ctx.pendingHomework[0].subject}`, route: ctx.pendingHomework[0].id ? `/us?type=guided&hw=${ctx.pendingHomework[0].id}` : "/dashboard" },
+      message: `${firstName}, ci sono ${ctx.urgentCount} compiti urgenti — il primo è di ${hw.subject}. Vuoi partire da quello?`,
+      action: { text: `Inizia ${hw.subject}`, route: hw.id ? `/us?type=guided&hw=${hw.id}` : `/study-tasks` },
     };
   }
 
@@ -54,7 +55,7 @@ function buildLocalCoachMessage(profileName: string, ctx: CoachContext) {
     const subject = ctx.recentErrors[0]?.subject;
     return {
       message: `${firstName}, ho notato qualche difficoltà ${subject ? `in ${subject}` : "recente"}. Vuoi che ci lavoriamo un po' insieme?`,
-      action: { text: "Ripassa con me", route: "/us?type=review" },
+      action: { text: "Ripassa con me", route: subject ? `/us?type=review&subject=${encodeURIComponent(subject)}` : "/us?type=review" },
     };
   }
 
