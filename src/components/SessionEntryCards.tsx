@@ -40,7 +40,15 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
       icon: PenLine,
       color: "bg-primary/10 text-primary",
       iconColor: "text-primary",
-      action: () => navigate(hasTasks ? "/dashboard" : "/add-homework"),
+      action: () => {
+        if (hasTasks) {
+          const el = document.getElementById("compiti-oggi");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+          else navigate("/dashboard");
+        } else {
+          navigate("/add-homework");
+        }
+      },
       disabled: false,
     },
     {

@@ -11,6 +11,7 @@ import { SessionEntryCards } from "@/components/SessionEntryCards";
 import { shouldShowCheckin } from "@/pages/EmotionalCheckin";
 import { getTasks, getActiveChildProfileId, getChildProfile, deleteTask } from "@/lib/database";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
+import { CoachPresence } from "@/components/CoachPresence";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -102,9 +103,16 @@ const DashboardAlunno = () => {
             </div>
           </motion.div>
 
-          {/* KPI cards */}
+          {/* AI Coach */}
           {!loading && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.08 }} className="mt-4">
+              <CoachPresence />
+            </motion.div>
+          )}
+
+          {/* KPI cards */}
+          {!loading && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.12 }} className="mt-4">
               <GamificationKPI />
             </motion.div>
           )}
@@ -131,7 +139,7 @@ const DashboardAlunno = () => {
 
       <div className="px-4 sm:px-6 mt-5 sm:mt-6 pb-4"><div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-display font-semibold text-foreground text-sm">Compiti di oggi</h3>
+          <h3 id="compiti-oggi" className="font-display font-semibold text-foreground text-sm">Compiti di oggi</h3>
           <button onClick={() => navigate("/memory")} className="text-xs text-primary font-medium hover:underline flex items-center gap-1"><Brain className="w-3 h-3" /> Ripassa</button>
         </div>
         {loading ? (
