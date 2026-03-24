@@ -196,14 +196,21 @@ REGOLE:
 - Dopo 3-4 scambi: riassumi i punti forti e deboli emersi
 - Sii socratico e incoraggiante
 Inizia con la prima domanda sull'argomento.`;
-      case "prep":
+      case "prep": {
+        const gapsBlock = learningGaps.length > 0
+          ? `\nLACUNE RILEVATE dallo storico dello studente:\n${learningGaps.map(g => `- ${g}`).join("\n")}\nUsa queste lacune per calibrare le domande: insisti sui punti deboli per verificarne il recupero.`
+          : "";
+        const topicBlock = topic.trim()
+          ? `ARGOMENTO SPECIFICO: ${topic.trim()}\nLe domande DEVONO essere focalizzate su questo argomento, tenendo conto delle lacune da colmare.`
+          : `Nessun argomento specifico indicato. Fai domande sugli argomenti della materia dove lo studente ha più lacune.${!gapsBlock ? " Copri i concetti fondamentali della materia." : ""}`;
         return `Sei il Coach AI di ${studentName}. Stai conducendo una SIMULAZIONE DI ${mode === "orale" ? "INTERROGAZIONE ORALE" : "VERIFICA SCRITTA"}.
 MATERIA: ${subject}
-${topic.trim() ? `ARGOMENTO SPECIFICO: ${topic.trim()}\nLe domande DEVONO essere focalizzate su questo argomento specifico, non sulla materia in generale.` : ""}
+${topicBlock}
 LIVELLO: ${schoolLevel}
+${gapsBlock}
 
 REGOLE:
-- Fai domande calibrate ${topic.trim() ? `sull'argomento "${topic.trim()}"` : "sulla materia"} — NON domande generiche
+- Fai domande calibrate e specifiche — NON domande generiche
 - ${mode === "orale" ? "Simula un'interrogazione: una domanda alla volta, attendi risposta, fai follow-up" : "Fai domande di diverso tipo: definizioni, problemi, ragionamento"}
 - Adatta la difficoltà: se risponde bene alza, se sbaglia abbassa
 - Dopo 5-6 domande, fornisci un REPORT finale strutturato con:
@@ -214,6 +221,7 @@ REGOLE:
   [/REPORT]
 - Non dare mai la risposta — guida con indizi se bloccato
 Inizia con la prima domanda.`;
+      }
       default:
         return "";
     }
