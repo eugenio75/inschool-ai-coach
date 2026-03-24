@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { X, Loader2, Smile, Frown, Minus, Shuffle, Zap, Sun, Moon, AlertTriangle, Star, MessageSquare, ArrowRight } from "lucide-react";
+import { X, Loader2, Smile, Frown, Minus, Shuffle, Zap, Sun, Moon, AlertTriangle, Star, MessageSquare, ArrowRight, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { saveEmotionalCheckin } from "@/lib/database";
 import { getChildSession } from "@/lib/childSession";
@@ -87,6 +87,10 @@ const EmotionalCheckin = () => {
   const [answers, setAnswers] = useState<{ question: string; answer: string; answerId: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [freeText, setFreeText] = useState("");
+  const [customAnswer0, setCustomAnswer0] = useState("");
+  const [customAnswer1, setCustomAnswer1] = useState("");
+  const [showCustom0, setShowCustom0] = useState(false);
+  const [showCustom1, setShowCustom1] = useState(false);
   const [moodStreak, setMoodStreak] = useState(0);
 
   const childSession = getChildSession();
@@ -239,13 +243,40 @@ const EmotionalCheckin = () => {
                 <button
                   key={opt.id}
                   onClick={() => handleAnswer(q1, opt.id, opt.label)}
-                  className="flex flex-col items-center gap-2 px-4 py-4 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all"
+                  className="flex flex-col items-center gap-2 px-4 py-3 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all"
                 >
-                  <opt.icon className="w-6 h-6 text-primary" />
+                  <opt.icon className="w-5 h-5 text-primary" />
                   <span className="text-xs font-medium text-foreground">{opt.label}</span>
                 </button>
               ))}
+              <button
+                onClick={() => setShowCustom0(true)}
+                className={`flex flex-col items-center gap-2 px-4 py-3 rounded-2xl border transition-all ${showCustom0 ? 'border-primary bg-primary/5' : 'border-border bg-card hover:bg-muted hover:border-primary/30'}`}
+              >
+                <PenLine className="w-5 h-5 text-primary" />
+                <span className="text-xs font-medium text-foreground">Altro...</span>
+              </button>
             </div>
+            {showCustom0 && (
+              <div className="mt-3 flex gap-2">
+                <input
+                  type="text"
+                  value={customAnswer0}
+                  onChange={(e) => setCustomAnswer0(e.target.value)}
+                  placeholder="Scrivi come ti senti..."
+                  className="flex-1 rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  autoFocus
+                />
+                <Button
+                  size="sm"
+                  disabled={!customAnswer0.trim()}
+                  onClick={() => handleAnswer(q1, "custom", customAnswer0.trim())}
+                  className="rounded-2xl px-4"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
             <button onClick={handleSkip} className="mt-6 text-xs text-muted-foreground hover:text-foreground">
               Salta per oggi
             </button>
@@ -273,13 +304,40 @@ const EmotionalCheckin = () => {
                 <button
                   key={opt.id}
                   onClick={() => handleAnswer(q2, opt.id, opt.label)}
-                  className="flex flex-col items-center gap-2 px-4 py-4 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all"
+                  className="flex flex-col items-center gap-2 px-4 py-3 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all"
                 >
-                  <opt.icon className="w-6 h-6 text-primary" />
+                  <opt.icon className="w-5 h-5 text-primary" />
                   <span className="text-xs font-medium text-foreground">{opt.label}</span>
                 </button>
               ))}
+              <button
+                onClick={() => setShowCustom1(true)}
+                className={`flex flex-col items-center gap-2 px-4 py-3 rounded-2xl border transition-all ${showCustom1 ? 'border-primary bg-primary/5' : 'border-border bg-card hover:bg-muted hover:border-primary/30'}`}
+              >
+                <PenLine className="w-5 h-5 text-primary" />
+                <span className="text-xs font-medium text-foreground">Altro...</span>
+              </button>
             </div>
+            {showCustom1 && (
+              <div className="mt-3 flex gap-2">
+                <input
+                  type="text"
+                  value={customAnswer1}
+                  onChange={(e) => setCustomAnswer1(e.target.value)}
+                  placeholder="Scrivi come ti senti..."
+                  className="flex-1 rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  autoFocus
+                />
+                <Button
+                  size="sm"
+                  disabled={!customAnswer1.trim()}
+                  onClick={() => handleAnswer(q2, "custom", customAnswer1.trim())}
+                  className="rounded-2xl px-4"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
             <button onClick={handleSkip} className="mt-6 text-xs text-muted-foreground hover:text-foreground transition-colors">
               Salta →
             </button>
