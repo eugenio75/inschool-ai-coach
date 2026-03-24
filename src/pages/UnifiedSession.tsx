@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getDailyMissions, completeMission } from "@/lib/database";
 import {
   BookOpen,
   FileText,
@@ -101,6 +102,7 @@ export default function UnifiedSession() {
   const [subject, setSubject] = useState(urlSubject || "");
   const [mode, setMode] = useState<"scritta" | "orale">("scritta");
   const [learningGaps, setLearningGaps] = useState<string[]>([]);
+  const missionsCompletedRef = useRef(false);
   const [reviewMode, setReviewMode] = useState<"chat" | "flashcard">("chat");
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [streamingText, setStreamingText] = useState("");
@@ -282,7 +284,23 @@ Inizia con la prima domanda.`;
       messages: newMessages,
       onDelta: (full) => setStreamingText(full),
       onDone: (full) => {
-        setMessages(prev => [...prev, { role: "assistant", content: full }]);
+        setMessages(prev => {
+          const updated = [...prev, { role: "assistant" as const, content: full }];
+          // Complete missions after meaningful engagement (4+ messages)
+          if (!missionsCompletedRef.current && updated.length >= 4) {
+            missionsCompletedRef.current = true;
+            getDailyMissions().then(missions => {
+              for (const mission of missions) {
+                if (mission.completed) continue;
+                const t = mission.mission_type;
+                if (t === "study_session" || (t === "review_concept" && type === "review") || (t === "review_weak_concept" && type === "review")) {
+                  completeMission(mission.id, mission.points_reward).catch(() => {});
+                }
+              }
+            }).catch(() => {});
+          }
+          return updated;
+        });
         setStreamingText("");
         setSending(false);
       },

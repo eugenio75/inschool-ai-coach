@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { getTask as fetchTask } from "@/lib/database";
+import { getTask as fetchTask, getDailyMissions, completeMission } from "@/lib/database";
 import { isChildSession, childApi, getChildSession } from "@/lib/childSession";
 import { ChatMsg, ChatAction, streamChat } from "@/lib/streamChat";
 import { playCelebrationSound } from "@/lib/celebrationSound";
@@ -718,6 +718,20 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
 
         // Mark session as completed — add "Fine" button instead of auto-celebration
         setSessionCompleted(true);
+
+        // Complete relevant daily missions
+        try {
+          const missions = await getDailyMissions();
+          for (const mission of missions) {
+            if (mission.completed) continue;
+            const t = mission.mission_type;
+            if (t === "study_session" || t === "complete_task" || t === "review_weak_concept" || t === "review_concept") {
+              await completeMission(mission.id, mission.points_reward);
+            }
+          }
+        } catch (err) {
+          console.error("Mission completion error:", err);
+        }
         // Append the finish action to the last message
         setMessages(prev => {
           const updated = [...prev];
