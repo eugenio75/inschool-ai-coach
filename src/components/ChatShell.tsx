@@ -108,12 +108,26 @@ export function ChatShell({
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         <AnimatePresence initial={false}>
-          {messages.map((msg, i) => (
+          {messages.map((msg, i) => {
+            const mood: CoachMood = msg.role === "assistant" ? detectMoodFromText(msg.content || "") : "happy";
+            return (
             <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               {msg.role === "assistant" && (
-                <div className="w-7 h-7 rounded-full bg-[hsl(var(--navy))] flex items-center justify-center mr-2 mt-1 flex-shrink-0">
-                  <span className="text-white text-xs font-bold">C</span>
+                <div className="w-8 h-8 rounded-full flex-shrink-0 mr-2 mt-1 overflow-hidden bg-primary/5">
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={mood}
+                      src={getCoachMoodSrc(mood)}
+                      alt="Coach"
+                      className="w-full h-full object-cover"
+                      width={32} height={32}
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    />
+                  </AnimatePresence>
                 </div>
               )}
               <div className="max-w-[80%]">
@@ -146,7 +160,8 @@ export function ChatShell({
                 )}
               </div>
             </motion.div>
-          ))}
+            );
+          })}
         </AnimatePresence>
 
         {streamingText && (
