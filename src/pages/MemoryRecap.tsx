@@ -19,7 +19,7 @@ import { isChildSession, getChildSession } from "@/lib/childSession";
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
 // ─── Types ───
-type Section = "ripasso" | "rinforza" | "errori";
+type Section = "ripasso" | "rinforza";
 type ContentType = "today" | "cumulative" | "specific";
 type StudyMethod = "coach" | "flashcard";
 
@@ -392,11 +392,7 @@ const MemoryRecap = () => {
       if (wizard.contentType === "cumulative") return weakItems;
       return [];
     }
-    if (wizard.section === "errori") {
-      if (wizard.contentType === "today") return todayErrors;
-      if (wizard.contentType === "cumulative") return errors;
-      return [];
-    }
+    return [];
     return [];
   };
 
@@ -477,7 +473,6 @@ const MemoryRecap = () => {
   const sectionConfig: Record<Section, { label: string; description: string; icon: any; color: string }> = {
     ripasso: { label: "Ripasso", description: "Rivedi quello che hai già studiato", icon: RefreshCw, color: "bg-primary/10 text-primary" },
     rinforza: { label: "Concetti da rinforzare", description: "Rafforza gli argomenti dove hai più bisogno", icon: Target, color: "bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400" },
-    errori: { label: "Errori", description: "Trasforma gli errori in punti di forza", icon: AlertTriangle, color: "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400" },
   };
 
   // Header text
@@ -523,14 +518,12 @@ const MemoryRecap = () => {
           {wizard.step === "section" && (
             <motion.div key="section" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
               className="space-y-3">
-              {(["ripasso", "rinforza", "errori"] as Section[]).map((section, i) => {
+              {(["ripasso", "rinforza"] as Section[]).map((section, i) => {
                 const cfg = sectionConfig[section];
                 const Icon = cfg.icon;
-                // Show count badge
                 let count = 0;
                 if (section === "ripasso") count = items.length;
                 if (section === "rinforza") count = weakItems.length;
-                if (section === "errori") count = errors.length;
 
                 return (
                   <motion.button key={section} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
