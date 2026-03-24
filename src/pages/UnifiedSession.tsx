@@ -1,6 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { BookOpen, FileText, Map, List, Key, Layers, Loader2, Brain, MessageCircle, CalendarDays, Sparkles, GraduationCap } from "lucide-react";
+import {
+  BookOpen,
+  FileText,
+  Map,
+  List,
+  Key,
+  Layers,
+  Loader2,
+  Brain,
+  MessageCircle,
+  CalendarDays,
+  Sparkles,
+  GraduationCap,
+} from "lucide-react";
+import { motion } from "framer-motion";
 import { ChatShell } from "@/components/ChatShell";
 import { ChatMsg, streamChat } from "@/lib/streamChat";
 import { SessionCelebration } from "@/components/SessionCelebration";
@@ -9,11 +23,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGuidedSession } from "@/hooks/useGuidedSession";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel,
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-  AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
 function getProfile() {
@@ -21,14 +39,20 @@ function getProfile() {
     if (isChildSession()) return getChildSession()?.profile || null;
     const saved = localStorage.getItem("inschool-profile");
     return saved ? JSON.parse(saved) : null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 function getPrepLabel(schoolLevel: string) {
   switch (schoolLevel) {
-    case "alunno": case "medie": return "Prepara l'interrogazione";
-    case "universitario": return "Prepara l'esame";
-    default: return "Prepara la verifica";
+    case "alunno":
+    case "medie":
+      return "Prepara l'interrogazione";
+    case "universitario":
+      return "Prepara l'esame";
+    default:
+      return "Prepara la verifica";
   }
 }
 
@@ -58,7 +82,6 @@ export default function UnifiedSession() {
   const userId = user?.id || profileId;
   const isJunior = schoolLevel === "alunno" || schoolLevel === "medie";
 
-  // ─── Guided session hook ───
   const guided = useGuidedSession({
     homeworkId,
     userId,
@@ -66,14 +89,12 @@ export default function UnifiedSession() {
     profileName: studentName,
   });
 
-  // Load guided session on mount
   useEffect(() => {
     if (type === "guided" && homeworkId) {
       guided.loadSession();
     }
   }, [type, homeworkId]);
 
-  // ─── Free-form session state (study/review/prep) ───
   const [setupDone, setSetupDone] = useState(false);
   const [topic, setTopic] = useState(urlSubject ? `Ripasso ${urlSubject}` : "");
   const [subject, setSubject] = useState(urlSubject || "");
@@ -83,8 +104,8 @@ export default function UnifiedSession() {
   const [streamingText, setStreamingText] = useState("");
   const [sending, setSending] = useState(false);
   const [showPauseDialog, setShowPauseDialog] = useState(false);
+  const [guidedCustomEmotion, setGuidedCustomEmotion] = useState("");
 
-  // Auto-start when subject is provided via URL for review
   useEffect(() => {
     if (urlSubject && type === "review" && !setupDone && !sending) {
       const t = setTimeout(() => startSession(), 100);
@@ -92,7 +113,6 @@ export default function UnifiedSession() {
     }
   }, [urlSubject, type]);
 
-  // Auto-start when msg is provided via URL (e.g. from coach mood chips)
   useEffect(() => {
     if (urlMsg && !setupDone && !sending) {
       setTopic(urlMsg);
@@ -126,7 +146,6 @@ export default function UnifiedSession() {
 
   const subjects = profile?.favorite_subjects || profile?.difficult_subjects || ["Matematica", "Italiano", "Inglese", "Storia", "Scienze"];
 
-  // ─── System prompts for non-guided types ───
   function getSystemPrompt(): string {
     switch (type) {
       case "study":
@@ -178,18 +197,20 @@ Inizia con la prima domanda.`;
   function getTitle(): string {
     if (type === "guided") return guided.homework?.title || "Sessione guidata";
     switch (type) {
-      case "study": return "Studio libero";
-      case "review": return "Ripasso profondo";
-      case "prep": return getPrepLabel(schoolLevel);
-      default: return "Sessione";
+      case "study":
+        return "Studio libero";
+      case "review":
+        return "Ripasso profondo";
+      case "prep":
+        return getPrepLabel(schoolLevel);
+      default:
+        return "Sessione";
     }
   }
 
-  // ─── Non-guided session start ───
   function startSession() {
     if (!topic.trim() && type !== "prep" && type !== "review") return;
     if (!topic.trim() && type === "review" && subject) {
-      // Auto-fill topic for review with subject
       setTopic(`Ripasso ${subject}`);
     }
     if (!subject && type === "prep") return;
@@ -252,11 +273,7 @@ Inizia con la prima domanda.`;
     handleSend(outputPrompts[outputType] || outputPrompts.schema);
   }
 
-  // ════════════════════════════════════════════
-  // GUIDED MODE
-  // ════════════════════════════════════════════
   if (type === "guided") {
-    // Loading
     if (guided.loading) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-background">
@@ -265,8 +282,24 @@ Inizia con la prima domanda.`;
       );
     }
 
-    // Emotional checkin
     if (guided.showCheckin) {
+      const guidedEmotionOptions = [
+        { key: "concentrato", label: "Concentrato", icon: "🎯" },
+        { key: "curioso", label: "Curioso", icon: "🤔" },
+        { key: "carico", label: "Carico", icon: "⚡" },
+        { key: "tranquillo", label: "Tranquillo", icon: "🙂" },
+        { key: "stanco", label: "Un po' stanco", icon: "😴" },
+        { key: "confuso", label: "Confuso", icon: "😵" },
+        { key: "agitato", label: "Agitato", icon: "😬" },
+        { key: "bloccato", label: "Bloccato in partenza", icon: "😕" },
+      ];
+
+      const submitCustomEmotion = () => {
+        const value = guidedCustomEmotion.trim();
+        if (!value) return;
+        guided.startNewSession(value);
+      };
+
       return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
           <motion.div
@@ -280,12 +313,8 @@ Inizia con la prima domanda.`;
             <p className="text-sm text-muted-foreground mb-6">
               {guided.homework?.title}
             </p>
-            <div className="flex flex-col gap-3">
-              {[
-                { key: "concentrato", label: "Concentrato", icon: "🎯" },
-                { key: "stanco", label: "Un po' stanco", icon: "😴" },
-                { key: "bloccato", label: "Bloccato in partenza", icon: "😕" },
-              ].map(opt => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              {guidedEmotionOptions.map((opt) => (
                 <button
                   key={opt.key}
                   onClick={() => guided.startNewSession(opt.key)}
@@ -296,12 +325,25 @@ Inizia con la prima domanda.`;
                 </button>
               ))}
             </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Input
+                value={guidedCustomEmotion}
+                onChange={(e) => setGuidedCustomEmotion(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") submitCustomEmotion();
+                }}
+                placeholder="Se non trovi l'opzione giusta, scrivila qui"
+                className="flex-1"
+              />
+              <Button onClick={submitCustomEmotion} disabled={!guidedCustomEmotion.trim()}>
+                Continua
+              </Button>
+            </div>
           </motion.div>
         </div>
       );
     }
 
-    // Chat view for guided
     const handleGuidedBack = () => {
       if (guided.messages.length > 1 && guided.sessionId) {
         setShowPauseDialog(true);
@@ -330,7 +372,6 @@ Inizia con la prima domanda.`;
           inputPlaceholder="Scrivi la tua risposta..."
         />
 
-        {/* Pause dialog */}
         <AlertDialog open={showPauseDialog} onOpenChange={setShowPauseDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -347,10 +388,12 @@ Inizia con la prima domanda.`;
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Celebration */}
         <SessionCelebration
           isVisible={guided.showCelebration}
-          onClose={() => { guided.setShowCelebration(false); navigate("/dashboard"); }}
+          onClose={() => {
+            guided.setShowCelebration(false);
+            navigate("/dashboard");
+          }}
           studentName={studentName}
           bloomLevel={guided.currentStep}
           subject={guided.homework?.subject || ""}
@@ -360,9 +403,6 @@ Inizia con la prima domanda.`;
     );
   }
 
-  // ════════════════════════════════════════════
-  // NON-GUIDED SETUP SCREEN
-  // ════════════════════════════════════════════
   if (!setupDone) {
     return (
       <div className="min-h-screen bg-background pb-24">
@@ -401,7 +441,6 @@ Inizia con la prima domanda.`;
                 ))}
               </div>
 
-              {/* Campo libero per argomento specifico */}
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
                   <Sparkles className="w-4 h-4 text-muted-foreground" />
@@ -448,7 +487,6 @@ Inizia con la prima domanda.`;
             </div>
           </div>
 
-          {/* Review: mode selector */}
           {type === "review" && (
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">Modalità di ripasso</label>
@@ -488,7 +526,7 @@ Inizia con la prima domanda.`;
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">Tipo di simulazione</label>
               <div className="flex gap-3">
-                {([["scritta", "Verifica scritta"], ["orale", "Interrogazione orale"]] as const).map(([m, label]) => (
+                {([ ["scritta", "Verifica scritta"], ["orale", "Interrogazione orale"] ] as const).map(([m, label]) => (
                   <button
                     key={m}
                     onClick={() => setMode(m)}
@@ -535,9 +573,6 @@ Inizia con la prima domanda.`;
     );
   }
 
-  // ════════════════════════════════════════════
-  // NON-GUIDED CHAT VIEW
-  // ════════════════════════════════════════════
   const studyOutputFooter = type === "study" && messages.length >= 4 ? (
     <div className="px-4 py-2 border-t border-border bg-muted/50">
       <p className="text-xs text-muted-foreground mb-2">Genera un output dalla sessione:</p>
