@@ -195,7 +195,7 @@ const AddHomework = () => {
           source_type: extractedSourceType || "photo",
           source_image_url: uploadedImageUrls[0] || undefined,
           source_files: uploadedImageUrls.length > 0 ? uploadedImageUrls : undefined,
-          due_date: dueDate, task_type: task.task_type,
+          due_date: dueDate, task_type: task.task_types.join(", "),
         });
       }
       toast({ title: `${selected.length} compiti aggiunti!` });
