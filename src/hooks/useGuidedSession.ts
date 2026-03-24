@@ -114,15 +114,23 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
         const result = await childApi("get-paused-session", { homeworkId });
         if (result.session) {
           const sess = result.session;
-          setSessionId(sess.id);
-          setCurrentStep(sess.current_step || 1);
-          setTotalSteps(sess.total_steps || 0);
-          setSteps(result.steps || []);
-          const resumeMsg = sess.last_difficulty
-            ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}. Riprendiamo dallo step ${sess.current_step}.`
-            : `Bentornato! Ripartiamo dallo step ${sess.current_step}.`;
-          setMessages([{ role: "assistant", content: resumeMsg }]);
-          setSetupDone(true);
+          const hasRealProgress = (sess.current_step || 1) > 1 || sess.last_difficulty;
+          
+          if (!hasRealProgress) {
+            setShowCheckin(true);
+          } else {
+            setSessionId(sess.id);
+            setCurrentStep(sess.current_step || 1);
+            setTotalSteps(sess.total_steps || 0);
+            setSteps(result.steps || []);
+            const stepInfo = result.steps?.[sess.current_step - 1];
+            const stepContext = stepInfo ? `\n\n${hw.title} — Step ${sess.current_step} di ${sess.total_steps}:\n${stepInfo.step_text || stepInfo.text}` : "";
+            const resumeMsg = sess.last_difficulty
+              ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}.${stepContext}`
+              : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
+            setMessages([{ role: "assistant", content: resumeMsg }]);
+            setSetupDone(true);
+          }
         } else {
           setShowCheckin(true);
         }
@@ -137,22 +145,30 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
 
         if (existing && existing.length > 0) {
           const sess = existing[0];
-          setSessionId(sess.id);
-          setCurrentStep(sess.current_step || 1);
-          setTotalSteps(sess.total_steps || 0);
+          const hasRealProgress = (sess.current_step || 1) > 1 || sess.last_difficulty;
+          
+          if (!hasRealProgress) {
+            setShowCheckin(true);
+          } else {
+            setSessionId(sess.id);
+            setCurrentStep(sess.current_step || 1);
+            setTotalSteps(sess.total_steps || 0);
 
-          const { data: savedSteps } = await supabase
-            .from("study_steps")
-            .select("*")
-            .eq("session_id", sess.id)
-            .order("step_number", { ascending: true });
-          setSteps(savedSteps || []);
+            const { data: savedSteps } = await supabase
+              .from("study_steps")
+              .select("*")
+              .eq("session_id", sess.id)
+              .order("step_number", { ascending: true });
+            setSteps(savedSteps || []);
 
-          const resumeMsg = sess.last_difficulty
-            ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}. Riprendiamo dallo step ${sess.current_step}.`
-            : `Bentornato! Ripartiamo dallo step ${sess.current_step}.`;
-          setMessages([{ role: "assistant", content: resumeMsg }]);
-          setSetupDone(true);
+            const stepInfo = savedSteps?.[sess.current_step! - 1];
+            const stepContext = stepInfo ? `\n\n${hw.title} — Step ${sess.current_step} di ${sess.total_steps}:\n${stepInfo.step_text}` : "";
+            const resumeMsg = sess.last_difficulty
+              ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}.${stepContext}`
+              : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
+            setMessages([{ role: "assistant", content: resumeMsg }]);
+            setSetupDone(true);
+          }
         } else {
           setShowCheckin(true);
         }
