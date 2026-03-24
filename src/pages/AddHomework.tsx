@@ -19,6 +19,7 @@ interface ExtractedTask {
   difficulty: number;
   selected: boolean;
   task_types: string[];
+  customNote: string;
 }
 
 interface UploadedFile {
@@ -122,6 +123,7 @@ const AddHomework = () => {
             difficulty: t.difficulty || 1,
             selected: true,
             task_types: Array.isArray(t.task_types) ? t.task_types : [t.task_type || "exercise"],
+            customNote: "",
           }))
         );
         setMode("task-type");
@@ -190,7 +192,8 @@ const AddHomework = () => {
     try {
       for (const task of selected) {
         await createTask({
-          subject: task.subject, title: task.title, description: task.description,
+          subject: task.subject, title: task.title,
+          description: [task.description, task.customNote].filter(Boolean).join("\n\nNota: "),
           estimated_minutes: task.estimatedMinutes, difficulty: task.difficulty,
           source_type: extractedSourceType || "photo",
           source_image_url: uploadedImageUrls[0] || undefined,
@@ -435,6 +438,13 @@ const AddHomework = () => {
                           );
                         })}
                       </div>
+                      <input
+                        type="text"
+                        value={task.customNote}
+                        onChange={(e) => updateTask(task.id, { customNote: e.target.value })}
+                        placeholder="Altro? Scrivi qui (es. 'Solo esercizi 3 e 5')..."
+                        className="w-full mt-2 text-sm px-3 py-2 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
                     </div>
                   </motion.div>
                 ))}
