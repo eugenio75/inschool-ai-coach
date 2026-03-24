@@ -35,7 +35,7 @@ const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const CredentialVerify = lazy(() => import("./pages/CredentialVerify"));
 const LandingStudenti = lazy(() => import("./pages/LandingStudenti"));
 const LandingDocenti = lazy(() => import("./pages/LandingDocenti"));
-const GuidedSession = lazy(() => import("./pages/GuidedSession"));
+
 const PrepSession = lazy(() => import("./pages/PrepSession"));
 const ClassView = lazy(() => import("./pages/ClassView"));
 const StudentView = lazy(() => import("./pages/StudentView"));
