@@ -1,97 +1,19 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Plus, Loader2, LogOut, Play, Brain, FolderOpen } from "lucide-react";
-import { CoachPresence } from "@/components/CoachPresence";
+import { BookOpen, Plus, Loader2, LogOut, Brain, FolderOpen } from "lucide-react";
 import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { Button } from "@/components/ui/button";
 import { TaskCard } from "@/components/TaskCard";
 import { GamificationKPI } from "@/components/GamificationBar";
 import { DailyMissions } from "@/components/GamificationBar";
-import { QuickHelpModal } from "@/components/QuickHelp";
 import { SessionEntryCards } from "@/components/SessionEntryCards";
 import { shouldShowCheckin } from "@/pages/EmotionalCheckin";
-import { getTasks, getActiveChildProfileId, getChildProfile, getMemoryItems, deleteTask } from "@/lib/database";
+import { getTasks, getActiveChildProfileId, getChildProfile, deleteTask } from "@/lib/database";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
-import { supabase } from "@/integrations/supabase/client";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
-/** Score each pending task and return the best one with a reason */
-function pickSmartTask(
-  pendingTasks: any[],
-  memoryItems: any[]
-): { task: any; reason: string } {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Build a map: subject → average memory strength
-  const subjectStrength: Record<string, { total: number; count: number }> = {};
-  for (const m of memoryItems) {
-    const s = m.subject?.toLowerCase();
-    if (!s) continue;
-    if (!subjectStrength[s]) subjectStrength[s] = { total: 0, count: 0 };
-    subjectStrength[s].total += m.strength ?? 50;
-    subjectStrength[s].count += 1;
-  }
-  const avgStrength = (subject: string): number | null => {
-    const entry = subjectStrength[subject?.toLowerCase()];
-    if (!entry || entry.count === 0) return null;
-    return entry.total / entry.count;
-  };
-
-  let bestTask = pendingTasks[0];
-  let bestScore = -Infinity;
-  let bestReason = "";
-
-  for (const task of pendingTasks) {
-    let score = 0;
-    let reason = "";
-
-    // 1. Due date urgency (highest priority)
-    if (task.due_date) {
-      const due = new Date(task.due_date);
-      due.setHours(0, 0, 0, 0);
-      const daysUntil = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysUntil <= 0) {
-        score += 100;
-        reason = "Questo compito scade oggi!";
-      } else if (daysUntil === 1) {
-        score += 80;
-        reason = "Questo compito scade domani";
-      } else if (daysUntil <= 3) {
-        score += 50;
-        reason = `Scade tra ${daysUntil} giorni`;
-      }
-    }
-
-    // 2. Weak memory in this subject
-    const strength = avgStrength(task.subject);
-    if (strength !== null && strength < 40) {
-      score += 60;
-      if (!reason) reason = `Hai bisogno di rinforzare ${task.subject} — la tua memoria è al ${Math.round(strength)}%`;
-      else reason += ` e hai bisogno di rinforzare ${task.subject}`;
-    } else if (strength !== null && strength < 60) {
-      score += 30;
-      if (!reason) reason = `${task.subject} ha bisogno di un po' di pratica — memoria al ${Math.round(strength)}%`;
-    }
-
-    // 3. Fallback: prefer easier tasks slightly (lower friction to start)
-    score += Math.max(0, 3 - (task.difficulty || 1)) * 5;
-
-    if (!reason) {
-      reason = "Un buon punto di partenza per oggi";
-    }
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestTask = task;
-      bestReason = reason;
-    }
-  }
-
-  return { task: bestTask, reason: bestReason };
-}
 
 const DashboardAlunno = () => {
   const navigate = useNavigate();
