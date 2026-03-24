@@ -347,6 +347,105 @@ serve(async (req) => {
         break;
       }
 
+      case "get-paused-session": {
+        const { data } = await supabase
+          .from("guided_sessions")
+          .select("*")
+          .eq("homework_id", payload.homeworkId)
+          .eq("user_id", childProfileId)
+          .eq("status", "paused")
+          .order("updated_at", { ascending: false })
+          .limit(1);
+        if (data && data.length > 0) {
+          const sess = data[0];
+          const { data: savedSteps } = await supabase
+            .from("study_steps")
+            .select("*")
+            .eq("session_id", sess.id)
+            .order("step_number", { ascending: true });
+          result = { session: sess, steps: savedSteps || [] };
+        } else {
+          result = { session: null, steps: [] };
+        }
+        break;
+      }
+
+      case "create-session": {
+        const { data, error } = await supabase
+          .from("guided_sessions")
+          .insert({
+            user_id: childProfileId,
+            homework_id: payload.homeworkId,
+            status: "active",
+            current_step: 1,
+            total_steps: payload.totalSteps,
+            emotional_checkin: payload.emotion,
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        result = data;
+        break;
+      }
+
+      case "insert-steps": {
+        const { error } = await supabase.from("study_steps").insert(payload.steps);
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
+      case "update-session": {
+        const { error } = await supabase
+          .from("guided_sessions")
+          .update(payload.updates)
+          .eq("id", payload.sessionId)
+          .eq("user_id", childProfileId);
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
+      case "update-step": {
+        const { error } = await supabase
+          .from("study_steps")
+          .update(payload.updates)
+          .eq("session_id", payload.sessionId)
+          .eq("step_number", payload.stepNumber);
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
+      case "insert-learning-error": {
+        const { error } = await supabase.from("learning_errors").insert({
+          user_id: childProfileId,
+          subject: payload.subject,
+          topic: payload.topic,
+          error_type: payload.errorType || "incomprensione",
+          session_id: payload.sessionId,
+        });
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
+      case "complete-session": {
+        await supabase.from("guided_sessions").update({
+          status: "completed",
+          completed_at: new Date().toISOString(),
+        }).eq("id", payload.sessionId).eq("user_id", childProfileId);
+
+        if (payload.homeworkId) {
+          await supabase.from("homework_tasks").update({
+            completed: true,
+            updated_at: new Date().toISOString(),
+          }).eq("id", payload.homeworkId).eq("child_profile_id", childProfileId);
+        }
+        result = { success: true };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Azione non supportata" }), {
           status: 400,
