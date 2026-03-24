@@ -370,6 +370,8 @@ Inizia con la prima domanda.`;
           showExplain={true}
           showVoice={true}
           showAttach={true}
+          showPomodoro={true}
+          pomodoroMinutes={profile?.focus_time || 25}
           inputPlaceholder="Scrivi la tua risposta..."
         />
 
