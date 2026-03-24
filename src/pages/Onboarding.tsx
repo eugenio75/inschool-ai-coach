@@ -303,9 +303,11 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         case 6:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">Personalizza il tuo coach</h2>
-                <p className="text-muted-foreground text-sm">Scegli un avatar e un nome per il tuo assistente AI</p>
-                <CoachAvatarPicker selected={answers.coach_avatar || null} onSelect={(id) => setAnswers({...answers, coach_avatar: id})} />
+                <h2 className="text-2xl font-bold text-foreground">Dai un nome al tuo coach</h2>
+                <p className="text-muted-foreground text-sm">Il tuo assistente AI ti accompagnerà ogni giorno nello studio</p>
+                <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
+                  <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
+                </div>
                 <input
                   type="text"
                   placeholder="Es. Coach, Maestro, Aria, Leo..."
