@@ -185,7 +185,7 @@ const HomeworkDetail = () => {
           {task.completed ? (
             <>
               <Button onClick={() => navigate("/memory")} variant="outline" className="flex-1 rounded-2xl py-5 text-base border-border">
-                <Brain className="w-4 h-4 mr-2" /> Memoria e Ripasso
+                <Brain className="w-4 h-4 mr-2" /> Ripassa e Rafforza
               </Button>
               <Button onClick={() => navigate(`/focus/${task.id}`)} variant="outline" className="flex-1 rounded-2xl py-5 text-base border-border">
                 <Play className="w-4 h-4 mr-2" /> Ripeti sessione

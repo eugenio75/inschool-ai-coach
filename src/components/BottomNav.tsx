@@ -26,7 +26,7 @@ export const BottomNav = () => {
     { path: "/dashboard", label: "Home", icon: Home },
     { path: "/add-homework", label: "Aggiungi", icon: Plus, isAdd: true },
     { path: "/libreria", label: "Libreria", icon: FolderOpen },
-    { path: "/memory", label: "Memoria", icon: Brain },
+    { path: "/memory", label: "Ripassa", icon: Brain },
     ...(isParentView ? [{ path: "/profiles", label: "Profilo", icon: User }] : []),
   ];
 
