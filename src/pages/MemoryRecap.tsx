@@ -338,6 +338,7 @@ const MemoryRecap = () => {
   const [items, setItems] = useState<any[]>([]);
   const [flashcards, setFlashcards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<Section>("ripasso");
   const [wizard, setWizard] = useState<WizardState>({
     step: "home", section: null, contentType: null, subject: null, specificTopic: null, method: null,
   });
