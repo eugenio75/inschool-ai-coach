@@ -366,7 +366,32 @@ const AddHomework = () => {
 
                     <div>
                       <label className="text-sm font-medium text-foreground mb-2 block">Cosa devi fare? (opzionale)</label>
-                      <textarea value={photoNote} onChange={(e) => setPhotoNote(e.target.value)} placeholder="Es: Esercizio 3 e 4 a pagina 52, solo le domande vero/falso..." rows={2}
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {[
+                          { value: "Studiare le pagine", emoji: "📖" },
+                          { value: "Fare gli esercizi", emoji: "✏️" },
+                          { value: "Rispondere alle domande", emoji: "❓" },
+                          { value: "Riassumere", emoji: "📝" },
+                          { value: "Memorizzare", emoji: "🧠" },
+                        ].map((opt) => {
+                          const isSelected = photoNote === opt.value;
+                          return (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => setPhotoNote(isSelected ? "" : opt.value)}
+                              className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                                isSelected
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-muted text-muted-foreground hover:bg-accent"
+                              }`}
+                            >
+                              {opt.emoji} {opt.value}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <textarea value={photoNote} onChange={(e) => setPhotoNote(e.target.value)} placeholder="Oppure scrivi qualcosa di specifico..." rows={2}
                         className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none text-sm" />
                     </div>
                     <div className="bg-muted/50 rounded-2xl px-4 py-3"><DatePickerRow /></div>
