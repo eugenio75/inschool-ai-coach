@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatMsg } from "@/lib/streamChat";
+import { PomodoroTimer } from "@/components/PomodoroTimer";
 
 interface ChatShellProps {
   title: string;
@@ -23,6 +24,8 @@ interface ChatShellProps {
   showExplain?: boolean;
   showVoice?: boolean;
   showAttach?: boolean;
+  showPomodoro?: boolean;
+  pomodoroMinutes?: number;
   extraFooter?: React.ReactNode;
   inputPlaceholder?: string;
 }
@@ -34,6 +37,7 @@ export function ChatShell({
   progress, progressLabel,
   showHint = true, showStuck = true, showExplain = true,
   showVoice = true, showAttach = true,
+  showPomodoro = false, pomodoroMinutes = 25,
   extraFooter, inputPlaceholder = "Scrivi la tua risposta...",
 }: ChatShellProps) {
   const [input, setInput] = useState("");
