@@ -187,31 +187,51 @@ const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
   const currentCard = cards[currentIndex];
 
   const handleRate = async (rating: "wrong" | "almost" | "correct") => {
-    if (!currentCard || !user) return;
+    if (!currentCard) return;
+
     setCoachIntervention(null);
-    const updates: any = { times_shown: (currentCard.times_shown || 0) + 1, last_shown_at: new Date().toISOString() };
+
+    const updates: any = {
+      times_shown: (currentCard.times_shown || 0) + 1,
+      last_shown_at: new Date().toISOString(),
+    };
+
     if (rating === "correct") {
       updates.times_correct = (currentCard.times_correct || 0) + 1;
       const streak = (currentCard.times_correct || 0) + 1;
       updates.next_review_at = new Date(Date.now() + Math.min(streak * 2, 30) * 86400000).toISOString();
       updates.is_flagged = false;
-      setSessionStats(s => ({ ...s, correct: s.correct + 1 }));
+      setSessionStats((s) => ({ ...s, correct: s.correct + 1 }));
     } else if (rating === "wrong") {
       const newWrong = (currentCard.times_wrong || 0) + 1;
       updates.times_wrong = newWrong;
       updates.next_review_at = new Date(Date.now() + 3600000).toISOString();
       updates.is_flagged = newWrong >= 3;
-      setSessionStats(s => ({ ...s, wrong: s.wrong + 1 }));
+      setSessionStats((s) => ({ ...s, wrong: s.wrong + 1 }));
       if (newWrong >= 3) setCoachIntervention(currentCard.subject);
     } else {
       updates.next_review_at = new Date(Date.now() + 86400000).toISOString();
-      setSessionStats(s => ({ ...s, almost: s.almost + 1 }));
+      setSessionStats((s) => ({ ...s, almost: s.almost + 1 }));
     }
-    await supabase.from("flashcards").update(updates).eq("id", currentCard.id);
-    setCards(prev => prev.map(c => c.id === currentCard.id ? { ...c, ...updates } : c));
+
+    setCards((prev) => prev.map((c) => (c.id === currentCard.id ? { ...c, ...updates } : c)));
     setFlipped(false);
-    if (currentIndex < cards.length - 1) setTimeout(() => setCurrentIndex(i => i + 1), 200);
-    else setSessionDone(true);
+
+    const nextIndex = currentIndex + 1;
+    if (nextIndex < cards.length) {
+      setCurrentIndex(nextIndex);
+    } else {
+      setSessionDone(true);
+    }
+
+    const isGeneratedCard = String(currentCard.id).startsWith("gen-");
+    if (!user || isGeneratedCard) return;
+
+    try {
+      await supabase.from("flashcards").update(updates).eq("id", currentCard.id);
+    } catch (error) {
+      console.error("Flashcard update error:", error);
+    }
   };
 
   if (sessionDone) {
