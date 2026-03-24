@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { getTask as fetchTask } from "@/lib/database";
+import { getTask as fetchTask, getDailyMissions, completeMission } from "@/lib/database";
 import { isChildSession, childApi, getChildSession } from "@/lib/childSession";
 import { ChatMsg, ChatAction, streamChat } from "@/lib/streamChat";
 import { playCelebrationSound } from "@/lib/celebrationSound";
