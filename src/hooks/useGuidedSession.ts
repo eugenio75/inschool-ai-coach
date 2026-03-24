@@ -129,11 +129,19 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       }
 
       if (generatedSteps.length === 0) {
-        generatedSteps = [
-          { number: 1, text: "Cosa sai già su questo argomento? Descrivilo con parole tue.", bloomLevel: 1 },
-          { number: 2, text: "Quali sono le parti principali di questo compito?", bloomLevel: 2 },
-          { number: 3, text: "Prova a risolvere il primo punto — cosa noti?", bloomLevel: 3 },
-        ];
+        const isExercise = homework.task_type !== "study";
+        generatedSteps = isExercise
+          ? [
+              { number: 1, text: "Leggi bene il testo dell'esercizio: quali sono i dati che hai a disposizione e cosa ti viene chiesto di trovare?", bloomLevel: 1 },
+              { number: 2, text: "Quale formula, regola o procedimento pensi si possa applicare qui? Se non lo sai, chiedimi una mini-ripetizione.", bloomLevel: 2 },
+              { number: 3, text: "Prova ad impostare il primo passaggio della risoluzione. Cosa ottieni?", bloomLevel: 3 },
+              { number: 4, text: "Controlla il risultato: ha senso? Come puoi verificarlo?", bloomLevel: 4 },
+            ]
+          : [
+              { number: 1, text: "Qual è il concetto principale di questo argomento? Prova a spiegarlo.", bloomLevel: 1 },
+              { number: 2, text: "Quali sono le parti o i punti chiave da ricordare?", bloomLevel: 2 },
+              { number: 3, text: "Sapresti fare un esempio concreto di quello che hai studiato?", bloomLevel: 3 },
+            ];
       }
 
       setTotalSteps(generatedSteps.length);
@@ -225,12 +233,27 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
         ? `\n\nStep attuale (${currentStep}/${totalSteps}): ${currentStepData.text || currentStepData.step_text}`
         : "";
 
+      const isExercise = homework?.task_type !== "study";
+      const coachBehavior = isExercise
+        ? `Sei un tutor che guida lo studente a RISOLVERE un esercizio. Il tuo metodo:
+1. NON dare mai la soluzione diretta, ma guida il ragionamento passo-passo
+2. Se lo studente non sa come procedere, offri una MINI-RIPETIZIONE della regola/formula necessaria (breve, 2-3 frasi + esempio)
+3. Se lo studente sbaglia, spiega PERCHÉ è sbagliato e rilancia con un indizio (Bloom L1→L2→L3)
+4. Se lo studente è bloccato dopo 2 tentativi, dai un indizio più esplicito
+5. Quando risponde correttamente, conferma e passa allo step successivo
+6. Sii breve e diretto: 2-3 frasi + una domanda`
+        : `Sei un tutor che verifica la comprensione di un argomento di studio. Il tuo metodo:
+1. Fai domande specifiche e concrete sull'argomento (NON "raccontami tutto")
+2. Se lo studente non sa rispondere, dai una mini-spiegazione e riprova
+3. Segui la Tassonomia di Bloom: parti da domande fattuali (L1-L2) e sali verso analisi e sintesi (L3-L6)
+4. Sii breve: 2-3 frasi + una domanda`;
+
       const fullText = await streamChat({
         messages: newMessages,
         onDelta: (full) => setStreamingText(full),
         onDone: () => {},
         extraBody: {
-          systemPrompt: `Sei in una sessione di studio guidata. Compito: ${homework?.title}. Materia: ${homework?.subject}. Livello: ${schoolLevel}.${systemAddition}\n\nNon dare mai la risposta diretta. Guida lo studente con domande socratiche. Se risponde bene, scrivi [STEP_COMPLETATO: ${currentStep}]. Se tutti gli step sono fatti, scrivi [SESSIONE_COMPLETATA].`,
+          systemPrompt: `${coachBehavior}\n\nCompito: ${homework?.title}. Materia: ${homework?.subject}. Livello: ${schoolLevel}.${systemAddition}\n\nSe lo studente completa lo step correttamente, scrivi [STEP_COMPLETATO: ${currentStep}]. Se tutti gli step sono completati, scrivi [SESSIONE_COMPLETATA]. Se lo studente mostra una difficoltà specifica, scrivi [SEGNALA_DIFFICOLTÀ: descrizione].`,
         },
       });
 
