@@ -18,7 +18,7 @@ interface ExtractedTask {
   estimatedMinutes: number;
   difficulty: number;
   selected: boolean;
-  task_type: string;
+  task_types: string[];
 }
 
 interface UploadedFile {
