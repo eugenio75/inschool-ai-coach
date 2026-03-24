@@ -72,28 +72,56 @@ export default function FlashcardSession() {
   async function loadCards() {
     setLoading(true);
     try {
-      let query = supabase
-        .from("flashcards")
-        .select("*")
-        .eq("user_id", userId!)
-        .order("next_review_at", { ascending: true, nullsFirst: true })
-        .limit(20);
+      const childSession = getChildSession();
+      const childMode = isChildSession();
 
-      if (subjectFilter) {
-        query = query.eq("subject", subjectFilter);
-      }
-
-      const { data } = await query;
-      if (data && data.length > 0) {
-        // Prioritize: flagged first, then by difficulty desc, then by times_wrong desc
-        const sorted = [...data].sort((a, b) => {
-          if (a.is_flagged && !b.is_flagged) return -1;
-          if (!a.is_flagged && b.is_flagged) return 1;
-          const wrongDiff = (b.times_wrong || 0) - (a.times_wrong || 0);
-          if (wrongDiff !== 0) return wrongDiff;
-          return (b.difficulty || 1) - (a.difficulty || 1);
+      if (childMode && childSession) {
+        // Use child-api to bypass RLS
+        const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/child-api`;
+        const res = await fetch(baseUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+          body: JSON.stringify({
+            action: "get-flashcards",
+            accessCode: childSession.accessCode,
+            childProfileId: childSession.profileId,
+            payload: { subject: subjectFilter || undefined },
+          }),
         });
-        setCards(sorted as Flashcard[]);
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const sorted = [...data].sort((a, b) => {
+            if (a.is_flagged && !b.is_flagged) return -1;
+            if (!a.is_flagged && b.is_flagged) return 1;
+            const wrongDiff = (b.times_wrong || 0) - (a.times_wrong || 0);
+            if (wrongDiff !== 0) return wrongDiff;
+            return (b.difficulty || 1) - (a.difficulty || 1);
+          });
+          setCards(sorted as Flashcard[]);
+        }
+      } else {
+        let query = supabase
+          .from("flashcards")
+          .select("*")
+          .eq("user_id", userId!)
+          .order("next_review_at", { ascending: true, nullsFirst: true })
+          .limit(20);
+
+        if (subjectFilter) {
+          query = query.eq("subject", subjectFilter);
+        }
+
+        const { data } = await query;
+        if (data && data.length > 0) {
+          const sorted = [...data].sort((a, b) => {
+            if (a.is_flagged && !b.is_flagged) return -1;
+            if (!a.is_flagged && b.is_flagged) return 1;
+            const wrongDiff = (b.times_wrong || 0) - (a.times_wrong || 0);
+            if (wrongDiff !== 0) return wrongDiff;
+            return (b.difficulty || 1) - (a.difficulty || 1);
+          });
+          setCards(sorted as Flashcard[]);
+        }
       }
     } catch (err) {
       console.error("loadCards error:", err);
