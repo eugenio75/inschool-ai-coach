@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, concept, summary, subject, studentProfile, strength } = await req.json();
+    const { messages, concept, summary, subject, studentProfile, strength, mode } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -21,7 +21,35 @@ serve(async (req) => {
 
     const studentName = studentProfile?.name || "Studente";
     const studentInterests = studentProfile?.interests || [];
-    const systemPrompt = `Sei il Coach AI di Inschool. Stai facendo un RIPASSO con ${studentName} su un concetto che ha già studiato.
+
+    let systemPrompt: string;
+
+    if (mode === "deep-summary") {
+      systemPrompt = `Sei il Coach AI di Inschool. Devi generare una SINTESI CHIARA E COMPLETA di un argomento studiato da ${studentName}.
+
+ARGOMENTO: ${concept}
+MATERIA: ${subject || "non specificata"}
+RIASSUNTO BREVE DI PARTENZA: ${summary || "non disponibile"}
+
+PROFILO STUDENTE:
+- Nome: ${studentName}
+- Età: ${studentProfile?.age || "non specificata"}
+- Livello scolastico: ${studentProfile?.school_level || "non specificato"}
+
+ISTRUZIONI:
+- Scrivi una sintesi completa ma accessibile dell'argomento
+- Usa un linguaggio adatto all'età e al livello dello studente
+- Organizza il contenuto in modo chiaro con punti chiave
+- Includi le definizioni importanti
+- Aggiungi 1-2 esempi pratici per rendere tutto più concreto
+- Se possibile, fai un breve collegamento con altri concetti correlati
+- La sintesi deve servire come ripasso veloce ma efficace
+- NON fare domande, questa è solo una sintesi da leggere
+- Scrivi in modo diretto e chiaro, come se stessi spiegando a ${studentName}
+- Usa emoji con moderazione per rendere il testo più leggibile
+- Lunghezza: 150-300 parole circa`;
+    } else {
+      systemPrompt = `Sei il Coach AI di Inschool. Stai facendo un RIPASSO con ${studentName} su un concetto che ha già studiato.
 Rivolgiti SEMPRE a ${studentName} usando il suo nome. Non parlare mai in terza persona ("lo studente ha imparato..."), ma dì "${studentName}, ricordi...?", "${studentName}, prova a spiegarmi...".
 
 CONCETTO: ${concept}
@@ -52,6 +80,11 @@ IMPORTANTE: Nell'ULTIMO messaggio (dopo 2-3 scambi), concludi con una riga speci
 [STRENGTH_UPDATE: XX]
 dove XX è il nuovo valore di forza (0-100) basato sulle risposte.
 Non mostrare questa riga, la userai internamente.`;
+    }
+
+    const aiMessages = mode === "deep-summary"
+      ? [{ role: "system", content: systemPrompt }, { role: "user", content: `Genera una sintesi completa e chiara dell'argomento "${concept}" in ${subject || "questa materia"}.` }]
+      : [{ role: "system", content: systemPrompt }, ...messages];
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -61,10 +94,7 @@ Non mostrare questa riga, la userai internamente.`;
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages,
-        ],
+        messages: aiMessages,
         stream: true,
       }),
     });
