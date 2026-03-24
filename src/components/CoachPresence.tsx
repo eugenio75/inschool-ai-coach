@@ -97,7 +97,6 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
   const [showMood, setShowMood] = useState(false);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const moodRef = useRef<HTMLDivElement>(null);
-  const [coachAvatar, setCoachAvatar] = useState<string | null>(null);
   const [coachName, setCoachName] = useState<string | null>(null);
   const [ctx, setCtx] = useState<CoachContext>({
     streak: 0, pendingHomework: [], teacherAssignments: [],
@@ -127,7 +126,6 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
       if (!profileId) return;
       const { data } = await supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
       const prefs = (data?.data as any) || {};
-      if (prefs.coach_avatar) setCoachAvatar(prefs.coach_avatar);
       if (prefs.coach_name) setCoachName(prefs.coach_name);
     };
     loadCoachPrefs();
@@ -286,7 +284,7 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border rounded-2xl p-4 sm:p-5">
       <div className="flex items-start gap-3 mb-3">
         <div className="w-9 h-9 rounded-full flex-shrink-0 mt-0.5 overflow-hidden bg-primary/10">
-          <img src={getCoachAvatarSrc(coachAvatar)} alt={coachName || "Coach"} className="w-full h-full object-cover" width={36} height={36} />
+          <img src={coachAvatarSrc} alt={coachName || "Coach"} className="w-full h-full object-cover" width={36} height={36} />
         </div>
         <div className="flex-1 min-w-0">
           {coachName && !loading && (
