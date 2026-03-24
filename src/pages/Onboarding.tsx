@@ -458,9 +458,11 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             case 6:
               return (
                 <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Personalizza il tuo coach</h2>
-                    <p className="text-muted-foreground text-sm">Scegli un avatar e un nome per il tuo assistente AI</p>
-                    <CoachAvatarPicker selected={answers.coach_avatar || null} onSelect={(id) => setAnswers({...answers, coach_avatar: id})} />
+                    <h2 className="text-2xl font-bold text-foreground">Dai un nome al tuo coach</h2>
+                    <p className="text-muted-foreground text-sm">Il tuo assistente AI personale per lo studio</p>
+                    <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
+                      <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
+                    </div>
                     <input type="text" placeholder="Es. Coach, Aria, Leo..." value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
                 </div>
               );
@@ -616,9 +618,11 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             case 6:
               return (
                 <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Personalizza il tuo assistente AI</h2>
-                    <p className="text-muted-foreground text-sm">Scegli un avatar e un nome per il tuo coach</p>
-                    <CoachAvatarPicker selected={answers.coach_avatar || null} onSelect={(id) => setAnswers({...answers, coach_avatar: id})} />
+                    <h2 className="text-2xl font-bold text-foreground">Dai un nome al tuo assistente AI</h2>
+                    <p className="text-muted-foreground text-sm">Personalizza il nome del coach che ti aiuterà</p>
+                    <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
+                      <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
+                    </div>
                     <input type="text" placeholder="Es. Assistente, Aria, Coach..." value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
                 </div>
               );
