@@ -579,7 +579,45 @@ const MemoryRecap = () => {
     setWizard(w => ({ ...w, step: "study", method }));
   };
 
-  // Header
+  // Start study for a specific exercise group
+  const startGroupStudy = async (subject: string, concepts: any[], method: StudyMethod) => {
+    if (method === "flashcard") {
+      setGeneratingFlashcards(true);
+      try {
+        const conceptTexts = concepts.map(c => `${c.concept}: ${c.summary || ""}`).join("\n");
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-flashcards`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+            body: JSON.stringify({ subject, concepts: conceptTexts, count: Math.max(concepts.length * 2, 4) }),
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          const generatedCards = (data.flashcards || data.cards || []).map((c: any, i: number) => ({
+            id: `gen-${Date.now()}-${i}`,
+            subject,
+            question: c.question || c.front || "",
+            answer: c.answer || c.back || "",
+            times_shown: 0, times_correct: 0, times_wrong: 0,
+          }));
+          if (generatedCards.length > 0) {
+            setActiveGroupStudy({ subject, concepts, method: "flashcard" });
+            setFlashcards(prev => [...generatedCards, ...prev]);
+          }
+        }
+      } catch (e) {
+        console.error("Error generating flashcards:", e);
+      } finally {
+        setGeneratingFlashcards(false);
+      }
+    } else {
+      setActiveGroupStudy({ subject, concepts, method: "coach" });
+    }
+  };
+
+
   const getSubtitle = (): string => {
     if (wizard.step === "home") return "Scegli cosa vuoi ripassare e fallo nel modo più adatto a te.";
     if (wizard.step === "subject-pick") {
