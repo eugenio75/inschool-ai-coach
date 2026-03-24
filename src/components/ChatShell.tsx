@@ -6,6 +6,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChatMsg } from "@/lib/streamChat";
 import { PomodoroTimer } from "@/components/PomodoroTimer";
+import { getCoachMoodSrc, detectMoodFromText, type CoachMood } from "@/components/shared/CoachAvatarPicker";
 
 interface ChatShellProps {
   title: string;
