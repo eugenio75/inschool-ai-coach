@@ -18,7 +18,7 @@ interface ExtractedTask {
   estimatedMinutes: number;
   difficulty: number;
   selected: boolean;
-  task_type: string;
+  task_types: string[];
 }
 
 interface UploadedFile {
@@ -61,6 +61,10 @@ function formatDueDate(dateStr: string): string {
 
 function getTaskTypeLabel(value: string): string {
   return TASK_TYPE_OPTIONS.find(o => o.value === value)?.label || value;
+}
+
+function getTaskTypesLabel(values: string[]): string {
+  return values.map(v => getTaskTypeLabel(v)).join(", ");
 }
 
 const AddHomework = () => {
@@ -117,7 +121,7 @@ const AddHomework = () => {
             estimatedMinutes: t.estimatedMinutes || 15,
             difficulty: t.difficulty || 1,
             selected: true,
-            task_type: t.task_type || "exercise",
+            task_types: [t.task_type || "exercise"],
           }))
         );
         setMode("task-type");
@@ -191,7 +195,7 @@ const AddHomework = () => {
           source_type: extractedSourceType || "photo",
           source_image_url: uploadedImageUrls[0] || undefined,
           source_files: uploadedImageUrls.length > 0 ? uploadedImageUrls : undefined,
-          due_date: dueDate, task_type: task.task_type,
+          due_date: dueDate, task_type: task.task_types.join(", "),
         });
       }
       toast({ title: `${selected.length} compiti aggiunti!` });
@@ -410,57 +414,27 @@ const AddHomework = () => {
                     </div>
 
                     <div className="bg-muted/50 rounded-xl p-3">
-                      <p className="text-xs text-muted-foreground mb-2">L'AI suggerisce:</p>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-medium text-foreground bg-primary/10 px-3 py-1 rounded-lg">{getTaskTypeLabel(task.task_type)}</span>
-                      </div>
-
-                      {!showFullTypeList[task.id] ? (
-                        <div className="flex flex-wrap gap-2">
-                          <button onClick={() => {/* keep as is */}}
-                            className="text-xs font-medium px-3 py-1.5 rounded-lg bg-primary text-primary-foreground">
-                            ✓ Va bene così
-                          </button>
-                          <button onClick={() => setShowFullTypeList(prev => ({ ...prev, [task.id]: true }))}
-                            className="text-xs font-medium px-3 py-1.5 rounded-lg border border-border text-foreground hover:bg-accent transition-colors">
-                            Cambialo
-                          </button>
-                          <button onClick={() => {/* AI decides = keep */}}
-                            className="text-xs font-medium px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:bg-accent transition-colors">
-                            Non so, decidi tu
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="space-y-1.5 mt-1">
-                          {TASK_TYPE_OPTIONS.map(opt => (
+                      <p className="text-xs text-muted-foreground mb-2">Cosa devi fare? (seleziona anche più di uno)</p>
+                      <div className="flex flex-wrap gap-2">
+                        {TASK_TYPE_OPTIONS.filter(o => o.value !== "custom").map(opt => {
+                          const isSelected = task.task_types.includes(opt.value);
+                          return (
                             <button key={opt.value} onClick={() => {
-                              if (opt.value === "custom") return;
-                              updateTask(task.id, { task_type: opt.value });
-                              setShowFullTypeList(prev => ({ ...prev, [task.id]: false }));
+                              const newTypes = isSelected
+                                ? task.task_types.filter(t => t !== opt.value)
+                                : [...task.task_types, opt.value];
+                              updateTask(task.id, { task_types: newTypes.length > 0 ? newTypes : [opt.value] });
                             }}
-                              className={`w-full text-left text-sm px-3 py-2 rounded-lg transition-colors ${
-                                task.task_type === opt.value ? "bg-primary text-primary-foreground" : "bg-card hover:bg-accent text-foreground border border-border"
+                              className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-all ${
+                                isSelected ? "bg-primary text-primary-foreground" : "bg-card border border-border text-foreground hover:bg-accent"
                               }`}
                             >
+                              {isSelected && <Check className="w-3 h-3 inline mr-1" />}
                               {opt.label}
                             </button>
-                          ))}
-                          <div className="flex gap-2 mt-1">
-                            <input type="text" value={customTypeText[task.id] || ""} onChange={(e) => setCustomTypeText(prev => ({ ...prev, [task.id]: e.target.value }))}
-                              placeholder="Scrivi tu stesso..."
-                              className="flex-1 text-sm px-3 py-2 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" />
-                            <button onClick={() => {
-                              const text = customTypeText[task.id]?.trim();
-                              if (text) {
-                                updateTask(task.id, { task_type: "custom", title: text });
-                                setShowFullTypeList(prev => ({ ...prev, [task.id]: false }));
-                              }
-                            }} disabled={!customTypeText[task.id]?.trim()} className="text-xs font-medium px-3 py-2 rounded-lg bg-primary text-primary-foreground disabled:opacity-40">
-                              OK
-                            </button>
-                          </div>
-                        </div>
-                      )}
+                          );
+                        })}
+                      </div>
                     </div>
                   </motion.div>
                 ))}
@@ -488,7 +462,7 @@ const AddHomework = () => {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-bold text-primary uppercase tracking-wider bg-primary/10 px-2 py-0.5 rounded-full">
-                          {getTaskTypeLabel(task.task_type)}
+                          {getTaskTypesLabel(task.task_types)}
                         </span>
                         <span className="text-xs text-muted-foreground">~{task.estimatedMinutes} min</span>
                       </div>
