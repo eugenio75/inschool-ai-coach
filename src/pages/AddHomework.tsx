@@ -19,6 +19,7 @@ interface ExtractedTask {
   difficulty: number;
   selected: boolean;
   task_types: string[];
+  customNote: string;
 }
 
 interface UploadedFile {
