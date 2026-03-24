@@ -1,12 +1,15 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { Pause, Play, Coffee, RotateCcw } from "lucide-react";
+import { playPomodoroSound } from "@/lib/pomodoroSound";
 
 interface PomodoroTimerProps {
   focusMinutes?: number;
   breakMinutes?: number;
   maxCycles?: number;
   compact?: boolean;
+  /** Number of user messages — timer auto-starts when this reaches 1 */
+  userMessageCount?: number;
 }
 
 export function PomodoroTimer({
@@ -14,9 +17,11 @@ export function PomodoroTimer({
   breakMinutes = 5,
   maxCycles = 3,
   compact = false,
+  userMessageCount = 0,
 }: PomodoroTimerProps) {
   const [seconds, setSeconds] = useState(focusMinutes * 60);
   const [isRunning, setIsRunning] = useState(false);
+  const hasAutoStarted = useRef(false);
   const [phase, setPhase] = useState<"focus" | "break">("focus");
   const [cycle, setCycle] = useState(1);
   const [breakSeconds, setBreakSeconds] = useState(breakMinutes * 60);
