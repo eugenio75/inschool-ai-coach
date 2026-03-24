@@ -156,7 +156,11 @@ Inizia con la prima domanda.`;
 
   // ─── Non-guided session start ───
   function startSession() {
-    if (!topic.trim() && type !== "prep") return;
+    if (!topic.trim() && type !== "prep" && type !== "review") return;
+    if (!topic.trim() && type === "review" && subject) {
+      // Auto-fill topic for review with subject
+      setTopic(`Ripasso ${subject}`);
+    }
     if (!subject && type === "prep") return;
 
     const systemPrompt = getSystemPrompt();
