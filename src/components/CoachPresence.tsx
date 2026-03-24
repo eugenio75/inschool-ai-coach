@@ -97,6 +97,8 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
   const [showMood, setShowMood] = useState(false);
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const moodRef = useRef<HTMLDivElement>(null);
+  const [coachAvatar, setCoachAvatar] = useState<string | null>(null);
+  const [coachName, setCoachName] = useState<string | null>(null);
   const [ctx, setCtx] = useState<CoachContext>({
     streak: 0, pendingHomework: [], teacherAssignments: [],
     urgentCount: 0, recentEmotions: [], recentErrors: [], recentSessions: [],
@@ -119,6 +121,16 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
 
   useEffect(() => {
     fetchCoachMessage();
+    // Load coach preferences
+    const loadCoachPrefs = async () => {
+      const profileId = getChildSession()?.profileId || profile?.id;
+      if (!profileId) return;
+      const { data } = await supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
+      const prefs = (data?.data as any) || {};
+      if (prefs.coach_avatar) setCoachAvatar(prefs.coach_avatar);
+      if (prefs.coach_name) setCoachName(prefs.coach_name);
+    };
+    loadCoachPrefs();
   }, []);
 
   async function fetchCoachMessage() {
