@@ -1,12 +1,15 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { Pause, Play, Coffee, RotateCcw } from "lucide-react";
+import { playPomodoroSound } from "@/lib/pomodoroSound";
 
 interface PomodoroTimerProps {
   focusMinutes?: number;
   breakMinutes?: number;
   maxCycles?: number;
   compact?: boolean;
+  /** Number of user messages — timer auto-starts when this reaches 1 */
+  userMessageCount?: number;
 }
 
 export function PomodoroTimer({
@@ -14,14 +17,24 @@ export function PomodoroTimer({
   breakMinutes = 5,
   maxCycles = 3,
   compact = false,
+  userMessageCount = 0,
 }: PomodoroTimerProps) {
   const [seconds, setSeconds] = useState(focusMinutes * 60);
   const [isRunning, setIsRunning] = useState(false);
+  const hasAutoStarted = useRef(false);
   const [phase, setPhase] = useState<"focus" | "break">("focus");
   const [cycle, setCycle] = useState(1);
   const [breakSeconds, setBreakSeconds] = useState(breakMinutes * 60);
 
   const totalFocusSeconds = focusMinutes * 60;
+
+  // Auto-start after first user message
+  useEffect(() => {
+    if (userMessageCount >= 1 && !hasAutoStarted.current && !isRunning && phase === "focus" && seconds === totalFocusSeconds) {
+      hasAutoStarted.current = true;
+      setIsRunning(true);
+    }
+  }, [userMessageCount, isRunning, phase, seconds, totalFocusSeconds]);
 
   // Focus countdown
   useEffect(() => {
@@ -30,12 +43,12 @@ export function PomodoroTimer({
     return () => clearInterval(id);
   }, [isRunning, phase, seconds]);
 
-  // Focus ended → break
+  // Focus ended → break (with sound)
   useEffect(() => {
     if (phase === "focus" && seconds <= 0 && isRunning) {
       setIsRunning(false);
+      playPomodoroSound("break");
       if (cycle >= maxCycles) {
-        // Done — just stop
         return;
       }
       setPhase("break");
@@ -50,9 +63,10 @@ export function PomodoroTimer({
     return () => clearInterval(id);
   }, [phase, breakSeconds]);
 
-  // Break ended → next focus
+  // Break ended → next focus (with sound)
   useEffect(() => {
     if (phase === "break" && breakSeconds <= 0) {
+      playPomodoroSound("focus");
       setCycle(c => c + 1);
       setSeconds(totalFocusSeconds);
       setPhase("focus");

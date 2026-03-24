@@ -98,7 +98,7 @@ export function ChatShell({
           <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">{badgeText}</span>
         )}
         {showPomodoro && (
-          <PomodoroTimer compact focusMinutes={pomodoroMinutes} />
+          <PomodoroTimer compact focusMinutes={pomodoroMinutes} userMessageCount={messages.filter(m => m.role === "user").length} />
         )}
       </div>
 
