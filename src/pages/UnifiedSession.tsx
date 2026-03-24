@@ -371,7 +371,39 @@ Inizia con la prima domanda.`;
           <h1 className="font-display text-lg font-bold text-foreground">{getTitle()}</h1>
         </div>
         <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
-          {type !== "prep" && type !== "review" && (
+          {type === "review" ? (
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">Scegli cosa ripassare</label>
+              <div className="grid grid-cols-1 gap-2">
+                {[
+                  { label: "Ripassa quello di oggi", desc: "Carte generate dalle sessioni di studio odierne", icon: CalendarDays },
+                  { label: "Ripasso cumulativo", desc: "Tutte le carte ordinate per priorità SRS", icon: Brain },
+                  { label: "Genera su un argomento", desc: "Scegli un tema e l'AI crea carte mirate", icon: Sparkles },
+                  { label: getPrepLabel(schoolLevel), desc: "Simulazione calibrata sui tuoi punti deboli", icon: GraduationCap },
+                ].map((opt) => (
+                  <button
+                    key={opt.label}
+                    onClick={() => setTopic(opt.label)}
+                    className={`flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all ${
+                      topic === opt.label
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                        : "border-border bg-card hover:border-primary/40"
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      topic === opt.label ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                    }`}>
+                      <opt.icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{opt.label}</p>
+                      <p className="text-xs text-muted-foreground">{opt.desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : type !== "prep" && (
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">Cosa vuoi studiare?</label>
               <Input
