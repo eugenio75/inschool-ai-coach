@@ -35,11 +35,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     if (!homeworkId) { setLoading(false); return; }
     setLoading(true);
     try {
-      const { data: hw } = await supabase
-        .from("homework_tasks")
-        .select("*")
-        .eq("id", homeworkId)
-        .single();
+      const hw = await fetchTask(homeworkId);
       if (!hw) { navigate("/dashboard"); return; }
       setHomework(hw);
 
