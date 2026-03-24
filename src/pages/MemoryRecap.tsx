@@ -584,13 +584,13 @@ const MemoryRecap = () => {
     if (method === "flashcard") {
       setGeneratingFlashcards(true);
       try {
-        const conceptTexts = concepts.map(c => `${c.concept}: ${c.summary || ""}`).join("\n");
+        const conceptTexts = concepts.map(c => `Concetto: ${c.concept}\nRiassunto: ${c.summary || "N/A"}`).join("\n\n");
         const response = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-flashcards`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-            body: JSON.stringify({ subject, concepts: conceptTexts, count: Math.max(concepts.length * 2, 4) }),
+            body: JSON.stringify({ subject, conversationHistory: conceptTexts }),
           }
         );
         if (response.ok) {
