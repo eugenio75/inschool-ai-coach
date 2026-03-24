@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import {
   BookOpen,
   FileText,
@@ -99,12 +100,35 @@ export default function UnifiedSession() {
   const [topic, setTopic] = useState(urlSubject ? `Ripasso ${urlSubject}` : "");
   const [subject, setSubject] = useState(urlSubject || "");
   const [mode, setMode] = useState<"scritta" | "orale">("scritta");
+  const [learningGaps, setLearningGaps] = useState<string[]>([]);
   const [reviewMode, setReviewMode] = useState<"chat" | "flashcard">("chat");
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [streamingText, setStreamingText] = useState("");
   const [sending, setSending] = useState(false);
   const [showPauseDialog, setShowPauseDialog] = useState(false);
   const [guidedCustomEmotion, setGuidedCustomEmotion] = useState("");
+
+  // Fetch learning gaps for prep mode
+  useEffect(() => {
+    if (type !== "prep" || !userId) return;
+    const fetchGaps = async () => {
+      const query = supabase
+        .from("learning_errors")
+        .select("subject, topic, description, error_type")
+        .eq("user_id", userId)
+        .eq("resolved", false)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (subject) query.eq("subject", subject);
+      const { data } = await query;
+      if (data && data.length > 0) {
+        setLearningGaps(data.map(e => `[${e.subject}] ${e.topic || ""}: ${e.description || e.error_type || ""}`).filter(Boolean));
+      } else {
+        setLearningGaps([]);
+      }
+    };
+    fetchGaps();
+  }, [type, subject, userId]);
 
   useEffect(() => {
     if (urlSubject && type === "review" && !setupDone && !sending) {
@@ -172,14 +196,21 @@ REGOLE:
 - Dopo 3-4 scambi: riassumi i punti forti e deboli emersi
 - Sii socratico e incoraggiante
 Inizia con la prima domanda sull'argomento.`;
-      case "prep":
+      case "prep": {
+        const gapsBlock = learningGaps.length > 0
+          ? `\nLACUNE RILEVATE dallo storico dello studente:\n${learningGaps.map(g => `- ${g}`).join("\n")}\nUsa queste lacune per calibrare le domande: insisti sui punti deboli per verificarne il recupero.`
+          : "";
+        const topicBlock = topic.trim()
+          ? `ARGOMENTO SPECIFICO: ${topic.trim()}\nLe domande DEVONO essere focalizzate su questo argomento, tenendo conto delle lacune da colmare.`
+          : `Nessun argomento specifico indicato. Fai domande sugli argomenti della materia dove lo studente ha più lacune.${!gapsBlock ? " Copri i concetti fondamentali della materia." : ""}`;
         return `Sei il Coach AI di ${studentName}. Stai conducendo una SIMULAZIONE DI ${mode === "orale" ? "INTERROGAZIONE ORALE" : "VERIFICA SCRITTA"}.
 MATERIA: ${subject}
-${topic.trim() ? `ARGOMENTO SPECIFICO: ${topic.trim()}\nLe domande DEVONO essere focalizzate su questo argomento specifico, non sulla materia in generale.` : ""}
+${topicBlock}
 LIVELLO: ${schoolLevel}
+${gapsBlock}
 
 REGOLE:
-- Fai domande calibrate ${topic.trim() ? `sull'argomento "${topic.trim()}"` : "sulla materia"} — NON domande generiche
+- Fai domande calibrate e specifiche — NON domande generiche
 - ${mode === "orale" ? "Simula un'interrogazione: una domanda alla volta, attendi risposta, fai follow-up" : "Fai domande di diverso tipo: definizioni, problemi, ragionamento"}
 - Adatta la difficoltà: se risponde bene alza, se sbaglia abbassa
 - Dopo 5-6 domande, fornisci un REPORT finale strutturato con:
@@ -190,6 +221,7 @@ REGOLE:
   [/REPORT]
 - Non dare mai la risposta — guida con indizi se bloccato
 Inizia con la prima domanda.`;
+      }
       default:
         return "";
     }
@@ -556,7 +588,12 @@ Inizia con la prima domanda.`;
 
           {type === "prep" && (
             <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Argomento specifico (opzionale)</label>
+              <label className="text-sm font-medium text-foreground mb-1 block">Argomento specifico (opzionale)</label>
+              <p className="text-xs text-muted-foreground mb-2">
+                {topic.trim()
+                  ? "Le domande saranno focalizzate su questo argomento, tenendo conto delle tue lacune"
+                  : "Senza argomento, la simulazione si concentra sugli argomenti dove hai più lacune"}
+              </p>
               <Input
                 value={topic}
                 onChange={e => setTopic(e.target.value)}
