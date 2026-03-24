@@ -28,7 +28,6 @@ const StudyTasks = () => {
     id: t.id, subject: t.subject, title: t.title, description: t.description || "",
     estimatedMinutes: t.estimated_minutes || 15, difficulty: t.difficulty || 1,
     steps: Array.isArray(t.micro_steps) ? t.micro_steps.length : 0, completed: t.completed || false,
-    task_type: t.task_type || "exercise",
   });
 
   return (

@@ -1,9 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  BookOpen, FileText, Map, List, Key, Layers, Loader2, Brain, MessageCircle,
-  ArrowLeft, CalendarDays, Search, Sparkles, GraduationCap,
-} from "lucide-react";
+import { BookOpen, FileText, Map, List, Key, Layers, Loader2, Brain, MessageCircle } from "lucide-react";
 import { ChatShell } from "@/components/ChatShell";
 import { ChatMsg, streamChat } from "@/lib/streamChat";
 import { SessionCelebration } from "@/components/SessionCelebration";
@@ -82,7 +79,6 @@ export default function UnifiedSession() {
   const [subject, setSubject] = useState(urlSubject || "");
   const [mode, setMode] = useState<"scritta" | "orale">("scritta");
   const [reviewMode, setReviewMode] = useState<"chat" | "flashcard">("chat");
-  const [reviewContentType, setReviewContentType] = useState<"today" | "cumulative" | "topic" | "program" | null>(null);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [streamingText, setStreamingText] = useState("");
   const [sending, setSending] = useState(false);
@@ -368,54 +364,17 @@ Inizia con la prima domanda.`;
   // NON-GUIDED SETUP SCREEN
   // ════════════════════════════════════════════
   if (!setupDone) {
-    const isExamLevel = schoolLevel === "universitario" || schoolLevel === "superiori";
-
     return (
       <div className="min-h-screen bg-background pb-24">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-1.5 rounded-lg hover:bg-muted"><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
+          <button onClick={() => navigate(-1)}><BookOpen className="w-5 h-5 text-muted-foreground" /></button>
           <h1 className="font-display text-lg font-bold text-foreground">{getTitle()}</h1>
         </div>
         <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
-
-          {/* ─── Review: content type selector ─── */}
-          {type === "review" && (
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Cosa vuoi ripassare?</label>
-              <div className="flex flex-col gap-2">
-                {([
-                  { id: "today", icon: CalendarDays, label: "Ripassa quello di oggi", desc: "Carte generate dalle sessioni di studio odierne", color: "bg-primary/10 text-primary" },
-                  { id: "cumulative", icon: Brain, label: "Ripasso cumulativo", desc: "Tutte le carte ordinate per priorità SRS", color: "bg-clay-light text-clay-dark" },
-                  { id: "topic", icon: Search, label: "Genera su un argomento", desc: "Scegli un tema e l'AI crea carte mirate", color: "bg-sage-light text-sage-dark" },
-                  { id: "program", icon: isExamLevel ? GraduationCap : Sparkles, label: isExamLevel ? "Preparati per l'esame" : "Preparati per la verifica", desc: isExamLevel ? "Carte allineate al programma d'esame della tua classe" : "Carte sui programmi ministeriali della tua classe", color: "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400" },
-                ] as const).map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => setReviewContentType(m.id)}
-                    className={`flex items-center gap-3 px-3.5 py-3 rounded-xl border text-left w-full transition-all ${
-                      reviewContentType === m.id
-                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                        : "border-border bg-card hover:bg-muted hover:border-foreground/20"
-                    }`}
-                  >
-                    <div className={`w-9 h-9 rounded-lg ${m.color} flex items-center justify-center shrink-0`}>
-                      <m.icon className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">{m.label}</p>
-                      <p className="text-[11px] text-muted-foreground leading-snug">{m.desc}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ─── Topic input (review topic mode OR study) ─── */}
-          {(type === "study" || (type === "review" && reviewContentType === "topic")) && (
+          {type !== "prep" && (
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">
-                {type === "review" ? "Su che argomento?" : "Cosa vuoi studiare?"}
+                {type === "review" ? "Cosa vuoi ripassare?" : "Cosa vuoi studiare?"}
               </label>
               <Input
                 value={topic}
@@ -427,7 +386,6 @@ Inizia con la prima domanda.`;
             </div>
           )}
 
-          {/* ─── Subject chips ─── */}
           <div>
             <label className="text-sm font-medium text-foreground mb-2 block">
               {type === "prep" ? "Materia" : "Materia (opzionale)"}
@@ -449,10 +407,10 @@ Inizia con la prima domanda.`;
             </div>
           </div>
 
-          {/* ─── Review: method selector (chat vs flashcard) ─── */}
-          {type === "review" && reviewContentType && (
+          {/* Review: mode selector */}
+          {type === "review" && (
             <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Scegli la modalità</label>
+              <label className="text-sm font-medium text-foreground mb-2 block">Modalità di ripasso</label>
               <div className="flex gap-3">
                 <button
                   onClick={() => setReviewMode("chat")}
@@ -463,7 +421,7 @@ Inizia con la prima domanda.`;
                   }`}
                 >
                   <MessageCircle className="w-5 h-5" />
-                  Ripasso approfondito
+                  Ripasso profondo
                 </button>
                 <button
                   onClick={() => setReviewMode("flashcard")}
@@ -485,7 +443,6 @@ Inizia con la prima domanda.`;
             </div>
           )}
 
-          {/* ─── Prep: mode selector ─── */}
           {type === "prep" && (
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">Tipo di simulazione</label>
@@ -519,44 +476,18 @@ Inizia con la prima domanda.`;
             </div>
           )}
 
-          {/* ─── Start button ─── */}
           <Button
             onClick={() => {
-              if (type === "review") {
-                // Set auto-topic based on content type
-                let reviewTopic = topic;
-                if (!topic.trim()) {
-                  if (reviewContentType === "today") reviewTopic = "Ripasso degli argomenti studiati oggi";
-                  else if (reviewContentType === "cumulative") reviewTopic = "Ripasso cumulativo degli argomenti";
-                  else if (reviewContentType === "program") reviewTopic = isExamLevel ? "Ripasso programma d'esame" : "Ripasso programma per la verifica";
-                  setTopic(reviewTopic);
-                }
-                if (reviewMode === "flashcard") {
-                  const params = new URLSearchParams();
-                  if (reviewContentType) params.set("mode", reviewContentType);
-                  if (subject) params.set("subject", subject);
-                  if (reviewTopic.trim()) params.set("topic", reviewTopic.trim());
-                  navigate(`/flashcards?${params.toString()}`);
-                  return;
-                }
-                // Chat mode — topic is set, proceed
-                if (!reviewTopic.trim() && subject) {
-                  reviewTopic = `Ripasso ${subject}`;
-                  setTopic(reviewTopic);
-                }
+              if (type === "review" && reviewMode === "flashcard") {
+                navigate(`/flashcards${subject ? `?subject=${encodeURIComponent(subject)}` : ""}`);
+                return;
               }
               startSession();
             }}
-            disabled={
-              type === "prep" ? !subject
-                : type === "review" ? !reviewContentType || (reviewContentType === "topic" && !topic.trim())
-                : !topic.trim()
-            }
+            disabled={type === "prep" ? !subject : type === "review" && reviewMode === "flashcard" ? false : !topic.trim()}
             className="w-full"
           >
-            {type === "prep" ? "Inizia la simulazione"
-              : type === "review" ? (reviewMode === "flashcard" ? "Inizia le flashcard" : "Inizia il ripasso")
-              : "Inizia a studiare"}
+            {type === "prep" ? "Inizia la simulazione" : type === "review" ? (reviewMode === "flashcard" ? "Inizia le flashcard" : "Inizia il ripasso") : "Inizia a studiare"}
           </Button>
         </div>
       </div>
