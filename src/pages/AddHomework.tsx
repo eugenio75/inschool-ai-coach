@@ -104,7 +104,8 @@ const AddHomework = () => {
       }
       setUploadedImageUrls(urls);
 
-      const result = await extractTasksFromImage(urls, sourceType, photoNote.trim() || undefined);
+      const combinedNote = [...photoTags, photoNote.trim()].filter(Boolean).join(". ") || undefined;
+      const result = await extractTasksFromImage(urls, sourceType, combinedNote);
 
       if (result.tasks && result.tasks.length > 0) {
         setExtractedTasks(
