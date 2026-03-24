@@ -1,6 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { BookOpen, FileText, Map, List, Key, Layers, Loader2, Brain, MessageCircle, CalendarDays, Sparkles, GraduationCap } from "lucide-react";
+import {
+  BookOpen,
+  FileText,
+  Map,
+  List,
+  Key,
+  Layers,
+  Loader2,
+  Brain,
+  MessageCircle,
+  CalendarDays,
+  Sparkles,
+  GraduationCap,
+} from "lucide-react";
+import { motion } from "framer-motion";
 import { ChatShell } from "@/components/ChatShell";
 import { ChatMsg, streamChat } from "@/lib/streamChat";
 import { SessionCelebration } from "@/components/SessionCelebration";
@@ -9,24 +23,265 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGuidedSession } from "@/hooks/useGuidedSession";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel,
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-  AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-...
+
+function getProfile() {
+  try {
+    if (isChildSession()) return getChildSession()?.profile || null;
+    const saved = localStorage.getItem("inschool-profile");
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+}
+
+function getPrepLabel(schoolLevel: string) {
+  switch (schoolLevel) {
+    case "alunno":
+    case "medie":
+      return "Prepara l'interrogazione";
+    case "universitario":
+      return "Prepara l'esame";
+    default:
+      return "Prepara la verifica";
+  }
+}
+
+const OUTPUT_TYPES = [
+  { id: "schema", label: "Schema", icon: List },
+  { id: "mappa", label: "Mappa concettuale", icon: Map },
+  { id: "sintesi_breve", label: "Sintesi breve", icon: FileText },
+  { id: "sintesi_estesa", label: "Sintesi estesa", icon: BookOpen },
+  { id: "glossario", label: "Glossario", icon: Key },
+  { id: "punti_chiave", label: "Punti chiave", icon: Layers },
+];
+
+type SessionType = "study" | "review" | "prep" | "guided";
+
+export default function UnifiedSession() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const type = (searchParams.get("type") || "study") as SessionType;
+  const homeworkId = searchParams.get("hw");
+  const urlSubject = searchParams.get("subject");
+  const urlMsg = searchParams.get("msg");
+  const profile = getProfile();
+  const schoolLevel = profile?.school_level || "superiori";
+  const { user } = useAuth();
+  const studentName = profile?.name || "Studente";
+  const profileId = profile?.id || getChildSession()?.profileId;
+  const userId = user?.id || profileId;
+  const isJunior = schoolLevel === "alunno" || schoolLevel === "medie";
+
+  const guided = useGuidedSession({
+    homeworkId,
+    userId,
+    schoolLevel,
+    profileName: studentName,
+  });
+
+  useEffect(() => {
+    if (type === "guided" && homeworkId) {
+      guided.loadSession();
+    }
+  }, [type, homeworkId]);
+
+  const [setupDone, setSetupDone] = useState(false);
+  const [topic, setTopic] = useState(urlSubject ? `Ripasso ${urlSubject}` : "");
+  const [subject, setSubject] = useState(urlSubject || "");
+  const [mode, setMode] = useState<"scritta" | "orale">("scritta");
+  const [reviewMode, setReviewMode] = useState<"chat" | "flashcard">("chat");
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [streamingText, setStreamingText] = useState("");
+  const [sending, setSending] = useState(false);
   const [showPauseDialog, setShowPauseDialog] = useState(false);
   const [guidedCustomEmotion, setGuidedCustomEmotion] = useState("");
 
-  // Auto-start when subject is provided via URL for review
   useEffect(() => {
     if (urlSubject && type === "review" && !setupDone && !sending) {
       const t = setTimeout(() => startSession(), 100);
       return () => clearTimeout(t);
     }
   }, [urlSubject, type]);
-...
+
+  useEffect(() => {
+    if (urlMsg && !setupDone && !sending) {
+      setTopic(urlMsg);
+      const t = setTimeout(() => {
+        const systemPrompt = getSystemPrompt();
+        setSetupDone(true);
+        setMessages([]);
+        setSending(true);
+        setStreamingText("");
+
+        streamChat({
+          messages: [
+            { role: "user", content: systemPrompt },
+            { role: "user", content: urlMsg },
+          ],
+          onDelta: (full) => setStreamingText(full),
+          onDone: (full) => {
+            setMessages([
+              { role: "user", content: urlMsg },
+              { role: "assistant", content: full },
+            ]);
+            setStreamingText("");
+            setSending(false);
+          },
+          extraBody: { profileId, subject: subject || undefined },
+        });
+      }, 150);
+      return () => clearTimeout(t);
+    }
+  }, [urlMsg]);
+
+  const subjects = profile?.favorite_subjects || profile?.difficult_subjects || ["Matematica", "Italiano", "Inglese", "Storia", "Scienze"];
+
+  function getSystemPrompt(): string {
+    switch (type) {
+      case "study":
+        return `Sei un coach di studio per ${studentName} (livello ${schoolLevel}).
+L'argomento è: "${topic}" (${subject || "materia non specificata"}).
+Dividi l'argomento in blocchi logici. Per ogni blocco:
+1. Presenta brevemente il concetto
+2. Fai una domanda di comprensione
+3. Attendi la risposta prima di proseguire
+4. Costruisci connessioni tra i blocchi
+Non dare mai la risposta finale direttamente. Guida lo studente a ragionare.
+Inizia presentando il primo blocco dell'argomento.`;
+      case "review":
+        return `Sei il Coach AI di ${studentName}. Stai facendo un RIPASSO PROFONDO.
+MATERIA: ${subject || "generale"}
+ARGOMENTO: ${topic}
+LIVELLO: ${schoolLevel}
+
+REGOLE:
+- Fai domande aperte e profonde — mai rilettura passiva
+- Richiamo attivo: lo studente deve ricordare, non rileggere
+- Una domanda alla volta
+- Dopo la risposta: conferma cosa è giusto, correggi cosa no
+- Dopo 3-4 scambi: riassumi i punti forti e deboli emersi
+- Sii socratico e incoraggiante
+Inizia con la prima domanda sull'argomento.`;
+      case "prep":
+        return `Sei il Coach AI di ${studentName}. Stai conducendo una SIMULAZIONE DI ${mode === "orale" ? "INTERROGAZIONE ORALE" : "VERIFICA SCRITTA"}.
+MATERIA: ${subject}
+LIVELLO: ${schoolLevel}
+
+REGOLE:
+- Fai domande calibrate sulla materia — NON domande generiche
+- ${mode === "orale" ? "Simula un'interrogazione: una domanda alla volta, attendi risposta, fai follow-up" : "Fai domande di diverso tipo: definizioni, problemi, ragionamento"}
+- Adatta la difficoltà: se risponde bene alza, se sbaglia abbassa
+- Dopo 5-6 domande, fornisci un REPORT finale strutturato con:
+  [REPORT]
+  Punti forti: ...
+  Punti deboli: ...
+  Priorità di ripasso: ...
+  [/REPORT]
+- Non dare mai la risposta — guida con indizi se bloccato
+Inizia con la prima domanda.`;
+      default:
+        return "";
+    }
+  }
+
+  function getTitle(): string {
+    if (type === "guided") return guided.homework?.title || "Sessione guidata";
+    switch (type) {
+      case "study":
+        return "Studio libero";
+      case "review":
+        return "Ripasso profondo";
+      case "prep":
+        return getPrepLabel(schoolLevel);
+      default:
+        return "Sessione";
+    }
+  }
+
+  function startSession() {
+    if (!topic.trim() && type !== "prep" && type !== "review") return;
+    if (!topic.trim() && type === "review" && subject) {
+      setTopic(`Ripasso ${subject}`);
+    }
+    if (!subject && type === "prep") return;
+
+    const systemPrompt = getSystemPrompt();
+    setSetupDone(true);
+    setMessages([]);
+    setSending(true);
+    setStreamingText("");
+
+    streamChat({
+      messages: [{ role: "user", content: systemPrompt }],
+      onDelta: (full) => setStreamingText(full),
+      onDone: (full) => {
+        setMessages([{ role: "assistant", content: full }]);
+        setStreamingText("");
+        setSending(false);
+      },
+      extraBody: { profileId, subject: subject || undefined },
+    }).catch(() => {
+      setMessages([{ role: "assistant", content: "Mi dispiace, c'è stato un problema. Riprova." }]);
+      setStreamingText("");
+      setSending(false);
+    });
+  }
+
+  const handleSend = useCallback((text: string) => {
+    if (sending) return;
+    const userMsg: ChatMsg = { role: "user", content: text };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setSending(true);
+    setStreamingText("");
+
+    streamChat({
+      messages: newMessages,
+      onDelta: (full) => setStreamingText(full),
+      onDone: (full) => {
+        setMessages(prev => [...prev, { role: "assistant", content: full }]);
+        setStreamingText("");
+        setSending(false);
+      },
+      extraBody: { profileId, subject: subject || undefined },
+    }).catch(() => {
+      setMessages(prev => [...prev, { role: "assistant", content: "Errore. Riprova." }]);
+      setStreamingText("");
+      setSending(false);
+    });
+  }, [messages, sending, profileId, subject]);
+
+  async function generateOutput(outputType: string) {
+    const outputPrompts: Record<string, string> = {
+      schema: `Genera uno schema strutturato dell'argomento "${topic}" basandoti sulla conversazione. Usa punti e sottopunti.`,
+      mappa: `Genera una mappa concettuale testuale dell'argomento "${topic}". Mostra le connessioni tra i concetti principali.`,
+      sintesi_breve: `Genera una sintesi breve (max 200 parole) dell'argomento "${topic}" basandoti sulla conversazione.`,
+      sintesi_estesa: `Genera una sintesi estesa e dettagliata dell'argomento "${topic}" basandoti sulla conversazione.`,
+      glossario: `Genera un glossario con i termini chiave dell'argomento "${topic}" emersi dalla conversazione, con definizioni concise.`,
+      punti_chiave: `Elenca i 5-10 punti chiave dell'argomento "${topic}" emersi dalla conversazione. Ogni punto in una frase.`,
+    };
+    handleSend(outputPrompts[outputType] || outputPrompts.schema);
+  }
+
+  if (type === "guided") {
+    if (guided.loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      );
+    }
+
     if (guided.showCheckin) {
       const guidedEmotionOptions = [
         { key: "concentrato", label: "Concentrato", icon: "🎯" },
@@ -89,7 +344,6 @@ import {
       );
     }
 
-    // Chat view for guided
     const handleGuidedBack = () => {
       if (guided.messages.length > 1 && guided.sessionId) {
         setShowPauseDialog(true);
@@ -118,7 +372,6 @@ import {
           inputPlaceholder="Scrivi la tua risposta..."
         />
 
-        {/* Pause dialog */}
         <AlertDialog open={showPauseDialog} onOpenChange={setShowPauseDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -135,10 +388,12 @@ import {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Celebration */}
         <SessionCelebration
           isVisible={guided.showCelebration}
-          onClose={() => { guided.setShowCelebration(false); navigate("/dashboard"); }}
+          onClose={() => {
+            guided.setShowCelebration(false);
+            navigate("/dashboard");
+          }}
           studentName={studentName}
           bloomLevel={guided.currentStep}
           subject={guided.homework?.subject || ""}
@@ -148,9 +403,6 @@ import {
     );
   }
 
-  // ════════════════════════════════════════════
-  // NON-GUIDED SETUP SCREEN
-  // ════════════════════════════════════════════
   if (!setupDone) {
     return (
       <div className="min-h-screen bg-background pb-24">
@@ -189,7 +441,6 @@ import {
                 ))}
               </div>
 
-              {/* Campo libero per argomento specifico */}
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
                   <Sparkles className="w-4 h-4 text-muted-foreground" />
@@ -236,7 +487,6 @@ import {
             </div>
           </div>
 
-          {/* Review: mode selector */}
           {type === "review" && (
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">Modalità di ripasso</label>
@@ -276,7 +526,7 @@ import {
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">Tipo di simulazione</label>
               <div className="flex gap-3">
-                {([["scritta", "Verifica scritta"], ["orale", "Interrogazione orale"]] as const).map(([m, label]) => (
+                {([ ["scritta", "Verifica scritta"], ["orale", "Interrogazione orale"] ] as const).map(([m, label]) => (
                   <button
                     key={m}
                     onClick={() => setMode(m)}
@@ -323,9 +573,6 @@ import {
     );
   }
 
-  // ════════════════════════════════════════════
-  // NON-GUIDED CHAT VIEW
-  // ════════════════════════════════════════════
   const studyOutputFooter = type === "study" && messages.length >= 4 ? (
     <div className="px-4 py-2 border-t border-border bg-muted/50">
       <p className="text-xs text-muted-foreground mb-2">Genera un output dalla sessione:</p>

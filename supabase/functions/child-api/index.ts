@@ -16,7 +16,6 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Validate access code on login
     if (action === "login") {
       const { data, error } = await supabase.rpc("validate_child_code", { code: accessCode });
       if (error) throw error;
@@ -26,8 +25,7 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      
-      // Also fetch tasks and gamification for initial load
+
       const profileId = data.profile.id;
       const [tasksResult, gamResult] = await Promise.all([
         supabase.from("homework_tasks").select("*").eq("child_profile_id", profileId).order("created_at", { ascending: false }),
@@ -43,7 +41,6 @@ serve(async (req) => {
       });
     }
 
-    // For all other actions, validate the access code
     if (!accessCode || !childProfileId) {
       return new Response(JSON.stringify({ error: "Accesso non autorizzato" }), {
         status: 401,
@@ -51,7 +48,6 @@ serve(async (req) => {
       });
     }
 
-    // Verify code matches profile
     const { data: profile } = await supabase
       .from("child_profiles")
       .select("id, access_code")
@@ -66,6 +62,17 @@ serve(async (req) => {
       });
     }
 
+    const { data: childProfile, error: childProfileError } = await supabase
+      .from("child_profiles")
+      .select("id, parent_id")
+      .eq("id", childProfileId)
+      .single();
+
+    if (childProfileError || !childProfile) {
+      throw childProfileError || new Error("Profilo bambino non trovato");
+    }
+
+    const ownerUserId = childProfile.parent_id;
     let result: any = null;
 
     switch (action) {
@@ -111,7 +118,6 @@ serve(async (req) => {
           .single();
         if (error) throw error;
 
-        // Update gamification
         const { data: gam } = await supabase
           .from("gamification")
           .select("*")
@@ -222,7 +228,6 @@ serve(async (req) => {
 
       case "get-daily-missions": {
         const today = new Date().toISOString().split("T")[0];
-        // Try to get existing missions
         let { data: missions } = await supabase
           .from("daily_missions")
           .select("*")
@@ -230,7 +235,6 @@ serve(async (req) => {
           .eq("mission_date", today);
 
         if (!missions || missions.length === 0) {
-          // Generate missions by calling the generate-missions function logic inline
           const [tasksRes, memRes] = await Promise.all([
             supabase.from("homework_tasks").select("id").eq("child_profile_id", childProfileId).eq("completed", false),
             supabase.from("memory_items").select("id, strength").eq("child_profile_id", childProfileId).lt("strength", 60),
@@ -252,7 +256,7 @@ serve(async (req) => {
             if (!selected.find(s => s.type === t.type)) selected.push(t);
           }
 
-          const toInsert = selected.map(m => ({
+          const toInsert = selected.map((m) => ({
             child_profile_id: childProfileId,
             mission_date: today,
             mission_type: m.type,
@@ -284,7 +288,6 @@ serve(async (req) => {
           .single();
         if (checkinErr) throw checkinErr;
 
-        // Trigger analysis asynchronously
         try {
           await fetch(`${supabaseUrl}/functions/v1/analyze-emotions`, {
             method: "POST",
@@ -303,7 +306,6 @@ serve(async (req) => {
           completed_at: new Date().toISOString(),
         }).eq("id", payload.missionId).eq("child_profile_id", childProfileId);
 
-        // Add points to gamification
         const { data: gam2 } = await supabase.from("gamification").select("*").eq("child_profile_id", childProfileId).maybeSingle();
         if (gam2) {
           await supabase.from("gamification").update({
@@ -316,33 +318,26 @@ serve(async (req) => {
       }
 
       case "get-flashcards": {
-        // Flashcards use parent_id as user_id, get it from profile
-        const { data: cp } = await supabase.from("child_profiles").select("parent_id").eq("id", childProfileId).single();
-        if (cp) {
-          let query = supabase
-            .from("flashcards")
-            .select("*")
-            .eq("user_id", cp.parent_id)
-            .order("next_review_at", { ascending: true, nullsFirst: true })
-            .limit(20);
-          if (payload?.subject) {
-            query = query.eq("subject", payload.subject);
-          }
-          const { data } = await query;
-          result = data || [];
-        } else {
-          result = [];
+        let query = supabase
+          .from("flashcards")
+          .select("*")
+          .eq("user_id", ownerUserId)
+          .order("next_review_at", { ascending: true, nullsFirst: true })
+          .limit(20);
+        if (payload?.subject) {
+          query = query.eq("subject", payload.subject);
         }
+        const { data } = await query;
+        result = data || [];
         break;
       }
 
       case "update-flashcard": {
-        const { data: cp2 } = await supabase.from("child_profiles").select("parent_id").eq("id", childProfileId).single();
-        if (cp2) {
-          await supabase.from("flashcards").update(payload.updates)
-            .eq("id", payload.cardId)
-            .eq("user_id", cp2.parent_id);
-        }
+        await supabase
+          .from("flashcards")
+          .update(payload.updates)
+          .eq("id", payload.cardId)
+          .eq("user_id", ownerUserId);
         result = { success: true };
         break;
       }
@@ -352,7 +347,7 @@ serve(async (req) => {
           .from("guided_sessions")
           .select("*")
           .eq("homework_id", payload.homeworkId)
-          .eq("user_id", childProfileId)
+          .eq("user_id", ownerUserId)
           .eq("status", "paused")
           .order("updated_at", { ascending: false })
           .limit(1);
@@ -362,6 +357,7 @@ serve(async (req) => {
             .from("study_steps")
             .select("*")
             .eq("session_id", sess.id)
+            .eq("user_id", ownerUserId)
             .order("step_number", { ascending: true });
           result = { session: sess, steps: savedSteps || [] };
         } else {
@@ -374,7 +370,7 @@ serve(async (req) => {
         const { data, error } = await supabase
           .from("guided_sessions")
           .insert({
-            user_id: childProfileId,
+            user_id: ownerUserId,
             homework_id: payload.homeworkId,
             status: "active",
             current_step: 1,
@@ -389,7 +385,11 @@ serve(async (req) => {
       }
 
       case "insert-steps": {
-        const { error } = await supabase.from("study_steps").insert(payload.steps);
+        const normalizedSteps = (payload.steps || []).map((step: Record<string, unknown>) => ({
+          ...step,
+          user_id: ownerUserId,
+        }));
+        const { error } = await supabase.from("study_steps").insert(normalizedSteps);
         if (error) throw error;
         result = { success: true };
         break;
@@ -400,7 +400,7 @@ serve(async (req) => {
           .from("guided_sessions")
           .update(payload.updates)
           .eq("id", payload.sessionId)
-          .eq("user_id", childProfileId);
+          .eq("user_id", ownerUserId);
         if (error) throw error;
         result = { success: true };
         break;
@@ -411,7 +411,8 @@ serve(async (req) => {
           .from("study_steps")
           .update(payload.updates)
           .eq("session_id", payload.sessionId)
-          .eq("step_number", payload.stepNumber);
+          .eq("step_number", payload.stepNumber)
+          .eq("user_id", ownerUserId);
         if (error) throw error;
         result = { success: true };
         break;
@@ -419,7 +420,7 @@ serve(async (req) => {
 
       case "insert-learning-error": {
         const { error } = await supabase.from("learning_errors").insert({
-          user_id: childProfileId,
+          user_id: ownerUserId,
           subject: payload.subject,
           topic: payload.topic,
           error_type: payload.errorType || "incomprensione",
@@ -434,7 +435,7 @@ serve(async (req) => {
         await supabase.from("guided_sessions").update({
           status: "completed",
           completed_at: new Date().toISOString(),
-        }).eq("id", payload.sessionId).eq("user_id", childProfileId);
+        }).eq("id", payload.sessionId).eq("user_id", ownerUserId);
 
         if (payload.homeworkId) {
           await supabase.from("homework_tasks").update({
