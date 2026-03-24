@@ -22,7 +22,7 @@ import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { LogoutButton } from "@/components/shared/LogoutButton";
 import { getChildSession } from "@/lib/childSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { CoachAvatarPicker, getCoachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
+import { coachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
 
 // Avatar colors for profile customization
 const AVATAR_COLORS = [
@@ -88,7 +88,6 @@ const Settings = () => {
   const [libraryFlags, setLibraryFlags] = useState<Record<string, boolean>>({});
 
   // Coach customization
-  const [coachAvatar, setCoachAvatar] = useState<string | null>(null);
   const [coachNameSetting, setCoachNameSetting] = useState("");
   const [savingCoach, setSavingCoach] = useState(false);
 
@@ -131,7 +130,6 @@ const Settings = () => {
           .eq("profile_id", profileId)
           .maybeSingle();
         const prefs = (prefData?.data as any) || {};
-        if (prefs.coach_avatar) setCoachAvatar(prefs.coach_avatar);
         if (prefs.coach_name) setCoachNameSetting(prefs.coach_name);
       }
 
@@ -186,7 +184,7 @@ const Settings = () => {
       .select("id, data")
       .eq("profile_id", session.profileId)
       .maybeSingle();
-    const newData = { ...((existing?.data as any) || {}), coach_avatar: coachAvatar, coach_name: coachNameSetting };
+    const newData = { ...((existing?.data as any) || {}), coach_name: coachNameSetting };
     if (existing) {
       await supabase.from("user_preferences").update({ data: newData } as any).eq("id", existing.id);
     } else {
@@ -367,14 +365,13 @@ const Settings = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-12 h-12 rounded-full overflow-hidden bg-primary/10 shrink-0">
-                  <img src={getCoachAvatarSrc(coachAvatar)} alt="Coach" className="w-full h-full object-cover" width={48} height={48} />
+                  <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={48} height={48} />
                 </div>
                 <div>
                   <p className="font-medium text-foreground">{coachNameSetting || "Coach AI"}</p>
                   <p className="text-xs text-muted-foreground">Il tuo assistente personale</p>
                 </div>
               </div>
-              <CoachAvatarPicker selected={coachAvatar} onSelect={setCoachAvatar} size="sm" />
               <Input
                 type="text"
                 placeholder="Nome del coach..."
@@ -384,7 +381,7 @@ const Settings = () => {
                 className="rounded-xl"
               />
               <Button onClick={handleSaveCoach} disabled={savingCoach} className="rounded-xl w-full">
-                {savingCoach ? "Salvataggio..." : "Salva coach"}
+                {savingCoach ? "Salvataggio..." : "Salva nome coach"}
               </Button>
             </div>
           </div>
