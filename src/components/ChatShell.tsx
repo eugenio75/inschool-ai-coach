@@ -97,6 +97,9 @@ export function ChatShell({
         {badgeText && (
           <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">{badgeText}</span>
         )}
+        {showPomodoro && (
+          <PomodoroTimer compact focusMinutes={pomodoroMinutes} />
+        )}
       </div>
 
       {/* Messages */}
