@@ -591,10 +591,21 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
           }).catch(() => {});
         } catch {}
 
-        setTimeout(() => {
-          playCelebrationSound();
-          setShowCelebration(true);
-        }, 500);
+        // Mark session as completed — add "Fine" button instead of auto-celebration
+        setSessionCompleted(true);
+        // Append the finish action to the last message
+        setMessages(prev => {
+          const updated = [...prev];
+          const last = updated[updated.length - 1];
+          if (last && last.role === "assistant") {
+            updated[updated.length - 1] = {
+              ...last,
+              content: last.content + "\n\n✅ **Ottimo lavoro! Hai completato tutti gli step.**\nQuando hai finito di leggere, premi il pulsante qui sotto.",
+              actions: [{ label: "🎉  Fine — Vedi il risultato", value: "finish_session", primary: true }],
+            };
+          }
+          return updated;
+        });
       }
     } catch (err) {
       console.error("sendMessage error:", err);
