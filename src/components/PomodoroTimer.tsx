@@ -88,63 +88,65 @@ export function PomodoroTimer({
 
   if (compact) {
     return (
-      <div className="flex items-center gap-2">
-        {/* Mini circular progress */}
-        <div className="relative w-9 h-9 flex items-center justify-center">
-          <svg className="w-9 h-9 -rotate-90" viewBox="0 0 36 36">
-            <circle cx="18" cy="18" r="15" fill="none" stroke="hsl(var(--muted))" strokeWidth="2.5" />
+      <div className="flex items-center gap-2.5">
+        {/* Circular progress */}
+        <div className="relative w-14 h-14 flex items-center justify-center">
+          <svg className="w-14 h-14 -rotate-90" viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="24" fill="none" stroke="hsl(var(--muted))" strokeWidth="3.5" />
             <motion.circle
-              cx="18" cy="18" r="15" fill="none"
+              cx="28" cy="28" r="24" fill="none"
               stroke={phase === "break" ? "hsl(var(--accent))" : "hsl(var(--primary))"}
-              strokeWidth="2.5"
+              strokeWidth="3.5"
               strokeLinecap="round"
-              strokeDasharray={94.25}
-              animate={{ strokeDashoffset: 94.25 * (1 - progress) }}
+              strokeDasharray={150.8}
+              animate={{ strokeDashoffset: 150.8 * (1 - progress) }}
               transition={{ duration: 0.5 }}
             />
           </svg>
-          <span className="absolute text-[10px] font-mono font-bold text-foreground">
+          <span className="absolute text-sm font-mono font-bold text-foreground">
             {phase === "break" ? formatTime(breakSeconds) : formatTime(seconds)}
           </span>
         </div>
 
-        <button
-          onClick={toggleRunning}
-          className="p-1.5 rounded-lg hover:bg-muted transition-colors"
-          title={isRunning ? "Pausa" : "Avvia"}
-        >
-          {isRunning ? (
-            <Pause className="w-4 h-4 text-foreground" />
-          ) : (
-            <Play className="w-4 h-4 text-foreground" />
-          )}
-        </button>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={toggleRunning}
+              className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+              title={isRunning ? "Pausa" : "Avvia"}
+            >
+              {isRunning ? (
+                <Pause className="w-5 h-5 text-foreground" />
+              ) : (
+                <Play className="w-5 h-5 text-foreground" />
+              )}
+            </button>
 
-        {phase === "break" && (
-          <Coffee className="w-4 h-4 text-accent animate-pulse" />
-        )}
+            <button
+              onClick={reset}
+              className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+              title="Reset timer"
+            >
+              <RotateCcw className="w-4 h-4 text-muted-foreground" />
+            </button>
 
-        {/* Cycle dots */}
-        <div className="flex gap-1">
-          {Array.from({ length: maxCycles }).map((_, i) => (
-            <div
-              key={i}
-              className={`w-1.5 h-1.5 rounded-full ${
-                i < cycle
-                  ? "bg-primary"
-                  : "bg-muted-foreground/30"
-              }`}
-            />
-          ))}
+            {phase === "break" && (
+              <Coffee className="w-4 h-4 text-accent animate-pulse" />
+            )}
+          </div>
+
+          {/* Cycle dots */}
+          <div className="flex gap-1 justify-center">
+            {Array.from({ length: maxCycles }).map((_, i) => (
+              <div
+                key={i}
+                className={`w-2 h-2 rounded-full ${
+                  i < cycle ? "bg-primary" : "bg-muted-foreground/30"
+                }`}
+              />
+            ))}
+          </div>
         </div>
-
-        <button
-          onClick={reset}
-          className="p-1 rounded hover:bg-muted transition-colors"
-          title="Reset timer"
-        >
-          <RotateCcw className="w-3 h-3 text-muted-foreground" />
-        </button>
       </div>
     );
   }
