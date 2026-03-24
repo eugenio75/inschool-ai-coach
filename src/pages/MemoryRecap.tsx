@@ -21,9 +21,10 @@ const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 type Section = "ripasso" | "rinforza";
 type ContentType = "today" | "cumulative" | "specific";
 type StudyMethod = "coach" | "flashcard";
+type Step = "home" | "subject-pick" | "summary" | "study";
 
 interface WizardState {
-  step: "section" | "content" | "subject-pick" | "summary" | "method" | "study";
+  step: Step;
   section: Section | null;
   contentType: ContentType | null;
   subject: string | null;
@@ -274,10 +275,10 @@ const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
         <div className="perspective-1000">
           <motion.div className="relative w-full cursor-pointer" style={{ minHeight: 240 }} onClick={() => setFlipped(!flipped)}
             animate={{ rotateY: flipped ? 180 : 0 }} transition={{ duration: 0.4, type: "spring", stiffness: 200, damping: 25 }}>
-            <div className={`absolute inset-0 rounded-2xl border-2 p-6 flex flex-col justify-center items-center text-center backface-hidden ${currentCard.is_flagged ? "border-red-300 bg-red-50/50 dark:bg-red-900/10" : "border-primary/30 bg-card"} shadow-md`}
+            <div className={`absolute inset-0 rounded-2xl border-2 p-6 flex flex-col justify-center items-center text-center backface-hidden ${currentCard.is_flagged ? "border-destructive/30 bg-destructive/5" : "border-primary/30 bg-card"} shadow-md`}
               style={{ backfaceVisibility: "hidden" }}>
               {currentCard.is_flagged && (
-                <span className="absolute top-3 right-3 text-xs bg-red-100 dark:bg-red-900/30 text-red-600 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span className="absolute top-3 right-3 text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded-full flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" /> Da rafforzare
                 </span>
               )}
@@ -310,8 +311,8 @@ const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
       {currentCard && flipped && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-3 gap-3">
           <button onClick={() => handleRate("wrong")}
-            className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 hover:bg-red-100 transition-colors">
-            <ThumbsDown className="w-5 h-5 text-red-500" /><span className="text-xs font-medium text-red-600">Non sapevo</span>
+            className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-destructive/5 border border-destructive/20 hover:bg-destructive/10 transition-colors">
+            <ThumbsDown className="w-5 h-5 text-destructive" /><span className="text-xs font-medium text-destructive">Non sapevo</span>
           </button>
           <button onClick={() => handleRate("almost")}
             className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 transition-colors">
@@ -328,7 +329,7 @@ const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
 };
 
 // ═══════════════════════════════════════════
-// MAIN PAGE — Wizard Flow
+// MAIN PAGE — Single Page Layout
 // ═══════════════════════════════════════════
 
 const MemoryRecap = () => {
@@ -336,24 +337,22 @@ const MemoryRecap = () => {
   const { user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [flashcards, setFlashcards] = useState<any[]>([]);
-  
   const [loading, setLoading] = useState(true);
   const [wizard, setWizard] = useState<WizardState>({
-    step: "section", section: null, contentType: null, subject: null, specificTopic: null, method: null,
+    step: "home", section: null, contentType: null, subject: null, specificTopic: null, method: null,
   });
-  const [specificInput, setSpecificInput] = useState("");
+  const [specificInputRipasso, setSpecificInputRipasso] = useState("");
+  const [specificInputRinforza, setSpecificInputRinforza] = useState("");
 
   // Load data
   useEffect(() => {
     const load = async () => {
       const memoryData = await getMemoryItems();
       setItems(memoryData);
-
       if (user) {
         const { data: fc } = await supabase.from("flashcards").select("*").eq("user_id", user.id)
           .order("next_review_at", { ascending: true, nullsFirst: true });
         setFlashcards(fc || []);
-
       }
       setLoading(false);
     };
@@ -371,25 +370,24 @@ const MemoryRecap = () => {
     [items]
   );
 
-
-  // Get subjects for the current section + content type
-  const getRelevantItems = (): any[] => {
-    if (wizard.section === "ripasso") {
-      if (wizard.contentType === "today") return todayItems;
-      if (wizard.contentType === "cumulative") return items;
+  // Get relevant items based on section + content type
+  const getRelevantItems = (section: Section, contentType: ContentType): any[] => {
+    if (section === "ripasso") {
+      if (contentType === "today") return todayItems;
+      if (contentType === "cumulative") return items;
       return [];
     }
-    if (wizard.section === "rinforza") {
-      if (wizard.contentType === "today") return weakItems.filter(i => i.created_at >= getTodayStart());
-      if (wizard.contentType === "cumulative") return weakItems;
+    if (section === "rinforza") {
+      if (contentType === "today") return weakItems.filter(i => i.created_at >= getTodayStart());
+      if (contentType === "cumulative") return weakItems;
       return [];
     }
-    return [];
     return [];
   };
 
   const relevantSubjects = useMemo(() => {
-    const relevant = getRelevantItems();
+    if (!wizard.section || !wizard.contentType || wizard.contentType === "specific") return [];
+    const relevant = getRelevantItems(wizard.section, wizard.contentType);
     const subjectMap: Record<string, number> = {};
     for (const item of relevant) {
       const s = item.subject || "Altro";
@@ -398,7 +396,7 @@ const MemoryRecap = () => {
     return Object.entries(subjectMap).sort(([, a], [, b]) => b - a);
   }, [wizard.section, wizard.contentType, items, weakItems, todayItems]);
 
-  // Get flashcards filtered by the wizard context
+  // Get flashcards filtered
   const getFilteredFlashcards = (): any[] => {
     if (wizard.specificTopic) {
       const topic = wizard.specificTopic.toLowerCase();
@@ -418,62 +416,48 @@ const MemoryRecap = () => {
     return flashcards;
   };
 
-  // Navigation helpers
+  // Navigation
   const goBack = () => {
     if (wizard.step === "study") setWizard(w => ({ ...w, step: "summary", method: null }));
     else if (wizard.step === "summary") {
-      if (wizard.contentType === "specific") setWizard(w => ({ ...w, step: "content", specificTopic: null, subject: null }));
+      if (wizard.contentType === "specific") setWizard(w => ({ ...w, step: "home", section: null, contentType: null, specificTopic: null, subject: null }));
       else setWizard(w => ({ ...w, step: "subject-pick", subject: null }));
     }
-    else if (wizard.step === "subject-pick") setWizard(w => ({ ...w, step: "content", contentType: null }));
-    else if (wizard.step === "content") setWizard(w => ({ ...w, step: "section", section: null }));
+    else if (wizard.step === "subject-pick") setWizard(w => ({ ...w, step: "home", section: null, contentType: null }));
     else navigate("/dashboard");
   };
 
-  const selectSection = (section: Section) => {
-    setWizard({ step: "content", section, contentType: null, subject: null, specificTopic: null, method: null });
+  const pickOption = (section: Section, contentType: ContentType) => {
+    if (contentType === "specific") return; // handled by submit
+    setWizard({ step: "subject-pick", section, contentType, subject: null, specificTopic: null, method: null });
   };
 
-  const selectContentType = (ct: ContentType) => {
-    if (ct === "specific") {
-      setWizard(w => ({ ...w, step: "content", contentType: ct }));
-    } else {
-      setWizard(w => ({ ...w, step: "subject-pick", contentType: ct, specificTopic: null }));
-    }
+  const submitSpecific = (section: Section, topic: string) => {
+    if (!topic.trim()) return;
+    setWizard({ step: "summary", section, contentType: "specific", subject: topic.trim(), specificTopic: topic.trim(), method: null });
   };
 
   const selectSubject = (subject: string) => {
     setWizard(w => ({ ...w, step: "summary", subject }));
   };
 
-  const submitSpecificTopic = () => {
-    const trimmed = specificInput.trim();
-    if (!trimmed) return;
-    setWizard(w => ({ ...w, step: "summary", contentType: "specific", specificTopic: trimmed, subject: trimmed }));
-  };
-
   const selectMethod = (method: StudyMethod) => {
     if (method === "flashcard" && wizard.specificTopic) {
-      // For specific topic, navigate to flashcard generation
       navigate(`/flashcards?mode=topic&topic=${encodeURIComponent(wizard.specificTopic)}`);
       return;
     }
     setWizard(w => ({ ...w, step: "study", method }));
   };
 
-  // ─── Section labels & styles ───
-  const sectionConfig: Record<Section, { label: string; description: string; icon: any; color: string }> = {
-    ripasso: { label: "Ripasso", description: "Rivedi quello che hai già studiato", icon: RefreshCw, color: "bg-primary/10 text-primary" },
-    rinforza: { label: "Concetti da rinforzare", description: "Rafforza gli argomenti dove hai più bisogno", icon: Target, color: "bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400" },
-  };
-
-  // Header text
-  const getHeaderText = (): string => {
-    if (wizard.step === "section") return "Scegli cosa vuoi ripassare e fallo nel modo più adatto a te.";
-    if (wizard.step === "content") return sectionConfig[wizard.section!].label;
-    if (wizard.step === "subject-pick") return `${sectionConfig[wizard.section!].label} · ${wizard.contentType === "today" ? "Di oggi" : "Cumulativo"}`;
+  // Header
+  const getSubtitle = (): string => {
+    if (wizard.step === "home") return "Scegli cosa vuoi ripassare e fallo nel modo più adatto a te.";
+    if (wizard.step === "subject-pick") {
+      const label = wizard.section === "ripasso" ? "Ripasso" : "Rafforza";
+      const ct = wizard.contentType === "today" ? "Di oggi" : "Cumulativo";
+      return `${label} · ${ct}`;
+    }
     if (wizard.step === "summary") return "Ecco cosa hai studiato";
-    if (wizard.step === "method") return "Come vuoi ripassare?";
     return "";
   };
 
@@ -484,6 +468,70 @@ const MemoryRecap = () => {
       </div>
     );
   }
+
+  // ─── Section block builder ───
+  const renderSectionBlock = (section: Section) => {
+    const isRipasso = section === "ripasso";
+    const label = isRipasso ? "Ripasso" : "Rafforza";
+    const description = isRipasso ? "Rivedi quello che hai già studiato" : "Rafforza gli argomenti dove hai più bisogno";
+    const Icon = isRipasso ? RefreshCw : Target;
+    const iconColor = isRipasso ? "bg-primary/10 text-primary" : "bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400";
+    const specificInput = isRipasso ? specificInputRipasso : specificInputRinforza;
+    const setSpecificInput = isRipasso ? setSpecificInputRipasso : setSpecificInputRinforza;
+
+    return (
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ ...spring, delay: isRipasso ? 0 : 0.1 }}
+        className="space-y-2.5">
+        {/* Section header */}
+        <div className="flex items-center gap-3 mb-1">
+          <div className={`w-9 h-9 rounded-xl ${iconColor} flex items-center justify-center flex-shrink-0`}>
+            <Icon className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-foreground">{label}</p>
+            <p className="text-xs text-muted-foreground">{description}</p>
+          </div>
+        </div>
+
+        {/* Option: Today */}
+        <button onClick={() => pickOption(section, "today")}
+          className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
+          <CalendarDays className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          <span className="text-sm font-medium text-foreground flex-1">Quello che hai studiato oggi</span>
+          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+        </button>
+
+        {/* Option: Cumulative */}
+        <button onClick={() => pickOption(section, "cumulative")}
+          className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
+          <Brain className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          <span className="text-sm font-medium text-foreground flex-1">Ripasso cumulativo</span>
+          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+        </button>
+
+        {/* Option: Specific topic */}
+        <div className="rounded-xl border border-border bg-card p-3.5">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">Argomento specifico</span>
+          </div>
+          <div className="mt-2.5 flex gap-2">
+            <Input
+              value={specificInput}
+              onChange={e => setSpecificInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") submitSpecific(section, specificInput); }}
+              placeholder="Es: frazioni, rivoluzione francese..."
+              className="text-sm"
+            />
+            <Button onClick={() => submitSpecific(section, specificInput)} disabled={!specificInput.trim()} size="sm" className="shrink-0 px-4">
+              Vai
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -497,7 +545,7 @@ const MemoryRecap = () => {
             <h1 className="font-display text-lg font-bold text-foreground">Ripassa e Rafforza</h1>
           </div>
           {wizard.step !== "study" && (
-            <p className="text-sm text-muted-foreground ml-8">{getHeaderText()}</p>
+            <p className="text-sm text-muted-foreground ml-8">{getSubtitle()}</p>
           )}
         </div>
       </div>
@@ -506,97 +554,17 @@ const MemoryRecap = () => {
       <div className="max-w-2xl mx-auto px-5 pt-5">
         <AnimatePresence mode="wait">
 
-          {/* ═══ STEP 1: Choose Section ═══ */}
-          {wizard.step === "section" && (
-            <motion.div key="section" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
-              className="space-y-3">
-              {(["ripasso", "rinforza"] as Section[]).map((section, i) => {
-                const cfg = sectionConfig[section];
-                const Icon = cfg.icon;
-                let count = 0;
-                if (section === "ripasso") count = items.length;
-                if (section === "rinforza") count = weakItems.length;
-
-                return (
-                  <motion.button key={section} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ ...spring, delay: i * 0.06 }}
-                    onClick={() => selectSection(section)}
-                    className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
-                    <div className={`w-11 h-11 rounded-xl ${cfg.color} flex items-center justify-center flex-shrink-0`}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground">{cfg.label}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{cfg.description}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {count > 0 && (
-                        <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{count}</span>
-                      )}
-                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                    </div>
-                  </motion.button>
-                );
-              })}
+          {/* ═══ HOME: Both sections on one page ═══ */}
+          {wizard.step === "home" && (
+            <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -12 }}
+              className="space-y-8">
+              {renderSectionBlock("ripasso")}
+              <div className="border-t border-border" />
+              {renderSectionBlock("rinforza")}
             </motion.div>
           )}
 
-          {/* ═══ STEP 2: Choose Content Type ═══ */}
-          {wizard.step === "content" && (
-            <motion.div key="content" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
-              className="space-y-3">
-              {/* Today */}
-              <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0 }}
-                onClick={() => selectContentType("today")}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
-                <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-                  <CalendarDays className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">Quello che hai studiato oggi</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-              </motion.button>
-
-              {/* Cumulative */}
-              <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.06 }}
-                onClick={() => selectContentType("cumulative")}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
-                <div className="w-11 h-11 rounded-xl bg-secondary/30 text-secondary-foreground flex items-center justify-center flex-shrink-0">
-                  <Brain className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">Ripasso cumulativo</p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-              </motion.button>
-
-              {/* Specific topic — inline input */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.12 }}
-                className="rounded-2xl border border-border bg-card p-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-11 h-11 rounded-xl bg-accent/50 text-accent-foreground flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="w-5 h-5" />
-                  </div>
-                  <p className="text-sm font-semibold text-foreground">Argomento specifico</p>
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <Input
-                    value={specificInput}
-                    onChange={e => setSpecificInput(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && submitSpecificTopic()}
-                    placeholder="Es: frazioni, rivoluzione francese..."
-                    className="text-sm"
-                  />
-                  <Button onClick={submitSpecificTopic} disabled={!specificInput.trim()} size="sm" className="shrink-0 px-4">
-                    Vai
-                  </Button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-
-          {/* ═══ STEP 2.5: Choose Subject ═══ */}
+          {/* ═══ SUBJECT PICK ═══ */}
           {wizard.step === "subject-pick" && (
             <motion.div key="subject-pick" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
               className="space-y-3">
@@ -605,15 +573,12 @@ const MemoryRecap = () => {
                 <div className="text-center py-12 px-6">
                   <BookOpen className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                   <p className="text-sm text-muted-foreground font-medium">
-                    {wizard.contentType === "today"
-                      ? "Nessun contenuto studiato oggi"
-                      : "Nessun contenuto disponibile"}
+                    {wizard.contentType === "today" ? "Nessun contenuto studiato oggi" : "Nessun contenuto disponibile"}
                   </p>
                   <button onClick={goBack} className="mt-3 text-sm text-primary font-medium">Torna indietro</button>
                 </div>
               ) : (
                 <>
-                  {/* "All subjects" option — only for cumulative */}
                   {wizard.contentType === "cumulative" && (
                     <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring }}
                       onClick={() => selectSubject("all")}
@@ -621,13 +586,10 @@ const MemoryRecap = () => {
                       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                         <Layers className="w-4 h-4 text-primary" />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-foreground">Tutte le materie</p>
-                      </div>
+                      <p className="text-sm font-semibold text-foreground flex-1">Tutte le materie</p>
                       <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     </motion.button>
                   )}
-
                   {relevantSubjects.map(([subject, count], i) => {
                     const colors = subjectColors[subject] || subjectColors.Matematica;
                     return (
@@ -638,9 +600,7 @@ const MemoryRecap = () => {
                         <div className={`w-10 h-10 rounded-xl ${colors.bg} flex items-center justify-center`}>
                           <BookOpen className={`w-4 h-4 ${colors.text}`} />
                         </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-foreground">{subject}</p>
-                        </div>
+                        <p className="text-sm font-semibold text-foreground flex-1">{subject}</p>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">{count}</span>
                           <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -653,7 +613,7 @@ const MemoryRecap = () => {
             </motion.div>
           )}
 
-          {/* ═══ STEP 3: Summary ═══ */}
+          {/* ═══ SUMMARY ═══ */}
           {wizard.step === "summary" && (
             <motion.div key="summary" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
               className="space-y-4">
@@ -664,7 +624,6 @@ const MemoryRecap = () => {
                 </p>
               </div>
 
-              {/* Concept summaries */}
               {(() => {
                 const summaryItems = wizard.specificTopic
                   ? items.filter(i => i.concept?.toLowerCase().includes(wizard.specificTopic!.toLowerCase()) || i.subject?.toLowerCase().includes(wizard.specificTopic!.toLowerCase()))
@@ -686,8 +645,6 @@ const MemoryRecap = () => {
                   );
                 }
 
-                // For memory items (ripasso / rinforza), show concept summaries
-                // Group by subject
                 const grouped: Record<string, any[]> = {};
                 for (const item of summaryItems) {
                   const key = item.subject || "Altro";
@@ -746,9 +703,7 @@ const MemoryRecap = () => {
                   <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
                     <MessageCircle className="w-5 h-5" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-foreground">Ripassa con il Coach</p>
-                  </div>
+                  <p className="text-sm font-semibold text-foreground flex-1">Ripassa con il Coach</p>
                   <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </motion.button>
 
@@ -758,16 +713,14 @@ const MemoryRecap = () => {
                   <div className="w-11 h-11 rounded-xl bg-secondary/30 text-secondary-foreground flex items-center justify-center flex-shrink-0">
                     <Layers className="w-5 h-5" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-foreground">Usa le Flashcard</p>
-                  </div>
+                  <p className="text-sm font-semibold text-foreground flex-1">Usa le Flashcard</p>
                   <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </motion.button>
               </div>
             </motion.div>
           )}
 
-          {/* ═══ STEP 4: Study ═══ */}
+          {/* ═══ STUDY ═══ */}
           {wizard.step === "study" && (
             <motion.div key="study" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
               {wizard.method === "coach" ? (
