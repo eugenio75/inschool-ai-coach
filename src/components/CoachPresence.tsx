@@ -285,15 +285,22 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border rounded-2xl p-4 sm:p-5">
       <div className="flex items-start gap-3 mb-3">
-        <motion.div
-          key={coachMood}
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex-shrink-0 mt-0.5 overflow-hidden bg-primary/5"
-        >
-          <img src={getCoachMoodSrc(coachMood)} alt={coachName || "Coach"} className="w-full h-full object-cover" width={64} height={64} />
-        </motion.div>
+        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex-shrink-0 mt-0.5 overflow-hidden bg-primary/5">
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={loading ? "loading" : coachMood}
+              src={getCoachMoodSrc(loading ? "happy" : coachMood)}
+              alt={coachName || "Coach"}
+              className="w-full h-full object-cover"
+              width={64}
+              height={64}
+              initial={loading ? false : { scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            />
+          </AnimatePresence>
+        </div>
         <div className="flex-1 min-w-0">
           {coachName && !loading && (
             <p className="text-[10px] font-semibold text-primary mb-0.5 uppercase tracking-wider">{coachName}</p>
