@@ -55,6 +55,8 @@ const experienceAnswers = [
   { id: "sad", icon: Moon, label: "Un po' triste" },
   { id: "normal", icon: Minus, label: "Normale" },
   { id: "mixed", icon: Shuffle, label: "Un po' e un po'" },
+  { id: "excited", icon: Star, label: "Entusiasmante!" },
+  { id: "boring", icon: Minus, label: "Noiosa" },
 ];
 
 function getStateAnswers(gender?: string) {
@@ -63,6 +65,8 @@ function getStateAnswers(gender?: string) {
     { id: "calm", icon: Sun, label: g(gender, "Tranquillo", "Tranquilla") },
     { id: "tired", icon: Moon, label: `Un po' ${g(gender, "stanco", "stanca")}` },
     { id: "nervous", icon: AlertTriangle, label: `Un po' ${g(gender, "agitato", "agitata")}` },
+    { id: "curious", icon: Star, label: g(gender, "Curioso", "Curiosa") },
+    { id: "confused", icon: Shuffle, label: g(gender, "Confuso", "Confusa") },
   ];
 }
 
