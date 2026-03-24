@@ -114,7 +114,25 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
 
       if (isChild) {
         const result = await childApi("get-paused-session", { homeworkId });
-        if (result.session) {
+        if (result.completed && result.session) {
+          // Completed session — show conversation history read-only
+          const conv = (result.session as any).conversation_sessions;
+          const savedMessages = conv?.messaggi;
+          if (Array.isArray(savedMessages) && savedMessages.length > 0) {
+            const chatMsgs: ChatMsg[] = savedMessages.map((m: any) => ({
+              role: m.role === "coach" || m.role === "assistant" ? "assistant" as const : "user" as const,
+              content: m.text || m.content || "",
+            }));
+            setMessages(chatMsgs);
+            setSessionCompleted(true);
+            setSessionId(result.session.id);
+            setCurrentStep(result.session.total_steps || 1);
+            setTotalSteps(result.session.total_steps || 0);
+            setSetupDone(true);
+          } else {
+            setShowCheckin(true);
+          }
+        } else if (result.session && !result.completed) {
           const sess = result.session;
           const hasRealProgress = (sess.current_step || 1) > 1 || sess.last_difficulty;
           
@@ -134,6 +152,11 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
             setMessages([{ role: "assistant", content: resumeMsg }]);
             setSetupDone(true);
           }
+        } else if (hw.completed) {
+          // Homework marked completed but no session found — show as completed
+          setSessionCompleted(true);
+          setMessages([{ role: "assistant", content: `Questo compito è già stato completato! ✅\n\n**${hw.title}**\n\nPuoi ripassare i concetti nella sezione "Ripassa e rafforza".` }]);
+          setSetupDone(true);
         } else {
           setShowCheckin(true);
         }
