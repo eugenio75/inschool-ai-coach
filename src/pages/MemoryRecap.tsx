@@ -783,7 +783,7 @@ const MemoryRecap = () => {
           )}
 
           {/* ═══ SUMMARY ═══ */}
-          {wizard.step === "summary" && (
+          {wizard.step === "summary" && !activeGroupStudy && (
             <motion.div key="summary" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
               className="space-y-4">
               <div className="flex items-center gap-2 mb-1">
