@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Brain, ArrowRight, Send, Flame, BookOpen, AlertTriangle, Sparkles, MessageCircle, PenLine, Heart, BatteryLow, CloudRain } from "lucide-react";
+import { Brain, ArrowRight, Send, Flame, BookOpen, AlertTriangle, Heart, BatteryLow, CloudRain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
@@ -72,6 +72,19 @@ function buildLocalCoachMessage(profileName: string, ctx: CoachContext) {
   };
 }
 
+const placeholders = [
+  "Chiedimi qualsiasi cosa...",
+  "Raccontami come va...",
+  "Su cosa vuoi lavorare?",
+  "Come posso aiutarti oggi?",
+];
+
+const moodOptions = [
+  { label: "Non mi va oggi", icon: CloudRain, msg: "Oggi non ho proprio voglia di studiare, non me la sento", color: "text-blue-600 dark:text-blue-400" },
+  { label: "Sono stanco", icon: BatteryLow, msg: "Mi sento stanco e senza energie oggi", color: "text-amber-600 dark:text-amber-400" },
+  { label: "Ho bisogno di parlare", icon: Heart, msg: "Ho bisogno di parlare con qualcuno di come mi sento", color: "text-rose-600 dark:text-rose-400" },
+];
+
 export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" }) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -80,10 +93,28 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
   const [action, setAction] = useState<{ text: string; route: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [coachInput, setCoachInput] = useState("");
+  const [showMood, setShowMood] = useState(false);
+  const [placeholderIdx, setPlaceholderIdx] = useState(0);
+  const moodRef = useRef<HTMLDivElement>(null);
   const [ctx, setCtx] = useState<CoachContext>({
     streak: 0, pendingHomework: [], teacherAssignments: [],
     urgentCount: 0, recentEmotions: [], recentErrors: [], recentSessions: [],
   });
+
+  // Rotate placeholder
+  useEffect(() => {
+    const timer = setInterval(() => setPlaceholderIdx(i => (i + 1) % placeholders.length), 4000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Close mood on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (moodRef.current && !moodRef.current.contains(e.target as Node)) setShowMood(false);
+    }
+    if (showMood) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showMood]);
 
   useEffect(() => {
     fetchCoachMessage();
@@ -233,25 +264,10 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
     navigate(`/us?type=study&msg=${encodeURIComponent(coachInput)}`);
   };
 
-  const quickActions = [
-    { label: "Spiegami un argomento", icon: <Sparkles className="w-3 h-3" />, msg: "Vorrei capire meglio un argomento" },
-    { label: "Aiutami a organizzarmi", icon: <PenLine className="w-3 h-3" />, msg: "Aiutami a organizzare lo studio di oggi" },
-  ];
-
-  const emotionalChips = [
-    { label: "Non mi va oggi", icon: <CloudRain className="w-3 h-3" />, msg: "Oggi non ho proprio voglia di studiare, non me la sento", color: "border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300" },
-    { label: "Sono stanco", icon: <BatteryLow className="w-3 h-3" />, msg: "Mi sento stanco e senza energie oggi", color: "border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300" },
-    { label: "Ho bisogno di parlare", icon: <Heart className="w-3 h-3" />, msg: "Ho bisogno di parlare con qualcuno di come mi sento", color: "border-rose-200 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300" },
-  ];
-
-  const showPills = variant === "full";
-  const pills: { icon: JSX.Element; label: string; color: string }[] = [];
-  if (showPills) {
-    if (ctx.streak > 0) pills.push({ icon: <Flame className="w-3 h-3" />, label: `${ctx.streak} giorni`, color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" });
-    if (ctx.urgentCount > 0) pills.push({ icon: <AlertTriangle className="w-3 h-3" />, label: `${ctx.urgentCount} urgenti`, color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" });
-    if (ctx.pendingHomework.length > 0) pills.push({ icon: <BookOpen className="w-3 h-3" />, label: `${ctx.pendingHomework.length} compiti`, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" });
-    if (ctx.teacherAssignments.length > 0) pills.push({ icon: <BookOpen className="w-3 h-3" />, label: `${ctx.teacherAssignments.length} dal prof`, color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" });
-  }
+  const handleMoodSelect = (msg: string) => {
+    setShowMood(false);
+    navigate(`/us?type=study&msg=${encodeURIComponent(msg)}`);
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border rounded-2xl p-4 sm:p-5">
@@ -269,16 +285,6 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
             <p className="text-sm text-foreground leading-relaxed font-medium">{message}</p>
           )}
 
-          {!loading && pills.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {pills.map((pill, i) => (
-                <span key={i} className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${pill.color}`}>
-                  {pill.icon}{pill.label}
-                </span>
-              ))}
-            </div>
-          )}
-
           {action && !loading && (
             <button onClick={() => navigate(action.route)} className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
               {action.text}<ArrowRight className="w-3.5 h-3.5" />
@@ -287,56 +293,65 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
         </div>
       </div>
 
-      {/* Quick action chips */}
+      {/* Chat input with mood button */}
       {!loading && (
-        <div className="flex flex-wrap gap-1.5 mb-2">
-          {quickActions.map((qa) => (
+        <div className="border-t border-border pt-3">
+          <div className="flex gap-2 items-center">
+            {/* Mood toggle */}
+            <div className="relative" ref={moodRef}>
+              <button
+                onClick={() => setShowMood(!showMood)}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors shrink-0 ${
+                  showMood ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+                title="Come ti senti?"
+              >
+                <Heart className="w-4 h-4" />
+              </button>
+
+              <AnimatePresence>
+                {showMood && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute bottom-full left-0 mb-2 bg-card border border-border rounded-xl shadow-lg p-1.5 min-w-[200px] z-10"
+                  >
+                    <p className="text-[10px] text-muted-foreground font-medium px-2 pt-1 pb-1.5">Come ti senti oggi?</p>
+                    {moodOptions.map((opt) => (
+                      <button
+                        key={opt.label}
+                        onClick={() => handleMoodSelect(opt.msg)}
+                        className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left hover:bg-muted transition-colors"
+                      >
+                        <opt.icon className={`w-4 h-4 shrink-0 ${opt.color}`} />
+                        <span className="text-xs font-medium text-foreground">{opt.label}</span>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <input
+              type="text"
+              value={coachInput}
+              onChange={(e) => setCoachInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              placeholder={placeholders[placeholderIdx]}
+              className="flex-1 text-sm border border-border rounded-xl px-3 py-2.5 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 bg-muted/50 transition-all"
+            />
             <button
-              key={qa.label}
-              onClick={() => navigate(`/us?type=study&msg=${encodeURIComponent(qa.msg)}`)}
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-full border border-border bg-muted/50 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              onClick={handleSend}
+              disabled={!coachInput.trim()}
+              className="bg-primary hover:bg-primary/90 disabled:opacity-40 text-primary-foreground px-4 py-2.5 rounded-xl transition-colors shrink-0"
             >
-              {qa.icon}{qa.label}
+              <Send className="w-4 h-4" />
             </button>
-          ))}
+          </div>
         </div>
       )}
-
-      {/* Emotional chips */}
-      {!loading && (
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {emotionalChips.map((ec) => (
-            <button
-              key={ec.label}
-              onClick={() => navigate(`/us?type=study&msg=${encodeURIComponent(ec.msg)}`)}
-              className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-full border transition-colors hover:opacity-80 ${ec.color}`}
-            >
-              {ec.icon}{ec.label}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Chat input */}
-      <div className="border-t border-border pt-3">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={coachInput}
-            onChange={(e) => setCoachInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            placeholder="Scrivi al coach..."
-            className="flex-1 text-sm border border-border rounded-xl px-3 py-2.5 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 bg-muted/50"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!coachInput.trim()}
-            className="bg-primary hover:bg-primary/90 disabled:opacity-40 text-primary-foreground px-4 py-2.5 rounded-xl transition-colors"
-          >
-            <Send className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
     </motion.div>
   );
 }
