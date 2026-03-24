@@ -473,27 +473,11 @@ const MemoryRecap = () => {
   // ─── Section block builder ───
   const renderSectionBlock = (section: Section) => {
     const isRipasso = section === "ripasso";
-    const label = isRipasso ? "Ripasso" : "Rafforza";
-    const description = isRipasso ? "Rivedi quello che hai già studiato" : "Rafforza gli argomenti dove hai più bisogno";
-    const Icon = isRipasso ? RefreshCw : Target;
-    const iconColor = isRipasso ? "bg-primary/10 text-primary" : "bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400";
     const specificInput = isRipasso ? specificInputRipasso : specificInputRinforza;
     const setSpecificInput = isRipasso ? setSpecificInputRipasso : setSpecificInputRinforza;
 
     return (
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-        transition={{ ...spring, delay: isRipasso ? 0 : 0.1 }}
-        className="space-y-2.5">
-        {/* Section header */}
-        <div className="flex items-center gap-3 mb-1">
-          <div className={`w-9 h-9 rounded-xl ${iconColor} flex items-center justify-center flex-shrink-0`}>
-            <Icon className="w-4 h-4" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-foreground">{label}</p>
-            <p className="text-xs text-muted-foreground">{description}</p>
-          </div>
-        </div>
+      <div className="space-y-2.5">
 
         {/* Option: Today */}
         <button onClick={() => pickOption(section, "today")}
