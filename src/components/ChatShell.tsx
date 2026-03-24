@@ -14,7 +14,7 @@ interface ChatShellProps {
   messages: ChatMsg[];
   streamingText: string;
   sending: boolean;
-  onSend: (text: string) => void;
+  onSend?: (text: string) => void;
   onBack: () => void;
   onAction?: (value: string) => void;
   progress?: number;
@@ -28,6 +28,7 @@ interface ChatShellProps {
   pomodoroMinutes?: number;
   extraFooter?: React.ReactNode;
   inputPlaceholder?: string;
+  disabled?: boolean;
 }
 
 export function ChatShell({
@@ -39,6 +40,7 @@ export function ChatShell({
   showVoice = true, showAttach = true,
   showPomodoro = false, pomodoroMinutes = 25,
   extraFooter, inputPlaceholder = "Scrivi la tua risposta...",
+  disabled = false,
 }: ChatShellProps) {
   const [input, setInput] = useState("");
   const [showExplainOptions, setShowExplainOptions] = useState(false);
@@ -51,7 +53,7 @@ export function ChatShell({
 
   function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
-    if (!input.trim() || sending) return;
+    if (!input.trim() || sending || !onSend) return;
     onSend(input.trim());
     setInput("");
   }
@@ -173,8 +175,8 @@ export function ChatShell({
       {/* Extra footer */}
       {extraFooter}
 
-      {/* Input toolbar - hide when actions are showing */}
-      {!hasActions && (
+      {/* Input toolbar - hide when actions are showing or disabled (read-only) */}
+      {!hasActions && !disabled && onSend && (
         <div className="border-t border-border bg-card p-3 shrink-0">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {showVoice && (

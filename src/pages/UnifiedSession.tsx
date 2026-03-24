@@ -352,27 +352,30 @@ Inizia con la prima domanda.`;
       }
     };
 
+    const isReadOnly = guided.sessionCompleted;
+
     return (
       <>
         <ChatShell
           title={guided.homework?.title || "Sessione guidata"}
-          subtitle={guided.homework?.subject}
-          progress={guided.methodPhase === "none" || guided.methodPhase === "ready" ? guided.progressPercent : undefined}
-          progressLabel={guided.methodPhase === "none" || guided.methodPhase === "ready" ? guided.progressLabel : undefined}
+          subtitle={isReadOnly ? `${guided.homework?.subject} · ✅ Completato` : guided.homework?.subject}
+          progress={!isReadOnly && (guided.methodPhase === "none" || guided.methodPhase === "ready") ? guided.progressPercent : undefined}
+          progressLabel={!isReadOnly && (guided.methodPhase === "none" || guided.methodPhase === "ready") ? guided.progressLabel : undefined}
           messages={guided.messages}
           streamingText={guided.streamingText}
           sending={guided.sending}
-          onSend={guided.handleSend}
+          onSend={isReadOnly ? undefined : guided.handleSend}
           onAction={guided.handleMethodAction}
           onBack={handleGuidedBack}
-          showHint={true}
-          showStuck={true}
-          showExplain={true}
-          showVoice={true}
-          showAttach={true}
-          showPomodoro={true}
+          showHint={!isReadOnly}
+          showStuck={!isReadOnly}
+          showExplain={!isReadOnly}
+          showVoice={!isReadOnly}
+          showAttach={!isReadOnly}
+          showPomodoro={!isReadOnly}
           pomodoroMinutes={profile?.focus_time || 25}
-          inputPlaceholder="Scrivi la tua risposta..."
+          inputPlaceholder={isReadOnly ? "Sessione completata — chat in sola lettura" : "Scrivi la tua risposta..."}
+          disabled={isReadOnly}
         />
 
         <AlertDialog open={showPauseDialog} onOpenChange={setShowPauseDialog}>

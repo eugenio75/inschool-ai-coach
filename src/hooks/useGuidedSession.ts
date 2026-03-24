@@ -138,6 +138,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
           setShowCheckin(true);
         }
       } else {
+        // Check for paused sessions first
         const { data: existing } = await supabase
           .from("guided_sessions")
           .select("*")
@@ -172,6 +173,38 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
               : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
             setMessages([{ role: "assistant", content: resumeMsg }]);
             setSetupDone(true);
+          }
+        } else if (hw.completed) {
+          // Task is completed — load conversation history if available
+          const { data: completedSession } = await supabase
+            .from("guided_sessions")
+            .select("*, conversation_sessions(messaggi)")
+            .eq("homework_id", homeworkId)
+            .eq("status", "completed")
+            .order("completed_at", { ascending: false })
+            .limit(1);
+
+          if (completedSession && completedSession.length > 0) {
+            const sess = completedSession[0];
+            const conv = (sess as any).conversation_sessions;
+            const savedMessages = conv?.messaggi;
+
+            if (Array.isArray(savedMessages) && savedMessages.length > 0) {
+              const chatMsgs: ChatMsg[] = savedMessages.map((m: any) => ({
+                role: m.role === "coach" || m.role === "assistant" ? "assistant" as const : "user" as const,
+                content: m.text || m.content || "",
+              }));
+              setMessages(chatMsgs);
+              setSessionCompleted(true);
+              setSessionId(sess.id);
+              setCurrentStep(sess.total_steps || 1);
+              setTotalSteps(sess.total_steps || 0);
+              setSetupDone(true);
+            } else {
+              setShowCheckin(true);
+            }
+          } else {
+            setShowCheckin(true);
           }
         } else {
           setShowCheckin(true);
@@ -559,10 +592,31 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
       }
 
       if (sessionComplete && sessionId) {
+        // Save conversation history
+        const chatToSave = newMessages
+          .filter((m: ChatMsg) => m.content?.trim())
+          .map((m: ChatMsg) => ({ role: m.role, text: m.content }));
+
         if (isChild) {
-          await childApi("complete-session", { sessionId, homeworkId });
+          await childApi("complete-session", { sessionId, homeworkId, chatMessages: chatToSave });
         } else {
-          await supabase.from("guided_sessions").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", sessionId);
+          // Save conversation to conversation_sessions
+          const { data: convSession } = await supabase
+            .from("conversation_sessions")
+            .insert({
+              profile_id: homework?.child_profile_id,
+              titolo: homework?.title || "Sessione guidata",
+              materia: homework?.subject,
+              messaggi: chatToSave,
+            })
+            .select("id")
+            .single();
+
+          await supabase.from("guided_sessions").update({
+            status: "completed",
+            completed_at: new Date().toISOString(),
+            conversation_id: convSession?.id || null,
+          }).eq("id", sessionId);
           await supabase.from("homework_tasks").update({ completed: true, updated_at: new Date().toISOString() }).eq("id", homeworkId);
         }
 
@@ -685,6 +739,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
     setShowCelebration,
     showCheckin,
     setupDone,
+    sessionCompleted,
     progressPercent,
     progressLabel,
     loadSession,

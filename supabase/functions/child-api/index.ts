@@ -78,13 +78,14 @@ serve(async (req) => {
     switch (action) {
       case "get-tasks": {
         const today = new Date().toISOString().split("T")[0];
+        const todayStart = `${today}T00:00:00.000Z`;
         const { data } = await supabase
           .from("homework_tasks")
           .select("*")
           .eq("child_profile_id", childProfileId)
           .or(`due_date.is.null,due_date.lte.${today}`)
-          .order("due_date", { ascending: true, nullsFirst: false })
-          .order("created_at", { ascending: true });
+          .or(`completed.eq.false,completed.is.null,updated_at.gte.${todayStart}`)
+          .order("created_at", { ascending: false });
         result = data || [];
         break;
       }
