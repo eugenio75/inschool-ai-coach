@@ -336,7 +336,7 @@ const MemoryRecap = () => {
   const { user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [flashcards, setFlashcards] = useState<any[]>([]);
-  const [errors, setErrors] = useState<any[]>([]);
+  
   const [loading, setLoading] = useState(true);
   const [wizard, setWizard] = useState<WizardState>({
     step: "section", section: null, contentType: null, subject: null, specificTopic: null, method: null,
@@ -354,9 +354,6 @@ const MemoryRecap = () => {
           .order("next_review_at", { ascending: true, nullsFirst: true });
         setFlashcards(fc || []);
 
-        const { data: le } = await supabase.from("learning_errors").select("*").eq("user_id", user.id)
-          .eq("resolved", false).order("created_at", { ascending: false }).limit(100);
-        setErrors(le || []);
       }
       setLoading(false);
     };
@@ -374,10 +371,6 @@ const MemoryRecap = () => {
     [items]
   );
 
-  const todayErrors = useMemo(() => {
-    const todayStart = getTodayStart();
-    return errors.filter(e => e.created_at >= todayStart);
-  }, [errors]);
 
   // Get subjects for the current section + content type
   const getRelevantItems = (): any[] => {
