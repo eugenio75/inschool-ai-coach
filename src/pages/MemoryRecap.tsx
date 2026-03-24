@@ -627,18 +627,20 @@ const MemoryRecap = () => {
                 </div>
               ) : (
                 <>
-                  {/* "All subjects" option */}
-                  <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring }}
-                    onClick={() => selectSubject("all")}
-                    className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Layers className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-foreground">Tutte le materie</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                  </motion.button>
+                  {/* "All subjects" option — only for cumulative */}
+                  {wizard.contentType === "cumulative" && (
+                    <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring }}
+                      onClick={() => selectSubject("all")}
+                      className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <Layers className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-foreground">Tutte le materie</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </motion.button>
+                  )}
 
                   {relevantSubjects.map(([subject, count], i) => {
                     const colors = subjectColors[subject] || subjectColors.Matematica;
