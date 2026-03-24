@@ -376,9 +376,9 @@ Inizia con la prima domanda.`;
               <label className="text-sm font-medium text-foreground mb-2 block">Scegli cosa ripassare</label>
               <div className="grid grid-cols-1 gap-2">
                 {[
-                  { id: "today", label: "Ripassa quello di oggi", desc: "Carte generate dalle sessioni di studio odierne", icon: CalendarDays },
-                  { id: "cumulative", label: "Ripasso cumulativo", desc: "Tutte le carte ordinate per priorità SRS", icon: Brain },
-                  { id: "prep", label: getPrepLabel(schoolLevel), desc: "Simulazione calibrata sui tuoi punti deboli", icon: GraduationCap },
+                  { id: "today", label: "Ripassa quello di oggi", icon: CalendarDays },
+                  { id: "cumulative", label: "Ripasso cumulativo", icon: Brain },
+                  { id: "prep", label: getPrepLabel(schoolLevel), icon: GraduationCap },
                 ].map((opt) => (
                   <button
                     key={opt.id}
@@ -396,7 +396,6 @@ Inizia con la prima domanda.`;
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-foreground">{opt.label}</p>
-                      <p className="text-xs text-muted-foreground">{opt.desc}</p>
                     </div>
                   </button>
                 ))}
