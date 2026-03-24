@@ -46,6 +46,7 @@ const FreeStudySession = lazy(() => import("./pages/FreeStudySession"));
 const UnifiedSession = lazy(() => import("./pages/UnifiedSession"));
 const MaterialLibrary = lazy(() => import("./pages/MaterialLibrary"));
 const FlashcardSession = lazy(() => import("./pages/FlashcardSession"));
+const StudyTasks = lazy(() => import("./pages/StudyTasks"));
 
 const queryClient = new QueryClient();
 
@@ -163,6 +164,7 @@ const AppRoutes = () => (
         <Route path="/study" element={<AccessibleRoute><MaybeAdultLayout><FreeStudySession /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/us" element={<AccessibleRoute><UnifiedSession /></AccessibleRoute>} />
         <Route path="/flashcards" element={<AccessibleRoute><FlashcardSession /></AccessibleRoute>} />
+        <Route path="/study-tasks" element={<AccessibleRoute><StudyTasks /></AccessibleRoute>} />
         <Route path="/libreria" element={<AccessibleRoute><MaybeAdultLayout><MaterialLibrary /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/agenda-docente" element={<AccessibleRoute><MaybeAdultLayout><AgendaDocente /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/parent-dashboard" element={<ProtectedRoute><ParentDashboard /></ProtectedRoute>} />

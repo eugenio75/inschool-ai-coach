@@ -137,31 +137,6 @@ const DashboardAlunno = () => {
         </motion.div>
       </div></div>
 
-      <div className="px-4 sm:px-6 mt-5 sm:mt-6 pb-4"><div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-3">
-          <h3 id="compiti-oggi" className="font-display font-semibold text-foreground text-sm">Compiti di oggi</h3>
-          <button onClick={() => navigate("/memory")} className="text-xs text-primary font-medium hover:underline flex items-center gap-1"><Brain className="w-3 h-3" /> Ripassa</button>
-        </div>
-        {loading ? (
-          <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
-        ) : tasks.length === 0 ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
-            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4"><BookOpen className="w-7 h-7 text-muted-foreground" /></div>
-            <p className="text-muted-foreground mb-4">Nessun compito ancora!</p>
-            <Button onClick={() => navigate("/add-homework")} className="bg-primary text-primary-foreground rounded-2xl"><Plus className="w-4 h-4 mr-2" /> Aggiungi compiti</Button>
-          </motion.div>
-        ) : (
-          <div className="space-y-3">{tasks.map((task, i) => (
-            <motion.div key={task.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.3 + i * 0.08 }}>
-              <TaskCard task={mapTask(task)} onClick={() => navigate(`/us?type=guided&hw=${task.id}`)} onDelete={async (taskId) => {
-                await deleteTask(taskId);
-                const dbTasks = await getTasks();
-                setTasks(dbTasks);
-              }} />
-            </motion.div>
-          ))}</div>
-        )}
-      </div></div>
 
       {/* FAB for desktop (mobile uses BottomNav) */}
       <div className="hidden sm:block fixed bottom-8 right-6 z-50">
