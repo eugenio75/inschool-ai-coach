@@ -437,6 +437,13 @@ const AddHomework = () => {
                           );
                         })}
                       </div>
+                      <input
+                        type="text"
+                        value={task.customNote}
+                        onChange={(e) => updateTask(task.id, { customNote: e.target.value })}
+                        placeholder="Altro? Scrivi qui (es. 'Solo esercizi 3 e 5')..."
+                        className="w-full mt-2 text-sm px-3 py-2 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
                     </div>
                   </motion.div>
                 ))}
