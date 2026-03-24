@@ -19,6 +19,8 @@ function mapRole(schoolLevel: string): string {
 function buildEnhancedSystemPrompt(vars: {
   coachName: string;
   profile: string;
+  gender: string | null;
+  age: number | string | null;
   studentInterests: string;
   sessionHistory: string;
   adaptiveProfile: string;
