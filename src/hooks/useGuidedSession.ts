@@ -38,39 +38,60 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
         .from("homework_tasks")
         .select("*")
         .eq("id", homeworkId)
-        .single();
-      if (!hw) { navigate("/dashboard"); return; }
-      setHomework(hw);
+        .maybeSingle();
 
-      // Check for existing paused session
-      const { data: existing } = await supabase
-        .from("guided_sessions")
-        .select("*")
-        .eq("homework_id", homeworkId)
-        .eq("status", "paused")
-        .order("updated_at", { ascending: false })
-        .limit(1);
+      if (hw) {
+        setHomework(hw);
 
-      if (existing && existing.length > 0) {
-        const sess = existing[0];
-        setSessionId(sess.id);
-        setCurrentStep(sess.current_step || 1);
-        setTotalSteps(sess.total_steps || 0);
-
-        const { data: savedSteps } = await supabase
-          .from("study_steps")
+        const { data: existing } = await supabase
+          .from("guided_sessions")
           .select("*")
-          .eq("session_id", sess.id)
-          .order("step_number", { ascending: true });
-        setSteps(savedSteps || []);
+          .eq("homework_id", homeworkId)
+          .eq("status", "paused")
+          .order("updated_at", { ascending: false })
+          .limit(1);
 
-        const resumeMsg = sess.last_difficulty
-          ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}. Riprendiamo dallo step ${sess.current_step}.`
-          : `Bentornato! Ripartiamo dallo step ${sess.current_step}.`;
-        setMessages([{ role: "assistant", content: resumeMsg }]);
-        setSetupDone(true);
-      } else {
+        if (existing && existing.length > 0) {
+          const sess = existing[0];
+          setSessionId(sess.id);
+          setCurrentStep(sess.current_step || 1);
+          setTotalSteps(sess.total_steps || 0);
+
+          const { data: savedSteps } = await supabase
+            .from("study_steps")
+            .select("*")
+            .eq("session_id", sess.id)
+            .order("step_number", { ascending: true });
+          setSteps(savedSteps || []);
+
+          const resumeMsg = sess.last_difficulty
+            ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}. Riprendiamo dallo step ${sess.current_step}.`
+            : `Bentornato! Ripartiamo dallo step ${sess.current_step}.`;
+          setMessages([{ role: "assistant", content: resumeMsg }]);
+          setSetupDone(true);
+        } else {
+          setShowCheckin(true);
+        }
+
+        setLoading(false);
+        return;
+      }
+
+      const { data: assignment } = await supabase
+        .from("teacher_assignments")
+        .select("id, title, subject, description, type, due_date, metadata")
+        .eq("id", homeworkId)
+        .maybeSingle();
+
+      if (assignment) {
+        setHomework({
+          ...assignment,
+          task_type: assignment.type === "esercizi" || assignment.type === "verifica" ? "exercise" : "study",
+          is_teacher_assignment: true,
+        });
         setShowCheckin(true);
+      } else {
+        navigate("/dashboard");
       }
     } catch (err) {
       console.error("loadSession error:", err);
