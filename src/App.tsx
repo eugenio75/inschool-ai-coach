@@ -82,8 +82,13 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 }
 
 import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { LangProvider } from "@/contexts/LangContext";
+
+function GuidedRedirect() {
+  const { homeworkId } = useParams<{ homeworkId: string }>();
+  return <Navigate to={`/us?type=guided&hw=${homeworkId}`} replace />;
+}
 
 // Global Guard for Intelligent Routing
 function RoleGuard({ children }: { children: React.ReactNode }) {
