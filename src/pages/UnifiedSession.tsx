@@ -400,7 +400,7 @@ Inizia con la prima domanda.`;
           subject={guided.homework?.subject || ""}
           isJunior={isJunior}
         />
-      </>;
+      </>
     );
   }
 
