@@ -76,6 +76,7 @@ export default function UnifiedSession() {
   const [topic, setTopic] = useState("");
   const [subject, setSubject] = useState("");
   const [mode, setMode] = useState<"scritta" | "orale">("scritta");
+  const [reviewMode, setReviewMode] = useState<"chat" | "flashcard">("chat");
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [streamingText, setStreamingText] = useState("");
   const [sending, setSending] = useState(false);
