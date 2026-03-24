@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Lock, Loader2, Users, Shield, Pencil, Bell,
-  Eye, EyeOff, Trash2, RotateCcw, Moon,
+  Eye, EyeOff, Trash2, RotateCcw, Moon, Brain,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { LogoutButton } from "@/components/shared/LogoutButton";
 import { getChildSession } from "@/lib/childSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { CoachAvatarPicker, getCoachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
 
 // Avatar colors for profile customization
 const AVATAR_COLORS = [
@@ -85,6 +86,11 @@ const Settings = () => {
 
   // Library toggle per child profile
   const [libraryFlags, setLibraryFlags] = useState<Record<string, boolean>>({});
+
+  // Coach customization
+  const [coachAvatar, setCoachAvatar] = useState<string | null>(null);
+  const [coachNameSetting, setCoachNameSetting] = useState("");
+  const [savingCoach, setSavingCoach] = useState(false);
 
   // Check if adult role
   const session = getChildSession();
