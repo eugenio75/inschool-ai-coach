@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { BookOpen, FileText, Map, List, Key, Layers, Loader2, Brain, MessageCircle } from "lucide-react";
+import { BookOpen, FileText, Map, List, Key, Layers, Loader2, Brain, MessageCircle, CalendarDays, Sparkles, GraduationCap } from "lucide-react";
 import { ChatShell } from "@/components/ChatShell";
 import { ChatMsg, streamChat } from "@/lib/streamChat";
 import { SessionCelebration } from "@/components/SessionCelebration";
