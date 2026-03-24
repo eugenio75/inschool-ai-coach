@@ -471,7 +471,20 @@ const MemoryRecap = () => {
     load();
   }, [user]);
 
-  // Derived data
+  // Auto-navigate from celebration: /memory?section=ripasso&content=today
+  useEffect(() => {
+    if (autoNavigated || loading) return;
+    const params = new URLSearchParams(window.location.search);
+    const section = params.get("section") as Section | null;
+    const content = params.get("content") as ContentType | null;
+    if (section && content) {
+      setActiveTab(section);
+      setWizard({ step: "home", section, contentType: content, subject: null, specificTopic: null, method: null });
+      setAutoNavigated(true);
+    }
+  }, [loading, autoNavigated]);
+
+
   const todayItems = useMemo(() => {
     const todayStart = getTodayStart();
     return items.filter(i => i.created_at >= todayStart);
