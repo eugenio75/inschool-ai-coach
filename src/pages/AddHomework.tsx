@@ -375,12 +375,12 @@ const AddHomework = () => {
                           { value: "Riassumere", emoji: "📝" },
                           { value: "Memorizzare", emoji: "🧠" },
                         ].map((opt) => {
-                          const isSelected = photoNote === opt.value;
+                          const isSelected = photoTags.includes(opt.value);
                           return (
                             <button
                               key={opt.value}
                               type="button"
-                              onClick={() => setPhotoNote(isSelected ? "" : opt.value)}
+                              onClick={() => setPhotoTags(prev => isSelected ? prev.filter(v => v !== opt.value) : [...prev, opt.value])}
                               className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
                                 isSelected
                                   ? "bg-primary text-primary-foreground"
