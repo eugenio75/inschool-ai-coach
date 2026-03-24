@@ -40,6 +40,7 @@ export function ChatShell({
   showVoice = true, showAttach = true,
   showPomodoro = false, pomodoroMinutes = 25,
   extraFooter, inputPlaceholder = "Scrivi la tua risposta...",
+  disabled = false,
 }: ChatShellProps) {
   const [input, setInput] = useState("");
   const [showExplainOptions, setShowExplainOptions] = useState(false);
