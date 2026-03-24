@@ -158,6 +158,7 @@ export async function createTask(task: {
   recall_questions?: string[];
   source_type?: string;
   source_image_url?: string;
+  source_files?: string[];
   due_date?: string;
   task_type?: string;
 }) {
@@ -521,7 +522,8 @@ export async function uploadHomeworkImage(file: File): Promise<string | null> {
 
 // ============ OCR ============
 
-export async function extractTasksFromImage(imageUrl: string, sourceType: string, userNote?: string) {
+export async function extractTasksFromImage(imageUrl: string | string[], sourceType: string, userNote?: string) {
+  const imageUrls = Array.isArray(imageUrl) ? imageUrl : [imageUrl];
   const response = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ocr-homework`,
     {
@@ -530,7 +532,7 @@ export async function extractTasksFromImage(imageUrl: string, sourceType: string
         "Content-Type": "application/json",
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
-      body: JSON.stringify({ imageUrl, sourceType, userNote: userNote || undefined }),
+      body: JSON.stringify({ imageUrls, sourceType, userNote: userNote || undefined }),
     }
   );
   if (!response.ok) {
