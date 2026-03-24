@@ -1,11 +1,12 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Trophy } from "lucide-react";
+import { Star, Trophy, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface SessionCelebrationProps {
   isVisible: boolean;
   onClose: () => void;
+  onGoToReview?: () => void;
   studentName: string;
   bloomLevel: number;
   subject: string;
@@ -24,6 +25,7 @@ const CONFETTI_COLORS = [
 export function SessionCelebration({
   isVisible,
   onClose,
+  onGoToReview,
   studentName,
   bloomLevel,
   subject,
@@ -45,12 +47,6 @@ export function SessionCelebration({
     [particleCount]
   );
 
-  useEffect(() => {
-    if (!isVisible) return;
-    const timer = setTimeout(onClose, 3500);
-    return () => clearTimeout(timer);
-  }, [isVisible, onClose]);
-
   const Icon = isJunior ? Trophy : Star;
   const title = "Sessione completata!";
   const body = isJunior
@@ -65,7 +61,6 @@ export function SessionCelebration({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-sm"
-          onClick={onClose}
         >
           {/* Confetti particles */}
           {particles.map((p) => (
@@ -134,9 +129,16 @@ export function SessionCelebration({
               </div>
             )}
 
-            <Button onClick={onClose} className="w-full">
-              Continua
-            </Button>
+            <div className="flex flex-col gap-2">
+              {onGoToReview && (
+                <Button onClick={onGoToReview} variant="outline" className="w-full gap-2">
+                  <Brain className="w-4 h-4" /> Ripassa e Rafforza
+                </Button>
+              )}
+              <Button onClick={onClose} className="w-full">
+                Torna alla home
+              </Button>
+            </div>
           </motion.div>
         </motion.div>
       )}
