@@ -92,6 +92,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   const [showCelebration, setShowCelebration] = useState(false);
   const [showCheckin, setShowCheckin] = useState(false);
   const [setupDone, setSetupDone] = useState(false);
+  const [sessionCompleted, setSessionCompleted] = useState(false);
 
   // Method block state
   const [methodPhase, setMethodPhase] = useState<MethodPhase>("none");
@@ -212,6 +213,14 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   }
 
   function handleMethodAction(value: string) {
+    // Handle finish session action
+    if (value === "finish_session") {
+      setMessages(prev => prev.map(m => ({ ...m, actions: undefined })));
+      playCelebrationSound();
+      setShowCelebration(true);
+      return;
+    }
+
     if (methodPhase === "ask_familiarity") {
       const fam = value as Familiarity;
       setFamiliarity(fam);
@@ -221,7 +230,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       const proposal = getMethodProposal(fam, homework?.task_type || "study", homework?.title || "");
 
       setMessages(prev => [
-        ...prev.map(m => ({ ...m, actions: undefined })), // clear old actions
+        ...prev.map(m => ({ ...m, actions: undefined })),
         { role: "user", content: familiarityLabel },
         {
           role: "assistant",
@@ -590,10 +599,21 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
           }).catch(() => {});
         } catch {}
 
-        setTimeout(() => {
-          playCelebrationSound();
-          setShowCelebration(true);
-        }, 500);
+        // Mark session as completed — add "Fine" button instead of auto-celebration
+        setSessionCompleted(true);
+        // Append the finish action to the last message
+        setMessages(prev => {
+          const updated = [...prev];
+          const last = updated[updated.length - 1];
+          if (last && last.role === "assistant") {
+            updated[updated.length - 1] = {
+              ...last,
+              content: last.content + "\n\n✅ **Ottimo lavoro! Hai completato tutti gli step.**\nQuando hai finito di leggere, premi il pulsante qui sotto.",
+              actions: [{ label: "🎉  Fine — Vedi il risultato", value: "finish_session", primary: true }],
+            };
+          }
+          return updated;
+        });
       }
     } catch (err) {
       console.error("sendMessage error:", err);
