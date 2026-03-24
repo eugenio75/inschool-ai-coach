@@ -372,17 +372,16 @@ Inizia con la prima domanda.`;
         </div>
         <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
           {type === "review" ? (
-            <div>
+            <div className="space-y-3">
               <label className="text-sm font-medium text-foreground mb-2 block">Scegli cosa ripassare</label>
               <div className="grid grid-cols-1 gap-2">
                 {[
-                  { label: "Ripassa quello di oggi", desc: "Carte generate dalle sessioni di studio odierne", icon: CalendarDays },
-                  { label: "Ripasso cumulativo", desc: "Tutte le carte ordinate per priorità SRS", icon: Brain },
-                  { label: "Genera su un argomento", desc: "Scegli un tema e l'AI crea carte mirate", icon: Sparkles },
-                  { label: getPrepLabel(schoolLevel), desc: "Simulazione calibrata sui tuoi punti deboli", icon: GraduationCap },
+                  { id: "today", label: "Ripassa quello di oggi", desc: "Carte generate dalle sessioni di studio odierne", icon: CalendarDays },
+                  { id: "cumulative", label: "Ripasso cumulativo", desc: "Tutte le carte ordinate per priorità SRS", icon: Brain },
+                  { id: "prep", label: getPrepLabel(schoolLevel), desc: "Simulazione calibrata sui tuoi punti deboli", icon: GraduationCap },
                 ].map((opt) => (
                   <button
-                    key={opt.label}
+                    key={opt.id}
                     onClick={() => setTopic(opt.label)}
                     className={`flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all ${
                       topic === opt.label
@@ -401,6 +400,19 @@ Inizia con la prima domanda.`;
                     </div>
                   </button>
                 ))}
+              </div>
+
+              {/* Campo libero per argomento specifico */}
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                  <Sparkles className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <Input
+                  value={topic.startsWith("Ripassa") || topic.startsWith("Ripasso") || topic === getPrepLabel(schoolLevel) ? "" : topic}
+                  onChange={e => setTopic(e.target.value)}
+                  placeholder="Oppure scrivi un argomento specifico..."
+                  className="text-sm pl-9"
+                />
               </div>
             </div>
           ) : type !== "prep" && (
