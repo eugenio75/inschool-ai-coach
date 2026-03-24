@@ -739,6 +739,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
     setShowCelebration,
     showCheckin,
     setupDone,
+    sessionCompleted,
     progressPercent,
     progressLabel,
     loadSession,
