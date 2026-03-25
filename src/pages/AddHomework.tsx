@@ -8,7 +8,18 @@ import { useToast } from "@/hooks/use-toast";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
-type InputMode = "choose" | "manual" | "photo-diary" | "photo-book" | "processing";
+type InputMode = "choose" | "manual" | "photo-diary" | "photo-book" | "processing" | "confirm";
+
+interface ExtractedTask {
+  id: string;
+  subject: string;
+  title: string;
+  description: string;
+  estimatedMinutes: number;
+  difficulty: number;
+  selected: boolean;
+  task_types: string[];
+}
 
 interface UploadedFile {
   file: File;
@@ -46,6 +57,9 @@ const AddHomework = () => {
   const [dueDate, setDueDate] = useState(getToday());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
+  const [extractedTasks, setExtractedTasks] = useState<ExtractedTask[]>([]);
+  const [extractedSourceType, setExtractedSourceType] = useState<"photo-book" | "photo-diary" | null>(null);
   const [saving, setSaving] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [photoNote, setPhotoNote] = useState("");
@@ -54,10 +68,10 @@ const AddHomework = () => {
   const handlePhotoAnalysis = async () => {
     if (uploadedFiles.length === 0) return;
     const sourceType = mode === "photo-book" ? "photo-book" : "photo-diary";
+    setExtractedSourceType(sourceType);
     setMode("processing");
 
     try {
-      // Upload all files
       const urls: string[] = [];
       for (const uf of uploadedFiles) {
         if (uf.uploadedUrl) {
@@ -68,31 +82,25 @@ const AddHomework = () => {
           urls.push(url);
         }
       }
+      setUploadedImageUrls(urls);
 
       const combinedNote = [...photoTags, photoNote.trim()].filter(Boolean).join(". ") || undefined;
       const result = await extractTasksFromImage(urls, sourceType, combinedNote);
 
       if (result.tasks && result.tasks.length > 0) {
-        // Auto-save all tasks directly — no Step 2
-        let savedCount = 0;
-        for (const t of result.tasks) {
-          const taskTypes = Array.isArray(t.task_types) ? t.task_types : [t.task_type || "exercise"];
-          await createTask({
+        setExtractedTasks(
+          result.tasks.map((t: any, i: number) => ({
+            id: `e${i}`,
             subject: t.subject || "Altro",
             title: t.title,
             description: t.exerciseText || t.description || "",
-            estimated_minutes: t.estimatedMinutes || 15,
+            estimatedMinutes: t.estimatedMinutes || 15,
             difficulty: t.difficulty || 1,
-            source_type: sourceType,
-            source_image_url: urls[0] || undefined,
-            source_files: urls.length > 0 ? urls : undefined,
-            due_date: dueDate,
-            task_type: taskTypes.join(", "),
-          });
-          savedCount++;
-        }
-        toast({ title: `${savedCount} ${savedCount === 1 ? "compito aggiunto" : "compiti aggiunti"}! ✨` });
-        navigate("/dashboard");
+            selected: true,
+            task_types: Array.isArray(t.task_types) ? t.task_types : [t.task_type || "exercise"],
+          }))
+        );
+        setMode("confirm");
       } else {
         throw new Error("Nessun compito trovato nella foto");
       }
@@ -105,6 +113,32 @@ const AddHomework = () => {
       });
       setMode(sourceType);
     }
+  };
+
+  const handleConfirmExtracted = async () => {
+    const selected = extractedTasks.filter(t => t.selected);
+    if (selected.length === 0) return;
+    setSaving(true);
+    try {
+      for (const task of selected) {
+        await createTask({
+          subject: task.subject,
+          title: task.title,
+          description: task.description,
+          estimated_minutes: task.estimatedMinutes,
+          difficulty: task.difficulty,
+          source_type: extractedSourceType || "photo",
+          source_image_url: uploadedImageUrls[0] || undefined,
+          source_files: uploadedImageUrls.length > 0 ? uploadedImageUrls : undefined,
+          due_date: dueDate,
+          task_type: task.task_types.join(", "),
+        });
+      }
+      toast({ title: `${selected.length} ${selected.length === 1 ? "compito aggiunto" : "compiti aggiunti"}! ✨` });
+      navigate("/dashboard");
+    } catch {
+      toast({ title: "Errore", description: "Non sono riuscito a salvare i compiti.", variant: "destructive" });
+    } finally { setSaving(false); }
   };
 
   const processFiles = (files: FileList | File[]) => {
@@ -151,20 +185,28 @@ const AddHomework = () => {
     } finally { setSaving(false); }
   };
 
+  const toggleTask = (id: string) => {
+    setExtractedTasks(prev => prev.map(t => t.id === id ? { ...t, selected: !t.selected } : t));
+  };
+
   const getStepDescription = () => {
     switch (mode) {
       case "choose": return "Come vuoi inserire i compiti di oggi?";
       case "manual": return "Scrivi i dettagli del compito";
       case "photo-diary": case "photo-book": return "Carica una o più foto, oppure un PDF";
       case "processing": return "Sto analizzando i file con l'AI...";
+      case "confirm": return "Seleziona i compiti da salvare";
       default: return "";
     }
   };
 
   const goBack = () => {
-    if (mode === "choose") navigate("/dashboard");
+    if (mode === "confirm") setMode(extractedSourceType || "choose");
+    else if (mode === "choose") navigate("/dashboard");
     else { setUploadedFiles([]); setMode("choose"); }
   };
+
+  const selectedCount = extractedTasks.filter(t => t.selected).length;
 
   const DatePickerRow = () => (
     <div className="flex items-center gap-3">
@@ -289,7 +331,6 @@ const AddHomework = () => {
                       ))}
                     </div>
 
-                    {/* Optional note for specific instructions */}
                     <div>
                       <input
                         type="text"
@@ -303,7 +344,7 @@ const AddHomework = () => {
                     <div className="bg-muted/50 rounded-2xl px-4 py-3"><DatePickerRow /></div>
                     <Button onClick={handlePhotoAnalysis} className="w-full bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5 text-base">
                       <Sparkles className="w-4 h-4 mr-2" />
-                      Analizza e salva compiti
+                      Analizza con AI
                     </Button>
                   </div>
                 )}
@@ -319,7 +360,56 @@ const AddHomework = () => {
                 <h3 className="font-display text-xl font-bold text-foreground mb-2">
                   Sto analizzando {uploadedFiles.length === 1 ? "il file" : `${uploadedFiles.length} file`}...
                 </h3>
-                <p className="text-muted-foreground">Riconosco il testo, trovo le materie e salvo i compiti per te.</p>
+                <p className="text-muted-foreground">Riconosco il testo, trovo le materie e organizzo tutto per te.</p>
+              </motion.div>
+            )}
+
+            {/* Confirm — select/deselect tasks */}
+            {mode === "confirm" && (
+              <motion.div key="confirm" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={spring} className="space-y-4">
+                <div className="bg-sage-light/50 rounded-2xl px-4 py-3 flex items-center gap-3">
+                  <Sparkles className="w-4 h-4 text-sage-dark flex-shrink-0" />
+                  <p className="text-sm text-foreground">
+                    Ho trovato <strong>{extractedTasks.length} {extractedTasks.length === 1 ? "compito" : "compiti"}</strong>. Deseleziona quelli che non ti servono.
+                  </p>
+                </div>
+
+                {extractedTasks.map((task, i) => (
+                  <motion.button
+                    key={task.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ ...spring, delay: i * 0.06 }}
+                    onClick={() => toggleTask(task.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border text-left transition-all ${
+                      task.selected
+                        ? "border-primary bg-card shadow-soft"
+                        : "border-border bg-muted/30 opacity-50"
+                    }`}
+                  >
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                      task.selected ? "bg-primary" : "bg-border"
+                    }`}>
+                      {task.selected && <Check className="w-4 h-4 text-primary-foreground" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{task.subject}</span>
+                        <span className="text-[10px] text-muted-foreground">~{task.estimatedMinutes} min</span>
+                      </div>
+                      <p className="font-medium text-foreground text-sm truncate">{task.title}</p>
+                    </div>
+                  </motion.button>
+                ))}
+
+                <Button
+                  onClick={handleConfirmExtracted}
+                  disabled={selectedCount === 0 || saving}
+                  className="w-full bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5 text-base disabled:opacity-40"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
+                  Salva {selectedCount} {selectedCount === 1 ? "compito" : "compiti"}
+                </Button>
               </motion.div>
             )}
           </AnimatePresence>
