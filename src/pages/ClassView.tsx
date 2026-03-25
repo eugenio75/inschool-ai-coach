@@ -80,12 +80,19 @@ export default function ClassView() {
   const [aiNumero, setAiNumero] = useState(5);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiOutput, setAiOutput] = useState<string | null>(null);
+  const [aiQuestionType, setAiQuestionType] = useState<"aperte" | "chiuse" | "miste">("miste");
 
   // File upload within dialog
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadUrl, setUploadUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // AI mode file context upload
+  const [aiContextFile, setAiContextFile] = useState<File | null>(null);
+  const [aiContextText, setAiContextText] = useState<string | null>(null);
+  const [aiContextUploading, setAiContextUploading] = useState(false);
+  const aiFileInputRef = useRef<HTMLInputElement>(null);
 
   function resetAssignForm() {
     setAssignTitle("");
@@ -98,8 +105,11 @@ export default function ClassView() {
     setAiPrompt("");
     setAiOutput(null);
     setAiLoading(false);
+    setAiQuestionType("miste");
     setUploadFile(null);
     setUploadUrl(null);
+    setAiContextFile(null);
+    setAiContextText(null);
   }
 
   async function handleFileUpload(file: File) {
@@ -120,11 +130,63 @@ export default function ClassView() {
     setUploading(false);
   }
 
+  async function handleAiContextUpload(file: File) {
+    setAiContextUploading(true);
+    setAiContextFile(file);
+    try {
+      // For images, convert to base64 and use OCR edge function
+      if (file.type.startsWith("image/")) {
+        const base64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+        const { data: { session: authSession } } = await supabase.auth.getSession();
+        const ocrRes = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ocr-homework`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authSession?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ images: [base64] }),
+        });
+        const ocrData = await ocrRes.json();
+        const extracted = ocrData.tasks?.map((t: any) => t.title || t).join("\n") || ocrData.text || "Contenuto estratto dal documento.";
+        setAiContextText(extracted);
+        toast.success("Documento analizzato!");
+      } else {
+        // For PDFs/docs, read as text if possible
+        const text = await file.text().catch(() => null);
+        setAiContextText(text || `[Documento caricato: ${file.name}]`);
+        toast.success("Documento caricato!");
+      }
+    } catch (err: any) {
+      toast.error("Errore analisi documento: " + (err.message || "Riprova"));
+      setAiContextText(`[Documento: ${file.name}]`);
+    }
+    setAiContextUploading(false);
+  }
+
   async function generateAiContent() {
-    if (!aiPrompt.trim()) { toast.error("Descrivi cosa vuoi generare"); return; }
+    if (!aiPrompt.trim() && !aiContextText) { toast.error("Descrivi cosa vuoi generare o carica un documento"); return; }
     setAiLoading(true);
     setAiOutput(null);
     try {
+      let systemPrompt = `Sei un docente esperto. Genera materiale didattico: ${assignType}, livello ${aiLivello}, ${aiNumero} elementi. Classe: ${classe?.nome || ""}. Materia: ${classe?.materia || ""}.`;
+
+      if (assignType === "verifica") {
+        const qTypeDesc = aiQuestionType === "aperte" ? "solo domande aperte (risposta libera)" :
+          aiQuestionType === "chiuse" ? "solo domande a risposta chiusa (scelta multipla con 4 opzioni, indica la risposta corretta)" :
+          "un mix di domande aperte e chiuse (scelta multipla con 4 opzioni, indica la risposta corretta per le chiuse)";
+        systemPrompt += ` La verifica deve contenere ${qTypeDesc}. Formatta con numerazione chiara. Per le domande chiuse usa A) B) C) D). Alla fine aggiungi una sezione "SOLUZIONI" con tutte le risposte corrette.`;
+      }
+
+      let userMessage = aiPrompt;
+      if (aiContextText) {
+        userMessage = `CONTESTO DAL DOCUMENTO CARICATO:\n---\n${aiContextText}\n---\n\nRICHIESTA: ${aiPrompt || "Genera materiale basandoti sul documento caricato."}`;
+      }
+
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
         {
@@ -135,22 +197,57 @@ export default function ClassView() {
           },
           body: JSON.stringify({
             stream: false,
-            maxTokens: 2000,
-            systemPrompt: `Sei un docente esperto. Genera materiale didattico: ${assignType}, livello ${aiLivello}, ${aiNumero} elementi. Classe: ${classe?.nome || ""}. Materia: ${classe?.materia || ""}.`,
-            messages: [{ role: "user", content: aiPrompt }],
+            maxTokens: 3000,
+            systemPrompt,
+            messages: [{ role: "user", content: userMessage }],
           }),
         }
       );
       const data = await res.json();
       const content = data.choices?.[0]?.message?.content?.trim() || "Errore nella generazione.";
       setAiOutput(content);
-      if (!assignTitle) setAssignTitle(aiPrompt.slice(0, 60));
+      if (!assignTitle) setAssignTitle(aiPrompt.slice(0, 60) || "Materiale generato");
       setAssignDesc(content);
     } catch {
       toast.error("Errore nella generazione.");
     } finally {
       setAiLoading(false);
     }
+  }
+
+  function exportToPdf(title: string, content: string, type: string) {
+    const printWin = window.open("", "_blank");
+    if (!printWin) { toast.error("Popup bloccato dal browser"); return; }
+
+    const isVerifica = type === "verifica";
+    const headerColor = isVerifica ? "#b91c1c" : "#1a3a5c";
+    const headerLabel = type.charAt(0).toUpperCase() + type.slice(1);
+
+    printWin.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>
+<style>
+@page { margin: 2cm; }
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 700px; margin: 0 auto; padding: 40px 20px; line-height: 1.8; color: #1a1a1a; font-size: 14px; }
+h1 { font-size: 1.5em; color: ${headerColor}; border-bottom: 3px solid ${headerColor}; padding-bottom: 10px; margin-bottom: 5px; }
+.meta { color: #666; font-size: 0.85em; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid #e5e5e5; }
+.badge { display: inline-block; background: ${headerColor}15; color: ${headerColor}; padding: 2px 10px; border-radius: 12px; font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+pre { white-space: pre-wrap; font-family: inherit; font-size: 0.95em; }
+${isVerifica ? `.question { margin: 16px 0; padding: 12px 16px; border-left: 3px solid ${headerColor}20; background: #fafafa; border-radius: 0 8px 8px 0; }` : ""}
+footer { margin-top: 40px; font-size: 0.7em; color: #999; border-top: 1px solid #e5e5e5; padding-top: 10px; display: flex; justify-content: space-between; }
+.student-info { margin-top: 20px; margin-bottom: 24px; border: 1px solid #ddd; border-radius: 8px; padding: 12px 16px; }
+.student-info span { color: #888; font-size: 0.85em; }
+.line { display: inline-block; border-bottom: 1px solid #333; width: 200px; margin-left: 8px; }
+@media print { body { padding: 0; } }
+</style></head><body>
+<h1>${title}</h1>
+<div class="meta">
+  <span class="badge">${headerLabel}</span> · ${classe?.nome || ""} · ${classe?.materia || ""} · Livello: ${aiLivello}
+</div>
+${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span class="line"></span> &nbsp;&nbsp; <span>Data:</span> <span class="line" style="width:120px"></span></div>` : ""}
+<pre>${content}</pre>
+<footer><span>Generato con InSchool</span><span>${new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}</span></footer>
+</body></html>`);
+    printWin.document.close();
+    setTimeout(() => printWin.print(), 400);
   }
 
   async function handleAssignActivity() {
@@ -596,15 +693,86 @@ export default function ClassView() {
 
             {assignMode === "ai" && (
               <div className="space-y-3">
+                {/* Document context upload */}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">Carica un documento di riferimento (opzionale)</Label>
+                  <input
+                    ref={aiFileInputRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    className="hidden"
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (file) handleAiContextUpload(file);
+                    }}
+                  />
+                  {!aiContextFile ? (
+                    <button
+                      onClick={() => aiFileInputRef.current?.click()}
+                      disabled={aiContextUploading}
+                      className="w-full border border-dashed border-border rounded-xl p-3 text-center hover:bg-muted/30 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Upload className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">
+                        {aiContextUploading ? "Analisi in corso..." : "Foto o documento per contestualizzare"}
+                      </span>
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2 p-2.5 bg-primary/5 border border-primary/20 rounded-xl">
+                      <FileText className="w-5 h-5 text-primary shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground truncate">{aiContextFile.name}</p>
+                        {aiContextText && <p className="text-[10px] text-muted-foreground truncate">{aiContextText.slice(0, 80)}...</p>}
+                      </div>
+                      <Button size="sm" variant="ghost" className="shrink-0 h-7 w-7 p-0" onClick={() => {
+                        setAiContextFile(null);
+                        setAiContextText(null);
+                      }}>
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
                 <div>
                   <Label className="text-xs text-muted-foreground">Descrivi cosa vuoi generare</Label>
                   <Textarea
-                    placeholder="Es: 'Crea 5 domande sul Risorgimento per una terza media, difficoltà media'"
+                    placeholder={aiContextFile
+                      ? "Es: 'Genera una verifica basandoti sul documento caricato'"
+                      : "Es: 'Crea 5 domande sul Risorgimento per una terza media, difficoltà media'"}
                     value={aiPrompt}
                     onChange={e => setAiPrompt(e.target.value)}
                     className="mt-1 rounded-xl min-h-[60px]"
                   />
                 </div>
+
+                {/* Question type for verifica */}
+                {assignType === "verifica" && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">Tipo di domande</Label>
+                    <div className="flex gap-1.5">
+                      {([
+                        { key: "aperte" as const, label: "Aperte" },
+                        { key: "chiuse" as const, label: "Chiuse" },
+                        { key: "miste" as const, label: "Miste" },
+                      ]).map(({ key, label }) => (
+                        <button
+                          key={key}
+                          onClick={() => setAiQuestionType(key)}
+                          className={cn(
+                            "flex-1 py-2 px-3 rounded-xl text-xs font-medium transition-all border",
+                            aiQuestionType === key
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background text-muted-foreground border-border hover:border-primary/40"
+                          )}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs text-muted-foreground">Livello</Label>
@@ -618,7 +786,7 @@ export default function ClassView() {
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">N. domande</Label>
+                    <Label className="text-xs text-muted-foreground">N. domande/elementi</Label>
                     <Input type="number" min={1} max={20} value={aiNumero}
                       onChange={e => setAiNumero(Number(e.target.value))} className="mt-1 rounded-xl" />
                   </div>
@@ -628,8 +796,13 @@ export default function ClassView() {
                   {aiLoading ? "Generazione in corso..." : "Genera contenuto"}
                 </Button>
                 {aiOutput && (
-                  <div className="bg-muted/50 border border-border rounded-xl p-3 text-sm whitespace-pre-wrap max-h-48 overflow-y-auto">
-                    {aiOutput}
+                  <div className="space-y-2">
+                    <div className="bg-muted/50 border border-border rounded-xl p-3 text-sm whitespace-pre-wrap max-h-48 overflow-y-auto">
+                      {aiOutput}
+                    </div>
+                    <Button size="sm" variant="outline" className="rounded-xl w-full" onClick={() => exportToPdf(assignTitle || "Materiale", aiOutput, assignType)}>
+                      <Download className="w-3.5 h-3.5 mr-1" /> Esporta in PDF
+                    </Button>
                   </div>
                 )}
               </div>
@@ -761,13 +934,7 @@ export default function ClassView() {
                       </div>
                     </div>
                     {m.content && (
-                      <Button size="sm" variant="ghost" className="rounded-xl shrink-0" onClick={() => {
-                        const printWin = window.open("", "_blank");
-                        if (!printWin) { toast.error("Popup bloccato dal browser"); return; }
-                        printWin.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${m.title}</title><style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:20px;line-height:1.7;color:#1a1a1a}h1{font-size:1.4em;border-bottom:2px solid #1a3a5c;padding-bottom:8px;color:#1a3a5c}pre{white-space:pre-wrap;font-family:inherit;font-size:0.95em}footer{margin-top:40px;font-size:0.75em;color:#888;border-top:1px solid #ddd;padding-top:8px}</style></head><body><h1>${m.title}</h1><p style="color:#666;font-size:0.85em">${classe?.nome || ""} · ${classe?.materia || ""} · ${m.type || ""}</p><pre>${m.content}</pre><footer>Generato con InSchool · ${new Date().toLocaleDateString("it-IT")}</footer></body></html>`);
-                        printWin.document.close();
-                        setTimeout(() => printWin.print(), 300);
-                      }}>
+                      <Button size="sm" variant="ghost" className="rounded-xl shrink-0" onClick={() => exportToPdf(m.title, m.content, m.type || "esercizi")}>
                         <Download className="w-3.5 h-3.5 mr-1" /> PDF
                       </Button>
                     )}
