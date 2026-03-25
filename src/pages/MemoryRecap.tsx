@@ -6,7 +6,7 @@ import {
   Loader2, Send, MessageCircle, X, BookOpen,
   Layers, ThumbsDown, Minus as MinusIcon, ThumbsUp, AlertCircle,
   CalendarDays, Target, ChevronRight, Zap, Gamepad2, Trophy,
-  CheckCircle2, XCircle, Clock, Shuffle, HelpCircle,
+  CheckCircle2, XCircle, Clock, Shuffle, HelpCircle, ChevronDown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,7 +22,7 @@ const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 type Section = "ripasso" | "rinforza";
 type ContentType = "today" | "cumulative" | "specific";
 type StudyMethod = "coach" | "flashcard" | "challenge" | "game";
-type Step = "home" | "subject-pick" | "summary" | "method-pick" | "study";
+type Step = "home" | "subject-pick" | "summary" | "study";
 
 interface WizardState {
   step: Step;
@@ -179,7 +179,6 @@ const ReviewChat = ({ topic, subject, section, onClose }: {
 const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
   cards: any[]; subject: string; onClose: () => void;
 }) => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [cards, setCards] = useState(initialCards);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -725,6 +724,7 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
   }
 
   const item = gameItems[currentIdx];
+  const [textInput, setTextInput] = useState("");
 
   return (
     <div className="max-w-lg mx-auto px-6 py-6 space-y-5">
@@ -758,8 +758,10 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
               }
               return (
                 <button key={label} onClick={() => handleTrueFalse(val)} disabled={answered}
-                  className={`p-4 rounded-xl border-2 text-sm font-semibold transition-all ${style}`}>
+                  className={`p-4 rounded-xl border-2 transition-all text-sm font-semibold ${style}`}>
                   {label}
+                  {answered && val === item.isTrue && <CheckCircle2 className="w-4 h-4 text-green-500 inline ml-2" />}
+                  {answered && val === userAnswer && val !== item.isTrue && <XCircle className="w-4 h-4 text-destructive inline ml-2" />}
                 </button>
               );
             })}
@@ -768,31 +770,27 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
 
         {(gameType === "complete" || gameType === "find-error") && !answered && (
           <div className="flex gap-2">
-            <Input placeholder={gameType === "find-error" ? "Scrivi la correzione..." : "Scrivi la risposta..."}
-              onKeyDown={e => { if (e.key === "Enter") handleTextAnswer((e.target as HTMLInputElement).value); }}
+            <Input value={textInput} onChange={e => setTextInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") handleTextAnswer(textInput); }}
+              placeholder={gameType === "find-error" ? "Scrivi la correzione..." : "Completa..."}
               className="text-sm" />
-            <Button size="sm" onClick={(e) => {
-              const inp = (e.currentTarget.previousElementSibling as HTMLInputElement);
-              if (inp?.value) handleTextAnswer(inp.value);
-            }}>Conferma</Button>
+            <Button onClick={() => handleTextAnswer(textInput)} disabled={!textInput.trim()} size="sm">Conferma</Button>
           </div>
         )}
 
-        {gameType === "memory-match" && !answered && item.answer && (
+        {gameType === "memory-match" && !answered && (
           <div className="space-y-2">
-            {/* Shuffle options for display */}
-            {[item.answer, ...(concepts.slice(0, 2).map(c => c.concept).filter(c => c !== item.answer))].sort(() => Math.random() - 0.5).map((opt, i) => (
-              <button key={i} onClick={() => handleTextAnswer(opt)}
-                className="w-full text-left p-3.5 rounded-xl border-2 border-border bg-card hover:border-primary/30 transition-all text-sm font-medium">
-                {opt}
-              </button>
-            ))}
+            {/* For memory-match, we show it as a simple question */}
+            <p className="text-xs text-muted-foreground">Seleziona la risposta corretta</p>
+            <Button onClick={() => handleTextAnswer(item.answer || "")} className="w-full" variant="outline">
+              {item.answer}
+            </Button>
           </div>
         )}
 
         {answered && (
           <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-            {gameType === "true-false" && userAnswer !== item.isTrue && item.correction && (
+            {gameType === "true-false" && item.correction && userAnswer !== item.isTrue && (
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm text-foreground">
                 💡 {item.correction}
               </div>
@@ -813,12 +811,25 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
   );
 };
 
-// ─── Summary Card with expandable detail ───
+// ─── Summary Card with expandable detail + inline mode icons ───
 
-const SummaryCard = ({ item, index, showStrength, compact = false }: { item: any; index: number; showStrength: boolean; compact?: boolean }) => {
+const SummaryCard = ({ item, index, showStrength, compact = false, section, onStartMethod }: {
+  item: any; index: number; showStrength: boolean; compact?: boolean;
+  section: Section;
+  onStartMethod: (concept: any, method: StudyMethod) => void;
+}) => {
   const [expanded, setExpanded] = useState(false);
   const [deepSummary, setDeepSummary] = useState<string | null>(null);
   const [loadingDeep, setLoadingDeep] = useState(false);
+
+  const isRinforza = section === "rinforza";
+
+  const modeIcons: { method: StudyMethod; icon: any; label: string; color: string }[] = [
+    { method: "coach", icon: MessageCircle, label: isRinforza ? "Rafforza" : "Ripassa", color: "text-primary bg-primary/10 hover:bg-primary/20" },
+    { method: "flashcard", icon: Layers, label: "Flashcard", color: "text-amber-600 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/30" },
+    { method: "challenge", icon: Zap, label: "Sfida", color: "text-orange-600 bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/20 dark:hover:bg-orange-900/30" },
+    { method: "game", icon: Gamepad2, label: "Gioca", color: "text-green-600 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30" },
+  ];
 
   const fetchDeepSummary = async () => {
     if (deepSummary) { setExpanded(true); return; }
@@ -878,11 +889,13 @@ const SummaryCard = ({ item, index, showStrength, compact = false }: { item: any
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
       transition={{ ...spring, delay: index * 0.03 }}
-      className={compact ? "py-2 first:pt-0" : "bg-card rounded-xl border border-border p-3.5"}>
-      {compact && index > 0 && <div className="border-t border-border/40 -mt-2 mb-2" />}
+      className={compact ? "py-2.5 first:pt-0" : "bg-card rounded-xl border border-border p-3.5"}>
+      {compact && index > 0 && <div className="border-t border-border/40 -mt-2.5 mb-2.5" />}
       <p className="text-sm font-semibold text-foreground">{item.concept}</p>
-      {item.summary && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{item.summary}</p>}
-      {!item.summary && <p className="text-sm text-muted-foreground mt-1.5 italic">Argomento studiato — espandi per un ripasso completo.</p>}
+      {item.summary && <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{item.summary}</p>}
+      {!item.summary && <p className="text-sm text-muted-foreground mt-1 italic">Argomento studiato — espandi per un ripasso completo.</p>}
+
+      {/* Expandable deep summary */}
       <AnimatePresence>
         {expanded && deepSummary && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
@@ -898,10 +911,12 @@ const SummaryCard = ({ item, index, showStrength, compact = false }: { item: any
         </div>
       )}
       <button onClick={() => expanded ? setExpanded(false) : fetchDeepSummary()}
-        className="mt-2 text-xs font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+        className="mt-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
         {expanded ? "Chiudi" : "Scopri di più"}
         <ChevronRight className={`w-3 h-3 transition-transform ${expanded ? "rotate-90" : ""}`} />
       </button>
+
+      {/* Strength bar */}
       {showStrength && (
         <div className="mt-2 flex items-center gap-2">
           <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
@@ -911,6 +926,21 @@ const SummaryCard = ({ item, index, showStrength, compact = false }: { item: any
           <span className="text-[10px] text-muted-foreground">{item.strength || 0}%</span>
         </div>
       )}
+
+      {/* 4 inline mode icons */}
+      <div className="flex items-center gap-1.5 mt-2.5">
+        {modeIcons.map(m => (
+          <button
+            key={m.method}
+            onClick={(e) => { e.stopPropagation(); onStartMethod(item, m.method); }}
+            className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-all ${m.color}`}
+            title={m.label}
+          >
+            <m.icon className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{m.label}</span>
+          </button>
+        ))}
+      </div>
     </motion.div>
   );
 };
@@ -932,9 +962,9 @@ const MemoryRecap = () => {
   const [specificInputRipasso, setSpecificInputRipasso] = useState("");
   const [specificInputRinforza, setSpecificInputRinforza] = useState("");
   const [autoNavigated, setAutoNavigated] = useState(false);
-  const [activeGroupStudy, setActiveGroupStudy] = useState<{ subject: string; concepts: any[]; method: StudyMethod } | null>(null);
+  const [activeStudy, setActiveStudy] = useState<{ subject: string; concepts: any[]; method: StudyMethod; topic: string } | null>(null);
   const [generatingFlashcards, setGeneratingFlashcards] = useState(false);
-  const [generatedGroupCards, setGeneratedGroupCards] = useState<any[]>([]);
+  const [generatedCards, setGeneratedCards] = useState<any[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -961,6 +991,8 @@ const MemoryRecap = () => {
       setAutoNavigated(true);
     }
   }, [loading, autoNavigated]);
+
+  const currentSection: Section = wizard.section || activeTab;
 
   const todayItems = useMemo(() => {
     const todayStart = getTodayStart();
@@ -999,79 +1031,10 @@ const MemoryRecap = () => {
     return Object.entries(subjectMap).sort(([, a], [, b]) => b - a);
   }, [wizard.section, wizard.contentType, items, weakItems, todayItems]);
 
-  const getFilteredFlashcards = (): any[] => {
-    if (wizard.specificTopic) {
-      const topic = wizard.specificTopic.toLowerCase();
-      return flashcards.filter(c =>
-        c.subject?.toLowerCase().includes(topic) ||
-        c.question?.toLowerCase().includes(topic) ||
-        c.answer?.toLowerCase().includes(topic)
-      );
-    }
-    if (wizard.subject) return flashcards.filter(c => c.subject === wizard.subject);
-    if (wizard.contentType === "today") {
-      const todayStart = getTodayStart();
-      return flashcards.filter(c => c.created_at >= todayStart);
-    }
-    return flashcards;
-  };
-
-  // Get current study concepts for challenge/game
-  const getCurrentConcepts = (): any[] => {
-    if (wizard.specificTopic) {
-      return items.filter(i =>
-        i.concept?.toLowerCase().includes(wizard.specificTopic!.toLowerCase()) ||
-        i.subject?.toLowerCase().includes(wizard.specificTopic!.toLowerCase())
-      );
-    }
-    if (!wizard.section || !wizard.contentType) return items.slice(0, 10);
-    let relevant = getRelevantItems(wizard.section, wizard.contentType);
-    if (wizard.subject && wizard.subject !== "all") {
-      relevant = relevant.filter(i => i.subject === wizard.subject);
-    }
-    return relevant.slice(0, 15);
-  };
-
-  const goBack = () => {
-    if (activeGroupStudy) { setActiveGroupStudy(null); return; }
-    if (wizard.step === "study") setWizard(w => ({ ...w, step: "method-pick", method: null }));
-    else if (wizard.step === "method-pick") setWizard(w => ({ ...w, step: "summary" }));
-    else if (wizard.step === "summary") {
-      if (wizard.contentType === "specific") setWizard(w => ({ ...w, step: "home", section: null, contentType: null, specificTopic: null, subject: null }));
-      else setWizard(w => ({ ...w, step: "subject-pick", subject: null }));
-    }
-    else if (wizard.step === "subject-pick") setWizard(w => ({ ...w, step: "home", section: null, contentType: null }));
-    else navigate("/dashboard");
-  };
-
-  const pickOption = (section: Section, contentType: ContentType) => {
-    if (contentType === "specific") return;
-    setWizard({ step: "subject-pick", section, contentType, subject: null, specificTopic: null, method: null });
-  };
-
-  const submitSpecific = (section: Section, topic: string) => {
-    if (!topic.trim()) return;
-    setWizard({ step: "method-pick", section, contentType: "specific", subject: topic.trim(), specificTopic: topic.trim(), method: null });
-  };
-
-  const selectSubject = (subject: string) => {
-    setWizard(w => ({ ...w, step: "summary", subject }));
-  };
-
-  const goToMethodPick = () => {
-    setWizard(w => ({ ...w, step: "method-pick" }));
-  };
-
-  const selectMethod = (method: StudyMethod) => {
-    if (method === "flashcard" && wizard.specificTopic) {
-      navigate(`/flashcards?mode=topic&topic=${encodeURIComponent(wizard.specificTopic)}`);
-      return;
-    }
-    setWizard(w => ({ ...w, step: "study", method }));
-  };
-
-  const startGroupStudy = async (subject: string, concepts: any[], method: StudyMethod) => {
+  // ─── Start a study method for a single concept or a group ───
+  const startStudyMethod = async (concepts: any[], subject: string, method: StudyMethod, topicLabel: string) => {
     if (method === "flashcard") {
+      // Generate flashcards for this specific concept/group
       setGeneratingFlashcards(true);
       try {
         const conceptTexts = concepts.map(c => `Concetto: ${c.concept}\nRiassunto: ${c.summary || "N/A"}`).join("\n\n");
@@ -1093,44 +1056,79 @@ const MemoryRecap = () => {
             times_shown: 0, times_correct: 0, times_wrong: 0,
           }));
           if (cards.length > 0) {
-            setGeneratedGroupCards(cards);
-            setActiveGroupStudy({ subject, concepts, method: "flashcard" });
+            setGeneratedCards(cards);
+            setActiveStudy({ subject, concepts, method: "flashcard", topic: topicLabel });
           }
         }
       } catch (e) { console.error("Error generating flashcards:", e); }
       finally { setGeneratingFlashcards(false); }
     } else {
-      setActiveGroupStudy({ subject, concepts, method });
+      setActiveStudy({ subject, concepts, method, topic: topicLabel });
     }
   };
 
-  // Method cards config
+  const handleConceptMethod = (concept: any, method: StudyMethod) => {
+    startStudyMethod([concept], concept.subject || "Generale", method, concept.concept);
+  };
+
+  const handleSubjectMethod = (subject: string, concepts: any[], method: StudyMethod) => {
+    startStudyMethod(concepts, subject, method, concepts.map(c => c.concept).join(", "));
+  };
+
+  const goBack = () => {
+    if (activeStudy) { setActiveStudy(null); return; }
+    if (wizard.step === "summary") {
+      if (wizard.contentType === "specific") setWizard(w => ({ ...w, step: "home", section: null, contentType: null, specificTopic: null, subject: null }));
+      else setWizard(w => ({ ...w, step: "subject-pick", subject: null }));
+    }
+    else if (wizard.step === "subject-pick") setWizard(w => ({ ...w, step: "home", section: null, contentType: null }));
+    else navigate("/dashboard");
+  };
+
+  const pickOption = (section: Section, contentType: ContentType) => {
+    if (contentType === "specific") return;
+    setWizard({ step: "subject-pick", section, contentType, subject: null, specificTopic: null, method: null });
+  };
+
+  const submitSpecific = (section: Section, topic: string) => {
+    if (!topic.trim()) return;
+    setWizard({ step: "summary", section, contentType: "specific", subject: topic.trim(), specificTopic: topic.trim(), method: null });
+  };
+
+  const selectSubject = (subject: string) => {
+    setWizard(w => ({ ...w, step: "summary", subject }));
+  };
+
   const isRinforza = activeTab === "rinforza" || wizard.section === "rinforza";
 
-  const methodCards: { method: StudyMethod; icon: any; label: string; desc: string }[] = [
+  const methodCards: { method: StudyMethod; icon: any; label: string; desc: string; color: string }[] = [
     {
       method: "coach",
       icon: MessageCircle,
       label: isRinforza ? "Rafforza con il Coach" : "Ripassa con il Coach",
       desc: isRinforza ? "Ti aiuto a capire meglio i punti più difficili" : "Rivedi l'argomento passo dopo passo con il tuo Coach",
+      color: "text-primary bg-primary/10",
     },
     {
       method: "flashcard",
       icon: Layers,
       label: "Usa le flashcard",
       desc: isRinforza ? "Allenati sui concetti da consolidare" : "Allenati sui concetti chiave in modo rapido",
+      color: "text-amber-600 bg-amber-50 dark:bg-amber-900/20",
     },
     {
       method: "challenge",
       icon: Zap,
       label: "Fai una sfida",
       desc: isRinforza ? "Lavora su un punto debole con una mini missione" : "Mettiti alla prova con una mini missione",
+      color: "text-orange-600 bg-orange-50 dark:bg-orange-900/20",
     },
     {
       method: "game",
       icon: Gamepad2,
       label: "Gioca per imparare",
       desc: isRinforza ? "Capisci meglio con un'attività interattiva" : "Ripassa con un'attività più leggera e interattiva",
+      color: "text-green-600 bg-green-50 dark:bg-green-900/20",
     },
   ];
 
@@ -1146,7 +1144,6 @@ const MemoryRecap = () => {
       return `${label} · ${ct}`;
     }
     if (wizard.step === "summary") return "Ecco cosa hai studiato";
-    if (wizard.step === "method-pick") return "Come vuoi studiare?";
     return "";
   };
 
@@ -1154,6 +1151,16 @@ const MemoryRecap = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Loading overlay for flashcard generation
+  if (generatingFlashcards) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Genero le flashcard...</p>
       </div>
     );
   }
@@ -1195,7 +1202,47 @@ const MemoryRecap = () => {
     );
   };
 
-  const currentSection = wizard.section || activeTab;
+  // ─── Subject-level method picker (bottom sheet style) ───
+  const SubjectMethodBar = ({ subject, concepts }: { subject: string; concepts: any[] }) => {
+    const [showPicker, setShowPicker] = useState(false);
+    const label = isRinforza ? "Rafforza tutta la materia" : "Ripassa tutta la materia";
+
+    return (
+      <div>
+        <button
+          onClick={() => setShowPicker(!showPicker)}
+          className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+        >
+          <Zap className="w-3.5 h-3.5" />
+          {label}
+          <ChevronDown className={`w-3 h-3 transition-transform ${showPicker ? "rotate-180" : ""}`} />
+        </button>
+        <AnimatePresence>
+          {showPicker && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="grid grid-cols-2 gap-1.5 mt-2">
+                {methodCards.map(mc => (
+                  <button
+                    key={mc.method}
+                    onClick={() => { setShowPicker(false); handleSubjectMethod(subject, concepts, mc.method); }}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium transition-all ${mc.color} hover:shadow-sm`}
+                  >
+                    <mc.icon className="w-3.5 h-3.5" />
+                    {mc.label}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -1210,10 +1257,10 @@ const MemoryRecap = () => {
               {wizard.step === "home" ? (activeTab === "ripasso" ? "Ripassa" : "Rafforza") : (currentSection === "ripasso" ? "Ripassa" : "Rafforza")}
             </h1>
           </div>
-          {wizard.step !== "study" && (
+          {!activeStudy && (
             <p className="text-sm text-muted-foreground ml-8 mb-3">{getSubtitle()}</p>
           )}
-          {wizard.step === "home" && (
+          {wizard.step === "home" && !activeStudy && (
             <div className="flex ml-8 gap-1">
               {(["ripasso", "rinforza"] as Section[]).map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)}
@@ -1236,7 +1283,7 @@ const MemoryRecap = () => {
         <AnimatePresence mode="wait">
 
           {/* HOME */}
-          {wizard.step === "home" && (
+          {wizard.step === "home" && !activeStudy && (
             <motion.div key={`home-${activeTab}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
               className="space-y-2.5 pt-1">
               {renderSectionBlock(activeTab)}
@@ -1244,7 +1291,7 @@ const MemoryRecap = () => {
           )}
 
           {/* SUBJECT PICK */}
-          {wizard.step === "subject-pick" && (
+          {wizard.step === "subject-pick" && !activeStudy && (
             <motion.div key="subject-pick" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
               className="space-y-3">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Scegli la materia</p>
@@ -1258,22 +1305,11 @@ const MemoryRecap = () => {
                 </div>
               ) : (
                 <>
-                  {wizard.contentType === "cumulative" && (
-                    <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring }}
-                      onClick={() => selectSubject("all")}
-                      className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <Layers className="w-4 h-4 text-primary" />
-                      </div>
-                      <p className="text-sm font-semibold text-foreground flex-1">Tutte le materie</p>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                    </motion.button>
-                  )}
                   {relevantSubjects.map(([subject, count], i) => {
                     const colors = subjectColors[subject] || subjectColors.Matematica;
                     return (
                       <motion.button key={subject} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                        transition={{ ...spring, delay: (i + 1) * 0.04 }}
+                        transition={{ ...spring, delay: i * 0.04 }}
                         onClick={() => selectSubject(subject)}
                         className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
                         <div className={`w-10 h-10 rounded-xl ${colors.bg} flex items-center justify-center`}>
@@ -1292,21 +1328,10 @@ const MemoryRecap = () => {
             </motion.div>
           )}
 
-          {/* SUMMARY */}
-          {wizard.step === "summary" && !activeGroupStudy && (
+          {/* SUMMARY — concepts grouped by subject, with inline mode icons per concept + subject-level button */}
+          {wizard.step === "summary" && !activeStudy && (
             <motion.div key="summary" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
               className="space-y-4">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-primary" />
-                  <p className="text-sm font-semibold text-foreground">
-                    {wizard.subject === "all" ? "Tutte le materie" : wizard.subject}
-                  </p>
-                </div>
-                <Button size="sm" onClick={goToMethodPick} className="gap-1.5">
-                  <Zap className="w-3.5 h-3.5" /> Inizia a studiare
-                </Button>
-              </div>
 
               {(() => {
                 let summaryItems = wizard.specificTopic
@@ -1333,6 +1358,7 @@ const MemoryRecap = () => {
                   );
                 }
 
+                // Group by subject
                 const exerciseGroups: { subject: string; items: any[]; latestAt: Date }[] = [];
                 for (const item of summaryItems) {
                   const itemTime = new Date(item.created_at).getTime();
@@ -1364,6 +1390,7 @@ const MemoryRecap = () => {
                         <motion.div key={`${group.subject}-${gi}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                           transition={{ ...spring, delay: gi * 0.05 }}
                           className="rounded-2xl border border-border bg-card overflow-hidden">
+                          {/* Subject header */}
                           <div className={`flex items-center gap-3 px-4 py-3 ${colors.bg || "bg-muted/30"} border-b border-border/50`}>
                             <div className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center`}>
                               <BookOpen className={`w-4 h-4 ${colors.text}`} />
@@ -1373,9 +1400,24 @@ const MemoryRecap = () => {
                               <p className="text-[11px] text-muted-foreground">{group.items.length} concett{group.items.length === 1 ? "o" : "i"} · {timeLabel}</p>
                             </div>
                           </div>
-                          <div className="px-4 py-3 space-y-2">
+
+                          {/* Subject-level "Ripassa/Rafforza tutta la materia" */}
+                          <div className="px-4 pt-3 pb-1">
+                            <SubjectMethodBar subject={group.subject} concepts={group.items} />
+                          </div>
+
+                          {/* Per-concept cards with inline icons */}
+                          <div className="px-4 py-2 space-y-1">
                             {group.items.map((item: any, i: number) => (
-                              <SummaryCard key={item.id} item={item} index={i} showStrength={showStrength} compact />
+                              <SummaryCard
+                                key={item.id}
+                                item={item}
+                                index={i}
+                                showStrength={showStrength}
+                                compact
+                                section={currentSection}
+                                onStartMethod={handleConceptMethod}
+                              />
                             ))}
                           </div>
                         </motion.div>
@@ -1387,82 +1429,26 @@ const MemoryRecap = () => {
             </motion.div>
           )}
 
-          {/* METHOD PICK */}
-          {wizard.step === "method-pick" && !activeGroupStudy && (
-            <motion.div key="method-pick" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
-              className="space-y-3">
-              <div className="flex items-center gap-2 mb-1">
-                <BookOpen className="w-4 h-4 text-primary" />
-                <p className="text-sm font-semibold text-foreground">
-                  {wizard.subject === "all" ? "Tutte le materie" : wizard.subject}
-                </p>
-              </div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Scegli come vuoi procedere</p>
-              <div className="space-y-2.5">
-                {methodCards.map((mc, i) => (
-                  <motion.button key={mc.method} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ ...spring, delay: i * 0.05 }}
-                    onClick={() => selectMethod(mc.method)}
-                    className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <mc.icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-foreground">{mc.label}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{mc.desc}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* GROUP STUDY (from summary card CTAs) */}
-          {activeGroupStudy && (
-            <motion.div key="group-study" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
-              {activeGroupStudy.method === "coach" ? (
-                <ReviewChat topic={activeGroupStudy.concepts.map(c => c.concept).join(", ")} subject={activeGroupStudy.subject}
-                  section={currentSection} onClose={() => setActiveGroupStudy(null)} />
-              ) : activeGroupStudy.method === "flashcard" ? (
-                <FlashcardSession cards={generatedGroupCards} subject={activeGroupStudy.subject}
-                  onClose={() => { setActiveGroupStudy(null); setGeneratedGroupCards([]); }} />
-              ) : activeGroupStudy.method === "challenge" ? (
-                <ChallengeSession subject={activeGroupStudy.subject}
-                  topic={activeGroupStudy.concepts.map(c => c.concept).join(", ")}
-                  section={currentSection} concepts={activeGroupStudy.concepts}
-                  onClose={() => setActiveGroupStudy(null)} />
+          {/* ACTIVE STUDY SESSION */}
+          {activeStudy && (
+            <motion.div key="active-study" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
+              {activeStudy.method === "coach" ? (
+                <ReviewChat topic={activeStudy.topic} subject={activeStudy.subject}
+                  section={currentSection} onClose={() => setActiveStudy(null)} />
+              ) : activeStudy.method === "flashcard" ? (
+                <FlashcardSession cards={generatedCards} subject={activeStudy.subject}
+                  onClose={() => { setActiveStudy(null); setGeneratedCards([]); }} />
+              ) : activeStudy.method === "challenge" ? (
+                <ChallengeSession subject={activeStudy.subject}
+                  topic={activeStudy.topic}
+                  section={currentSection} concepts={activeStudy.concepts}
+                  onClose={() => setActiveStudy(null)} />
               ) : (
-                <GameSession subject={activeGroupStudy.subject}
-                  topic={activeGroupStudy.concepts.map(c => c.concept).join(", ")}
-                  section={currentSection} concepts={activeGroupStudy.concepts}
-                  onClose={() => setActiveGroupStudy(null)} />
+                <GameSession subject={activeStudy.subject}
+                  topic={activeStudy.topic}
+                  section={currentSection} concepts={activeStudy.concepts}
+                  onClose={() => setActiveStudy(null)} />
               )}
-            </motion.div>
-          )}
-
-          {/* STUDY (from wizard method pick) */}
-          {wizard.step === "study" && !activeGroupStudy && (
-            <motion.div key="study" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
-              {wizard.method === "coach" ? (
-                <ReviewChat topic={wizard.specificTopic || wizard.subject || "Ripasso generale"}
-                  subject={wizard.subject === "all" ? "Generale" : (wizard.subject || "Generale")}
-                  section={currentSection} onClose={goBack} />
-              ) : wizard.method === "flashcard" ? (
-                <FlashcardSession cards={getFilteredFlashcards()}
-                  subject={wizard.subject === "all" ? "Tutte le materie" : (wizard.subject || "")}
-                  onClose={goBack} />
-              ) : wizard.method === "challenge" ? (
-                <ChallengeSession subject={wizard.subject === "all" ? "Generale" : (wizard.subject || "Generale")}
-                  topic={wizard.specificTopic || wizard.subject || "Ripasso"}
-                  section={currentSection} concepts={getCurrentConcepts()}
-                  onClose={goBack} />
-              ) : wizard.method === "game" ? (
-                <GameSession subject={wizard.subject === "all" ? "Generale" : (wizard.subject || "Generale")}
-                  topic={wizard.specificTopic || wizard.subject || "Ripasso"}
-                  section={currentSection} concepts={getCurrentConcepts()}
-                  onClose={goBack} />
-              ) : null}
             </motion.div>
           )}
 
