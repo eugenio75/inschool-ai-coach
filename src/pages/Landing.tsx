@@ -6,6 +6,9 @@ import {
   ArrowRight,
   Sparkles,
   CheckCircle,
+  BadgeCheck,
+  Shield,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLang } from "@/contexts/LangContext";
@@ -250,6 +253,103 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* ── SEZIONE BLOCKCHAIN ── */}
+      <section className="py-20 px-6" style={{ backgroundColor: "#0d1b2a" }}>
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <motion.div {...fade} className="text-center mb-12">
+            <span
+              className="inline-flex items-center gap-2 text-xs font-medium px-4 py-1.5 rounded-full border mb-6"
+              style={{ color: "#60a5fa", borderColor: "rgba(96,165,250,0.3)", backgroundColor: "rgba(96,165,250,0.08)" }}
+            >
+              <Shield className="w-3 h-3" />
+              Blockchain · Azar Chain · Chain ID 24780
+            </span>
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-4">
+              Certificato. Verificabile. Immutabile.
+            </h2>
+            <p className="text-sm text-white/60 max-w-2xl mx-auto">
+              InSchool usa una blockchain privata per certificare le competenze degli studenti
+              e garantire la conformità alle normative europee sull'AI in educazione.
+            </p>
+          </motion.div>
+
+          {/* 3 card */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.25 }}
+              className="rounded-xl p-6"
+              style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+            >
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: "rgba(96,165,250,0.12)" }}>
+                <BadgeCheck className="w-5 h-5" style={{ color: "#60a5fa" }} />
+              </div>
+              <h3 className="font-display font-semibold text-white mb-2">Credenziali verificabili</h3>
+              <p className="text-xs text-white/50 leading-relaxed">
+                Ogni competenza raggiunta diventa un certificato digitale non falsificabile,
+                verificabile da scuole, università e aziende in tempo reale.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.25, delay: 0.05 }}
+              className="rounded-xl p-6"
+              style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+            >
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: "rgba(96,165,250,0.12)" }}>
+                <Shield className="w-5 h-5" style={{ color: "#60a5fa" }} />
+              </div>
+              <h3 className="font-display font-semibold text-white mb-2">Conformità EU AI Act</h3>
+              <p className="text-xs text-white/50 leading-relaxed">
+                Ogni sessione AI viene registrata con log immutabile on-chain.
+                Audit trail automatico per soddisfare le obbligazioni EU AI Act
+                (scadenza agosto 2026).
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.25, delay: 0.1 }}
+              className="rounded-xl p-6"
+              style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+            >
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: "rgba(96,165,250,0.12)" }}>
+                <Lock className="w-5 h-5" style={{ color: "#60a5fa" }} />
+              </div>
+              <h3 className="font-display font-semibold text-white mb-2">Zero dati personali on-chain</h3>
+              <p className="text-xs text-white/50 leading-relaxed">
+                Nessun nome, email o dato identificativo va sulla blockchain.
+                Solo hash anonimi. Pienamente conforme al GDPR e al diritto all'oblio.
+              </p>
+            </motion.div>
+          </div>
+
+          {/* Riga tecnica discreta */}
+          <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] text-white/30">
+            <span>Azar Chain · PoA / IBFT2</span>
+            <span>·</span>
+            <span>AIGovernanceLog.sol</span>
+            <span>·</span>
+            <span>CredentialNFT.sol ERC-5192</span>
+            <span>·</span>
+            <span>MinorConsentRegistry.sol</span>
+            <span>·</span>
+            <Link to="/security" className="underline hover:text-white/50 transition-colors">
+              Sicurezza e conformità →
+            </Link>
+          </div>
+        </div>
+      </section>
+      {/* ── fine sezione blockchain ── */}
 
       {/* TRUST */}
       <TrustSection />
