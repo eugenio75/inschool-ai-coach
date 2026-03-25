@@ -1,44 +1,20 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Type, BookOpen, Plus, X, Sparkles, Check, Loader2, CalendarDays, ChevronDown, Pencil, FileText, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Camera, Type, BookOpen, Plus, X, Sparkles, Check, Loader2, CalendarDays, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createTask, uploadHomeworkImage, extractTasksFromImage } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
-type InputMode = "choose" | "manual" | "photo-diary" | "photo-book" | "processing" | "task-type" | "review";
-
-interface ExtractedTask {
-  id: string;
-  subject: string;
-  title: string;
-  description: string;
-  estimatedMinutes: number;
-  difficulty: number;
-  selected: boolean;
-  task_types: string[];
-  customNote: string;
-}
+type InputMode = "choose" | "manual" | "photo-diary" | "photo-book" | "processing";
 
 interface UploadedFile {
   file: File;
-  preview: string; // data URL for images, "pdf" for PDFs
+  preview: string;
   uploadedUrl?: string;
 }
-
-const TASK_TYPE_OPTIONS = [
-  { value: "read", label: "Leggere e comprendere" },
-  { value: "questions", label: "Rispondere a domande" },
-  { value: "exercise", label: "Fare esercizi" },
-  { value: "study", label: "Studiare teoria" },
-  { value: "summarize", label: "Riassumere" },
-  { value: "memorize", label: "Memorizzare" },
-  { value: "write", label: "Scrivere un testo" },
-  { value: "problem", label: "Risolvere problemi" },
-  { value: "custom", label: "Scrivi tu stesso" },
-];
 
 const subjects = [
   "Italiano", "Matematica", "Scienze", "Storia", "Geografia", "Inglese", "Arte", "Musica", "Tecnologia",
@@ -60,14 +36,6 @@ function formatDueDate(dateStr: string): string {
   return d.toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" });
 }
 
-function getTaskTypeLabel(value: string): string {
-  return TASK_TYPE_OPTIONS.find(o => o.value === value)?.label || value;
-}
-
-function getTaskTypesLabel(values: string[]): string {
-  return values.map(v => getTaskTypeLabel(v)).join(", ");
-}
-
 const AddHomework = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -77,22 +45,15 @@ const AddHomework = () => {
   const [manualDescription, setManualDescription] = useState("");
   const [dueDate, setDueDate] = useState(getToday());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  // Multi-file state
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
-  const [extractedTasks, setExtractedTasks] = useState<ExtractedTask[]>([]);
-  const [extractedSourceType, setExtractedSourceType] = useState<"photo-book" | "photo-diary" | null>(null);
   const [saving, setSaving] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [photoNote, setPhotoNote] = useState("");
   const [photoTags, setPhotoTags] = useState<string[]>([]);
-  const [showFullTypeList, setShowFullTypeList] = useState<Record<string, boolean>>({});
-  const [customTypeText, setCustomTypeText] = useState<Record<string, string>>({});
 
   const handlePhotoAnalysis = async () => {
     if (uploadedFiles.length === 0) return;
     const sourceType = mode === "photo-book" ? "photo-book" : "photo-diary";
-    setExtractedSourceType(sourceType);
     setMode("processing");
 
     try {
@@ -107,26 +68,31 @@ const AddHomework = () => {
           urls.push(url);
         }
       }
-      setUploadedImageUrls(urls);
 
       const combinedNote = [...photoTags, photoNote.trim()].filter(Boolean).join(". ") || undefined;
       const result = await extractTasksFromImage(urls, sourceType, combinedNote);
 
       if (result.tasks && result.tasks.length > 0) {
-        setExtractedTasks(
-          result.tasks.map((t: any, i: number) => ({
-            id: `e${i}`,
+        // Auto-save all tasks directly — no Step 2
+        let savedCount = 0;
+        for (const t of result.tasks) {
+          const taskTypes = Array.isArray(t.task_types) ? t.task_types : [t.task_type || "exercise"];
+          await createTask({
             subject: t.subject || "Altro",
             title: t.title,
             description: t.exerciseText || t.description || "",
-            estimatedMinutes: t.estimatedMinutes || 15,
+            estimated_minutes: t.estimatedMinutes || 15,
             difficulty: t.difficulty || 1,
-            selected: true,
-            task_types: Array.isArray(t.task_types) ? t.task_types : [t.task_type || "exercise"],
-            customNote: "",
-          }))
-        );
-        setMode("task-type");
+            source_type: sourceType,
+            source_image_url: urls[0] || undefined,
+            source_files: urls.length > 0 ? urls : undefined,
+            due_date: dueDate,
+            task_type: taskTypes.join(", "),
+          });
+          savedCount++;
+        }
+        toast({ title: `${savedCount} ${savedCount === 1 ? "compito aggiunto" : "compiti aggiunti"}! ✨` });
+        navigate("/dashboard");
       } else {
         throw new Error("Nessun compito trovato nella foto");
       }
@@ -185,49 +151,18 @@ const AddHomework = () => {
     } finally { setSaving(false); }
   };
 
-  const handleConfirmExtracted = async () => {
-    const selected = extractedTasks.filter(t => t.selected);
-    if (selected.length === 0) return;
-    setSaving(true);
-    try {
-      for (const task of selected) {
-        await createTask({
-          subject: task.subject, title: task.title,
-          description: [task.description, task.customNote].filter(Boolean).join("\n\nNota: "),
-          estimated_minutes: task.estimatedMinutes, difficulty: task.difficulty,
-          source_type: extractedSourceType || "photo",
-          source_image_url: uploadedImageUrls[0] || undefined,
-          source_files: uploadedImageUrls.length > 0 ? uploadedImageUrls : undefined,
-          due_date: dueDate, task_type: task.task_types.join(", "),
-        });
-      }
-      toast({ title: `${selected.length} compiti aggiunti!` });
-      navigate("/dashboard");
-    } catch {
-      toast({ title: "Errore", description: "Non sono riuscito a salvare i compiti.", variant: "destructive" });
-    } finally { setSaving(false); }
-  };
-
-  const updateTask = (id: string, updates: Partial<ExtractedTask>) => {
-    setExtractedTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
-  };
-
   const getStepDescription = () => {
     switch (mode) {
       case "choose": return "Come vuoi inserire i compiti di oggi?";
       case "manual": return "Scrivi i dettagli del compito";
       case "photo-diary": case "photo-book": return "Carica una o più foto, oppure un PDF";
       case "processing": return "Sto analizzando i file con l'AI...";
-      case "task-type": return "Step 2 — Controlla il tipo di attività";
-      case "review": return "Step 3 — Modifica e conferma i compiti";
       default: return "";
     }
   };
 
   const goBack = () => {
-    if (mode === "review") setMode("task-type");
-    else if (mode === "task-type") setMode(extractedSourceType || "choose");
-    else if (mode === "choose") navigate("/dashboard");
+    if (mode === "choose") navigate("/dashboard");
     else { setUploadedFiles([]); setMode("choose"); }
   };
 
@@ -257,23 +192,6 @@ const AddHomework = () => {
             <button onClick={goBack} className="text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft className="w-5 h-5" /></button>
             <span className="font-display text-lg font-semibold text-foreground">Aggiungi compiti</span>
           </div>
-          {(mode === "task-type" || mode === "review") && (
-            <div className="flex items-center gap-2 mb-3">
-              {[1, 2, 3].map(step => {
-                const current = mode === "task-type" ? 2 : 3;
-                return (
-                  <div key={step} className="flex items-center gap-2">
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                      step < current ? "bg-primary text-primary-foreground" :
-                      step === current ? "bg-primary text-primary-foreground" :
-                      "bg-muted text-muted-foreground"
-                    }`}>{step <= current - 1 ? <Check className="w-3.5 h-3.5" /> : step}</div>
-                    {step < 3 && <div className={`w-8 h-0.5 ${step < current ? "bg-primary" : "bg-muted"}`} />}
-                  </div>
-                );
-              })}
-            </div>
-          )}
           <p className="text-sm text-muted-foreground">{getStepDescription()}</p>
         </div>
       </div>
@@ -328,7 +246,6 @@ const AddHomework = () => {
             {/* Photo upload — multi-file */}
             {(mode === "photo-diary" || mode === "photo-book") && (
               <motion.div key="photo" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={spring} className="space-y-5">
-                {/* File upload area — always visible to allow adding more */}
                 <label className="block cursor-pointer" onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}>
                   <div className={`border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${dragActive ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}>
                     <div className="w-14 h-14 rounded-2xl bg-sage-light flex items-center justify-center mx-auto mb-3">
@@ -346,7 +263,6 @@ const AddHomework = () => {
                   <input type="file" accept="image/*,application/pdf" capture="environment" multiple className="hidden" onChange={handlePhotoUpload} />
                 </label>
 
-                {/* Thumbnails of uploaded files */}
                 {uploadedFiles.length > 0 && (
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
@@ -373,10 +289,21 @@ const AddHomework = () => {
                       ))}
                     </div>
 
+                    {/* Optional note for specific instructions */}
+                    <div>
+                      <input
+                        type="text"
+                        value={photoNote}
+                        onChange={(e) => setPhotoNote(e.target.value)}
+                        placeholder="Indicazioni? Es: 'Solo es. 3 e 5', 'Da pag 42 a 44'..."
+                        className="w-full text-sm px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                    </div>
+
                     <div className="bg-muted/50 rounded-2xl px-4 py-3"><DatePickerRow /></div>
                     <Button onClick={handlePhotoAnalysis} className="w-full bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5 text-base">
                       <Sparkles className="w-4 h-4 mr-2" />
-                      Analizza {uploadedFiles.length === 1 ? "il file" : `${uploadedFiles.length} file`} con AI
+                      Analizza e salva compiti
                     </Button>
                   </div>
                 )}
@@ -392,129 +319,7 @@ const AddHomework = () => {
                 <h3 className="font-display text-xl font-bold text-foreground mb-2">
                   Sto analizzando {uploadedFiles.length === 1 ? "il file" : `${uploadedFiles.length} file`}...
                 </h3>
-                <p className="text-muted-foreground">Riconosco il testo, trovo le materie e organizzo tutto per te.</p>
-              </motion.div>
-            )}
-
-            {/* Step 2 — Task type confirmation */}
-            {mode === "task-type" && (
-              <motion.div key="task-type" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={spring} className="space-y-4">
-                <div className="bg-sage-light/50 rounded-2xl px-4 py-3 flex items-center gap-3">
-                  <Sparkles className="w-4 h-4 text-sage-dark flex-shrink-0" />
-                  <p className="text-sm text-foreground">
-                    Ho trovato <strong>{extractedTasks.length} {extractedTasks.length === 1 ? "compito" : "compiti"}</strong> da {uploadedFiles.length === 1 ? "1 file" : `${uploadedFiles.length} file`}. Controlla che il tipo sia giusto.
-                  </p>
-                </div>
-
-                {extractedTasks.map((task, i) => (
-                  <motion.div key={task.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: i * 0.08 }}
-                    className="bg-card border border-border rounded-2xl p-4 shadow-soft"
-                  >
-                    <div className="mb-3">
-                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{task.subject}</span>
-                      <h4 className="font-display font-semibold text-foreground mt-0.5">{task.title}</h4>
-                      {task.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{task.description}</p>}
-                    </div>
-
-                    <div className="bg-muted/50 rounded-xl p-3">
-                      <p className="text-xs text-muted-foreground mb-2">Cosa devi fare? (seleziona anche più di uno)</p>
-                      <div className="flex flex-wrap gap-2">
-                        {TASK_TYPE_OPTIONS.filter(o => o.value !== "custom").map(opt => {
-                          const isSelected = task.task_types.includes(opt.value);
-                          return (
-                            <button key={opt.value} onClick={() => {
-                              const newTypes = isSelected
-                                ? task.task_types.filter(t => t !== opt.value)
-                                : [...task.task_types, opt.value];
-                              updateTask(task.id, { task_types: newTypes.length > 0 ? newTypes : [opt.value] });
-                            }}
-                              className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-all ${
-                                isSelected ? "bg-primary text-primary-foreground" : "bg-card border border-border text-foreground hover:bg-accent"
-                              }`}
-                            >
-                              {isSelected && <Check className="w-3 h-3 inline mr-1" />}
-                              {opt.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <input
-                        type="text"
-                        value={task.customNote}
-                        onChange={(e) => updateTask(task.id, { customNote: e.target.value })}
-                        placeholder="Altro? Scrivi qui (es. 'Solo esercizi 3 e 5')..."
-                        className="w-full mt-2 text-sm px-3 py-2 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                      />
-                    </div>
-                  </motion.div>
-                ))}
-
-                <Button onClick={() => setMode("review")} className="w-full bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5 text-base">
-                  Avanti — Conferma compiti
-                </Button>
-              </motion.div>
-            )}
-
-            {/* Step 3 — Editable review */}
-            {mode === "review" && (
-              <motion.div key="review" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={spring} className="space-y-4">
-                <div className="bg-sage-light/50 rounded-2xl px-4 py-3 flex items-center gap-3">
-                  <Pencil className="w-4 h-4 text-sage-dark flex-shrink-0" />
-                  <p className="text-sm text-foreground">Puoi modificare tutto prima di salvare.</p>
-                </div>
-
-                <div className="bg-muted/50 rounded-2xl px-4 py-3"><DatePickerRow /></div>
-
-                {extractedTasks.map((task, i) => (
-                  <motion.div key={task.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: i * 0.08 }}
-                    className={`bg-card border rounded-2xl p-4 transition-all ${task.selected ? "border-primary shadow-soft" : "border-border opacity-60"}`}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-primary uppercase tracking-wider bg-primary/10 px-2 py-0.5 rounded-full">
-                          {getTaskTypesLabel(task.task_types)}
-                        </span>
-                        <span className="text-xs text-muted-foreground">~{task.estimatedMinutes} min</span>
-                      </div>
-                      <button onClick={() => updateTask(task.id, { selected: !task.selected })}
-                        className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${task.selected ? "bg-primary" : "bg-border"}`}>
-                        {task.selected && <Check className="w-4 h-4 text-primary-foreground" />}
-                      </button>
-                    </div>
-
-                    {task.selected && (
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-xs font-medium text-muted-foreground mb-1 block">Materia</label>
-                          <div className="flex flex-wrap gap-1.5">
-                            {subjects.map(s => (
-                              <button key={s} onClick={() => updateTask(task.id, { subject: s })}
-                                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${task.subject === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>
-                                {s}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-muted-foreground mb-1 block">Titolo</label>
-                          <input type="text" value={task.title} onChange={(e) => updateTask(task.id, { title: e.target.value })}
-                            className="w-full text-sm px-3 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" />
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-muted-foreground mb-1 block">Descrizione</label>
-                          <textarea value={task.description} onChange={(e) => updateTask(task.id, { description: e.target.value })} rows={2}
-                            className="w-full text-sm px-3 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                ))}
-
-                <Button onClick={handleConfirmExtracted} disabled={!extractedTasks.some(t => t.selected) || saving}
-                  className="w-full bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5 text-base disabled:opacity-40">
-                  {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
-                  Salva {extractedTasks.filter(t => t.selected).length} compiti
-                </Button>
+                <p className="text-muted-foreground">Riconosco il testo, trovo le materie e salvo i compiti per te.</p>
               </motion.div>
             )}
           </AnimatePresence>
