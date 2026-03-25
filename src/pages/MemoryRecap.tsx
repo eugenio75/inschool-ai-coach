@@ -725,7 +725,6 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
   }
 
   const item = gameItems[currentIdx];
-  const [textInput, setTextInput] = useState("");
 
   return (
     <div className="max-w-lg mx-auto px-6 py-6 space-y-5">
