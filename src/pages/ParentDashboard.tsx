@@ -1,31 +1,17 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, BookOpen, Brain, Lightbulb, Lock, Loader2, Eye, MessageCircle, Heart, Star, Sparkles, KeyRound, RefreshCw, Copy, Check, AlertTriangle, ShieldAlert, Info } from "lucide-react";
-import { ProgressSun } from "@/components/ProgressSun";
-import { BadgeGrid } from "@/components/GamificationBar";
-import { getChildProfiles, getFocusSessions, getGamification, getParentSettings, updateChildProfile, getMemoryItems, getTasks, getDailyMissions, getEmotionalAlerts, markAlertRead } from "@/lib/database";
+import { ArrowLeft, BookOpen, Loader2, Lock } from "lucide-react";
+import { getChildProfiles, getFocusSessions, getGamification, getParentSettings, getMemoryItems, getTasks, getDailyMissions, getEmotionalAlerts } from "@/lib/database";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+
+import { DailySnapshotCard } from "@/components/parent/DailySnapshotCard";
+import { ProgressCard } from "@/components/parent/ProgressCard";
+import { EmotionalCard } from "@/components/parent/EmotionalCard";
+import { CognitiveCard } from "@/components/parent/CognitiveCard";
+import { AccessCodeCard } from "@/components/parent/AccessCodeCard";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
-
-const iconMap: Record<string, any> = {
-  lightbulb: Lightbulb,
-  eye: Eye,
-  message: MessageCircle,
-  brain: Brain,
-  heart: Heart,
-  clock: Clock,
-  star: Star,
-};
-
-const categoryColors: Record<string, { bg: string; text: string }> = {
-  metodo: { bg: "bg-sage-light", text: "text-sage-dark" },
-  emotivo: { bg: "bg-clay-light", text: "text-clay-dark" },
-  autonomia: { bg: "bg-primary/10", text: "text-primary" },
-  motivazione: { bg: "bg-amber-100", text: "text-amber-700" },
-};
 
 const ParentDashboard = () => {
   const navigate = useNavigate();
@@ -43,10 +29,7 @@ const ParentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [aiInsights, setAiInsights] = useState<any[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const [regeneratingCode, setRegeneratingCode] = useState<string | null>(null);
   const [emotionalAlerts, setEmotionalAlerts] = useState<any[]>([]);
-  const { toast } = useToast();
 
   useEffect(() => {
     const load = async () => {
@@ -81,7 +64,7 @@ const ParentDashboard = () => {
     loadChild();
   }, [selectedChild]);
 
-  // Fetch AI insights when child data is loaded
+  // Fetch AI insights
   useEffect(() => {
     if (!selectedChild || !unlocked) return;
     const selectedProfile = children.find(c => c.id === selectedChild);
@@ -92,35 +75,16 @@ const ParentDashboard = () => {
       setAiInsights([]);
       try {
         const totalMinutes = sessions.reduce((a, s) => a + Math.round((s.duration_seconds || 0) / 60), 0);
-        
-        // Prepare recent sessions with task subject info and detect extended sessions
         const recentSessions = sessions.slice(0, 15).map(s => {
           const task = tasks.find(t => t.id === s.task_id);
           const expectedMinutes = task?.estimated_minutes || 15;
           const actualMinutes = Math.round((s.duration_seconds || 0) / 60);
-          return {
-            ...s,
-            subject: task?.subject || "N/A",
-            task_title: task?.title || "N/A",
-            expected_minutes: expectedMinutes,
-            actual_minutes: actualMinutes,
-            studied_extra: actualMinutes > expectedMinutes,
-          };
+          return { ...s, subject: task?.subject || "N/A", task_title: task?.title || "N/A", expected_minutes: expectedMinutes, actual_minutes: actualMinutes, studied_extra: actualMinutes > expectedMinutes };
         });
-
-        // Get ALL concepts (not just weak) to show progression
-        const allConcepts = memoryItems.map(m => ({
-          ...m,
-          is_weak: (m.strength || 0) < 60,
-          is_strong: (m.strength || 0) >= 80,
-        }));
-
-        // Build subject stats
+        const allConcepts = memoryItems.map(m => ({ ...m, is_weak: (m.strength || 0) < 60, is_strong: (m.strength || 0) >= 80 }));
         const subjectStats: Record<string, { sessions: number; totalMinutes: number; completed: number; total: number }> = {};
         for (const task of tasks) {
-          if (!subjectStats[task.subject]) {
-            subjectStats[task.subject] = { sessions: 0, totalMinutes: 0, completed: 0, total: 0 };
-          }
+          if (!subjectStats[task.subject]) subjectStats[task.subject] = { sessions: 0, totalMinutes: 0, completed: 0, total: 0 };
           subjectStats[task.subject].total++;
           if (task.completed) subjectStats[task.subject].completed++;
         }
@@ -131,36 +95,13 @@ const ParentDashboard = () => {
           subjectStats[subject].sessions++;
           subjectStats[subject].totalMinutes += Math.round((s.duration_seconds || 0) / 60);
         }
-
-        // Missions data
-        const missionsData = {
-          total: missions.length,
-          completed: missions.filter((m: any) => m.completed).length,
-          challengesCompleted: missions.filter((m: any) => m.completed && m.mission_type === "coach_challenge").length,
-          types: missions.map((m: any) => ({ type: m.mission_type, title: m.title, completed: m.completed, date: m.mission_date })),
-        };
-
-        // Session patterns
+        const missionsData = { total: missions.length, completed: missions.filter((m: any) => m.completed).length, challengesCompleted: missions.filter((m: any) => m.completed && m.mission_type === "coach_challenge").length, types: missions.map((m: any) => ({ type: m.mission_type, title: m.title, completed: m.completed, date: m.mission_date })) };
         const emotionCounts: Record<string, number> = {};
-        for (const s of sessions) {
-          const e = s.emotion || "non_registrata";
-          emotionCounts[e] = (emotionCounts[e] || 0) + 1;
-        }
+        for (const s of sessions) { const e = s.emotion || "non_registrata"; emotionCounts[e] = (emotionCounts[e] || 0) + 1; }
         const extendedSessions = recentSessions.filter(s => s.studied_extra).length;
 
         const { data, error } = await supabase.functions.invoke("parent-insights", {
-          body: {
-            childProfile: selectedProfile,
-            gamification,
-            sessionsCount: sessions.length,
-            totalMinutes,
-            recentSessions,
-            allConcepts,
-            subjectStats,
-            missionsData,
-            emotionPatterns: emotionCounts,
-            extendedSessionsCount: extendedSessions,
-          },
+          body: { childProfile: selectedProfile, gamification, sessionsCount: sessions.length, totalMinutes, recentSessions, allConcepts, subjectStats, missionsData, emotionPatterns: emotionCounts, extendedSessionsCount: extendedSessions },
         });
         if (error) throw error;
         if (data?.insights) setAiInsights(data.insights);
@@ -174,13 +115,8 @@ const ParentDashboard = () => {
   }, [selectedChild, unlocked, sessions, gamification, memoryItems, tasks, missions]);
 
   const checkPin = () => {
-    if (pinInput === correctPin) {
-      setUnlocked(true);
-      setPinError(false);
-    } else {
-      setPinError(true);
-      setPinInput("");
-    }
+    if (pinInput === correctPin) { setUnlocked(true); setPinError(false); }
+    else { setPinError(true); setPinInput(""); }
   };
 
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
@@ -190,8 +126,8 @@ const ParentDashboard = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="w-full max-w-xs text-center">
-          <div className="w-16 h-16 rounded-2xl bg-sage-light flex items-center justify-center mx-auto mb-6">
-            <Lock className="w-7 h-7 text-sage-dark" />
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
+            <Lock className="w-7 h-7 text-primary" />
           </div>
           <h2 className="font-display text-2xl font-bold text-foreground mb-2">Area Genitori</h2>
           <p className="text-sm text-muted-foreground mb-8">Inserisci il PIN per accedere</p>
@@ -218,221 +154,96 @@ const ParentDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background pb-12">
-      <div className="bg-card border-b border-border px-6 pt-6 pb-8">
+      {/* Header */}
+      <div className="bg-card border-b border-border px-6 pt-6 pb-6">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
-            <button onClick={() => navigate("/profiles")} className="text-muted-foreground hover:text-foreground"><ArrowLeft className="w-5 h-5" /></button>
+          <div className="flex items-center gap-3 mb-4">
+            <button onClick={() => navigate("/profiles")} className="text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center"><BookOpen className="w-3.5 h-3.5 text-primary-foreground" /></div>
+              <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
+                <BookOpen className="w-3.5 h-3.5 text-primary-foreground" />
+              </div>
               <span className="font-display text-lg font-semibold text-foreground">Area Genitori</span>
             </div>
           </div>
 
           {/* Child selector */}
           {children.length > 1 && (
-            <div className="flex gap-2 mb-6 flex-wrap">
+            <div className="flex gap-2 mb-4 flex-wrap">
               {children.map((child) => (
-                <button key={child.id} onClick={() => setSelectedChild(child.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${selectedChild === child.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>
-                  <span className="w-6 h-6 rounded-md bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">{child.name?.charAt(0)?.toUpperCase() || "S"}</span> {child.name}
+                <button
+                  key={child.id}
+                  onClick={() => setSelectedChild(child.id)}
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                    selectedChild === child.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  <span className="w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">
+                    {child.name?.charAt(0)?.toUpperCase() || "S"}
+                  </span>
+                  {child.name}
                 </button>
               ))}
             </div>
           )}
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
-            <h1 className="font-display text-2xl font-bold text-foreground mb-1">
-              Progressi di {selectedProfile?.name || "—"} {selectedProfile?.avatar_emoji || ""}
+            <h1 className="font-display text-xl font-bold text-foreground mb-0.5">
+              Progressi di {selectedProfile?.name || "—"}
             </h1>
             <p className="text-muted-foreground text-sm">Niente voti, solo crescita.</p>
           </motion.div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="px-6 -mt-4"><div className="max-w-3xl mx-auto">
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-card rounded-2xl border border-border p-4 text-center shadow-soft">
-            <div className="flex justify-center mb-2"><ProgressSun progress={0.72} size={40} /></div>
-            <p className="text-xs text-muted-foreground">Autonomia</p>
-            <p className="font-display font-bold text-foreground">72%</p>
-          </div>
-          <div className="bg-card rounded-2xl border border-border p-4 text-center shadow-soft">
-            <div className="w-10 h-10 rounded-xl bg-sage-light flex items-center justify-center mx-auto mb-2"><Clock className="w-5 h-5 text-sage-dark" /></div>
-            <p className="text-xs text-muted-foreground">Focus totale</p>
-            <p className="font-display font-bold text-foreground">{totalMinutes}m</p>
-          </div>
-          <div className="bg-card rounded-2xl border border-border p-4 text-center shadow-soft">
-            <div className="w-10 h-10 rounded-xl bg-clay-light flex items-center justify-center mx-auto mb-2"><Brain className="w-5 h-5 text-clay-dark" /></div>
-            <p className="text-xs text-muted-foreground">Sessioni</p>
-            <p className="font-display font-bold text-foreground">{totalSessions}</p>
-          </div>
+      {/* Cards grid */}
+      <div className="px-6 mt-6">
+        <div className="max-w-3xl mx-auto space-y-4">
+          {/* Daily snapshot - always first */}
+          <DailySnapshotCard
+            childName={selectedProfile?.name || "—"}
+            sessions={sessions}
+            tasks={tasks}
+            missions={missions}
+          />
+
+          {/* Progress */}
+          <ProgressCard
+            totalMinutes={totalMinutes}
+            totalSessions={totalSessions}
+            gamification={gamification}
+          />
+
+          {/* Emotional wellbeing */}
+          <EmotionalCard
+            alerts={emotionalAlerts}
+            onAlertRead={(alertId) => {
+              setEmotionalAlerts(prev => prev.map(a => a.id === alertId ? { ...a, read: true } : a));
+            }}
+            sessions={sessions}
+          />
+
+          {/* Cognitive area + AI insights */}
+          <CognitiveCard
+            childName={selectedProfile?.name || "—"}
+            insights={aiInsights}
+            insightsLoading={insightsLoading}
+            memoryItems={memoryItems}
+          />
+
+          {/* Access code */}
+          {selectedProfile && (
+            <AccessCodeCard
+              profile={selectedProfile}
+              onProfileUpdate={(id, updates) => {
+                setChildren(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+              }}
+            />
+          )}
         </div>
-      </div></div>
-
-      {/* Gamification */}
-      {gamification && (
-        <div className="px-6 mt-6"><div className="max-w-3xl mx-auto">
-          <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
-            <h3 className="font-display font-semibold text-foreground mb-4">Punti e streak</h3>
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div><p className="text-lg font-display font-bold text-sage-dark">{gamification.focus_points || 0}</p><p className="text-xs text-muted-foreground">Focus</p></div>
-              <div><p className="text-lg font-display font-bold text-clay-dark">{gamification.autonomy_points || 0}</p><p className="text-xs text-muted-foreground">Autonomia</p></div>
-              <div><p className="text-lg font-display font-bold text-terracotta">{gamification.streak || 0}</p><p className="text-xs text-muted-foreground">Streak</p></div>
-            </div>
-          </div>
-        </div></div>
-      )}
-
-      {/* Child Access Code */}
-      {selectedProfile && (
-        <div className="px-6 mt-6"><div className="max-w-3xl mx-auto">
-          <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
-            <div className="flex items-center gap-2 mb-3">
-              <KeyRound className="w-4 h-4 text-primary" />
-              <h3 className="font-display font-semibold text-foreground text-sm">Codice accesso di {selectedProfile.name}</h3>
-            </div>
-            <p className="text-xs text-muted-foreground mb-4">Condividi questo codice con {selectedProfile.name} per farlo entrare direttamente nella sua area.</p>
-            <div className="flex items-center gap-3">
-              <div className="flex-1 bg-muted rounded-xl px-5 py-3 text-center">
-                <span className="font-display text-2xl font-bold tracking-widest text-foreground">
-                  {selectedProfile.access_code || "—"}
-                </span>
-              </div>
-              <button
-                onClick={() => {
-                  if (selectedProfile.access_code) {
-                    navigator.clipboard.writeText(selectedProfile.access_code);
-                    setCopiedCode(selectedProfile.id);
-                    setTimeout(() => setCopiedCode(null), 2000);
-                  }
-                }}
-                className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors"
-                title="Copia codice"
-              >
-                {copiedCode === selectedProfile.id ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
-              </button>
-              <button
-                onClick={async () => {
-                  setRegeneratingCode(selectedProfile.id);
-                  try {
-                    const { data: newCode } = await supabase.rpc("generate_child_access_code");
-                    if (newCode) {
-                      await updateChildProfile(selectedProfile.id, { access_code: newCode });
-                      setChildren(prev => prev.map(c => c.id === selectedProfile.id ? { ...c, access_code: newCode } : c));
-                      toast({ title: `Nuovo codice generato: ${newCode}` });
-                    }
-                  } catch (e) {
-                    toast({ title: "Errore nella rigenerazione", variant: "destructive" });
-                  } finally {
-                    setRegeneratingCode(null);
-                  }
-                }}
-                disabled={regeneratingCode === selectedProfile.id}
-                className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center hover:bg-accent transition-colors disabled:opacity-40"
-                title="Genera nuovo codice"
-              >
-                <RefreshCw className={`w-4 h-4 text-muted-foreground ${regeneratingCode === selectedProfile.id ? "animate-spin" : ""}`} />
-              </button>
-            </div>
-          </div>
-        </div></div>
-      )}
-
-      {/* Emotional Alerts */}
-      {emotionalAlerts.filter(a => !a.read).length > 0 && (
-        <div className="px-6 mt-6"><div className="max-w-3xl mx-auto space-y-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Heart className="w-4 h-4 text-destructive" />
-            <h3 className="font-display font-semibold text-foreground">Benessere emotivo</h3>
-          </div>
-          {emotionalAlerts.filter(a => !a.read).map((alert) => {
-            const levelConfig: Record<string, { bg: string; border: string; icon: any; text: string }> = {
-              high: { bg: "bg-destructive/10", border: "border-destructive/30", icon: ShieldAlert, text: "text-destructive" },
-              medium: { bg: "bg-amber-500/10", border: "border-amber-500/30", icon: AlertTriangle, text: "text-amber-600 dark:text-amber-400" },
-              low: { bg: "bg-blue-500/10", border: "border-blue-500/30", icon: Info, text: "text-blue-600 dark:text-blue-400" },
-            };
-            const config = levelConfig[alert.alert_level] || levelConfig.low;
-            const IconComp = config.icon;
-            return (
-              <motion.div
-                key={alert.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={spring}
-                className={`${config.bg} border ${config.border} rounded-2xl p-5`}
-              >
-                <div className="flex gap-3">
-                  <div className={`w-10 h-10 rounded-xl ${config.bg} flex items-center justify-center flex-shrink-0`}>
-                    <IconComp className={`w-5 h-5 ${config.text}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h4 className={`font-display font-semibold text-sm ${config.text}`}>{alert.title}</h4>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${config.bg} ${config.text} font-medium uppercase`}>
-                        {alert.alert_level === "high" ? "Importante" : alert.alert_level === "medium" ? "Attenzione" : "Info"}
-                      </span>
-                    </div>
-                    <p className="text-sm text-foreground/80 leading-relaxed mb-3">{alert.message}</p>
-                    <button
-                      onClick={async () => {
-                        await markAlertRead(alert.id);
-                        setEmotionalAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, read: true } : a));
-                      }}
-                      className="text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      Ho letto ✓
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div></div>
-      )}
-
-      {/* AI Personalized Insights */}
-      <div className="px-6 mt-8"><div className="max-w-3xl mx-auto space-y-3">
-        <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="w-4 h-4 text-primary" />
-          <h3 className="font-display font-semibold text-foreground">Consigli personalizzati per {selectedProfile?.name}</h3>
-        </div>
-        <p className="text-xs text-muted-foreground mb-4">Generati dall'AI in base ai dati reali di studio</p>
-
-        {insightsLoading ? (
-          <div className="flex flex-col items-center gap-3 py-10">
-            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Analizzo i progressi di {selectedProfile?.name}...</p>
-          </div>
-        ) : aiInsights.length > 0 ? (
-          aiInsights.map((insight, i) => {
-            const IconComponent = iconMap[insight.icon] || Lightbulb;
-            const colors = categoryColors[insight.category] || categoryColors.metodo;
-            return (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ ...spring, delay: 0.1 + i * 0.08 }}
-                className="bg-card rounded-2xl border border-border p-5 shadow-soft"
-              >
-                <div className="flex gap-4">
-                  <div className={`w-10 h-10 rounded-xl ${colors.bg} flex items-center justify-center flex-shrink-0`}>
-                    <IconComponent className={`w-5 h-5 ${colors.text}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground mb-1">{insight.title}</p>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{insight.text}</p>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-sm text-muted-foreground">Nessun consiglio disponibile al momento.</p>
-          </div>
-        )}
-      </div></div>
+      </div>
     </div>
   );
 };
