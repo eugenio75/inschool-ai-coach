@@ -13,11 +13,15 @@ interface UseGuidedSessionProps {
   profileName: string;
 }
 
-// Task types that require the oral study method block
+// All tasks should ask familiarity to tailor the coach approach
+function shouldAskFamiliarity(_taskType: string, _title: string): boolean {
+  return true;
+}
+
+// Task types that use the oral/study method (vs exercise method)
 const ORAL_STUDY_TYPES = new Set(["study", "memorize", "teoria", "memorizzazione", "ripasso", "interrogazione", "esame", "riassunto", "summarize", "read"]);
 
 function isOralStudyTask(taskType: string, title: string): boolean {
-  // Handle comma-separated task_types (e.g. "study, memorize")
   const types = taskType.split(",").map(t => t.trim().toLowerCase());
   if (types.some(t => ORAL_STUDY_TYPES.has(t))) return true;
   const lowerTitle = title.toLowerCase();
@@ -32,16 +36,20 @@ function getMethodProposal(familiarity: Familiarity, taskType: string, title: st
   const isPrep = ["interrogazione", "esame", "prepara"].some(k => lowerTitle.includes(k)) || taskType === "interrogazione" || taskType === "esame";
   const isSummary = lowerTitle.includes("riassumi") || lowerTitle.includes("riassunto") || taskType === "riassunto";
   const isMemorize = lowerTitle.includes("memorizza") || taskType === "memorizzazione";
+  const isExercise = !isOralStudyTask(taskType, title);
 
   switch (familiarity) {
     case "first_time":
       if (isSummary) return "Ok. Mentre leggi cerca l'idea principale di ogni parte: non sottolineare tutto, solo la cosa più importante per blocco. Poi costruiamo il riassunto insieme.";
+      if (isExercise) return "Ok, è la prima volta. Ti spiego prima la teoria necessaria, poi affrontiamo l'esercizio passo dopo passo insieme.";
       return "Allora partiamo leggendolo una volta per capire di cosa si tratta. Poi lo dividiamo in pezzi piccoli e lavoriamo su ognuno insieme.";
     case "already_know":
       if (isPrep) return "Bene. Partiamo da quello che ricordi già. Ti faccio qualche domanda e vediamo subito dove sei sicuro e dove serve rinforzare.";
       if (isMemorize) return "Perfetto. Allora chiudiamo il materiale e partiamo da quello che hai in testa. Quello che non ricordi lo riprendiamo insieme.";
+      if (isExercise) return "Bene, allora proviamo subito l'esercizio. Se ti blocchi ti do un suggerimento.";
       return "Bene. Partiamo da quello che ricordi già. Ti faccio qualche domanda e vediamo subito dove sei sicuro e dove serve rinforzare.";
     case "partial":
+      if (isExercise) return "Ok. Rivediamo velocemente la parte che non ricordi bene, poi affrontiamo l'esercizio insieme.";
       return "Ok. Finiamo prima le parti che non hai ancora studiato, poi passiamo a richiamare tutto dalla memoria.";
   }
 }
@@ -249,8 +257,8 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     setShowCheckin(false);
     setSessionEmotion(emotion);
     
-    // Check if this is an oral study task — if so, show method block first
-    if (homework && isOralStudyTask(homework.task_type, homework.title)) {
+    // Always ask familiarity to tailor coach approach
+    if (homework && shouldAskFamiliarity(homework.task_type, homework.title)) {
       setPendingEmotion(emotion);
       setMethodPhase("ask_familiarity");
       setSetupDone(true);
@@ -358,14 +366,30 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       }
 
       if (generatedSteps.length === 0) {
-        const isExercise = homework.task_type !== "study" && !isOralStudyTask(homework.task_type, homework.title);
+        const isExercise = !isOralStudyTask(homework.task_type, homework.title);
         if (isExercise) {
-          generatedSteps = [
+          if (fam === "first_time") {
+            generatedSteps = [
+              { number: 1, text: "Prima di tutto, ti spiego la teoria necessaria per affrontare questo esercizio.", bloomLevel: 1 },
+              { number: 2, text: "Ora leggiamo insieme l'esercizio e vediamo cosa ci viene chiesto.", bloomLevel: 2 },
+              { number: 3, text: "Prova ad impostare il primo passaggio. Ti guido se ti blocchi.", bloomLevel: 3 },
+              { number: 4, text: "Controlla il risultato: ha senso? Come puoi verificarlo?", bloomLevel: 4 },
+            ];
+          } else if (fam === "partial") {
+            generatedSteps = [
+              { number: 1, text: "Rivediamo velocemente la parte di teoria che non ricordi bene.", bloomLevel: 1 },
+              { number: 2, text: "Ora leggiamo l'esercizio e applichiamo quello che sappiamo.", bloomLevel: 2 },
+              { number: 3, text: "Prova a risolvere — se ti blocchi chiedimi un suggerimento.", bloomLevel: 3 },
+              { number: 4, text: "Controlla il risultato e prova a spiegare il ragionamento.", bloomLevel: 4 },
+            ];
+          } else {
+            generatedSteps = [
               { number: 1, text: "Leggiamo insieme l'esercizio. Ti presento il problema e vediamo cosa ci viene chiesto.", bloomLevel: 1 },
-              { number: 2, text: "Quale formula, regola o procedimento pensi si possa applicare qui? Se non lo sai, chiedimi una mini-ripetizione.", bloomLevel: 2 },
+              { number: 2, text: "Quale formula, regola o procedimento pensi si possa applicare qui?", bloomLevel: 2 },
               { number: 3, text: "Prova ad impostare il primo passaggio della risoluzione. Cosa ottieni?", bloomLevel: 3 },
               { number: 4, text: "Controlla il risultato: ha senso? Come puoi verificarlo?", bloomLevel: 4 },
             ];
+          }
         } else {
           // Oral study fallback steps based on familiarity
           if (fam === "already_know") {
@@ -489,6 +513,11 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       let coachBehavior: string;
 
       if (isExercise) {
+        const familiarityContext = familiarity === "first_time"
+          ? "\nLo studente NON conosce la teoria dietro questo esercizio. PRIMA spiega brevemente la regola/formula necessaria con un esempio, POI presenta l'esercizio."
+          : familiarity === "partial"
+          ? "\nLo studente conosce PARZIALMENTE la teoria. Chiedi cosa ricorda della regola/formula, integra quello che manca, poi passa all'esercizio."
+          : "\nLo studente dice di conoscere l'argomento. Passa direttamente all'esercizio, offri aiuto solo se si blocca.";
         coachBehavior = `Sei un tutor che guida lo studente a RISOLVERE un esercizio. Il tuo metodo:
 1. All'inizio PRESENTA tu il problema allo studente: riporta il testo dell'esercizio e spiega cosa viene chiesto
 2. Guida il ragionamento passo-passo: fai domande mirate per portare lo studente alla soluzione
@@ -498,7 +527,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
 6. Se lo studente è bloccato dopo 2 tentativi, dai un indizio più esplicito
 7. Quando risponde correttamente, conferma e passa allo step successivo
 8. Sii breve e diretto: 2-3 frasi + una domanda
-
+${familiarityContext}
 IMPORTANTE: Sei TU a dover guidare. Non chiedere allo studente di elencare i dati — presentaglieli tu e poi chiedi di ragionare.`;
       } else if (isOral && familiarity) {
         coachBehavior = `Sei un tutor che aiuta lo studente a STUDIARE, CAPIRE e RIPETERE un argomento per l'orale.
