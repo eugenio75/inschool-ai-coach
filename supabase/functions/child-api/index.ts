@@ -583,6 +583,27 @@ Estrai da 1 a 4 concetti. Rispondi SOLO con il JSON, senza markdown.`;
         break;
       }
 
+      case "upload-homework-image": {
+        const { base64, fileName, contentType } = payload;
+        if (!base64 || !fileName) throw new Error("File mancante");
+        
+        const fileBytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+        const filePath = `${ownerUserId}/${Date.now()}-${fileName}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("homework-images")
+          .upload(filePath, fileBytes, { contentType: contentType || "image/jpeg" });
+        
+        if (uploadError) throw uploadError;
+        
+        const { data: urlData } = supabase.storage
+          .from("homework-images")
+          .getPublicUrl(uploadData.path);
+        
+        result = { publicUrl: urlData.publicUrl };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Azione non supportata" }), {
           status: 400,
