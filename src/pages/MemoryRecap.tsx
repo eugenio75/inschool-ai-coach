@@ -881,16 +881,16 @@ const ConceptRow = ({ item, index, showStrength, checked, onToggle }: {
       transition={{ ...spring, delay: index * 0.02 }}
       className="py-2.5 first:pt-0">
       {index > 0 && <div className="border-t border-border/40 -mt-2.5 mb-2.5" />}
-      <div className="flex items-start gap-2.5">
+      <div className="flex items-start gap-3">
         <button
           onClick={onToggle}
-          className={`mt-0.5 w-4.5 h-4.5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
+          className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
             checked
-              ? "bg-primary border-primary"
-              : "border-muted-foreground/30 hover:border-primary/50"
+              ? "bg-primary border-primary shadow-sm"
+              : "border-muted-foreground/25 hover:border-primary/60 bg-background"
           }`}
         >
-          {checked && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
+          {checked && <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />}
         </button>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground leading-tight">{item.concept}</p>
@@ -986,11 +986,11 @@ const SubjectGroupCard = ({ group, gi, showStrength, section, methodCards, onSta
 
       {/* "Tutti" checkbox */}
       <div className="px-4 pt-3 pb-1">
-        <button onClick={toggleAll} className="flex items-center gap-2.5 group">
-          <div className={`w-4.5 h-4.5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
-            allSelected ? "bg-primary border-primary" : "border-muted-foreground/30 hover:border-primary/50"
+        <button onClick={toggleAll} className="flex items-center gap-3 group">
+          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
+            allSelected ? "bg-primary border-primary shadow-sm" : "border-muted-foreground/25 hover:border-primary/60 bg-background"
           }`}>
-            {allSelected && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
+            {allSelected && <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />}
           </div>
           <span className="text-xs font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
             Tutti gli argomenti
@@ -1015,22 +1015,25 @@ const SubjectGroupCard = ({ group, gi, showStrength, section, methodCards, onSta
         ))}
       </div>
 
-      {/* 4 method buttons at the bottom */}
+      {/* Method buttons */}
       <div className="px-4 py-3 border-t border-border/50 bg-muted/20">
+        <p className="text-[11px] font-medium text-muted-foreground mb-2">
+          {section === "rinforza" ? "Scegli come vuoi rafforzare" : "Scegli come vuoi ripassare"}
+        </p>
         <div className="flex items-center gap-1.5">
           {methodCards.map(mc => (
             <button
               key={mc.method}
               onClick={() => handleMethod(mc.method)}
               disabled={noneSelected}
-              className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-[11px] font-semibold transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl text-[11px] font-semibold transition-all ${
                 noneSelected
                   ? "opacity-30 cursor-not-allowed bg-muted text-muted-foreground"
                   : `${mc.color} hover:shadow-sm active:scale-[0.97]`
               }`}
             >
               <mc.icon className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{mc.label.split(" ")[0]}</span>
+              <span>{mc.label}</span>
             </button>
           ))}
         </div>
@@ -1196,28 +1199,28 @@ const MemoryRecap = () => {
     {
       method: "coach",
       icon: MessageCircle,
-      label: isRinforza ? "Rafforza con il Coach" : "Ripassa con il Coach",
+      label: "Coach",
       desc: isRinforza ? "Ti aiuto a capire meglio i punti più difficili" : "Rivedi l'argomento passo dopo passo con il tuo Coach",
       color: "text-primary bg-primary/10",
     },
     {
       method: "flashcard",
       icon: Layers,
-      label: "Usa le flashcard",
+      label: "Flashcard",
       desc: isRinforza ? "Allenati sui concetti da consolidare" : "Allenati sui concetti chiave in modo rapido",
       color: "text-amber-600 bg-amber-50 dark:bg-amber-900/20",
     },
     {
       method: "challenge",
       icon: Zap,
-      label: "Fai una sfida",
+      label: "Sfide",
       desc: isRinforza ? "Lavora su un punto debole con una mini missione" : "Mettiti alla prova con una mini missione",
       color: "text-orange-600 bg-orange-50 dark:bg-orange-900/20",
     },
     {
       method: "game",
       icon: Gamepad2,
-      label: "Gioca per imparare",
+      label: "Giochi",
       desc: isRinforza ? "Capisci meglio con un'attività interattiva" : "Ripassa con un'attività più leggera e interattiva",
       color: "text-green-600 bg-green-50 dark:bg-green-900/20",
     },
