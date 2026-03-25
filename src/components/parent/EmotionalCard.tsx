@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, ShieldAlert, AlertTriangle, Info, ChevronDown } from "lucide-react";
+import { Heart, ShieldAlert, AlertTriangle, Info, ChevronDown, Lightbulb, Sparkles, Loader2 } from "lucide-react";
 import { markAlertRead } from "@/lib/database";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
@@ -15,13 +15,14 @@ interface EmotionalCardProps {
   alerts: any[];
   onAlertRead: (alertId: string) => void;
   sessions: any[];
+  insights?: any[];
+  insightsLoading?: boolean;
 }
 
-export const EmotionalCard = ({ alerts, onAlertRead, sessions }: EmotionalCardProps) => {
+export const EmotionalCard = ({ alerts, onAlertRead, sessions, insights = [], insightsLoading = false }: EmotionalCardProps) => {
   const [expanded, setExpanded] = useState(true);
   const unreadAlerts = alerts.filter(a => !a.read);
 
-  // Compute recent emotion distribution
   const recentSessions = sessions.slice(0, 20);
   const emotionCounts: Record<string, number> = {};
   for (const s of recentSessions) {
@@ -41,6 +42,9 @@ export const EmotionalCard = ({ alerts, onAlertRead, sessions }: EmotionalCardPr
 
   const totalEmotions = Object.entries(emotionCounts).filter(([k]) => k !== "non_registrata").reduce((a, [, v]) => a + v, 0);
 
+  // Filter emotional insights from AI
+  const emotionalInsights = insights.filter(i => i.category === "emotivo");
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -48,10 +52,7 @@ export const EmotionalCard = ({ alerts, onAlertRead, sessions }: EmotionalCardPr
       transition={{ ...spring, delay: 0.1 }}
       className="bg-card rounded-2xl border border-border p-5 shadow-soft"
     >
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="flex items-center justify-between w-full"
-      >
+      <button onClick={() => setExpanded(!expanded)} className="flex items-center justify-between w-full">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-destructive/10 flex items-center justify-center">
             <Heart className="w-4 h-4 text-destructive" />
@@ -86,12 +87,7 @@ export const EmotionalCard = ({ alerts, onAlertRead, sessions }: EmotionalCardPr
                     .map(([emotion, count]) => {
                       const info = emotionLabels[emotion] || { color: "bg-slate-300", label: emotion };
                       return (
-                        <div
-                          key={emotion}
-                          className={`${info.color} rounded-sm`}
-                          style={{ width: `${(count / totalEmotions) * 100}%` }}
-                          title={`${info.label}: ${count}`}
-                        />
+                        <div key={emotion} className={`${info.color} rounded-sm`} style={{ width: `${(count / totalEmotions) * 100}%` }} title={`${info.label}: ${count}`} />
                       );
                     })}
                 </div>
@@ -126,16 +122,11 @@ export const EmotionalCard = ({ alerts, onAlertRead, sessions }: EmotionalCardPr
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">
                             <h4 className={`font-medium text-xs ${config.text}`}>{alert.title}</h4>
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${config.bg} ${config.text} font-medium`}>
-                              {config.label}
-                            </span>
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${config.bg} ${config.text} font-medium`}>{config.label}</span>
                           </div>
                           <p className="text-xs text-foreground/70 leading-relaxed mb-2">{alert.message}</p>
                           <button
-                            onClick={async () => {
-                              await markAlertRead(alert.id);
-                              onAlertRead(alert.id);
-                            }}
+                            onClick={async () => { await markAlertRead(alert.id); onAlertRead(alert.id); }}
                             className="text-[10px] text-muted-foreground hover:text-foreground font-medium"
                           >
                             Ho letto ✓
@@ -148,7 +139,38 @@ export const EmotionalCard = ({ alerts, onAlertRead, sessions }: EmotionalCardPr
               </div>
             )}
 
-            {unreadAlerts.length === 0 && totalEmotions === 0 && (
+            {/* Emotional AI Insights / Consigli */}
+            <div className="border-t border-border pt-3 mt-3">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Sparkles className="w-3.5 h-3.5 text-destructive" />
+                <p className="text-xs font-medium text-foreground">Consigli per il benessere</p>
+              </div>
+
+              {insightsLoading ? (
+                <div className="flex items-center gap-2 py-3 justify-center">
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                  <p className="text-xs text-muted-foreground">Analizzo il benessere...</p>
+                </div>
+              ) : emotionalInsights.length > 0 ? (
+                <div className="space-y-2">
+                  {emotionalInsights.map((insight, i) => (
+                    <div key={i} className="flex gap-2.5 py-1.5">
+                      <div className="w-7 h-7 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                        <Lightbulb className="w-3.5 h-3.5 text-destructive" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-foreground mb-0.5">{insight.title}</p>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed">{insight.text}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-2">Nessun segnale particolare — tutto nella norma</p>
+              )}
+            </div>
+
+            {unreadAlerts.length === 0 && totalEmotions === 0 && emotionalInsights.length === 0 && (
               <p className="text-xs text-muted-foreground mt-4 text-center py-2">Nessun segnale emotivo rilevato al momento</p>
             )}
           </motion.div>
