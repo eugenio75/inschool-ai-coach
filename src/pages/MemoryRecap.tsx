@@ -5,7 +5,8 @@ import {
   ArrowLeft, Brain, RefreshCw, Sparkles,
   Loader2, Send, MessageCircle, X, BookOpen,
   Layers, ThumbsDown, Minus as MinusIcon, ThumbsUp, AlertCircle,
-  CalendarDays, Target, ChevronRight,
+  CalendarDays, Target, ChevronRight, Zap, Gamepad2, Trophy,
+  CheckCircle2, XCircle, Clock, Shuffle, HelpCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,8 +21,8 @@ const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 // ─── Types ───
 type Section = "ripasso" | "rinforza";
 type ContentType = "today" | "cumulative" | "specific";
-type StudyMethod = "coach" | "flashcard";
-type Step = "home" | "subject-pick" | "summary" | "study";
+type StudyMethod = "coach" | "flashcard" | "challenge" | "game";
+type Step = "home" | "subject-pick" | "summary" | "method-pick" | "study";
 
 interface WizardState {
   step: Step;
@@ -52,8 +53,8 @@ function getTodayStart(): string {
 
 interface ReviewMessage { role: "assistant" | "user"; content: string; }
 
-const ReviewChat = ({ topic, subject, onClose }: {
-  topic: string; subject: string; onClose: () => void;
+const ReviewChat = ({ topic, subject, section, onClose }: {
+  topic: string; subject: string; section: Section; onClose: () => void;
 }) => {
   const [messages, setMessages] = useState<ReviewMessage[]>([]);
   const [input, setInput] = useState("");
@@ -68,13 +69,14 @@ const ReviewChat = ({ topic, subject, onClose }: {
     setIsTyping(true);
     setStreamingText("");
     const profile = getProfile();
+    const mode = section === "rinforza" ? "strengthen" : "review";
     try {
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/review-memory`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-          body: JSON.stringify({ messages: allMessages, concept: topic, summary: "", subject, strength: 50, studentProfile: profile }),
+          body: JSON.stringify({ messages: allMessages, concept: topic, summary: "", subject, strength: 50, studentProfile: profile, studyMode: mode }),
         }
       );
       if (!response.ok || !response.body) throw new Error("Errore");
@@ -119,12 +121,14 @@ const ReviewChat = ({ topic, subject, onClose }: {
     streamReply(updated);
   };
 
+  const label = section === "rinforza" ? "Rafforza" : "Ripasso";
+
   return (
     <div className="flex flex-col h-[calc(100vh-180px)] max-w-2xl mx-auto">
       <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
         <div className="flex items-center gap-2">
           <MessageCircle className="w-4 h-4 text-primary" />
-          <span className="text-sm font-semibold text-foreground">{topic}</span>
+          <span className="text-sm font-semibold text-foreground">{label}: {topic}</span>
           <span className="text-xs text-muted-foreground">· {subject}</span>
         </div>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="w-4 h-4" /></button>
@@ -188,14 +192,11 @@ const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
 
   const handleRate = async (rating: "wrong" | "almost" | "correct") => {
     if (!currentCard) return;
-
     setCoachIntervention(null);
-
     const updates: any = {
       times_shown: (currentCard.times_shown || 0) + 1,
       last_shown_at: new Date().toISOString(),
     };
-
     if (rating === "correct") {
       updates.times_correct = (currentCard.times_correct || 0) + 1;
       const streak = (currentCard.times_correct || 0) + 1;
@@ -213,25 +214,15 @@ const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
       updates.next_review_at = new Date(Date.now() + 86400000).toISOString();
       setSessionStats((s) => ({ ...s, almost: s.almost + 1 }));
     }
-
     setCards((prev) => prev.map((c) => (c.id === currentCard.id ? { ...c, ...updates } : c)));
     setFlipped(false);
-
     const nextIndex = currentIndex + 1;
-    if (nextIndex < cards.length) {
-      setCurrentIndex(nextIndex);
-    } else {
-      setSessionDone(true);
-    }
+    if (nextIndex < cards.length) setCurrentIndex(nextIndex);
+    else setSessionDone(true);
 
     const isGeneratedCard = String(currentCard.id).startsWith("gen-");
     if (!user || isGeneratedCard) return;
-
-    try {
-      await supabase.from("flashcards").update(updates).eq("id", currentCard.id);
-    } catch (error) {
-      console.error("Flashcard update error:", error);
-    }
+    try { await supabase.from("flashcards").update(updates).eq("id", currentCard.id); } catch {}
   };
 
   if (sessionDone) {
@@ -269,7 +260,6 @@ const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
       <div className="text-center py-16 px-6">
         <Layers className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
         <p className="text-muted-foreground font-medium">Nessuna flashcard disponibile</p>
-        <p className="text-muted-foreground text-sm mt-1">Completa sessioni di studio per generare carte!</p>
         <button onClick={onClose} className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium">Torna indietro</button>
       </div>
     );
@@ -283,14 +273,12 @@ const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
         </button>
         <span className="text-xs text-muted-foreground font-medium">{subject}</span>
       </div>
-
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <span>{currentIndex + 1} / {cards.length}</span>
         <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
           <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${((currentIndex + 1) / cards.length) * 100}%` }} />
         </div>
       </div>
-
       {currentCard && (
         <div className="perspective-1000">
           <motion.div className="relative w-full cursor-pointer transform-style-3d" style={{ minHeight: 240 }} onClick={() => { if (!flipped) setFlipped(true); }}
@@ -314,20 +302,14 @@ const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
           </motion.div>
         </div>
       )}
-
       <AnimatePresence>
         {coachIntervention && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
             className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
             <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">Questo concetto ti crea difficoltà — vuoi che ci lavoriamo insieme?</p>
-            <button onClick={() => navigate(`/challenge/new?subject=${encodeURIComponent(coachIntervention)}`)}
-              className="mt-2 px-4 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-medium hover:bg-amber-700 transition-colors">
-              Apri sessione guidata
-            </button>
           </motion.div>
         )}
       </AnimatePresence>
-
       {currentCard && flipped && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-3 gap-3">
           <button onClick={() => handleRate("wrong")}
@@ -344,6 +326,489 @@ const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
           </button>
         </motion.div>
       )}
+    </div>
+  );
+};
+
+// ─── Challenge Session ───
+
+interface ChallengeQuestion {
+  question: string;
+  options: string[];
+  correct: number;
+  explanation: string;
+}
+
+const ChallengeSession = ({ subject, topic, section, concepts, onClose }: {
+  subject: string; topic: string; section: Section; concepts: any[]; onClose: () => void;
+}) => {
+  const [questions, setQuestions] = useState<ChallengeQuestion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentQ, setCurrentQ] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [showResult, setShowResult] = useState(false);
+  const [score, setScore] = useState(0);
+  const [done, setDone] = useState(false);
+  const [streak, setStreak] = useState(0);
+  const [timer, setTimer] = useState(60);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    generateChallenge();
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, []);
+
+  const generateChallenge = async () => {
+    setLoading(true);
+    const profile = getProfile();
+    const conceptTexts = concepts.map(c => `${c.concept}: ${c.summary || ""}`).join("\n");
+    const challengeType = section === "rinforza"
+      ? "sfide mirate al miglioramento: correggi errori, rimetti in ordine passaggi, scegli il procedimento corretto, applica concetti a esempi concreti"
+      : "sfide brevi per attivare attenzione e memoria: domande rapide, abbina concetto e definizione, riconosci concetti";
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-flashcards`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+          body: JSON.stringify({
+            subject,
+            schoolLevel: profile?.school_level || "superiori",
+            conversationHistory: `Genera 5 domande a risposta multipla (4 opzioni, 1 corretta) come ${challengeType}.
+Argomento: ${topic}
+Concetti: ${conceptTexts}
+${section === "rinforza" ? "Focalizzati sui punti deboli e gli errori comuni." : "Focalizzati sul richiamo e la memoria."}
+${profile?.name ? `Studente: ${profile.name}` : ""}
+
+Formato JSON richiesto:
+{"cards":[{"question":"...","options":["A","B","C","D"],"correct":0,"explanation":"..."}]}
+correct è l'indice (0-3) della risposta giusta.`,
+          }),
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        const raw = data.cards || [];
+        const parsed = raw.filter((q: any) => q.question && q.options?.length >= 2 && typeof q.correct === "number");
+        if (parsed.length > 0) {
+          setQuestions(parsed);
+          startTimer();
+        }
+      }
+    } catch (e) { console.error("Challenge gen error:", e); }
+    finally { setLoading(false); }
+  };
+
+  const startTimer = () => {
+    setTimer(60);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setTimer(prev => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleAnswer = (idx: number) => {
+    if (showResult) return;
+    setSelected(idx);
+    setShowResult(true);
+    if (timerRef.current) clearInterval(timerRef.current);
+    const isCorrect = idx === questions[currentQ]?.correct;
+    if (isCorrect) {
+      setScore(s => s + 1);
+      setStreak(s => s + 1);
+    } else {
+      setStreak(0);
+    }
+  };
+
+  const nextQuestion = () => {
+    if (currentQ + 1 >= questions.length) {
+      setDone(true);
+    } else {
+      setCurrentQ(q => q + 1);
+      setSelected(null);
+      setShowResult(false);
+      startTimer();
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Preparo la sfida...</p>
+      </div>
+    );
+  }
+
+  if (done || questions.length === 0) {
+    const pct = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
+    return (
+      <div className="max-w-md mx-auto px-6 py-12 text-center">
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Trophy className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="font-display text-xl font-bold text-foreground mb-1">
+            {questions.length === 0 ? "Nessuna sfida disponibile" : "Sfida completata!"}
+          </h2>
+          {questions.length > 0 && (
+            <>
+              <p className="text-3xl font-bold text-primary mt-4">{pct}%</p>
+              <p className="text-sm text-muted-foreground">{score} su {questions.length} corrette</p>
+              <div className="mt-4 text-sm text-muted-foreground">
+                {pct >= 80 ? "🎉 Ottimo lavoro!" : pct >= 50 ? "💪 Buon inizio, continua così!" : "📚 Rivedi l'argomento e riprova!"}
+              </div>
+            </>
+          )}
+          <button onClick={onClose} className="mt-6 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium text-sm">
+            Torna indietro
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  const q = questions[currentQ];
+
+  return (
+    <div className="max-w-lg mx-auto px-6 py-6 space-y-5">
+      <div className="flex items-center justify-between">
+        <button onClick={onClose} className="flex items-center gap-2 text-sm text-primary font-medium">
+          <ArrowLeft className="w-4 h-4" /> Indietro
+        </button>
+        <div className="flex items-center gap-3">
+          {streak >= 2 && <span className="text-xs font-bold text-amber-500">🔥 {streak}</span>}
+          <span className={`text-xs font-mono font-bold ${timer <= 10 ? "text-destructive" : "text-muted-foreground"}`}>
+            <Clock className="w-3 h-3 inline mr-1" />{timer}s
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <span>{currentQ + 1} / {questions.length}</span>
+        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${((currentQ + 1) / questions.length) * 100}%` }} />
+        </div>
+        <span className="font-semibold text-primary">{score} pt</span>
+      </div>
+
+      <motion.div key={currentQ} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
+        <div className="bg-card rounded-2xl border border-border p-5">
+          <p className="text-sm font-semibold text-foreground leading-relaxed">{q.question}</p>
+        </div>
+
+        <div className="space-y-2">
+          {q.options.map((opt, i) => {
+            let style = "border-border bg-card hover:border-primary/30";
+            if (showResult) {
+              if (i === q.correct) style = "border-green-400 bg-green-50 dark:bg-green-900/20";
+              else if (i === selected && i !== q.correct) style = "border-destructive bg-destructive/5";
+              else style = "border-border bg-card opacity-60";
+            }
+            return (
+              <button key={i} onClick={() => handleAnswer(i)} disabled={showResult}
+                className={`w-full text-left p-3.5 rounded-xl border-2 transition-all text-sm ${style}`}>
+                <span className="font-medium text-foreground">{opt}</span>
+                {showResult && i === q.correct && <CheckCircle2 className="w-4 h-4 text-green-500 inline ml-2" />}
+                {showResult && i === selected && i !== q.correct && <XCircle className="w-4 h-4 text-destructive inline ml-2" />}
+              </button>
+            );
+          })}
+        </div>
+
+        {showResult && q.explanation && (
+          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+            className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm text-foreground leading-relaxed">
+            💡 {q.explanation}
+          </motion.div>
+        )}
+
+        {showResult && (
+          <Button onClick={nextQuestion} className="w-full">
+            {currentQ + 1 >= questions.length ? "Vedi risultati" : "Prossima domanda"}
+          </Button>
+        )}
+      </motion.div>
+    </div>
+  );
+};
+
+// ─── Game Session ───
+
+type GameType = "true-false" | "complete" | "memory-match" | "find-error";
+
+interface GameItem {
+  statement: string;
+  isTrue?: boolean;
+  answer?: string;
+  correction?: string;
+}
+
+const GameSession = ({ subject, topic, section, concepts, onClose }: {
+  subject: string; topic: string; section: Section; concepts: any[]; onClose: () => void;
+}) => {
+  const [gameItems, setGameItems] = useState<GameItem[]>([]);
+  const [gameType, setGameType] = useState<GameType | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [answered, setAnswered] = useState(false);
+  const [userAnswer, setUserAnswer] = useState<boolean | string | null>(null);
+  const [score, setScore] = useState(0);
+  const [done, setDone] = useState(false);
+
+  const gameOptions: { type: GameType; label: string; desc: string; icon: any; forSection: Section[] }[] = [
+    { type: "true-false", label: "Vero o falso", desc: section === "rinforza" ? "Individua le affermazioni corrette e scorrette" : "Rispondi velocemente: vero o falso?", icon: CheckCircle2, forSection: ["ripasso", "rinforza"] },
+    { type: "complete", label: "Completa la frase", desc: section === "rinforza" ? "Completa il passaggio mancante" : "Inserisci la parola giusta", icon: HelpCircle, forSection: ["ripasso", "rinforza"] },
+    { type: "find-error", label: "Trova l'errore", desc: "Correggi l'affermazione sbagliata", icon: XCircle, forSection: ["rinforza"] },
+    { type: "memory-match", label: "Scegli la risposta", desc: "Seleziona la risposta corretta", icon: Shuffle, forSection: ["ripasso", "rinforza"] },
+  ];
+
+  const availableGames = gameOptions.filter(g => g.forSection.includes(section));
+
+  const startGame = async (type: GameType) => {
+    setGameType(type);
+    setLoading(true);
+    const profile = getProfile();
+    const conceptTexts = concepts.map(c => `${c.concept}: ${c.summary || ""}`).join("\n");
+
+    let prompt = "";
+    if (type === "true-false") {
+      prompt = `Genera 6 affermazioni vero/falso su: ${topic}\nConcetti: ${conceptTexts}\nFormato JSON: {"cards":[{"question":"affermazione","options":["vero"],"correct":0,"explanation":""}]}\nPer affermazioni false, metti correct: -1 e in explanation scrivi la correzione.`;
+    } else if (type === "complete") {
+      prompt = `Genera 5 frasi da completare su: ${topic}\nConcetti: ${conceptTexts}\nOgni frase deve avere uno spazio vuoto (___). Formato JSON: {"cards":[{"question":"La ___ è...","options":["risposta corretta"],"correct":0,"explanation":"frase completa"}]}`;
+    } else if (type === "find-error") {
+      prompt = `Genera 5 affermazioni SBAGLIATE su: ${topic} che lo studente deve correggere.\nConcetti: ${conceptTexts}\nFormato JSON: {"cards":[{"question":"affermazione sbagliata","options":["correzione"],"correct":0,"explanation":"spiegazione dell'errore"}]}`;
+    } else {
+      prompt = `Genera 5 domande a risposta multipla facili su: ${topic}\nConcetti: ${conceptTexts}\nFormato: {"cards":[{"question":"...","options":["A","B","C"],"correct":0,"explanation":""}]}`;
+    }
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-flashcards`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+          body: JSON.stringify({ subject, schoolLevel: profile?.school_level || "superiori", conversationHistory: prompt }),
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        const cards = data.cards || [];
+        if (type === "true-false") {
+          setGameItems(cards.map((c: any) => ({
+            statement: c.question,
+            isTrue: c.correct === 0,
+            correction: c.explanation || "",
+          })));
+        } else if (type === "find-error") {
+          setGameItems(cards.map((c: any) => ({
+            statement: c.question,
+            answer: c.options?.[0] || "",
+            correction: c.explanation || "",
+          })));
+        } else if (type === "complete") {
+          setGameItems(cards.map((c: any) => ({
+            statement: c.question,
+            answer: c.options?.[0] || "",
+            correction: c.explanation || "",
+          })));
+        } else {
+          setGameItems(cards.map((c: any) => ({
+            statement: c.question,
+            answer: c.options?.[c.correct] || "",
+            correction: c.explanation || "",
+          })));
+        }
+      }
+    } catch (e) { console.error("Game gen error:", e); }
+    finally { setLoading(false); }
+  };
+
+  const handleTrueFalse = (answer: boolean) => {
+    if (answered) return;
+    setAnswered(true);
+    setUserAnswer(answer);
+    if (answer === gameItems[currentIdx]?.isTrue) setScore(s => s + 1);
+  };
+
+  const handleTextAnswer = (ans: string) => {
+    if (answered) return;
+    setAnswered(true);
+    setUserAnswer(ans);
+    const correct = gameItems[currentIdx]?.answer?.toLowerCase().trim();
+    if (ans.toLowerCase().trim() === correct) setScore(s => s + 1);
+  };
+
+  const nextItem = () => {
+    if (currentIdx + 1 >= gameItems.length) {
+      setDone(true);
+    } else {
+      setCurrentIdx(i => i + 1);
+      setAnswered(false);
+      setUserAnswer(null);
+    }
+  };
+
+  // Game type picker
+  if (!gameType) {
+    return (
+      <div className="max-w-lg mx-auto px-6 py-6 space-y-4">
+        <div className="flex items-center gap-3 mb-2">
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><ArrowLeft className="w-5 h-5" /></button>
+          <h2 className="font-display text-lg font-bold text-foreground">Scegli il gioco</h2>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {section === "rinforza" ? "Capisci meglio con un'attività interattiva" : "Ripassa con un'attività più leggera e interattiva"}
+        </p>
+        <div className="space-y-2.5">
+          {availableGames.map((g, i) => (
+            <motion.button key={g.type} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ ...spring, delay: i * 0.05 }}
+              onClick={() => startGame(g.type)}
+              className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
+              <div className="w-10 h-10 rounded-xl bg-accent/50 flex items-center justify-center">
+                <g.icon className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-foreground">{g.label}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{g.desc}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
+            </motion.button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Preparo il gioco...</p>
+      </div>
+    );
+  }
+
+  if (done || gameItems.length === 0) {
+    const pct = gameItems.length > 0 ? Math.round((score / gameItems.length) * 100) : 0;
+    return (
+      <div className="max-w-md mx-auto px-6 py-12 text-center">
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+          <div className="w-16 h-16 rounded-2xl bg-accent/50 flex items-center justify-center mx-auto mb-4">
+            <Gamepad2 className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="font-display text-xl font-bold text-foreground mb-1">
+            {gameItems.length === 0 ? "Nessun gioco disponibile" : "Gioco completato!"}
+          </h2>
+          {gameItems.length > 0 && (
+            <>
+              <p className="text-3xl font-bold text-primary mt-4">{pct}%</p>
+              <p className="text-sm text-muted-foreground">{score} su {gameItems.length}</p>
+              <div className="mt-3 text-sm text-muted-foreground">
+                {pct >= 80 ? "🎉 Fantastico!" : pct >= 50 ? "💪 Bene, continua!" : "📖 Rivedi i concetti e riprova!"}
+              </div>
+            </>
+          )}
+          <button onClick={onClose} className="mt-6 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium text-sm">Torna indietro</button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  const item = gameItems[currentIdx];
+
+  return (
+    <div className="max-w-lg mx-auto px-6 py-6 space-y-5">
+      <div className="flex items-center justify-between">
+        <button onClick={onClose} className="flex items-center gap-2 text-sm text-primary font-medium">
+          <ArrowLeft className="w-4 h-4" /> Indietro
+        </button>
+        <span className="text-xs font-semibold text-primary">{score} pt</span>
+      </div>
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <span>{currentIdx + 1} / {gameItems.length}</span>
+        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${((currentIdx + 1) / gameItems.length) * 100}%` }} />
+        </div>
+      </div>
+
+      <motion.div key={currentIdx} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
+        <div className="bg-card rounded-2xl border border-border p-5">
+          <p className="text-sm font-semibold text-foreground leading-relaxed">{item.statement}</p>
+        </div>
+
+        {gameType === "true-false" && (
+          <div className="grid grid-cols-2 gap-3">
+            {["Vero", "Falso"].map((label, i) => {
+              const val = i === 0;
+              let style = "border-border bg-card hover:border-primary/30";
+              if (answered) {
+                if (val === item.isTrue) style = "border-green-400 bg-green-50 dark:bg-green-900/20";
+                else if (val === userAnswer) style = "border-destructive bg-destructive/5";
+                else style = "border-border bg-card opacity-60";
+              }
+              return (
+                <button key={label} onClick={() => handleTrueFalse(val)} disabled={answered}
+                  className={`p-4 rounded-xl border-2 text-sm font-semibold transition-all ${style}`}>
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {(gameType === "complete" || gameType === "find-error") && !answered && (
+          <div className="flex gap-2">
+            <Input placeholder={gameType === "find-error" ? "Scrivi la correzione..." : "Scrivi la risposta..."}
+              onKeyDown={e => { if (e.key === "Enter") handleTextAnswer((e.target as HTMLInputElement).value); }}
+              className="text-sm" />
+            <Button size="sm" onClick={(e) => {
+              const inp = (e.currentTarget.previousElementSibling as HTMLInputElement);
+              if (inp?.value) handleTextAnswer(inp.value);
+            }}>Conferma</Button>
+          </div>
+        )}
+
+        {gameType === "memory-match" && !answered && item.answer && (
+          <div className="space-y-2">
+            {/* Shuffle options for display */}
+            {[item.answer, ...(concepts.slice(0, 2).map(c => c.concept).filter(c => c !== item.answer))].sort(() => Math.random() - 0.5).map((opt, i) => (
+              <button key={i} onClick={() => handleTextAnswer(opt)}
+                className="w-full text-left p-3.5 rounded-xl border-2 border-border bg-card hover:border-primary/30 transition-all text-sm font-medium">
+                {opt}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {answered && (
+          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+            {gameType === "true-false" && userAnswer !== item.isTrue && item.correction && (
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm text-foreground">
+                💡 {item.correction}
+              </div>
+            )}
+            {(gameType === "complete" || gameType === "find-error") && (
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm text-foreground">
+                ✅ Risposta: <span className="font-semibold">{item.answer}</span>
+                {item.correction && <span className="block mt-1 text-muted-foreground">{item.correction}</span>}
+              </div>
+            )}
+            <Button onClick={nextItem} className="w-full">
+              {currentIdx + 1 >= gameItems.length ? "Vedi risultati" : "Avanti"}
+            </Button>
+          </motion.div>
+        )}
+      </motion.div>
     </div>
   );
 };
@@ -416,14 +881,8 @@ const SummaryCard = ({ item, index, showStrength, compact = false }: { item: any
       className={compact ? "py-2 first:pt-0" : "bg-card rounded-xl border border-border p-3.5"}>
       {compact && index > 0 && <div className="border-t border-border/40 -mt-2 mb-2" />}
       <p className="text-sm font-semibold text-foreground">{item.concept}</p>
-      {item.summary && (
-        <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{item.summary}</p>
-      )}
-      {!item.summary && (
-        <p className="text-sm text-muted-foreground mt-1.5 italic">Argomento studiato — espandi per un ripasso completo.</p>
-      )}
-
-      {/* Expanded deep summary */}
+      {item.summary && <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{item.summary}</p>}
+      {!item.summary && <p className="text-sm text-muted-foreground mt-1.5 italic">Argomento studiato — espandi per un ripasso completo.</p>}
       <AnimatePresence>
         {expanded && deepSummary && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
@@ -438,14 +897,11 @@ const SummaryCard = ({ item, index, showStrength, compact = false }: { item: any
           <span className="text-xs text-muted-foreground">Genero un ripasso dettagliato...</span>
         </div>
       )}
-
-      {/* Scopri di più button */}
       <button onClick={() => expanded ? setExpanded(false) : fetchDeepSummary()}
         className="mt-2 text-xs font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
         {expanded ? "Chiudi" : "Scopri di più"}
         <ChevronRight className={`w-3 h-3 transition-transform ${expanded ? "rotate-90" : ""}`} />
       </button>
-
       {showStrength && (
         <div className="mt-2 flex items-center gap-2">
           <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
@@ -460,7 +916,7 @@ const SummaryCard = ({ item, index, showStrength, compact = false }: { item: any
 };
 
 // ═══════════════════════════════════════════
-// MAIN PAGE — Single Page Layout
+// MAIN PAGE
 // ═══════════════════════════════════════════
 
 const MemoryRecap = () => {
@@ -478,8 +934,8 @@ const MemoryRecap = () => {
   const [autoNavigated, setAutoNavigated] = useState(false);
   const [activeGroupStudy, setActiveGroupStudy] = useState<{ subject: string; concepts: any[]; method: StudyMethod } | null>(null);
   const [generatingFlashcards, setGeneratingFlashcards] = useState(false);
+  const [generatedGroupCards, setGeneratedGroupCards] = useState<any[]>([]);
 
-  // Load data
   useEffect(() => {
     const load = async () => {
       const memoryData = await getMemoryItems();
@@ -494,7 +950,6 @@ const MemoryRecap = () => {
     load();
   }, [user]);
 
-  // Auto-navigate from celebration: /memory?section=ripasso&content=today
   useEffect(() => {
     if (autoNavigated || loading) return;
     const params = new URLSearchParams(window.location.search);
@@ -507,10 +962,9 @@ const MemoryRecap = () => {
     }
   }, [loading, autoNavigated]);
 
-
   const todayItems = useMemo(() => {
     const todayStart = getTodayStart();
-    return items.filter(i => i.created_at >= todayStart).sort((a, b) => 
+    return items.filter(i => i.created_at >= todayStart).sort((a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
   }, [items]);
@@ -520,7 +974,6 @@ const MemoryRecap = () => {
     [items]
   );
 
-  // Get relevant items based on section + content type
   const getRelevantItems = (section: Section, contentType: ContentType): any[] => {
     if (section === "ripasso") {
       if (contentType === "today") return todayItems;
@@ -546,7 +999,6 @@ const MemoryRecap = () => {
     return Object.entries(subjectMap).sort(([, a], [, b]) => b - a);
   }, [wizard.section, wizard.contentType, items, weakItems, todayItems]);
 
-  // Get flashcards filtered
   const getFilteredFlashcards = (): any[] => {
     if (wizard.specificTopic) {
       const topic = wizard.specificTopic.toLowerCase();
@@ -556,9 +1008,7 @@ const MemoryRecap = () => {
         c.answer?.toLowerCase().includes(topic)
       );
     }
-    if (wizard.subject) {
-      return flashcards.filter(c => c.subject === wizard.subject);
-    }
+    if (wizard.subject) return flashcards.filter(c => c.subject === wizard.subject);
     if (wizard.contentType === "today") {
       const todayStart = getTodayStart();
       return flashcards.filter(c => c.created_at >= todayStart);
@@ -566,10 +1016,26 @@ const MemoryRecap = () => {
     return flashcards;
   };
 
-  // Navigation
+  // Get current study concepts for challenge/game
+  const getCurrentConcepts = (): any[] => {
+    if (wizard.specificTopic) {
+      return items.filter(i =>
+        i.concept?.toLowerCase().includes(wizard.specificTopic!.toLowerCase()) ||
+        i.subject?.toLowerCase().includes(wizard.specificTopic!.toLowerCase())
+      );
+    }
+    if (!wizard.section || !wizard.contentType) return items.slice(0, 10);
+    let relevant = getRelevantItems(wizard.section, wizard.contentType);
+    if (wizard.subject && wizard.subject !== "all") {
+      relevant = relevant.filter(i => i.subject === wizard.subject);
+    }
+    return relevant.slice(0, 15);
+  };
+
   const goBack = () => {
     if (activeGroupStudy) { setActiveGroupStudy(null); return; }
-    if (wizard.step === "study") setWizard(w => ({ ...w, step: "summary", method: null }));
+    if (wizard.step === "study") setWizard(w => ({ ...w, step: "method-pick", method: null }));
+    else if (wizard.step === "method-pick") setWizard(w => ({ ...w, step: "summary" }));
     else if (wizard.step === "summary") {
       if (wizard.contentType === "specific") setWizard(w => ({ ...w, step: "home", section: null, contentType: null, specificTopic: null, subject: null }));
       else setWizard(w => ({ ...w, step: "subject-pick", subject: null }));
@@ -579,17 +1045,21 @@ const MemoryRecap = () => {
   };
 
   const pickOption = (section: Section, contentType: ContentType) => {
-    if (contentType === "specific") return; // handled by submit
+    if (contentType === "specific") return;
     setWizard({ step: "subject-pick", section, contentType, subject: null, specificTopic: null, method: null });
   };
 
   const submitSpecific = (section: Section, topic: string) => {
     if (!topic.trim()) return;
-    setWizard({ step: "summary", section, contentType: "specific", subject: topic.trim(), specificTopic: topic.trim(), method: null });
+    setWizard({ step: "method-pick", section, contentType: "specific", subject: topic.trim(), specificTopic: topic.trim(), method: null });
   };
 
   const selectSubject = (subject: string) => {
     setWizard(w => ({ ...w, step: "summary", subject }));
+  };
+
+  const goToMethodPick = () => {
+    setWizard(w => ({ ...w, step: "method-pick" }));
   };
 
   const selectMethod = (method: StudyMethod) => {
@@ -599,9 +1069,6 @@ const MemoryRecap = () => {
     }
     setWizard(w => ({ ...w, step: "study", method }));
   };
-
-  // Start study for a specific exercise group
-  const [generatedGroupCards, setGeneratedGroupCards] = useState<any[]>([]);
 
   const startGroupStudy = async (subject: string, concepts: any[], method: StudyMethod) => {
     if (method === "flashcard") {
@@ -630,25 +1097,56 @@ const MemoryRecap = () => {
             setActiveGroupStudy({ subject, concepts, method: "flashcard" });
           }
         }
-      } catch (e) {
-        console.error("Error generating flashcards:", e);
-      } finally {
-        setGeneratingFlashcards(false);
-      }
+      } catch (e) { console.error("Error generating flashcards:", e); }
+      finally { setGeneratingFlashcards(false); }
     } else {
-      setActiveGroupStudy({ subject, concepts, method: "coach" });
+      setActiveGroupStudy({ subject, concepts, method });
     }
   };
 
+  // Method cards config
+  const isRinforza = activeTab === "rinforza" || wizard.section === "rinforza";
+
+  const methodCards: { method: StudyMethod; icon: any; label: string; desc: string }[] = [
+    {
+      method: "coach",
+      icon: MessageCircle,
+      label: isRinforza ? "Rafforza con il Coach" : "Ripassa con il Coach",
+      desc: isRinforza ? "Ti aiuto a capire meglio i punti più difficili" : "Rivedi l'argomento passo dopo passo con il tuo Coach",
+    },
+    {
+      method: "flashcard",
+      icon: Layers,
+      label: "Usa le flashcard",
+      desc: isRinforza ? "Allenati sui concetti da consolidare" : "Allenati sui concetti chiave in modo rapido",
+    },
+    {
+      method: "challenge",
+      icon: Zap,
+      label: "Fai una sfida",
+      desc: isRinforza ? "Lavora su un punto debole con una mini missione" : "Mettiti alla prova con una mini missione",
+    },
+    {
+      method: "game",
+      icon: Gamepad2,
+      label: "Gioca per imparare",
+      desc: isRinforza ? "Capisci meglio con un'attività interattiva" : "Ripassa con un'attività più leggera e interattiva",
+    },
+  ];
 
   const getSubtitle = (): string => {
-    if (wizard.step === "home") return "Scegli cosa vuoi ripassare e fallo nel modo più adatto a te.";
+    if (wizard.step === "home") {
+      return activeTab === "ripasso"
+        ? "Rivedi ciò che hai studiato in modo semplice e guidato"
+        : "Lavora meglio su ciò che ti risulta più difficile";
+    }
     if (wizard.step === "subject-pick") {
       const label = wizard.section === "ripasso" ? "Ripasso" : "Rafforza";
       const ct = wizard.contentType === "today" ? "Di oggi" : "Cumulativo";
       return `${label} · ${ct}`;
     }
     if (wizard.step === "summary") return "Ecco cosa hai studiato";
+    if (wizard.step === "method-pick") return "Come vuoi studiare?";
     return "";
   };
 
@@ -660,7 +1158,6 @@ const MemoryRecap = () => {
     );
   }
 
-  // ─── Section block builder ───
   const renderSectionBlock = (section: Section) => {
     const isRipasso = section === "ripasso";
     const specificInput = isRipasso ? specificInputRipasso : specificInputRinforza;
@@ -668,8 +1165,6 @@ const MemoryRecap = () => {
 
     return (
       <div className="space-y-2.5">
-
-        {/* Option: Today */}
         <button onClick={() => pickOption(section, "today")}
           className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
           <CalendarDays className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -677,7 +1172,6 @@ const MemoryRecap = () => {
           <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
         </button>
 
-        {/* Option: Cumulative */}
         <button onClick={() => pickOption(section, "cumulative")}
           className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
           <Brain className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -685,28 +1179,23 @@ const MemoryRecap = () => {
           <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
         </button>
 
-        {/* Option: Specific topic */}
         <div className="rounded-xl border border-border bg-card p-3.5">
           <div className="flex items-center gap-3">
             <Sparkles className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium text-foreground">Argomento specifico</span>
           </div>
           <div className="mt-2.5 flex gap-2">
-            <Input
-              value={specificInput}
-              onChange={e => setSpecificInput(e.target.value)}
+            <Input value={specificInput} onChange={e => setSpecificInput(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") submitSpecific(section, specificInput); }}
-              placeholder="Es: frazioni, rivoluzione francese..."
-              className="text-sm"
-            />
-            <Button onClick={() => submitSpecific(section, specificInput)} disabled={!specificInput.trim()} size="sm" className="shrink-0 px-4">
-              Vai
-            </Button>
+              placeholder="Es: frazioni, rivoluzione francese..." className="text-sm" />
+            <Button onClick={() => submitSpecific(section, specificInput)} disabled={!specificInput.trim()} size="sm" className="shrink-0 px-4">Vai</Button>
           </div>
         </div>
       </div>
     );
   };
+
+  const currentSection = wizard.section || activeTab;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -717,22 +1206,21 @@ const MemoryRecap = () => {
             <button onClick={goBack} className="text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="font-display text-lg font-bold text-foreground">Ripassa e Rafforza</h1>
+            <h1 className="font-display text-lg font-bold text-foreground">
+              {wizard.step === "home" ? (activeTab === "ripasso" ? "Ripassa" : "Rafforza") : (currentSection === "ripasso" ? "Ripassa" : "Rafforza")}
+            </h1>
           </div>
           {wizard.step !== "study" && (
             <p className="text-sm text-muted-foreground ml-8 mb-3">{getSubtitle()}</p>
           )}
-          {/* Tab menu — only on home */}
           {wizard.step === "home" && (
             <div className="flex ml-8 gap-1">
               {(["ripasso", "rinforza"] as Section[]).map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)}
                   className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg transition-colors relative ${
-                    activeTab === tab
-                      ? "text-primary"
-                      : "text-muted-foreground hover:text-foreground"
+                    activeTab === tab ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   }`}>
-                  {tab === "ripasso" ? "Ripasso" : "Rafforza"}
+                  {tab === "ripasso" ? "Ripassa" : "Rafforza"}
                   {activeTab === tab && (
                     <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
                   )}
@@ -747,7 +1235,7 @@ const MemoryRecap = () => {
       <div className="max-w-2xl mx-auto px-5 pt-5">
         <AnimatePresence mode="wait">
 
-          {/* ═══ HOME: Both sections on one page ═══ */}
+          {/* HOME */}
           {wizard.step === "home" && (
             <motion.div key={`home-${activeTab}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
               className="space-y-2.5 pt-1">
@@ -755,7 +1243,7 @@ const MemoryRecap = () => {
             </motion.div>
           )}
 
-          {/* ═══ SUBJECT PICK ═══ */}
+          {/* SUBJECT PICK */}
           {wizard.step === "subject-pick" && (
             <motion.div key="subject-pick" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
               className="space-y-3">
@@ -804,15 +1292,20 @@ const MemoryRecap = () => {
             </motion.div>
           )}
 
-          {/* ═══ SUMMARY ═══ */}
+          {/* SUMMARY */}
           {wizard.step === "summary" && !activeGroupStudy && (
             <motion.div key="summary" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
               className="space-y-4">
-              <div className="flex items-center gap-2 mb-1">
-                <BookOpen className="w-4 h-4 text-primary" />
-                <p className="text-sm font-semibold text-foreground">
-                  {wizard.subject === "all" ? "Tutte le materie" : wizard.subject}
-                </p>
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-primary" />
+                  <p className="text-sm font-semibold text-foreground">
+                    {wizard.subject === "all" ? "Tutte le materie" : wizard.subject}
+                  </p>
+                </div>
+                <Button size="sm" onClick={goToMethodPick} className="gap-1.5">
+                  <Zap className="w-3.5 h-3.5" /> Inizia a studiare
+                </Button>
               </div>
 
               {(() => {
@@ -826,8 +1319,7 @@ const MemoryRecap = () => {
                         ? todayItems.filter(i => wizard.subject === "all" || i.subject === wizard.subject)
                         : items.filter(i => wizard.subject === "all" || i.subject === wizard.subject));
 
-                // Sort newest first
-                summaryItems = [...summaryItems].sort((a, b) => 
+                summaryItems = [...summaryItems].sort((a, b) =>
                   new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                 );
 
@@ -841,12 +1333,11 @@ const MemoryRecap = () => {
                   );
                 }
 
-                // Group items by subject + time proximity (within 10 minutes = same exercise)
                 const exerciseGroups: { subject: string; items: any[]; latestAt: Date }[] = [];
                 for (const item of summaryItems) {
                   const itemTime = new Date(item.created_at).getTime();
-                  const existing = exerciseGroups.find(g => 
-                    g.subject === (item.subject || "Altro") && 
+                  const existing = exerciseGroups.find(g =>
+                    g.subject === (item.subject || "Altro") &&
                     Math.abs(g.latestAt.getTime() - itemTime) < 10 * 60 * 1000
                   );
                   if (existing) {
@@ -860,8 +1351,6 @@ const MemoryRecap = () => {
                     });
                   }
                 }
-
-                // Sort groups newest first
                 exerciseGroups.sort((a, b) => b.latestAt.getTime() - a.latestAt.getTime());
 
                 return (
@@ -872,14 +1361,9 @@ const MemoryRecap = () => {
                       const showStrength = wizard.section === "rinforza";
 
                       return (
-                        <motion.div
-                          key={`${group.subject}-${gi}`}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
+                        <motion.div key={`${group.subject}-${gi}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                           transition={{ ...spring, delay: gi * 0.05 }}
-                          className="rounded-2xl border border-border bg-card overflow-hidden"
-                        >
-                          {/* Exercise card header */}
+                          className="rounded-2xl border border-border bg-card overflow-hidden">
                           <div className={`flex items-center gap-3 px-4 py-3 ${colors.bg || "bg-muted/30"} border-b border-border/50`}>
                             <div className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center`}>
                               <BookOpen className={`w-4 h-4 ${colors.text}`} />
@@ -889,30 +1373,10 @@ const MemoryRecap = () => {
                               <p className="text-[11px] text-muted-foreground">{group.items.length} concett{group.items.length === 1 ? "o" : "i"} · {timeLabel}</p>
                             </div>
                           </div>
-
-                          {/* Concepts inside */}
                           <div className="px-4 py-3 space-y-2">
                             {group.items.map((item: any, i: number) => (
                               <SummaryCard key={item.id} item={item} index={i} showStrength={showStrength} compact />
                             ))}
-                          </div>
-
-                          {/* Per-card CTA buttons */}
-                          <div className="px-4 pb-3 flex gap-2">
-                            <button
-                              onClick={() => startGroupStudy(group.subject, group.items, "coach")}
-                              className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-colors text-xs font-semibold"
-                            >
-                              <MessageCircle className="w-3.5 h-3.5" /> Ripassa con il Coach
-                            </button>
-                            <button
-                              onClick={() => startGroupStudy(group.subject, group.items, "flashcard")}
-                              disabled={generatingFlashcards}
-                              className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl border border-border bg-muted/30 text-foreground hover:bg-muted/60 transition-colors text-xs font-semibold disabled:opacity-50"
-                            >
-                              {generatingFlashcards ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Layers className="w-3.5 h-3.5" />}
-                              Usa le Flashcard
-                            </button>
                           </div>
                         </motion.div>
                       );
@@ -923,41 +1387,82 @@ const MemoryRecap = () => {
             </motion.div>
           )}
 
-          {/* ═══ STUDY (from specific card) ═══ */}
+          {/* METHOD PICK */}
+          {wizard.step === "method-pick" && !activeGroupStudy && (
+            <motion.div key="method-pick" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
+              className="space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <BookOpen className="w-4 h-4 text-primary" />
+                <p className="text-sm font-semibold text-foreground">
+                  {wizard.subject === "all" ? "Tutte le materie" : wizard.subject}
+                </p>
+              </div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Scegli come vuoi procedere</p>
+              <div className="space-y-2.5">
+                {methodCards.map((mc, i) => (
+                  <motion.button key={mc.method} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ ...spring, delay: i * 0.05 }}
+                    onClick={() => selectMethod(mc.method)}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <mc.icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-foreground">{mc.label}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{mc.desc}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* GROUP STUDY (from summary card CTAs) */}
           {activeGroupStudy && (
             <motion.div key="group-study" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
               {activeGroupStudy.method === "coach" ? (
-                <ReviewChat
+                <ReviewChat topic={activeGroupStudy.concepts.map(c => c.concept).join(", ")} subject={activeGroupStudy.subject}
+                  section={currentSection} onClose={() => setActiveGroupStudy(null)} />
+              ) : activeGroupStudy.method === "flashcard" ? (
+                <FlashcardSession cards={generatedGroupCards} subject={activeGroupStudy.subject}
+                  onClose={() => { setActiveGroupStudy(null); setGeneratedGroupCards([]); }} />
+              ) : activeGroupStudy.method === "challenge" ? (
+                <ChallengeSession subject={activeGroupStudy.subject}
                   topic={activeGroupStudy.concepts.map(c => c.concept).join(", ")}
-                  subject={activeGroupStudy.subject}
-                  onClose={() => setActiveGroupStudy(null)}
-                />
+                  section={currentSection} concepts={activeGroupStudy.concepts}
+                  onClose={() => setActiveGroupStudy(null)} />
               ) : (
-                <FlashcardSession
-                  cards={generatedGroupCards}
-                  subject={activeGroupStudy.subject}
-                  onClose={() => { setActiveGroupStudy(null); setGeneratedGroupCards([]); }}
-                />
+                <GameSession subject={activeGroupStudy.subject}
+                  topic={activeGroupStudy.concepts.map(c => c.concept).join(", ")}
+                  section={currentSection} concepts={activeGroupStudy.concepts}
+                  onClose={() => setActiveGroupStudy(null)} />
               )}
             </motion.div>
           )}
 
-          {/* ═══ STUDY (global, from wizard) ═══ */}
+          {/* STUDY (from wizard method pick) */}
           {wizard.step === "study" && !activeGroupStudy && (
             <motion.div key="study" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
               {wizard.method === "coach" ? (
-                <ReviewChat
-                  topic={wizard.specificTopic || wizard.subject || "Ripasso generale"}
+                <ReviewChat topic={wizard.specificTopic || wizard.subject || "Ripasso generale"}
                   subject={wizard.subject === "all" ? "Generale" : (wizard.subject || "Generale")}
-                  onClose={goBack}
-                />
-              ) : (
-                <FlashcardSession
-                  cards={getFilteredFlashcards()}
+                  section={currentSection} onClose={goBack} />
+              ) : wizard.method === "flashcard" ? (
+                <FlashcardSession cards={getFilteredFlashcards()}
                   subject={wizard.subject === "all" ? "Tutte le materie" : (wizard.subject || "")}
-                  onClose={goBack}
-                />
-              )}
+                  onClose={goBack} />
+              ) : wizard.method === "challenge" ? (
+                <ChallengeSession subject={wizard.subject === "all" ? "Generale" : (wizard.subject || "Generale")}
+                  topic={wizard.specificTopic || wizard.subject || "Ripasso"}
+                  section={currentSection} concepts={getCurrentConcepts()}
+                  onClose={goBack} />
+              ) : wizard.method === "game" ? (
+                <GameSession subject={wizard.subject === "all" ? "Generale" : (wizard.subject || "Generale")}
+                  topic={wizard.specificTopic || wizard.subject || "Ripasso"}
+                  section={currentSection} concepts={getCurrentConcepts()}
+                  onClose={goBack} />
+              ) : null}
             </motion.div>
           )}
 
