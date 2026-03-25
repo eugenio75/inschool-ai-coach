@@ -506,6 +506,21 @@ async function triggerEmotionalAnalysis(profileId: string) {
 // ============ IMAGE UPLOAD ============
 
 export async function uploadHomeworkImage(file: File): Promise<string | null> {
+  if (isChildSession()) {
+    try {
+      const base64 = await fileToBase64(file);
+      const result = await childApi("upload-homework-image", {
+        base64,
+        fileName: file.name,
+        contentType: file.type,
+      });
+      return result?.publicUrl || null;
+    } catch (err) {
+      console.error("Child upload error:", err);
+      return null;
+    }
+  }
+
   const { data: { user } } = await supabase.auth.getUser();
   const userId = user?.id || "anonymous";
   const fileName = `${userId}/${Date.now()}-${file.name}`;
@@ -519,6 +534,18 @@ export async function uploadHomeworkImage(file: File): Promise<string | null> {
     .from("homework-images")
     .getPublicUrl(data.path);
   return urlData.publicUrl;
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      resolve(dataUrl.split(",")[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 // ============ OCR ============
