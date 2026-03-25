@@ -693,15 +693,86 @@ ${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span cla
 
             {assignMode === "ai" && (
               <div className="space-y-3">
+                {/* Document context upload */}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1.5 block">Carica un documento di riferimento (opzionale)</Label>
+                  <input
+                    ref={aiFileInputRef}
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    className="hidden"
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (file) handleAiContextUpload(file);
+                    }}
+                  />
+                  {!aiContextFile ? (
+                    <button
+                      onClick={() => aiFileInputRef.current?.click()}
+                      disabled={aiContextUploading}
+                      className="w-full border border-dashed border-border rounded-xl p-3 text-center hover:bg-muted/30 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Upload className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">
+                        {aiContextUploading ? "Analisi in corso..." : "Foto o documento per contestualizzare"}
+                      </span>
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2 p-2.5 bg-primary/5 border border-primary/20 rounded-xl">
+                      <FileText className="w-5 h-5 text-primary shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground truncate">{aiContextFile.name}</p>
+                        {aiContextText && <p className="text-[10px] text-muted-foreground truncate">{aiContextText.slice(0, 80)}...</p>}
+                      </div>
+                      <Button size="sm" variant="ghost" className="shrink-0 h-7 w-7 p-0" onClick={() => {
+                        setAiContextFile(null);
+                        setAiContextText(null);
+                      }}>
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
                 <div>
                   <Label className="text-xs text-muted-foreground">Descrivi cosa vuoi generare</Label>
                   <Textarea
-                    placeholder="Es: 'Crea 5 domande sul Risorgimento per una terza media, difficoltà media'"
+                    placeholder={aiContextFile
+                      ? "Es: 'Genera una verifica basandoti sul documento caricato'"
+                      : "Es: 'Crea 5 domande sul Risorgimento per una terza media, difficoltà media'"}
                     value={aiPrompt}
                     onChange={e => setAiPrompt(e.target.value)}
                     className="mt-1 rounded-xl min-h-[60px]"
                   />
                 </div>
+
+                {/* Question type for verifica */}
+                {assignType === "verifica" && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground mb-1.5 block">Tipo di domande</Label>
+                    <div className="flex gap-1.5">
+                      {([
+                        { key: "aperte" as const, label: "Aperte" },
+                        { key: "chiuse" as const, label: "Chiuse" },
+                        { key: "miste" as const, label: "Miste" },
+                      ]).map(({ key, label }) => (
+                        <button
+                          key={key}
+                          onClick={() => setAiQuestionType(key)}
+                          className={cn(
+                            "flex-1 py-2 px-3 rounded-xl text-xs font-medium transition-all border",
+                            aiQuestionType === key
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background text-muted-foreground border-border hover:border-primary/40"
+                          )}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs text-muted-foreground">Livello</Label>
@@ -715,7 +786,7 @@ ${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span cla
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">N. domande</Label>
+                    <Label className="text-xs text-muted-foreground">N. domande/elementi</Label>
                     <Input type="number" min={1} max={20} value={aiNumero}
                       onChange={e => setAiNumero(Number(e.target.value))} className="mt-1 rounded-xl" />
                   </div>
@@ -725,8 +796,13 @@ ${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span cla
                   {aiLoading ? "Generazione in corso..." : "Genera contenuto"}
                 </Button>
                 {aiOutput && (
-                  <div className="bg-muted/50 border border-border rounded-xl p-3 text-sm whitespace-pre-wrap max-h-48 overflow-y-auto">
-                    {aiOutput}
+                  <div className="space-y-2">
+                    <div className="bg-muted/50 border border-border rounded-xl p-3 text-sm whitespace-pre-wrap max-h-48 overflow-y-auto">
+                      {aiOutput}
+                    </div>
+                    <Button size="sm" variant="outline" className="rounded-xl w-full" onClick={() => exportToPdf(assignTitle || "Materiale", aiOutput, assignType)}>
+                      <Download className="w-3.5 h-3.5 mr-1" /> Esporta in PDF
+                    </Button>
                   </div>
                 )}
               </div>
