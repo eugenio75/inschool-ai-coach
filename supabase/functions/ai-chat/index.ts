@@ -528,10 +528,14 @@ ${clientSystemPrompt}`
       // Fire-and-forget: update adaptive profile + blockchain log
       if (profileId) {
         updateAdaptiveProfile(profileId, messages).catch(() => {});
-        // Blockchain session log (fire-and-forget, skip if not configured)
+      // Blockchain log — fire-and-forget, mai blocca la risposta
         try {
-          const { logAISession } = await import("../_shared/blockchainService.ts");
-          logAISession(profileId, "inschool-coach-v2", 0).catch(() => {});
+          const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+          const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+          const _sb = createClient(supabaseUrl, serviceRoleKey);
+          _sb.functions.invoke('blockchain-log', {
+            body: { userId: profileId, modelVersion: 'inschool-coach-v2', riskLevel: 0 }
+          }).catch(() => {});
         } catch (_) {}
       }
       return new Response(response.body, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
@@ -541,8 +545,12 @@ ${clientSystemPrompt}`
       if (profileId) {
         updateAdaptiveProfile(profileId, messages).catch(() => {});
         try {
-          const { logAISession } = await import("../_shared/blockchainService.ts");
-          logAISession(profileId, "inschool-coach-v2", 0).catch(() => {});
+          const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+          const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+          const _sb2 = createClient(supabaseUrl, serviceRoleKey);
+          _sb2.functions.invoke('blockchain-log', {
+            body: { userId: profileId, modelVersion: 'inschool-coach-v2', riskLevel: 0 }
+          }).catch(() => {});
         } catch (_) {}
       }
       return new Response(JSON.stringify(data), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

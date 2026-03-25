@@ -557,6 +557,17 @@ COMPORTAMENTO OBBLIGATORIO:
       });
     }
 
+    // Blockchain log — fire-and-forget, mai blocca la risposta
+    try {
+      const _uid = profileId || 'anon';
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const _sb = createClient(supabaseUrl, serviceRoleKey);
+      _sb.functions.invoke('blockchain-log', {
+        body: { userId: _uid, modelVersion: 'inschool-coach-v2', riskLevel: 0 }
+      }).catch(() => {});
+    } catch (_) {}
+
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
