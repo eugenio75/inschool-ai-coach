@@ -223,6 +223,8 @@ const ParentDashboard = () => {
               setEmotionalAlerts(prev => prev.map(a => a.id === alertId ? { ...a, read: true } : a));
             }}
             sessions={sessions}
+            insights={aiInsights}
+            insightsLoading={insightsLoading}
           />
 
           {/* Cognitive area + AI insights */}
