@@ -934,13 +934,7 @@ ${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span cla
                       </div>
                     </div>
                     {m.content && (
-                      <Button size="sm" variant="ghost" className="rounded-xl shrink-0" onClick={() => {
-                        const printWin = window.open("", "_blank");
-                        if (!printWin) { toast.error("Popup bloccato dal browser"); return; }
-                        printWin.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${m.title}</title><style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:20px;line-height:1.7;color:#1a1a1a}h1{font-size:1.4em;border-bottom:2px solid #1a3a5c;padding-bottom:8px;color:#1a3a5c}pre{white-space:pre-wrap;font-family:inherit;font-size:0.95em}footer{margin-top:40px;font-size:0.75em;color:#888;border-top:1px solid #ddd;padding-top:8px}</style></head><body><h1>${m.title}</h1><p style="color:#666;font-size:0.85em">${classe?.nome || ""} · ${classe?.materia || ""} · ${m.type || ""}</p><pre>${m.content}</pre><footer>Generato con InSchool · ${new Date().toLocaleDateString("it-IT")}</footer></body></html>`);
-                        printWin.document.close();
-                        setTimeout(() => printWin.print(), 300);
-                      }}>
+                      <Button size="sm" variant="ghost" className="rounded-xl shrink-0" onClick={() => exportToPdf(m.title, m.content, m.type || "esercizi")}>
                         <Download className="w-3.5 h-3.5 mr-1" /> PDF
                       </Button>
                     )}
