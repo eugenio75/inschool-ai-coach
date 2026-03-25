@@ -513,6 +513,11 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       let coachBehavior: string;
 
       if (isExercise) {
+        const familiarityContext = familiarity === "first_time"
+          ? "\nLo studente NON conosce la teoria dietro questo esercizio. PRIMA spiega brevemente la regola/formula necessaria con un esempio, POI presenta l'esercizio."
+          : familiarity === "partial"
+          ? "\nLo studente conosce PARZIALMENTE la teoria. Chiedi cosa ricorda della regola/formula, integra quello che manca, poi passa all'esercizio."
+          : "\nLo studente dice di conoscere l'argomento. Passa direttamente all'esercizio, offri aiuto solo se si blocca.";
         coachBehavior = `Sei un tutor che guida lo studente a RISOLVERE un esercizio. Il tuo metodo:
 1. All'inizio PRESENTA tu il problema allo studente: riporta il testo dell'esercizio e spiega cosa viene chiesto
 2. Guida il ragionamento passo-passo: fai domande mirate per portare lo studente alla soluzione
@@ -522,7 +527,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
 6. Se lo studente è bloccato dopo 2 tentativi, dai un indizio più esplicito
 7. Quando risponde correttamente, conferma e passa allo step successivo
 8. Sii breve e diretto: 2-3 frasi + una domanda
-
+${familiarityContext}
 IMPORTANTE: Sei TU a dover guidare. Non chiedere allo studente di elencare i dati — presentaglieli tu e poi chiedi di ragionare.`;
       } else if (isOral && familiarity) {
         coachBehavior = `Sei un tutor che aiuta lo studente a STUDIARE, CAPIRE e RIPETERE un argomento per l'orale.
