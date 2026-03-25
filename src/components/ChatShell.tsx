@@ -59,20 +59,41 @@ export function ChatShell({
     setInput("");
   }
 
+  const [isListening, setIsListening] = useState(false);
+
   function startVoice() {
     try {
       const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (!SR) return;
+      if (!SR) {
+        alert("Il tuo browser non supporta il riconoscimento vocale. Prova con Chrome.");
+        return;
+      }
       const recognition = new SR();
       recognition.lang = "it-IT";
       recognition.continuous = false;
       recognition.interimResults = false;
+      setIsListening(true);
       recognition.onresult = (e: any) => {
         const transcript = e.results[0][0].transcript;
-        if (transcript) onSend(transcript);
+        if (transcript) onSend?.(transcript);
+        setIsListening(false);
       };
+      recognition.onerror = (e: any) => {
+        setIsListening(false);
+        if (e.error === "not-allowed") {
+          alert("Permesso microfono negato. Controlla le impostazioni del browser.");
+        } else if (e.error === "no-speech") {
+          // silenzio, nessun feedback necessario
+        } else {
+          console.warn("Errore riconoscimento vocale:", e.error);
+        }
+      };
+      recognition.onend = () => setIsListening(false);
       recognition.start();
-    } catch {}
+    } catch (err) {
+      setIsListening(false);
+      console.error("Errore avvio microfono:", err);
+    }
   }
 
   const lastMsg = messages[messages.length - 1];
@@ -210,9 +231,13 @@ export function ChatShell({
         <div className="border-t border-border bg-card p-3 shrink-0">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {showVoice && (
-              <button onClick={startVoice} disabled={sending}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-muted-foreground text-xs font-medium hover:bg-muted transition-colors">
-                <Mic className="w-3.5 h-3.5" /> Voce
+              <button onClick={startVoice} disabled={sending || isListening}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
+                  isListening
+                    ? "border-red-500 text-red-500 bg-red-50 dark:bg-red-950 animate-pulse"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                }`}>
+                <Mic className="w-3.5 h-3.5" /> {isListening ? "Ascolto..." : "Voce"}
               </button>
             )}
             {showAttach && (
