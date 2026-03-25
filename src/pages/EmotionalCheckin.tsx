@@ -192,18 +192,7 @@ const EmotionalCheckin = () => {
     }
   };
 
-  // Auto-finish after step 2 if no optional question needed
-  useEffect(() => {
-    if (step === 2) {
-      // Check if signals suggest showing optional question
-      const expAnswer = answers.find(a => experienceAnswers.some(e => e.id === a.answerId));
-      const stateAnswer = answers.find(a => stateAnswers.some(s => s.id === a.answerId));
-      const needsOptional = expAnswer?.answerId === "hard" || stateAnswer?.answerId === "nervous";
-      if (!needsOptional) {
-        handleFinish();
-      }
-    }
-  }, [step]);
+  // Step 2 (free text) is always shown to give the student a chance to write
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center px-6">
