@@ -366,14 +366,30 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       }
 
       if (generatedSteps.length === 0) {
-        const isExercise = homework.task_type !== "study" && !isOralStudyTask(homework.task_type, homework.title);
+        const isExercise = !isOralStudyTask(homework.task_type, homework.title);
         if (isExercise) {
-          generatedSteps = [
+          if (fam === "first_time") {
+            generatedSteps = [
+              { number: 1, text: "Prima di tutto, ti spiego la teoria necessaria per affrontare questo esercizio.", bloomLevel: 1 },
+              { number: 2, text: "Ora leggiamo insieme l'esercizio e vediamo cosa ci viene chiesto.", bloomLevel: 2 },
+              { number: 3, text: "Prova ad impostare il primo passaggio. Ti guido se ti blocchi.", bloomLevel: 3 },
+              { number: 4, text: "Controlla il risultato: ha senso? Come puoi verificarlo?", bloomLevel: 4 },
+            ];
+          } else if (fam === "partial") {
+            generatedSteps = [
+              { number: 1, text: "Rivediamo velocemente la parte di teoria che non ricordi bene.", bloomLevel: 1 },
+              { number: 2, text: "Ora leggiamo l'esercizio e applichiamo quello che sappiamo.", bloomLevel: 2 },
+              { number: 3, text: "Prova a risolvere — se ti blocchi chiedimi un suggerimento.", bloomLevel: 3 },
+              { number: 4, text: "Controlla il risultato e prova a spiegare il ragionamento.", bloomLevel: 4 },
+            ];
+          } else {
+            generatedSteps = [
               { number: 1, text: "Leggiamo insieme l'esercizio. Ti presento il problema e vediamo cosa ci viene chiesto.", bloomLevel: 1 },
-              { number: 2, text: "Quale formula, regola o procedimento pensi si possa applicare qui? Se non lo sai, chiedimi una mini-ripetizione.", bloomLevel: 2 },
+              { number: 2, text: "Quale formula, regola o procedimento pensi si possa applicare qui?", bloomLevel: 2 },
               { number: 3, text: "Prova ad impostare il primo passaggio della risoluzione. Cosa ottieni?", bloomLevel: 3 },
               { number: 4, text: "Controlla il risultato: ha senso? Come puoi verificarlo?", bloomLevel: 4 },
             ];
+          }
         } else {
           // Oral study fallback steps based on familiarity
           if (fam === "already_know") {
