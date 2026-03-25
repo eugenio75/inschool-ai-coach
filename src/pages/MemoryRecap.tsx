@@ -1164,13 +1164,7 @@ const MemoryRecap = () => {
     }
   };
 
-  const handleConceptMethod = (concept: any, method: StudyMethod) => {
-    startStudyMethod([concept], concept.subject || "Generale", method, concept.concept);
-  };
 
-  const handleSubjectMethod = (subject: string, concepts: any[], method: StudyMethod) => {
-    startStudyMethod(concepts, subject, method, concepts.map(c => c.concept).join(", "));
-  };
 
   const goBack = () => {
     if (activeStudy) { setActiveStudy(null); return; }
