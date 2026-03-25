@@ -105,8 +105,11 @@ export default function ClassView() {
     setAiPrompt("");
     setAiOutput(null);
     setAiLoading(false);
+    setAiQuestionType("miste");
     setUploadFile(null);
     setUploadUrl(null);
+    setAiContextFile(null);
+    setAiContextText(null);
   }
 
   async function handleFileUpload(file: File) {
