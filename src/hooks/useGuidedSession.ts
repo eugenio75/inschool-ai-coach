@@ -13,11 +13,15 @@ interface UseGuidedSessionProps {
   profileName: string;
 }
 
-// Task types that require the oral study method block
+// All tasks should ask familiarity to tailor the coach approach
+function shouldAskFamiliarity(_taskType: string, _title: string): boolean {
+  return true;
+}
+
+// Task types that use the oral/study method (vs exercise method)
 const ORAL_STUDY_TYPES = new Set(["study", "memorize", "teoria", "memorizzazione", "ripasso", "interrogazione", "esame", "riassunto", "summarize", "read"]);
 
 function isOralStudyTask(taskType: string, title: string): boolean {
-  // Handle comma-separated task_types (e.g. "study, memorize")
   const types = taskType.split(",").map(t => t.trim().toLowerCase());
   if (types.some(t => ORAL_STUDY_TYPES.has(t))) return true;
   const lowerTitle = title.toLowerCase();
