@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, ShieldAlert, AlertTriangle, Info, ChevronDown } from "lucide-react";
+import { Heart, ShieldAlert, AlertTriangle, Info, ChevronDown, Lightbulb, Sparkles } from "lucide-react";
 import { markAlertRead } from "@/lib/database";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
@@ -15,9 +15,14 @@ interface EmotionalCardProps {
   alerts: any[];
   onAlertRead: (alertId: string) => void;
   sessions: any[];
+  insights?: any[];
+  insightsLoading?: boolean;
 }
 
-export const EmotionalCard = ({ alerts, onAlertRead, sessions }: EmotionalCardProps) => {
+export const EmotionalCard = ({ alerts, onAlertRead, sessions, insights = [], insightsLoading = false }: EmotionalCardProps) => {
+
+// component declaration moved to interface block above
+const EmotionalCardInner = () => {
   const [expanded, setExpanded] = useState(true);
   const unreadAlerts = alerts.filter(a => !a.read);
 
