@@ -231,9 +231,13 @@ export function ChatShell({
         <div className="border-t border-border bg-card p-3 shrink-0">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {showVoice && (
-              <button onClick={startVoice} disabled={sending}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-muted-foreground text-xs font-medium hover:bg-muted transition-colors">
-                <Mic className="w-3.5 h-3.5" /> Voce
+              <button onClick={startVoice} disabled={sending || isListening}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
+                  isListening
+                    ? "border-red-500 text-red-500 bg-red-50 dark:bg-red-950 animate-pulse"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                }`}>
+                <Mic className="w-3.5 h-3.5" /> {isListening ? "Ascolto..." : "Voce"}
               </button>
             )}
             {showAttach && (
