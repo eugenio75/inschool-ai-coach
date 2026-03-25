@@ -654,6 +654,7 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
       setCurrentIdx(i => i + 1);
       setAnswered(false);
       setUserAnswer(null);
+      setTextInput("");
     }
   };
 
