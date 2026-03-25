@@ -264,7 +264,12 @@ export default function DashboardUniversitario() {
               ))}
             </div>
           </div>
-          <LogoutButton showLabel />
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate("/report")} className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors" title="Il tuo andamento">
+              <BarChart3 className="w-4 h-4" />
+            </button>
+            <LogoutButton showLabel />
+          </div>
         </motion.div>
 
         <CoachPresence />
