@@ -80,12 +80,19 @@ export default function ClassView() {
   const [aiNumero, setAiNumero] = useState(5);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiOutput, setAiOutput] = useState<string | null>(null);
+  const [aiQuestionType, setAiQuestionType] = useState<"aperte" | "chiuse" | "miste">("miste");
 
   // File upload within dialog
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadUrl, setUploadUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // AI mode file context upload
+  const [aiContextFile, setAiContextFile] = useState<File | null>(null);
+  const [aiContextText, setAiContextText] = useState<string | null>(null);
+  const [aiContextUploading, setAiContextUploading] = useState(false);
+  const aiFileInputRef = useRef<HTMLInputElement>(null);
 
   function resetAssignForm() {
     setAssignTitle("");
