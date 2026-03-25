@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   GraduationCap, Lightbulb, ClipboardCheck, Search, Mic,
   PenLine, MessageSquare, Zap, Plus, Brain, Sliders, Timer,
-  CheckCircle2, CalendarDays, TrendingUp, BookMarked,
+  CheckCircle2, CalendarDays, TrendingUp, BookMarked, BarChart3,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
