@@ -860,11 +860,16 @@ ${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span cla
             {/* Destinatari */}
             <div>
               <Label className="text-xs text-muted-foreground mb-2 block">Destinatari</Label>
-              <div className="flex gap-2 mb-2">
+              <div className="flex gap-2 mb-2 flex-wrap">
                 <Button size="sm" variant={assignTarget === "all" ? "default" : "outline"} className="rounded-xl text-xs"
                   onClick={() => setAssignTarget("all")}>Tutta la classe</Button>
                 <Button size="sm" variant={assignTarget === "selected" ? "default" : "outline"} className="rounded-xl text-xs"
                   onClick={() => setAssignTarget("selected")}>Studenti specifici</Button>
+                {assignDesc && (
+                  <Button size="sm" variant="outline" className="rounded-xl text-xs ml-auto" onClick={() => exportToPdf(assignTitle || "Materiale", assignDesc, assignType)}>
+                    <Download className="w-3.5 h-3.5 mr-1" /> Scarica PDF
+                  </Button>
+                )}
               </div>
               {assignTarget === "selected" && (
                 <div className="max-h-40 overflow-y-auto border border-border rounded-xl p-2 space-y-1">
