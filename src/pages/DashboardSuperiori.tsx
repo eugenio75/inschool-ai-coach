@@ -289,6 +289,9 @@ export default function DashboardSuperiori() {
             )}
           </div>
           <div className="flex items-center gap-3">
+            <button onClick={() => navigate("/report")} className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors" title="Il tuo andamento">
+              <BarChart3 className="w-4 h-4" />
+            </button>
             <div className="flex items-center gap-2 bg-destructive/10 border border-destructive/20 rounded-2xl px-3 py-2 shrink-0">
               <Flame className="w-4 h-4 text-destructive" />
               <span className="font-bold text-destructive">{streak}</span>

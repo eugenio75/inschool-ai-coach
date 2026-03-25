@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   GraduationCap, Lightbulb, ClipboardCheck, Search, Mic,
   PenLine, MessageSquare, Zap, Plus, Brain, Sliders, Timer,
-  CheckCircle2, CalendarDays, TrendingUp, BookMarked,
+  CheckCircle2, CalendarDays, TrendingUp, BookMarked, BarChart3,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
@@ -264,7 +264,12 @@ export default function DashboardUniversitario() {
               ))}
             </div>
           </div>
-          <LogoutButton showLabel />
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate("/report")} className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors" title="Il tuo andamento">
+              <BarChart3 className="w-4 h-4" />
+            </button>
+            <LogoutButton showLabel />
+          </div>
         </motion.div>
 
         <CoachPresence />
