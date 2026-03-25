@@ -812,25 +812,14 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
   );
 };
 
-// ─── Summary Card with expandable detail + inline mode icons ───
+// ─── Concept Row (checkbox + expandable detail, no inline icons) ───
 
-const SummaryCard = ({ item, index, showStrength, compact = false, section, onStartMethod }: {
-  item: any; index: number; showStrength: boolean; compact?: boolean;
-  section: Section;
-  onStartMethod: (concept: any, method: StudyMethod) => void;
+const ConceptRow = ({ item, index, showStrength, checked, onToggle }: {
+  item: any; index: number; showStrength: boolean; checked: boolean; onToggle: () => void;
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [deepSummary, setDeepSummary] = useState<string | null>(null);
   const [loadingDeep, setLoadingDeep] = useState(false);
-
-  const isRinforza = section === "rinforza";
-
-  const modeIcons: { method: StudyMethod; icon: any; label: string; color: string }[] = [
-    { method: "coach", icon: MessageCircle, label: isRinforza ? "Rafforza" : "Ripassa", color: "text-primary bg-primary/10 hover:bg-primary/20" },
-    { method: "flashcard", icon: Layers, label: "Flashcard", color: "text-amber-600 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:hover:bg-amber-900/30" },
-    { method: "challenge", icon: Zap, label: "Sfida", color: "text-orange-600 bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/20 dark:hover:bg-orange-900/30" },
-    { method: "game", icon: Gamepad2, label: "Gioca", color: "text-green-600 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/30" },
-  ];
 
   const fetchDeepSummary = async () => {
     if (deepSummary) { setExpanded(true); return; }
@@ -888,59 +877,166 @@ const SummaryCard = ({ item, index, showStrength, compact = false, section, onSt
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-      transition={{ ...spring, delay: index * 0.03 }}
-      className={compact ? "py-2.5 first:pt-0" : "bg-card rounded-xl border border-border p-3.5"}>
-      {compact && index > 0 && <div className="border-t border-border/40 -mt-2.5 mb-2.5" />}
-      <p className="text-sm font-semibold text-foreground">{item.concept}</p>
-      {item.summary && <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{item.summary}</p>}
-      {!item.summary && <p className="text-sm text-muted-foreground mt-1 italic">Argomento studiato — espandi per un ripasso completo.</p>}
+    <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ ...spring, delay: index * 0.02 }}
+      className="py-2.5 first:pt-0">
+      {index > 0 && <div className="border-t border-border/40 -mt-2.5 mb-2.5" />}
+      <div className="flex items-start gap-2.5">
+        <button
+          onClick={onToggle}
+          className={`mt-0.5 w-4.5 h-4.5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
+            checked
+              ? "bg-primary border-primary"
+              : "border-muted-foreground/30 hover:border-primary/50"
+          }`}
+        >
+          {checked && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
+        </button>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground leading-tight">{item.concept}</p>
+          {item.summary && <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">{item.summary}</p>}
+          {!item.summary && <p className="text-xs text-muted-foreground mt-0.5 italic">Espandi per un ripasso completo</p>}
 
-      {/* Expandable deep summary */}
-      <AnimatePresence>
-        {expanded && deepSummary && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-            className="mt-3 pt-3 border-t border-border">
-            <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{deepSummary}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {expanded && loadingDeep && (
-        <div className="mt-3 pt-3 border-t border-border flex items-center gap-2">
-          <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-          <span className="text-xs text-muted-foreground">Genero un ripasso dettagliato...</span>
-        </div>
-      )}
-      <button onClick={() => expanded ? setExpanded(false) : fetchDeepSummary()}
-        className="mt-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
-        {expanded ? "Chiudi" : "Scopri di più"}
-        <ChevronRight className={`w-3 h-3 transition-transform ${expanded ? "rotate-90" : ""}`} />
-      </button>
-
-      {/* Strength bar */}
-      {showStrength && (
-        <div className="mt-2 flex items-center gap-2">
-          <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-            <div className={`h-full rounded-full ${(item.strength || 0) < 30 ? "bg-destructive" : "bg-amber-500"}`}
-              style={{ width: `${item.strength || 0}%` }} />
-          </div>
-          <span className="text-[10px] text-muted-foreground">{item.strength || 0}%</span>
-        </div>
-      )}
-
-      {/* 4 inline mode icons */}
-      <div className="flex items-center gap-1.5 mt-2.5">
-        {modeIcons.map(m => (
-          <button
-            key={m.method}
-            onClick={(e) => { e.stopPropagation(); onStartMethod(item, m.method); }}
-            className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-all ${m.color}`}
-            title={m.label}
-          >
-            <m.icon className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{m.label}</span>
+          <AnimatePresence>
+            {expanded && deepSummary && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                className="mt-2 pt-2 border-t border-border">
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{deepSummary}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          {expanded && loadingDeep && (
+            <div className="mt-2 pt-2 border-t border-border flex items-center gap-2">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+              <span className="text-xs text-muted-foreground">Genero un ripasso dettagliato...</span>
+            </div>
+          )}
+          <button onClick={() => expanded ? setExpanded(false) : fetchDeepSummary()}
+            className="mt-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+            {expanded ? "Chiudi" : "Scopri di più"}
+            <ChevronRight className={`w-3 h-3 transition-transform ${expanded ? "rotate-90" : ""}`} />
           </button>
+
+          {showStrength && (
+            <div className="mt-1.5 flex items-center gap-2">
+              <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div className={`h-full rounded-full ${(item.strength || 0) < 30 ? "bg-destructive" : "bg-amber-500"}`}
+                  style={{ width: `${item.strength || 0}%` }} />
+              </div>
+              <span className="text-[10px] text-muted-foreground">{item.strength || 0}%</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// ─── Subject Group Card (checkboxes + 4 method buttons at bottom) ───
+
+const SubjectGroupCard = ({ group, gi, showStrength, section, methodCards, onStartStudy }: {
+  group: { subject: string; items: any[]; latestAt: Date };
+  gi: number;
+  showStrength: boolean;
+  section: Section;
+  methodCards: { method: StudyMethod; icon: any; label: string; desc: string; color: string }[];
+  onStartStudy: (concepts: any[], subject: string, method: StudyMethod, topic: string) => void;
+}) => {
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(group.items.map(i => i.id)));
+  const allSelected = selectedIds.size === group.items.length;
+  const noneSelected = selectedIds.size === 0;
+  const colors = subjectColors[group.subject] || subjectColors.Matematica;
+  const timeLabel = new Date(group.latestAt).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+
+  const toggleAll = () => {
+    if (allSelected) setSelectedIds(new Set());
+    else setSelectedIds(new Set(group.items.map(i => i.id)));
+  };
+
+  const toggleItem = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const selectedConcepts = group.items.filter(i => selectedIds.has(i.id));
+
+  const handleMethod = (method: StudyMethod) => {
+    if (noneSelected) return;
+    const topicLabel = selectedConcepts.map(c => c.concept).join(", ");
+    onStartStudy(selectedConcepts, group.subject, method, topicLabel);
+  };
+
+  return (
+    <motion.div key={`${group.subject}-${gi}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ ...spring, delay: gi * 0.05 }}
+      className="rounded-2xl border border-border bg-card overflow-hidden">
+      {/* Subject header */}
+      <div className={`flex items-center gap-3 px-4 py-3 ${colors.bg || "bg-muted/30"} border-b border-border/50`}>
+        <div className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center`}>
+          <BookOpen className={`w-4 h-4 ${colors.text}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground truncate">{group.subject}</p>
+          <p className="text-[11px] text-muted-foreground">{group.items.length} concett{group.items.length === 1 ? "o" : "i"} · {timeLabel}</p>
+        </div>
+      </div>
+
+      {/* "Tutti" checkbox */}
+      <div className="px-4 pt-3 pb-1">
+        <button onClick={toggleAll} className="flex items-center gap-2.5 group">
+          <div className={`w-4.5 h-4.5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
+            allSelected ? "bg-primary border-primary" : "border-muted-foreground/30 hover:border-primary/50"
+          }`}>
+            {allSelected && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
+          </div>
+          <span className="text-xs font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
+            Tutti gli argomenti
+          </span>
+          <span className="text-[10px] text-muted-foreground">
+            ({selectedIds.size}/{group.items.length})
+          </span>
+        </button>
+      </div>
+
+      {/* Concept list with checkboxes */}
+      <div className="px-4 py-1 space-y-0">
+        {group.items.map((item: any, i: number) => (
+          <ConceptRow
+            key={item.id}
+            item={item}
+            index={i}
+            showStrength={showStrength}
+            checked={selectedIds.has(item.id)}
+            onToggle={() => toggleItem(item.id)}
+          />
         ))}
+      </div>
+
+      {/* 4 method buttons at the bottom */}
+      <div className="px-4 py-3 border-t border-border/50 bg-muted/20">
+        <div className="flex items-center gap-1.5">
+          {methodCards.map(mc => (
+            <button
+              key={mc.method}
+              onClick={() => handleMethod(mc.method)}
+              disabled={noneSelected}
+              className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-[11px] font-semibold transition-all ${
+                noneSelected
+                  ? "opacity-30 cursor-not-allowed bg-muted text-muted-foreground"
+                  : `${mc.color} hover:shadow-sm active:scale-[0.97]`
+              }`}
+            >
+              <mc.icon className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{mc.label.split(" ")[0]}</span>
+            </button>
+          ))}
+        </div>
+        {noneSelected && (
+          <p className="text-[10px] text-muted-foreground text-center mt-1.5">Seleziona almeno un argomento</p>
+        )}
       </div>
     </motion.div>
   );
