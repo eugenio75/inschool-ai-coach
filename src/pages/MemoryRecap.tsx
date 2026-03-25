@@ -1479,45 +1479,17 @@ const MemoryRecap = () => {
                 return (
                   <div className="space-y-3">
                     {exerciseGroups.map((group, gi) => {
-                      const colors = subjectColors[group.subject] || subjectColors.Matematica;
-                      const timeLabel = new Date(group.latestAt).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
                       const showStrength = wizard.section === "rinforza";
-
                       return (
-                        <motion.div key={`${group.subject}-${gi}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                          transition={{ ...spring, delay: gi * 0.05 }}
-                          className="rounded-2xl border border-border bg-card overflow-hidden">
-                          {/* Subject header */}
-                          <div className={`flex items-center gap-3 px-4 py-3 ${colors.bg || "bg-muted/30"} border-b border-border/50`}>
-                            <div className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center`}>
-                              <BookOpen className={`w-4 h-4 ${colors.text}`} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-foreground truncate">{group.subject}</p>
-                              <p className="text-[11px] text-muted-foreground">{group.items.length} concett{group.items.length === 1 ? "o" : "i"} · {timeLabel}</p>
-                            </div>
-                          </div>
-
-                          {/* Subject-level "Ripassa/Rafforza tutta la materia" */}
-                          <div className="px-4 pt-3 pb-1">
-                            <SubjectMethodBar subject={group.subject} concepts={group.items} />
-                          </div>
-
-                          {/* Per-concept cards with inline icons */}
-                          <div className="px-4 py-2 space-y-1">
-                            {group.items.map((item: any, i: number) => (
-                              <SummaryCard
-                                key={item.id}
-                                item={item}
-                                index={i}
-                                showStrength={showStrength}
-                                compact
-                                section={currentSection}
-                                onStartMethod={handleConceptMethod}
-                              />
-                            ))}
-                          </div>
-                        </motion.div>
+                        <SubjectGroupCard
+                          key={`${group.subject}-${gi}`}
+                          group={group}
+                          gi={gi}
+                          showStrength={showStrength}
+                          section={currentSection}
+                          methodCards={methodCards}
+                          onStartStudy={startStudyMethod}
+                        />
                       );
                     })}
                   </div>
