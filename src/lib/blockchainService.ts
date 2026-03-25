@@ -1,199 +1,229 @@
 /**
- * InSchool Blockchain Service
- * Unico layer che comunica con la chain privata.
- * Tutte le operazioni sono fire-and-forget (non bloccano la UI).
- * Se VITE_CHAIN_RPC_URL è vuoto → skip silenzioso di tutto.
- * MAI dati personali on-chain — solo hash HMAC.
+ * InSchool × Azar Chain — Blockchain Service
+ *
+ * Unico punto di comunicazione con la blockchain dall'app.
+ * Chiama il backend API di Azar Chain via fetch() — nessuna libreria blockchain.
+ * La firma delle transazioni avviene LATO BACKEND (sicuro per produzione).
+ * Tutte le operazioni sono fire-and-forget — non bloccano mai la UI.
+ * Se VITE_CHAIN_API_URL è vuoto → skip silenzioso, app funziona normalmente.
+ *
+ * Chain: Azar Chain — Chain ID 24780 — rpc.azarlabs.com
+ * Backend: api-chain.azarlabs.com (Docker container azar-api-chain)
  */
 
-const isBlockchainConfigured = () => !!import.meta.env.VITE_CHAIN_RPC_URL;
+import { anonymize } from './hmac';
 
-// Simple keccak-like hash using Web Crypto API (no ethers dependency needed for hashing)
-async function hmacHash(data: string): Promise<string> {
-  const secret = import.meta.env.VITE_HMAC_SECRET || "default";
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
-  return Array.from(new Uint8Array(signature))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+// ── Configurazione ────────────────────────────────────────────────────────────
+const API_URL  = import.meta.env.VITE_CHAIN_API_URL     || '';
+const API_KEY  = import.meta.env.VITE_CHAIN_API_KEY     || '';
+const EXPLORER = import.meta.env.VITE_CHAIN_EXPLORER_URL || 'https://explorer.azarlabs.com';
+
+// Indirizzi contratti (per link explorer)
+const CREDENTIAL_ADDR = import.meta.env.VITE_CREDENTIAL_CONTRACT_ADDR ||
+  '0x57457E2a5B2Aa0cE246E3873306a95277f7E341A';
+
+const isConfigured = (): boolean => !!API_URL;
+
+// ── Helper HTTP ───────────────────────────────────────────────────────────────
+async function apiCall<T>(
+  method: 'GET' | 'POST',
+  path: string,
+  body?: Record<string, unknown>
+): Promise<{ success: boolean; data?: T; error?: string }> {
+  if (!isConfigured()) return { success: true };
+
+  try {
+    const res = await fetch(`${API_URL}${path}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+    if (!res.ok) {
+      return { success: false, error: `HTTP ${res.status}` };
+    }
+
+    return { success: true, data: await res.json() as T };
+
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.debug('[Chain] API error:', msg);
+    return { success: false, error: msg };
+  }
 }
 
-// ── Tipi ──────────────────────────────────────────────────────
-
-export interface SessionLog {
-  sessionHash: string;
-  timestamp: number;
-  modelVersion: string;
-  riskLevel: 0 | 1 | 2;
+// ── Tipi ──────────────────────────────────────────────────────────────────────
+export interface BlockchainResult {
+  success: boolean;
+  txHash?: string;
+  blockNumber?: number;
+  error?: string;
+  skipped?: boolean;
 }
 
 export interface CredentialInfo {
+  tokenId: string;
   subject: string;
   level: 1 | 2 | 3;
   issuedAt: number;
-  institutionHash: string;
+  verified: boolean;
+  explorerUrl: string;
 }
 
-// ── 1. Log sessione AI on-chain ───────────────────────────────
+export interface ChainHealth {
+  online: boolean;
+  blockNumber?: number;
+  chainId?: number;
+}
+
+// ── 1. LOG SESSIONE AI ────────────────────────────────────────────────────────
+/**
+ * Loga una sessione AI on-chain.
+ * userId viene anonimizzato via HMAC — mai l'ID reale on-chain.
+ * Fire-and-forget: non blocca mai la UI.
+ */
 export async function logAISession(
   userId: string,
-  modelVersion: string,
-  riskLevel: 0 | 1 | 2
-): Promise<{ success: boolean; txHash?: string }> {
-  if (!isBlockchainConfigured()) return { success: true };
+  modelVersion = 'inschool-coach-v2',
+  riskLevel: 0 | 1 | 2 = 0
+): Promise<BlockchainResult> {
+  if (!isConfigured()) return { success: true, skipped: true };
   try {
-    const { ethers } = await import("ethers");
-    const sessionHash = "0x" + (await hmacHash(userId + Date.now().toString()));
-    const modelHash = ethers.keccak256(ethers.toUtf8Bytes(modelVersion));
-    const provider = new ethers.JsonRpcProvider(import.meta.env.VITE_CHAIN_RPC_URL);
-    const signer = new ethers.Wallet(import.meta.env.VITE_OPERATOR_PRIVATE_KEY, provider);
-    const contract = new ethers.Contract(
-      import.meta.env.VITE_GOVERNANCE_CONTRACT_ADDR,
-      ["function logSession(bytes32,bytes32,uint8) external"],
-      signer
+    const sessionHash = await anonymize(userId + Date.now());
+    const modelHash   = await anonymize(modelVersion);
+    const result = await apiCall<{ txHash: string; blockNumber: number }>(
+      'POST', '/inschool/governance/log-session',
+      { sessionHash, modelHash, riskLevel }
     );
-    const tx = await contract.logSession(sessionHash, modelHash, riskLevel);
-    const receipt = await tx.wait();
-    return { success: true, txHash: receipt.hash };
-  } catch (e) {
-    console.error("[Blockchain] logAISession error:", e);
-    return { success: false };
-  }
+    if (result.success && result.data?.txHash) {
+      console.debug('[Chain] SessionLogged:', result.data.txHash);
+    }
+    return { success: result.success, txHash: result.data?.txHash, error: result.error };
+  } catch { return { success: false }; }
 }
 
-// ── 2. Registra consenso genitore on-chain ────────────────────
+// ── 2. REGISTRA CONSENSO GENITORE ─────────────────────────────────────────────
+/**
+ * Registra il consenso genitoriale on-chain.
+ * Chiamata dal Parent Guardian Portal.
+ */
 export async function registerConsent(
-  minorId: string,
-  guardianId: string,
-  scope: string,
-  durationDays: number
-): Promise<{ success: boolean; txHash?: string }> {
-  if (!isBlockchainConfigured()) return { success: true };
+  minorUserId: string,
+  guardianUserId: string,
+  scope = 'full',
+  durationDays = 365
+): Promise<BlockchainResult> {
+  if (!isConfigured()) return { success: true, skipped: true };
   try {
-    const { ethers } = await import("ethers");
-    const minorHash = "0x" + (await hmacHash(minorId));
-    const guardianHash = "0x" + (await hmacHash(guardianId));
-    const scopeHash = ethers.keccak256(ethers.toUtf8Bytes(scope));
-    const duration = durationDays * 86400;
-    const provider = new ethers.JsonRpcProvider(import.meta.env.VITE_CHAIN_RPC_URL);
-    const signer = new ethers.Wallet(import.meta.env.VITE_OPERATOR_PRIVATE_KEY, provider);
-    const contract = new ethers.Contract(
-      import.meta.env.VITE_CONSENT_CONTRACT_ADDR,
-      ["function grantConsent(bytes32,bytes32,bytes32,uint256) external"],
-      signer
+    const minorHash    = await anonymize(minorUserId);
+    const guardianHash = await anonymize(guardianUserId);
+    const scopeHash    = await anonymize(scope);
+    const result = await apiCall<{ txHash: string }>(
+      'POST', '/inschool/consent/grant',
+      { minorHash, guardianHash, scope: scopeHash, durationSeconds: durationDays * 86400 }
     );
-    const tx = await contract.grantConsent(minorHash, guardianHash, scopeHash, duration);
-    const receipt = await tx.wait();
-    return { success: true, txHash: receipt.hash };
-  } catch (e) {
-    console.error("[Blockchain] registerConsent error:", e);
-    return { success: false };
-  }
+    return { success: result.success, txHash: result.data?.txHash, error: result.error };
+  } catch { return { success: false }; }
 }
 
-// ── 3. Revoca consenso ────────────────────────────────────────
+// ── 3. REVOCA CONSENSO ────────────────────────────────────────────────────────
+/**
+ * Revoca il consenso genitoriale on-chain.
+ * Chiamata dal bottone "Revoca tutti i permessi".
+ */
 export async function revokeConsent(
-  minorId: string,
-  guardianId: string
-): Promise<{ success: boolean; txHash?: string }> {
-  if (!isBlockchainConfigured()) return { success: true };
+  minorUserId: string,
+  guardianUserId: string
+): Promise<BlockchainResult> {
+  if (!isConfigured()) return { success: true, skipped: true };
   try {
-    const { ethers } = await import("ethers");
-    const minorHash = "0x" + (await hmacHash(minorId));
-    const guardianHash = "0x" + (await hmacHash(guardianId));
-    const provider = new ethers.JsonRpcProvider(import.meta.env.VITE_CHAIN_RPC_URL);
-    const signer = new ethers.Wallet(import.meta.env.VITE_OPERATOR_PRIVATE_KEY, provider);
-    const contract = new ethers.Contract(
-      import.meta.env.VITE_CONSENT_CONTRACT_ADDR,
-      ["function revokeConsent(bytes32,bytes32) external"],
-      signer
+    const minorHash    = await anonymize(minorUserId);
+    const guardianHash = await anonymize(guardianUserId);
+    const result = await apiCall<{ txHash: string }>(
+      'POST', '/inschool/consent/revoke',
+      { minorHash, guardianHash }
     );
-    const tx = await contract.revokeConsent(minorHash, guardianHash);
-    const receipt = await tx.wait();
-    return { success: true, txHash: receipt.hash };
-  } catch (e) {
-    console.error("[Blockchain] revokeConsent error:", e);
-    return { success: false };
-  }
+    return { success: result.success, txHash: result.data?.txHash, error: result.error };
+  } catch { return { success: false }; }
 }
 
-// ── 4. Emetti credenziale NFT Soulbound (ERC-5192) ────────────
+// ── 4. VERIFICA CONSENSO VALIDO ───────────────────────────────────────────────
+export async function isConsentValid(minorUserId: string): Promise<boolean> {
+  if (!isConfigured()) return true;
+  try {
+    const minorHash = await anonymize(minorUserId);
+    const result = await apiCall<{ valid: boolean }>('GET', `/inschool/consent-valid/${minorHash}`);
+    return result.data?.valid ?? true;
+  } catch { return true; }
+}
+
+// ── 5. EMETTI CREDENZIALE BADGE (Soulbound NFT) ───────────────────────────────
+/**
+ * Emette un ERC-5192 Soulbound Token per una competenza raggiunta.
+ * level: 1=Bronze, 2=Silver, 3=Gold
+ */
 export async function issueCredential(
-  studentWalletAddr: string,
+  studentWalletAddress: string,
   subject: string,
   level: 1 | 2 | 3,
-  studentId: string,
-  sessionProof: string
-): Promise<{ success: boolean; tokenId?: string; txHash?: string }> {
-  if (!isBlockchainConfigured()) return { success: true };
+  studentUserId: string,
+  sessionTxHash = ''
+): Promise<BlockchainResult & { tokenId?: string }> {
+  if (!isConfigured()) return { success: true, skipped: true };
   try {
-    const { ethers } = await import("ethers");
-    const studentHash = "0x" + (await hmacHash(studentId));
-    const proofHash = ethers.keccak256(ethers.toUtf8Bytes(sessionProof));
-    const provider = new ethers.JsonRpcProvider(import.meta.env.VITE_CHAIN_RPC_URL);
-    const signer = new ethers.Wallet(import.meta.env.VITE_OPERATOR_PRIVATE_KEY, provider);
-    const contract = new ethers.Contract(
-      import.meta.env.VITE_CREDENTIAL_CONTRACT_ADDR,
-      ["function issueCredential(address,string,uint8,bytes32,bytes32) external returns (uint256)"],
-      signer
+    const studentHash  = await anonymize(studentUserId);
+    const sessionProof = await anonymize(sessionTxHash || 'no-proof');
+    const result = await apiCall<{ txHash: string; tokenId: string }>(
+      'POST', '/inschool/credential/issue',
+      { to: studentWalletAddress, subject, level, studentHash, sessionProof }
     );
-    const tx = await contract.issueCredential(studentWalletAddr, subject, level, studentHash, proofHash);
-    const receipt = await tx.wait();
-    return { success: true, txHash: receipt.hash };
-  } catch (e) {
-    console.error("[Blockchain] issueCredential error:", e);
-    return { success: false };
-  }
+    return { success: result.success, txHash: result.data?.txHash, tokenId: result.data?.tokenId };
+  } catch { return { success: false }; }
 }
 
-// ── 5. Verifica credenziale (lettura pubblica) ─────────────────
+// ── 6. VERIFICA CREDENZIALE PUBBLICA ─────────────────────────────────────────
+/**
+ * Legge una credenziale on-chain — usata dalla pagina pubblica /verify.
+ * Non richiede autenticazione.
+ */
 export async function verifyCredential(tokenId: string): Promise<CredentialInfo | null> {
-  if (!isBlockchainConfigured()) return null;
+  if (!API_URL) return null;
   try {
-    const { ethers } = await import("ethers");
-    const provider = new ethers.JsonRpcProvider(import.meta.env.VITE_CHAIN_RPC_URL);
-    const contract = new ethers.Contract(
-      import.meta.env.VITE_CREDENTIAL_CONTRACT_ADDR,
-      ["function credentials(uint256) external view returns (string,uint8,uint256,bytes32,bytes32)"],
-      provider
+    const result = await apiCall<{ subject: string; level: number; issuedAt: number }>(
+      'GET', `/inschool/credential/${tokenId}`
     );
-    const result = await contract.credentials(tokenId);
+    if (!result.success || !result.data) return null;
     return {
-      subject: result[0],
-      level: Number(result[1]) as 1 | 2 | 3,
-      issuedAt: Number(result[2]),
-      institutionHash: result[3],
+      tokenId,
+      subject:     result.data.subject,
+      level:       result.data.level as 1 | 2 | 3,
+      issuedAt:    result.data.issuedAt,
+      verified:    true,
+      explorerUrl: `${EXPLORER}/token/${CREDENTIAL_ADDR}/instance/${tokenId}`,
     };
-  } catch (e) {
-    console.error("[Blockchain] verifyCredential error:", e);
-    return null;
-  }
+  } catch { return null; }
 }
 
-// ── 6. Leggi log sessioni (per audit dashboard) ───────────────
-export async function getSessionLogs(limit = 50): Promise<SessionLog[]> {
-  if (!isBlockchainConfigured()) return [];
+// ── 7. HEALTH CHECK ───────────────────────────────────────────────────────────
+export async function checkChainHealth(): Promise<ChainHealth> {
+  if (!API_URL) return { online: false };
   try {
-    if (import.meta.env.VITE_THE_GRAPH_ENDPOINT) {
-      const query = `{ sessionLogs(first: ${limit}, orderBy: timestamp, orderDirection: desc) { sessionHash timestamp modelVersion riskLevel } }`;
-      const res = await fetch(import.meta.env.VITE_THE_GRAPH_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
-      const data = await res.json();
-      return data?.data?.sessionLogs ?? [];
+    const result = await apiCall<{ blockNumber: string; chainId: string }>('GET', '/health');
+    if (result.success && result.data) {
+      return {
+        online: true,
+        blockNumber: parseInt(result.data.blockNumber),
+        chainId: parseInt(result.data.chainId),
+      };
     }
-    return [];
-  } catch (e) {
-    console.error("[Blockchain] getSessionLogs error:", e);
-    return [];
-  }
+    return { online: false };
+  } catch { return { online: false }; }
 }
+
+// ── Helpers URL ───────────────────────────────────────────────────────────────
+export const getExplorerTxUrl    = (hash: string)    => `${EXPLORER}/tx/${hash}`;
+export const getExplorerTokenUrl = (tokenId: string) =>
+  `${EXPLORER}/token/${CREDENTIAL_ADDR}/instance/${tokenId}`;
