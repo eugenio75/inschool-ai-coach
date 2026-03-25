@@ -13,9 +13,9 @@ interface UseGuidedSessionProps {
   profileName: string;
 }
 
-// All tasks should ask familiarity to tailor the coach approach
-function shouldAskFamiliarity(_taskType: string, _title: string): boolean {
-  return true;
+// Only oral/study tasks should ask familiarity — exercises go straight to solving
+function shouldAskFamiliarity(taskType: string, title: string): boolean {
+  return isOralStudyTask(taskType, title);
 }
 
 // Task types that use the oral/study method (vs exercise method)
