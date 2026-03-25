@@ -257,8 +257,8 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     setShowCheckin(false);
     setSessionEmotion(emotion);
     
-    // Check if this is an oral study task — if so, show method block first
-    if (homework && isOralStudyTask(homework.task_type, homework.title)) {
+    // Always ask familiarity to tailor coach approach
+    if (homework && shouldAskFamiliarity(homework.task_type, homework.title)) {
       setPendingEmotion(emotion);
       setMethodPhase("ask_familiarity");
       setSetupDone(true);
