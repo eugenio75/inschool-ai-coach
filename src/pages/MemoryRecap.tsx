@@ -562,6 +562,7 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
   const [userAnswer, setUserAnswer] = useState<boolean | string | null>(null);
   const [score, setScore] = useState(0);
   const [done, setDone] = useState(false);
+  const [textInput, setTextInput] = useState("");
 
   const gameOptions: { type: GameType; label: string; desc: string; icon: any; forSection: Section[] }[] = [
     { type: "true-false", label: "Vero o falso", desc: section === "rinforza" ? "Individua le affermazioni corrette e scorrette" : "Rispondi velocemente: vero o falso?", icon: CheckCircle2, forSection: ["ripasso", "rinforza"] },
