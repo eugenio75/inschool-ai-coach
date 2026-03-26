@@ -498,6 +498,37 @@ ${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span cla
           </Select>
         </div>
 
+        {/* Subject multi-select */}
+        <div>
+          <Label className="text-xs text-muted-foreground">Materia</Label>
+          <div className="mt-1.5 flex flex-wrap gap-1.5 mb-2">
+            {selectedSubjects.map(s => (
+              <span key={s} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                {s}
+                <button onClick={() => setSelectedSubjects(prev => prev.filter(x => x !== s))} className="hover:text-destructive">×</button>
+              </span>
+            ))}
+          </div>
+          <Select
+            value=""
+            onValueChange={(v) => {
+              if (v && !selectedSubjects.includes(v)) setSelectedSubjects(prev => [...prev, v]);
+            }}
+          >
+            <SelectTrigger className="rounded-xl">
+              <SelectValue placeholder={selectedSubjects.length === 0 ? "Seleziona materia" : "Aggiungi materia..."} />
+            </SelectTrigger>
+            <SelectContent>
+              {MATERIE_OPTIONS.filter(m => !selectedSubjects.includes(m)).map(m => (
+                <SelectItem key={m} value={m}>{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedSubjects.length === 0 && (
+            <p className="text-[10px] text-destructive mt-1">Seleziona almeno una materia</p>
+          )}
+        </div>
+
         {/* --- FORM A: Scrivo io --- */}
         {mode === "write" && (
           <div>
