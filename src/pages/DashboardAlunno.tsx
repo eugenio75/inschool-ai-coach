@@ -13,6 +13,7 @@ import { getTasks, getActiveChildProfileId, getChildProfile, deleteTask } from "
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 import { CoachPresence } from "@/components/CoachPresence";
 import { BadgeDisplay } from "@/components/BadgeDisplay";
+import { supabase } from "@/integrations/supabase/client";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
