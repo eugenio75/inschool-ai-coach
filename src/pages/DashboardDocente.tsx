@@ -1,12 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-  Users, Plus, FileText, BarChart2, Copy, CheckSquare,
-  Minus, Printer, Trash2, Eye, ChevronDown, ChevronUp,
-  AlertTriangle, UserCheck, RefreshCw, LayoutDashboard,
-  AlertCircle, Send, Brain, Shield, Link2, Clock,
-  Calendar, CalendarDays, ChevronRight,
+  Users, Plus, FileText, LayoutDashboard, AlertCircle,
+  Send, Brain, Copy, CheckSquare, ChevronRight,
+  Calendar, Clock, FolderOpen,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
@@ -15,7 +13,6 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -25,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { streamChat, type ChatMsg } from "@/lib/streamChat";
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -33,192 +31,34 @@ function getGreeting(): string {
   return "Buonasera";
 }
 
-// ============ TEACHER RESULTS SECTION ============
-function TeacherResultsSection({ profileId }: { profileId: string | undefined }) {
-  const { user } = useAuth();
-  const [assignments, setAssignments] = useState<any[]>([]);
-  const [results, setResults] = useState<Record<string, any[]>>({});
-  const [loading, setLoading] = useState(true);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    loadAssignments();
-  }, [user]);
-
-  async function loadAssignments() {
-    setLoading(true);
-    const { data: ta } = await supabase
-      .from("teacher_assignments")
-      .select("*")
-      .eq("teacher_id", user!.id)
-      .in("type", ["verifica", "compito", "esercizi"])
-      .order("assigned_at", { ascending: false })
-      .limit(20);
-    setAssignments(ta || []);
-    if (ta && ta.length > 0) {
-      const ids = ta.map((a: any) => a.id);
-      const { data: ar } = await supabase
-        .from("assignment_results")
-        .select("*")
-        .in("assignment_id", ids);
-      const grouped: Record<string, any[]> = {};
-      for (const r of (ar || [])) {
-        if (!grouped[r.assignment_id!]) grouped[r.assignment_id!] = [];
-        grouped[r.assignment_id!].push(r);
-      }
-      setResults(grouped);
-    }
-    setLoading(false);
-  }
-
-  async function createFollowUp(assignmentId: string, type: "recupero" | "potenziamento") {
-    const original = assignments.find(a => a.id === assignmentId);
-    if (!original || !user) return;
-    await supabase.from("teacher_assignments").insert({
-      teacher_id: user.id,
-      class_id: original.class_id,
-      title: `${type === "recupero" ? "Recupero" : "Potenziamento"}: ${original.title}`,
-      type,
-      subject: original.subject,
-      description: `${type === "recupero" ? "Attività di recupero" : "Attività di potenziamento"} basata su: ${original.title}`,
-    });
-    toast.success(`${type === "recupero" ? "Recupero" : "Potenziamento"} assegnato!`);
-    loadAssignments();
-  }
-
-  if (loading) {
-    return (
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
-        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-          <BarChart2 className="w-4 h-4" /> Risultati verifiche
-        </h2>
-        <div className="space-y-2">{[1, 2].map(i => <Skeleton key={i} className="h-20 rounded-xl" />)}</div>
-      </div>
-    );
-  }
-
-  if (assignments.length === 0) return null;
-
-  return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6">
-      <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-        <BarChart2 className="w-4 h-4" /> Risultati verifiche
-      </h2>
-      <div className="space-y-3">
-        {assignments.map(a => {
-          const res = results[a.id] || [];
-          const completed = res.filter((r: any) => r.status === "completed").length;
-          const total = res.length || 0;
-          const isExpanded = expandedId === a.id;
-          const avgScore = completed > 0
-            ? Math.round(res.filter((r: any) => r.score != null).reduce((s: number, r: any) => s + (r.score || 0), 0) / completed)
-            : null;
-
-          return (
-            <div key={a.id} className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-              <button
-                onClick={() => setExpandedId(isExpanded ? null : a.id)}
-                className="w-full p-4 flex items-center justify-between text-left"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-slate-900 text-sm truncate">{a.title}</p>
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    {a.subject && <Badge variant="secondary" className="text-xs">{a.subject}</Badge>}
-                    <Badge variant="outline" className="text-xs capitalize">{a.type}</Badge>
-                    {a.assigned_at && (
-                      <span className="text-xs text-slate-400">
-                        {format(new Date(a.assigned_at), "d MMM", { locale: it })}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  {total > 0 && (
-                    <div className="text-right">
-                      <p className="text-xs text-slate-400">{completed}/{total} completati</p>
-                      {avgScore !== null && (
-                        <p className="text-xs font-semibold text-slate-900">Media: {avgScore}%</p>
-                      )}
-                    </div>
-                  )}
-                  {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-                </div>
-              </button>
-
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-                    <div className="px-4 pb-4 space-y-3 border-t border-slate-100 pt-3">
-                      {res.length === 0 ? (
-                        <p className="text-sm text-slate-400 text-center py-3">Nessuno studente ha completato questa verifica</p>
-                      ) : (
-                        <div className="space-y-1.5">
-                          {res.map((r: any) => (
-                            <div key={r.id} className="flex items-center justify-between py-1.5 border-b border-slate-100 last:border-0">
-                              <div className="flex items-center gap-2">
-                                <UserCheck className="w-3.5 h-3.5 text-slate-400" />
-                                <span className="text-sm text-slate-700">Studente</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Badge variant={r.status === "completed" ? "default" : "secondary"} className="text-xs capitalize">
-                                  {r.status === "completed" ? "Completato" : r.status === "in_progress" ? "In corso" : "Assegnato"}
-                                </Badge>
-                                {r.score != null && <span className="text-sm font-semibold">{Math.round(r.score)}%</span>}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="rounded-lg text-xs flex-1" onClick={() => createFollowUp(a.id, "recupero")}>
-                          <RefreshCw className="w-3 h-3 mr-1" /> Recupero
-                        </Button>
-                        <Button variant="outline" size="sm" className="rounded-lg text-xs flex-1" onClick={() => createFollowUp(a.id, "potenziamento")}>
-                          <Plus className="w-3 h-3 mr-1" /> Potenziamento
-                        </Button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ============ MAIN DASHBOARD ============
 export default function DashboardDocente() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const session = getChildSession();
   const profile = session?.profile;
   const profileId = session?.profileId;
+  const { user } = useAuth();
+  const userId = user?.id;
 
   const [onboarding, setOnboarding] = useState<any>({});
   const [classi, setClassi] = useState<any[]>([]);
   const [loadingClassi, setLoadingClassi] = useState(true);
   const [materialiCount, setMaterialiCount] = useState(0);
-  const [materialiNonAssegnati, setMaterialiNonAssegnati] = useState(0);
   const [feedItems, setFeedItems] = useState<any[]>([]);
   const [daSegurireCount, setDaSegurireCount] = useState(0);
-  const [classiConAlert, setClassiConAlert] = useState(0);
   const [assignments, setAssignments] = useState<any[]>([]);
 
-  // Coach presence
-  const [coachInput, setCoachInput] = useState('');
-  const [coachMessage, setCoachMessage] = useState('');
+  // Coach
+  const [coachMessages, setCoachMessages] = useState<ChatMsg[]>([]);
+  const [coachInput, setCoachInput] = useState("");
   const [isLoadingCoachMsg, setIsLoadingCoachMsg] = useState(true);
+  const [isCoachReplying, setIsCoachReplying] = useState(false);
+  const coachRef = useRef<HTMLDivElement>(null);
 
-  // Modal nuova classe
+  // Modal
   const [showClasseModal, setShowClasseModal] = useState(false);
   const [newClasse, setNewClasse] = useState({ nome: "", materia: "", ordine_scolastico: "", num_studenti: "" });
   const [savingClasse, setSavingClasse] = useState(false);
-  const [showAllScadenze, setShowAllScadenze] = useState(false);
-  const [showAllFeed, setShowAllFeed] = useState(false);
   const [classeCreata, setClasseCreata] = useState<any>(null);
 
   const od = onboarding;
@@ -226,14 +66,11 @@ export default function DashboardDocente() {
   const ordine: string = od?.docente_ordine || "";
   const cognome = profile?.name?.split(" ").slice(-1)[0] || profile?.name || "";
   const studentiCount = classi.reduce((s, c) => s + (c.num_studenti || 0), 0);
-  const { user } = useAuth();
-  const userId = user?.id; // auth.users.id for tables referencing auth.users
 
   useEffect(() => { if (!profileId) return; loadAll(); }, [profileId, userId]);
 
-  // Auto-open "Nuova classe" modal from sidebar link (?nuova=1) or custom event
   useEffect(() => {
-    if (searchParams.get('nuova') === '1') {
+    if (searchParams.get("nuova") === "1") {
       setShowClasseModal(true);
       setSearchParams({}, { replace: true });
     }
@@ -245,30 +82,33 @@ export default function DashboardDocente() {
     return () => window.removeEventListener("inschool:nuova-classe", handler);
   }, []);
 
-  // Coach message
+  // Coach initial message
   useEffect(() => {
-    const cached = sessionStorage.getItem('teacher_coach_msg');
+    const cached = sessionStorage.getItem("teacher_coach_msg");
     if (cached) {
-      setCoachMessage(cached);
+      setCoachMessages([{ role: "assistant", content: cached }]);
       setIsLoadingCoachMsg(false);
       return;
     }
     if (!profileId || classi.length === 0) { setIsLoadingCoachMsg(false); return; }
-    supabase.functions.invoke('coach-teacher-message', {
+    supabase.functions.invoke("coach-teacher-message", {
       body: {
-        teacherName: profile?.name || '',
+        teacherName: profile?.name || "",
         activeClasses: classi.map(c => ({ id: c.id, name: c.nome, subject: c.materia, studentCount: c.num_studenti || 0 })),
         recentFeed: feedItems.slice(0, 5).map(f => ({ type: f.type, message: f.message, severity: f.severity })),
         currentHour: new Date().getHours(),
         materialsThisWeek: materialiCount,
-        openVerifications: assignments.filter(a => a.type === 'verifica').length,
-      }
+        openVerifications: assignments.filter(a => a.type === "verifica").length,
+      },
     }).then(({ data }) => {
-      const msg = data?.message || '';
-      setCoachMessage(msg);
-      if (msg) sessionStorage.setItem('teacher_coach_msg', msg);
+      const msg = data?.message || "Bentornato. Pronto per una nuova giornata di lavoro?";
+      setCoachMessages([{ role: "assistant", content: msg }]);
+      if (msg) sessionStorage.setItem("teacher_coach_msg", msg);
       setIsLoadingCoachMsg(false);
-    }).catch(() => setIsLoadingCoachMsg(false));
+    }).catch(() => {
+      setCoachMessages([{ role: "assistant", content: "Bentornato. Da dove vuoi partire oggi?" }]);
+      setIsLoadingCoachMsg(false);
+    });
   }, [classi.length, feedItems.length]);
 
   async function loadAll() {
@@ -283,37 +123,24 @@ export default function DashboardDocente() {
         .order("created_at", { ascending: false });
       setClassi(c || []);
 
-      // Use userId (auth.users.id) for tables that reference auth.users
       const teacherId = userId || profileId;
 
-      // Materials count
       const { data: mats } = await (supabase as any)
-        .from("teacher_materials").select("id, status")
-        .eq("teacher_id", teacherId);
+        .from("teacher_materials").select("id, status").eq("teacher_id", teacherId);
       setMaterialiCount(mats?.length || 0);
-      setMaterialiNonAssegnati(mats?.filter((m: any) => m.status === 'draft' || m.status === 'salvato').length || 0);
 
-      // Assignments
       const { data: ta } = await (supabase as any)
-        .from("teacher_assignments").select("*")
-        .eq("teacher_id", teacherId)
-        .order("assigned_at", { ascending: false })
-        .limit(20);
+        .from("teacher_assignments").select("*").eq("teacher_id", teacherId)
+        .order("assigned_at", { ascending: false }).limit(20);
       setAssignments(ta || []);
 
-      // Feed
       const { data: feed } = await (supabase as any)
-        .from("teacher_activity_feed").select("*")
-        .eq("teacher_id", teacherId)
-        .order("created_at", { ascending: false })
-        .limit(20);
+        .from("teacher_activity_feed").select("*").eq("teacher_id", teacherId)
+        .order("created_at", { ascending: false }).limit(20);
       setFeedItems(feed || []);
 
-      // Da seguire
-      const unread = (feed || []).filter((f: any) => !f.read_at && (f.severity === 'warning' || f.severity === 'urgent'));
+      const unread = (feed || []).filter((f: any) => !f.read_at && (f.severity === "warning" || f.severity === "urgent"));
       setDaSegurireCount(unread.length);
-      const uniqueClasses = new Set(unread.map((f: any) => f.class_id).filter(Boolean));
-      setClassiConAlert(uniqueClasses.size);
     } finally {
       setLoadingClassi(false);
     }
@@ -340,318 +167,346 @@ export default function DashboardDocente() {
     }
   }
 
-  const handleCoachSend = () => {
-    if (!coachInput.trim()) return;
-    navigate(`/challenge/new?msg=${encodeURIComponent(coachInput)}`);
-  };
+  async function handleCoachSend(overrideMsg?: string) {
+    const text = overrideMsg || coachInput.trim();
+    if (!text) return;
+    if (!overrideMsg) setCoachInput("");
+
+    const userMsg: ChatMsg = { role: "user", content: text };
+    const updated = [...coachMessages, userMsg];
+    setCoachMessages(updated);
+    setIsCoachReplying(true);
+
+    const systemContext = `Sei il coach AI personale di ${profile?.name || "un docente"} su InSchool.
+Tono collegiale, efficiente, caldo ma mai paternalistico. Max 2-3 frasi.
+NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contesto e rispondi.
+
+Contesto attuale:
+- Classi: ${classi.map(c => `${c.nome} (${c.materia || "N/A"}, ${c.num_studenti || 0} studenti)`).join(", ") || "nessuna"}
+- Materiali creati: ${materialiCount}
+- Segnalazioni aperte: ${daSegurireCount}
+- Scadenze prossime: ${assignments.filter(a => a.due_date).length}
+
+REGOLE DI RISPOSTA:
+- Se il messaggio è una risposta al tuo messaggio precedente → continua la conversazione coerentemente
+- Se è un saluto → rispondi brevemente e proponi un'azione concreta
+- Se è una richiesta operativa → guida verso la funzione
+- Se è uno sfogo emotivo → riconosci lo stato, non forzare azioni
+- Rispondi SOLO testo, niente JSON.`;
+
+    const messagesForAI: ChatMsg[] = [
+      { role: "assistant", content: systemContext },
+      ...updated,
+    ];
+
+    try {
+      const assistantMsg: ChatMsg = { role: "assistant", content: "" };
+      setCoachMessages([...updated, assistantMsg]);
+
+      await streamChat({
+        messages: messagesForAI,
+        onDelta: (text) => {
+          setCoachMessages([...updated, { role: "assistant", content: text }]);
+        },
+        onDone: (text) => {
+          setCoachMessages([...updated, { role: "assistant", content: text }]);
+          setIsCoachReplying(false);
+        },
+        extraBody: { model: "google/gemini-2.5-flash" },
+      });
+    } catch {
+      setCoachMessages([...updated, { role: "assistant", content: "Mi dispiace, non sono riuscito a rispondere. Riprova tra poco." }]);
+      setIsCoachReplying(false);
+    }
+  }
+
+  // Upcoming deadlines (today & tomorrow)
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 2);
+  const upcomingDeadlines = assignments
+    .filter(a => a.due_date && new Date(a.due_date) >= new Date(now.toDateString()) && new Date(a.due_date) < tomorrow)
+    .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+
+  // Feed alerts per class
+  const classFeedMap = new Map<string, number>();
+  feedItems.filter(f => !f.read_at && (f.severity === "warning" || f.severity === "urgent")).forEach(f => {
+    if (f.class_id) classFeedMap.set(f.class_id, (classFeedMap.get(f.class_id) || 0) + 1);
+  });
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-24">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+    <div className="pb-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
-        {/* ━━━ BLOCCO 1 — TOPBAR ━━━ */}
+        {/* ━━━ BLOCK 1 — HEADER ━━━ */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-display text-2xl font-bold text-slate-900">
+            <h1 className="font-display text-2xl font-bold text-foreground">
               {getGreeting()}, Prof. {cognome}
             </h1>
-            <p className="text-sm text-slate-500 mt-1">
-              {new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}
-              {' · '}{classi.length} {classi.length === 1 ? 'classe attiva' : 'classi attive'}
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
             </p>
           </div>
-          <button
-            onClick={() => setShowClasseModal(true)}
-            className="flex items-center gap-2 bg-[#0070C0] hover:bg-[#005fa3] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          >
+          <Button onClick={() => setShowClasseModal(true)} className="gap-2">
             <Plus className="w-4 h-4" />
             Nuova classe
-          </button>
+          </Button>
         </div>
 
-        {/* ━━━ BLOCCO 2 — KPI ROW ━━━ */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {/* Classi attive */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs uppercase tracking-wide font-semibold text-slate-400">Classi attive</span>
-              <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-                <LayoutDashboard className="w-4 h-4 text-blue-600" />
-              </div>
+        {/* ━━━ BLOCK 2 — COACH ━━━ */}
+        <div className="bg-card border border-border rounded-xl p-5">
+          <div className="flex items-start gap-3 mb-4" ref={coachRef}>
+            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center shrink-0 mt-0.5">
+              <Brain className="w-4 h-4 text-primary-foreground" />
             </div>
-            <p className="font-display text-3xl font-bold text-[#1A3A5C]">{classi.length}</p>
-          </div>
-          {/* Studenti */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs uppercase tracking-wide font-semibold text-slate-400">Studenti totali</span>
-              <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center">
-                <Users className="w-4 h-4 text-green-600" />
-              </div>
-            </div>
-            <p className="font-display text-3xl font-bold text-[#1A3A5C]">{studentiCount}</p>
-          </div>
-          {/* Materiali */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs uppercase tracking-wide font-semibold text-slate-400">Materiali</span>
-              <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center">
-                <FileText className="w-4 h-4 text-purple-600" />
-              </div>
-            </div>
-            <p className="font-display text-3xl font-bold text-[#1A3A5C]">{materialiCount}</p>
-            {materialiNonAssegnati > 0 && (
-              <p className="text-xs text-amber-600 mt-1">{materialiNonAssegnati} non assegnati</p>
-            )}
-          </div>
-          {/* Da seguire */}
-          <div className={`rounded-xl p-5 shadow-sm border ${daSegurireCount > 0 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'}`}>
-            <div className="flex items-center justify-between mb-3">
-              <span className={`text-xs uppercase tracking-wide font-semibold ${daSegurireCount > 0 ? 'text-amber-600' : 'text-green-600'}`}>Da seguire</span>
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${daSegurireCount > 0 ? 'bg-amber-100' : 'bg-green-100'}`}>
-                <AlertCircle className={`w-4 h-4 ${daSegurireCount > 0 ? 'text-amber-600' : 'text-green-600'}`} />
-              </div>
-            </div>
-            <p className={`font-display text-3xl font-bold ${daSegurireCount > 0 ? 'text-amber-700' : 'text-green-700'}`}>{daSegurireCount}</p>
-            {daSegurireCount > 0 && (
-              <p className="text-xs text-amber-600 mt-1">In {classiConAlert} {classiConAlert === 1 ? 'classe' : 'classi'}</p>
-            )}
-          </div>
-        </div>
-
-        {/* ━━━ BLOCCO 3 — COME STAI OGGI? ━━━ */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6">
-          <div className="flex items-start gap-3 mb-5">
-            <div className="w-9 h-9 bg-[#1A3A5C] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Brain className="w-4 h-4 text-white" />
-            </div>
-            <div className="flex-1">
+            <div className="flex-1 space-y-3">
               {isLoadingCoachMsg ? (
                 <div className="space-y-2">
-                  <div className="h-4 bg-slate-100 rounded animate-pulse w-3/4" />
-                  <div className="h-4 bg-slate-100 rounded animate-pulse w-1/2" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
                 </div>
               ) : (
-                <p className="text-sm text-slate-700 leading-relaxed font-medium">
-                  {coachMessage || 'Buongiorno. Da dove vuoi iniziare oggi?'}
-                </p>
+                coachMessages.map((msg, i) => (
+                  <div key={i} className={msg.role === "user" ? "text-right" : ""}>
+                    <p className={`text-sm leading-relaxed inline-block max-w-[90%] ${
+                      msg.role === "user"
+                        ? "bg-primary/10 text-foreground px-3 py-2 rounded-xl rounded-br-sm"
+                        : "text-foreground font-medium"
+                    }`}>
+                      {msg.content || (isCoachReplying && i === coachMessages.length - 1 ? "..." : "")}
+                    </p>
+                  </div>
+                ))
               )}
             </div>
           </div>
 
-          <div className="border-t border-slate-100 pt-5">
-            <p className="font-semibold text-[#1A3A5C] text-sm mb-1">Come stai oggi?</p>
-            <p className="text-xs text-slate-500 mb-4">
-              Uno spazio riservato per aiutarti a gestire meglio carico,
-              complessità e situazioni educative delicate.
-            </p>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={coachInput}
-                onChange={(e) => setCoachInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleCoachSend()}
-                placeholder="Parla con il tuo coach..."
-                className="flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0070C0] focus:ring-2 focus:ring-[#0070C0]/20 bg-slate-50"
-              />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={coachInput}
+              onChange={(e) => setCoachInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && !isCoachReplying && handleCoachSend()}
+              placeholder="Scrivi al coach..."
+              disabled={isCoachReplying}
+              className="flex-1 text-sm border border-input rounded-lg px-3 py-2.5 bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 disabled:opacity-50 transition-colors"
+            />
+            <button
+              onClick={() => handleCoachSend()}
+              disabled={!coachInput.trim() || isCoachReplying}
+              className="bg-primary hover:bg-primary/90 disabled:opacity-40 text-primary-foreground px-4 py-2.5 rounded-lg transition-colors"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-3">
+            {["Organizza il lavoro", "Chiedi un suggerimento", "Rivedi le priorità"].map((label) => (
               <button
-                onClick={handleCoachSend}
-                disabled={!coachInput.trim()}
-                className="bg-[#0070C0] hover:bg-[#005fa3] disabled:opacity-40 text-white px-4 py-2.5 rounded-lg transition-colors"
+                key={label}
+                onClick={() => handleCoachSend(label)}
+                disabled={isCoachReplying}
+                className="text-xs border border-border hover:border-primary hover:text-primary text-muted-foreground px-3 py-1.5 rounded-lg transition-colors bg-card disabled:opacity-50"
               >
-                <Send className="w-4 h-4" />
+                {label}
               </button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-3">
-              {[
-                { label: 'Organizza il lavoro', prompt: 'organizza' },
-                { label: 'Chiedi un suggerimento', prompt: '' },
-                { label: 'Rivedi le priorità', prompt: 'priorita' },
-              ].map(({ label, prompt }) => (
-                <button
-                  key={label}
-                  onClick={() => navigate(`/challenge/new${prompt ? `?prompt=${prompt}` : ''}`)}
-                  className="text-xs border border-slate-200 hover:border-[#0070C0] hover:text-[#0070C0] text-slate-500 px-3 py-1.5 rounded-lg transition-colors bg-white"
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* ━━━ BLOCCO 3.5 — CALENDARIO PROFESSIONALE ━━━ */}
-        {assignments.length > 0 && (
-          <div className="bg-white border border-slate-200 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xs uppercase tracking-widest font-semibold text-slate-400 flex items-center gap-2">
-                <CalendarDays className="w-4 h-4" /> Scadenze e impegni
-              </h2>
+        {/* ━━━ BLOCK 3 — KPI ━━━ */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { label: "Classi attive", value: classi.length, icon: LayoutDashboard, color: "text-primary bg-primary/10" },
+            { label: "Studenti totali", value: studentiCount, icon: Users, color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950" },
+            { label: "Materiali creati", value: materialiCount, icon: FileText, color: "text-violet-600 bg-violet-50 dark:bg-violet-950" },
+            { label: "Da seguire", value: daSegurireCount, icon: AlertCircle, color: daSegurireCount > 0 ? "text-amber-600 bg-amber-50 dark:bg-amber-950" : "text-emerald-600 bg-emerald-50 dark:bg-emerald-950" },
+          ].map(({ label, value, icon: Icon, color }) => (
+            <div key={label} className="bg-card border border-border rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground">{label}</span>
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${color}`}>
+                  <Icon className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <p className="font-display text-2xl font-bold text-foreground">{loadingClassi ? "–" : value}</p>
             </div>
-            <div className="space-y-2">
-              {assignments
-                .filter(a => a.due_date && new Date(a.due_date) >= new Date(new Date().toDateString()))
-                .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-                .slice(0, showAllScadenze ? undefined : 4)
-                .map((a: any) => {
-                  const dueDate = new Date(a.due_date);
-                  const now = new Date();
-                  const daysLeft = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                  const isUrgent = daysLeft >= 0 && daysLeft <= 2;
-                  const className = classi.find(c => c.id === a.class_id);
+          ))}
+        </div>
 
+        {/* ━━━ BLOCK 4 — LE TUE CLASSI ━━━ */}
+        <div>
+          <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-3">Le tue classi</h2>
+          {loadingClassi ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+            </div>
+          ) : classi.length === 0 ? (
+            <div className="bg-card border border-border rounded-xl p-8 text-center">
+              <Users className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Nessuna classe ancora</p>
+              <Button variant="outline" size="sm" className="mt-3" onClick={() => setShowClasseModal(true)}>
+                <Plus className="w-3.5 h-3.5 mr-1" /> Crea la prima classe
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {classi.map(c => {
+                const alertCount = classFeedMap.get(c.id) || 0;
+                const hasAlert = alertCount > 0;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => navigate(`/classe/${c.id}`)}
+                    className="bg-card border border-border rounded-xl p-4 text-left hover:shadow-md hover:border-primary/30 transition-all group"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2.5 h-2.5 rounded-full ${hasAlert ? "bg-amber-400" : "bg-emerald-400"}`} />
+                        <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">{c.nome}</span>
+                      </div>
+                      {hasAlert && (
+                        <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                          {alertCount}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">{c.materia || "–"}</span>
+                      <span className="text-xs text-muted-foreground">{c.num_studenti || 0} studenti</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* ━━━ BLOCK 5 — AZIONI RAPIDE ━━━ */}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => navigate("/add-homework?mode=teacher")}
+            className="flex items-center justify-center gap-2 bg-primary text-primary-foreground font-medium text-sm py-3.5 rounded-xl hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Crea materiale
+          </button>
+          <button
+            onClick={() => navigate("/libreria")}
+            className="flex items-center justify-center gap-2 bg-card border border-border text-foreground font-medium text-sm py-3.5 rounded-xl hover:bg-accent transition-colors"
+          >
+            <FolderOpen className="w-4 h-4" />
+            I miei materiali
+          </button>
+        </div>
+
+        {/* ━━━ BLOCK 6 — TWO COLUMNS ━━━ */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Left — Scadenze imminenti */}
+          <div className="bg-card border border-border rounded-xl p-5">
+            <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+              <Calendar className="w-3.5 h-3.5" /> Scadenze imminenti
+            </h2>
+            {upcomingDeadlines.length === 0 ? (
+              <div className="text-center py-6">
+                <Calendar className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-xs text-muted-foreground">Nessuna scadenza oggi o domani</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {upcomingDeadlines.slice(0, 4).map(a => {
+                  const dueDate = new Date(a.due_date);
+                  const isToday = dueDate.toDateString() === now.toDateString();
+                  const className = classi.find(cl => cl.id === a.class_id);
                   return (
                     <div
                       key={a.id}
                       onClick={() => a.class_id && navigate(`/classe/${a.class_id}?tab=materiali`)}
                       className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                        isUrgent ? 'bg-amber-50 border border-amber-200 hover:bg-amber-100' :
-                        'bg-slate-50 border border-slate-100 hover:bg-slate-100'
-                      }`}
+                        isToday ? "bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800" : "bg-muted/50 border border-border"
+                      } hover:shadow-sm`}
                     >
-                      <div className="text-center shrink-0 w-12">
-                        <p className={`text-lg font-bold ${isUrgent ? 'text-amber-600' : 'text-slate-700'}`}>
-                          {dueDate.getDate()}
-                        </p>
-                        <p className="text-[10px] uppercase text-slate-400">
-                          {dueDate.toLocaleDateString('it-IT', { month: 'short' })}
-                        </p>
+                      <div className="text-center w-10 shrink-0">
+                        <p className={`text-base font-bold ${isToday ? "text-amber-600" : "text-foreground"}`}>{dueDate.getDate()}</p>
+                        <p className="text-[10px] uppercase text-muted-foreground">{format(dueDate, "MMM", { locale: it })}</p>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 truncate">{a.title}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          {a.subject && <span className="text-xs text-slate-500">{a.subject}</span>}
-                          {className && <span className="text-xs text-slate-400">· {className.nome}</span>}
-                        </div>
+                        <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {a.subject}{className ? ` · ${className.nome}` : ""}
+                        </p>
                       </div>
-                      <div className="shrink-0 flex items-center gap-2">
-                        {isUrgent && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">{daysLeft === 0 ? 'Oggi' : daysLeft === 1 ? 'Domani' : `${daysLeft}g`}</span>}
-                        <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${
-                          a.type === 'verifica' ? 'bg-purple-100 text-purple-700' :
-                          a.type === 'recupero' ? 'bg-orange-100 text-orange-700' :
-                          'bg-blue-100 text-blue-700'
-                        }`}>{a.type}</span>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full capitalize font-medium ${
+                        a.type === "verifica" ? "bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300" : "bg-primary/10 text-primary"
+                      }`}>{a.type}</span>
                     </div>
                   );
                 })}
-            </div>
-            {(() => {
-              const futureCount = assignments.filter(a => a.due_date && new Date(a.due_date) >= new Date(new Date().toDateString())).length;
-              return futureCount > 4 ? (
-                <button
-                  onClick={() => setShowAllScadenze(v => !v)}
-                  className="w-full text-center text-xs text-[#0070C0] font-medium hover:underline mt-3 py-1"
-                >
-                  {showAllScadenze ? 'Mostra meno' : `Vedi tutte (${futureCount})`}
-                </button>
-              ) : null;
-            })()}
-            {assignments.filter(a => a.due_date && new Date(a.due_date) >= new Date(new Date().toDateString())).length === 0 && (
-              <div className="text-center py-6">
-                <Calendar className="w-7 h-7 text-slate-300 mx-auto mb-2" />
-                <p className="text-sm text-slate-400">Nessuna scadenza imminente</p>
               </div>
             )}
+            {upcomingDeadlines.length > 4 && (
+              <button onClick={() => navigate("/agenda-docente")} className="w-full text-center text-xs text-primary font-medium hover:underline mt-3 py-1">
+                Vedi tutte
+              </button>
+            )}
           </div>
-        )}
 
-        {/* ━━━ BLOCCO 4 — FEED ATTIVITÀ RECENTI ━━━ */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6">
-          <h2 className="text-xs uppercase tracking-widest font-semibold text-slate-400 mb-4 flex items-center gap-2">
-            <Clock className="w-4 h-4" /> Attività recenti
-          </h2>
-          {feedItems.length === 0 ? (
-            <div className="text-center py-8">
-              <Clock className="w-8 h-8 text-slate-200 mx-auto mb-3" />
-              <p className="text-sm font-medium text-slate-400">Nessuna attività recente</p>
-              <p className="text-xs text-slate-300 mt-1">Le attività appariranno quando gli studenti useranno la piattaforma</p>
-            </div>
-          ) : (
-            <>
-              <div className="space-y-1">
-                {feedItems.slice(0, showAllFeed ? undefined : 4).map((item: any) => {
-                  const relatedClass = classi.find(c => c.id === item.class_id);
-                  const severityStyles: Record<string, { bg: string; dot: string; icon: string }> = {
-                    urgent:  { bg: 'bg-red-50 border-red-100', dot: 'bg-red-500', icon: 'text-red-500' },
-                    warning: { bg: 'bg-amber-50 border-amber-100', dot: 'bg-amber-400', icon: 'text-amber-500' },
-                    positive:{ bg: 'bg-green-50 border-green-100', dot: 'bg-green-500', icon: 'text-green-500' },
-                    info:    { bg: 'bg-slate-50 border-slate-100', dot: 'bg-blue-400', icon: 'text-blue-400' },
-                  };
-                  const style = severityStyles[item.severity] || severityStyles.info;
-                  const typeIcon: Record<string, typeof AlertTriangle> = {
-                    alert: AlertTriangle,
-                    completion: CheckSquare,
-                    enrollment: Users,
-                    submission: FileText,
-                  };
-                  const IconComp = typeIcon[item.type] || Clock;
-
-                  // Time ago
+          {/* Right — Attività recenti */}
+          <div className="bg-card border border-border rounded-xl p-5">
+            <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+              <Clock className="w-3.5 h-3.5" /> Attività recenti
+            </h2>
+            {feedItems.length === 0 ? (
+              <div className="text-center py-6">
+                <Clock className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-xs text-muted-foreground">Nessuna attività recente</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {feedItems.slice(0, 4).map(item => {
                   const diffMs = Date.now() - new Date(item.created_at).getTime();
                   const diffMin = Math.floor(diffMs / 60000);
-                  let timeLabel = '';
-                  if (diffMin < 1) timeLabel = 'Ora';
+                  let timeLabel = "";
+                  if (diffMin < 1) timeLabel = "Ora";
                   else if (diffMin < 60) timeLabel = `${diffMin}min fa`;
                   else if (diffMin < 1440) timeLabel = `${Math.floor(diffMin / 60)}h fa`;
-                  else {
-                    const d = Math.floor(diffMin / 1440);
-                    timeLabel = d === 1 ? 'Ieri' : `${d}g fa`;
-                  }
+                  else { const d = Math.floor(diffMin / 1440); timeLabel = d === 1 ? "Ieri" : `${d}g fa`; }
+
+                  const relatedClass = classi.find(cl => cl.id === item.class_id);
+                  const severityDot: Record<string, string> = {
+                    urgent: "bg-destructive", warning: "bg-amber-400", positive: "bg-emerald-400", info: "bg-primary/60",
+                  };
 
                   return (
                     <div
                       key={item.id}
                       onClick={() => item.action_route ? navigate(item.action_route) : (item.class_id && navigate(`/classe/${item.class_id}`))}
-                      className={`flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer hover:shadow-sm transition-all ${style.bg} ${!item.read_at ? '' : 'opacity-70'}`}
+                      className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 border border-border cursor-pointer hover:shadow-sm transition-all"
                     >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                        item.severity === 'urgent' ? 'bg-red-100' :
-                        item.severity === 'warning' ? 'bg-amber-100' :
-                        item.severity === 'positive' ? 'bg-green-100' : 'bg-blue-50'
-                      }`}>
-                        <IconComp className={`w-4 h-4 ${style.icon}`} />
-                      </div>
+                      <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${severityDot[item.severity] || severityDot.info}`} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-slate-800 leading-snug">{item.message}</p>
+                        <p className="text-sm text-foreground leading-snug">{item.message}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          {relatedClass && (
-                            <span className="text-[11px] font-semibold text-slate-500 bg-white/80 px-2 py-0.5 rounded-md border border-slate-200">
-                              {relatedClass.nome}{relatedClass.materia ? ` · ${relatedClass.materia}` : ''}
-                            </span>
-                          )}
-                          <span className="text-[11px] text-slate-400">{timeLabel}</span>
+                          {relatedClass && <span className="text-[11px] text-muted-foreground font-medium">{relatedClass.nome}</span>}
+                          <span className="text-[11px] text-muted-foreground">{timeLabel}</span>
                         </div>
                       </div>
-                      {item.action_label && (
-                        <span className="text-xs text-[#0070C0] font-semibold shrink-0 hover:underline">
-                          {item.action_label}
-                        </span>
-                      )}
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0 mt-0.5" />
                     </div>
                   );
                 })}
               </div>
-              {feedItems.length > 4 && (
-                <button
-                  onClick={() => setShowAllFeed(v => !v)}
-                  className="w-full text-center text-xs text-[#0070C0] font-medium hover:underline mt-3 py-1"
-                >
-                  {showAllFeed ? 'Mostra meno' : `Vedi tutte (${feedItems.length})`}
-                </button>
-              )}
-            </>
-          )}
+            )}
+            {feedItems.length > 4 && (
+              <button onClick={() => {}} className="w-full text-center text-xs text-primary font-medium hover:underline mt-3 py-1">
+                Vedi tutte
+              </button>
+            )}
+          </div>
         </div>
-
-
       </div>
 
       {/* ═══ DIALOGS ═══ */}
-
-      {/* Nuova classe */}
       <Dialog open={showClasseModal && !classeCreata} onOpenChange={v => { setShowClasseModal(v); if (!v) setClasseCreata(null); }}>
         <DialogContent className="rounded-xl">
           <DialogHeader><DialogTitle>Nuova Classe</DialogTitle></DialogHeader>
@@ -701,14 +556,13 @@ export default function DashboardDocente() {
         </DialogContent>
       </Dialog>
 
-      {/* Classe creata */}
       <Dialog open={!!classeCreata} onOpenChange={() => { setClasseCreata(null); setShowClasseModal(false); }}>
         <DialogContent className="rounded-xl text-center">
-          <CheckSquare className="w-10 h-10 text-[#0070C0] mx-auto mt-2" />
+          <CheckSquare className="w-10 h-10 text-primary mx-auto mt-2" />
           <DialogHeader><DialogTitle className="text-center mt-2">Classe creata!</DialogTitle></DialogHeader>
-          <p className="text-sm text-slate-500">Condividi questo codice con i tuoi studenti</p>
-          <div className="bg-slate-50 rounded-xl py-5 px-4 my-2">
-            <p className="font-mono font-black text-4xl tracking-[0.3em] text-slate-900">
+          <p className="text-sm text-muted-foreground">Condividi questo codice con i tuoi studenti</p>
+          <div className="bg-muted rounded-xl py-5 px-4 my-2">
+            <p className="font-mono font-black text-4xl tracking-[0.3em] text-foreground">
               {classeCreata?.codice_invito}
             </p>
           </div>
