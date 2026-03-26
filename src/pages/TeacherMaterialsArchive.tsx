@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Search, FolderOpen, FileText, Download, Pencil, Archive, Share2, Loader2, X, Eye } from "lucide-react";
+import { Plus, Search, FolderOpen, FileText, Download, Pencil, Archive, Share2, Loader2, X, Eye, RotateCcw, CalendarIcon } from "lucide-react";
 import { MathText } from "@/components/shared/MathText";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +19,10 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const TYPE_OPTIONS = [
@@ -233,6 +239,16 @@ export default function TeacherMaterialsArchive() {
   const [shareClassIds, setShareClassIds] = useState<string[]>([]);
   const [sharing, setSharing] = useState(false);
 
+  // Reassign dialog
+  const [reassignMaterial, setReassignMaterial] = useState<any | null>(null);
+  const [reassignClassId, setReassignClassId] = useState("");
+  const [reassignDest, setReassignDest] = useState<"all" | "selected" | "pdf">("all");
+  const [reassignStudents, setReassignStudents] = useState<string[]>([]);
+  const [reassignStudentsList, setReassignStudentsList] = useState<any[]>([]);
+  const [reassignDueDate, setReassignDueDate] = useState<Date | undefined>(undefined);
+  const [reassigning, setReassigning] = useState(false);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+
   // Edit dialog
   const [editMaterial, setEditMaterial] = useState<any | null>(null);
   const [editForm, setEditForm] = useState({ title: "", subject: "", type: "", level: "", content: "" });
@@ -418,6 +434,85 @@ ${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> __________
     );
   }
 
+  // Reassign functions
+  async function openReassign(m: any) {
+    setReassignMaterial(m);
+    setReassignClassId("");
+    setReassignDest("all");
+    setReassignStudents([]);
+    setReassignStudentsList([]);
+    setReassignDueDate(undefined);
+  }
+
+  async function loadClassStudents(classId: string) {
+    setLoadingStudents(true);
+    const { data } = await supabase
+      .from("class_enrollments")
+      .select("student_id")
+      .eq("class_id", classId);
+    if (data && data.length > 0) {
+      const ids = data.map(d => d.student_id);
+      const { data: profiles } = await supabase
+        .from("child_profiles")
+        .select("id, name")
+        .in("id", ids);
+      setReassignStudentsList(profiles || []);
+    } else {
+      setReassignStudentsList([]);
+    }
+    setLoadingStudents(false);
+  }
+
+  async function handleReassign() {
+    if (!reassignMaterial || !reassignClassId || !user) return;
+
+    if (reassignDest === "pdf") {
+      handleDownloadPdf(reassignMaterial);
+      setReassignMaterial(null);
+      return;
+    }
+
+    setReassigning(true);
+    try {
+      const targetStudents = reassignDest === "all"
+        ? reassignStudentsList
+        : reassignStudentsList.filter(s => reassignStudents.includes(s.id));
+
+      if (targetStudents.length === 0) {
+        toast.error("Nessuno studente selezionato");
+        setReassigning(false);
+        return;
+      }
+
+      const inserts = targetStudents.map(s => ({
+        teacher_id: user.id,
+        class_id: reassignClassId,
+        student_id: s.id,
+        title: reassignMaterial.title,
+        type: reassignMaterial.type || "esercizi",
+        subject: reassignMaterial.subject || null,
+        description: reassignMaterial.content,
+        due_date: reassignDueDate ? reassignDueDate.toISOString() : null,
+        metadata: { reassigned: true },
+      }));
+
+      const { error } = await supabase.from("teacher_assignments").insert(inserts);
+      if (error) throw error;
+
+      await supabase.from("teacher_materials").update({
+        status: "assigned",
+        assigned_at: new Date().toISOString(),
+      }).eq("id", reassignMaterial.id);
+
+      toast.success(`Assegnato a ${targetStudents.length} studenti`);
+      setReassignMaterial(null);
+      loadData();
+    } catch (err: any) {
+      toast.error("Errore: " + (err.message || "Riprova"));
+    }
+    setReassigning(false);
+  }
+
   // Available classes to share to (exclude the material's current class)
   const shareableClasses = useMemo(() => {
     if (!shareMaterial) return classi;
@@ -544,6 +639,13 @@ ${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> __________
                 </div>
 
                 <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                  <button
+                    onClick={() => openReassign(m)}
+                    className="p-2 rounded-lg hover:bg-muted transition-colors"
+                    title="Riassegna"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
                   <button
                     onClick={() => openShare(m)}
                     className="p-2 rounded-lg hover:bg-muted transition-colors"
@@ -754,6 +856,116 @@ ${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> __________
             <Button disabled={saving || !editForm.title || !editForm.content} onClick={handleSaveEdit}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Pencil className="w-4 h-4 mr-1" />}
               Salva
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Reassign dialog ── */}
+      <Dialog open={!!reassignMaterial} onOpenChange={open => !open && setReassignMaterial(null)}>
+        <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Riassegna materiale</DialogTitle>
+            <DialogDescription>
+              Assegna "{reassignMaterial?.title}" agli studenti di una classe.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {/* Class select */}
+            <div>
+              <Label className="text-xs font-medium">Classe</Label>
+              <Select
+                value={reassignClassId}
+                onValueChange={v => {
+                  setReassignClassId(v);
+                  setReassignStudents([]);
+                  loadClassStudents(v);
+                }}
+              >
+                <SelectTrigger className="mt-1 rounded-xl"><SelectValue placeholder="Seleziona una classe..." /></SelectTrigger>
+                <SelectContent>
+                  {classi.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Destination */}
+            {reassignClassId && (
+              <div>
+                <Label className="text-xs font-medium mb-2 block">Destinazione</Label>
+                <RadioGroup value={reassignDest} onValueChange={v => setReassignDest(v as any)} className="flex gap-2 flex-wrap">
+                  {([
+                    { value: "all", label: "Tutta la classe" },
+                    { value: "selected", label: "Studenti specifici" },
+                    { value: "pdf", label: "Scarica PDF" },
+                  ] as const).map(({ value, label }) => (
+                    <label
+                      key={value}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all text-xs font-medium",
+                        reassignDest === value
+                          ? "bg-primary/10 border-primary/40 text-primary"
+                          : "bg-background border-border text-muted-foreground hover:border-primary/20"
+                      )}
+                    >
+                      <RadioGroupItem value={value} className="sr-only" />
+                      {label}
+                    </label>
+                  ))}
+                </RadioGroup>
+
+                {reassignDest === "selected" && (
+                  <div className="max-h-40 overflow-y-auto border border-border rounded-xl p-2 space-y-1 mt-2">
+                    {loadingStudents ? (
+                      <div className="flex justify-center py-3"><Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /></div>
+                    ) : reassignStudentsList.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-2">Nessuno studente iscritto</p>
+                    ) : reassignStudentsList.map(s => (
+                      <label key={s.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/50 cursor-pointer">
+                        <Checkbox
+                          checked={reassignStudents.includes(s.id)}
+                          onCheckedChange={v => setReassignStudents(prev => v ? [...prev, s.id] : prev.filter(x => x !== s.id))}
+                        />
+                        <span className="text-sm">{s.name || "Studente"}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Due date */}
+            {reassignClassId && reassignDest !== "pdf" && (
+              <div>
+                <Label className="text-xs font-medium">Scadenza (opzionale)</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full mt-1 rounded-xl justify-start text-left font-normal", !reassignDueDate && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {reassignDueDate ? format(reassignDueDate, "dd MMM yyyy", { locale: it }) : "Seleziona data"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={reassignDueDate} onSelect={setReassignDueDate}
+                      disabled={(date) => date < new Date()}
+                      initialFocus className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReassignMaterial(null)}>Annulla</Button>
+            <Button
+              disabled={!reassignClassId || reassigning || (reassignDest === "selected" && reassignStudents.length === 0)}
+              onClick={handleReassign}
+            >
+              {reassigning ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <RotateCcw className="w-4 h-4 mr-1" />}
+              {reassignDest === "pdf" ? "Scarica PDF" : "Assegna"}
             </Button>
           </DialogFooter>
         </DialogContent>
