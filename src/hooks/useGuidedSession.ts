@@ -13,13 +13,29 @@ interface UseGuidedSessionProps {
   profileName: string;
 }
 
-// Only oral/study tasks should ask familiarity — exercises go straight to solving
-function shouldAskFamiliarity(taskType: string, title: string): boolean {
-  return isOralStudyTask(taskType, title);
-}
-
 // Task types that use the oral/study method (vs exercise method)
 const ORAL_STUDY_TYPES = new Set(["study", "memorize", "teoria", "memorizzazione", "ripasso", "interrogazione", "esame", "riassunto", "summarize", "read"]);
+
+// Recovery tasks always default to first_time
+const RECOVERY_TYPES = new Set(["recupero", "recovery", "rinforzo"]);
+
+function isRecoveryTask(taskType: string, title: string): boolean {
+  const types = taskType.split(",").map(t => t.trim().toLowerCase());
+  if (types.some(t => RECOVERY_TYPES.has(t))) return true;
+  return title.toLowerCase().includes("recupero") || title.toLowerCase().includes("rinforzo");
+}
+
+// Familiarity memory — persist per homework so we don't ask twice
+function getSavedFamiliarity(homeworkId: string): Familiarity | null {
+  try {
+    const stored = localStorage.getItem(`inschool-familiarity-${homeworkId}`);
+    return stored as Familiarity | null;
+  } catch { return null; }
+}
+
+function saveFamiliarity(homeworkId: string, fam: Familiarity) {
+  try { localStorage.setItem(`inschool-familiarity-${homeworkId}`, fam); } catch {}
+}
 
 function isOralStudyTask(taskType: string, title: string): boolean {
   const types = taskType.split(",").map(t => t.trim().toLowerCase());
@@ -113,6 +129,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   const [familiarity, setFamiliarity] = useState<Familiarity | null>(null);
   const [pendingEmotion, setPendingEmotion] = useState<string>("");
   const [sessionEmotion, setSessionEmotion] = useState<string>("");
+  const [showFamiliarity, setShowFamiliarity] = useState(false);
 
   const progressPercent = totalSteps > 0 ? ((currentStep - 1) / totalSteps) * 100 : 0;
   const progressLabel = totalSteps > 0 ? `Step ${currentStep} di ${totalSteps}` : undefined;
