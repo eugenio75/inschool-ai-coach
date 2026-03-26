@@ -55,7 +55,7 @@ export default function CoachDocente() {
   const profile = session?.profile;
   const profileId = session?.profileId;
   const { user } = useAuth();
-  const teacherId = user?.id || profileId;
+  const teacherId = user?.id;
   const isMobile = useIsMobile();
 
   const [chats, setChats] = useState<TeacherChat[]>([]);
@@ -81,6 +81,7 @@ export default function CoachDocente() {
       setLoading(false);
       return;
     }
+    setLoading(true);
     loadSidebarData();
   }, [teacherId]);
 
