@@ -54,12 +54,11 @@ export default function DashboardDocente() {
   const [daSegurireCount, setDaSegurireCount] = useState(0);
   const [assignments, setAssignments] = useState<any[]>([]);
 
-  // Coach
-  const [coachMessages, setCoachMessages] = useState<ChatMsg[]>([]);
+  // Coach — home shows only latest message (single line)
+  const [coachLastMsg, setCoachLastMsg] = useState("");
   const [coachInput, setCoachInput] = useState("");
   const [isLoadingCoachMsg, setIsLoadingCoachMsg] = useState(true);
   const [isCoachReplying, setIsCoachReplying] = useState(false);
-  const coachRef = useRef<HTMLDivElement>(null);
 
   // Modal
   const [showClasseModal, setShowClasseModal] = useState(false);
