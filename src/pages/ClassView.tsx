@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Users, Heart, BookOpen, MessageSquare,
@@ -49,7 +49,9 @@ export default function ClassView() {
   const [materials, setMaterials] = useState<any[]>([]);
   const [assignmentResults, setAssignmentResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("classe");
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "classe";
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
     if (!classId || (!profileId && !user)) return;

@@ -61,6 +61,10 @@ export default function DashboardDocente() {
   const [savingClasse, setSavingClasse] = useState(false);
   const [classeCreata, setClasseCreata] = useState<any>(null);
 
+  // Crea materiale — class picker
+  const [showMaterialClassPicker, setShowMaterialClassPicker] = useState(false);
+  const [selectedMaterialClassId, setSelectedMaterialClassId] = useState("");
+
   const od = onboarding;
   const materie: string[] = od?.docente_materie || [];
   const ordine: string = od?.docente_ordine || "";
@@ -385,7 +389,7 @@ REGOLE DI RISPOSTA:
         {/* ━━━ BLOCK 5 — AZIONI RAPIDE ━━━ */}
         <div className="grid grid-cols-2 gap-3">
           <button
-            onClick={() => navigate("/libreria?create=true")}
+            onClick={() => setShowMaterialClassPicker(true)}
             className="flex items-center justify-center gap-2 bg-primary text-primary-foreground font-medium text-sm py-3.5 rounded-xl hover:bg-primary/90 transition-colors"
           >
             <Plus className="w-4 h-4" />
