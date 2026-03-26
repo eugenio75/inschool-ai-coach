@@ -5,7 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
-import { isChildSession, getChildSession } from "@/lib/childSession";
+import { isChildSession, getChildSession, setChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
 import { AdultLayout } from "@/components/AdultLayout";
@@ -113,6 +113,12 @@ function RoleGuard({ children }: { children: React.ReactNode }) {
         const { data } = await supabase.from("child_profiles").select("*").eq("parent_id", user.id).limit(1);
         if (data && data.length > 0) {
           profile = data[0];
+          // Persist session so we don't re-fetch on every navigation
+          setChildSession({
+            profileId: profile.id,
+            accessCode: (profile as any).access_code || "",
+            profile: profile as any,
+          });
         }
       }
 

@@ -132,16 +132,25 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         if (step < totalSteps - 1) {
             const nextStep = step + 1;
             setSaving(true);
+            // Merge with existing data to preserve teacherBehavior etc
+            const { data: existingPref } = await supabase
+              .from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
+            const existingData = (existingPref?.data as any) || {};
+            const mergedData = { ...existingData, ...answers };
             await (supabase.from as any)("user_preferences").upsert({
-               profile_id: profileId, role: role, current_step: nextStep, data: answers
+               profile_id: profileId, role: role, current_step: nextStep, data: mergedData
             });
             setSaving(false);
             setDirection(1);
             setStep(nextStep);
         } else {
             setSaving(true);
+            const { data: existingPref } = await supabase
+              .from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
+            const existingData = (existingPref?.data as any) || {};
+            const mergedData = { ...existingData, ...answers };
             await (supabase as any).from("user_preferences").upsert({
-               profile_id: profileId, role: role, current_step: step, data: answers
+               profile_id: profileId, role: role, current_step: step, data: mergedData
             });
             await supabase.from("child_profiles").update({ onboarding_completed: true } as any).eq("id", profileId);
             // Update localStorage session so RoleGuard doesn't redirect back
