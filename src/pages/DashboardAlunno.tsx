@@ -23,6 +23,7 @@ const DashboardAlunno = () => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const isChild = isChildSession();
+  const [showLibrary, setShowLibrary] = useState(false);
 
   useEffect(() => {
     if (isChild && shouldShowCheckin()) {
