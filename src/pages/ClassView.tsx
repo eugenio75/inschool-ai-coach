@@ -133,9 +133,6 @@ export default function ClassView() {
     );
   }
 
-  const filteredMaterials = materialFilter === "tutti"
-    ? materials
-    : materials.filter(m => m.status === materialFilter);
 
   const matLower = (classe.materia || '').toLowerCase();
   const gradientMap: Record<string, string> = {
