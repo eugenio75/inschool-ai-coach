@@ -12,7 +12,8 @@ serve(async (req) => {
   }
 
   try {
-    const { teacherName, teacherProfileId, activeClasses, recentFeed, materialsThisWeek, openVerifications, currentHour } = await req.json();
+    const body = await req.json();
+    const { teacherName, teacherProfileId, activeClasses, recentFeed, materialsThisWeek, openVerifications, currentHour, mode, classId, students, materials, verifications, topics } = body;
 
     // Fetch teacher behavior data from user_preferences if available
     let behaviorContext = "";
@@ -56,7 +57,27 @@ REGOLE LINGUAGGIO:
       }
     }
 
-    const systemPrompt = `Sei il coach personale di ${teacherName || "un docente"}, docente su InSchool.
+    // Build system prompt based on mode
+    let systemPrompt: string;
+
+    if (mode === "class_chat") {
+      systemPrompt = `Sei il coach personale di ${teacherName || "un docente"}, docente su InSchool.
+Stai rispondendo nella chat della classe ${classId ? "selezionata" : ""}.
+
+CONTESTO CLASSE:
+- Studenti: ${JSON.stringify(students || [])}
+- Materiali recenti: ${JSON.stringify(materials || [])}
+- Verifiche: ${JSON.stringify(verifications || [])}
+- Argomenti trattati: ${JSON.stringify(topics || [])}
+${behaviorContext}
+
+Regole:
+- Rispondi sempre in contesto con i dati reali della classe
+- Max 2-3 frasi. Sempre una domanda aperta finale.
+- Tono: collegiale, preciso, caldo ma non paternalistico.
+- Rispondi SOLO con JSON valido: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }`;
+    } else {
+      systemPrompt = `Sei il coach personale di ${teacherName || "un docente"}, docente su InSchool.
 
 REGOLA FONDAMENTALE: parla per primo con qualcosa di specifico e contestuale.
 MAI aprire con 'Come posso aiutarti oggi?' o frasi generiche.
@@ -79,6 +100,7 @@ Regole:
 - Tono: collegiale, preciso, caldo ma non paternalistico.
 
 Rispondi SOLO con JSON valido: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }`;
+    }
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -91,7 +113,7 @@ Rispondi SOLO con JSON valido: { "message": "...", "suggestedAction": "...", "ac
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: "Genera il messaggio di apertura per il docente." },
+          { role: "user", content: mode === "class_chat" ? "Genera un messaggio contestuale per questa classe." : "Genera il messaggio di apertura per il docente." },
         ],
         max_tokens: 300,
       }),
