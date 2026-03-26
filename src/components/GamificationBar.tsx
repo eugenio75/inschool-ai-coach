@@ -115,14 +115,51 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
   const [missions, setMissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const load = async () => {
-      const data = await getDailyMissions();
-      setMissions(data);
-      setLoading(false);
-    };
-    load();
+  const loadMissions = useCallback(async () => {
+    const data = await getDailyMissions();
+    setMissions(data);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    loadMissions();
+  }, [loadMissions]);
+
+  // Realtime subscription — update missions instantly when DB changes
+  useEffect(() => {
+    const profileId = isChildSession()
+      ? getChildSession()?.profileId
+      : getActiveChildProfileId();
+    if (!profileId) return;
+
+    const channel = supabase
+      .channel(`missions-realtime-${profileId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "daily_missions",
+          filter: `child_profile_id=eq.${profileId}`,
+        },
+        (payload) => {
+          // Update the mission in local state immediately
+          setMissions((prev) =>
+            prev.map((m) =>
+              m.id === payload.new.id ? { ...m, ...payload.new } : m
+            )
+          );
+          if (payload.new.completed && !payload.old?.completed) {
+            onMissionComplete?.();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [onMissionComplete]);
 
   const handleMissionClick = async (mission: any) => {
     if (mission.completed) return;
