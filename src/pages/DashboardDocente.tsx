@@ -243,96 +243,11 @@ export default function DashboardDocente() {
     }
   }
 
-  async function handleCoachSend(overrideMsg?: string) {
-    const text = overrideMsg || coachInput.trim();
+  function navigateToCoach(msg?: string) {
+    const text = msg || coachInput.trim();
     if (!text) return;
-    if (!overrideMsg) setCoachInput("");
-    setIsCoachReplying(true);
-
-    const systemContext = `Sei il coach AI personale di ${profile?.name || "un docente"} su InSchool.
-Tono collegiale, efficiente, caldo ma mai paternalistico. Max 2-3 frasi.
-NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contesto e rispondi.
-
-Contesto attuale:
-- Classi: ${classi.map(c => `${c.nome} (${c.materia || "N/A"}, ${c.num_studenti || 0} studenti)`).join(", ") || "nessuna"}
-- Materiali creati: ${materialiCount}
-- Segnalazioni aperte: ${daSegurireCount}
-- Scadenze prossime: ${assignments.filter(a => a.due_date).length}
-
-REGOLE DI RISPOSTA:
-- Se il messaggio è una risposta al tuo messaggio precedente → continua la conversazione coerentemente
-- Se è un saluto → rispondi brevemente e proponi un'azione concreta
-- Se è una richiesta operativa → guida verso la funzione
-- Se è uno sfogo emotivo → riconosci lo stato, non forzare azioni
-- Se è un errore di battitura o testo senza senso → chiedi gentilmente di ripetere in UNA frase sola
-- Non rispondere mai con risposte identiche consecutive — varia sempre
-- Rispondi SOLO testo, niente JSON.`;
-
-    // Send only the last coach message + user message (home is single-turn)
-    const messagesForAI: ChatMsg[] = [
-      { role: "assistant", content: systemContext },
-      ...(coachLastMsg ? [{ role: "assistant" as const, content: coachLastMsg }] : []),
-      { role: "user" as const, content: text },
-    ];
-
-    try {
-      setCoachLastMsg("...");
-
-      await streamChat({
-        messages: messagesForAI,
-        onDelta: (fullText) => {
-          setCoachLastMsg(fullText);
-        },
-        onDone: (fullText) => {
-          setCoachLastMsg(fullText);
-          setIsCoachReplying(false);
-          // Cache for next load
-          sessionStorage.setItem("teacher_coach_msg", fullText);
-          sessionStorage.setItem("teacher_coach_msg_at", Date.now().toString());
-          // Also persist to conversation_sessions for the full chat page
-          persistHomeExchange(text, fullText);
-        },
-        extraBody: { model: "google/gemini-2.5-flash" },
-      });
-    } catch {
-      setCoachLastMsg("Mi dispiace, non sono riuscito a rispondere. Riprova tra poco.");
-      setIsCoachReplying(false);
-    }
-  }
-
-  async function persistHomeExchange(userText: string, coachText: string) {
-    if (!profileId) return;
-    try {
-      // Append to existing coach conversation or create one
-      const { data: convs } = await (supabase as any)
-        .from("conversation_sessions")
-        .select("id, messaggi")
-        .eq("profile_id", profileId)
-        .eq("ruolo_utente", "docente_coach")
-        .order("updated_at", { ascending: false })
-        .limit(1);
-
-      const existing = convs?.[0];
-      const oldMsgs = existing?.messaggi || [];
-      const newMsgs = [...oldMsgs, { role: "user", content: userText }, { role: "assistant", content: coachText }];
-
-      if (existing) {
-        await (supabase as any).from("conversation_sessions").update({
-          messaggi: newMsgs,
-          updated_at: new Date().toISOString(),
-        }).eq("id", existing.id);
-      } else {
-        await (supabase as any).from("conversation_sessions").insert({
-          profile_id: profileId,
-          ruolo_utente: "docente_coach",
-          titolo: "Coach",
-          messaggi: newMsgs,
-          updated_at: new Date().toISOString(),
-        });
-      }
-    } catch (e) {
-      console.error("Failed to persist coach exchange:", e);
-    }
+    setCoachInput("");
+    navigate("/coach-docente", { state: { initialMessage: text } });
   }
 
   // Upcoming deadlines (today + 3 days), deduplicated
