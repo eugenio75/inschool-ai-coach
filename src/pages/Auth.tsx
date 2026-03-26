@@ -392,7 +392,7 @@ const Auth = () => {
                         <div className="grid grid-cols-3 gap-3">
                             <div className="col-span-1">
                                 <label className={labelSmClass}>Età</label>
-                                <input required type="number" min="14" max="99" value={age} onChange={e => setAge(e.target.value)} placeholder="Anni"
+                                <input required type="number" min={role === "medie" ? "11" : "14"} max="99" value={age} onChange={e => setAge(e.target.value)} placeholder="Anni"
                                     className="w-full px-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-center text-foreground placeholder-muted-foreground focus:border-primary transition-colors" />
                             </div>
                             <div className="col-span-2">
