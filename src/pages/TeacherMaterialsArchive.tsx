@@ -49,6 +49,55 @@ function typeLabel(t: string | null) {
   return found ? found.label : t || "—";
 }
 
+/** Renders material content with proper visual formatting (line breaks, numbered lists, etc.) */
+function formatMaterialContent(raw: string) {
+  if (!raw) return null;
+  // Replace literal \n with actual newlines
+  const text = raw.replace(/\\n/g, "\n");
+  const lines = text.split("\n").filter(l => l.trim() !== "");
+
+  return (
+    <div className="space-y-2">
+      {lines.map((line, i) => {
+        const trimmed = line.trim();
+        // Numbered item: "1." or "1)" 
+        const numberedMatch = trimmed.match(/^(\d+)[.)]\s*(.*)/);
+        // Lettered item: "a)" or "a."
+        const letteredMatch = !numberedMatch && trimmed.match(/^([a-zA-Z])[.)]\s*(.*)/);
+        // Bullet: "- " or "• "
+        const bulletMatch = !numberedMatch && !letteredMatch && trimmed.match(/^[-•]\s*(.*)/);
+
+        if (numberedMatch) {
+          return (
+            <div key={i} className="flex gap-3 items-start pl-1">
+              <span className="font-semibold text-primary min-w-[1.5rem] text-right shrink-0">{numberedMatch[1]}.</span>
+              <span>{numberedMatch[2]}</span>
+            </div>
+          );
+        }
+        if (letteredMatch) {
+          return (
+            <div key={i} className="flex gap-3 items-start pl-6">
+              <span className="font-medium text-muted-foreground min-w-[1.2rem] shrink-0">{letteredMatch[1]})</span>
+              <span>{letteredMatch[2]}</span>
+            </div>
+          );
+        }
+        if (bulletMatch) {
+          return (
+            <div key={i} className="flex gap-3 items-start pl-1">
+              <span className="text-primary shrink-0">•</span>
+              <span>{bulletMatch[1]}</span>
+            </div>
+          );
+        }
+        // Regular paragraph
+        return <p key={i}>{trimmed}</p>;
+      })}
+    </div>
+  );
+}
+
 export default function TeacherMaterialsArchive() {
   const navigate = useNavigate();
   const { user } = useAuth();
