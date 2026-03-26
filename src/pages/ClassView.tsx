@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Users, BookOpen, MessageSquare,
   Copy, ChevronRight, ChevronDown, AlertTriangle,
-  BarChart2,
+  BarChart2, Send,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import TeacherMaterialsTab from "@/components/teacher/TeacherMaterialsTab";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -243,11 +244,17 @@ export default function ClassView() {
           <ArrowLeft className="w-4 h-4 mr-1" /> Home
         </Button>
 
-        <div className="bg-[hsl(var(--primary))] rounded-2xl p-6 text-primary-foreground relative">
+        <div className="bg-[hsl(var(--primary))] rounded-2xl p-4 text-primary-foreground relative">
           <div>
             <p className="text-primary-foreground/60 text-xs font-medium uppercase tracking-wider mb-1">Classe</p>
-            <h1 className="text-2xl font-bold">{classe.nome}</h1>
-            <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold">{classe.nome}</h1>
+              <span className={cn(
+                "w-3 h-3 rounded-full shrink-0",
+                stats.toFollow > 0 ? "bg-amber-400" : "bg-green-400"
+              )} />
+            </div>
+            <div className="flex items-center gap-3 mt-1.5">
               {classe.materia && (
                 <span className="text-sm bg-primary-foreground/20 px-3 py-0.5 rounded-full font-medium">{classe.materia}</span>
               )}
@@ -520,19 +527,14 @@ export default function ClassView() {
 
         {/* ━━━ TAB: COACH AI ━━━ */}
         <TabsContent value="coach" className="mt-6">
-          <div className="bg-card border border-border rounded-2xl p-8 text-center">
-            <MessageSquare className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="font-medium text-foreground mb-1">Coach AI per {classe.nome}</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              {students.length === 0
-                ? "La classe è vuota ma puoi già generare materiali e pianificare attività."
-                : "Chiedi consigli su questa classe, piani di recupero o strategie didattiche."
-              }
-            </p>
-            <Button className="rounded-xl" onClick={() => navigate("/challenge/new")}>
-              <MessageSquare className="w-4 h-4 mr-1" /> Apri il Coach AI
-            </Button>
-          </div>
+          <ClassCoachChat
+            classe={classe}
+            students={students}
+            materials={materials}
+            assignmentResults={assignmentResults}
+            stats={stats}
+            userId={user!.id}
+          />
         </TabsContent>
       </Tabs>
     </div>
