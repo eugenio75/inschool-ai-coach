@@ -452,9 +452,24 @@ export default function FlashcardSession() {
     setCurrentIndex(prev => prev + 1);
   }
 
-  function finishSession() {
+  async function finishSession() {
     playCelebrationSound();
     setDone(true);
+
+    // Auto-complete review missions
+    try {
+      const { getDailyMissions, completeMission } = await import("@/lib/database");
+      const missions = await getDailyMissions();
+      for (const mission of missions) {
+        if (mission.completed) continue;
+        const t = mission.mission_type;
+        if (t === "review_weak_concept" || t === "review_concept" || t === "study_session") {
+          await completeMission(mission.id, mission.points_reward);
+        }
+      }
+    } catch (err) {
+      console.error("Mission completion error:", err);
+    }
   }
 
   function triggerCoachIntervention(card: Flashcard) {
