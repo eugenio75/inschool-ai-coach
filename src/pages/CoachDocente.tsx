@@ -185,8 +185,7 @@ export default function CoachDocente() {
   async function handleInitialMessage(text: string, classId?: string) {
     let chatId: string;
     if (classId) {
-      // Find or wait for class chat
-      const existing = chats.find(c => c.class_id === classId);
+      const existing = chatsRef.current.find(c => c.class_id === classId);
       if (existing) {
         chatId = existing.id;
         setActiveChatId(chatId);
