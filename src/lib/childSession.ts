@@ -20,6 +20,7 @@ interface ChildSession {
 }
 
 const CHILD_SESSION_KEY = "inschool-child-session";
+const ADULT_ROLES = new Set(["superiori", "universitario", "docente"]);
 
 export function getChildSession(): ChildSession | null {
   try {
@@ -57,7 +58,15 @@ export function clearChildSession() {
 }
 
 export function isChildSession(): boolean {
-  return !!getChildSession();
+  const session = getChildSession();
+  const schoolLevel = session?.profile?.school_level || null;
+  return !!session && !ADULT_ROLES.has(schoolLevel || "");
+}
+
+export function isAdultProfileSession(): boolean {
+  const session = getChildSession();
+  const schoolLevel = session?.profile?.school_level || null;
+  return !!session && ADULT_ROLES.has(schoolLevel || "");
 }
 
 // API calls through the child-api edge function

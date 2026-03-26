@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Bell, AlertTriangle, Clock, FileText, Heart, CheckCircle2, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { getChildSession } from "@/lib/childSession";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -30,20 +31,26 @@ function timeAgo(dateStr: string) {
 export default function TeacherNotifications() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const profileId = getChildSession()?.profileId;
   const [items, setItems] = useState<any[]>([]);
   const [classi, setClassi] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     loadData();
-  }, [user]);
+  }, [user, profileId]);
 
   async function loadData() {
     setLoading(true);
     const [{ data: feed }, { data: cl }] = await Promise.all([
       (supabase as any).from("teacher_activity_feed").select("*").eq("teacher_id", user!.id).order("created_at", { ascending: false }).limit(50),
-      (supabase as any).from("classi").select("id, nome").eq("docente_profile_id", user!.id),
+      profileId
+        ? (supabase as any).from("classi").select("id, nome").eq("docente_profile_id", profileId)
+        : Promise.resolve({ data: [] }),
     ]);
     setItems(feed || []);
     setClassi(cl || []);
