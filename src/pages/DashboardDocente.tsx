@@ -109,7 +109,7 @@ export default function DashboardDocente() {
     const dataChanged = cachedDataHash !== currentDataHash;
 
     if (cachedMsg && !isExpired && !dataChanged) {
-      setCoachMessages([{ role: "assistant", content: cachedMsg }]);
+      setCoachLastMsg(cachedMsg);
       setIsLoadingCoachMsg(false);
       return;
     }
@@ -117,7 +117,7 @@ export default function DashboardDocente() {
     // Welcome message for teachers with no classes yet
     if (classi.length === 0 && !loadingClassi) {
       const welcomeMsg = "Benvenuto! Sono pronto ad aiutarti. Il primo passo è creare la tua prima classe — ci vogliono meno di un minuto. Vuoi iniziare?";
-      setCoachMessages([{ role: "assistant", content: welcomeMsg }]);
+      setCoachLastMsg(welcomeMsg);
       setIsLoadingCoachMsg(false);
       return;
     }
@@ -152,12 +152,12 @@ export default function DashboardDocente() {
         });
 
         const msg = data?.message || "Bentornato. Pronto per una nuova giornata di lavoro?";
-        setCoachMessages([{ role: "assistant", content: msg }]);
+        setCoachLastMsg(msg);
         sessionStorage.setItem("teacher_coach_msg", msg);
         sessionStorage.setItem("teacher_coach_msg_at", Date.now().toString());
         sessionStorage.setItem("teacher_coach_data_hash", currentDataHash);
       } catch {
-        setCoachMessages([{ role: "assistant", content: "Bentornato. Da dove vuoi partire oggi?" }]);
+        setCoachLastMsg("Bentornato. Da dove vuoi partire oggi?");
       } finally {
         setIsLoadingCoachMsg(false);
       }
@@ -248,10 +248,6 @@ export default function DashboardDocente() {
     const text = overrideMsg || coachInput.trim();
     if (!text) return;
     if (!overrideMsg) setCoachInput("");
-
-    const userMsg: ChatMsg = { role: "user", content: text };
-    const updated = [...coachMessages, userMsg];
-    setCoachMessages(updated);
     setIsCoachReplying(true);
 
     const systemContext = `Sei il coach AI personale di ${profile?.name || "un docente"} su InSchool.
@@ -269,31 +265,74 @@ REGOLE DI RISPOSTA:
 - Se è un saluto → rispondi brevemente e proponi un'azione concreta
 - Se è una richiesta operativa → guida verso la funzione
 - Se è uno sfogo emotivo → riconosci lo stato, non forzare azioni
+- Se è un errore di battitura o testo senza senso → chiedi gentilmente di ripetere in UNA frase sola
+- Non rispondere mai con risposte identiche consecutive — varia sempre
 - Rispondi SOLO testo, niente JSON.`;
 
+    // Send only the last coach message + user message (home is single-turn)
     const messagesForAI: ChatMsg[] = [
       { role: "assistant", content: systemContext },
-      ...updated,
+      ...(coachLastMsg ? [{ role: "assistant" as const, content: coachLastMsg }] : []),
+      { role: "user" as const, content: text },
     ];
 
     try {
-      const assistantMsg: ChatMsg = { role: "assistant", content: "" };
-      setCoachMessages([...updated, assistantMsg]);
+      setCoachLastMsg("...");
 
       await streamChat({
         messages: messagesForAI,
-        onDelta: (text) => {
-          setCoachMessages([...updated, { role: "assistant", content: text }]);
+        onDelta: (fullText) => {
+          setCoachLastMsg(fullText);
         },
-        onDone: (text) => {
-          setCoachMessages([...updated, { role: "assistant", content: text }]);
+        onDone: (fullText) => {
+          setCoachLastMsg(fullText);
           setIsCoachReplying(false);
+          // Cache for next load
+          sessionStorage.setItem("teacher_coach_msg", fullText);
+          sessionStorage.setItem("teacher_coach_msg_at", Date.now().toString());
+          // Also persist to conversation_sessions for the full chat page
+          persistHomeExchange(text, fullText);
         },
         extraBody: { model: "google/gemini-2.5-flash" },
       });
     } catch {
-      setCoachMessages([...updated, { role: "assistant", content: "Mi dispiace, non sono riuscito a rispondere. Riprova tra poco." }]);
+      setCoachLastMsg("Mi dispiace, non sono riuscito a rispondere. Riprova tra poco.");
       setIsCoachReplying(false);
+    }
+  }
+
+  async function persistHomeExchange(userText: string, coachText: string) {
+    if (!profileId) return;
+    try {
+      // Append to existing coach conversation or create one
+      const { data: convs } = await (supabase as any)
+        .from("conversation_sessions")
+        .select("id, messaggi")
+        .eq("profile_id", profileId)
+        .eq("ruolo_utente", "docente_coach")
+        .order("updated_at", { ascending: false })
+        .limit(1);
+
+      const existing = convs?.[0];
+      const oldMsgs = existing?.messaggi || [];
+      const newMsgs = [...oldMsgs, { role: "user", content: userText }, { role: "assistant", content: coachText }];
+
+      if (existing) {
+        await (supabase as any).from("conversation_sessions").update({
+          messaggi: newMsgs,
+          updated_at: new Date().toISOString(),
+        }).eq("id", existing.id);
+      } else {
+        await (supabase as any).from("conversation_sessions").insert({
+          profile_id: profileId,
+          ruolo_utente: "docente_coach",
+          titolo: "Coach",
+          messaggi: newMsgs,
+          updated_at: new Date().toISOString(),
+        });
+      }
+    } catch (e) {
+      console.error("Failed to persist coach exchange:", e);
     }
   }
 
@@ -337,38 +376,32 @@ REGOLE DI RISPOSTA:
           </Button>
         </div>
 
-        {/* ━━━ BLOCK 2 — COACH ━━━ */}
+        {/* ━━━ BLOCK 2 — COACH (compact — single message) ━━━ */}
         <div className="bg-card border border-border rounded-xl p-5">
-          <div className="flex items-start gap-3 mb-4" ref={coachRef}>
+          <div className="flex items-start gap-3 mb-4">
             <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center shrink-0 mt-0.5">
               <Brain className="w-4 h-4 text-primary-foreground" />
             </div>
-            <div className="flex-1 space-y-3">
+            <div className="flex-1">
               {isLoadingCoachMsg ? (
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-3/4" />
                   <Skeleton className="h-4 w-1/2" />
                 </div>
               ) : (
-                coachMessages.map((msg, i) => (
-                  <div key={i} className={msg.role === "user" ? "text-right" : ""}>
-                    <p className={`text-sm leading-relaxed inline-block max-w-[90%] ${
-                      msg.role === "user"
-                        ? "bg-primary/10 text-foreground px-3 py-2 rounded-xl rounded-br-sm"
-                        : "text-foreground font-medium"
-                    }`}>
-                      {msg.content || (isCoachReplying && i === coachMessages.length - 1 ? "..." : "")}
-                    </p>
-                    {/* Inline CTA for welcome message */}
-                    {msg.role === "assistant" && classi.length === 0 && i === 0 && !loadingClassi && (
-                      <div className="mt-2">
-                        <Button size="sm" onClick={() => setShowClasseModal(true)} className="gap-1.5">
-                          <Plus className="w-3.5 h-3.5" /> Crea la prima classe
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))
+                <>
+                  <p className="text-sm leading-relaxed text-foreground font-medium line-clamp-2">
+                    {coachLastMsg || "Bentornato. Pronto per una nuova giornata di lavoro?"}
+                  </p>
+                  {/* Inline CTA for welcome message */}
+                  {classi.length === 0 && !loadingClassi && (
+                    <div className="mt-2">
+                      <Button size="sm" onClick={() => setShowClasseModal(true)} className="gap-1.5">
+                        <Plus className="w-3.5 h-3.5" /> Crea la prima classe
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -391,17 +424,25 @@ REGOLE DI RISPOSTA:
               <Send className="w-4 h-4" />
             </button>
           </div>
-          <div className="flex flex-wrap gap-2 mt-3">
-            {["Organizza il lavoro", "Chiedi un suggerimento", "Rivedi le priorità"].map((label) => (
-              <button
-                key={label}
-                onClick={() => handleCoachSend(label)}
-                disabled={isCoachReplying}
-                className="text-xs border border-border hover:border-primary hover:text-primary text-muted-foreground px-3 py-1.5 rounded-lg transition-colors bg-card disabled:opacity-50"
-              >
-                {label}
-              </button>
-            ))}
+          <div className="flex items-center justify-between mt-3">
+            <div className="flex flex-wrap gap-2">
+              {["Organizza il lavoro", "Chiedi un suggerimento", "Rivedi le priorità"].map((label) => (
+                <button
+                  key={label}
+                  onClick={() => handleCoachSend(label)}
+                  disabled={isCoachReplying}
+                  className="text-xs border border-border hover:border-primary hover:text-primary text-muted-foreground px-3 py-1.5 rounded-lg transition-colors bg-card disabled:opacity-50"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => navigate("/coach-docente")}
+              className="text-xs text-primary hover:text-primary/80 font-medium transition-colors whitespace-nowrap ml-2"
+            >
+              Apri chat completa →
+            </button>
           </div>
         </div>
 
