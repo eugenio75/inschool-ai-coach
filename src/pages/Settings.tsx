@@ -97,6 +97,10 @@ const Settings = () => {
 
   useEffect(() => {
     const load = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       const p = await getChildProfiles();
       setProfiles(p);
       const settings = await getParentSettings();
@@ -136,7 +140,7 @@ const Settings = () => {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [user]);
 
   const handlePinSave = async () => {
     if (newPin.length === 4 && /^\d{4}$/.test(newPin)) {
