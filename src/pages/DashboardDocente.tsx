@@ -54,11 +54,10 @@ export default function DashboardDocente() {
   const [daSegurireCount, setDaSegurireCount] = useState(0);
   const [assignments, setAssignments] = useState<any[]>([]);
 
-  // Coach — home shows only latest message (single line)
+  // Coach — home shows only initial message (no inline replies)
   const [coachLastMsg, setCoachLastMsg] = useState("");
   const [coachInput, setCoachInput] = useState("");
   const [isLoadingCoachMsg, setIsLoadingCoachMsg] = useState(true);
-  const [isCoachReplying, setIsCoachReplying] = useState(false);
 
   // Modal
   const [showClasseModal, setShowClasseModal] = useState(false);
@@ -411,38 +410,28 @@ REGOLE DI RISPOSTA:
               type="text"
               value={coachInput}
               onChange={(e) => setCoachInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !isCoachReplying && handleCoachSend()}
+              onKeyDown={(e) => e.key === "Enter" && navigateToCoach()}
               placeholder="Scrivi al coach..."
-              disabled={isCoachReplying}
-              className="flex-1 text-sm border border-input rounded-lg px-3 py-2.5 bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 disabled:opacity-50 transition-colors"
+              className="flex-1 text-sm border border-input rounded-lg px-3 py-2.5 bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 transition-colors"
             />
             <button
-              onClick={() => handleCoachSend()}
-              disabled={!coachInput.trim() || isCoachReplying}
+              onClick={() => navigateToCoach()}
+              disabled={!coachInput.trim()}
               className="bg-primary hover:bg-primary/90 disabled:opacity-40 text-primary-foreground px-4 py-2.5 rounded-lg transition-colors"
             >
               <Send className="w-4 h-4" />
             </button>
           </div>
-          <div className="flex items-center justify-between mt-3">
-            <div className="flex flex-wrap gap-2">
-              {["Organizza il lavoro", "Chiedi un suggerimento", "Rivedi le priorità"].map((label) => (
-                <button
-                  key={label}
-                  onClick={() => handleCoachSend(label)}
-                  disabled={isCoachReplying}
-                  className="text-xs border border-border hover:border-primary hover:text-primary text-muted-foreground px-3 py-1.5 rounded-lg transition-colors bg-card disabled:opacity-50"
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => navigate("/coach-docente")}
-              className="text-xs text-primary hover:text-primary/80 font-medium transition-colors whitespace-nowrap ml-2"
-            >
-              Apri chat completa →
-            </button>
+          <div className="flex flex-wrap gap-2 mt-3">
+            {["Organizza il lavoro", "Chiedi un suggerimento", "Rivedi le priorità"].map((label) => (
+              <button
+                key={label}
+                onClick={() => navigateToCoach(label)}
+                className="text-xs border border-border hover:border-primary hover:text-primary text-muted-foreground px-3 py-1.5 rounded-lg transition-colors bg-card"
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
 
