@@ -784,6 +784,38 @@ export type Database = {
         }
         Relationships: []
       }
+      material_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          material_id: string
+          material_type: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          material_id: string
+          material_type: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          material_id?: string
+          material_type?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_favorites_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memory_items: {
         Row: {
           child_profile_id: string
@@ -956,6 +988,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "sessioni_studio_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_materials: {
+        Row: {
+          created_at: string
+          extracted_text: string | null
+          file_name: string
+          file_type: string
+          file_url: string
+          id: string
+          material_type: string
+          profile_id: string
+          subject: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          extracted_text?: string | null
+          file_name: string
+          file_type?: string
+          file_url: string
+          id?: string
+          material_type?: string
+          profile_id: string
+          subject: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          extracted_text?: string | null
+          file_name?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          material_type?: string
+          profile_id?: string
+          subject?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_materials_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "child_profiles"
