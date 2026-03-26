@@ -13,6 +13,7 @@ import { getTasks, getActiveChildProfileId, getChildProfile, deleteTask } from "
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 import { CoachPresence } from "@/components/CoachPresence";
 import { BadgeDisplay } from "@/components/BadgeDisplay";
+import { supabase } from "@/integrations/supabase/client";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -23,6 +24,7 @@ const DashboardAlunno = () => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const isChild = isChildSession();
+  const [showLibrary, setShowLibrary] = useState(false);
 
   useEffect(() => {
     if (isChild && shouldShowCheckin()) {
@@ -35,16 +37,22 @@ const DashboardAlunno = () => {
     if (!profileId && !isChild) { navigate("/profiles"); return; }
 
     const load = async () => {
+      let currentProfile: any = null;
       if (isChild) {
-        const session = getChildSession();
-        if (session) setProfile(session.profile);
+        const sess = getChildSession();
+        if (sess) { currentProfile = sess.profile; setProfile(currentProfile); }
       } else {
         const p = await getChildProfile(profileId!);
-        if (p) setProfile(p);
+        if (p) { currentProfile = p; setProfile(p); }
         else {
           const saved = localStorage.getItem("inschool-profile");
-          if (saved) try { setProfile(JSON.parse(saved)); } catch {}
+          if (saved) try { currentProfile = JSON.parse(saved); setProfile(currentProfile); } catch {}
         }
+      }
+      if (currentProfile?.school_level === "alunno" && profileId) {
+        const { data } = await supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
+        const prefs = (data?.data as any) || {};
+        setShowLibrary(!!prefs.show_library);
       }
       const dbTasks = await getTasks();
       setTasks(dbTasks);
@@ -81,7 +89,7 @@ const DashboardAlunno = () => {
               <span className="font-display text-lg sm:text-xl font-semibold text-foreground">Inschool</span>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => navigate("/libreria")} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors" title="Libreria materiali"><FolderOpen className="w-4 h-4" /></button>
+              {showLibrary && <button onClick={() => navigate("/libreria")} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors" title="Libreria materiali"><FolderOpen className="w-4 h-4" /></button>}
               <button onClick={() => navigate("/memory")} className="w-9 h-9 rounded-xl bg-clay-light flex items-center justify-center text-clay-dark hover:bg-accent transition-colors" title="Memoria e ripasso"><Brain className="w-4 h-4" /></button>
               <button onClick={() => navigate("/student-profile")} className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-accent transition-colors text-xs font-bold text-primary" title="Il mio profilo">
                 {avatarName.charAt(0).toUpperCase()}
