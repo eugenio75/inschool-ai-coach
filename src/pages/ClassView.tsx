@@ -6,6 +6,7 @@ import {
   Copy, CheckCircle2, ChevronRight, BarChart2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import TeacherMaterialsTab from "@/components/teacher/TeacherMaterialsTab";
 import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
