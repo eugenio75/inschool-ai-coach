@@ -431,6 +431,7 @@ correct è l'indice (0-3) della risposta giusta.`,
   const nextQuestion = () => {
     if (currentQ + 1 >= questions.length) {
       setDone(true);
+      autoCompleteMissions(["review_weak_concept", "review_concept", "study_session"]).catch(() => {});
     } else {
       setCurrentQ(q => q + 1);
       setSelected(null);
@@ -651,6 +652,7 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
   const nextItem = () => {
     if (currentIdx + 1 >= gameItems.length) {
       setDone(true);
+      autoCompleteMissions(["review_weak_concept", "review_concept", "study_session"]).catch(() => {});
     } else {
       setCurrentIdx(i => i + 1);
       setAnswered(false);
