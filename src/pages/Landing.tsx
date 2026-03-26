@@ -152,45 +152,6 @@ export default function Landing() {
       {/* ── TRUST ── */}
       <TrustSection />
 
-      {/* ── BLOCKCHAIN ── */}
-      <section className="py-20 px-6" style={{ backgroundColor: "#0d1b2a" }}>
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div {...fade} className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs border" style={{ backgroundColor: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}>
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            {t("home_new_bc_badge")}
-          </motion.div>
-          <motion.h2 {...fade} transition={{ delay: 0.05 }} className="font-display text-3xl font-bold text-white mt-4">
-            {t("home_new_bc_title")}
-          </motion.h2>
-          <motion.p {...fade} transition={{ delay: 0.1 }} className="text-base max-w-xl mx-auto mt-3" style={{ color: "rgba(255,255,255,0.5)" }}>
-            {t("home_new_bc_sub")}
-          </motion.p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-12">
-            {([
-              { icon: BadgeCheck, color: "#4ade80", bg: "rgba(34,197,94,0.15)", key: "1" },
-              { icon: Shield, color: "#60a5fa", bg: "rgba(59,130,246,0.15)", key: "2" },
-              { icon: Lock, color: "#c084fc", bg: "rgba(168,85,247,0.15)", key: "3" },
-            ] as const).map(({ icon: Icon, color, bg, key }, i) => (
-              <motion.div key={key} {...fade} transition={{ delay: i * 0.05 }} className="rounded-xl p-6 text-left border" style={{ backgroundColor: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}>
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: bg }}>
-                  <Icon className="w-5 h-5" style={{ color }} />
-                </div>
-                <h4 className="text-sm font-semibold text-white">{t(`home_new_bc_${key}_title` as any)}</h4>
-                <p className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.4)" }}>{t(`home_new_bc_${key}_body` as any)}</p>
-              </motion.div>
-            ))}
-          </div>
-
-          <motion.div {...fade} transition={{ delay: 0.2 }} className="mt-10 pt-8 border-t flex flex-wrap gap-x-6 gap-y-2 justify-center text-xs font-mono" style={{ borderColor: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.2)" }}>
-            <span>{t("home_new_bc_tech")}</span>
-            <Link to="/security" className="hover:text-white/40 transition-colors" style={{ color: "rgba(255,255,255,0.3)" }}>
-              {t("trust_link")} <ArrowRight className="w-3 h-3 inline" />
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-
       {/* ── CTA FINALE ── */}
       <section className="py-24 px-6 text-center" style={{ background: "linear-gradient(135deg, #1A3A5C, #0070C0)" }}>
         <motion.h2 {...fade} className="font-display text-4xl font-bold text-white">
