@@ -164,7 +164,7 @@ export default function Landing() {
           <Button asChild size="lg" className="rounded-lg bg-white font-semibold px-6 py-3 hover:bg-white/90" style={{ color: "#1A3A5C" }}>
             <Link to="/auth">{t("home_final_cta1")}</Link>
           </Button>
-          <Button asChild variant="outline" size="lg" className="rounded-lg px-6 py-3 text-white border-white/40 hover:bg-white/10">
+          <Button asChild variant="outline" size="lg" className="rounded-lg px-6 py-3 border-white/40 hover:bg-white/10" style={{ color: "white", borderColor: "rgba(255,255,255,0.4)" }}>
             <Link to="/docenti">{t("home_final_cta2")}</Link>
           </Button>
         </motion.div>
