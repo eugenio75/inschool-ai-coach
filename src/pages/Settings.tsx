@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { LogoutButton } from "@/components/shared/LogoutButton";
-import { getChildSession } from "@/lib/childSession";
+import { getChildSession, setChildSession } from "@/lib/childSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { coachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
 
