@@ -13,6 +13,7 @@ interface ChatShellProps {
   title: string;
   subtitle?: string;
   badgeText?: string;
+  coachName?: string;
   messages: ChatMsg[];
   streamingText: string;
   sending: boolean;
@@ -34,7 +35,7 @@ interface ChatShellProps {
 }
 
 export function ChatShell({
-  title, subtitle, badgeText,
+  title, subtitle, badgeText, coachName,
   messages, streamingText, sending,
   onSend, onBack, onAction,
   progress, progressLabel,
