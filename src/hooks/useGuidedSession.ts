@@ -44,28 +44,37 @@ function isOralStudyTask(taskType: string, title: string): boolean {
   return ["studia", "ripeti", "memorizza", "prepara", "ripasso", "interrogazione", "esame", "riassumi"].some(k => lowerTitle.includes(k));
 }
 
-type MethodPhase = "none" | "ask_familiarity" | "propose_method" | "ready";
+type MethodPhase = "none" | "propose_method" | "ready";
 type Familiarity = "first_time" | "already_know" | "partial";
+
+function isMixedWritingTask(taskType: string, title: string): boolean {
+  const types = taskType.split(",").map(t => t.trim().toLowerCase());
+  if (types.some(t => ["riassunto", "summarize", "write", "tema", "testo"].includes(t))) return true;
+  const lowerTitle = title.toLowerCase();
+  return ["riassumi", "scrivi", "tema", "testo"].some(k => lowerTitle.includes(k));
+}
 
 function getMethodProposal(familiarity: Familiarity, taskType: string, title: string): string {
   const lowerTitle = title.toLowerCase();
   const isPrep = ["interrogazione", "esame", "prepara"].some(k => lowerTitle.includes(k)) || taskType === "interrogazione" || taskType === "esame";
-  const isSummary = lowerTitle.includes("riassumi") || lowerTitle.includes("riassunto") || taskType === "riassunto";
   const isMemorize = lowerTitle.includes("memorizza") || taskType === "memorizzazione";
-  const isExercise = !isOralStudyTask(taskType, title);
+  const isExercise = !isOralStudyTask(taskType, title) && !isMixedWritingTask(taskType, title);
+  const isMixed = isMixedWritingTask(taskType, title);
 
   switch (familiarity) {
     case "first_time":
-      if (isSummary) return "Ok. Mentre leggi cerca l'idea principale di ogni parte: non sottolineare tutto, solo la cosa più importante per blocco. Poi costruiamo il riassunto insieme.";
+      if (isMixed) return "Ok. Ti guido io nella struttura passo per passo prima di iniziare a scrivere.";
       if (isExercise) return "Ok, è la prima volta. Ti spiego prima la teoria necessaria, poi affrontiamo l'esercizio passo dopo passo insieme.";
       return "Allora partiamo leggendolo una volta per capire di cosa si tratta. Poi lo dividiamo in pezzi piccoli e lavoriamo su ognuno insieme.";
     case "already_know":
       if (isPrep) return "Bene. Partiamo da quello che ricordi già. Ti faccio qualche domanda e vediamo subito dove sei sicuro e dove serve rinforzare.";
       if (isMemorize) return "Perfetto. Allora chiudiamo il materiale e partiamo da quello che hai in testa. Quello che non ricordi lo riprendiamo insieme.";
       if (isExercise) return "Bene, allora proviamo subito l'esercizio. Se ti blocchi ti do un suggerimento.";
+      if (isMixed) return "Perfetto. Partiamo direttamente — intervento solo sulla revisione.";
       return "Bene. Partiamo da quello che ricordi già. Ti faccio qualche domanda e vediamo subito dove sei sicuro e dove serve rinforzare.";
     case "partial":
       if (isExercise) return "Ok. Rivediamo velocemente la parte che non ricordi bene, poi affrontiamo l'esercizio insieme.";
+      if (isMixed) return "Ok. Ti propongo uno schema di partenza, poi ti lascio procedere e intervengo dove serve.";
       return "Ok. Finiamo prima le parti che non hai ancora studiato, poi passiamo a richiamare tutto dalla memoria.";
   }
 }
