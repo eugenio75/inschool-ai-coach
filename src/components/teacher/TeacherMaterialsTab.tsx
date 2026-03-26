@@ -68,6 +68,12 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>(() => {
+    const classMateria = classe?.materia;
+    if (!classMateria) return [];
+    // Support multi-materia classes (comma separated)
+    return classMateria.split(",").map((m: string) => m.trim()).filter(Boolean);
+  });
 
   // AI state
   const [aiPrompt, setAiPrompt] = useState("");
