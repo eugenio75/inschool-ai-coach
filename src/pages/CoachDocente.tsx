@@ -307,7 +307,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
         ...placeholder,
         content: "Mi dispiace, non sono riuscito a rispondere. Riprova tra poco.",
       };
-      setMessages([...updatedMessages, fallbackMsg]);
+      setMessages([...currentMessages, fallbackMsg]);
       setIsReplying(false);
     }
   }
