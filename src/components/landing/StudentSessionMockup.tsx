@@ -1,4 +1,4 @@
-import { PhoneFrame } from "./PhoneFrame";
+import { BrowserFrame } from "./BrowserFrame";
 
 function ProgressDots({ current, total }: { current: number; total: number }) {
   return (

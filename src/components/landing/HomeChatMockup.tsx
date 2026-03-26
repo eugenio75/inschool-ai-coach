@@ -1,4 +1,4 @@
-import { PhoneFrame } from "./PhoneFrame";
+import { BrowserFrame } from "./BrowserFrame";
 
 function CoachBubble({ text }: { text: string }) {
   return (

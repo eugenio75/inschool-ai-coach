@@ -1,4 +1,4 @@
-import { PhoneFrame } from "./PhoneFrame";
+import { BrowserFrame } from "./BrowserFrame";
 import { AlertTriangle } from "lucide-react";
 
 function StrengthBar({ filled, total }: { filled: number; total: number }) {
