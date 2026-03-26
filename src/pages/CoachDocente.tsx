@@ -72,6 +72,8 @@ export default function CoachDocente() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const initialHandled = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const chatsRef = useRef<TeacherChat[]>([]);
+  chatsRef.current = chats;
 
   // Load sidebar data
   useEffect(() => {
@@ -79,15 +81,19 @@ export default function CoachDocente() {
     loadSidebarData();
   }, [teacherId]);
 
-  // Handle initial message
-  useEffect(() => {
-    if (!teacherId || loading) return;
-    if (initialMessage && !initialHandled.current) {
-      initialHandled.current = true;
-      window.history.replaceState({}, "");
-      handleInitialMessage(initialMessage, initialClassId);
-    }
-  }, [teacherId, loading]);
+  // Handle initial message — triggered after sidebar finishes loading
+  const pendingInitialMessage = useRef(initialMessage);
+  const pendingInitialClassId = useRef(initialClassId);
+  
+  async function processInitialMessage() {
+    const msg = pendingInitialMessage.current;
+    const clsId = pendingInitialClassId.current;
+    if (!msg || initialHandled.current || !teacherId) return;
+    initialHandled.current = true;
+    pendingInitialMessage.current = undefined;
+    window.history.replaceState({}, "");
+    await handleInitialMessage(msg, clsId);
+  }
 
   // Auto-scroll
   useEffect(() => {
@@ -144,6 +150,9 @@ export default function CoachDocente() {
       }
     }
     setLoading(false);
+    
+    // Process initial message AFTER sidebar is fully loaded
+    await processInitialMessage();
   }
 
   async function loadMessages(chatId: string) {
@@ -176,8 +185,7 @@ export default function CoachDocente() {
   async function handleInitialMessage(text: string, classId?: string) {
     let chatId: string;
     if (classId) {
-      // Find or wait for class chat
-      const existing = chats.find(c => c.class_id === classId);
+      const existing = chatsRef.current.find(c => c.class_id === classId);
       if (existing) {
         chatId = existing.id;
         setActiveChatId(chatId);
