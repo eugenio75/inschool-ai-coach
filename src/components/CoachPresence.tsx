@@ -27,50 +27,98 @@ interface CoachContext {
   recentSessions: any[];
 }
 
+function getSchoolLevel(): string {
+  try {
+    const profile = getProfile();
+    return profile?.school_level || "superiori";
+  } catch { return "superiori"; }
+}
+
 function buildLocalCoachMessage(profileName: string, ctx: CoachContext) {
   const firstName = profileName || "campione";
+  const level = getSchoolLevel();
 
+  // Context-aware messages adapted by school level
   if (ctx.urgentCount > 0 && ctx.pendingHomework[0]?.subject) {
     const hw = ctx.pendingHomework[0];
-    return {
-      message: `${firstName}, ci sono ${ctx.urgentCount} compiti urgenti — il primo è di ${hw.subject}. Vuoi partire da quello?`,
-      action: { text: `Inizia ${hw.subject}`, route: hw.id ? `/us?type=guided&hw=${hw.id}` : `/study-tasks` },
-    };
+    const actionRoute = hw.id ? `/us?type=guided&hw=${hw.id}` : `/study-tasks`;
+    switch (level) {
+      case "elementari":
+        return { message: `${firstName}, hai un compito di ${hw.subject} da fare! Vuoi che lo facciamo insieme?`, action: { text: `Inizia!`, route: actionRoute } };
+      case "medie":
+        return { message: `${firstName}, hai ${ctx.urgentCount} compiti urgenti — il primo è ${hw.subject}. Partiamo?`, action: { text: `Inizia ${hw.subject}`, route: actionRoute } };
+      case "universitario":
+        return { message: `${firstName}, ${ctx.urgentCount} scadenze ravvicinate. Priorità: ${hw.subject}.`, action: { text: `Affronta ${hw.subject}`, route: actionRoute } };
+      default:
+        return { message: `${firstName}, ci sono ${ctx.urgentCount} compiti urgenti — il primo è di ${hw.subject}. Vuoi partire da quello?`, action: { text: `Inizia ${hw.subject}`, route: actionRoute } };
+    }
   }
 
   if (ctx.streak > 0 && ctx.pendingHomework.length > 0) {
-    return {
-      message: `${firstName}, ${ctx.streak} giorni consecutivi — bella costanza! Hai ${ctx.pendingHomework.length} compiti aperti. Da quale partiamo?`,
-      action: { text: "Vedi i compiti", route: "/dashboard" },
-    };
+    switch (level) {
+      case "elementari":
+        return { message: `${firstName}, ${ctx.streak} giorni di fila — sei fortissimo! Hai ancora ${ctx.pendingHomework.length} cosette da fare.`, action: { text: "Vediamo!", route: "/dashboard" } };
+      case "medie":
+        return { message: `${firstName}, ${ctx.streak} giorni consecutivi, grande! Hai ${ctx.pendingHomework.length} compiti aperti.`, action: { text: "Vedi i compiti", route: "/dashboard" } };
+      case "universitario":
+        return { message: `${firstName}, ${ctx.streak} giorni di continuità. ${ctx.pendingHomework.length} task aperti.`, action: { text: "Pianifica", route: "/dashboard" } };
+      default:
+        return { message: `${firstName}, ${ctx.streak} giorni consecutivi — bella costanza! Hai ${ctx.pendingHomework.length} compiti aperti. Da quale partiamo?`, action: { text: "Vedi i compiti", route: "/dashboard" } };
+    }
   }
 
   if (ctx.pendingHomework.length > 0) {
-    return {
-      message: `${firstName}, hai ${ctx.pendingHomework.length} compiti in sospeso. Vuoi che li affrontiamo insieme?`,
-      action: { text: "Guarda i compiti", route: "/dashboard" },
-    };
+    switch (level) {
+      case "elementari":
+        return { message: `${firstName}, ci sono ${ctx.pendingHomework.length} compiti che ti aspettano! Li facciamo insieme?`, action: { text: "Iniziamo!", route: "/dashboard" } };
+      case "medie":
+        return { message: `${firstName}, hai ${ctx.pendingHomework.length} compiti da fare. Da quale vuoi partire?`, action: { text: "Guarda i compiti", route: "/dashboard" } };
+      case "universitario":
+        return { message: `${firstName}, ${ctx.pendingHomework.length} attività in sospeso. Cosa affrontiamo?`, action: { text: "Vedi attività", route: "/dashboard" } };
+      default:
+        return { message: `${firstName}, hai ${ctx.pendingHomework.length} compiti in sospeso. Vuoi che li affrontiamo insieme?`, action: { text: "Guarda i compiti", route: "/dashboard" } };
+    }
   }
 
   if (ctx.recentErrors.length > 0) {
     const subject = ctx.recentErrors[0]?.subject;
-    return {
-      message: `${firstName}, ho notato qualche difficoltà ${subject ? `in ${subject}` : "recente"}. Vuoi che ci lavoriamo un po' insieme?`,
-      action: { text: "Ripassa con me", route: subject ? `/us?type=review&subject=${encodeURIComponent(subject)}` : "/us?type=review" },
-    };
+    const route = subject ? `/us?type=review&subject=${encodeURIComponent(subject)}` : "/us?type=review";
+    switch (level) {
+      case "elementari":
+        return { message: `${firstName}, qualcosina non è andata bene ${subject ? `in ${subject}` : ""}. Vuoi riprovare con me?`, action: { text: "Riproviamo!", route } };
+      case "medie":
+        return { message: `${firstName}, ho notato qualche errore ${subject ? `in ${subject}` : "recente"}. Vuoi che ci lavoriamo?`, action: { text: "Ripassa con me", route } };
+      case "universitario":
+        return { message: `${firstName}, gap rilevato ${subject ? `in ${subject}` : ""}. Ripasso mirato disponibile.`, action: { text: "Ripasso mirato", route } };
+      default:
+        return { message: `${firstName}, ho notato qualche difficoltà ${subject ? `in ${subject}` : "recente"}. Vuoi che ci lavoriamo un po' insieme?`, action: { text: "Ripassa con me", route } };
+    }
   }
 
   if (ctx.streak > 0) {
-    return {
-      message: `${firstName}, ${ctx.streak} giorni di fila — stai andando forte! Vuoi fare un ripasso veloce per mantenere il ritmo?`,
-      action: { text: "Ripasso veloce", route: "/us?type=review" },
-    };
+    switch (level) {
+      case "elementari":
+        return { message: `${firstName}, ${ctx.streak} giorni di fila — sei un campione! Vuoi fare un giochino di ripasso?`, action: { text: "Ripasso!", route: "/us?type=review" } };
+      case "medie":
+        return { message: `${firstName}, ${ctx.streak} giorni di fila! Vuoi fare un ripasso veloce?`, action: { text: "Ripasso veloce", route: "/us?type=review" } };
+      case "universitario":
+        return { message: `${firstName}, ${ctx.streak} giorni di continuità. Ripasso distribuito consigliato.`, action: { text: "Ripasso", route: "/us?type=review" } };
+      default:
+        return { message: `${firstName}, ${ctx.streak} giorni di fila — stai andando forte! Vuoi fare un ripasso veloce?`, action: { text: "Ripasso veloce", route: "/us?type=review" } };
+    }
   }
 
-  return {
-    message: `${firstName}, sono qui per te. Raccontami come va o scegli cosa vuoi fare oggi.`,
-    action: { text: "Parla col coach", route: "/us?type=study" },
-  };
+  // Default fallback per profilo
+  switch (level) {
+    case "elementari":
+      return { message: `Ciao ${firstName}! Sono qui con te. Da dove vuoi iniziare oggi?`, action: { text: "Parla col coach", route: "/us?type=study" } };
+    case "medie":
+      return { message: `Ciao ${firstName}! Cosa hai da fare oggi? Partiamo insieme.`, action: { text: "Parla col coach", route: "/us?type=study" } };
+    case "universitario":
+      return { message: `Bentornato ${firstName}. Cosa vuoi affrontare oggi?`, action: { text: "Inizia sessione", route: "/us?type=study" } };
+    default:
+      return { message: `Ciao ${firstName}. Hai compiti in scadenza oggi — vuoi che partiamo da quello più urgente?`, action: { text: "Parla col coach", route: "/us?type=study" } };
+  }
 }
 
 const placeholders = [
