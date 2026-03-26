@@ -849,6 +849,8 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
     showCelebration,
     setShowCelebration,
     showCheckin,
+    showFamiliarity,
+    selectFamiliarity,
     setupDone,
     sessionCompleted,
     progressPercent,
