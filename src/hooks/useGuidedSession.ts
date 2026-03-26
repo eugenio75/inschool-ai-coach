@@ -509,11 +509,16 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       const firstStep = generatedSteps[0];
       const stepIntro = `${homework.title} — Step 1 di ${generatedSteps.length}:\n\n${firstStep.text}`;
 
-      // For oral study tasks, also prompt voice as primary response mode
+      // Mic suggestion: show only once EVER per student profile
       const isOral = isOralStudyTask(homework.task_type, homework.title);
-      const voicePrompt = isOral
-        ? "\n\n🎤 **Rispondi a voce** — premi il tasto Voce per parlare, oppure scrivi in una frase breve."
-        : "";
+      let voicePrompt = "";
+      if (isOral) {
+        const micAlreadySuggested = await checkMicSuggested(userId, isChild);
+        if (!micAlreadySuggested) {
+          voicePrompt = "\n\nConsiglio: per le interrogazioni è più utile rispondere a voce. Puoi usare il microfono qui sotto — ti aiuta ad allenarti come nella realtà.";
+          await markMicSuggested(userId, isChild);
+        }
+      }
 
       setMessages(prev => [...prev, {
         role: "assistant",
