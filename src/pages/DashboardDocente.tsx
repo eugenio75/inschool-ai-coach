@@ -98,6 +98,7 @@ export default function DashboardDocente() {
 
   // Coach initial message with TTL cache
   const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+  const BEHAVIOR_TTL = 30 * 60 * 1000; // 30 minutes
   useEffect(() => {
     if (!profileId) { setIsLoadingCoachMsg(false); return; }
 
@@ -124,27 +125,46 @@ export default function DashboardDocente() {
 
     if (loadingClassi) return;
 
-    supabase.functions.invoke("coach-teacher-message", {
-      body: {
-        teacherName: profile?.name || "",
-        teacherProfileId: profileId,
-        activeClasses: classi.map(c => ({ id: c.id, name: c.nome, subject: c.materia, studentCount: c.num_studenti || 0 })),
-        recentFeed: feedItems.slice(0, 5).map(f => ({ type: f.type, message: f.message, severity: f.severity })),
-        currentHour: new Date().getHours(),
-        materialsThisWeek: materialiCount,
-        openVerifications: assignments.filter(a => a.type === "verifica").length,
-      },
-    }).then(({ data }) => {
-      const msg = data?.message || "Bentornato. Pronto per una nuova giornata di lavoro?";
-      setCoachMessages([{ role: "assistant", content: msg }]);
-      sessionStorage.setItem("teacher_coach_msg", msg);
-      sessionStorage.setItem("teacher_coach_msg_at", Date.now().toString());
-      sessionStorage.setItem("teacher_coach_data_hash", currentDataHash);
-      setIsLoadingCoachMsg(false);
-    }).catch(() => {
-      setCoachMessages([{ role: "assistant", content: "Bentornato. Da dove vuoi partire oggi?" }]);
-      setIsLoadingCoachMsg(false);
-    });
+    // FIX 4: Call teacher-behavior-data FIRST, then coach-teacher-message
+    const fetchCoach = async () => {
+      try {
+        // Step 1: Refresh behavior data if stale
+        const behaviorCheckedAt = sessionStorage.getItem("behaviorCheckedAt");
+        const shouldRefreshBehavior = !behaviorCheckedAt || Date.now() - parseInt(behaviorCheckedAt) > BEHAVIOR_TTL;
+
+        if (shouldRefreshBehavior) {
+          await supabase.functions.invoke("teacher-behavior-data", {
+            body: { teacherProfileId: profileId },
+          });
+          sessionStorage.setItem("behaviorCheckedAt", Date.now().toString());
+        }
+
+        // Step 2: Now call coach with up-to-date behavior data
+        const { data } = await supabase.functions.invoke("coach-teacher-message", {
+          body: {
+            teacherName: profile?.name || "",
+            teacherProfileId: profileId,
+            activeClasses: classi.map(c => ({ id: c.id, name: c.nome, subject: c.materia, studentCount: c.num_studenti || 0 })),
+            recentFeed: feedItems.slice(0, 5).map(f => ({ type: f.type, message: f.message, severity: f.severity })),
+            currentHour: new Date().getHours(),
+            materialsThisWeek: materialiCount,
+            openVerifications: assignments.filter(a => a.type === "verifica").length,
+          },
+        });
+
+        const msg = data?.message || "Bentornato. Pronto per una nuova giornata di lavoro?";
+        setCoachMessages([{ role: "assistant", content: msg }]);
+        sessionStorage.setItem("teacher_coach_msg", msg);
+        sessionStorage.setItem("teacher_coach_msg_at", Date.now().toString());
+        sessionStorage.setItem("teacher_coach_data_hash", currentDataHash);
+      } catch {
+        setCoachMessages([{ role: "assistant", content: "Bentornato. Da dove vuoi partire oggi?" }]);
+      } finally {
+        setIsLoadingCoachMsg(false);
+      }
+    };
+
+    fetchCoach();
   }, [classi.length, feedItems.length, materialiCount, assignments.length, loadingClassi]);
 
   async function loadAll() {
