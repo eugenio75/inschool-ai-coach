@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   Users, Plus, FileText, LayoutDashboard, AlertCircle,
   Send, Brain, Copy, CheckSquare, ChevronRight,
-  Calendar, Clock, FolderOpen,
+  Calendar, Clock, FolderOpen, MoreVertical, Pencil, Trash2, X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
@@ -16,6 +16,12 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -57,9 +63,13 @@ export default function DashboardDocente() {
 
   // Modal
   const [showClasseModal, setShowClasseModal] = useState(false);
-  const [newClasse, setNewClasse] = useState({ nome: "", materia: "", ordine_scolastico: "", num_studenti: "" });
+  const [newClasse, setNewClasse] = useState({ nome: "", materie: [] as string[], ordine_scolastico: "", num_studenti: "" });
   const [savingClasse, setSavingClasse] = useState(false);
   const [classeCreata, setClasseCreata] = useState<any>(null);
+
+  // Delete class
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [deletingClasse, setDeletingClasse] = useState(false);
 
   // Crea materiale — class picker
   const [showMaterialClassPicker, setShowMaterialClassPicker] = useState(false);
@@ -86,15 +96,34 @@ export default function DashboardDocente() {
     return () => window.removeEventListener("inschool:nuova-classe", handler);
   }, []);
 
-  // Coach initial message
+  // Coach initial message with TTL cache
+  const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
   useEffect(() => {
-    const cached = sessionStorage.getItem("teacher_coach_msg");
-    if (cached) {
-      setCoachMessages([{ role: "assistant", content: cached }]);
+    if (!profileId) { setIsLoadingCoachMsg(false); return; }
+
+    const cachedMsg = sessionStorage.getItem("teacher_coach_msg");
+    const cachedAt = sessionStorage.getItem("teacher_coach_msg_at");
+    const cachedDataHash = sessionStorage.getItem("teacher_coach_data_hash");
+    const currentDataHash = `${classi.length}-${feedItems.length}-${materialiCount}-${assignments.length}`;
+    const isExpired = !cachedAt || Date.now() - parseInt(cachedAt) > CACHE_TTL;
+    const dataChanged = cachedDataHash !== currentDataHash;
+
+    if (cachedMsg && !isExpired && !dataChanged) {
+      setCoachMessages([{ role: "assistant", content: cachedMsg }]);
       setIsLoadingCoachMsg(false);
       return;
     }
-    if (!profileId || classi.length === 0) { setIsLoadingCoachMsg(false); return; }
+
+    // Welcome message for teachers with no classes yet
+    if (classi.length === 0 && !loadingClassi) {
+      const welcomeMsg = "Benvenuto! Sono pronto ad aiutarti. Il primo passo è creare la tua prima classe — ci vogliono meno di un minuto. Vuoi iniziare?";
+      setCoachMessages([{ role: "assistant", content: welcomeMsg }]);
+      setIsLoadingCoachMsg(false);
+      return;
+    }
+
+    if (loadingClassi) return;
+
     supabase.functions.invoke("coach-teacher-message", {
       body: {
         teacherName: profile?.name || "",
@@ -108,13 +137,15 @@ export default function DashboardDocente() {
     }).then(({ data }) => {
       const msg = data?.message || "Bentornato. Pronto per una nuova giornata di lavoro?";
       setCoachMessages([{ role: "assistant", content: msg }]);
-      if (msg) sessionStorage.setItem("teacher_coach_msg", msg);
+      sessionStorage.setItem("teacher_coach_msg", msg);
+      sessionStorage.setItem("teacher_coach_msg_at", Date.now().toString());
+      sessionStorage.setItem("teacher_coach_data_hash", currentDataHash);
       setIsLoadingCoachMsg(false);
     }).catch(() => {
       setCoachMessages([{ role: "assistant", content: "Bentornato. Da dove vuoi partire oggi?" }]);
       setIsLoadingCoachMsg(false);
     });
-  }, [classi.length, feedItems.length]);
+  }, [classi.length, feedItems.length, materialiCount, assignments.length, loadingClassi]);
 
   async function loadAll() {
     setLoadingClassi(true);
@@ -152,23 +183,45 @@ export default function DashboardDocente() {
   }
 
   async function saveClasse() {
-    if (!newClasse.nome.trim() || !profileId) return;
+    if (!newClasse.nome.trim() || newClasse.materie.length === 0 || !profileId) return;
     setSavingClasse(true);
     const { data, error } = await (supabase as any)
       .from("classi").insert({
         docente_profile_id: profileId,
         nome: newClasse.nome,
-        materia: newClasse.materia || null,
+        materia: newClasse.materie.join(", "),
         ordine_scolastico: newClasse.ordine_scolastico || ordine || null,
         num_studenti: newClasse.num_studenti ? parseInt(newClasse.num_studenti) : 0,
       }).select().single();
     setSavingClasse(false);
     if (!error && data) {
       setClasseCreata(data);
-      setNewClasse({ nome: "", materia: "", ordine_scolastico: "", num_studenti: "" });
+      setNewClasse({ nome: "", materie: [], ordine_scolastico: "", num_studenti: "" });
       loadAll();
     } else {
       toast.error("Errore nella creazione della classe.");
+    }
+  }
+
+  async function deleteClasse(classeId: string) {
+    setDeletingClasse(true);
+    // Unlink materials (set class_id to null)
+    await (supabase as any).from("teacher_materials").update({ class_id: null }).eq("class_id", classeId);
+    // Delete enrollments
+    await (supabase as any).from("class_enrollments").delete().eq("class_id", classeId);
+    // Delete assignments
+    await (supabase as any).from("teacher_assignments").delete().eq("class_id", classeId);
+    // Delete feed
+    await (supabase as any).from("teacher_activity_feed").delete().eq("class_id", classeId);
+    // Delete class
+    const { error } = await (supabase as any).from("classi").delete().eq("id", classeId);
+    setDeletingClasse(false);
+    setDeleteTarget(null);
+    if (!error) {
+      toast.success("Classe eliminata correttamente.");
+      loadAll();
+    } else {
+      toast.error("Errore nell'eliminazione della classe.");
     }
   }
 
@@ -225,12 +278,18 @@ REGOLE DI RISPOSTA:
     }
   }
 
-  // Upcoming deadlines (today & tomorrow)
+  // Upcoming deadlines (today + 3 days), deduplicated
   const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 2);
+  const threeDaysFromNow = new Date(now);
+  threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+  const seenIds = new Set<string>();
   const upcomingDeadlines = assignments
-    .filter(a => a.due_date && new Date(a.due_date) >= new Date(now.toDateString()) && new Date(a.due_date) < tomorrow)
+    .filter(a => {
+      if (!a.due_date || seenIds.has(a.id)) return false;
+      seenIds.add(a.id);
+      const d = new Date(a.due_date);
+      return d >= new Date(now.toDateString()) && d < threeDaysFromNow;
+    })
     .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
 
   // Feed alerts per class
@@ -281,6 +340,14 @@ REGOLE DI RISPOSTA:
                     }`}>
                       {msg.content || (isCoachReplying && i === coachMessages.length - 1 ? "..." : "")}
                     </p>
+                    {/* Inline CTA for welcome message */}
+                    {msg.role === "assistant" && classi.length === 0 && i === 0 && !loadingClassi && (
+                      <div className="mt-2">
+                        <Button size="sm" onClick={() => setShowClasseModal(true)} className="gap-1.5">
+                          <Plus className="w-3.5 h-3.5" /> Crea la prima classe
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
@@ -360,27 +427,48 @@ REGOLE DI RISPOSTA:
                 const alertCount = classFeedMap.get(c.id) || 0;
                 const hasAlert = alertCount > 0;
                 return (
-                  <button
+                  <div
                     key={c.id}
-                    onClick={() => navigate(`/classe/${c.id}`)}
-                    className="bg-card border border-border rounded-xl p-4 text-left hover:shadow-md hover:border-primary/30 transition-all group"
+                    className="bg-card border border-border rounded-xl p-4 text-left hover:shadow-md hover:border-primary/30 transition-all group relative"
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2.5 h-2.5 rounded-full ${hasAlert ? "bg-amber-400" : "bg-emerald-400"}`} />
-                        <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">{c.nome}</span>
+                    <div className="absolute top-2 right-2 z-10">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            onClick={e => e.stopPropagation()}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate(`/classe/${c.id}`)}>
+                            <Pencil className="w-3.5 h-3.5 mr-2" /> Modifica classe
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteTarget(c)}>
+                            <Trash2 className="w-3.5 h-3.5 mr-2" /> Elimina classe
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    <button onClick={() => navigate(`/classe/${c.id}`)} className="w-full text-left">
+                      <div className="flex items-center justify-between mb-1 pr-6">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2.5 h-2.5 rounded-full ${hasAlert ? "bg-amber-400" : "bg-emerald-400"}`} />
+                          <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">{c.nome}</span>
+                        </div>
+                        {hasAlert && (
+                          <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                            {alertCount}
+                          </span>
+                        )}
                       </div>
-                      {hasAlert && (
-                        <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                          {alertCount}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">{c.materia || "–"}</span>
-                      <span className="text-xs text-muted-foreground">{c.num_studenti || 0} studenti</span>
-                    </div>
-                  </button>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">{c.materia || "–"}</span>
+                        <span className="text-xs text-muted-foreground">{c.num_studenti || 0} studenti</span>
+                      </div>
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -503,7 +591,7 @@ REGOLE DI RISPOSTA:
               </div>
             )}
             {feedItems.length > 4 && (
-              <button onClick={() => {}} className="w-full text-center text-xs text-primary font-medium hover:underline mt-3 py-1">
+              <button onClick={() => navigate("/agenda-docente")} className="w-full text-center text-xs text-primary font-medium hover:underline mt-3 py-1">
                 Vedi tutte
               </button>
             )}
@@ -522,16 +610,40 @@ REGOLE DI RISPOSTA:
                 onChange={e => setNewClasse(p => ({ ...p, nome: e.target.value }))} className="mt-1" />
             </div>
             <div>
-              <Label>Materia</Label>
-              {materie.length > 0 ? (
-                <Select value={newClasse.materia} onValueChange={v => setNewClasse(p => ({ ...p, materia: v }))}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Seleziona materia" /></SelectTrigger>
-                  <SelectContent>{materie.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-                </Select>
-              ) : (
-                <Input placeholder="es. Matematica" value={newClasse.materia}
-                  onChange={e => setNewClasse(p => ({ ...p, materia: e.target.value }))} className="mt-1" />
-              )}
+              <Label>Materie *</Label>
+              <div className="mt-1 border border-input rounded-lg p-2 min-h-[42px]">
+                <div className="flex flex-wrap gap-1.5 mb-1">
+                  {newClasse.materie.map(m => (
+                    <span key={m} className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium px-2 py-1 rounded-md">
+                      {m}
+                      <button onClick={() => setNewClasse(p => ({ ...p, materie: p.materie.filter(x => x !== m) }))} className="hover:text-destructive">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                {materie.length > 0 ? (
+                  <Select value="" onValueChange={v => {
+                    if (v && !newClasse.materie.includes(v)) setNewClasse(p => ({ ...p, materie: [...p.materie, v] }));
+                  }}>
+                    <SelectTrigger className="border-0 p-0 h-8 shadow-none"><SelectValue placeholder="Aggiungi materia..." /></SelectTrigger>
+                    <SelectContent>{materie.filter(m => !newClasse.materie.includes(m)).map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+                  </Select>
+                ) : (
+                  <Input placeholder="es. Matematica" className="border-0 p-0 h-8 shadow-none"
+                    onKeyDown={e => {
+                      if (e.key === "Enter") {
+                        const v = (e.target as HTMLInputElement).value.trim();
+                        if (v && !newClasse.materie.includes(v)) {
+                          setNewClasse(p => ({ ...p, materie: [...p.materie, v] }));
+                          (e.target as HTMLInputElement).value = "";
+                        }
+                        e.preventDefault();
+                      }
+                    }}
+                  />
+                )}
+              </div>
             </div>
             <div>
               <Label>Ordine scolastico</Label>
@@ -554,7 +666,7 @@ REGOLE DI RISPOSTA:
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowClasseModal(false)}>Annulla</Button>
-            <Button onClick={saveClasse} disabled={!newClasse.nome.trim() || savingClasse}>
+            <Button onClick={saveClasse} disabled={!newClasse.nome.trim() || newClasse.materie.length === 0 || savingClasse}>
               {savingClasse ? "Creazione..." : "Crea classe"}
             </Button>
           </DialogFooter>
@@ -611,6 +723,33 @@ REGOLE DI RISPOSTA:
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete class confirmation */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={v => { if (!v) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminare la classe "{deleteTarget?.nome}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Questa azione non può essere annullata. I materiali assegnati rimarranno nel tuo archivio.
+              {deleteTarget?.num_studenti > 0 && (
+                <span className="block mt-2 font-medium text-foreground">
+                  ⚠ Questa classe ha {deleteTarget.num_studenti} studenti attivi. Eliminandola perderanno l'accesso al codice classe.
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingClasse}>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteTarget && deleteClasse(deleteTarget.id)}
+              disabled={deletingClasse}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingClasse ? "Eliminazione..." : "Elimina"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

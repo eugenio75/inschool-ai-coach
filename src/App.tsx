@@ -49,6 +49,7 @@ const TeacherMaterialsArchive = lazy(() => import("./pages/TeacherMaterialsArchi
 const FlashcardSession = lazy(() => import("./pages/FlashcardSession"));
 const StudyTasks = lazy(() => import("./pages/StudyTasks"));
 const StudentReport = lazy(() => import("./pages/StudentReport"));
+const TeacherNotifications = lazy(() => import("./pages/TeacherNotifications"));
 
 const queryClient = new QueryClient();
 
@@ -173,6 +174,7 @@ const AppRoutes = () => (
         <Route path="/materiali-docente" element={<AccessibleRoute><MaybeAdultLayout><TeacherMaterialsArchive /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/agenda-docente" element={<AccessibleRoute><MaybeAdultLayout><AgendaDocente /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/parent-dashboard" element={<ProtectedRoute><ParentDashboard /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><MaybeAdultLayout><TeacherNotifications /></MaybeAdultLayout></ProtectedRoute>} />
         <Route path="/report" element={<AccessibleRoute><MaybeAdultLayout><StudentReport /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/student-profile" element={<AccessibleRoute><StudentProfile /></AccessibleRoute>} />
         <Route path="/classe/:classId" element={<AccessibleRoute><MaybeAdultLayout><ClassView /></MaybeAdultLayout></AccessibleRoute>} />
