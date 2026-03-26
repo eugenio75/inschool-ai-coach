@@ -191,11 +191,15 @@ export default function FlashcardSession() {
   const [searchParams] = useSearchParams();
   const subjectFilter = searchParams.get("subject") || "";
   const modeParam = searchParams.get("mode") as FlashcardMode | null;
+  const fromMemory = searchParams.get("fromMemory") === "true";
   const profile = getProfile();
   const schoolLevel = profile?.school_level || "superiori";
   const { user } = useAuth();
   const userId = user?.id || getChildSession()?.profileId;
-  const isJunior = schoolLevel === "alunno" || schoolLevel === "medie";
+
+  // Determine text size based on schoolLevel
+  const isElementari = schoolLevel === "alunno";
+  const textSizeClass = isElementari ? "text-xl" : "text-lg";
 
   const [mode, setMode] = useState<FlashcardMode | null>(modeParam);
   const [loading, setLoading] = useState(false);
@@ -216,8 +220,30 @@ export default function FlashcardSession() {
   const [coachSending, setCoachSending] = useState(false);
   const [coachCard, setCoachCard] = useState<Flashcard | null>(null);
 
+  // Check for cards passed from MemoryRecap via sessionStorage
+  useEffect(() => {
+    if (fromMemory) {
+      try {
+        const stored = sessionStorage.getItem("inschool-generated-flashcards");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setCards(parsed);
+            setMode("topic");
+            setCheckingCards(false);
+            setLoading(false);
+            sessionStorage.removeItem("inschool-generated-flashcards");
+            sessionStorage.removeItem("inschool-flashcard-subject");
+            return;
+          }
+        }
+      } catch {}
+    }
+  }, [fromMemory]);
+
   // Check if user has existing cards
   useEffect(() => {
+    if (fromMemory && cards.length > 0) return;
     async function check() {
       try {
         const childSession = getChildSession();
@@ -238,11 +264,11 @@ export default function FlashcardSession() {
       setCheckingCards(false);
     }
     check();
-  }, [userId]);
+  }, [userId, fromMemory, cards.length]);
 
   // If mode is set via param, auto-start
   useEffect(() => {
-    if (modeParam && !checkingCards) {
+    if (modeParam && !checkingCards && !fromMemory) {
       handleModeSelect(modeParam);
     }
   }, [modeParam, checkingCards]);
@@ -270,7 +296,6 @@ export default function FlashcardSession() {
       if (selectedMode === "topic") {
         prompt = `Genera flashcard di ripasso sull'argomento: "${topic}". Livello scolastico: ${schoolLevel}. Classe: ${classSection}.`;
       } else {
-        // program mode - ministerial program / exam prep
         const isExam = schoolLevel === "universitario" || schoolLevel === "superiori";
         const subjectList = [...subjects, ...difficultSubjects].filter(Boolean).join(", ");
         prompt = isExam
@@ -345,7 +370,7 @@ export default function FlashcardSession() {
           if (selectedMode === "today") {
             const todayStr = new Date().toISOString().slice(0, 10);
             filtered = data.filter((c: any) => c.created_at?.slice(0, 10) === todayStr);
-            if (filtered.length === 0) filtered = data.slice(0, 10); // fallback
+            if (filtered.length === 0) filtered = data.slice(0, 10);
           }
           const sorted = sortCards(filtered);
           setCards(sorted as Flashcard[]);
@@ -366,7 +391,6 @@ export default function FlashcardSession() {
         if (data && data.length > 0) {
           setCards(sortCards(data) as Flashcard[]);
         } else if (selectedMode === "today") {
-          // Fallback to cumulative if no today cards
           const { data: fallback } = await supabase
             .from("flashcards").select("*").eq("user_id", userId!)
             .order("next_review_at", { ascending: true, nullsFirst: true }).limit(20);
@@ -414,7 +438,7 @@ export default function FlashcardSession() {
       } else if (evaluation === "wrong") {
         updates.times_wrong = (currentCard.times_wrong || 0) + 1;
         updates.is_flagged = true;
-        updates.next_review_at = new Date(Date.now() + 3600000).toISOString();
+        updates.next_review_at = new Date(Date.now() + 3600000).toISOString(); // 1h for wrong cards
       } else {
         updates.next_review_at = new Date(Date.now() + 86400000).toISOString();
       }
@@ -429,7 +453,8 @@ export default function FlashcardSession() {
     };
     setResults(prev => [...prev, result]);
 
-    if (evaluation === "wrong" && (newWrongCounts[currentCard.id] || 0) >= 2) {
+    // Coach intervention after 3 wrong on same card
+    if (evaluation === "wrong" && (newWrongCounts[currentCard.id] || 0) >= 3) {
       triggerCoachIntervention(currentCard);
       return;
     }
@@ -440,6 +465,7 @@ export default function FlashcardSession() {
   function advanceCard() {
     setFlipped(false);
     if (currentIndex + 1 >= cards.length) {
+      // Re-add wrong cards to end of deck
       const wrongCards = results.filter(r => r.eval === "wrong").map(r => r.card);
       if (wrongCards.length > 0 && results.length < cards.length * 2) {
         setCards(prev => [...prev, ...wrongCards.filter(wc => !prev.slice(currentIndex + 1).some(c => c.id === wc.id))]);
@@ -470,6 +496,16 @@ export default function FlashcardSession() {
     setCoachSending(true);
     setCoachStreaming("");
 
+    // Adapt coach tone to schoolLevel
+    let toneInstruction = "in modo chiaro e diretto";
+    if (isElementari) {
+      toneInstruction = "con parole semplicissime, frasi brevi, emoji e tono giocoso. Come se parlassi a un bambino";
+    } else if (schoolLevel === "medie" || schoolLevel?.startsWith("media")) {
+      toneInstruction = "con tono amichevole e diretto, adatto a un ragazzo di 11-13 anni. Non infantile ma accessibile";
+    } else if (schoolLevel === "universitario") {
+      toneInstruction = "con tono sobrio e accademico, alla pari. Nessun incoraggiamento infantile";
+    }
+
     const systemPrompt = `Sei un coach di studio. Lo studente sta facendo un ripasso con flashcard e ha sbagliato più volte questa domanda:
 
 DOMANDA: ${card.question}
@@ -478,7 +514,7 @@ MATERIA: ${card.subject}
 LIVELLO: ${schoolLevel}
 
 Il tuo compito:
-1. Spiega il concetto in modo chiaro e ${isJunior ? "semplice, adatto a un bambino" : "diretto"}
+1. Spiega il concetto ${toneInstruction}
 2. Fai una domanda di verifica per assicurarti che abbia capito
 3. Sii breve e incoraggiante
 
@@ -583,7 +619,7 @@ Inizia spiegando il concetto.`;
     );
   }
 
-  // ─── Coach intervention ───
+  // ─── Coach intervention (interactive mini-session) ───
   if (coachMode && coachCard) {
     return (
       <ChatShell
@@ -598,7 +634,7 @@ Inizia spiegando il concetto.`;
         showHint={false}
         showStuck={false}
         showExplain={true}
-        showVoice={!isJunior}
+        showVoice={!isElementari}
         showAttach={false}
         extraFooter={
           coachMessages.length >= 2 ? (
@@ -627,7 +663,6 @@ Inizia spiegando il concetto.`;
         </div>
 
         <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
-          {/* Score card */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -641,7 +676,6 @@ Inizia spiegando il concetto.`;
             </p>
           </motion.div>
 
-          {/* Stats */}
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-primary/5 rounded-2xl p-3 text-center">
               <p className="text-lg font-bold text-primary">{summary.correct}</p>
@@ -657,7 +691,7 @@ Inizia spiegando il concetto.`;
             </div>
           </div>
 
-          {/* Hard cards */}
+          {/* Hard cards with "Approfondisci con il Coach" */}
           {summary.hardCards.length > 0 && (
             <div className="bg-card rounded-2xl border border-border p-4">
               <div className="flex items-center gap-2 mb-3">
@@ -684,7 +718,7 @@ Inizia spiegando il concetto.`;
           )}
 
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => { setMode(null); setCards([]); setResults([]); setCurrentIndex(0); setDone(false); }} className="flex-1">
+            <Button variant="outline" onClick={() => { setMode(null); setCards([]); setResults([]); setCurrentIndex(0); setDone(false); setWrongCounts({}); }} className="flex-1">
               Altro ripasso
             </Button>
             <Button onClick={() => navigate("/dashboard")} className="flex-1">
@@ -707,7 +741,6 @@ Inizia spiegando il concetto.`;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3 shrink-0">
         <button onClick={() => navigate(-1)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
           <ArrowLeft className="w-5 h-5 text-muted-foreground" />
@@ -725,7 +758,6 @@ Inizia spiegando il concetto.`;
         </div>
       </div>
 
-      {/* Card area */}
       <div className="flex-1 flex items-center justify-center p-6">
         <AnimatePresence mode="wait">
           <motion.div
@@ -736,26 +768,23 @@ Inizia spiegando il concetto.`;
             transition={{ duration: 0.25 }}
             className="w-full max-w-md"
           >
-            {/* Flip card */}
             <button
               onClick={() => setFlipped(!flipped)}
               className="w-full aspect-[3/2] perspective-1000"
             >
               <div className={`relative w-full h-full transition-transform duration-500 transform-style-3d ${flipped ? "[transform:rotateY(180deg)]" : ""}`}>
-                {/* Front */}
                 <div className="absolute inset-0 backface-hidden bg-card rounded-3xl border-2 border-border shadow-soft flex flex-col items-center justify-center p-8">
                   <span className="text-xs text-muted-foreground mb-3 font-medium uppercase tracking-wider">
                     {currentCard?.subject}
                   </span>
-                  <p className={`font-display font-bold text-foreground text-center leading-relaxed ${isJunior ? "text-xl" : "text-lg"}`}>
+                  <p className={`font-display font-bold text-foreground text-center leading-relaxed ${textSizeClass}`}>
                     {currentCard?.question}
                   </p>
                   <span className="text-xs text-muted-foreground mt-6">Tocca per girare</span>
                 </div>
-                {/* Back */}
                 <div className="absolute inset-0 backface-hidden [transform:rotateY(180deg)] bg-primary/5 rounded-3xl border-2 border-primary/20 shadow-soft flex flex-col items-center justify-center p-8">
                   <span className="text-xs text-primary mb-3 font-medium uppercase tracking-wider">Risposta</span>
-                  <p className={`font-display font-semibold text-foreground text-center leading-relaxed ${isJunior ? "text-xl" : "text-lg"}`}>
+                  <p className={`font-display font-semibold text-foreground text-center leading-relaxed ${textSizeClass}`}>
                     {currentCard?.answer}
                   </p>
                   <button
@@ -772,7 +801,6 @@ Inizia spiegando il concetto.`;
         </AnimatePresence>
       </div>
 
-      {/* Eval buttons */}
       <AnimatePresence>
         {flipped && (
           <motion.div

@@ -70,14 +70,14 @@ const ReviewChat = ({ topic, subject, section, onClose }: {
     setIsTyping(true);
     setStreamingText("");
     const profile = getProfile();
-    const mode = section === "rinforza" ? "strengthen" : "review";
+    const studyMode = section === "rinforza" ? "strengthen" : "review";
     try {
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/review-memory`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-          body: JSON.stringify({ messages: allMessages, concept: topic, summary: "", subject, strength: 50, studentProfile: profile, studyMode: mode }),
+          body: JSON.stringify({ messages: allMessages, concept: topic, summary: "", subject, strength: 50, studentProfile: profile, studyMode }),
         }
       );
       if (!response.ok || !response.body) throw new Error("Errore");
@@ -175,161 +175,6 @@ const ReviewChat = ({ topic, subject, section, onClose }: {
   );
 };
 
-// ─── Flashcard Session (inline) ───
-
-const FlashcardSession = ({ cards: initialCards, subject, onClose }: {
-  cards: any[]; subject: string; onClose: () => void;
-}) => {
-  const { user } = useAuth();
-  const [cards, setCards] = useState(initialCards);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [flipped, setFlipped] = useState(false);
-  const [sessionStats, setSessionStats] = useState({ correct: 0, almost: 0, wrong: 0 });
-  const [sessionDone, setSessionDone] = useState(false);
-  const [coachIntervention, setCoachIntervention] = useState<string | null>(null);
-
-  const currentCard = cards[currentIndex];
-
-  const handleRate = async (rating: "wrong" | "almost" | "correct") => {
-    if (!currentCard) return;
-    setCoachIntervention(null);
-    const updates: any = {
-      times_shown: (currentCard.times_shown || 0) + 1,
-      last_shown_at: new Date().toISOString(),
-    };
-    if (rating === "correct") {
-      updates.times_correct = (currentCard.times_correct || 0) + 1;
-      const streak = (currentCard.times_correct || 0) + 1;
-      updates.next_review_at = new Date(Date.now() + Math.min(streak * 2, 30) * 86400000).toISOString();
-      updates.is_flagged = false;
-      setSessionStats((s) => ({ ...s, correct: s.correct + 1 }));
-    } else if (rating === "wrong") {
-      const newWrong = (currentCard.times_wrong || 0) + 1;
-      updates.times_wrong = newWrong;
-      updates.next_review_at = new Date(Date.now() + 3600000).toISOString();
-      updates.is_flagged = newWrong >= 3;
-      setSessionStats((s) => ({ ...s, wrong: s.wrong + 1 }));
-      if (newWrong >= 3) setCoachIntervention(currentCard.subject);
-    } else {
-      updates.next_review_at = new Date(Date.now() + 86400000).toISOString();
-      setSessionStats((s) => ({ ...s, almost: s.almost + 1 }));
-    }
-    setCards((prev) => prev.map((c) => (c.id === currentCard.id ? { ...c, ...updates } : c)));
-    setFlipped(false);
-    const nextIndex = currentIndex + 1;
-    if (nextIndex < cards.length) setCurrentIndex(nextIndex);
-    else setSessionDone(true);
-
-    const isGeneratedCard = String(currentCard.id).startsWith("gen-");
-    if (!user || isGeneratedCard) return;
-    try { await supabase.from("flashcards").update(updates).eq("id", currentCard.id); } catch {}
-  };
-
-  if (sessionDone) {
-    return (
-      <div className="max-w-md mx-auto px-6 py-12 text-center">
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Brain className="w-8 h-8 text-primary" />
-          </div>
-          <h2 className="font-display text-xl font-bold text-foreground mb-2">Sessione completata!</h2>
-          <div className="grid grid-cols-3 gap-3 mt-6 mb-6">
-            <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-3">
-              <p className="text-2xl font-bold text-green-600">{sessionStats.correct}</p>
-              <p className="text-xs text-green-600/70">Corrette</p>
-            </div>
-            <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3">
-              <p className="text-2xl font-bold text-amber-600">{sessionStats.almost}</p>
-              <p className="text-xs text-amber-600/70">Quasi</p>
-            </div>
-            <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-3">
-              <p className="text-2xl font-bold text-red-600">{sessionStats.wrong}</p>
-              <p className="text-xs text-red-600/70">Da ripassare</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium text-sm">
-            Torna indietro
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (cards.length === 0) {
-    return (
-      <div className="text-center py-16 px-6">
-        <Layers className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-        <p className="text-muted-foreground font-medium">Nessuna flashcard disponibile</p>
-        <button onClick={onClose} className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium">Torna indietro</button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-lg mx-auto px-6 py-6 space-y-5">
-      <div className="flex items-center justify-between">
-        <button onClick={onClose} className="flex items-center gap-2 text-sm text-primary font-medium">
-          <ArrowLeft className="w-4 h-4" /> Indietro
-        </button>
-        <span className="text-xs text-muted-foreground font-medium">{subject}</span>
-      </div>
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <span>{currentIndex + 1} / {cards.length}</span>
-        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${((currentIndex + 1) / cards.length) * 100}%` }} />
-        </div>
-      </div>
-      {currentCard && (
-        <div className="perspective-1000">
-          <motion.div className="relative w-full cursor-pointer transform-style-3d" style={{ minHeight: 240 }} onClick={() => { if (!flipped) setFlipped(true); }}
-            animate={{ rotateY: flipped ? 180 : 0 }} transition={{ duration: 0.4, type: "spring", stiffness: 200, damping: 25 }}>
-            <div className={`absolute inset-0 rounded-2xl border-2 p-6 flex flex-col justify-center items-center text-center backface-hidden ${currentCard.is_flagged ? "border-destructive/30 bg-destructive/5" : "border-primary/30 bg-card"} shadow-md`}
-              style={{ backfaceVisibility: "hidden" }}>
-              {currentCard.is_flagged && (
-                <span className="absolute top-3 right-3 text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" /> Da rafforzare
-                </span>
-              )}
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground mb-3 font-semibold">{currentCard.subject}</span>
-              <p className="font-display text-lg font-semibold text-foreground leading-snug">{currentCard.question}</p>
-              <p className="text-xs text-muted-foreground mt-4">Tocca per girare</p>
-            </div>
-            <div className="absolute inset-0 rounded-2xl border-2 border-primary/20 bg-primary/5 p-6 flex flex-col justify-center items-center text-center shadow-md"
-              style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
-              <span className="text-[10px] uppercase tracking-wider text-primary mb-3 font-semibold">Risposta</span>
-              <p className="text-base text-foreground leading-relaxed">{currentCard.answer}</p>
-            </div>
-          </motion.div>
-        </div>
-      )}
-      <AnimatePresence>
-        {coachIntervention && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-            className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
-            <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">Questo concetto ti crea difficoltà — vuoi che ci lavoriamo insieme?</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {currentCard && flipped && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-3 gap-3">
-          <button onClick={() => handleRate("wrong")}
-            className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-destructive/5 border border-destructive/20 hover:bg-destructive/10 transition-colors">
-            <ThumbsDown className="w-5 h-5 text-destructive" /><span className="text-xs font-medium text-destructive">Non sapevo</span>
-          </button>
-          <button onClick={() => handleRate("almost")}
-            className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 transition-colors">
-            <MinusIcon className="w-5 h-5 text-amber-500" /><span className="text-xs font-medium text-amber-600">Quasi</span>
-          </button>
-          <button onClick={() => handleRate("correct")}
-            className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 hover:bg-green-100 transition-colors">
-            <ThumbsUp className="w-5 h-5 text-green-500" /><span className="text-xs font-medium text-green-600">Lo sapevo</span>
-          </button>
-        </motion.div>
-      )}
-    </div>
-  );
-};
-
 // ─── Challenge Session ───
 
 interface ChallengeQuestion {
@@ -361,10 +206,23 @@ const ChallengeSession = ({ subject, topic, section, concepts, onClose }: {
   const generateChallenge = async () => {
     setLoading(true);
     const profile = getProfile();
+    const schoolLevel = profile?.school_level || "superiori";
     const conceptTexts = concepts.map(c => `${c.concept}: ${c.summary || ""}`).join("\n");
     const challengeType = section === "rinforza"
       ? "sfide mirate al miglioramento: correggi errori, rimetti in ordine passaggi, scegli il procedimento corretto, applica concetti a esempi concreti"
       : "sfide brevi per attivare attenzione e memoria: domande rapide, abbina concetto e definizione, riconosci concetti";
+
+    // Profile-specific instructions
+    let levelInstructions = "";
+    if (schoolLevel === "alunno") {
+      levelInstructions = "Domande semplicissime con linguaggio breve. Una cosa sola per volta. Opzioni corte e chiare. Tono giocoso.";
+    } else if (schoolLevel === "medie" || schoolLevel?.startsWith("media")) {
+      levelInstructions = "Domande di complessità moderata. Linguaggio chiaro e amichevole, adatto a 11-13 anni. Non infantile.";
+    } else if (schoolLevel === "superiori") {
+      levelInstructions = "Domande mirate al ragionamento e al metodo. Linguaggio disciplinare. Connessioni causa-effetto.";
+    } else {
+      levelInstructions = "Domande strategiche e dense. Terminologia tecnica. Comprensione profonda.";
+    }
 
     try {
       const response = await fetch(
@@ -374,12 +232,13 @@ const ChallengeSession = ({ subject, topic, section, concepts, onClose }: {
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
           body: JSON.stringify({
             subject,
-            schoolLevel: profile?.school_level || "superiori",
+            schoolLevel,
             conversationHistory: `Genera 5 domande a risposta multipla (4 opzioni, 1 corretta) come ${challengeType}.
 Argomento: ${topic}
 Concetti: ${conceptTexts}
 ${section === "rinforza" ? "Focalizzati sui punti deboli e gli errori comuni." : "Focalizzati sul richiamo e la memoria."}
 ${profile?.name ? `Studente: ${profile.name}` : ""}
+LIVELLO: ${levelInstructions}
 
 Formato JSON richiesto:
 {"cards":[{"question":"...","options":["A","B","C","D"],"correct":0,"explanation":"..."}]}
@@ -579,17 +438,30 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
     setGameType(type);
     setLoading(true);
     const profile = getProfile();
+    const schoolLevel = profile?.school_level || "superiori";
     const conceptTexts = concepts.map(c => `${c.concept}: ${c.summary || ""}`).join("\n");
+
+    // Profile-specific game instructions
+    let levelInstructions = "";
+    if (schoolLevel === "alunno") {
+      levelInstructions = "Gioco per bambini 6-10 anni. Frasi brevissime. Parole semplici. Tono giocoso e leggero. Nessun termine tecnico.";
+    } else if (schoolLevel === "medie" || schoolLevel?.startsWith("media")) {
+      levelInstructions = "Gioco per ragazzi 11-13 anni. Coinvolgente ma non infantile. Linguaggio chiaro e accessibile.";
+    } else if (schoolLevel === "superiori") {
+      levelInstructions = "Gioco orientato alla comprensione. Linguaggio disciplinare. Sfide di ragionamento.";
+    } else {
+      levelInstructions = "Gioco orientato alla comprensione profonda e terminologia tecnica. Registro accademico.";
+    }
 
     let prompt = "";
     if (type === "true-false") {
-      prompt = `Genera 6 affermazioni vero/falso su: ${topic}\nConcetti: ${conceptTexts}\nFormato JSON: {"cards":[{"question":"affermazione","options":["vero"],"correct":0,"explanation":""}]}\nPer affermazioni false, metti correct: -1 e in explanation scrivi la correzione.`;
+      prompt = `Genera 6 affermazioni vero/falso su: ${topic}\nConcetti: ${conceptTexts}\n${levelInstructions}\nFormato JSON: {"cards":[{"question":"affermazione","options":["vero"],"correct":0,"explanation":""}]}\nPer affermazioni false, metti correct: -1 e in explanation scrivi la correzione.`;
     } else if (type === "complete") {
-      prompt = `Genera 5 frasi da completare su: ${topic}\nConcetti: ${conceptTexts}\nOgni frase deve avere uno spazio vuoto (___). Formato JSON: {"cards":[{"question":"La ___ è...","options":["risposta corretta"],"correct":0,"explanation":"frase completa"}]}`;
+      prompt = `Genera 5 frasi da completare su: ${topic}\nConcetti: ${conceptTexts}\n${levelInstructions}\nOgni frase deve avere uno spazio vuoto (___). Formato JSON: {"cards":[{"question":"La ___ è...","options":["risposta corretta"],"correct":0,"explanation":"frase completa"}]}`;
     } else if (type === "find-error") {
-      prompt = `Genera 5 affermazioni SBAGLIATE su: ${topic} che lo studente deve correggere.\nConcetti: ${conceptTexts}\nFormato JSON: {"cards":[{"question":"affermazione sbagliata","options":["correzione"],"correct":0,"explanation":"spiegazione dell'errore"}]}`;
+      prompt = `Genera 5 affermazioni SBAGLIATE su: ${topic} che lo studente deve correggere.\nConcetti: ${conceptTexts}\n${levelInstructions}\nFormato JSON: {"cards":[{"question":"affermazione sbagliata","options":["correzione"],"correct":0,"explanation":"spiegazione dell'errore"}]}`;
     } else {
-      prompt = `Genera 5 domande a risposta multipla facili su: ${topic}\nConcetti: ${conceptTexts}\nFormato: {"cards":[{"question":"...","options":["A","B","C"],"correct":0,"explanation":""}]}`;
+      prompt = `Genera 5 domande a risposta multipla facili su: ${topic}\nConcetti: ${conceptTexts}\n${levelInstructions}\nFormato: {"cards":[{"question":"...","options":["A","B","C"],"correct":0,"explanation":""}]}`;
     }
 
     try {
@@ -598,7 +470,7 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
         {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-          body: JSON.stringify({ subject, schoolLevel: profile?.school_level || "superiori", conversationHistory: prompt }),
+          body: JSON.stringify({ subject, schoolLevel, conversationHistory: prompt }),
         }
       );
       if (response.ok) {
@@ -764,49 +636,56 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
                 <button key={label} onClick={() => handleTrueFalse(val)} disabled={answered}
                   className={`p-4 rounded-xl border-2 transition-all text-sm font-semibold ${style}`}>
                   {label}
-                  {answered && val === item.isTrue && <CheckCircle2 className="w-4 h-4 text-green-500 inline ml-2" />}
-                  {answered && val === userAnswer && val !== item.isTrue && <XCircle className="w-4 h-4 text-destructive inline ml-2" />}
                 </button>
               );
             })}
           </div>
         )}
 
-        {(gameType === "complete" || gameType === "find-error") && !answered && (
-          <div className="flex gap-2">
-            <Input value={textInput} onChange={e => setTextInput(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") handleTextAnswer(textInput); }}
-              placeholder={gameType === "find-error" ? "Scrivi la correzione..." : "Completa..."}
-              className="text-sm" />
-            <Button onClick={() => handleTextAnswer(textInput)} disabled={!textInput.trim()} size="sm">Conferma</Button>
+        {(gameType === "complete" || gameType === "find-error") && (
+          <div className="space-y-3">
+            <input type="text" value={textInput} onChange={e => setTextInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && textInput.trim()) handleTextAnswer(textInput.trim()); }}
+              placeholder={gameType === "find-error" ? "Scrivi la correzione..." : "Completa la frase..."}
+              disabled={answered}
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+            />
+            {!answered && (
+              <Button onClick={() => textInput.trim() && handleTextAnswer(textInput.trim())} disabled={!textInput.trim()} className="w-full">
+                Conferma
+              </Button>
+            )}
           </div>
         )}
 
-        {gameType === "memory-match" && !answered && (
+        {gameType === "memory-match" && item.answer && (
           <div className="space-y-2">
-            {/* For memory-match, we show it as a simple question */}
-            <p className="text-xs text-muted-foreground">Seleziona la risposta corretta</p>
-            <Button onClick={() => handleTextAnswer(item.answer || "")} className="w-full" variant="outline">
-              {item.answer}
-            </Button>
+            {[item.answer, ...(concepts.slice(0, 2).map(c => c.concept).filter(c => c !== item.answer))].sort(() => Math.random() - 0.5).map((opt, i) => {
+              let style = "border-border bg-card hover:border-primary/30";
+              if (answered) {
+                if (opt === item.answer) style = "border-green-400 bg-green-50 dark:bg-green-900/20";
+                else if (opt === userAnswer) style = "border-destructive bg-destructive/5";
+                else style = "border-border bg-card opacity-60";
+              }
+              return (
+                <button key={i} onClick={() => handleTextAnswer(opt)} disabled={answered}
+                  className={`w-full text-left p-3.5 rounded-xl border-2 transition-all text-sm ${style}`}>
+                  <span className="font-medium text-foreground">{opt}</span>
+                </button>
+              );
+            })}
           </div>
         )}
 
         {answered && (
           <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-            {gameType === "true-false" && item.correction && userAnswer !== item.isTrue && (
-              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm text-foreground">
+            {item.correction && (
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm text-foreground leading-relaxed">
                 💡 {item.correction}
               </div>
             )}
-            {(gameType === "complete" || gameType === "find-error") && (
-              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm text-foreground">
-                ✅ Risposta: <span className="font-semibold">{item.answer}</span>
-                {item.correction && <span className="block mt-1 text-muted-foreground">{item.correction}</span>}
-              </div>
-            )}
             <Button onClick={nextItem} className="w-full">
-              {currentIdx + 1 >= gameItems.length ? "Vedi risultati" : "Avanti"}
+              {currentIdx + 1 >= gameItems.length ? "Vedi risultati" : "Prossimo"}
             </Button>
           </motion.div>
         )}
@@ -815,7 +694,7 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
   );
 };
 
-// ─── Concept Row (checkbox + expandable detail, no inline icons) ───
+// ─── Concept Row ───
 
 const ConceptRow = ({ item, index, showStrength, checked, onToggle }: {
   item: any; index: number; showStrength: boolean; checked: boolean; onToggle: () => void;
@@ -826,8 +705,8 @@ const ConceptRow = ({ item, index, showStrength, checked, onToggle }: {
 
   const fetchDeepSummary = async () => {
     if (deepSummary) { setExpanded(true); return; }
-    setLoadingDeep(true);
     setExpanded(true);
+    setLoadingDeep(true);
     try {
       const profile = getProfile();
       const response = await fetch(
@@ -836,106 +715,92 @@ const ConceptRow = ({ item, index, showStrength, checked, onToggle }: {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
           body: JSON.stringify({
-            messages: [],
-            concept: item.concept,
-            summary: item.summary || "",
-            subject: item.subject,
-            strength: item.strength || 50,
-            studentProfile: profile,
-            mode: "deep-summary",
+            messages: [], concept: item.concept, summary: item.summary || "",
+            subject: item.subject || "", studentProfile: profile, mode: "deep-summary",
           }),
         }
       );
-      if (!response.ok || !response.body) throw new Error("Errore");
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = "";
-      let fullText = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) { fullText += content; setDeepSummary(fullText); }
-          } catch { textBuffer = line + "\n" + textBuffer; break; }
+      if (response.ok && response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let text = "";
+        let buf = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          let nl: number;
+          while ((nl = buf.indexOf("\n")) !== -1) {
+            let line = buf.slice(0, nl);
+            buf = buf.slice(nl + 1);
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (!line.startsWith("data: ") || line.trim() === "") continue;
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr === "[DONE]") break;
+            try {
+              const p = JSON.parse(jsonStr);
+              const c = p.choices?.[0]?.delta?.content;
+              if (c) text += c;
+            } catch {}
+          }
         }
+        if (text) setDeepSummary(text);
       }
-      if (fullText) setDeepSummary(fullText.replace(/\[STRENGTH_UPDATE:\s*\d+\]/, "").trim());
-    } catch {
-      setDeepSummary("Non è stato possibile generare il riassunto. Riprova più tardi.");
-    } finally {
-      setLoadingDeep(false);
-    }
+    } catch (e) { console.error("Deep summary error:", e); }
+    finally { setLoadingDeep(false); }
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-      transition={{ ...spring, delay: index * 0.02 }}
-      className="py-2.5 first:pt-0">
-      {index > 0 && <div className="border-t border-border/40 -mt-2.5 mb-2.5" />}
-      <div className="flex items-start gap-3">
-        <button
-          onClick={onToggle}
-          className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
-            checked
-              ? "bg-primary border-primary shadow-sm"
-              : "border-muted-foreground/25 hover:border-primary/60 bg-background"
-          }`}
-        >
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.03 }}
+      className="flex items-start gap-3 py-2.5 border-b border-border/30 last:border-0">
+      <button onClick={onToggle} className="mt-0.5 shrink-0">
+        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 ${
+          checked ? "bg-primary border-primary shadow-sm" : "border-muted-foreground/25 hover:border-primary/60 bg-background"
+        }`}>
           {checked && <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />}
-        </button>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground leading-tight">{item.concept}</p>
-          {item.summary && <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">{item.summary}</p>}
-          {!item.summary && <p className="text-xs text-muted-foreground mt-0.5 italic">Espandi per un ripasso completo</p>}
-
-          <AnimatePresence>
-            {expanded && deepSummary && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                className="mt-2 pt-2 border-t border-border">
-                <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{deepSummary}</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          {expanded && loadingDeep && (
-            <div className="mt-2 pt-2 border-t border-border flex items-center gap-2">
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-              <span className="text-xs text-muted-foreground">Genero un ripasso dettagliato...</span>
-            </div>
-          )}
-          <button onClick={() => expanded ? setExpanded(false) : fetchDeepSummary()}
-            className="mt-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
-            {expanded ? "Chiudi" : "Scopri di più"}
-            <ChevronRight className={`w-3 h-3 transition-transform ${expanded ? "rotate-90" : ""}`} />
-          </button>
-
-          {showStrength && (
-            <div className="mt-1.5 flex items-center gap-2">
-              <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                <div className={`h-full rounded-full ${(item.strength || 0) < 30 ? "bg-destructive" : "bg-amber-500"}`}
-                  style={{ width: `${item.strength || 0}%` }} />
-              </div>
-              <span className="text-[10px] text-muted-foreground">{item.strength || 0}%</span>
-            </div>
-          )}
         </div>
+      </button>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-foreground leading-snug">{item.concept}</p>
+        {item.summary && <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">{item.summary}</p>}
+        {!item.summary && <p className="text-xs text-muted-foreground mt-0.5 italic">Espandi per un ripasso completo</p>}
+
+        <AnimatePresence>
+          {expanded && deepSummary && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+              className="mt-2 pt-2 border-t border-border">
+              <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{deepSummary}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {expanded && loadingDeep && (
+          <div className="mt-2 pt-2 border-t border-border flex items-center gap-2">
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+            <span className="text-xs text-muted-foreground">Genero un ripasso dettagliato...</span>
+          </div>
+        )}
+        <button onClick={() => expanded ? setExpanded(false) : fetchDeepSummary()}
+          className="mt-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+          {expanded ? "Chiudi" : "Scopri di più"}
+          <ChevronRight className={`w-3 h-3 transition-transform ${expanded ? "rotate-90" : ""}`} />
+        </button>
+
+        {showStrength && (
+          <div className="mt-1.5 flex items-center gap-2">
+            <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+              <div className={`h-full rounded-full ${(item.strength || 0) < 30 ? "bg-destructive" : "bg-amber-500"}`}
+                style={{ width: `${item.strength || 0}%` }} />
+            </div>
+            <span className="text-[10px] text-muted-foreground">{item.strength || 0}%</span>
+          </div>
+        )}
       </div>
     </motion.div>
   );
 };
 
-// ─── Subject Group Card (checkboxes + 4 method buttons at bottom) ───
+// ─── Subject Group Card ───
 
 const SubjectGroupCard = ({ group, gi, showStrength, section, methodCards, onStartStudy }: {
   group: { subject: string; items: any[]; latestAt: Date };
@@ -976,7 +841,6 @@ const SubjectGroupCard = ({ group, gi, showStrength, section, methodCards, onSta
     <motion.div key={`${group.subject}-${gi}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
       transition={{ ...spring, delay: gi * 0.05 }}
       className="rounded-2xl border border-border bg-card overflow-hidden">
-      {/* Subject header */}
       <div className={`flex items-center gap-3 px-4 py-3 ${colors.bg || "bg-muted/30"} border-b border-border/50`}>
         <div className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center`}>
           <BookOpen className={`w-4 h-4 ${colors.text}`} />
@@ -987,7 +851,6 @@ const SubjectGroupCard = ({ group, gi, showStrength, section, methodCards, onSta
         </div>
       </div>
 
-      {/* "Tutti" checkbox */}
       <div className="px-4 pt-3 pb-1">
         <button onClick={toggleAll} className="flex items-center gap-3 group">
           <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
@@ -1004,7 +867,6 @@ const SubjectGroupCard = ({ group, gi, showStrength, section, methodCards, onSta
         </button>
       </div>
 
-      {/* Concept list with checkboxes */}
       <div className="px-4 py-1 space-y-0">
         {group.items.map((item: any, i: number) => (
           <ConceptRow
@@ -1018,7 +880,6 @@ const SubjectGroupCard = ({ group, gi, showStrength, section, methodCards, onSta
         ))}
       </div>
 
-      {/* Method buttons */}
       <div className="px-4 py-3 border-t border-border/50 bg-muted/20">
         <p className="text-[11px] font-medium text-muted-foreground mb-2">
           {section === "rinforza" ? "Scegli come vuoi rafforzare" : "Scegli come vuoi ripassare"}
@@ -1056,7 +917,6 @@ const MemoryRecap = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
-  const [flashcards, setFlashcards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Section>("ripasso");
   const [wizard, setWizard] = useState<WizardState>({
@@ -1073,11 +933,6 @@ const MemoryRecap = () => {
     const load = async () => {
       const memoryData = await getMemoryItems();
       setItems(memoryData);
-      if (user) {
-        const { data: fc } = await supabase.from("flashcards").select("*").eq("user_id", user.id)
-          .order("next_review_at", { ascending: true, nullsFirst: true });
-        setFlashcards(fc || []);
-      }
       setLoading(false);
     };
     load();
@@ -1134,19 +989,46 @@ const MemoryRecap = () => {
     return Object.entries(subjectMap).sort(([, a], [, b]) => b - a);
   }, [wizard.section, wizard.contentType, items, weakItems, todayItems]);
 
-  // ─── Start a study method for a single concept or a group ───
+  // ─── Start a study method ───
   const startStudyMethod = async (concepts: any[], subject: string, method: StudyMethod, topicLabel: string) => {
     if (method === "flashcard") {
-      // Generate flashcards for this specific concept/group
       setGeneratingFlashcards(true);
       try {
+        const profile = getProfile();
+        const isStrengthen = currentSection === "rinforza";
+
+        // In Rafforza mode, fetch learning errors and flagged cards for context
+        let errorContext = "";
+        if (isStrengthen && user) {
+          const [errorsRes, flaggedRes] = await Promise.all([
+            supabase.from("learning_errors").select("topic, error_type, description").eq("user_id", user.id).eq("subject", subject).eq("resolved", false).limit(20),
+            supabase.from("flashcards").select("question, answer").eq("user_id", user.id).eq("subject", subject).eq("is_flagged", true).limit(10),
+          ]);
+          const errors = errorsRes.data || [];
+          const flagged = flaggedRes.data || [];
+          if (errors.length > 0 || flagged.length > 0) {
+            errorContext = "\n\nCONTESTO ERRORI E DEBOLEZZE DELLO STUDENTE (PRIORITÀ MASSIMA - genera flashcard su questi punti deboli):\n";
+            if (errors.length > 0) {
+              errorContext += "Errori ricorrenti:\n" + errors.map(e => `- ${e.topic}: ${e.description || e.error_type || "errore generico"}`).join("\n");
+            }
+            if (flagged.length > 0) {
+              errorContext += "\nCarte precedentemente sbagliate:\n" + flagged.map(f => `- D: ${f.question} / R: ${f.answer}`).join("\n");
+            }
+            errorContext += "\n\nGenera flashcard MIRATE su questi punti deboli, non sull'intero argomento.";
+          }
+        }
+
         const conceptTexts = concepts.map(c => `Concetto: ${c.concept}\nRiassunto: ${c.summary || "N/A"}`).join("\n\n");
         const response = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-flashcards`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-            body: JSON.stringify({ subject, conversationHistory: conceptTexts }),
+            body: JSON.stringify({
+              subject,
+              conversationHistory: conceptTexts + errorContext,
+              schoolLevel: profile?.school_level || "superiori",
+            }),
           }
         );
         if (response.ok) {
@@ -1156,7 +1038,8 @@ const MemoryRecap = () => {
             subject,
             question: c.question || c.front || "",
             answer: c.answer || c.back || "",
-            times_shown: 0, times_correct: 0, times_wrong: 0,
+            difficulty: c.difficulty || 1,
+            times_shown: 0, times_correct: 0, times_wrong: 0, is_flagged: false,
           }));
           if (cards.length > 0) {
             setGeneratedCards(cards);
@@ -1169,8 +1052,6 @@ const MemoryRecap = () => {
       setActiveStudy({ subject, concepts, method, topic: topicLabel });
     }
   };
-
-
 
   const goBack = () => {
     if (activeStudy) { setActiveStudy(null); return; }
@@ -1202,7 +1083,7 @@ const MemoryRecap = () => {
     {
       method: "coach",
       icon: MessageCircle,
-      label: "Coach",
+      label: isRinforza ? "Coach" : "Coach",
       desc: isRinforza ? "Ti aiuto a capire meglio i punti più difficili" : "Rivedi l'argomento passo dopo passo con il tuo Coach",
       color: "text-primary bg-primary/10",
     },
@@ -1252,7 +1133,6 @@ const MemoryRecap = () => {
     );
   }
 
-  // Loading overlay for flashcard generation
   if (generatingFlashcards) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
@@ -1298,8 +1178,6 @@ const MemoryRecap = () => {
       </div>
     );
   };
-
-
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -1385,7 +1263,7 @@ const MemoryRecap = () => {
             </motion.div>
           )}
 
-          {/* SUMMARY — concepts grouped by subject, with inline mode icons per concept + subject-level button */}
+          {/* SUMMARY */}
           {wizard.step === "summary" && !activeStudy && (
             <motion.div key="summary" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
               className="space-y-4">
@@ -1415,7 +1293,6 @@ const MemoryRecap = () => {
                   );
                 }
 
-                // Group by subject
                 const exerciseGroups: { subject: string; items: any[]; latestAt: Date }[] = [];
                 for (const item of summaryItems) {
                   const itemTime = new Date(item.created_at).getTime();
@@ -1458,15 +1335,33 @@ const MemoryRecap = () => {
             </motion.div>
           )}
 
-          {/* ACTIVE STUDY SESSION */}
+          {/* ACTIVE STUDY SESSION — uses standalone FlashcardSession page for flashcards */}
           {activeStudy && (
             <motion.div key="active-study" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>
               {activeStudy.method === "coach" ? (
                 <ReviewChat topic={activeStudy.topic} subject={activeStudy.subject}
                   section={currentSection} onClose={() => setActiveStudy(null)} />
               ) : activeStudy.method === "flashcard" ? (
-                <FlashcardSession cards={generatedCards} subject={activeStudy.subject}
-                  onClose={() => { setActiveStudy(null); setGeneratedCards([]); }} />
+                // Navigate to standalone FlashcardSession with generated cards
+                (() => {
+                  // Use inline minimal flashcard view that delegates to the standalone component behavior
+                  const InlineFlashcardRedirect = () => {
+                    useEffect(() => {
+                      // Store generated cards in sessionStorage for the standalone page
+                      if (generatedCards.length > 0) {
+                        sessionStorage.setItem("inschool-generated-flashcards", JSON.stringify(generatedCards));
+                        sessionStorage.setItem("inschool-flashcard-subject", activeStudy.subject);
+                        navigate(`/flashcards?mode=topic&subject=${encodeURIComponent(activeStudy.subject)}&fromMemory=true`);
+                      }
+                    }, []);
+                    return (
+                      <div className="flex items-center justify-center py-20">
+                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                      </div>
+                    );
+                  };
+                  return <InlineFlashcardRedirect />;
+                })()
               ) : activeStudy.method === "challenge" ? (
                 <ChallengeSession subject={activeStudy.subject}
                   topic={activeStudy.topic}
