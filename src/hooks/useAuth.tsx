@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
+import { clearChildSession, isAdultProfileSession } from "@/lib/childSession";
 
 interface AuthContextType {
   session: Session | null;
@@ -20,14 +21,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let initialResolved = false;
+    let cancelled = false;
+
+    const clearStaleAdultProfile = () => {
+      if (isAdultProfileSession()) {
+        clearChildSession();
+      }
+    };
 
     // 1. Restore session from storage FIRST — this is the authority for initial state
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      initialResolved = true;
-      setLoading(false);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        if (cancelled) return;
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (!session) {
+          clearStaleAdultProfile();
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSession(null);
+        setUser(null);
+        clearStaleAdultProfile();
+      })
+      .finally(() => {
+        if (cancelled) return;
+        initialResolved = true;
+        setLoading(false);
+      });
 
     // 2. Listen for SUBSEQUENT auth changes (sign-in, sign-out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -35,9 +57,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!initialResolved) return;
       setSession(session);
       setUser(session?.user ?? null);
+      if (!session) {
+        clearStaleAdultProfile();
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string) => {
