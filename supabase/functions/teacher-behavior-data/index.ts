@@ -191,11 +191,19 @@ serve(async (req) => {
       triggers,
     };
 
-    // Save to user_preferences for injection into coach prompts
+    // Merge with existing data to preserve coach_name and other settings
+    const { data: existingPref } = await sb
+      .from("user_preferences")
+      .select("data")
+      .eq("profile_id", teacherProfileId)
+      .maybeSingle();
+    const existingData = (existingPref?.data as Record<string, unknown>) || {};
+    const mergedData = { ...existingData, teacherBehavior: behaviorData };
+
     await sb.from("user_preferences").upsert({
       profile_id: teacherProfileId,
       role: "docente",
-      data: { teacherBehavior: behaviorData },
+      data: mergedData,
       updated_at: new Date().toISOString(),
     }, { onConflict: "profile_id" });
 
