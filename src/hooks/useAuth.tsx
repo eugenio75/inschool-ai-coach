@@ -19,16 +19,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    let initialResolved = false;
 
+    // 1. Restore session from storage FIRST — this is the authority for initial state
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      initialResolved = true;
       setLoading(false);
+    });
+
+    // 2. Listen for SUBSEQUENT auth changes (sign-in, sign-out, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Skip if getSession hasn't resolved yet to avoid premature null
+      if (!initialResolved) return;
+      setSession(session);
+      setUser(session?.user ?? null);
     });
 
     return () => subscription.unsubscribe();
