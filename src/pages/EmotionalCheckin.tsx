@@ -1,74 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { X, Loader2, Smile, Frown, Minus, Shuffle, Zap, Sun, Moon, AlertTriangle, Star, MessageSquare, ArrowRight, PenLine } from "lucide-react";
+import { X, Loader2, ArrowRight, PenLine, MessageSquare, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { saveEmotionalCheckin } from "@/lib/database";
 import { getChildSession } from "@/lib/childSession";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
-
 const CHECKIN_DATE_KEY = "inschool-last-checkin-date";
-
-// Gender-aware text helper: returns M/F variant based on gender
-function g(gender: string | undefined, male: string, female: string): string {
-  if (gender === "F") return female;
-  if (gender === "M") return male;
-  return `${male}/${female.slice(-1)}`; // fallback: "o/a"
-}
-
-// Question pools - will be gender-adapted at render time
-function getExperienceQuestions() {
-  return [
-    "Oggi c'è stata una cosa che ti ha fatto sorridere oppure una un po' complicata?",
-    "Se ripensi alla giornata, qual è la cosa che ti è rimasta più in testa?",
-    "Oggi c'è stato un momento facile o uno un po' difficile?",
-    "C'è stato qualcosa di bello o di un po' strano oggi?",
-    "Com'è andata la giornata? C'è qualcosa che vuoi raccontarmi?",
-  ];
-}
-
-function getStateQuestions(gender?: string) {
-  const ca = g(gender, "carico", "carica");
-  const sa = g(gender, "scarico", "scarica");
-  const pa = g(gender, "pronto", "pronta");
-  const sta = g(gender, "stanco", "stanca");
-  const tra = g(gender, "tranquillo", "tranquilla");
-  const agi = g(gender, "agitato", "agitata");
-  return [
-    `E adesso come ti senti? Più ${ca} oppure un po' ${sa}?`,
-    "Hai più voglia di partire oppure oggi serve andare piano piano?",
-    `Ti senti ${pa} oppure un po' ${sta} oggi?`,
-    `Come stai in questo momento? ${tra} o un po' ${agi}?`,
-  ];
-}
-
-const optionalQuestions = [
-  "Vuoi raccontarmi qualcosa prima di iniziare?",
-  "Vuoi raccontarmi qualcosa prima di iniziare?",
-];
-
-// Answer options for structured responses
-const experienceAnswers = [
-  { id: "smile", icon: Smile, label: "Qualcosa di bello" },
-  { id: "hard", icon: Frown, label: "Difficile" },
-  { id: "sad", icon: Moon, label: "Un po' triste" },
-  { id: "normal", icon: Minus, label: "Normale" },
-  { id: "mixed", icon: Shuffle, label: "Un po' e un po'" },
-  { id: "excited", icon: Star, label: "Entusiasmante!" },
-  { id: "boring", icon: Minus, label: "Noiosa" },
-];
-
-function getStateAnswers(gender?: string) {
-  return [
-    { id: "charged", icon: Zap, label: g(gender, "Carico!", "Carica!") },
-    { id: "calm", icon: Sun, label: g(gender, "Tranquillo", "Tranquilla") },
-    { id: "tired", icon: Moon, label: `Un po' ${g(gender, "stanco", "stanca")}` },
-    { id: "nervous", icon: AlertTriangle, label: `Un po' ${g(gender, "agitato", "agitata")}` },
-    { id: "curious", icon: Star, label: g(gender, "Curioso", "Curiosa") },
-    { id: "confused", icon: Shuffle, label: g(gender, "Confuso", "Confusa") },
-  ];
-}
 
 export function shouldShowCheckin(): boolean {
   const lastDate = localStorage.getItem(CHECKIN_DATE_KEY);
@@ -81,16 +20,121 @@ export function markCheckinDone() {
   localStorage.setItem(CHECKIN_DATE_KEY, today);
 }
 
+// ─── Profile configs ────────────────────────────────────
+interface MoodOption {
+  id: string;
+  label: string;
+  emoji?: string;
+}
+
+interface ProfileCheckinConfig {
+  moodQuestion: string;
+  moodOptions: MoodOption[];
+  useEmoji: boolean;
+  contextualQuestion: (moodStreak: number) => string | null;
+  freeTextPrompt: string;
+  skipLabel: string;
+}
+
+function getJuniorConfig(): ProfileCheckinConfig {
+  return {
+    moodQuestion: "Com'è la tua energia oggi?",
+    moodOptions: [
+      { id: "great", label: "Benissimo", emoji: "😄" },
+      { id: "good", label: "Bene", emoji: "🙂" },
+      { id: "ok", label: "Così così", emoji: "😐" },
+      { id: "sad", label: "Un po' triste", emoji: "😔" },
+      { id: "tired", label: "Stanco", emoji: "😴" },
+    ],
+    useEmoji: true,
+    contextualQuestion: (moodStreak) =>
+      moodStreak >= 1
+        ? "Ieri sembrava una giornata pesante. Oggi come stai?"
+        : null,
+    freeTextPrompt: "Vuoi raccontarmi qualcosa prima di iniziare?",
+    skipLabel: "Iniziamo",
+  };
+}
+
+function getSuperioriConfig(): ProfileCheckinConfig {
+  return {
+    moodQuestion: "Come stai oggi?",
+    moodOptions: [
+      { id: "focused", label: "Concentrato" },
+      { id: "tired", label: "Stanco" },
+      { id: "pressured", label: "Sotto pressione" },
+      { id: "notgreat", label: "Non benissimo" },
+    ],
+    useEmoji: false,
+    contextualQuestion: (moodStreak) =>
+      moodStreak >= 1
+        ? "Ieri sembrava una giornata pesante. Come stai adesso?"
+        : null,
+    freeTextPrompt: "Vuoi dirmi qualcosa prima di iniziare?",
+    skipLabel: "Inizia",
+  };
+}
+
+function getUniversityConfig(): ProfileCheckinConfig {
+  return {
+    moodQuestion: "Come stai?",
+    moodOptions: [
+      { id: "good", label: "Bene" },
+      { id: "tired", label: "Stanco" },
+      { id: "distracted", label: "Distratto" },
+      { id: "notgreat", label: "Non benissimo" },
+    ],
+    useEmoji: false,
+    contextualQuestion: (moodStreak) =>
+      moodStreak >= 3
+        ? "Nelle ultime settimane sembra esserci qualcosa che pesa. Tutto ok?"
+        : null,
+    freeTextPrompt: "",
+    skipLabel: "Continua",
+  };
+}
+
+function getConfigForLevel(schoolLevel: string | undefined): ProfileCheckinConfig {
+  switch (schoolLevel) {
+    case "superiori":
+      return getSuperioriConfig();
+    case "universitario":
+      return getUniversityConfig();
+    case "alunno":
+    case "medie":
+    default:
+      return getJuniorConfig();
+  }
+}
+
+// Map mood option IDs to emotional_tone / energy_level
+function deriveToneAndEnergy(moodId: string): {
+  emotional_tone: "positive" | "neutral" | "low";
+  energy_level: "high" | "medium" | "low";
+  signals: string[];
+} {
+  const map: Record<string, { emotional_tone: "positive" | "neutral" | "low"; energy_level: "high" | "medium" | "low"; signals: string[] }> = {
+    great: { emotional_tone: "positive", energy_level: "high", signals: [] },
+    good: { emotional_tone: "positive", energy_level: "medium", signals: [] },
+    ok: { emotional_tone: "neutral", energy_level: "medium", signals: [] },
+    sad: { emotional_tone: "low", energy_level: "medium", signals: ["sadness_reported"] },
+    tired: { emotional_tone: "neutral", energy_level: "low", signals: ["low_energy"] },
+    focused: { emotional_tone: "positive", energy_level: "high", signals: [] },
+    pressured: { emotional_tone: "low", energy_level: "medium", signals: ["anxiety"] },
+    notgreat: { emotional_tone: "low", energy_level: "low", signals: ["distress_combined"] },
+    distracted: { emotional_tone: "neutral", energy_level: "medium", signals: ["difficulty_reported"] },
+  };
+  return map[moodId] || { emotional_tone: "neutral", energy_level: "medium", signals: [] };
+}
+
 const EmotionalCheckin = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState<{ question: string; answer: string; answerId: string }[]>([]);
+  const [moodAnswer, setMoodAnswer] = useState<{ id: string; label: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [freeText, setFreeText] = useState("");
-  const [customAnswer0, setCustomAnswer0] = useState("");
-  const [customAnswer1, setCustomAnswer1] = useState("");
-  const [showCustom0, setShowCustom0] = useState(false);
-  const [showCustom1, setShowCustom1] = useState(false);
+  const [customAnswer, setCustomAnswer] = useState("");
+  const [showCustom, setShowCustom] = useState(false);
   const [moodStreak, setMoodStreak] = useState(0);
 
   const childSession = getChildSession();
@@ -102,13 +146,14 @@ const EmotionalCheckin = () => {
       return null;
     }
   }, []);
+
   const name = childSession?.profile?.name || savedProfile?.name || "campione";
-  const gender = (childSession?.profile?.gender || savedProfile?.gender) as string | undefined;
+  const schoolLevel = (childSession?.profile?.school_level || savedProfile?.school_level) as string | undefined;
   const profileId = childSession?.profileId || savedProfile?.id;
 
-  const stateAnswers = useMemo(() => getStateAnswers(gender), [gender]);
+  const config = useMemo(() => getConfigForLevel(schoolLevel), [schoolLevel]);
 
-  // Load mood_streak from user_preferences
+  // Load mood_streak
   useEffect(() => {
     if (!profileId) return;
     import("@/integrations/supabase/client").then(({ supabase }) => {
@@ -123,25 +168,29 @@ const EmotionalCheckin = () => {
     });
   }, [profileId]);
 
-  // Pick today's questions based on day-of-year for rotation
-  const { q1, q2, q3 } = useMemo(() => {
-    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-    const expQ = getExperienceQuestions();
-    const stQ = getStateQuestions(gender);
-    // Adaptive question for mood_streak >= 3
-    const adaptiveQ2 = moodStreak >= 3
-      ? "Sembra una settimana un po' pesante. Oggi come stai?"
-      : stQ[dayOfYear % stQ.length];
-    return {
-      q1: expQ[dayOfYear % expQ.length],
-      q2: adaptiveQ2,
-      q3: optionalQuestions[dayOfYear % optionalQuestions.length],
-    };
-  }, [gender, moodStreak]);
+  // Steps: 0 = mood, 1 = contextual (optional, auto-skipped), 2 = free text
+  const contextualQ = useMemo(() => config.contextualQuestion(moodStreak), [config, moodStreak]);
+  const hasContextual = !!contextualQ;
+  // Determine actual step count: mood → (contextual?) → free text
+  const totalSteps = hasContextual ? 3 : 2;
 
-  const handleAnswer = (question: string, answerId: string, label: string) => {
-    setAnswers(prev => [...prev, { question, answer: label, answerId }]);
-    setStep(prev => prev + 1);
+  const handleMoodSelect = (opt: MoodOption) => {
+    setMoodAnswer(opt);
+    if (hasContextual) {
+      setStep(1);
+    } else {
+      setStep(2);
+    }
+  };
+
+  const handleCustomMood = () => {
+    if (!customAnswer.trim()) return;
+    setMoodAnswer({ id: "custom", label: customAnswer.trim() });
+    if (hasContextual) {
+      setStep(1);
+    } else {
+      setStep(2);
+    }
   };
 
   const handleSkip = async () => {
@@ -152,47 +201,33 @@ const EmotionalCheckin = () => {
   const handleFinish = async () => {
     setSaving(true);
     try {
-      // Determine emotional tone and energy from answers
-      const expAnswer = answers.find(a => experienceAnswers.some(e => e.id === a.answerId));
-      const stateAnswer = answers.find(a => stateAnswers.some(s => s.id === a.answerId));
-
-      let emotionalTone: "positive" | "neutral" | "low" = "neutral";
-      if (expAnswer?.answerId === "smile") emotionalTone = "positive";
-      else if (expAnswer?.answerId === "hard" || expAnswer?.answerId === "sad") emotionalTone = "low";
-
-      let energyLevel: "high" | "medium" | "low" = "medium";
-      if (stateAnswer?.answerId === "charged") energyLevel = "high";
-      else if (stateAnswer?.answerId === "tired") energyLevel = "low";
-
-      // Detect signals
-      const signals: string[] = [];
-      if (expAnswer?.answerId === "hard") signals.push("difficulty_reported");
-      if (stateAnswer?.answerId === "tired") signals.push("low_energy");
-      if (stateAnswer?.answerId === "nervous") signals.push("anxiety");
-      if (emotionalTone === "low" && energyLevel === "low") signals.push("distress_combined");
+      const { emotional_tone, energy_level, signals } = moodAnswer
+        ? deriveToneAndEnergy(moodAnswer.id)
+        : { emotional_tone: "neutral" as const, energy_level: "medium" as const, signals: [] as string[] };
 
       const allResponses = [
-        ...answers.map(a => ({ question: a.question, answer: a.answer, answerId: a.answerId })),
-        ...(freeText ? [{ question: q3, answer: freeText, answerId: "free_text" }] : []),
+        { question: config.moodQuestion, answer: moodAnswer?.label || "skipped", answerId: moodAnswer?.id || "skipped" },
+        ...(freeText ? [{ question: config.freeTextPrompt || "Spazio libero", answer: freeText, answerId: "free_text" }] : []),
       ];
 
       await saveEmotionalCheckin({
         responses: allResponses,
-        emotional_tone: emotionalTone,
-        energy_level: energyLevel,
+        emotional_tone,
+        energy_level,
         signals,
       });
 
       markCheckinDone();
     } catch (err) {
       console.error("Failed to save check-in:", err);
-      markCheckinDone(); // Don't block the child
+      markCheckinDone();
     } finally {
       navigate("/dashboard", { replace: true });
     }
   };
 
-  // Step 2 (free text) is always shown to give the student a chance to write
+  // Determine which visual step we're on for progress dots
+  const progressStep = step === 0 ? 0 : step >= 2 ? (totalSteps - 1) : 1;
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center px-6">
@@ -205,6 +240,7 @@ const EmotionalCheckin = () => {
       </button>
 
       <AnimatePresence mode="wait">
+        {/* STEP 0 — Mood question */}
         {step === 0 && (
           <motion.div
             key="step0"
@@ -214,65 +250,68 @@ const EmotionalCheckin = () => {
             transition={spring}
             className="max-w-sm w-full text-center"
           >
-           <motion.div
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6"
-            >
-              <Smile className="w-8 h-8 text-primary" />
-            </motion.div>
             <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-2">
               Ciao {name}!
             </h2>
             <p className="text-muted-foreground mb-8 text-sm">
-              {q1}
+              {config.moodQuestion}
             </p>
-            <div className="grid grid-cols-2 gap-3">
-              {experienceAnswers.map((opt) => (
+
+            <div className={`grid ${config.useEmoji ? "grid-cols-1 gap-3" : "grid-cols-2 gap-3"}`}>
+              {config.moodOptions.map((opt) => (
                 <button
                   key={opt.id}
-                  onClick={() => handleAnswer(q1, opt.id, opt.label)}
-                  className="flex flex-col items-center gap-2 px-4 py-3 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all"
+                  onClick={() => handleMoodSelect(opt)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all ${
+                    config.useEmoji ? "justify-start" : "justify-center flex-col gap-2"
+                  }`}
                 >
-                  <opt.icon className="w-5 h-5 text-primary" />
-                  <span className="text-xs font-medium text-foreground">{opt.label}</span>
+                  {config.useEmoji && opt.emoji && (
+                    <span className="text-2xl">{opt.emoji}</span>
+                  )}
+                  <span className="text-sm font-medium text-foreground">{opt.label}</span>
                 </button>
               ))}
               <button
-                onClick={() => setShowCustom0(true)}
-                className={`flex flex-col items-center gap-2 px-4 py-3 rounded-2xl border transition-all ${showCustom0 ? 'border-primary bg-primary/5' : 'border-border bg-card hover:bg-muted hover:border-primary/30'}`}
+                onClick={() => setShowCustom(true)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${
+                  showCustom ? "border-primary bg-primary/5" : "border-border bg-card hover:bg-muted hover:border-primary/30"
+                } ${config.useEmoji ? "justify-start" : "justify-center flex-col gap-2"}`}
               >
                 <PenLine className="w-5 h-5 text-primary" />
-                <span className="text-xs font-medium text-foreground">Altro...</span>
+                <span className="text-sm font-medium text-foreground">Altro...</span>
               </button>
             </div>
-            {showCustom0 && (
+
+            {showCustom && (
               <div className="mt-3 flex gap-2">
                 <input
                   type="text"
-                  value={customAnswer0}
-                  onChange={(e) => setCustomAnswer0(e.target.value)}
+                  value={customAnswer}
+                  onChange={(e) => setCustomAnswer(e.target.value)}
                   placeholder="Scrivi come ti senti..."
                   className="flex-1 rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                   autoFocus
                 />
                 <Button
                   size="sm"
-                  disabled={!customAnswer0.trim()}
-                  onClick={() => handleAnswer(q1, "custom", customAnswer0.trim())}
+                  disabled={!customAnswer.trim()}
+                  onClick={handleCustomMood}
                   className="rounded-2xl px-4"
                 >
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
             )}
+
             <button onClick={handleSkip} className="mt-6 text-xs text-muted-foreground hover:text-foreground">
               Salta per oggi
             </button>
           </motion.div>
         )}
 
-        {step === 1 && (
+        {/* STEP 1 — Contextual question (only if hasContextual) */}
+        {step === 1 && hasContextual && (
           <motion.div
             key="step1"
             initial={{ opacity: 0, y: 20 }}
@@ -281,58 +320,29 @@ const EmotionalCheckin = () => {
             transition={spring}
             className="max-w-sm w-full text-center"
           >
-            <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-6"><Star className="w-7 h-7 text-accent-foreground" /></div>
-            <h2 className="font-display text-lg sm:text-xl font-bold text-foreground mb-2">
-              Perfetto!
-            </h2>
-            <p className="text-muted-foreground mb-8 text-sm">
-              {q2}
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              {stateAnswers.map((opt) => (
-                <button
-                  key={opt.id}
-                  onClick={() => handleAnswer(q2, opt.id, opt.label)}
-                  className="flex flex-col items-center gap-2 px-4 py-3 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all"
-                >
-                  <opt.icon className="w-5 h-5 text-primary" />
-                  <span className="text-xs font-medium text-foreground">{opt.label}</span>
-                </button>
-              ))}
-              <button
-                onClick={() => setShowCustom1(true)}
-                className={`flex flex-col items-center gap-2 px-4 py-3 rounded-2xl border transition-all ${showCustom1 ? 'border-primary bg-primary/5' : 'border-border bg-card hover:bg-muted hover:border-primary/30'}`}
-              >
-                <PenLine className="w-5 h-5 text-primary" />
-                <span className="text-xs font-medium text-foreground">Altro...</span>
-              </button>
+            <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-6">
+              <Star className="w-7 h-7 text-accent-foreground" />
             </div>
-            {showCustom1 && (
-              <div className="mt-3 flex gap-2">
-                <input
-                  type="text"
-                  value={customAnswer1}
-                  onChange={(e) => setCustomAnswer1(e.target.value)}
-                  placeholder="Scrivi come ti senti..."
-                  className="flex-1 rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  autoFocus
-                />
-                <Button
-                  size="sm"
-                  disabled={!customAnswer1.trim()}
-                  onClick={() => handleAnswer(q2, "custom", customAnswer1.trim())}
-                  className="rounded-2xl px-4"
-                >
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
-            <button onClick={handleSkip} className="mt-6 text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <p className="text-muted-foreground mb-8 text-sm">{contextualQ}</p>
+            <textarea
+              value={freeText}
+              onChange={(e) => setFreeText(e.target.value)}
+              placeholder="Scrivi qui se ti va..."
+              className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-20 mb-4"
+            />
+            <Button
+              onClick={() => setStep(2)}
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl py-5"
+            >
+              Avanti <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
+            <button onClick={() => setStep(2)} className="mt-4 text-xs text-muted-foreground hover:text-foreground">
               Salta →
             </button>
           </motion.div>
         )}
 
+        {/* STEP 2 — Free text */}
         {step === 2 && (
           <motion.div
             key="step2"
@@ -342,49 +352,46 @@ const EmotionalCheckin = () => {
             transition={spring}
             className="max-w-sm w-full text-center"
           >
-            <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-6"><MessageSquare className="w-7 h-7 text-muted-foreground" /></div>
-            <h2 className="font-display text-lg font-bold text-foreground mb-2">
-              Un'ultima cosa...
-            </h2>
-            <p className="text-muted-foreground mb-6 text-sm">
-              {q3}
-            </p>
+            <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-6">
+              <MessageSquare className="w-7 h-7 text-muted-foreground" />
+            </div>
+            {config.freeTextPrompt ? (
+              <>
+                <h2 className="font-display text-lg font-bold text-foreground mb-2">
+                  Un'ultima cosa...
+                </h2>
+                <p className="text-muted-foreground mb-6 text-sm">{config.freeTextPrompt}</p>
+              </>
+            ) : (
+              <h2 className="font-display text-lg font-bold text-foreground mb-6">
+                Qualcosa da aggiungere?
+              </h2>
+            )}
             <textarea
               value={freeText}
               onChange={(e) => setFreeText(e.target.value)}
-              placeholder="Scrivi qui se ti va... (facoltativo)"
+              placeholder={config.freeTextPrompt ? "Scrivi qui se ti va... (facoltativo)" : "Scrivi qui..."}
               className="w-full rounded-2xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none h-24 mb-4"
             />
             <Button
               onClick={handleFinish}
               disabled={saving}
-              className="w-full bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl py-5"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl py-5"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              {freeText ? "Invia e inizia!" : "Continua"} <ArrowRight className="w-4 h-4 ml-1" />
+              {config.skipLabel} <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
-          </motion.div>
-        )}
-
-        {saving && step > 2 && (
-          <motion.div
-            key="saving"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center"
-          >
-            <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" />
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Progress dots */}
       <div className="absolute bottom-8 flex gap-2">
-        {[0, 1, 2].map((i) => (
+        {Array.from({ length: totalSteps }).map((_, i) => (
           <div
             key={i}
             className={`w-2 h-2 rounded-full transition-colors ${
-              i <= step ? "bg-primary" : "bg-muted"
+              i <= progressStep ? "bg-primary" : "bg-muted"
             }`}
           />
         ))}
