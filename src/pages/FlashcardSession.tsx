@@ -452,9 +452,15 @@ export default function FlashcardSession() {
     setCurrentIndex(prev => prev + 1);
   }
 
-  function finishSession() {
+  async function finishSession() {
     playCelebrationSound();
     setDone(true);
+    try {
+      const { autoCompleteMissions } = await import("@/lib/database");
+      await autoCompleteMissions(["review_weak_concept", "review_concept", "study_session"]);
+    } catch (err) {
+      console.error("Mission completion error:", err);
+    }
   }
 
   function triggerCoachIntervention(card: Flashcard) {

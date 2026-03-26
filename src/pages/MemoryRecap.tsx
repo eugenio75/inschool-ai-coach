@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { MathText } from "@/components/shared/MathText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getMemoryItems, updateMemoryStrength, getDailyMissions, completeMission } from "@/lib/database";
+import { getMemoryItems, updateMemoryStrength, getDailyMissions, completeMission, autoCompleteMissions } from "@/lib/database";
 import { subjectColors } from "@/lib/mockData";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 
@@ -431,6 +431,7 @@ correct è l'indice (0-3) della risposta giusta.`,
   const nextQuestion = () => {
     if (currentQ + 1 >= questions.length) {
       setDone(true);
+      autoCompleteMissions(["review_weak_concept", "review_concept", "study_session"]).catch(() => {});
     } else {
       setCurrentQ(q => q + 1);
       setSelected(null);
@@ -651,6 +652,7 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
   const nextItem = () => {
     if (currentIdx + 1 >= gameItems.length) {
       setDone(true);
+      autoCompleteMissions(["review_weak_concept", "review_concept", "study_session"]).catch(() => {});
     } else {
       setCurrentIdx(i => i + 1);
       setAnswered(false);

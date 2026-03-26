@@ -429,7 +429,24 @@ export async function completeMission(missionId: string, pointsReward: number) {
   }
 }
 
-// ============ EMOTIONAL CHECKINS ============
+/**
+ * Auto-complete matching missions by type.
+ * Call after a study action (flashcards, review, session, etc.)
+ */
+export async function autoCompleteMissions(matchTypes: string[]) {
+  try {
+    const missions = await getDailyMissions();
+    for (const mission of missions) {
+      if (mission.completed) continue;
+      if (matchTypes.includes(mission.mission_type)) {
+        await completeMission(mission.id, mission.points_reward);
+      }
+    }
+  } catch (err) {
+    console.error("autoCompleteMissions error:", err);
+  }
+}
+
 
 export async function saveEmotionalCheckin(checkin: {
   responses: any[];
