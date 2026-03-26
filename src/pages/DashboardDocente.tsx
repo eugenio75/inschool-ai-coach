@@ -28,7 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { streamChat, type ChatMsg } from "@/lib/streamChat";
+
 
 function getGreeting(): string {
   const h = new Date().getHours();
