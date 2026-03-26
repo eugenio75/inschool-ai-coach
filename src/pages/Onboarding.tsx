@@ -106,12 +106,12 @@ const summaryValueClass = "font-medium text-foreground";
 
 function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
     const navigate = useNavigate();
-    const [step, setStep] = useState(initialStep);
+    const totalSteps = role === "docente" ? 4 : 8;
+    const [step, setStep] = useState(Math.min(initialStep, totalSteps - 1));
     const [answers, setAnswers] = useState<any>(initialData || {});
     const [direction, setDirection] = useState(1);
     const [saving, setSaving] = useState(false);
     const locationInputRef = useRef<HTMLInputElement>(null);
-    const totalSteps = 8;
 
     useEffect(() => {
         let autocomplete: any = null;
@@ -198,9 +198,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             if (step === 4) return (answers.serve_ai || []).length > 0;
         } else if (role === "docente") {
             if (step === 1) return answers.docente_ordine && (answers.docente_materie || []).length > 0;
-            if (step === 2) return answers.docente_studenti;
-            if (step === 3) return (answers.docente_uso || []).length > 0;
-            if (step === 4) return (answers.docente_auto || []).length > 0;
+            return true;
         }
         return true; 
     };
@@ -623,42 +621,55 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             }
         };
 
+        const docenteMaterie = ["Matematica","Fisica","Chimica","Italiano","Latino","Greco","Storia","Filosofia","Inglese","Francese","Spagnolo","Tedesco","Informatica","Scienze","Arte","Musica","Educazione Fisica","Educazione Civica","Diritto","Economia","Geografia","Religione","Tecnologia"];
+
         switch (step) {
             case 0:
               return (
-                <div className="text-center w-full">
-                    <h2 className="text-3xl font-bold text-foreground mb-2">Benvenuto Docente</h2>
-                    <p className="text-muted-foreground mb-8">Il tuo assistente didattico intelligente</p>
-                    <div className="w-24 h-24 mx-auto bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4"><Users className="w-12 h-12" /></div>
+                <div className="text-center w-full space-y-6">
+                    <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
+                      <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
+                    </div>
+                    <h2 className="text-2xl font-bold text-foreground">Ciao, sono il tuo assistente didattico.</h2>
+                    <p className="text-muted-foreground text-sm max-w-md mx-auto">
+                      Ti aiuto a preparare materiali, seguire le tue classi e lavorare con più chiarezza ogni giorno. Più mi conosci, più divento utile. Iniziamo con qualche domanda per capire come lavori.
+                    </p>
+                    <div className="grid grid-cols-3 gap-4 mt-6">
+                      <div className="flex flex-col items-center text-center p-4 rounded-2xl border border-border bg-muted/30">
+                        <span className="text-2xl mb-2">📚</span>
+                        <p className="text-xs font-medium text-foreground">Preparo materiali su misura per le tue classi</p>
+                      </div>
+                      <div className="flex flex-col items-center text-center p-4 rounded-2xl border border-border bg-muted/30">
+                        <span className="text-2xl mb-2">👥</span>
+                        <p className="text-xs font-medium text-foreground">Seguo i progressi dei tuoi studenti con te</p>
+                      </div>
+                      <div className="flex flex-col items-center text-center p-4 rounded-2xl border border-border bg-muted/30">
+                        <span className="text-2xl mb-2">🤝</span>
+                        <p className="text-xs font-medium text-foreground">Sono qui anche quando la giornata è pesante</p>
+                      </div>
+                    </div>
                 </div>
               );
             case 1:
-              const docenteMaterie = ["Matematica", "Fisica", "Chimica", "Italiano", "Latino", "Greco", "Storia", "Filosofia", "Inglese", "Francese", "Spagnolo", "Tedesco", "Informatica", "Scienze", "Arte", "Musica", "Educazione Fisica", "Educazione Civica", "Diritto", "Economia", "Geografia", "Religione", "Tecnologia"];
-              const regioni = ["Abruzzo","Basilicata","Calabria","Campania","Emilia-Romagna","Friuli Venezia Giulia","Lazio","Liguria","Lombardia","Marche","Molise","Piemonte","Puglia","Sardegna","Sicilia","Toscana","Trentino-Alto Adige","Umbria","Valle d'Aosta","Veneto"];
               return (
                 <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Il tuo ruolo</h2>
+                    <h2 className="text-2xl font-bold text-foreground">Dati essenziali</h2>
                     <div className="space-y-4">
-                       <select value={answers.docente_ordine || ""} onChange={e => setAnswers({...answers, docente_ordine: e.target.value})} className={inputClass}>
-                          <option value="" disabled>Ordine scolastico</option>
-                          {["Scuola Primaria", "Scuola Secondaria I grado", "Scuola Secondaria II grado", "Università", "Formazione Professionale"].map(a => <option key={a} value={a}>{a}</option>)}
-                       </select>
-                       <input ref={locRef} type="text" placeholder="Nome Istituto" className={inputClass} defaultValue={answers.docente_istituto || ""} />
-                       <select value={answers.docente_regione || ""} onChange={e => setAnswers({...answers, docente_regione: e.target.value})} className={inputClass}>
-                          <option value="" disabled>Regione</option>
-                          {regioni.map(r => <option key={r} value={r}>{r}</option>)}
-                       </select>
-                       <input type="text" placeholder="Provincia" value={answers.docente_provincia || ""} onChange={e => setAnswers({...answers, docente_provincia: e.target.value})} className={inputClass} />
-                       <input type="text" placeholder="Città" value={answers.docente_citta || ""} onChange={e => setAnswers({...answers, docente_citta: e.target.value})} className={inputClass} />
+                       <div>
+                         <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Ordine scolastico</label>
+                         <select value={answers.docente_ordine || ""} onChange={e => setAnswers({...answers, docente_ordine: e.target.value})} className={inputClass}>
+                            <option value="" disabled>Seleziona</option>
+                            {["Primaria", "Secondaria I grado", "Secondaria II grado", "Università", "Formazione Professionale"].map(a => <option key={a} value={a}>{a}</option>)}
+                         </select>
+                       </div>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-foreground mb-2">Le tue materie (max 5)</p>
+                      <p className="text-sm font-semibold text-foreground mb-2">Le tue materie (max 5, almeno 1 obbligatoria)</p>
                       <div className="flex flex-wrap gap-2">
                         {docenteMaterie.map((m: string) => {
                           const isSel = (answers.docente_materie || []).includes(m);
                           return <button key={m} onClick={() => toggleMax("docente_materie", m, 5)} className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${isSel ? chipSelClass : chipUnselClass}`}>{m}</button>;
                         })}
-                        {/* Custom materie added by user */}
                         {(answers.docente_materie || []).filter((m: string) => !docenteMaterie.includes(m)).map((m: string) => (
                           <button key={m} onClick={() => toggleMax("docente_materie", m, 5)} className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${chipSelClass}`}>{m}</button>
                         ))}
@@ -673,103 +684,23 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             case 2:
               return (
                 <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Quanti studenti gestisci?</h2>
-                    <div className="space-y-3">
-                       {[
-                         { id: "s30", title: "Fino a 30 studenti", icon: Users },
-                         { id: "s100", title: "Da 30 a 100 studenti", icon: Users2 },
-                         { id: "l100", title: "Più di 100 studenti", icon: Building }
-                       ].map(opt => {
-                         const isSel = answers.docente_studenti === opt.id;
-                         return <button key={opt.id} onClick={() => setAnswers({...answers, docente_studenti: opt.id})} className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-6 h-6 mr-4 ${isSel ? selIconClass : unselIconClass}`}/><p className={`font-bold ${isSel ? selTextClass : "text-foreground"}`}>{opt.title}</p></button>
-                       })}
+                    <h2 className="text-2xl font-bold text-foreground">Personalizza il tuo assistente AI</h2>
+                    <p className="text-muted-foreground text-sm">Scegli un nome per il tuo assistente AI</p>
+                    <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
+                      <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
                     </div>
+                    <input type="text" placeholder="Es. Alex, Maya, o lascia il nome di default" value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
+                    <p className="text-xs text-muted-foreground text-center">Puoi cambiarlo quando vuoi dalle impostazioni</p>
                 </div>
               );
             case 3:
               return (
-                <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Cosa usi di più in classe?</h2>
-                    <p className="text-muted-foreground text-sm">Seleziona max 4 opzioni</p>
-                    <div className="grid grid-cols-2 gap-3">
-                       {[
-                         { id: "verifiche", title: "Verifiche scritte", icon: FileText },
-                         { id: "orali", title: "Interrogazioni", icon: Mic },
-                         { id: "progetti", title: "Progetti", icon: FolderOpen },
-                         { id: "compiti", title: "Compiti a casa", icon: Home },
-                         { id: "gruppi", title: "Lavori di gruppo", icon: Users2 },
-                       ].map(opt => {
-                         const isSel = (answers.docente_uso || []).includes(opt.id);
-                         return <button key={opt.id} onClick={() => toggleMax("docente_uso", opt.id, 4)} className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-6 h-6 mb-2 ${isSel ? selIconClass : unselIconClass}`}/><span className={`font-medium text-xs text-center ${isSel ? selTextClass : unselTextClass}`}>{opt.title}</span></button>
-                       })}
-                    </div>
-                </div>
-              );
-            case 4:
-              return (
-                <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Cosa vuoi automatizzare?</h2>
-                    <p className="text-muted-foreground text-sm">Seleziona max 4 opzioni</p>
-                    <div className="grid grid-cols-2 gap-3">
-                       {[
-                         { id: "generare", title: "Generare prove", icon: FilePlus },
-                         { id: "correzione", title: "Correzione auto", icon: CheckSquare },
-                         { id: "statistiche", title: "Statistiche", icon: BarChart2 },
-                         { id: "materiali", title: "Materiali didattici", icon: BookMarked },
-                         { id: "comunicazioni", title: "Comunicazioni", icon: Mail },
-                       ].map(opt => {
-                         const isSel = (answers.docente_auto || []).includes(opt.id);
-                         return <button key={opt.id} onClick={() => toggleMax("docente_auto", opt.id, 4)} className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-6 h-6 mb-2 ${isSel ? selIconClass : unselIconClass}`}/><span className={`font-medium text-xs text-center ${isSel ? selTextClass : unselTextClass}`}>{opt.title}</span></button>
-                       })}
-                    </div>
-                </div>
-              );
-            case 5:
-              return (
-                <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Quali sfide incontri con gli studenti?</h2>
-                    <div className="space-y-3">
-                       {[
-                         { id: "motivazione", title: "Scarsa motivazione" },
-                         { id: "lacune", title: "Lacune diffuse" },
-                         { id: "comportamento", title: "Problemi comportamentali" },
-                         { id: "inclusione", title: "Gestione inclusione/BES" },
-                       ].map(opt => {
-                         const isSel = (answers.sfide_docente || []).includes(opt.id);
-                         return <button key={opt.id} onClick={() => {
-                           const arr = answers.sfide_docente || [];
-                           if (arr.includes(opt.id)) setAnswers({...answers, sfide_docente: arr.filter((x: string) => x !== opt.id)});
-                           else if (arr.length < 3) setAnswers({...answers, sfide_docente: [...arr, opt.id]});
-                         }} className={`w-full text-left p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}>
-                           <p className={`font-bold ${isSel ? selTextClass : "text-foreground"}`}>{opt.title}</p>
-                         </button>;
-                       })}
-                    </div>
-                </div>
-              );
-            case 6:
-              return (
-                <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Dai un nome al tuo assistente AI</h2>
-                    <p className="text-muted-foreground text-sm">Personalizza il nome del coach che ti aiuterà</p>
-                    <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
-                      <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
-                    </div>
-                    <input type="text" placeholder="Es. Assistente, Aria, Coach..." value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
-                </div>
-              );
-            case 7:
-              return (
                 <div className="text-left w-full space-y-6">
                     <h2 className="text-3xl font-bold text-foreground mb-2">Tutto pronto!</h2>
-                    <p className="text-muted-foreground mb-6">Il tuo cruscotto didattico ti attende</p>
+                    <p className="text-muted-foreground mb-6">Puoi modificare queste informazioni in qualsiasi momento dalle impostazioni.</p>
                     <div className={summaryBoxClass}>
-                        <div><span className={summaryLabelClass}>Classe</span><p className={summaryValueClass}>{answers.docente_ordine}</p></div>
-                        {answers.docente_istituto && <div><span className={summaryLabelClass}>Istituto</span><p className={summaryValueClass}>{answers.docente_istituto}</p></div>}
-                        {answers.docente_citta && <div><span className={summaryLabelClass}>Sede</span><p className={summaryValueClass}>{[answers.docente_citta, answers.docente_provincia, answers.docente_regione].filter(Boolean).join(", ")}</p></div>}
+                        <div><span className={summaryLabelClass}>Ordine scolastico</span><p className={summaryValueClass}>{answers.docente_ordine}</p></div>
                         <div><span className={summaryLabelClass}>Materie</span><p className={summaryValueClass}>{(answers.docente_materie || []).join(", ")}</p></div>
-                        <div><span className={summaryLabelClass}>Strumenti usati</span><p className={summaryValueClass}>{(answers.docente_uso || []).join(", ")}</p></div>
-                        <div><span className={summaryLabelClass}>Automazioni IA</span><p className={summaryValueClass}>{(answers.docente_auto || []).join(", ")}</p></div>
                         {answers.coach_name && <div><span className={summaryLabelClass}>Assistente AI</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
                     </div>
                 </div>
@@ -809,7 +740,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     <ArrowLeft className="w-4 h-4 mr-2" /> Indietro
                 </Button>
                 <Button onClick={handleNext} disabled={!canProceed() || saving} className="rounded-xl px-8 font-bold shadow-sm transition-all h-12">
-                    {step === totalSteps - 1 ? (saving ? "Salvataggio..." : "Inizia") : "Avanti"} <ArrowRight className="ml-2 w-4 h-4" />
+                    {step === totalSteps - 1 ? (saving ? "Salvataggio..." : (role === "docente" ? "Entra nella tua dashboard" : "Inizia")) : (step === 0 && role === "docente" ? "Iniziamo" : "Avanti")} <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
             </div>
         </div>

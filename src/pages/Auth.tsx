@@ -83,6 +83,8 @@ const Auth = () => {
   const [age, setAge] = useState("");
   const [schoolName, setSchoolName] = useState("");
   const [locationStr, setLocationStr] = useState("");
+  const [materiaDocente, setMateriaDocente] = useState("");
+  const [ordineDocente, setOrdineDocente] = useState("");
   const [childCode, setChildCode] = useState("");
   const locationInputRef = useRef<HTMLInputElement>(null);
 
@@ -166,9 +168,16 @@ const Auth = () => {
   const handleAdultSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) return;
-    if (!isLogin && (!firstName || !lastName || !age || !locationStr || !schoolName)) {
+    if (!isLogin) {
+      if (role === "docente") {
+        if (!firstName || !lastName || !materiaDocente || !ordineDocente || !schoolName || !locationStr) {
+          toast({ title: "Compila tutti i campi richiesti", variant: "destructive" });
+          return;
+        }
+      } else if (!firstName || !lastName || !age || !locationStr || !schoolName) {
         toast({ title: "Compila tutti i campi richiesti", variant: "destructive" });
         return;
+      }
     }
 
     setLoading(true);
@@ -216,13 +225,19 @@ const Auth = () => {
         if (error) throw error;
 
         // Store signup metadata in localStorage so we can create the profile on first login
-        localStorage.setItem("inschool-signup-meta", JSON.stringify({
+        const meta: any = {
           name: `${firstName} ${lastName}`,
-          age: parseInt(age),
           city: locationStr,
           school_name: schoolName,
           school_level: role,
-        }));
+        };
+        if (role === "docente") {
+          meta.materia_principale = materiaDocente;
+          meta.ordine_scolastico = ordineDocente;
+        } else {
+          meta.age = parseInt(age);
+        }
+        localStorage.setItem("inschool-signup-meta", JSON.stringify(meta));
 
         toast({ title: "Account creato! Controlla la tua email per confermare la registrazione." });
         navigate(`/verify-email?email=${encodeURIComponent(email)}`);
@@ -300,7 +315,7 @@ const Auth = () => {
             {getRoleTitle()}
           </h1>
           <p className="text-sm text-muted-foreground mt-2">
-            {isLogin ? "Inserisci le tue credenziali per accedere" : "Crea il tuo profilo accademico in pochi secondi"}
+            {isLogin ? "Inserisci le tue credenziali per accedere" : (role === "docente" ? "Crea il tuo spazio di lavoro — classi, materiali e supporto in un unico posto." : "Crea il tuo profilo accademico in pochi secondi")}
           </p>
         </div>
 
@@ -373,36 +388,68 @@ const Auth = () => {
                             </div>
                         </div>
 
-                        <div>
-                            <label className={labelSmClass}>Nome Istituto / Università</label>
-                            <div className="relative">
+                        {role === "docente" ? (
+                          <>
+                            <div>
+                              <label className={labelSmClass}>Materia principale</label>
+                              <select required value={materiaDocente} onChange={e => setMateriaDocente(e.target.value)}
+                                className="w-full px-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-foreground focus:border-primary transition-colors">
+                                <option value="" disabled>Seleziona materia</option>
+                                {["Matematica","Fisica","Chimica","Italiano","Latino","Greco","Storia","Filosofia","Inglese","Francese","Spagnolo","Tedesco","Informatica","Scienze","Arte","Musica","Educazione Fisica","Educazione Civica","Diritto","Economia","Geografia","Religione","Tecnologia"].map(m => <option key={m} value={m}>{m}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label className={labelSmClass}>Ordine scolastico</label>
+                              <select required value={ordineDocente} onChange={e => setOrdineDocente(e.target.value)}
+                                className="w-full px-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-foreground focus:border-primary transition-colors">
+                                <option value="" disabled>Seleziona ordine</option>
+                                {["Primaria","Secondaria I grado","Secondaria II grado","Università","Formazione Professionale"].map(o => <option key={o} value={o}>{o}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label className={labelSmClass}>Nome Istituto</label>
+                              <div className="relative">
+                                <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <input required value={schoolName} onChange={e => setSchoolName(e.target.value)} placeholder="Es. Liceo Da Vinci"
+                                  className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-foreground placeholder-muted-foreground focus:border-primary transition-colors" />
+                              </div>
+                            </div>
+                            <div>
+                              <label className={labelSmClass}>Città</label>
+                              <div className="relative">
+                                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                <input ref={locationInputRef} required type="text" placeholder="Ricerca..." onChange={e => setLocationStr(e.target.value)}
+                                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-foreground placeholder-muted-foreground focus:border-primary transition-colors" />
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div>
+                              <label className={labelSmClass}>Nome Istituto / Università</label>
+                              <div className="relative">
                                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <input required value={schoolName} onChange={e => setSchoolName(e.target.value)} placeholder="Es. Liceo Da Vinci / La Sapienza"
-                                    className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-foreground placeholder-muted-foreground focus:border-primary transition-colors" />
+                                  className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-foreground placeholder-muted-foreground focus:border-primary transition-colors" />
+                              </div>
                             </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-3">
-                            <div className="col-span-1">
+                            <div className="grid grid-cols-3 gap-3">
+                              <div className="col-span-1">
                                 <label className={labelSmClass}>Età</label>
                                 <input required type="number" min="14" max="99" value={age} onChange={e => setAge(e.target.value)} placeholder="Anni"
-                                    className="w-full px-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-center text-foreground placeholder-muted-foreground focus:border-primary transition-colors" />
-                            </div>
-                            <div className="col-span-2">
+                                  className="w-full px-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-center text-foreground placeholder-muted-foreground focus:border-primary transition-colors" />
+                              </div>
+                              <div className="col-span-2">
                                 <label className={labelSmClass}>Città</label>
                                 <div className="relative">
-                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                                    <input
-                                        ref={locationInputRef}
-                                        className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-foreground placeholder-muted-foreground focus:border-primary transition-colors"
-                                        placeholder="Ricerca..."
-                                        required
-                                        type="text"
-                                        onChange={(e) => setLocationStr(e.target.value)}
-                                    />
+                                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                  <input ref={locationInputRef} required type="text" placeholder="Ricerca..." onChange={e => setLocationStr(e.target.value)}
+                                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-foreground placeholder-muted-foreground focus:border-primary transition-colors" />
                                 </div>
+                              </div>
                             </div>
-                        </div>
+                          </>
+                        )}
                         </>
                     )}
 
