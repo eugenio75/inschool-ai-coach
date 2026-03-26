@@ -37,16 +37,22 @@ const DashboardAlunno = () => {
     if (!profileId && !isChild) { navigate("/profiles"); return; }
 
     const load = async () => {
+      let currentProfile: any = null;
       if (isChild) {
-        const session = getChildSession();
-        if (session) setProfile(session.profile);
+        const sess = getChildSession();
+        if (sess) { currentProfile = sess.profile; setProfile(currentProfile); }
       } else {
         const p = await getChildProfile(profileId!);
-        if (p) setProfile(p);
+        if (p) { currentProfile = p; setProfile(p); }
         else {
           const saved = localStorage.getItem("inschool-profile");
-          if (saved) try { setProfile(JSON.parse(saved)); } catch {}
+          if (saved) try { currentProfile = JSON.parse(saved); setProfile(currentProfile); } catch {}
         }
+      }
+      if (currentProfile?.school_level === "alunno" && profileId) {
+        const { data } = await supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
+        const prefs = (data?.data as any) || {};
+        setShowLibrary(!!prefs.show_library);
       }
       const dbTasks = await getTasks();
       setTasks(dbTasks);
