@@ -497,6 +497,7 @@ Inizia con la prima domanda.`;
     return (
       <>
         <ChatShell
+          coachName={coachName}
           title={guided.homework?.title || "Sessione guidata"}
           subtitle={isReadOnly ? `${guided.homework?.subject} · ✅ Completato` : guided.homework?.subject}
           progress={!isReadOnly && (guided.methodPhase === "none" || guided.methodPhase === "ready") ? guided.progressPercent : undefined}
@@ -749,6 +750,7 @@ Inizia con la prima domanda.`;
 
   return (
     <ChatShell
+      coachName={coachName}
       title={topic || subject || getTitle()}
       subtitle={subject && topic ? subject : undefined}
       badgeText={type === "prep" ? (mode === "orale" ? "Orale" : "Scritta") : undefined}
