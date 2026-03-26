@@ -26,20 +26,38 @@ interface CognitiveCardProps {
   insights: any[];
   insightsLoading: boolean;
   memoryItems: any[];
+  schoolLevel?: string;
 }
 
-export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItems }: CognitiveCardProps) => {
+export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItems, schoolLevel = "superiori" }: CognitiveCardProps) => {
   const [expanded, setExpanded] = useState(true);
 
-  // Compute weak concepts
   const weakConcepts = memoryItems.filter(m => (m.strength || 0) < 60);
   const strongConcepts = memoryItems.filter(m => (m.strength || 0) >= 80);
 
-  // Group weak by subject
+  const isMedie = schoolLevel === "medie";
+  const isUniversitario = schoolLevel === "universitario";
+
+  // For medie: limit to 2 weak areas
   const weakBySubject: Record<string, number> = {};
   for (const c of weakConcepts) {
     weakBySubject[c.subject] = (weakBySubject[c.subject] || 0) + 1;
   }
+  const weakEntries = Object.entries(weakBySubject).sort(([, a], [, b]) => b - a);
+  const displayedWeakEntries = isMedie ? weakEntries.slice(0, 2) : weakEntries;
+
+  const cardTitle = isUniversitario ? "Analisi cognitiva" : "Area cognitiva";
+  const cardSubtitle = isMedie
+    ? (weakConcepts.length > 0 ? "Ci sono un paio di cose da rinforzare — niente di grave!" : "Tutto in ordine, continua così!")
+    : isUniversitario
+    ? (weakConcepts.length > 0 ? `${weakConcepts.length} concetti da consolidare — analisi strategica` : "Padronanza solida su tutti i concetti")
+    : (weakConcepts.length > 0 ? `${weakConcepts.length} concett${weakConcepts.length === 1 ? "o" : "i"} da rafforzare` : "Tutto in ordine");
+
+  const insightsLabel = isMedie
+    ? `Suggerimenti per ${childName}`
+    : isUniversitario
+    ? "Strategie di miglioramento"
+    : `Consigli per ${childName}`;
 
   return (
     <motion.div
@@ -57,10 +75,8 @@ export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItem
             <Brain className="w-4 h-4 text-primary" />
           </div>
           <div className="text-left">
-            <h3 className="font-display font-semibold text-foreground text-sm">Area cognitiva</h3>
-            <p className="text-[11px] text-muted-foreground">
-              {weakConcepts.length > 0 ? `${weakConcepts.length} concett${weakConcepts.length === 1 ? "o" : "i"} da rafforzare` : "Tutto in ordine"}
-            </p>
+            <h3 className="font-display font-semibold text-foreground text-sm">{cardTitle}</h3>
+            <p className="text-[11px] text-muted-foreground">{cardSubtitle}</p>
           </div>
         </div>
         <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
@@ -75,28 +91,34 @@ export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItem
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            {/* Concept strength overview */}
+            {/* Concept strength overview — hide percentages for medie */}
             {memoryItems.length > 0 && (
               <div className="mt-4 grid grid-cols-2 gap-2 mb-3">
                 <div className="bg-emerald-500/10 rounded-xl p-3 text-center">
                   <p className="font-display font-bold text-foreground text-lg">{strongConcepts.length}</p>
-                  <p className="text-[10px] text-muted-foreground">Concetti solidi</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {isMedie ? "Cose che sai bene" : "Concetti solidi"}
+                  </p>
                 </div>
                 <div className={`${weakConcepts.length > 0 ? "bg-amber-500/10" : "bg-muted/50"} rounded-xl p-3 text-center`}>
-                  <p className="font-display font-bold text-foreground text-lg">{weakConcepts.length}</p>
-                  <p className="text-[10px] text-muted-foreground">Da rafforzare</p>
+                  <p className="font-display font-bold text-foreground text-lg">{isMedie ? Math.min(2, Object.keys(weakBySubject).length) : weakConcepts.length}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {isMedie ? "Cose da ripassare" : "Da rafforzare"}
+                  </p>
                 </div>
               </div>
             )}
 
             {/* Weak by subject */}
-            {Object.keys(weakBySubject).length > 0 && (
+            {displayedWeakEntries.length > 0 && (
               <div className="mb-3">
-                <p className="text-xs text-muted-foreground mb-2">Lacune per materia</p>
+                <p className="text-xs text-muted-foreground mb-2">
+                  {isMedie ? "Dove puoi migliorare" : "Lacune per materia"}
+                </p>
                 <div className="flex flex-wrap gap-1.5">
-                  {Object.entries(weakBySubject).sort(([, a], [, b]) => b - a).map(([subject, count]) => (
+                  {displayedWeakEntries.map(([subject, count]) => (
                     <span key={subject} className="text-[11px] px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium">
-                      {subject} ({count})
+                      {subject}{!isMedie ? ` (${count})` : ""}
                     </span>
                   ))}
                 </div>
@@ -107,7 +129,7 @@ export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItem
             <div className="border-t border-border pt-3 mt-3">
               <div className="flex items-center gap-1.5 mb-2">
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
-                <p className="text-xs font-medium text-foreground">Consigli per {childName}</p>
+                <p className="text-xs font-medium text-foreground">{insightsLabel}</p>
               </div>
 
               {insightsLoading ? (
