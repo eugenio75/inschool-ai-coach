@@ -240,8 +240,10 @@ export default function CoachDocente() {
     const activeChat = chats.find(c => c.id === (chatId || activeChatId));
     const isClassChat = !!activeChat?.class_id;
     const className = activeChat?.name || "";
+    const subjects = profile?.favorite_subjects || [];
 
     let base = `Sei il coach AI personale di ${profile?.name || "un docente"} su InSchool.
+${subjects.length > 0 ? `Materie insegnate: ${subjects.join(", ")}.` : ""}
 Tono collegiale, efficiente, caldo ma mai paternalistico. Max 2-3 frasi.
 NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contesto e rispondi.`;
 

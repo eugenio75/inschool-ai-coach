@@ -13,7 +13,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { teacherName, teacherProfileId, activeClasses, recentFeed, materialsThisWeek, openVerifications, currentHour, mode, classId, students, materials, verifications, topics } = body;
+    const { teacherName, teacherProfileId, teacherSubjects, activeClasses, recentFeed, materialsThisWeek, openVerifications, currentHour, mode, classId, students, materials, verifications, topics } = body;
 
     // Fetch teacher behavior data from user_preferences if available
     let behaviorContext = "";
@@ -65,6 +65,7 @@ REGOLE LINGUAGGIO:
 Stai rispondendo nella chat della classe ${classId ? "selezionata" : ""}.
 
 CONTESTO CLASSE:
+- Materie insegnate dal docente: ${(teacherSubjects || []).length > 0 ? (teacherSubjects || []).join(", ") : "non specificate"}
 - Studenti: ${JSON.stringify(students || [])}
 - Materiali recenti: ${JSON.stringify(materials || [])}
 - Verifiche: ${JSON.stringify(verifications || [])}
@@ -83,6 +84,7 @@ REGOLA FONDAMENTALE: parla per primo con qualcosa di specifico e contestuale.
 MAI aprire con 'Come posso aiutarti oggi?' o frasi generiche.
 
 Dati reali:
+- Materie insegnate: ${(teacherSubjects || []).length > 0 ? (teacherSubjects || []).join(", ") : "non specificate"}
 - Classi attive: ${JSON.stringify(activeClasses || [])}
 - Feed recente: ${JSON.stringify(recentFeed || [])}
 - Materiali creati questa settimana: ${materialsThisWeek || 0}
