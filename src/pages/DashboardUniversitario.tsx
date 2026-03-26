@@ -448,6 +448,20 @@ export default function DashboardUniversitario() {
           )}
         </section>
 
+        {/* LINK PROGRESSI DETTAGLIATI */}
+        <section className="bg-card border border-border rounded-2xl p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-primary" />
+              <h2 className="font-semibold text-foreground text-sm">Progressi dettagliati</h2>
+            </div>
+            <button onClick={() => navigate("/progress")} className="text-xs text-primary hover:underline font-medium">
+              Vedi analisi →
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">Grafico settimanale, errori per categoria e andamento per esame</p>
+        </section>
+
         {/* CONVERSAZIONI RECENTI */}
         <RecentConversations profileId={profileId} title="Sessioni di studio recenti" />
 
