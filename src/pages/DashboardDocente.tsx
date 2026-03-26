@@ -427,27 +427,48 @@ REGOLE DI RISPOSTA:
                 const alertCount = classFeedMap.get(c.id) || 0;
                 const hasAlert = alertCount > 0;
                 return (
-                  <button
+                  <div
                     key={c.id}
-                    onClick={() => navigate(`/classe/${c.id}`)}
-                    className="bg-card border border-border rounded-xl p-4 text-left hover:shadow-md hover:border-primary/30 transition-all group"
+                    className="bg-card border border-border rounded-xl p-4 text-left hover:shadow-md hover:border-primary/30 transition-all group relative"
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2.5 h-2.5 rounded-full ${hasAlert ? "bg-amber-400" : "bg-emerald-400"}`} />
-                        <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">{c.nome}</span>
+                    <div className="absolute top-2 right-2 z-10">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            onClick={e => e.stopPropagation()}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate(`/classe/${c.id}`)}>
+                            <Pencil className="w-3.5 h-3.5 mr-2" /> Modifica classe
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteTarget(c)}>
+                            <Trash2 className="w-3.5 h-3.5 mr-2" /> Elimina classe
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    <button onClick={() => navigate(`/classe/${c.id}`)} className="w-full text-left">
+                      <div className="flex items-center justify-between mb-1 pr-6">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2.5 h-2.5 rounded-full ${hasAlert ? "bg-amber-400" : "bg-emerald-400"}`} />
+                          <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">{c.nome}</span>
+                        </div>
+                        {hasAlert && (
+                          <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                            {alertCount}
+                          </span>
+                        )}
                       </div>
-                      {hasAlert && (
-                        <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                          {alertCount}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">{c.materia || "–"}</span>
-                      <span className="text-xs text-muted-foreground">{c.num_studenti || 0} studenti</span>
-                    </div>
-                  </button>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">{c.materia || "–"}</span>
+                        <span className="text-xs text-muted-foreground">{c.num_studenti || 0} studenti</span>
+                      </div>
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -589,16 +610,40 @@ REGOLE DI RISPOSTA:
                 onChange={e => setNewClasse(p => ({ ...p, nome: e.target.value }))} className="mt-1" />
             </div>
             <div>
-              <Label>Materia</Label>
-              {materie.length > 0 ? (
-                <Select value={newClasse.materia} onValueChange={v => setNewClasse(p => ({ ...p, materia: v }))}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Seleziona materia" /></SelectTrigger>
-                  <SelectContent>{materie.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-                </Select>
-              ) : (
-                <Input placeholder="es. Matematica" value={newClasse.materia}
-                  onChange={e => setNewClasse(p => ({ ...p, materia: e.target.value }))} className="mt-1" />
-              )}
+              <Label>Materie *</Label>
+              <div className="mt-1 border border-input rounded-lg p-2 min-h-[42px]">
+                <div className="flex flex-wrap gap-1.5 mb-1">
+                  {newClasse.materie.map(m => (
+                    <span key={m} className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium px-2 py-1 rounded-md">
+                      {m}
+                      <button onClick={() => setNewClasse(p => ({ ...p, materie: p.materie.filter(x => x !== m) }))} className="hover:text-destructive">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                {materie.length > 0 ? (
+                  <Select value="" onValueChange={v => {
+                    if (v && !newClasse.materie.includes(v)) setNewClasse(p => ({ ...p, materie: [...p.materie, v] }));
+                  }}>
+                    <SelectTrigger className="border-0 p-0 h-8 shadow-none"><SelectValue placeholder="Aggiungi materia..." /></SelectTrigger>
+                    <SelectContent>{materie.filter(m => !newClasse.materie.includes(m)).map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+                  </Select>
+                ) : (
+                  <Input placeholder="es. Matematica" className="border-0 p-0 h-8 shadow-none"
+                    onKeyDown={e => {
+                      if (e.key === "Enter") {
+                        const v = (e.target as HTMLInputElement).value.trim();
+                        if (v && !newClasse.materie.includes(v)) {
+                          setNewClasse(p => ({ ...p, materie: [...p.materie, v] }));
+                          (e.target as HTMLInputElement).value = "";
+                        }
+                        e.preventDefault();
+                      }
+                    }}
+                  />
+                )}
+              </div>
             </div>
             <div>
               <Label>Ordine scolastico</Label>
@@ -621,7 +666,7 @@ REGOLE DI RISPOSTA:
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowClasseModal(false)}>Annulla</Button>
-            <Button onClick={saveClasse} disabled={!newClasse.nome.trim() || savingClasse}>
+            <Button onClick={saveClasse} disabled={!newClasse.nome.trim() || newClasse.materie.length === 0 || savingClasse}>
               {savingClasse ? "Creazione..." : "Crea classe"}
             </Button>
           </DialogFooter>
