@@ -607,7 +607,7 @@ ${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> __________
                 <Button variant="outline" size="sm" onClick={() => openShare(previewMaterial)}>
                   <Share2 className="w-3.5 h-3.5 mr-1" /> Condividi
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => handleDownloadPdf(previewMaterial)}>
                   <Download className="w-3.5 h-3.5 mr-1" /> Scarica PDF
                 </Button>
                 <Button size="sm" onClick={() => setPreviewMaterial(null)}>Chiudi</Button>
