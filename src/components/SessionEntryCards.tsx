@@ -33,13 +33,15 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
   const profile = getProfile();
   const schoolLevel = profile?.school_level || "superiori";
 
-  const sessions = [
+  const isElementari = schoolLevel === "alunno" || schoolLevel === "elementari";
+
+  const allSessions = [
     {
       id: "guided",
       label: "Studia un compito",
       desc: hasTasks
-        ? "Apri un compito e il coach ti guida passo passo"
-        : "Non hai ancora compiti: aggiungine uno per iniziare",
+        ? isElementari ? "Il coach ti aiuta!" : "Apri un compito e il coach ti guida passo passo"
+        : isElementari ? "Aggiungi un compito per iniziare!" : "Non hai ancora compiti: aggiungine uno per iniziare",
       icon: PenLine,
       color: "bg-primary/10 text-primary",
       iconColor: "text-primary",
@@ -51,6 +53,19 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
             onClick: () => navigate("/add-homework"),
           }
         : null,
+      showFor: "all",
+    },
+    {
+      id: "review",
+      label: "Ripasso",
+      desc: isElementari ? "Rivedi quello che hai imparato" : "Rivedi quello che hai studiato e rafforza la memoria",
+      icon: Brain,
+      color: "bg-clay-light text-clay-dark",
+      iconColor: "text-clay-dark",
+      action: () => navigate("/memory"),
+      disabled: false,
+      extraAction: null,
+      showFor: "all",
     },
     {
       id: "study",
@@ -62,17 +77,7 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
       action: () => navigate("/us?type=study"),
       disabled: false,
       extraAction: null,
-    },
-    {
-      id: "review",
-      label: "Ripasso",
-      desc: "Rivedi quello che hai studiato e rafforza la memoria",
-      icon: Brain,
-      color: "bg-clay-light text-clay-dark",
-      iconColor: "text-clay-dark",
-      action: () => navigate("/memory"),
-      disabled: false,
-      extraAction: null,
+      showFor: "advanced",
     },
     {
       id: "prep",
@@ -84,8 +89,13 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
       action: () => navigate("/us?type=prep"),
       disabled: false,
       extraAction: null,
+      showFor: "advanced",
     },
   ];
+
+  const sessions = isElementari
+    ? allSessions.filter(s => s.showFor === "all")
+    : allSessions;
 
   return (
     <div className="grid grid-cols-2 gap-2.5">

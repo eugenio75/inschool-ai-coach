@@ -68,7 +68,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const role = searchParams.get("role") || "alunno";
-  const adultRoles = ["superiori", "universitario", "docente"];
+  const adultRoles = ["medie", "superiori", "universitario", "docente"];
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   
@@ -149,6 +149,7 @@ const Auth = () => {
 
   const getRoleTitle = () => {
     if (role === "alunno") return isLogin ? "Bentornato Genitore" : "Registrazione Genitore";
+    if (role === "medie") return isLogin ? "Bentornato Studente" : "Registrazione Medie";
     if (role === "superiori") return isLogin ? "Bentornato Studente" : "Registrazione Superiori";
     if (role === "universitario") return isLogin ? "Accesso Universitario" : "Registrazione Universitario";
     if (role === "docente") return isLogin ? "Bentornato Docente" : "Registrazione Docente";
@@ -157,6 +158,7 @@ const Auth = () => {
 
   const getRoleIcon = () => {
     if (role === "alunno") return <Users className="w-8 h-8" />;
+    if (role === "medie") return <BookOpen className="w-8 h-8" />;
     if (role === "superiori") return <BookOpen className="w-8 h-8" />;
     if (role === "universitario") return <GraduationCap className="w-8 h-8" />;
     if (role === "docente") return <Laptop className="w-8 h-8" />;
@@ -209,6 +211,11 @@ const Auth = () => {
         // The child_profile will be created on first login (after email verification).
         if (role === "superiori" && parseInt(age) < 14) {
           toast({ title: "Devi avere almeno 14 anni per registrarti come studente di superiori.", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
+        if (role === "medie" && (parseInt(age) < 11 || parseInt(age) > 14)) {
+          toast({ title: "Il profilo medie è per studenti tra 11 e 14 anni.", variant: "destructive" });
           setLoading(false);
           return;
         }
@@ -385,7 +392,7 @@ const Auth = () => {
                         <div className="grid grid-cols-3 gap-3">
                             <div className="col-span-1">
                                 <label className={labelSmClass}>Età</label>
-                                <input required type="number" min="14" max="99" value={age} onChange={e => setAge(e.target.value)} placeholder="Anni"
+                                <input required type="number" min={role === "medie" ? "11" : "14"} max="99" value={age} onChange={e => setAge(e.target.value)} placeholder="Anni"
                                     className="w-full px-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-center text-foreground placeholder-muted-foreground focus:border-primary transition-colors" />
                             </div>
                             <div className="col-span-2">

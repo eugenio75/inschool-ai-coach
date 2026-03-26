@@ -117,18 +117,21 @@ export default function LandingStudenti() {
             {t("st_new_coach_title")}
           </motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-10">
-            {ageCards.map((card, i) => (
+            {ageCards.map((card, i) => {
+              const roleMap = ["/auth?role=alunno", "/auth?role=medie", "/auth?role=superiori", "/auth?role=universitario"];
+              return (
               <motion.div key={card.title} {...fade} transition={{ delay: i * 0.05 }} className="bg-white border-t-4 rounded-xl p-6 shadow-sm" style={{ borderColor: "#0070C0" }}>
                 <span className="inline-block rounded-full px-3 py-1 text-xs font-semibold mb-3" style={{ backgroundColor: "rgba(0,112,192,0.1)", color: "#0070C0" }}>
                   {t(card.badge)}
                 </span>
                 <h3 className="font-semibold" style={{ color: "#1A3A5C" }}>{t(card.title)}</h3>
                 <p className="text-sm mt-2" style={{ color: "#64748B" }}>{t(card.body)}</p>
-                <Link to="/auth" className="inline-flex items-center gap-1 text-sm font-medium mt-4" style={{ color: "#0070C0" }}>
+                <Link to={roleMap[i]} className="inline-flex items-center gap-1 text-sm font-medium mt-4" style={{ color: "#0070C0" }}>
                   <ArrowRight className="w-3.5 h-3.5" /> {t("profile_cta")}
                 </Link>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
