@@ -8,12 +8,16 @@ interface ProgressCardProps {
   totalMinutes: number;
   totalSessions: number;
   gamification: any;
+  schoolLevel?: string;
 }
 
-export const ProgressCard = ({ totalMinutes, totalSessions, gamification }: ProgressCardProps) => {
+export const ProgressCard = ({ totalMinutes, totalSessions, gamification, schoolLevel = "superiori" }: ProgressCardProps) => {
   const autonomyPercent = gamification
     ? Math.min(100, Math.round(((gamification.autonomy_points || 0) / Math.max(1, (gamification.focus_points || 0) + (gamification.autonomy_points || 0))) * 100))
     : 0;
+
+  const isUniversitario = schoolLevel === "universitario";
+  const title = isUniversitario ? "Efficienza studio" : "Progressi generali";
 
   return (
     <motion.div
@@ -26,17 +30,20 @@ export const ProgressCard = ({ totalMinutes, totalSessions, gamification }: Prog
         <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
           <TrendingUp className="w-4 h-4 text-primary" />
         </div>
-        <h3 className="font-display font-semibold text-foreground text-sm">Progressi generali</h3>
+        <h3 className="font-display font-semibold text-foreground text-sm">{title}</h3>
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="text-center">
-          <div className="flex justify-center mb-1.5">
-            <ProgressSun progress={autonomyPercent / 100} size={36} />
+        {/* Show autonomy for superiori+, hide for medie */}
+        {schoolLevel !== "medie" && (
+          <div className="text-center">
+            <div className="flex justify-center mb-1.5">
+              <ProgressSun progress={autonomyPercent / 100} size={36} />
+            </div>
+            <p className="font-display font-bold text-foreground text-sm">{autonomyPercent}%</p>
+            <p className="text-[10px] text-muted-foreground">Autonomia</p>
           </div>
-          <p className="font-display font-bold text-foreground text-sm">{autonomyPercent}%</p>
-          <p className="text-[10px] text-muted-foreground">Autonomia</p>
-        </div>
+        )}
         <div className="text-center">
           <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center mx-auto mb-1.5">
             <Clock className="w-4 h-4 text-primary" />
@@ -51,9 +58,19 @@ export const ProgressCard = ({ totalMinutes, totalSessions, gamification }: Prog
           <p className="font-display font-bold text-foreground text-sm">{totalSessions}</p>
           <p className="text-[10px] text-muted-foreground">Sessioni</p>
         </div>
+        {/* For medie: show streak instead of autonomy */}
+        {schoolLevel === "medie" && gamification && (
+          <div className="text-center">
+            <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center mx-auto mb-1.5">
+              <Flame className="w-4 h-4 text-primary" />
+            </div>
+            <p className="font-display font-bold text-foreground text-sm">{gamification.streak || 0}</p>
+            <p className="text-[10px] text-muted-foreground">Giorni di fila</p>
+          </div>
+        )}
       </div>
 
-      {gamification && (
+      {gamification && schoolLevel !== "medie" && (
         <div className="border-t border-border pt-3">
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="flex flex-col items-center gap-1">

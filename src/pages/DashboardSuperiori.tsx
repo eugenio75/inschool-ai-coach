@@ -462,9 +462,14 @@ export default function DashboardSuperiori() {
 
         {/* PROGRESSI SETTIMANALI */}
         <section className="bg-card border border-border rounded-2xl p-5">
-          <h2 className="font-semibold text-foreground flex items-center gap-2 mb-4">
-            <BarChart3 className="w-4 h-4 text-primary" /> Progressi questa settimana
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-foreground flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-primary" /> Progressi questa settimana
+            </h2>
+            <button onClick={() => navigate("/progress")} className="text-xs text-primary hover:underline font-medium">
+              Vedi dettagli →
+            </button>
+          </div>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={weekData} barSize={28} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />

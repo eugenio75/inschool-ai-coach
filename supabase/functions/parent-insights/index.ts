@@ -5,36 +5,73 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `Sei un esperto di pedagogia e psicologia dell'apprendimento per bambini e ragazzi.
-Analizzi i dati DETTAGLIATI e REALI di studio di un bambino e fornisci consigli personalizzati ai genitori.
+function getSystemPrompt(schoolLevel: string): string {
+  const baseRules = `Sei un esperto di pedagogia e psicologia dell'apprendimento.
+Analizzi i dati DETTAGLIATI e REALI di studio di uno studente e fornisci consigli personalizzati.
 
 REGOLE FONDAMENTALI:
 - Rispondi SEMPRE in italiano
-- Fornisci esattamente 4 consigli personalizzati basati ESCLUSIVAMENTE sui dati REALI e SPECIFICI che ricevi
 - Ogni consiglio DEVE citare dati concreti: nomi di concetti studiati, materie, emozioni registrate, missioni completate, pattern specifici
-- NON usare le materie preferite/difficili dichiarate dal profilo come base per i consigli — quelle sono solo dichiarazioni iniziali
-- PERÒ, se ci sono materie dichiarate come "difficili" o "non piacevoli", dedica UNO dei 4 consigli a strategie concrete per renderle più attraenti e divertenti per lo studente (gamification, collegamenti con interessi, approcci creativi)
+- NON usare le materie preferite/difficili dichiarate dal profilo come base per i consigli
+- PERÒ, se ci sono materie dichiarate come "difficili" o "non piacevoli", dedica UNO dei 4 consigli a strategie per renderle più attraenti
 - NON inventare mai informazioni che non sono nei dati
 - Se i dati sono pochi, riconosci questo fatto e dai consigli su come costruire un'abitudine di studio regolare
-- Tono: caldo, non giudicante, incoraggiante, pratico
 - NON menzionare mai voti o performance scolastica
-- Concentrati su: autonomia, benessere emotivo, metodo di studio, motivazione
+- NON fare classifiche o confronti con altri studenti
+- Linguaggio sempre costruttivo, mai punitivo
 
 DATI SPECIALI DA ANALIZZARE:
-- SESSIONI ESTESE: se lo studente ha studiato più del tempo previsto, evidenzialo come segnale positivo di motivazione intrinseca
-- MISSIONI E SFIDE: commenta le sfide del coach completate come segnale di impegno ludico-educativo
-- PATTERN EMOTIVI: se noti emozioni ricorrenti (tired, ready, excited, etc.), suggerisci adattamenti concreti
+- SESSIONI ESTESE: se lo studente ha studiato più del tempo previsto, evidenzialo come segnale positivo
+- MISSIONI E SFIDE: commenta le sfide del coach completate
+- PATTERN EMOTIVI: se noti emozioni ricorrenti, suggerisci adattamenti concreti
 - PROGRESSIONE MEMORIA: confronta concetti forti vs deboli per suggerire strategie di consolidamento
-- Se ci sono concetti con forza >= 80, celebrali come successi concreti dello studente
-- Se ci sono concetti con forza < 60, suggerisci strategie specifiche per rafforzarli
-- MATERIE NON PIACEVOLI: se il profilo indica materie difficili/non amate, suggerisci modi creativi per avvicinarsi (giochi, storie, collegamenti con passioni del bambino)
 
 FORMATO RISPOSTA (JSON array di 4 oggetti):
 [
-  { "icon": "lightbulb|eye|message|brain|heart|clock|star", "title": "Titolo breve e specifico", "text": "Consiglio in 2-3 frasi con riferimenti SPECIFICI ai dati reali (nomi concetti, materie, emozioni, missioni)", "category": "metodo|emotivo|autonomia|motivazione" }
+  { "icon": "lightbulb|eye|message|brain|heart|clock|star", "title": "Titolo breve e specifico", "text": "Consiglio in 2-3 frasi con riferimenti SPECIFICI ai dati reali", "category": "metodo|emotivo|autonomia|motivazione" }
 ]
 
 Rispondi SOLO con il JSON array, nient'altro.`;
+
+  switch (schoolLevel) {
+    case "medie":
+      return `${baseRules}
+
+PROFILO STUDENTE: Scuola Media (11-13 anni)
+TONO: Caldo, diretto e incoraggiante. Parla come un mentore amichevole.
+LINGUAGGIO: Semplice, nessun termine tecnico. Frasi chiare e brevi.
+FOCUS: Massimo 2 aree da rinforzare. Non elencare tutti i problemi.
+APPROCCIO: Celebra i successi prima di suggerire miglioramenti. Usa un linguaggio tipo "Stai andando bene in..." prima di "Potresti provare a...".
+NON usare percentuali, metriche tecniche o termini come "autonomia cognitiva", "bloom", "metacognizione".
+Esempio di tono: "Questa settimana hai fatto un ottimo lavoro in matematica. Storia ha bisogno di un po' più di attenzione — il coach ti può aiutare!"`;
+
+    case "superiori":
+      return `${baseRules}
+
+PROFILO STUDENTE: Scuola Superiore (14-18 anni)
+TONO: Diretto e orientato al metodo. Rispetta l'autonomia dello studente.
+LINGUAGGIO: Preciso, usa termini disciplinari quando appropriato.
+FOCUS: Errori ricorrenti con suggerimento concreto su come affrontarli. Progressi di autonomia visibili.
+APPROCCIO: Vai al punto. Suggerisci strategie pratiche di studio. Collega gli errori a strategie specifiche.
+Esempio di tono: "In italiano fai spesso errori di comprensione della consegna — prova a sottolineare i verbi chiave prima di rispondere."`;
+
+    case "universitario":
+      return `${baseRules}
+
+PROFILO STUDENTE: Università
+TONO: Sobrio ed essenziale. Nessun incoraggiamento infantile. Dialogo alla pari tra colleghi.
+LINGUAGGIO: Accademico e preciso. Usa terminologia specifica quando pertinente.
+FOCUS: Feedback metacognitivo — come lo studente sta imparando, cosa funziona, cosa ottimizzare. Efficienza delle sessioni. Strategie per ottimizzare il tempo per ogni esame.
+APPROCCIO: Analisi strategica. Identifica pattern di apprendimento efficaci e inefficaci. Suggerisci ottimizzazioni basate sui dati.
+Esempio di tono: "Con gli esempi concreti capisci meglio la teoria. Cerca sempre un caso applicativo prima di memorizzare il concetto."`;
+
+    default:
+      return `${baseRules}
+
+TONO: Caldo, non giudicante, incoraggiante, pratico.
+Concentrati su: autonomia, benessere emotivo, metodo di studio, motivazione.`;
+  }
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -42,12 +79,14 @@ serve(async (req) => {
   }
 
   try {
-    const { childProfile, gamification, sessionsCount, totalMinutes, recentSessions, allConcepts, subjectStats, missionsData, emotionPatterns, extendedSessionsCount } = await req.json();
+    const { childProfile, gamification, sessionsCount, totalMinutes, recentSessions, allConcepts, subjectStats, missionsData, emotionPatterns, extendedSessionsCount, schoolLevel } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
+
+    const effectiveSchoolLevel = schoolLevel || childProfile?.school_level || "superiori";
 
     // Build detailed sessions section
     let sessionsDetail = "Nessuna sessione recente.";
@@ -59,7 +98,7 @@ serve(async (req) => {
       }).join("\n");
     }
 
-    // Build concepts section (all, not just weak)
+    // Build concepts section
     let conceptsDetail = "Nessun concetto in memoria.";
     if (allConcepts && allConcepts.length > 0) {
       const weak = allConcepts.filter((c: any) => c.is_weak);
@@ -112,16 +151,21 @@ serve(async (req) => {
       ).join("\n");
     }
 
-    const userPrompt = `Analizza questi dati DETTAGLIATI e REALI e fornisci 4 consigli iper-personalizzati per i genitori di ${childProfile.name}:
+    const audienceLabel = effectiveSchoolLevel === "medie" ? "lo studente (11-13 anni)"
+      : effectiveSchoolLevel === "universitario" ? "lo studente universitario"
+      : effectiveSchoolLevel === "superiori" ? "lo studente delle superiori"
+      : "il genitore";
 
-PROFILO (solo per contesto, NON basare i consigli sulle preferenze dichiarate):
+    const userPrompt = `Analizza questi dati DETTAGLIATI e REALI e fornisci 4 consigli iper-personalizzati per ${audienceLabel} di nome ${childProfile.name}:
+
+PROFILO (solo per contesto):
 - Nome: ${childProfile.name}
 - Età: ${childProfile.age || "non specificata"}
-- Classe: ${childProfile.school_level || "non specificata"}
+- Livello scolastico: ${effectiveSchoolLevel}
 - Tempo focus preferito: ${childProfile.focus_time || 15} minuti
 
-MATERIE CHE NON PIACCIONO O SONO DIFFICILI (usa queste per suggerire come renderle più attraenti):
-- Materie difficili: ${childProfile.difficult_subjects?.join(", ") || "nessuna indicata"}
+MATERIE DIFFICILI (usa per suggerire strategie creative):
+- ${childProfile.difficult_subjects?.join(", ") || "nessuna indicata"}
 - Difficoltà segnalate: ${childProfile.struggles?.join(", ") || "nessuna"}
 
 STATISTICHE GENERALI:
@@ -133,22 +177,22 @@ STATISTICHE GENERALI:
 - Punti costanza: ${gamification?.consistency_points || 0}
 - Streak attuale: ${gamification?.streak || 0} giorni consecutivi
 
-ULTIME SESSIONI DI STUDIO (dettaglio con compiti specifici):
+ULTIME SESSIONI DI STUDIO (dettaglio):
 ${sessionsDetail}
 
-MAPPA DELLA MEMORIA (tutti i concetti studiati con livello di acquisizione):
+MAPPA DELLA MEMORIA:
 ${conceptsDetail}
 
 MISSIONI E SFIDE DEL COACH:
 ${missionsDetail}
 
-PATTERN EMOTIVI (come si sentiva prima di studiare):
+PATTERN EMOTIVI:
 ${emotionDetail}
 
 STATISTICHE PER MATERIA:
 ${subjectDetail}
 
-IMPORTANTE: Basa i consigli sui DATI REALI di studio (sessioni, concetti, missioni, emozioni), NON sulle preferenze dichiarate. Usa le materie difficili/non piacevoli SOLO per suggerire strategie creative per avvicinarsi ad esse.`;
+IMPORTANTE: Basa i consigli sui DATI REALI di studio, NON sulle preferenze dichiarate. Adatta il tono al livello scolastico: ${effectiveSchoolLevel}.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -159,7 +203,7 @@ IMPORTANTE: Basa i consigli sui DATI REALI di studio (sessioni, concetti, missio
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: getSystemPrompt(effectiveSchoolLevel) },
           { role: "user", content: userPrompt },
         ],
       }),

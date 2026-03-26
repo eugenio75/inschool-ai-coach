@@ -151,6 +151,17 @@ export default function DashboardMedie() {
       {/* Teacher Assignments */}
       <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto"><TeacherAssignments /></div></div>
 
+      {/* Link to progress */}
+      <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
+        <button onClick={() => navigate("/progress")} className="w-full bg-card border border-border rounded-2xl p-4 flex items-center justify-between hover:border-primary/40 transition-all text-left">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">I tuoi progressi</span>
+          </div>
+          <span className="text-xs text-primary font-medium">Vedi →</span>
+        </button>
+      </div></div>
+
       {/* Daily Missions */}
       <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.25 }}>
