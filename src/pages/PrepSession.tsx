@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
+import { MathText } from "@/components/shared/MathText";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -332,7 +333,7 @@ export default function PrepSession() {
             <div className={`max-w-[80%] rounded-xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
               msg.role === "user" ? "bg-[var(--color-accent)] text-white rounded-br-sm" : "bg-slate-100 text-[var(--color-text-primary)] rounded-bl-sm"
             }`}>
-              {msg.content}
+              <MathText>{msg.content}</MathText>
             </div>
           </motion.div>
         ))}
@@ -342,7 +343,7 @@ export default function PrepSession() {
               <span className="text-white text-xs font-bold">C</span>
             </div>
             <div className="max-w-[80%] rounded-xl rounded-bl-sm bg-slate-100 px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap">
-              {streamingText}<span className="inline-block w-1.5 h-4 bg-[var(--color-accent)] ml-0.5 animate-pulse" />
+              <MathText>{streamingText}</MathText><span className="inline-block w-1.5 h-4 bg-[var(--color-accent)] ml-0.5 animate-pulse" />
             </div>
           </div>
         )}

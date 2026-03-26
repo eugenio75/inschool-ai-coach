@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { MathText } from "@/components/shared/MathText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getMemoryItems, updateMemoryStrength, getDailyMissions, completeMission } from "@/lib/database";
@@ -137,14 +138,14 @@ const ReviewChat = ({ topic, subject, section, onClose }: {
         {messages.map((msg, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${msg.role === "assistant" ? "bg-card text-foreground rounded-bl-md border border-border" : "bg-primary text-primary-foreground rounded-br-md"}`}>
-              {msg.content}
+              <MathText>{msg.content}</MathText>
             </div>
           </motion.div>
         ))}
         {streamingText && (
           <div className="flex justify-start">
             <div className="max-w-[85%] bg-card text-foreground rounded-2xl rounded-bl-md border border-border px-4 py-2.5 text-sm leading-relaxed">
-              {streamingText.replace(/\[STRENGTH_UPDATE:\s*\d+\]/, "")}
+              <MathText>{streamingText.replace(/\[STRENGTH_UPDATE:\s*\d+\]/, "")}</MathText>
               <span className="inline-block w-1.5 h-4 bg-primary/40 ml-0.5 animate-pulse" />
             </div>
           </div>

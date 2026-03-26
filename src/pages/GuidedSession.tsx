@@ -10,6 +10,7 @@ import { playCelebrationSound } from "@/lib/celebrationSound";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { MathText } from "@/components/shared/MathText";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -497,7 +498,7 @@ export default function GuidedSession() {
                     : "bg-slate-100 text-[var(--color-text-primary)] rounded-bl-sm"
                 }`}
               >
-                {msg.content}
+                <MathText>{msg.content}</MathText>
               </div>
             </motion.div>
           ))}
@@ -509,7 +510,7 @@ export default function GuidedSession() {
               <span className="text-white text-xs font-bold">C</span>
             </div>
             <div className="max-w-[80%] rounded-xl rounded-bl-sm bg-slate-100 px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap text-[var(--color-text-primary)]">
-              {streamingText}
+              <MathText>{streamingText}</MathText>
               <span className="inline-block w-1.5 h-4 bg-[var(--color-accent)] ml-0.5 animate-pulse" />
             </div>
           </div>
