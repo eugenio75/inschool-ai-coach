@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Search, FolderOpen, FileText, Download, Pencil, Archive, RotateCcw, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { Plus, Search, FolderOpen, FileText, Download, Pencil, Archive, Share2, Loader2, X, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
@@ -10,9 +10,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 const TYPE_OPTIONS = [
@@ -61,9 +62,17 @@ export default function TeacherMaterialsArchive() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Create material dialog (same as home)
+  // Create material dialog
   const [showClassPicker, setShowClassPicker] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState("");
+
+  // Preview dialog
+  const [previewMaterial, setPreviewMaterial] = useState<any | null>(null);
+
+  // Share dialog
+  const [shareMaterial, setShareMaterial] = useState<any | null>(null);
+  const [shareClassIds, setShareClassIds] = useState<string[]>([]);
+  const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -92,7 +101,7 @@ export default function TeacherMaterialsArchive() {
       if (classFilter !== "all" && m.class_id !== classFilter) return false;
       if (typeFilter !== "all" && m.type !== typeFilter) return false;
       if (statusFilter !== "all" && m.status !== statusFilter) return false;
-      if (statusFilter === "all" && m.status === "archived") return false; // hide archived by default
+      if (statusFilter === "all" && m.status === "archived") return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         const title = (m.title || "").toLowerCase();
@@ -118,6 +127,46 @@ export default function TeacherMaterialsArchive() {
     navigate(`/classe/${selectedClassId}?tab=materiali&create=true`);
     setSelectedClassId("");
   }
+
+  function openShare(m: any) {
+    setShareMaterial(m);
+    setShareClassIds([]);
+  }
+
+  async function handleShare() {
+    if (!shareMaterial || shareClassIds.length === 0 || !user) return;
+    setSharing(true);
+    const inserts = shareClassIds.map(classId => ({
+      teacher_id: user.id,
+      class_id: classId,
+      title: shareMaterial.title,
+      subject: shareMaterial.subject,
+      type: shareMaterial.type,
+      level: shareMaterial.level,
+      content: shareMaterial.content,
+      status: "draft" as const,
+      target_profile: shareMaterial.target_profile,
+    }));
+
+    const { error } = await supabase.from("teacher_materials").insert(inserts);
+    setSharing(false);
+    if (error) { toast.error("Errore nella condivisione"); return; }
+    toast.success(`Materiale condiviso con ${shareClassIds.length} ${shareClassIds.length === 1 ? "classe" : "classi"}`);
+    setShareMaterial(null);
+    loadData();
+  }
+
+  function toggleShareClass(id: string) {
+    setShareClassIds(prev =>
+      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+    );
+  }
+
+  // Available classes to share to (exclude the material's current class)
+  const shareableClasses = useMemo(() => {
+    if (!shareMaterial) return classi;
+    return classi.filter(c => c.id !== shareMaterial.class_id);
+  }, [classi, shareMaterial]);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -202,9 +251,7 @@ export default function TeacherMaterialsArchive() {
                 : "Nessun materiale corrisponde alla ricerca."}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              {materials.length === 0
-                ? "Inizia adesso."
-                : "Prova con un termine diverso."}
+              {materials.length === 0 ? "Inizia adesso." : "Prova con un termine diverso."}
             </p>
             {materials.length === 0 && (
               <Button onClick={() => setShowClassPicker(true)} className="mt-4">
@@ -220,7 +267,8 @@ export default function TeacherMaterialsArchive() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.02 }}
-                className="bg-card border border-border rounded-xl p-4 flex items-center gap-4"
+                className="bg-card border border-border rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:shadow-sm transition-shadow"
+                onClick={() => setPreviewMaterial(m)}
               >
                 <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
                   <FileText className="w-4 h-4 text-muted-foreground" />
@@ -239,13 +287,13 @@ export default function TeacherMaterialsArchive() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                   <button
-                    onClick={() => m.class_id && navigate(`/classe/${m.class_id}?tab=materiali`)}
+                    onClick={() => openShare(m)}
                     className="p-2 rounded-lg hover:bg-muted transition-colors"
-                    title="Riassegna"
+                    title="Condividi con altre classi"
                   >
-                    <RotateCcw className="w-3.5 h-3.5 text-muted-foreground" />
+                    <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
                   <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
                     <Download className="w-3.5 h-3.5 text-muted-foreground" />
@@ -267,7 +315,95 @@ export default function TeacherMaterialsArchive() {
         )}
       </div>
 
-      {/* Class picker dialog */}
+      {/* ── Preview dialog ── */}
+      <Dialog open={!!previewMaterial} onOpenChange={open => !open && setPreviewMaterial(null)}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+          {previewMaterial && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-lg">{previewMaterial.title}</DialogTitle>
+                <DialogDescription asChild>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <Badge variant="outline" className="text-[10px]">{typeLabel(previewMaterial.type)}</Badge>
+                    {previewMaterial.subject && (
+                      <Badge variant="secondary" className="text-[10px]">{previewMaterial.subject}</Badge>
+                    )}
+                    {previewMaterial.level && (
+                      <Badge variant="secondary" className="text-[10px]">Livello: {previewMaterial.level}</Badge>
+                    )}
+                    {previewMaterial.class_id && classMap[previewMaterial.class_id] && (
+                      <span className="text-[11px] text-muted-foreground">{classMap[previewMaterial.class_id]}</span>
+                    )}
+                    <span className="text-[11px] text-muted-foreground">
+                      {new Date(previewMaterial.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}
+                    </span>
+                  </div>
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="mt-4 bg-muted/30 border border-border rounded-xl p-5">
+                <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap text-sm leading-relaxed">
+                  {previewMaterial.content}
+                </div>
+              </div>
+
+              <DialogFooter className="mt-4 flex-row gap-2">
+                <Button variant="outline" size="sm" onClick={() => openShare(previewMaterial)}>
+                  <Share2 className="w-3.5 h-3.5 mr-1" /> Condividi
+                </Button>
+                <Button variant="outline" size="sm">
+                  <Download className="w-3.5 h-3.5 mr-1" /> Scarica PDF
+                </Button>
+                <Button size="sm" onClick={() => setPreviewMaterial(null)}>Chiudi</Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Share dialog ── */}
+      <Dialog open={!!shareMaterial} onOpenChange={open => !open && setShareMaterial(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Condividi con altre classi</DialogTitle>
+            <DialogDescription>
+              Seleziona le classi a cui vuoi assegnare una copia di "{shareMaterial?.title}".
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-3 space-y-2 max-h-60 overflow-y-auto">
+            {shareableClasses.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Nessun'altra classe disponibile.</p>
+            ) : (
+              shareableClasses.map(c => (
+                <label
+                  key={c.id}
+                  className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                >
+                  <Checkbox
+                    checked={shareClassIds.includes(c.id)}
+                    onCheckedChange={() => toggleShareClass(c.id)}
+                  />
+                  <span className="text-sm font-medium text-foreground">{c.nome}</span>
+                </label>
+              ))
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShareMaterial(null)}>Annulla</Button>
+            <Button
+              disabled={shareClassIds.length === 0 || sharing}
+              onClick={handleShare}
+            >
+              {sharing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Share2 className="w-4 h-4 mr-1" />}
+              Condividi ({shareClassIds.length})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Class picker for create ── */}
       <Dialog open={showClassPicker} onOpenChange={setShowClassPicker}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
