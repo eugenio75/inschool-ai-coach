@@ -28,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { RecentConversations } from "@/components/shared/RecentConversations";
 import { LogoutButton } from "@/components/shared/LogoutButton";
+import { BadgeDisplay } from "@/components/BadgeDisplay";
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -273,6 +274,7 @@ export default function DashboardUniversitario() {
         </motion.div>
 
         <CoachPresence />
+        <BadgeDisplay variant="universitario" />
         <TeacherAssignments />
 
         {/* ESAMI IN VISTA */}

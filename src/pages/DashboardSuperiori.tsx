@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { RecentConversations } from "@/components/shared/RecentConversations";
 import { LogoutButton } from "@/components/shared/LogoutButton";
+import { BadgeDisplay } from "@/components/BadgeDisplay";
 
 const TIMER_CONFIGS = {
   pomodoro:   { seconds: 25 * 60, label: "Pomodoro — 25 min" },
@@ -302,6 +303,7 @@ export default function DashboardSuperiori() {
         </motion.div>
 
         <CoachPresence />
+        <BadgeDisplay variant="superiori" />
         <TeacherAssignments />
 
         {/* MATERIE IN FOCUS */}
