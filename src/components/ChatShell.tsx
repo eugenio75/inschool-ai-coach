@@ -158,7 +158,7 @@ export function ChatShell({
                     ? "bg-primary text-primary-foreground rounded-br-sm"
                     : "bg-muted text-foreground rounded-bl-sm"
                 }`}>
-                  {msg.content}
+                  <MathText>{msg.content}</MathText>
                 </div>
                 {/* Inline action buttons */}
                 {msg.actions && msg.actions.length > 0 && i === messages.length - 1 && (
@@ -199,7 +199,7 @@ export function ChatShell({
               />
             </div>
             <div className="max-w-[80%] rounded-xl rounded-bl-sm bg-muted px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap text-foreground">
-              {streamingText}
+              <MathText>{streamingText}</MathText>
               <span className="inline-block w-1.5 h-4 bg-primary ml-0.5 animate-pulse" />
             </div>
           </div>
