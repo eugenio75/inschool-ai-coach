@@ -217,6 +217,33 @@ const Settings = () => {
     }
   };
 
+  const handleSaveMaterie = async (materie: string[]) => {
+    if (!session?.profileId) return;
+    setSavingMaterie(true);
+    await supabase.from("child_profiles").update({ favorite_subjects: materie } as any).eq("id", session.profileId);
+    const currentSession = getChildSession();
+    if (currentSession?.profile) {
+      setChildSession({
+        ...currentSession,
+        profile: { ...currentSession.profile, favorite_subjects: materie } as any,
+      });
+    }
+    setDocenteMaterie(materie);
+    setSavingMaterie(false);
+    toast.success("Materie aggiornate!");
+  };
+
+  const handleAddMateria = () => {
+    const val = newMateria.trim();
+    if (!val || docenteMaterie.includes(val)) { setNewMateria(""); return; }
+    handleSaveMaterie([...docenteMaterie, val]);
+    setNewMateria("");
+  };
+
+  const handleRemoveMateria = (m: string) => {
+    handleSaveMaterie(docenteMaterie.filter(x => x !== m));
+  };
+
   const handleToggleLibrary = async (profileId: string, checked: boolean) => {
     setLibraryFlags(prev => ({ ...prev, [profileId]: checked }));
     // Upsert user_preferences.data.show_library
