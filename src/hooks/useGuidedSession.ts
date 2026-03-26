@@ -845,7 +845,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
       setMessages(prev => [...prev, { role: "assistant", content: "Si è verificato un errore. Riprova." }]);
     }
     setSending(false);
-  }, [messages, sending, steps, currentStep, totalSteps, sessionId, homework, userId, schoolLevel, homeworkId, isChild, familiarity]);
+  }, [messages, sending, steps, currentStep, totalSteps, sessionId, homework, userId, schoolLevel, homeworkId, isChild, familiarity, hintCountPerStep]);
 
   async function pauseSession() {
     if (sessionId) {
