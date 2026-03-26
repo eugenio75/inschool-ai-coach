@@ -528,8 +528,20 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     setLoading(false);
   }
 
+  // Track hint count per step for escalation
+  const [hintCountPerStep, setHintCountPerStep] = useState<Record<number, number>>({});
+
   const handleSend = useCallback(async (text: string) => {
     if (sending || !text.trim()) return;
+
+    // Check if this is a hint request
+    const isHintRequest = text.includes("Dammi un indizio") || text.includes("indizio") || text.includes("Sono bloccato");
+    let currentHintCount = hintCountPerStep[currentStep] || 0;
+    if (isHintRequest) {
+      currentHintCount += 1;
+      setHintCountPerStep(prev => ({ ...prev, [currentStep]: currentHintCount }));
+    }
+
     const userMsg: ChatMsg = { role: "user", content: text };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
@@ -633,12 +645,30 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
           : `\nTesto/descrizione del compito già disponibile qui sotto. NON chiedere allo studente di copiarlo o riscriverlo. Usa direttamente questo testo per guidarlo:\n${homework.description}`)
         : "";
 
+      // Build hint escalation context
+      let hintEscalation = "";
+      if (isHintRequest && currentHintCount >= 3) {
+        hintEscalation = `\n\nATTENZIONE ESCALATION INDIZI: Lo studente ha chiesto ${currentHintCount} indizi su questo step. Questo punto è più difficile del solito. CAMBIA APPROCCIO:
+- Dì: "Questo punto è più difficile del solito — facciamo un passo ancora più piccolo insieme."
+- Scomponi ulteriormente lo step in un micro-passo molto più semplice
+- Accompagna lo studente passo per passo con domande molto guidate
+- NON dare la risposta finale, ma il supporto deve essere molto più diretto e ravvicinato
+- Segna mentalmente questo passaggio come "difficile"`;
+      } else if (isHintRequest && currentHintCount === 2) {
+        hintEscalation = `\n\nINDIZIO 2: Lo studente ha chiesto 2 indizi su questo step. Dai un suggerimento PIÙ SPECIFICO sul passaggio. Usa un esempio concreto legato ai suoi interessi se possibile.`;
+      } else if (isHintRequest && currentHintCount === 1) {
+        hintEscalation = `\n\nINDIZIO 1: Dai un suggerimento leggero e generico. Restringi il campo senza rivelare troppo.`;
+      }
+
+      // Build difficulty signal for 3+ hints
+      const markDifficult = currentHintCount >= 3 ? `\nQuesto step va segnalato come difficile: scrivi [SEGNALA_DIFFICOLTÀ: Step ${currentStep} - richiesti ${currentHintCount} indizi, necessita ripasso futuro]` : "";
+
       const fullText = await streamChat({
         messages: newMessages,
         onDelta: (full) => setStreamingText(full),
         onDone: () => {},
         extraBody: {
-          systemPrompt: `${coachBehavior}\n\nCompito: ${homework?.title}. Materia: ${homework?.subject}. Livello: ${schoolLevel}.\nOBIETTIVO: ${goalStr}.${contentInstruction}${systemAddition}${emotionContext}\n\nSe lo studente completa lo step correttamente, scrivi [STEP_COMPLETATO: ${currentStep}]. Se tutti gli step sono completati, scrivi [SESSIONE_COMPLETATA]. Se lo studente mostra una difficoltà specifica, scrivi [SEGNALA_DIFFICOLTÀ: descrizione].`,
+          systemPrompt: `${coachBehavior}\n\nCompito: ${homework?.title}. Materia: ${homework?.subject}. Livello: ${schoolLevel}.\nOBIETTIVO: ${goalStr}.${contentInstruction}${systemAddition}${emotionContext}${hintEscalation}${markDifficult}\n\nSe lo studente completa lo step correttamente, scrivi [STEP_COMPLETATO: ${currentStep}]. Se tutti gli step sono completati, scrivi [SESSIONE_COMPLETATA]. Se lo studente mostra una difficoltà specifica, scrivi [SEGNALA_DIFFICOLTÀ: descrizione].`,
         },
       });
 
@@ -815,7 +845,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
       setMessages(prev => [...prev, { role: "assistant", content: "Si è verificato un errore. Riprova." }]);
     }
     setSending(false);
-  }, [messages, sending, steps, currentStep, totalSteps, sessionId, homework, userId, schoolLevel, homeworkId, isChild, familiarity]);
+  }, [messages, sending, steps, currentStep, totalSteps, sessionId, homework, userId, schoolLevel, homeworkId, isChild, familiarity, hintCountPerStep]);
 
   async function pauseSession() {
     if (sessionId) {

@@ -380,16 +380,44 @@ Inizia con la prima domanda.`;
     }
 
     if (guided.showCheckin) {
-      const guidedEmotionOptions = [
-        { key: "concentrato", label: "Concentrato", icon: "🎯" },
-        { key: "curioso", label: "Curioso", icon: "🤔" },
-        { key: "carico", label: "Carico", icon: "⚡" },
-        { key: "tranquillo", label: "Tranquillo", icon: "🙂" },
-        { key: "stanco", label: "Un po' stanco", icon: "😴" },
-        { key: "confuso", label: "Confuso", icon: "😵" },
-        { key: "agitato", label: "Agitato", icon: "😬" },
-        { key: "bloccato", label: "Bloccato in partenza", icon: "😕" },
-      ];
+      // Age-differentiated emotional check-in
+      const isElementari = schoolLevel === "alunno" || schoolLevel === "elementari";
+      const isMediaLevel = schoolLevel === "medie" || schoolLevel?.startsWith("media-");
+      const isUni = schoolLevel === "universitario";
+
+      let checkinQuestion = "Come ti senti per iniziare?";
+      let guidedEmotionOptions: { key: string; label: string; icon: string }[];
+
+      if (isElementari) {
+        checkinQuestion = "Come ti senti adesso?";
+        guidedEmotionOptions = [
+          { key: "concentrato", label: "Pronto", icon: "😊" },
+          { key: "stanco", label: "Stanco", icon: "😴" },
+          { key: "bloccato", label: "Un po' bloccato", icon: "😕" },
+        ];
+      } else if (isMediaLevel) {
+        checkinQuestion = "Come ti senti per iniziare?";
+        guidedEmotionOptions = [
+          { key: "concentrato", label: "Concentrato", icon: "🎯" },
+          { key: "stanco", label: "Stanco", icon: "😴" },
+          { key: "bloccato", label: "Un po' bloccato", icon: "😕" },
+        ];
+      } else if (isUni) {
+        checkinQuestion = "Come ti senti?";
+        guidedEmotionOptions = [
+          { key: "concentrato", label: "Pronto", icon: "🎯" },
+          { key: "stanco", label: "Stanco", icon: "😴" },
+          { key: "confuso", label: "Distratto", icon: "😵" },
+        ];
+      } else {
+        // superiori
+        checkinQuestion = "Come stai adesso?";
+        guidedEmotionOptions = [
+          { key: "concentrato", label: "Concentrato", icon: "🎯" },
+          { key: "stanco", label: "Stanco", icon: "😴" },
+          { key: "agitato", label: "Sotto pressione", icon: "😬" },
+        ];
+      }
 
       const submitCustomEmotion = () => {
         const value = guidedCustomEmotion.trim();
@@ -405,20 +433,22 @@ Inizia con la prima domanda.`;
             className="max-w-md w-full bg-card rounded-xl border border-border p-8 text-center"
           >
             <h2 className="font-display text-xl font-bold text-foreground mb-2">
-              Come ti senti per iniziare?
+              {checkinQuestion}
             </h2>
             <p className="text-sm text-muted-foreground mb-6">
               {guided.homework?.title}
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div className={`grid gap-3 mb-4 ${isElementari ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}>
               {guidedEmotionOptions.map((opt) => (
                 <button
                   key={opt.key}
                   onClick={() => guided.startNewSession(opt.key)}
-                  className="flex items-center gap-3 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
+                  className={`flex items-center gap-3 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all text-left ${
+                    isElementari ? "p-5" : "p-4"
+                  }`}
                 >
-                  <span className="text-2xl">{opt.icon}</span>
-                  <span className="font-medium text-foreground">{opt.label}</span>
+                  <span className={isElementari ? "text-4xl" : "text-2xl"}>{opt.icon}</span>
+                  <span className={`font-medium text-foreground ${isElementari ? "text-lg" : ""}`}>{opt.label}</span>
                 </button>
               ))}
             </div>
