@@ -111,6 +111,7 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     setUploadFile(null);
     setUploadUrl(null);
     setOcrText(null);
+    setSelectedSubjects(classe?.materia ? classe.materia.split(",").map((m: string) => m.trim()).filter(Boolean) : []);
   }
 
   function getPreviewContent(): string {
@@ -296,7 +297,7 @@ ${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span cla
         teacher_id: userId,
         class_id: classId,
         title,
-        subject: classe?.materia || null,
+        subject: selectedSubjects.join(", ") || classe?.materia || null,
         type: activityType,
         content: previewContent,
         status: destination === "pdf" ? "draft" : "assigned",
@@ -329,7 +330,7 @@ ${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span cla
           student_id: s.student_id || s.id,
           title,
           type: activityType,
-          subject: classe?.materia || null,
+          subject: selectedSubjects.join(", ") || classe?.materia || null,
           description: previewContent,
           due_date: dueDate ? dueDate.toISOString() : null,
           metadata,
