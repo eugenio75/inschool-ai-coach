@@ -285,6 +285,98 @@ export default function TeacherMaterialsArchive() {
     toast.success(newStatus === "archived" ? "Archiviato" : "Ripristinato");
   }
 
+  function handleDownloadPdf(m: any) {
+    const content = (m.content || "").replace(/\\n/g, "\n");
+    // Convert markdown to simple HTML for printing
+    const htmlContent = content
+      .split("\n")
+      .map((line: string) => {
+        const t = line.trim();
+        if (!t) return "<br/>";
+        if (/^-{3,}$/.test(t)) return '<hr style="margin:16px 0;border:none;border-top:1px solid #ddd"/>';
+        if (t.startsWith("#### ")) return `<h4 style="margin:18px 0 6px;font-size:14px;font-weight:700;color:#1A3A5C">${t.slice(5)}</h4>`;
+        if (t.startsWith("### ")) return `<h3 style="margin:20px 0 8px;font-size:16px;font-weight:700;border-bottom:1px solid #eee;padding-bottom:4px">${t.slice(4)}</h3>`;
+        if (t.startsWith("## ")) return `<h2 style="margin:24px 0 10px;font-size:18px;font-weight:700">${t.slice(3)}</h2>`;
+        const numMatch = t.match(/^(\d+)[.)]\s+(.*)/);
+        if (numMatch) return `<div style="display:flex;gap:10px;margin:4px 0 4px 8px"><span style="font-weight:600;color:#0070C0;min-width:20px;text-align:right">${numMatch[1]}.</span><span>${numMatch[2]}</span></div>`;
+        const bulletMatch = t.match(/^[-•]\s+(.*)/);
+        if (bulletMatch) return `<div style="display:flex;gap:10px;margin:4px 0 4px 8px"><span style="color:#0070C0">•</span><span>${bulletMatch[1]}</span></div>`;
+        return `<p style="margin:4px 0">${t}</p>`;
+      })
+      .join("")
+      // Process bold
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      // Process italic
+      .replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+    const className = m.class_id && classMap[m.class_id] ? classMap[m.class_id] : "";
+    const dateStr = new Date(m.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+    const isVerifica = m.type === "verifica";
+
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"/><title>${m.title}</title>
+<style>
+  @page { margin: 20mm; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; line-height: 1.6; color: #1a1a1a; max-width: 700px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid ${isVerifica ? "#c0392b" : "#1A3A5C"}; }
+  .header h1 { font-size: 20px; margin: 0 0 8px; color: ${isVerifica ? "#c0392b" : "#1A3A5C"}; }
+  .header .meta { font-size: 11px; color: #888; }
+  ${isVerifica ? `.student-fields { margin: 16px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+  .student-fields p { margin: 4px 0; font-size: 12px; }` : ""}
+  .content { margin-top: 16px; }
+  @media print { body { -webkit-print-color-adjust: exact; } }
+</style></head><body>
+<div class="header">
+  <h1>${m.title}</h1>
+  <div class="meta">${[typeLabel(m.type), m.subject, m.level ? "Livello: " + m.level : "", className, dateStr].filter(Boolean).join(" · ")}</div>
+</div>
+${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> _________________________ <strong>Classe:</strong> _______ <strong>Data:</strong> _____________</p></div>` : ""}
+<div class="content">${htmlContent}</div>
+</body></html>`;
+
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, "_blank");
+    if (printWindow) {
+      printWindow.onload = () => {
+        setTimeout(() => { printWindow.print(); }, 300);
+      };
+    }
+  }
+
+  function openEdit(m: any) {
+    setEditMaterial(m);
+    setEditForm({
+      title: m.title || "",
+      subject: m.subject || "",
+      type: m.type || "",
+      level: m.level || "",
+      content: (m.content || "").replace(/\\n/g, "\n"),
+    });
+  }
+
+  async function handleSaveEdit() {
+    if (!editMaterial) return;
+    setSaving(true);
+    const { error } = await supabase.from("teacher_materials").update({
+      title: editForm.title,
+      subject: editForm.subject,
+      type: editForm.type,
+      level: editForm.level,
+      content: editForm.content,
+      updated_at: new Date().toISOString(),
+    }).eq("id", editMaterial.id);
+    setSaving(false);
+    if (error) { toast.error("Errore nel salvataggio"); return; }
+    setMaterials(prev => prev.map(m => m.id === editMaterial.id ? { ...m, ...editForm, updated_at: new Date().toISOString() } : m));
+    toast.success("Materiale aggiornato");
+    setEditMaterial(null);
+    // Also refresh the preview if open
+    if (previewMaterial?.id === editMaterial.id) {
+      setPreviewMaterial({ ...previewMaterial, ...editForm });
+    }
+  }
+
   function handleCreateConfirm() {
     if (!selectedClassId) return;
     setShowClassPicker(false);
