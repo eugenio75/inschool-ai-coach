@@ -30,7 +30,7 @@ export function BrowserFrame({ children, className = "" }: BrowserFrameProps) {
             className="flex-1 rounded-md px-3 py-1 text-xs font-mono ml-3"
             style={{ backgroundColor: "#E2E8F0", color: "#94A3B8" }}
           >
-            app.inschool.ai
+            inschool.azarlabs.com
           </div>
         </div>
         {/* Content */}

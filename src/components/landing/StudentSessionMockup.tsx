@@ -1,4 +1,4 @@
-import { PhoneFrame } from "./PhoneFrame";
+import { BrowserFrame } from "./BrowserFrame";
 
 function ProgressDots({ current, total }: { current: number; total: number }) {
   return (
@@ -19,7 +19,7 @@ function ProgressDots({ current, total }: { current: number; total: number }) {
 
 export function StudentSessionMockup() {
   return (
-    <PhoneFrame>
+    <BrowserFrame>
       {/* Header */}
       <div className="mb-3">
         <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#94A3B8" }}>
@@ -77,6 +77,6 @@ export function StudentSessionMockup() {
           Dammi un indizio
         </button>
       </div>
-    </PhoneFrame>
+    </BrowserFrame>
   );
 }

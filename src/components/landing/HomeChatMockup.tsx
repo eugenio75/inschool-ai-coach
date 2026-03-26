@@ -1,4 +1,4 @@
-import { PhoneFrame } from "./PhoneFrame";
+import { BrowserFrame } from "./BrowserFrame";
 
 function CoachBubble({ text }: { text: string }) {
   return (
@@ -34,7 +34,7 @@ function UserBubble({ text }: { text: string }) {
 
 export function HomeChatMockup() {
   return (
-    <PhoneFrame>
+    <BrowserFrame>
       <p
         className="text-[10px] font-semibold uppercase tracking-wider mb-3"
         style={{ color: "#94A3B8" }}
@@ -53,6 +53,6 @@ export function HomeChatMockup() {
       >
         Scrivi un messaggio...
       </div>
-    </PhoneFrame>
+    </BrowserFrame>
   );
 }
