@@ -723,6 +723,33 @@ REGOLE DI RISPOSTA:
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete class confirmation */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={v => { if (!v) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminare la classe "{deleteTarget?.nome}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Questa azione non può essere annullata. I materiali assegnati rimarranno nel tuo archivio.
+              {deleteTarget?.num_studenti > 0 && (
+                <span className="block mt-2 font-medium text-foreground">
+                  ⚠ Questa classe ha {deleteTarget.num_studenti} studenti attivi. Eliminandola perderanno l'accesso al codice classe.
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingClasse}>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteTarget && deleteClasse(deleteTarget.id)}
+              disabled={deletingClasse}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingClasse ? "Eliminazione..." : "Elimina"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
