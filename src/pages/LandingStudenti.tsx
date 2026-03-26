@@ -118,7 +118,7 @@ export default function LandingStudenti() {
           </motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-10">
             {ageCards.map((card, i) => {
-              const roleMap = ["/auth?role=alunno", "/auth?role=medie", "/auth?role=superiori", "/auth?role=universitario"];
+              const roleMap = ["/auth?role=alunno", "/auth?role=alunno", "/auth?role=superiori", "/auth?role=universitario"];
               return (
               <motion.div key={card.title} {...fade} transition={{ delay: i * 0.05 }} className="bg-white border-t-4 rounded-xl p-6 shadow-sm" style={{ borderColor: "#0070C0" }}>
                 <span className="inline-block rounded-full px-3 py-1 text-xs font-semibold mb-3" style={{ backgroundColor: "rgba(0,112,192,0.1)", color: "#0070C0" }}>

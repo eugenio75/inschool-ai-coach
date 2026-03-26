@@ -3,7 +3,7 @@ import { Home, Brain, User, Plus, FolderOpen } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildSession } from "@/lib/childSession";
 
-const ADULT_ROLES = ["medie", "superiori", "universitario", "docente"];
+const ADULT_ROLES = ["superiori", "universitario", "docente"];
 
 export const BottomNav = () => {
   const navigate = useNavigate();
