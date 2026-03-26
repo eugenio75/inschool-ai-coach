@@ -740,7 +740,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     <ArrowLeft className="w-4 h-4 mr-2" /> Indietro
                 </Button>
                 <Button onClick={handleNext} disabled={!canProceed() || saving} className="rounded-xl px-8 font-bold shadow-sm transition-all h-12">
-                    {step === totalSteps - 1 ? (saving ? "Salvataggio..." : "Inizia") : "Avanti"} <ArrowRight className="ml-2 w-4 h-4" />
+                    {step === totalSteps - 1 ? (saving ? "Salvataggio..." : (role === "docente" ? "Entra nella tua dashboard" : "Inizia")) : (step === 0 && role === "docente" ? "Iniziamo" : "Avanti")} <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
             </div>
         </div>

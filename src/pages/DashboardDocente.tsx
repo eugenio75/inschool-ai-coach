@@ -98,6 +98,7 @@ export default function DashboardDocente() {
     supabase.functions.invoke("coach-teacher-message", {
       body: {
         teacherName: profile?.name || "",
+        teacherProfileId: profileId,
         activeClasses: classi.map(c => ({ id: c.id, name: c.nome, subject: c.materia, studentCount: c.num_studenti || 0 })),
         recentFeed: feedItems.slice(0, 5).map(f => ({ type: f.type, message: f.message, severity: f.severity })),
         currentHour: new Date().getHours(),
