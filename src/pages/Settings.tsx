@@ -390,18 +390,30 @@ const Settings = () => {
             </div>
           </div>
 
-          {/* Study preferences reset (adult only) */}
-          {isAdult && (
+          {/* Materie docente */}
+          {session?.profile?.school_level === "docente" && (
+            <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
+              <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2"><Brain className="w-4 h-4 text-primary" /> Le tue materie</h3>
+              {session.profile.favorite_subjects && session.profile.favorite_subjects.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {session.profile.favorite_subjects.map((m: string) => (
+                    <span key={m} className="text-xs font-medium bg-primary/10 text-primary px-3 py-1.5 rounded-full">{m}</span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Nessuna materia configurata.</p>
+              )}
+            </div>
+          )}
+
+          {/* Study preferences reset (non-docente adult) */}
+          {isAdult && session?.profile?.school_level !== "docente" && (
             <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
               <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2"><RotateCcw className="w-4 h-4 text-primary" /> Preferenze Studio</h3>
               <p className="text-sm text-muted-foreground mb-3">Riconfigura le tue preferenze di studio e materie dall'onboarding.</p>
-              <AlertDialog>
-                <Button variant="outline" className="rounded-xl" asChild>
-                  <AlertDialogAction className="bg-transparent border border-border text-foreground hover:bg-muted" onClick={handleResetOnboarding}>
-                    Reimposta onboarding
-                  </AlertDialogAction>
-                </Button>
-              </AlertDialog>
+              <Button variant="outline" className="rounded-xl" onClick={handleResetOnboarding}>
+                Reimposta onboarding
+              </Button>
             </div>
           )}
 
