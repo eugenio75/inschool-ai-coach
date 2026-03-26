@@ -182,7 +182,12 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
     };
 
     const canProceed = () => {
-        if (role === "superiori") {
+        if (role === "medie") {
+            if (step === 1) return answers.medie_anno && answers.medie_scuola_tipo;
+            if (step === 2) return (answers.materie_critiche || []).length > 0;
+            if (step === 3) return answers.metodo_studio;
+            if (step === 4) return answers.obiettivo;
+        } else if (role === "superiori") {
             if (step === 1) return answers.superiori_anno && answers.superiori_indirizzo;
             if (step === 2) return (answers.materie_critiche || []).length > 0;
             if (step === 3) return answers.metodo_studio;
