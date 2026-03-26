@@ -86,15 +86,34 @@ export default function DashboardDocente() {
     return () => window.removeEventListener("inschool:nuova-classe", handler);
   }, []);
 
-  // Coach initial message
+  // Coach initial message with TTL cache
+  const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
   useEffect(() => {
-    const cached = sessionStorage.getItem("teacher_coach_msg");
-    if (cached) {
-      setCoachMessages([{ role: "assistant", content: cached }]);
+    if (!profileId) { setIsLoadingCoachMsg(false); return; }
+
+    const cachedMsg = sessionStorage.getItem("teacher_coach_msg");
+    const cachedAt = sessionStorage.getItem("teacher_coach_msg_at");
+    const cachedDataHash = sessionStorage.getItem("teacher_coach_data_hash");
+    const currentDataHash = `${classi.length}-${feedItems.length}-${materialiCount}-${assignments.length}`;
+    const isExpired = !cachedAt || Date.now() - parseInt(cachedAt) > CACHE_TTL;
+    const dataChanged = cachedDataHash !== currentDataHash;
+
+    if (cachedMsg && !isExpired && !dataChanged) {
+      setCoachMessages([{ role: "assistant", content: cachedMsg }]);
       setIsLoadingCoachMsg(false);
       return;
     }
-    if (!profileId || classi.length === 0) { setIsLoadingCoachMsg(false); return; }
+
+    // Welcome message for teachers with no classes yet
+    if (classi.length === 0 && !loadingClassi) {
+      const welcomeMsg = "Benvenuto! Sono pronto ad aiutarti. Il primo passo è creare la tua prima classe — ci vogliono meno di un minuto. Vuoi iniziare?";
+      setCoachMessages([{ role: "assistant", content: welcomeMsg }]);
+      setIsLoadingCoachMsg(false);
+      return;
+    }
+
+    if (loadingClassi) return;
+
     supabase.functions.invoke("coach-teacher-message", {
       body: {
         teacherName: profile?.name || "",
@@ -108,13 +127,15 @@ export default function DashboardDocente() {
     }).then(({ data }) => {
       const msg = data?.message || "Bentornato. Pronto per una nuova giornata di lavoro?";
       setCoachMessages([{ role: "assistant", content: msg }]);
-      if (msg) sessionStorage.setItem("teacher_coach_msg", msg);
+      sessionStorage.setItem("teacher_coach_msg", msg);
+      sessionStorage.setItem("teacher_coach_msg_at", Date.now().toString());
+      sessionStorage.setItem("teacher_coach_data_hash", currentDataHash);
       setIsLoadingCoachMsg(false);
     }).catch(() => {
       setCoachMessages([{ role: "assistant", content: "Bentornato. Da dove vuoi partire oggi?" }]);
       setIsLoadingCoachMsg(false);
     });
-  }, [classi.length, feedItems.length]);
+  }, [classi.length, feedItems.length, materialiCount, assignments.length, loadingClassi]);
 
   async function loadAll() {
     setLoadingClassi(true);
@@ -225,12 +246,18 @@ REGOLE DI RISPOSTA:
     }
   }
 
-  // Upcoming deadlines (today & tomorrow)
+  // Upcoming deadlines (today + 3 days), deduplicated
   const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 2);
+  const threeDaysFromNow = new Date(now);
+  threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+  const seenIds = new Set<string>();
   const upcomingDeadlines = assignments
-    .filter(a => a.due_date && new Date(a.due_date) >= new Date(now.toDateString()) && new Date(a.due_date) < tomorrow)
+    .filter(a => {
+      if (!a.due_date || seenIds.has(a.id)) return false;
+      seenIds.add(a.id);
+      const d = new Date(a.due_date);
+      return d >= new Date(now.toDateString()) && d < threeDaysFromNow;
+    })
     .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
 
   // Feed alerts per class
@@ -503,7 +530,7 @@ REGOLE DI RISPOSTA:
               </div>
             )}
             {feedItems.length > 4 && (
-              <button onClick={() => {}} className="w-full text-center text-xs text-primary font-medium hover:underline mt-3 py-1">
+              <button onClick={() => navigate("/agenda-docente")} className="w-full text-center text-xs text-primary font-medium hover:underline mt-3 py-1">
                 Vedi tutte
               </button>
             )}
