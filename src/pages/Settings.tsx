@@ -91,6 +91,11 @@ const Settings = () => {
   const [coachNameSetting, setCoachNameSetting] = useState("");
   const [savingCoach, setSavingCoach] = useState(false);
 
+  // Docente materie editing
+  const [docenteMaterie, setDocenteMaterie] = useState<string[]>([]);
+  const [newMateria, setNewMateria] = useState("");
+  const [savingMaterie, setSavingMaterie] = useState(false);
+
   // Check if adult role
   const session = getChildSession();
   const isAdult = ["superiori", "universitario", "docente"].includes(session?.profile?.school_level || "");
