@@ -53,7 +53,7 @@ function SubjectBlock({ subject, topics }: { subject: string; topics: TopicRow[]
 
 export function StudentReviewMockup() {
   return (
-    <PhoneFrame>
+    <BrowserFrame>
       <p className="text-sm font-bold mb-1" style={{ color: "#1A3A5C" }}>
         Ripassa
       </p>
@@ -75,6 +75,6 @@ export function StudentReviewMockup() {
           { name: "Grammatica", filled: 3 },
         ]}
       />
-    </PhoneFrame>
+    </BrowserFrame>
   );
 }
