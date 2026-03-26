@@ -81,15 +81,19 @@ export default function CoachDocente() {
     loadSidebarData();
   }, [teacherId]);
 
-  // Handle initial message
-  useEffect(() => {
-    if (!teacherId || loading) return;
-    if (initialMessage && !initialHandled.current) {
-      initialHandled.current = true;
-      window.history.replaceState({}, "");
-      handleInitialMessage(initialMessage, initialClassId);
-    }
-  }, [teacherId, loading]);
+  // Handle initial message — triggered after sidebar finishes loading
+  const pendingInitialMessage = useRef(initialMessage);
+  const pendingInitialClassId = useRef(initialClassId);
+  
+  async function processInitialMessage() {
+    const msg = pendingInitialMessage.current;
+    const clsId = pendingInitialClassId.current;
+    if (!msg || initialHandled.current || !teacherId) return;
+    initialHandled.current = true;
+    pendingInitialMessage.current = undefined;
+    window.history.replaceState({}, "");
+    await handleInitialMessage(msg, clsId);
+  }
 
   // Auto-scroll
   useEffect(() => {
