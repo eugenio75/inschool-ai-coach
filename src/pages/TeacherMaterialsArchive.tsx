@@ -342,8 +342,8 @@ export default function TeacherMaterialsArchive() {
               </DialogHeader>
 
               <div className="mt-4 bg-muted/30 border border-border rounded-xl p-5">
-                <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap text-sm leading-relaxed">
-                  {previewMaterial.content}
+                <div className="prose prose-sm max-w-none text-foreground text-sm leading-relaxed">
+                  {formatMaterialContent(previewMaterial.content)}
                 </div>
               </div>
 
