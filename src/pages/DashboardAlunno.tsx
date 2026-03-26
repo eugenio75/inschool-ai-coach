@@ -12,6 +12,7 @@ import { shouldShowCheckin } from "@/pages/EmotionalCheckin";
 import { getTasks, getActiveChildProfileId, getChildProfile, deleteTask } from "@/lib/database";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 import { CoachPresence } from "@/components/CoachPresence";
+import { BadgeDisplay } from "@/components/BadgeDisplay";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -120,6 +121,11 @@ const DashboardAlunno = () => {
             <CoachPresence variant="home" />
           </motion.div>
         )}
+      </div></div>
+
+      {/* Motivational Badges */}
+      <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
+        <BadgeDisplay variant="elementari" />
       </div></div>
 
       {/* Session entry cards */}
