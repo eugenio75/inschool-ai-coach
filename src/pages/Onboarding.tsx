@@ -795,6 +795,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     key={step} custom={direction} variants={variants} initial="enter" animate="center" exit="exit"
                     className="w-full max-w-2xl absolute flex flex-col items-center justify-center p-8 bg-card rounded-[2rem] shadow-sm border border-border"
                 >
+                    {role === "medie" && renderMedie(step, answers, setAnswers, toggleArrayMax, toggleArray, locationInputRef)}
                     {role === "superiori" && renderSuperiori(step, answers, setAnswers, toggleArrayMax, toggleArray, locationInputRef)}
                     {role === "universitario" && renderUniversitario(step, answers, setAnswers, toggleArrayMax, toggleArray, locationInputRef)}
                     {role === "docente" && renderDocente(step, answers, setAnswers, toggleArrayMax, toggleArray, locationInputRef)}
