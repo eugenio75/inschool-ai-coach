@@ -860,6 +860,116 @@ ${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> __________
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Reassign dialog ── */}
+      <Dialog open={!!reassignMaterial} onOpenChange={open => !open && setReassignMaterial(null)}>
+        <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Riassegna materiale</DialogTitle>
+            <DialogDescription>
+              Assegna "{reassignMaterial?.title}" agli studenti di una classe.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {/* Class select */}
+            <div>
+              <Label className="text-xs font-medium">Classe</Label>
+              <Select
+                value={reassignClassId}
+                onValueChange={v => {
+                  setReassignClassId(v);
+                  setReassignStudents([]);
+                  loadClassStudents(v);
+                }}
+              >
+                <SelectTrigger className="mt-1 rounded-xl"><SelectValue placeholder="Seleziona una classe..." /></SelectTrigger>
+                <SelectContent>
+                  {classi.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Destination */}
+            {reassignClassId && (
+              <div>
+                <Label className="text-xs font-medium mb-2 block">Destinazione</Label>
+                <RadioGroup value={reassignDest} onValueChange={v => setReassignDest(v as any)} className="flex gap-2 flex-wrap">
+                  {([
+                    { value: "all", label: "Tutta la classe" },
+                    { value: "selected", label: "Studenti specifici" },
+                    { value: "pdf", label: "Scarica PDF" },
+                  ] as const).map(({ value, label }) => (
+                    <label
+                      key={value}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all text-xs font-medium",
+                        reassignDest === value
+                          ? "bg-primary/10 border-primary/40 text-primary"
+                          : "bg-background border-border text-muted-foreground hover:border-primary/20"
+                      )}
+                    >
+                      <RadioGroupItem value={value} className="sr-only" />
+                      {label}
+                    </label>
+                  ))}
+                </RadioGroup>
+
+                {reassignDest === "selected" && (
+                  <div className="max-h-40 overflow-y-auto border border-border rounded-xl p-2 space-y-1 mt-2">
+                    {loadingStudents ? (
+                      <div className="flex justify-center py-3"><Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /></div>
+                    ) : reassignStudentsList.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-2">Nessuno studente iscritto</p>
+                    ) : reassignStudentsList.map(s => (
+                      <label key={s.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/50 cursor-pointer">
+                        <Checkbox
+                          checked={reassignStudents.includes(s.id)}
+                          onCheckedChange={v => setReassignStudents(prev => v ? [...prev, s.id] : prev.filter(x => x !== s.id))}
+                        />
+                        <span className="text-sm">{s.name || "Studente"}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Due date */}
+            {reassignClassId && reassignDest !== "pdf" && (
+              <div>
+                <Label className="text-xs font-medium">Scadenza (opzionale)</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full mt-1 rounded-xl justify-start text-left font-normal", !reassignDueDate && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {reassignDueDate ? format(reassignDueDate, "dd MMM yyyy", { locale: it }) : "Seleziona data"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={reassignDueDate} onSelect={setReassignDueDate}
+                      disabled={(date) => date < new Date()}
+                      initialFocus className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReassignMaterial(null)}>Annulla</Button>
+            <Button
+              disabled={!reassignClassId || reassigning || (reassignDest === "selected" && reassignStudents.length === 0)}
+              onClick={handleReassign}
+            >
+              {reassigning ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <RotateCcw className="w-4 h-4 mr-1" />}
+              {reassignDest === "pdf" ? "Scarica PDF" : "Assegna"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
