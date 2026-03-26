@@ -552,33 +552,34 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
               {messages.map((msg, i) => {
                 console.log("RENDERING MESSAGE:", msg);
                 return (
-                <div key={msg.id || i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
-                  {msg.role === "assistant" && (
-                    <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center shrink-0 mt-0.5 mr-2">
-                      <Brain className="w-3.5 h-3.5 text-primary-foreground" />
+                  <div key={msg.id || i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
+                    {msg.role === "assistant" && (
+                      <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center shrink-0 mt-0.5 mr-2">
+                        <Brain className="w-3.5 h-3.5 text-primary-foreground" />
+                      </div>
+                    )}
+                    <div className="max-w-[80%] space-y-1">
+                      <div className={cn(
+                        "px-4 py-2.5 rounded-2xl text-sm leading-relaxed",
+                        msg.role === "user"
+                          ? "bg-primary text-primary-foreground rounded-br-sm"
+                          : "bg-card text-foreground rounded-bl-sm shadow-sm border border-border"
+                      )}>
+                        {msg.content || (isReplying && i === messages.length - 1 ? (
+                          <span className="inline-flex gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "0ms" }} />
+                            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "150ms" }} />
+                            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "300ms" }} />
+                          </span>
+                        ) : "")}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground/60 px-1">
+                        {format(new Date(msg.created_at), "HH:mm", { locale: it })}
+                      </p>
                     </div>
-                  )}
-                  <div className="max-w-[80%] space-y-1">
-                    <div className={cn(
-                      "px-4 py-2.5 rounded-2xl text-sm leading-relaxed",
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-sm"
-                        : "bg-card text-foreground rounded-bl-sm shadow-sm border border-border"
-                    )}>
-                      {msg.content || (isReplying && i === messages.length - 1 ? (
-                        <span className="inline-flex gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "0ms" }} />
-                          <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "150ms" }} />
-                          <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "300ms" }} />
-                        </span>
-                      ) : "")}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground/60 px-1">
-                      {format(new Date(msg.created_at), "HH:mm", { locale: it })}
-                    </p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div ref={bottomRef} />
             </div>
           )}
