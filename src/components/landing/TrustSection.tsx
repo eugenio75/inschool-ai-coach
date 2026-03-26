@@ -8,6 +8,8 @@ const trustItems: { title: TranslationKey; desc: TranslationKey }[] = [
   { title: "trust_1", desc: "trust_1_desc" },
   { title: "trust_2", desc: "trust_2_desc" },
   { title: "trust_3", desc: "trust_3_desc" },
+  { title: "trust_6", desc: "trust_6_desc" },
+  { title: "trust_7", desc: "trust_7_desc" },
   { title: "trust_4", desc: "trust_4_desc" },
   { title: "trust_5", desc: "trust_5_desc" },
 ];
