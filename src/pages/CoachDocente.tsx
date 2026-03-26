@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Brain, Send, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
@@ -15,6 +15,8 @@ import { streamChat, type ChatMsg } from "@/lib/streamChat";
 
 export default function CoachDocente() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const initialMessage = (location.state as any)?.initialMessage as string | undefined;
   const session = getChildSession();
   const profile = session?.profile;
   const profileId = session?.profileId;
@@ -33,10 +35,18 @@ export default function CoachDocente() {
   const daSegurireCount = useRef(0);
   const assignmentsCount = useRef(0);
 
-  // Load context data + conversation history
+  // Load conversation history, then handle initial message from home
+  const initialHandled = useRef(false);
   useEffect(() => {
     if (!profileId) return;
-    loadConversation();
+    loadConversation().then(() => {
+      if (initialMessage && !initialHandled.current) {
+        initialHandled.current = true;
+        // Clear the navigation state so refresh doesn't re-send
+        window.history.replaceState({}, "");
+        handleSend(initialMessage);
+      }
+    });
     loadContext();
   }, [profileId]);
 
