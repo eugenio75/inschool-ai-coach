@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Flame, Star, Zap, Target, Loader2, Brain, MessageCircle, ArrowRight } from "lucide-react";
-import { getGamification, getDailyMissions, completeMission, getTasks } from "@/lib/database";
+import { getGamification, getDailyMissions, completeMission, getTasks, getActiveChildProfileId } from "@/lib/database";
+import { getChildSession, isChildSession } from "@/lib/childSession";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { StreakShieldBadge } from "@/components/CelebrationOverlay";
 
