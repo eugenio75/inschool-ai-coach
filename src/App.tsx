@@ -113,6 +113,12 @@ function RoleGuard({ children }: { children: React.ReactNode }) {
         const { data } = await supabase.from("child_profiles").select("*").eq("parent_id", user.id).limit(1);
         if (data && data.length > 0) {
           profile = data[0];
+          // Persist session so we don't re-fetch on every navigation
+          setChildSession({
+            profileId: profile.id,
+            accessCode: profile.access_code || "",
+            profile: profile as any,
+          });
         }
       }
 
