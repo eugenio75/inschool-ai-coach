@@ -69,10 +69,21 @@ export default function CoachDocente() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [editNameValue, setEditNameValue] = useState("");
+  const [coachName, setCoachName] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const initialHandled = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatsRef = useRef<TeacherChat[]>([]);
+
+  // Load coach name
+  useEffect(() => {
+    if (!profileId) return;
+    supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle()
+      .then(({ data }) => {
+        const prefs = (data?.data as any) || {};
+        if (prefs.coach_name) setCoachName(prefs.coach_name);
+      });
+  }, [profileId]);
   chatsRef.current = chats;
 
   // Load sidebar data
