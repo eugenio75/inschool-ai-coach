@@ -539,7 +539,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
                 }}
                 className="font-semibold text-foreground text-sm truncate max-w-[200px] hover:text-primary transition-colors"
               >
-                {activeChat?.name || "Chat con il coach"}
+                {activeChat?.name || (coachName ? `Chat con ${coachName}` : "Chat con il coach")}
               </button>
             )}
           </div>
