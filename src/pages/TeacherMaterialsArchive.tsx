@@ -50,145 +50,160 @@ function typeLabel(t: string | null) {
   return found ? found.label : t || "—";
 }
 
-/** Render inline markdown: **bold**, *italic*, and LaTeX via MathText */
-function renderInline(text: string) {
-  // Split on LaTeX patterns first, then handle bold/italic
-  // We'll use MathText for the whole line if it contains $ or \(
-  const hasLatex = /\$|\\\(|\\\[/.test(text);
-  
-  if (hasLatex) {
-    // Process bold/italic around LaTeX by splitting on ** and *
-    const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
-    return parts.map((part, i) => {
-      const boldMatch = part.match(/^\*\*(.+)\*\*$/);
-      const italicMatch = !boldMatch && part.match(/^\*(.+)\*$/);
-      if (boldMatch) return <strong key={i}><MathText>{boldMatch[1]}</MathText></strong>;
-      if (italicMatch) return <em key={i}><MathText>{italicMatch[1]}</MathText></em>;
-      return <MathText key={i}>{part}</MathText>;
-    });
-  }
-
-  // No LaTeX — just handle bold/italic
-  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
-  return parts.map((part, i) => {
-    const boldMatch = part.match(/^\*\*(.+)\*\*$/);
-    const italicMatch = !boldMatch && part.match(/^\*(.+)\*$/);
-    if (boldMatch) return <strong key={i}>{boldMatch[1]}</strong>;
-    if (italicMatch) return <em key={i}>{italicMatch[1]}</em>;
-    return <span key={i}>{part}</span>;
-  });
-}
-
-/** Renders material content with proper visual formatting */
+/** Convert markdown content to structured React elements */
 function formatMaterialContent(raw: string) {
   if (!raw) return null;
-  const text = raw.replace(/\\n/g, "\n");
+  
+  // Normalize: replace literal \n sequences AND ensure real newlines
+  let text = raw;
+  // Handle literal backslash-n from DB
+  text = text.replace(/\\n/g, "\n");
+  // Normalize line endings
+  text = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  
   const lines = text.split("\n");
+  const elements: JSX.Element[] = [];
+  let idx = 0;
 
-  const elements: React.ReactNode[] = [];
-  let i = 0;
-
-  while (i < lines.length) {
-    const trimmed = lines[i].trim();
-
-    // Skip empty lines
-    if (trimmed === "") { i++; continue; }
-
-    // Horizontal rule ---
-    if (/^-{3,}$/.test(trimmed) || /^\*{3,}$/.test(trimmed)) {
-      elements.push(<hr key={i} className="my-4 border-border" />);
-      i++; continue;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const t = line.trim();
+    
+    // Empty line → skip
+    if (t === "") continue;
+    
+    // Horizontal rule: --- or ***
+    if (/^[-]{3,}$/.test(t) || /^[*]{3,}$/.test(t)) {
+      elements.push(<hr key={idx++} className="my-5 border-border" />);
+      continue;
     }
 
-    // Headings #### → h4, ### → h3, ## → h2
-    const h4Match = trimmed.match(/^#{4,}\s+(.*)/);
-    if (h4Match) {
+    // Heading ####
+    if (t.startsWith("#### ")) {
+      const content = t.replace(/^#{4,}\s+/, "");
       elements.push(
-        <h4 key={i} className="text-sm font-bold text-foreground mt-5 mb-1.5 flex items-center gap-2">
+        <h4 key={idx++} className="text-sm font-bold text-foreground mt-5 mb-1.5 flex items-center gap-2">
           <span className="w-1 h-4 bg-primary rounded-full shrink-0" />
-          {renderInline(h4Match[1])}
+          <span>{inlineMarkdown(content)}</span>
         </h4>
       );
-      i++; continue;
+      continue;
     }
-    const h3Match = trimmed.match(/^###\s+(.*)/);
-    if (h3Match) {
+    
+    // Heading ###
+    if (t.startsWith("### ")) {
+      const content = t.replace(/^###\s+/, "");
       elements.push(
-        <h3 key={i} className="text-base font-bold text-foreground mt-6 mb-2 pb-1.5 border-b border-border">
-          {renderInline(h3Match[1])}
+        <h3 key={idx++} className="text-base font-bold text-foreground mt-6 mb-2 pb-1.5 border-b border-border">
+          {inlineMarkdown(content)}
         </h3>
       );
-      i++; continue;
+      continue;
     }
-    const h2Match = trimmed.match(/^##\s+(.*)/);
-    if (h2Match) {
+    
+    // Heading ##
+    if (t.startsWith("## ")) {
+      const content = t.replace(/^##\s+/, "");
       elements.push(
-        <h2 key={i} className="text-lg font-bold text-foreground mt-6 mb-2">
-          {renderInline(h2Match[1])}
+        <h2 key={idx++} className="text-lg font-bold text-foreground mt-6 mb-2">
+          {inlineMarkdown(content)}
         </h2>
       );
-      i++; continue;
+      continue;
     }
 
-    // Display math block $$...$$
-    if (trimmed.startsWith("$$")) {
-      let mathContent = trimmed.slice(2);
-      // Might span multiple lines
-      while (!mathContent.includes("$$") && i + 1 < lines.length) {
-        i++;
-        mathContent += "\n" + lines[i].trim();
+    // Display math $$...$$ (may span multiple lines)
+    if (t.startsWith("$$")) {
+      let math = t.substring(2);
+      if (math.endsWith("$$")) {
+        math = math.slice(0, -2);
+      } else {
+        // Collect lines until closing $$
+        while (i + 1 < lines.length) {
+          i++;
+          const next = lines[i].trim();
+          if (next.endsWith("$$")) {
+            math += "\n" + next.slice(0, -2);
+            break;
+          }
+          math += "\n" + next;
+        }
       }
-      mathContent = mathContent.replace(/\$\$$/, "").trim();
       elements.push(
-        <div key={i} className="my-3 py-3 px-4 bg-muted/50 rounded-lg border border-border text-center overflow-x-auto">
-          <MathText>{`$$${mathContent}$$`}</MathText>
+        <div key={idx++} className="my-3 py-3 px-4 bg-muted/50 rounded-lg border border-border text-center overflow-x-auto">
+          <MathText>{`$$${math.trim()}$$`}</MathText>
         </div>
       );
-      i++; continue;
+      continue;
     }
 
-    // Numbered item: "1." or "1)"
-    const numberedMatch = trimmed.match(/^(\d+)[.)]\s*(.*)/);
-    if (numberedMatch) {
+    // Numbered list: 1. or 1)
+    const numMatch = t.match(/^(\d+)[.)]\s+(.*)/);
+    if (numMatch) {
       elements.push(
-        <div key={i} className="flex gap-3 items-start pl-1 py-0.5">
-          <span className="font-semibold text-primary min-w-[1.5rem] text-right shrink-0">{numberedMatch[1]}.</span>
-          <span>{renderInline(numberedMatch[2])}</span>
+        <div key={idx++} className="flex gap-3 items-baseline pl-1 py-0.5">
+          <span className="font-semibold text-primary min-w-[1.5rem] text-right shrink-0">{numMatch[1]}.</span>
+          <span className="flex-1">{inlineMarkdown(numMatch[2])}</span>
         </div>
       );
-      i++; continue;
+      continue;
     }
 
-    // Lettered item: "a)" or "a."
-    const letteredMatch = trimmed.match(/^([a-zA-Z])[.)]\s*(.*)/);
-    if (letteredMatch) {
-      elements.push(
-        <div key={i} className="flex gap-3 items-start pl-6 py-0.5">
-          <span className="font-medium text-muted-foreground min-w-[1.2rem] shrink-0">{letteredMatch[1]})</span>
-          <span>{renderInline(letteredMatch[2])}</span>
-        </div>
-      );
-      i++; continue;
-    }
-
-    // Bullet: "- " or "• "
-    const bulletMatch = trimmed.match(/^[-•]\s+(.*)/);
+    // Bullet: - text or • text
+    const bulletMatch = t.match(/^[-•]\s+(.*)/);
     if (bulletMatch) {
       elements.push(
-        <div key={i} className="flex gap-3 items-start pl-1 py-0.5">
-          <span className="text-primary shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-primary inline-block" />
-          <span>{renderInline(bulletMatch[1])}</span>
+        <div key={idx++} className="flex gap-3 items-baseline pl-2 py-0.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 mt-[0.4em]" />
+          <span className="flex-1">{inlineMarkdown(bulletMatch[1])}</span>
         </div>
       );
-      i++; continue;
+      continue;
     }
 
     // Regular paragraph
-    elements.push(<p key={i} className="py-0.5">{renderInline(trimmed)}</p>);
-    i++;
+    elements.push(<p key={idx++} className="py-0.5 leading-relaxed">{inlineMarkdown(t)}</p>);
   }
 
-  return <div className="space-y-0.5">{elements}</div>;
+  return <div className="space-y-1">{elements}</div>;
+}
+
+/** Process inline markdown: **bold**, *italic*, and LaTeX $...$ */
+function inlineMarkdown(text: string): React.ReactNode {
+  // Process bold and italic first, then pass through MathText for LaTeX
+  const segments: React.ReactNode[] = [];
+  // Split on **bold** and *italic* patterns
+  const regex = /(\*\*(.+?)\*\*|\*(.+?)\*)/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    // Text before match
+    if (match.index > lastIndex) {
+      const before = text.slice(lastIndex, match.index);
+      segments.push(<MathText key={`t${lastIndex}`}>{before}</MathText>);
+    }
+    if (match[2]) {
+      // Bold
+      segments.push(<strong key={`b${match.index}`}><MathText>{match[2]}</MathText></strong>);
+    } else if (match[3]) {
+      // Italic
+      segments.push(<em key={`i${match.index}`}><MathText>{match[3]}</MathText></em>);
+    }
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Remaining text
+  if (lastIndex < text.length) {
+    const rest = text.slice(lastIndex);
+    segments.push(<MathText key={`r${lastIndex}`}>{rest}</MathText>);
+  }
+
+  if (segments.length === 0) {
+    return <MathText>{text}</MathText>;
+  }
+
+  return <>{segments}</>;
 }
 
 export default function TeacherMaterialsArchive() {
