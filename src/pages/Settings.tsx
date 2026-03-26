@@ -142,6 +142,10 @@ const Settings = () => {
         if (prefs.coach_name) setCoachNameSetting(prefs.coach_name);
       }
 
+      // Load docente materie from profile
+      if (session?.profile?.school_level === "docente") {
+        setDocenteMaterie(session.profile.favorite_subjects || []);
+
       setLoading(false);
     };
     load();
