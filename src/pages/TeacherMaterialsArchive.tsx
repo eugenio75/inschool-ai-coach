@@ -551,10 +551,10 @@ ${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> __________
                   >
                     <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
-                  <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
+                  <button onClick={() => handleDownloadPdf(m)} className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
                     <Download className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
-                  <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Modifica">
+                  <button onClick={() => openEdit(m)} className="p-2 rounded-lg hover:bg-muted transition-colors" title="Modifica">
                     <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
                   <button
