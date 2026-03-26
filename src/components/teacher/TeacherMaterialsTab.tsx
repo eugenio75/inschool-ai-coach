@@ -49,10 +49,11 @@ interface Props {
   materials: any[];
   userId: string;
   onReload: () => void;
+  autoCreate?: boolean;
 }
 
-export default function TeacherMaterialsTab({ classId, classe, students, materials, userId, onReload }: Props) {
-  const [mode, setMode] = useState<FormMode>(null);
+export default function TeacherMaterialsTab({ classId, classe, students, materials, userId, onReload, autoCreate }: Props) {
+  const [mode, setMode] = useState<FormMode>(autoCreate ? "write" : null);
   const [activityType, setActivityType] = useState<ActivityType>("compito");
   const [content, setContent] = useState("");
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);

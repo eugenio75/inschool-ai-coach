@@ -61,6 +61,10 @@ export default function DashboardDocente() {
   const [savingClasse, setSavingClasse] = useState(false);
   const [classeCreata, setClasseCreata] = useState<any>(null);
 
+  // Crea materiale — class picker
+  const [showMaterialClassPicker, setShowMaterialClassPicker] = useState(false);
+  const [selectedMaterialClassId, setSelectedMaterialClassId] = useState("");
+
   const od = onboarding;
   const materie: string[] = od?.docente_materie || [];
   const ordine: string = od?.docente_ordine || "";
@@ -385,7 +389,7 @@ REGOLE DI RISPOSTA:
         {/* ━━━ BLOCK 5 — AZIONI RAPIDE ━━━ */}
         <div className="grid grid-cols-2 gap-3">
           <button
-            onClick={() => navigate("/libreria?create=true")}
+            onClick={() => setShowMaterialClassPicker(true)}
             className="flex items-center justify-center gap-2 bg-primary text-primary-foreground font-medium text-sm py-3.5 rounded-xl hover:bg-primary/90 transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -575,6 +579,35 @@ REGOLE DI RISPOSTA:
             }}>
             <Copy className="w-4 h-4 mr-2" />Copia codice e chiudi
           </Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* Crea materiale — class picker */}
+      <Dialog open={showMaterialClassPicker} onOpenChange={setShowMaterialClassPicker}>
+        <DialogContent className="rounded-xl">
+          <DialogHeader><DialogTitle>Seleziona classe</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Scegli la classe per cui vuoi creare il materiale.</p>
+          <Select value={selectedMaterialClassId} onValueChange={setSelectedMaterialClassId}>
+            <SelectTrigger className="mt-2"><SelectValue placeholder="Seleziona una classe..." /></SelectTrigger>
+            <SelectContent>
+              {classi.map(c => (
+                <SelectItem key={c.id} value={c.id}>{c.nome}{c.materia ? ` — ${c.materia}` : ""}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => { setShowMaterialClassPicker(false); setSelectedMaterialClassId(""); }}>Annulla</Button>
+            <Button
+              disabled={!selectedMaterialClassId}
+              onClick={() => {
+                setShowMaterialClassPicker(false);
+                navigate(`/classe/${selectedMaterialClassId}?tab=materiali&create=true`);
+                setSelectedMaterialClassId("");
+              }}
+            >
+              Continua
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
