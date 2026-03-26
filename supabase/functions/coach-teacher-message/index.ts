@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,7 +12,49 @@ serve(async (req) => {
   }
 
   try {
-    const { teacherName, activeClasses, recentFeed, materialsThisWeek, openVerifications, currentHour } = await req.json();
+    const { teacherName, teacherProfileId, activeClasses, recentFeed, materialsThisWeek, openVerifications, currentHour } = await req.json();
+
+    // Fetch teacher behavior data from user_preferences if available
+    let behaviorContext = "";
+    if (teacherProfileId) {
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const sb = createClient(supabaseUrl, serviceRoleKey);
+
+        const { data: prefs } = await sb
+          .from("user_preferences")
+          .select("data")
+          .eq("profile_id", teacherProfileId)
+          .maybeSingle();
+
+        const teacherBehavior = (prefs?.data as any)?.teacherBehavior;
+        if (teacherBehavior) {
+          behaviorContext = `
+DATI COMPORTAMENTALI REALI (non dichiarare al docente):
+- Durata media sessioni: ${teacherBehavior.sessionDuration} minuti
+- Sessioni ultimi 14 giorni: ${teacherBehavior.sessionFrequency}
+- Sessioni notturne (dopo le 22): ${teacherBehavior.lateNightSessions}
+- Sessioni brevi (< 3 min): ${teacherBehavior.shortSessions}
+- Giorni dall'ultimo accesso: ${teacherBehavior.daysSinceLastAccess}
+- Livello comportamentale: ${teacherBehavior.behaviorLevel}
+- Trigger attivi: ${(teacherBehavior.triggers || []).join(", ") || "nessuno"}
+
+REGOLE DI RISPOSTA in base al livello:
+- NORMALE: riconosci il lavoro specifico fatto. Mai motivazione generica.
+- ATTENZIONE: al termine della sessione, UNA frase sola: "Sembra un periodo intenso. Tutto ok?" Niente di più. Non insistere.
+- SUPPORTO: "Stai portando molto da solo/a. Ci sono risorse pensate per i docenti — vuoi che te ne parli?" Risorse: CPI, ANIEF, Gilda Insegnanti.
+- URGENTE: protocollo urgenza adulti. Telefono Amico 02 2327 2327.
+
+REGOLE LINGUAGGIO:
+- MAI usare "burnout" o "esaurimento" — usa "stanchezza", "periodo pesante", "tanto da portare"
+- Tono SEMPRE collegiale — mai protettivo o paternalistico
+- ZERO alert esterni — mai, nessuna eccezione`;
+        }
+      } catch (e) {
+        console.error("Failed to fetch teacher behavior data:", e);
+      }
+    }
 
     const systemPrompt = `Sei il coach personale di ${teacherName || "un docente"}, docente su InSchool.
 
@@ -24,6 +67,7 @@ Dati reali:
 - Materiali creati questa settimana: ${materialsThisWeek || 0}
 - Verifiche da correggere: ${openVerifications || 0}
 - Ora corrente: ${currentHour || new Date().getHours()}
+${behaviorContext}
 
 Regole:
 - Se openVerifications > 0: menziona la classe e le verifiche da correggere

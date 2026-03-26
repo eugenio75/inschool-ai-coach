@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Loader2, Lock } from "lucide-react";
+import { ArrowLeft, BookOpen, Loader2, Lock, Bell } from "lucide-react";
 import { getChildProfiles, getFocusSessions, getGamification, getParentSettings, getMemoryItems, getTasks, getDailyMissions, getEmotionalAlerts } from "@/lib/database";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -30,6 +30,7 @@ const ParentDashboard = () => {
   const [aiInsights, setAiInsights] = useState<any[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [emotionalAlerts, setEmotionalAlerts] = useState<any[]>([]);
+  const [parentNotifications, setParentNotifications] = useState<any[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -42,6 +43,23 @@ const ParentDashboard = () => {
     };
     load();
   }, []);
+
+  // Load parent notifications for all children
+  useEffect(() => {
+    if (children.length === 0) return;
+    const loadNotifications = async () => {
+      const childIds = children.map((c: any) => c.id);
+      const { data } = await supabase
+        .from("parent_notifications")
+        .select("*")
+        .in("child_profile_id", childIds)
+        .eq("read", false)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      setParentNotifications(data || []);
+    };
+    loadNotifications();
+  }, [children]);
 
   useEffect(() => {
     if (!selectedChild) return;
@@ -119,6 +137,11 @@ const ParentDashboard = () => {
     else { setPinError(true); setPinInput(""); }
   };
 
+  const markNotificationRead = async (notifId: string) => {
+    await supabase.from("parent_notifications").update({ read: true }).eq("id", notifId);
+    setParentNotifications(prev => prev.filter(n => n.id !== notifId));
+  };
+
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
 
   // PIN lock screen
@@ -131,6 +154,22 @@ const ParentDashboard = () => {
           </div>
           <h2 className="font-display text-2xl font-bold text-foreground mb-2">Area Genitori</h2>
           <p className="text-sm text-muted-foreground mb-8">Inserisci il PIN per accedere</p>
+
+          {/* Show notification badge on PIN screen */}
+          {parentNotifications.length > 0 && (
+            <div className="mb-6 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 text-left">
+              <div className="flex items-center gap-2 mb-1">
+                <Bell className="w-4 h-4 text-amber-600" />
+                <span className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                  {parentNotifications.length} {parentNotifications.length === 1 ? "notifica" : "notifiche"}
+                </span>
+              </div>
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                Sblocca per vedere i dettagli
+              </p>
+            </div>
+          )}
+
           <input
             type="password"
             value={pinInput}
@@ -151,6 +190,9 @@ const ParentDashboard = () => {
   const selectedProfile = children.find(c => c.id === selectedChild);
   const totalMinutes = sessions.reduce((a, s) => a + Math.round((s.duration_seconds || 0) / 60), 0);
   const totalSessions = sessions.length;
+
+  // Filter notifications for selected child
+  const childNotifications = parentNotifications.filter(n => n.child_profile_id === selectedChild);
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -201,7 +243,54 @@ const ParentDashboard = () => {
       {/* Cards grid */}
       <div className="px-6 mt-6">
         <div className="max-w-3xl mx-auto space-y-4">
-          {/* Daily snapshot - always first */}
+          {/* Parent notifications — silent alerts */}
+          {childNotifications.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={spring}
+              className="space-y-3"
+            >
+              {childNotifications.map((notif) => (
+                <div
+                  key={notif.id}
+                  className={`rounded-2xl border p-4 ${
+                    notif.alert_level === "urgent"
+                      ? "bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700"
+                      : "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Bell className={`w-4 h-4 ${
+                          notif.alert_level === "urgent" ? "text-amber-600" : "text-blue-600"
+                        }`} />
+                        <span className={`text-sm font-semibold ${
+                          notif.alert_level === "urgent" ? "text-amber-800 dark:text-amber-200" : "text-blue-800 dark:text-blue-200"
+                        }`}>
+                          {notif.title}
+                        </span>
+                      </div>
+                      <p className={`text-xs leading-relaxed ${
+                        notif.alert_level === "urgent" ? "text-amber-700 dark:text-amber-300" : "text-blue-700 dark:text-blue-300"
+                      }`}>
+                        {notif.message}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => markNotificationRead(notif.id)}
+                      className="text-xs text-muted-foreground hover:text-foreground shrink-0 mt-1"
+                    >
+                      ✓ Letto
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Daily snapshot */}
           <DailySnapshotCard
             childName={selectedProfile?.name || "—"}
             sessions={sessions}
@@ -227,7 +316,7 @@ const ParentDashboard = () => {
             insightsLoading={insightsLoading}
           />
 
-          {/* Cognitive area + AI insights */}
+          {/* Cognitive area */}
           <CognitiveCard
             childName={selectedProfile?.name || "—"}
             insights={aiInsights}
