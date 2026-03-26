@@ -25,6 +25,37 @@ function isRecoveryTask(taskType: string, title: string): boolean {
   return title.toLowerCase().includes("recupero") || title.toLowerCase().includes("rinforzo");
 }
 
+// Check if mic was already suggested to this student (once-ever)
+async function checkMicSuggested(userId: string | undefined, isChild: boolean): Promise<boolean> {
+  if (!userId) return false;
+  try {
+    if (isChild) {
+      const session = getChildSession();
+      const profileId = session?.profileId;
+      if (!profileId) return false;
+      const { data } = await (supabase as any).from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
+      return !!(data?.data?.mic_suggested);
+    }
+    const { data } = await supabase.from("user_preferences").select("data").eq("profile_id", userId).maybeSingle();
+    return !!((data?.data as any)?.mic_suggested);
+  } catch { return false; }
+}
+
+async function markMicSuggested(userId: string | undefined, isChild: boolean): Promise<void> {
+  if (!userId) return;
+  try {
+    const profileId = isChild ? getChildSession()?.profileId : userId;
+    if (!profileId) return;
+    const { data: existing } = await (supabase as any).from("user_preferences").select("id, data").eq("profile_id", profileId).maybeSingle();
+    const newData = { ...(existing?.data || {}), mic_suggested: true };
+    if (existing) {
+      await (supabase as any).from("user_preferences").update({ data: newData, updated_at: new Date().toISOString() }).eq("id", existing.id);
+    } else {
+      await (supabase as any).from("user_preferences").insert({ profile_id: profileId, data: newData });
+    }
+  } catch (e) { console.error("Failed to mark mic_suggested:", e); }
+}
+
 // Familiarity memory — persist per homework so we don't ask twice
 function getSavedFamiliarity(homeworkId: string): Familiarity | null {
   try {
