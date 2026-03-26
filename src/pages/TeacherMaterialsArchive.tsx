@@ -233,6 +233,11 @@ export default function TeacherMaterialsArchive() {
   const [shareClassIds, setShareClassIds] = useState<string[]>([]);
   const [sharing, setSharing] = useState(false);
 
+  // Edit dialog
+  const [editMaterial, setEditMaterial] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", subject: "", type: "", level: "", content: "" });
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     loadData();
