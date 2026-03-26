@@ -336,26 +336,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       return;
     }
 
-    if (methodPhase === "ask_familiarity") {
-      const fam = value as Familiarity;
-      setFamiliarity(fam);
-      setMethodPhase("propose_method");
-
-      const familiarityLabel = fam === "first_time" ? "Prima volta" : fam === "already_know" ? "Lo conosco già" : "Solo in parte";
-      const proposal = getMethodProposal(fam, homework?.task_type || "study", homework?.title || "");
-
-      setMessages(prev => [
-        ...prev.map(m => ({ ...m, actions: undefined })),
-        { role: "user", content: familiarityLabel },
-        {
-          role: "assistant",
-          content: proposal,
-          actions: [
-            { label: "🚀  Cominciamo", value: "start_session", primary: true },
-          ],
-        },
-      ]);
-    } else if (methodPhase === "propose_method" && value === "start_session") {
+    if (methodPhase === "propose_method" && value === "start_session") {
       setMethodPhase("ready");
       setMessages(prev => [
         ...prev.map(m => ({ ...m, actions: undefined })),
