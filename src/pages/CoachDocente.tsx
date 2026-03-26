@@ -72,6 +72,8 @@ export default function CoachDocente() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const initialHandled = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const chatsRef = useRef<TeacherChat[]>([]);
+  chatsRef.current = chats;
 
   // Load sidebar data
   useEffect(() => {
