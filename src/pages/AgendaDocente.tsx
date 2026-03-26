@@ -64,7 +64,7 @@ export default function AgendaDocente() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const session = getChildSession();
-  const teacherId = user?.id || session?.profileId;
+  const teacherId = user?.id;
 
   const [viewMode, setViewMode] = useState<ViewMode>("settimana");
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -83,21 +83,17 @@ export default function AgendaDocente() {
 
   useEffect(() => {
     if (!teacherId) {
-      setLoading(false);
+      // Still loading auth — don't set loading false yet unless auth is settled
       return;
     }
     loadData();
-  }, [teacherId, session?.profileId]);
+  }, [teacherId]);
 
   async function loadData() {
     setLoading(true);
     const profileId = session?.profileId;
 
     if (!teacherId) {
-      setAssignments([]);
-      setCalendarEvents([]);
-      setClassi([]);
-      setLoading(false);
       return;
     }
 
