@@ -25,6 +25,37 @@ function isRecoveryTask(taskType: string, title: string): boolean {
   return title.toLowerCase().includes("recupero") || title.toLowerCase().includes("rinforzo");
 }
 
+// Check if mic was already suggested to this student (once-ever)
+async function checkMicSuggested(userId: string | undefined, isChild: boolean): Promise<boolean> {
+  if (!userId) return false;
+  try {
+    if (isChild) {
+      const session = getChildSession();
+      const profileId = session?.profileId;
+      if (!profileId) return false;
+      const { data } = await (supabase as any).from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
+      return !!(data?.data?.mic_suggested);
+    }
+    const { data } = await supabase.from("user_preferences").select("data").eq("profile_id", userId).maybeSingle();
+    return !!((data?.data as any)?.mic_suggested);
+  } catch { return false; }
+}
+
+async function markMicSuggested(userId: string | undefined, isChild: boolean): Promise<void> {
+  if (!userId) return;
+  try {
+    const profileId = isChild ? getChildSession()?.profileId : userId;
+    if (!profileId) return;
+    const { data: existing } = await (supabase as any).from("user_preferences").select("id, data").eq("profile_id", profileId).maybeSingle();
+    const newData = { ...(existing?.data || {}), mic_suggested: true };
+    if (existing) {
+      await (supabase as any).from("user_preferences").update({ data: newData, updated_at: new Date().toISOString() }).eq("id", existing.id);
+    } else {
+      await (supabase as any).from("user_preferences").insert({ profile_id: profileId, data: newData });
+    }
+  } catch (e) { console.error("Failed to mark mic_suggested:", e); }
+}
+
 // Familiarity memory — persist per homework so we don't ask twice
 function getSavedFamiliarity(homeworkId: string): Familiarity | null {
   try {
@@ -509,11 +540,16 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       const firstStep = generatedSteps[0];
       const stepIntro = `${homework.title} — Step 1 di ${generatedSteps.length}:\n\n${firstStep.text}`;
 
-      // For oral study tasks, also prompt voice as primary response mode
+      // Mic suggestion: show only once EVER per student profile
       const isOral = isOralStudyTask(homework.task_type, homework.title);
-      const voicePrompt = isOral
-        ? "\n\n🎤 **Rispondi a voce** — premi il tasto Voce per parlare, oppure scrivi in una frase breve."
-        : "";
+      let voicePrompt = "";
+      if (isOral) {
+        const micAlreadySuggested = await checkMicSuggested(userId, isChild);
+        if (!micAlreadySuggested) {
+          voicePrompt = "\n\nConsiglio: per le interrogazioni è più utile rispondere a voce. Puoi usare il microfono qui sotto — ti aiuta ad allenarti come nella realtà.";
+          await markMicSuggested(userId, isChild);
+        }
+      }
 
       setMessages(prev => [...prev, {
         role: "assistant",
@@ -583,8 +619,8 @@ ${getCoachBehaviorForFamiliarity(familiarity)}
 
 REGOLE GENERALI PER LO STUDIO ORALE:
 - "Spiegare con parole tue" NON deve significare scrivere testi lunghi
-- Preferisci sempre che lo studente risponda A VOCE (ricordagli di usare il pulsante 🎤)
 - Se scrive, accetta risposte BREVI (una frase basta)
+- NON menzionare MAI il microfono o la voce — il suggerimento è gestito dall'interfaccia
 - Se è bloccato, abbassa il carico cognitivo con frasi guidate:
   "Inizia così: questo argomento parla di…"
   "Dimmi solo l'idea principale"
@@ -684,11 +720,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
         .replace(/\[SEGNALA_DIFFICOLTÀ:\s*.+?\]/, "")
         .trim();
 
-      // For oral study tasks, add voice prompt reminder periodically
-      const isOralActive = isOralStudyTask(homework?.task_type || "", homework?.title || "");
-      if (isOralActive && !displayText.includes("🎤") && newMessages.filter(m => m.role === "user").length % 3 === 0) {
-        displayText += "\n\n🎤 Ricorda: puoi rispondermi a voce!";
-      }
+      // Mic reminder removed — handled once-ever by the UI on session start
 
       setStreamingText("");
       setMessages([...newMessages, { role: "assistant", content: displayText }]);
