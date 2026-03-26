@@ -640,6 +640,13 @@ ${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> __________
 
                 <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                   <button
+                    onClick={() => openReassign(m)}
+                    className="p-2 rounded-lg hover:bg-muted transition-colors"
+                    title="Riassegna"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                  <button
                     onClick={() => openShare(m)}
                     className="p-2 rounded-lg hover:bg-muted transition-colors"
                     title="Condividi con altre classi"
