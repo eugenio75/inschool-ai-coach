@@ -61,6 +61,67 @@ export function ChatShell({
   }
 
   const [isListening, setIsListening] = useState(false);
+  const [attachProcessing, setAttachProcessing] = useState(false);
+
+  async function handleAttachFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !onSend) return;
+    e.target.value = ""; // reset input
+
+    setAttachProcessing(true);
+    try {
+      // Convert file to base64 data URL
+      const reader = new FileReader();
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      // Call OCR edge function
+      const { data: { session } } = await (await import("@/integrations/supabase/client")).supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ocr-homework`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            imageUrls: [dataUrl],
+            sourceType: file.type.includes("pdf") ? "photo-book" : "photo-diary",
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        onSend("[Il file non è leggibile] Non riesco a leggere questo file. Prova con una foto più nitida o un PDF diverso.");
+        return;
+      }
+
+      const result = await res.json();
+      if (result.tasks && result.tasks.length > 0) {
+        // Extract text content from OCR results
+        const extractedText = result.tasks.map((t: any) => {
+          const parts = [t.title];
+          if (t.description) parts.push(t.description);
+          if (t.exerciseText) parts.push(`Esercizio: ${t.exerciseText}`);
+          return parts.join("\n");
+        }).join("\n\n---\n\n");
+
+        onSend(`[Contenuto estratto dal file "${file.name}"]\n\n${extractedText}\n\nAnalizza questo contenuto nel contesto della sessione attiva.`);
+      } else {
+        onSend("[Il file non è leggibile] Non riesco a leggere questo file. Prova con una foto più nitida o un PDF diverso.");
+      }
+    } catch (err) {
+      console.error("Attach file error:", err);
+      onSend("[Il file non è leggibile] Non riesco a leggere questo file. Prova con una foto più nitida o un PDF diverso.");
+    } finally {
+      setAttachProcessing(false);
+    }
+  }
 
   function startVoice() {
     try {
@@ -243,11 +304,8 @@ export function ChatShell({
             )}
             {showAttach && (
               <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-muted-foreground text-xs font-medium hover:bg-muted transition-colors cursor-pointer">
-                <Paperclip className="w-3.5 h-3.5" /> Allega
-                <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) onSend(`[Ho allegato un file: ${file.name}] Analizzalo nel contesto di questa sessione.`);
-                }} />
+                <Paperclip className="w-3.5 h-3.5" /> {attachProcessing ? "Analisi..." : "Allega"}
+                <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleAttachFile} disabled={attachProcessing} />
               </label>
             )}
             {showHint && (
