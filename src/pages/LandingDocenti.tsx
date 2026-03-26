@@ -6,6 +6,8 @@ import { useLang } from "@/contexts/LangContext";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { TrustSection } from "@/components/landing/TrustSection";
+import { TeacherHomeMockup } from "@/components/landing/TeacherHomeMockup";
+import { TeacherGenerateMockup } from "@/components/landing/TeacherGenerateMockup";
 
 const fade = {
   initial: { opacity: 0, y: 16 },
@@ -64,20 +66,25 @@ export default function LandingDocenti() {
         </div>
       </section>
 
-      {/* ── COME TI AIUTA ── */}
+      {/* ── COME TI AIUTA + MOCKUP ── */}
       <section className="py-20 px-6" style={{ backgroundColor: "#F8FAFC" }}>
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <motion.h2 {...fade} className="font-display text-2xl font-bold text-center" style={{ color: "#1A3A5C" }}>
             {t("doc_new_ben_title")}
           </motion.h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-            {benefits.map(({ icon: Icon, tTitle, tBody }, i) => (
-              <motion.div key={tTitle} {...fade} transition={{ delay: i * 0.05 }} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                <Icon className="w-7 h-7 mb-4" style={{ color: "#0070C0" }} />
-                <h3 className="font-semibold" style={{ color: "#1A3A5C" }}>{t(tTitle)}</h3>
-                <p className="text-sm mt-2" style={{ color: "#64748B" }}>{t(tBody)}</p>
-              </motion.div>
-            ))}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10 items-center">
+            <div className="space-y-6">
+              {benefits.map(({ icon: Icon, tTitle, tBody }, i) => (
+                <motion.div key={tTitle} {...fade} transition={{ delay: i * 0.05 }} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                  <Icon className="w-7 h-7 mb-4" style={{ color: "#0070C0" }} />
+                  <h3 className="font-semibold" style={{ color: "#1A3A5C" }}>{t(tTitle)}</h3>
+                  <p className="text-sm mt-2" style={{ color: "#64748B" }}>{t(tBody)}</p>
+                </motion.div>
+              ))}
+            </div>
+            <div className="flex justify-center">
+              <TeacherHomeMockup />
+            </div>
           </div>
         </div>
       </section>
@@ -99,6 +106,33 @@ export default function LandingDocenti() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── MOCKUP GENERA CON AI ── */}
+      <section className="py-20 px-6 bg-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.h2
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.3 }}
+            className="font-display text-2xl font-bold mb-4"
+            style={{ color: "#1A3A5C" }}
+          >
+            Genera materiali in pochi secondi
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.05, duration: 0.3 }}
+            className="text-sm mb-10"
+            style={{ color: "#64748B" }}
+          >
+            Descrivi cosa ti serve e l'AI prepara verifiche, esercizi e materiali pronti da assegnare.
+          </motion.p>
+          <TeacherGenerateMockup />
         </div>
       </section>
 

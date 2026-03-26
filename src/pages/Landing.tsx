@@ -2,14 +2,14 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   GraduationCap, BookOpen, Timer, Brain, Smile,
-  Zap, Users, FolderOpen, BadgeCheck, Shield, Lock,
-  ArrowRight, CheckCircle,
+  Zap, Users, FolderOpen, ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLang } from "@/contexts/LangContext";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { TrustSection } from "@/components/landing/TrustSection";
+import { HomeChatMockup } from "@/components/landing/HomeChatMockup";
 
 const fade = {
   initial: { opacity: 0, y: 16 },
@@ -146,6 +146,33 @@ export default function Landing() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── MOCKUP COACH ── */}
+      <section className="py-20 px-6 bg-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.h2
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.3 }}
+            className="font-display text-2xl font-bold mb-4"
+            style={{ color: "#1A3A5C" }}
+          >
+            Guarda il coach in azione
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.05, duration: 0.3 }}
+            className="text-sm mb-10"
+            style={{ color: "#64748B" }}
+          >
+            Una conversazione reale tra il coach e uno studente.
+          </motion.p>
+          <HomeChatMockup />
         </div>
       </section>
 
