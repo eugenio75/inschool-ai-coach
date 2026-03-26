@@ -616,9 +616,18 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
     function renderDocente(step: number, answers: any, setAnswers: any, toggleMax: any, toggle: any, locRef: any) {
         const addCustomMateria = () => {
             const val = (answers._customMateria || "").trim();
-            if (val && !(answers.docente_materie || []).includes(val) && (answers.docente_materie || []).length < 5) {
-                setAnswers({ ...answers, docente_materie: [...(answers.docente_materie || []), val], _customMateria: "" });
+            if (!val) return;
+            const current = answers.docente_materie || [];
+            if (current.length >= 5) return;
+            if (current.includes(val)) {
+                setAnswers((prev: any) => ({ ...prev, _customMateria: "" }));
+                return;
             }
+            setAnswers((prev: any) => ({
+                ...prev,
+                docente_materie: [...(prev.docente_materie || []), val],
+                _customMateria: "",
+            }));
         };
 
         const docenteMaterie = ["Matematica","Fisica","Chimica","Italiano","Latino","Greco","Storia","Filosofia","Inglese","Francese","Spagnolo","Tedesco","Informatica","Scienze","Arte","Musica","Educazione Fisica","Educazione Civica","Diritto","Economia","Geografia","Religione","Tecnologia"];
@@ -675,8 +684,8 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                         ))}
                       </div>
                       <div className="flex gap-2 mt-3">
-                        <input type="text" placeholder="Altra materia..." value={answers._customMateria || ""} onChange={e => setAnswers({...answers, _customMateria: e.target.value})} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addCustomMateria(); } }} className="flex-1 p-3 rounded-xl border border-border bg-muted/50 outline-none text-sm text-foreground focus:border-primary" />
-                        <Button type="button" variant="outline" onClick={addCustomMateria} disabled={(answers.docente_materie || []).length >= 5} className="rounded-xl text-sm">Aggiungi</Button>
+                        <input type="text" placeholder="Altra materia..." value={answers._customMateria || ""} onChange={e => setAnswers((prev: any) => ({...prev, _customMateria: e.target.value}))} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addCustomMateria(); } }} className="flex-1 p-3 rounded-xl border border-border bg-muted/50 outline-none text-sm text-foreground focus:border-primary" />
+                        <Button type="button" variant="outline" onClick={() => addCustomMateria()} disabled={(answers.docente_materie || []).length >= 5} className="rounded-xl text-sm">Aggiungi</Button>
                       </div>
                     </div>
                 </div>
