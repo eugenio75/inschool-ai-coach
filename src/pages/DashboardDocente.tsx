@@ -183,23 +183,45 @@ export default function DashboardDocente() {
   }
 
   async function saveClasse() {
-    if (!newClasse.nome.trim() || !profileId) return;
+    if (!newClasse.nome.trim() || newClasse.materie.length === 0 || !profileId) return;
     setSavingClasse(true);
     const { data, error } = await (supabase as any)
       .from("classi").insert({
         docente_profile_id: profileId,
         nome: newClasse.nome,
-        materia: newClasse.materia || null,
+        materia: newClasse.materie.join(", "),
         ordine_scolastico: newClasse.ordine_scolastico || ordine || null,
         num_studenti: newClasse.num_studenti ? parseInt(newClasse.num_studenti) : 0,
       }).select().single();
     setSavingClasse(false);
     if (!error && data) {
       setClasseCreata(data);
-      setNewClasse({ nome: "", materia: "", ordine_scolastico: "", num_studenti: "" });
+      setNewClasse({ nome: "", materie: [], ordine_scolastico: "", num_studenti: "" });
       loadAll();
     } else {
       toast.error("Errore nella creazione della classe.");
+    }
+  }
+
+  async function deleteClasse(classeId: string) {
+    setDeletingClasse(true);
+    // Unlink materials (set class_id to null)
+    await (supabase as any).from("teacher_materials").update({ class_id: null }).eq("class_id", classeId);
+    // Delete enrollments
+    await (supabase as any).from("class_enrollments").delete().eq("class_id", classeId);
+    // Delete assignments
+    await (supabase as any).from("teacher_assignments").delete().eq("class_id", classeId);
+    // Delete feed
+    await (supabase as any).from("teacher_activity_feed").delete().eq("class_id", classeId);
+    // Delete class
+    const { error } = await (supabase as any).from("classi").delete().eq("id", classeId);
+    setDeletingClasse(false);
+    setDeleteTarget(null);
+    if (!error) {
+      toast.success("Classe eliminata correttamente.");
+      loadAll();
+    } else {
+      toast.error("Errore nell'eliminazione della classe.");
     }
   }
 
