@@ -64,6 +64,7 @@ export default function AgendaDocente() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const session = getChildSession();
+  const teacherId = user?.id || session?.profileId;
 
   const [viewMode, setViewMode] = useState<ViewMode>("settimana");
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -81,17 +82,28 @@ export default function AgendaDocente() {
   });
 
   useEffect(() => {
-    if (!user) return;
+    if (!teacherId) {
+      setLoading(false);
+      return;
+    }
     loadData();
-  }, [user]);
+  }, [teacherId, session?.profileId]);
 
   async function loadData() {
     setLoading(true);
     const profileId = session?.profileId;
 
+    if (!teacherId) {
+      setAssignments([]);
+      setCalendarEvents([]);
+      setClassi([]);
+      setLoading(false);
+      return;
+    }
+
     const [assignRes, calRes, classiRes] = await Promise.all([
-      supabase.from("teacher_assignments").select("*").eq("teacher_id", user!.id).order("due_date", { ascending: true }),
-      (supabase as any).from("teacher_calendar_events").select("*").eq("teacher_id", user!.id).order("event_date", { ascending: true }),
+      supabase.from("teacher_assignments").select("*").eq("teacher_id", teacherId).order("due_date", { ascending: true }),
+      (supabase as any).from("teacher_calendar_events").select("*").eq("teacher_id", teacherId).order("event_date", { ascending: true }),
       profileId
         ? (supabase as any).from("classi").select("id, nome, materia").eq("docente_profile_id", profileId)
         : Promise.resolve({ data: [] }),
@@ -178,8 +190,12 @@ export default function AgendaDocente() {
       toast.error("Inserisci titolo e data");
       return;
     }
+    if (!teacherId) {
+      toast.error("Sessione docente non disponibile");
+      return;
+    }
     const { error } = await (supabase as any).from("teacher_calendar_events").insert({
-      teacher_id: user!.id,
+      teacher_id: teacherId,
       title: newEvent.title,
       description: newEvent.description || null,
       event_type: newEvent.event_type,
