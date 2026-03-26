@@ -45,6 +45,7 @@ const AgendaDocente = lazy(() => import("./pages/AgendaDocente"));
 const FreeStudySession = lazy(() => import("./pages/FreeStudySession"));
 const UnifiedSession = lazy(() => import("./pages/UnifiedSession"));
 const MaterialLibrary = lazy(() => import("./pages/MaterialLibrary"));
+const TeacherMaterialsArchive = lazy(() => import("./pages/TeacherMaterialsArchive"));
 const FlashcardSession = lazy(() => import("./pages/FlashcardSession"));
 const StudyTasks = lazy(() => import("./pages/StudyTasks"));
 const StudentReport = lazy(() => import("./pages/StudentReport"));
