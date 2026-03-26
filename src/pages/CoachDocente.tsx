@@ -55,7 +55,7 @@ export default function CoachDocente() {
   const profile = session?.profile;
   const profileId = session?.profileId;
   const { user } = useAuth();
-  const teacherId = user?.id;
+  const teacherId = user?.id || profileId;
   const isMobile = useIsMobile();
 
   const [chats, setChats] = useState<TeacherChat[]>([]);
