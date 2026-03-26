@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.teacher-feedback-loop]
 verify_jwt = false
+
+[functions.teacher-behavior-data]
+verify_jwt = false

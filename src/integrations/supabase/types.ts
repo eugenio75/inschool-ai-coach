@@ -904,6 +904,47 @@ export type Database = {
           },
         ]
       }
+      parent_notifications: {
+        Row: {
+          alert_level: string
+          child_profile_id: string
+          created_at: string
+          id: string
+          link_url: string | null
+          message: string
+          read: boolean
+          title: string
+        }
+        Insert: {
+          alert_level?: string
+          child_profile_id: string
+          created_at?: string
+          id?: string
+          link_url?: string | null
+          message: string
+          read?: boolean
+          title: string
+        }
+        Update: {
+          alert_level?: string
+          child_profile_id?: string
+          created_at?: string
+          id?: string
+          link_url?: string | null
+          message?: string
+          read?: boolean
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_notifications_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parent_settings: {
         Row: {
           created_at: string

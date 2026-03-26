@@ -16,7 +16,7 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Validate access (either parent JWT or child code)
+    // Validate access
     if (accessCode) {
       const { data: profile } = await supabase
         .from("child_profiles")
@@ -30,6 +30,16 @@ serve(async (req) => {
         });
       }
     }
+
+    // Get child profile to determine school_level
+    const { data: childProfile } = await supabase
+      .from("child_profiles")
+      .select("school_level, age")
+      .eq("id", childProfileId)
+      .single();
+
+    const schoolLevel = childProfile?.school_level || "alunno";
+    const isJunior = schoolLevel === "alunno" || schoolLevel === "medie";
 
     // Fetch last 30 days of check-ins
     const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
@@ -56,7 +66,6 @@ serve(async (req) => {
       return d >= new Date(Date.now() - 14 * 86400000);
     });
 
-    // Count signals
     const countSignals = (items: any[]) => {
       const signals: Record<string, number> = {};
       for (const item of items) {
@@ -110,7 +119,7 @@ serve(async (req) => {
       .update({ mood_streak: moodStreak })
       .eq("profile_id", childProfileId);
 
-    // Determine alert level — enhanced with WATCH/CONCERN/URGENT
+    // Determine alert level
     let alertLevel: string | null = null;
     let alertTitle = "";
     let alertMessage = "";
@@ -121,7 +130,7 @@ serve(async (req) => {
       moodStreak,
     };
 
-    // Check for text-based urgent signals from recent free text responses
+    // Check for text-based urgent signals
     const recentTexts = checkins.slice(0, 5).flatMap((c: any) => {
       const responses = c.responses || [];
       return responses
@@ -173,7 +182,7 @@ serve(async (req) => {
       alertTitle = "Segnali di disagio persistente";
       alertMessage = "Nelle ultime due settimane abbiamo notato segnali ripetuti di stanchezza, agitazione o difficoltà. Potrebbe essere utile parlare con il bambino per capire come si sente.";
     }
-    // MEDIUM: recurring frustration over 7 days
+    // MEDIUM
     else if (
       (signals7.difficulty_reported && signals7.difficulty_reported >= 3) ||
       (signals7.anxiety && signals7.anxiety >= 2) ||
@@ -183,7 +192,7 @@ serve(async (req) => {
       alertTitle = "Alcuni segnali di fatica";
       alertMessage = "Negli ultimi giorni il bambino ha mostrato segni di fatica più frequenti del solito.";
     }
-    // LOW: mild signs
+    // LOW
     else if (
       (energy7.low >= Math.ceil(last7.length * 0.4) && last7.length >= 3) ||
       (signals7.low_energy && signals7.low_energy >= 2)
@@ -193,7 +202,7 @@ serve(async (req) => {
       alertMessage = "Il bambino ha segnalato di sentirsi stanco o con poca energia in alcuni degli ultimi giorni.";
     }
 
-    // Save alert if detected (and no similar recent alert exists)
+    // Save alert if detected
     if (alertLevel) {
       const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
       const { data: existingAlerts } = await supabase
@@ -210,6 +219,36 @@ serve(async (req) => {
           title: alertTitle,
           message: alertMessage,
           pattern_data: patternData,
+        });
+      }
+    }
+
+    // ─── FIX 3: Active parent notification for URGENT/CONCERN junior ───
+    if (isJunior && (alertLevel === "urgent" || alertLevel === "concern")) {
+      // Check: no notification in last 48h for this level
+      const twoDaysAgo = new Date(Date.now() - 48 * 3600000).toISOString();
+      const { data: recentNotifs } = await supabase
+        .from("parent_notifications")
+        .select("id")
+        .eq("child_profile_id", childProfileId)
+        .eq("alert_level", alertLevel)
+        .gte("created_at", twoDaysAgo);
+
+      if (!recentNotifs || recentNotifs.length === 0) {
+        const notifTitle = alertLevel === "urgent"
+          ? "Un segnale importante"
+          : "Un po' di attenzione in più";
+        
+        const notifMessage = alertLevel === "urgent"
+          ? "InSchool ha rilevato alcuni segnali che potrebbero indicare un momento difficile per tuo figlio. Ti invitiamo a dedicargli qualche momento di attenzione oggi. Non è un'emergenza — è un segnale preventivo."
+          : "Negli ultimi giorni tuo figlio sembra attraversare un momento un po' pesante. Un po' di attenzione in più può fare la differenza.";
+
+        await supabase.from("parent_notifications").insert({
+          child_profile_id: childProfileId,
+          alert_level: alertLevel,
+          title: notifTitle,
+          message: notifMessage,
+          link_url: "/parent",
         });
       }
     }
