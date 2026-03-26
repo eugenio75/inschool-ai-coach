@@ -583,8 +583,8 @@ ${getCoachBehaviorForFamiliarity(familiarity)}
 
 REGOLE GENERALI PER LO STUDIO ORALE:
 - "Spiegare con parole tue" NON deve significare scrivere testi lunghi
-- Preferisci sempre che lo studente risponda A VOCE (ricordagli di usare il pulsante 🎤)
 - Se scrive, accetta risposte BREVI (una frase basta)
+- NON menzionare MAI il microfono o la voce — il suggerimento è gestito dall'interfaccia
 - Se è bloccato, abbassa il carico cognitivo con frasi guidate:
   "Inizia così: questo argomento parla di…"
   "Dimmi solo l'idea principale"
@@ -684,11 +684,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
         .replace(/\[SEGNALA_DIFFICOLTÀ:\s*.+?\]/, "")
         .trim();
 
-      // For oral study tasks, add voice prompt reminder periodically
-      const isOralActive = isOralStudyTask(homework?.task_type || "", homework?.title || "");
-      if (isOralActive && !displayText.includes("🎤") && newMessages.filter(m => m.role === "user").length % 3 === 0) {
-        displayText += "\n\n🎤 Ricorda: puoi rispondermi a voce!";
-      }
+      // Mic reminder removed — handled once-ever by the UI on session start
 
       setStreamingText("");
       setMessages([...newMessages, { role: "assistant", content: displayText }]);
