@@ -18,7 +18,7 @@ function getPrepLabel(schoolLevel: string): string {
   switch (schoolLevel) {
     case "alunno": return "Prepara l'interrogazione";
     case "medie": return "Prepara l'interrogazione";
-    case "superiori": return "Prepara la verifica";
+    case "superiori": return "Prepara la verifica o l'interrogazione";
     case "universitario": return "Prepara l'esame";
     default: return "Prepara la prova";
   }
