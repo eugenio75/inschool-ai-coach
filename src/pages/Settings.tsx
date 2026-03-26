@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Lock, Loader2, Users, Shield, Pencil, Bell,
-  Eye, EyeOff, Trash2, RotateCcw, Moon, Brain,
+  Eye, EyeOff, Trash2, RotateCcw, Moon, Brain, BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { LogoutButton } from "@/components/shared/LogoutButton";
-import { getChildSession } from "@/lib/childSession";
+import { getChildSession, setChildSession } from "@/lib/childSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { coachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
 
@@ -91,6 +91,11 @@ const Settings = () => {
   const [coachNameSetting, setCoachNameSetting] = useState("");
   const [savingCoach, setSavingCoach] = useState(false);
 
+  // Docente materie editing
+  const [docenteMaterie, setDocenteMaterie] = useState<string[]>([]);
+  const [newMateria, setNewMateria] = useState("");
+  const [savingMaterie, setSavingMaterie] = useState(false);
+
   // Check if adult role
   const session = getChildSession();
   const isAdult = ["superiori", "universitario", "docente"].includes(session?.profile?.school_level || "");
@@ -135,6 +140,11 @@ const Settings = () => {
           .maybeSingle();
         const prefs = (prefData?.data as any) || {};
         if (prefs.coach_name) setCoachNameSetting(prefs.coach_name);
+      }
+
+      // Load docente materie from profile
+      if (session?.profile?.school_level === "docente") {
+        setDocenteMaterie(session.profile.favorite_subjects || []);
       }
 
       setLoading(false);
@@ -205,6 +215,33 @@ const Settings = () => {
     } else {
       setNotifTimer(false);
     }
+  };
+
+  const handleSaveMaterie = async (materie: string[]) => {
+    if (!session?.profileId) return;
+    setSavingMaterie(true);
+    await supabase.from("child_profiles").update({ favorite_subjects: materie } as any).eq("id", session.profileId);
+    const currentSession = getChildSession();
+    if (currentSession?.profile) {
+      setChildSession({
+        ...currentSession,
+        profile: { ...currentSession.profile, favorite_subjects: materie } as any,
+      });
+    }
+    setDocenteMaterie(materie);
+    setSavingMaterie(false);
+    toast.success("Materie aggiornate!");
+  };
+
+  const handleAddMateria = () => {
+    const val = newMateria.trim();
+    if (!val || docenteMaterie.includes(val)) { setNewMateria(""); return; }
+    handleSaveMaterie([...docenteMaterie, val]);
+    setNewMateria("");
+  };
+
+  const handleRemoveMateria = (m: string) => {
+    handleSaveMaterie(docenteMaterie.filter(x => x !== m));
   };
 
   const handleToggleLibrary = async (profileId: string, checked: boolean) => {
@@ -390,19 +427,38 @@ const Settings = () => {
             </div>
           </div>
 
-          {/* Materie docente */}
+          {/* Materie docente (editable) */}
           {session?.profile?.school_level === "docente" && (
             <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
-              <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2"><Brain className="w-4 h-4 text-primary" /> Le tue materie</h3>
-              {session.profile.favorite_subjects && session.profile.favorite_subjects.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {session.profile.favorite_subjects.map((m: string) => (
-                    <span key={m} className="text-xs font-medium bg-primary/10 text-primary px-3 py-1.5 rounded-full">{m}</span>
+              <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2"><BookOpen className="w-4 h-4 text-primary" /> Le tue materie</h3>
+              {docenteMaterie.length > 0 ? (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {docenteMaterie.map((m: string) => (
+                    <span key={m} className="inline-flex items-center gap-1.5 text-xs font-medium bg-primary/10 text-primary px-3 py-1.5 rounded-full">
+                      {m}
+                      <button onClick={() => handleRemoveMateria(m)} className="hover:text-destructive transition-colors" disabled={savingMaterie}>
+                        ✕
+                      </button>
+                    </span>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Nessuna materia configurata.</p>
+                <p className="text-sm text-muted-foreground mb-4">Nessuna materia configurata.</p>
               )}
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  placeholder="Aggiungi materia..."
+                  value={newMateria}
+                  onChange={(e) => setNewMateria(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddMateria()}
+                  className="rounded-xl flex-1"
+                  maxLength={30}
+                />
+                <Button onClick={handleAddMateria} disabled={!newMateria.trim() || savingMaterie} className="rounded-xl" size="sm">
+                  {savingMaterie ? <Loader2 className="w-4 h-4 animate-spin" /> : "Aggiungi"}
+                </Button>
+              </div>
             </div>
           )}
 
@@ -417,17 +473,19 @@ const Settings = () => {
             </div>
           )}
 
-          {/* Notifications */}
-          <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
-            <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2"><Bell className="w-4 h-4 text-primary" /> Notifiche</h3>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-foreground">Notifiche browser per fine timer</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Ricevi una notifica quando il timer di studio termina</p>
+          {/* Notifications (hide timer for docente) */}
+          {session?.profile?.school_level !== "docente" && (
+            <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
+              <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2"><Bell className="w-4 h-4 text-primary" /> Notifiche</h3>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Notifiche browser per fine timer</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Ricevi una notifica quando il timer di studio termina</p>
+                </div>
+                <Switch checked={notifTimer} onCheckedChange={handleNotifToggle} />
               </div>
-              <Switch checked={notifTimer} onCheckedChange={handleNotifToggle} />
             </div>
-          </div>
+          )}
 
           {/* Aspetto */}
           <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
