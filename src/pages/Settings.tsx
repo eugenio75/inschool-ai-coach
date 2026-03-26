@@ -427,19 +427,38 @@ const Settings = () => {
             </div>
           </div>
 
-          {/* Materie docente */}
+          {/* Materie docente (editable) */}
           {session?.profile?.school_level === "docente" && (
             <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
-              <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2"><Brain className="w-4 h-4 text-primary" /> Le tue materie</h3>
-              {session.profile.favorite_subjects && session.profile.favorite_subjects.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {session.profile.favorite_subjects.map((m: string) => (
-                    <span key={m} className="text-xs font-medium bg-primary/10 text-primary px-3 py-1.5 rounded-full">{m}</span>
+              <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2"><BookOpen className="w-4 h-4 text-primary" /> Le tue materie</h3>
+              {docenteMaterie.length > 0 ? (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {docenteMaterie.map((m: string) => (
+                    <span key={m} className="inline-flex items-center gap-1.5 text-xs font-medium bg-primary/10 text-primary px-3 py-1.5 rounded-full">
+                      {m}
+                      <button onClick={() => handleRemoveMateria(m)} className="hover:text-destructive transition-colors" disabled={savingMaterie}>
+                        ✕
+                      </button>
+                    </span>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Nessuna materia configurata.</p>
+                <p className="text-sm text-muted-foreground mb-4">Nessuna materia configurata.</p>
               )}
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  placeholder="Aggiungi materia..."
+                  value={newMateria}
+                  onChange={(e) => setNewMateria(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddMateria()}
+                  className="rounded-xl flex-1"
+                  maxLength={30}
+                />
+                <Button onClick={handleAddMateria} disabled={!newMateria.trim() || savingMaterie} className="rounded-xl" size="sm">
+                  {savingMaterie ? <Loader2 className="w-4 h-4 animate-spin" /> : "Aggiungi"}
+                </Button>
+              </div>
             </div>
           )}
 
@@ -454,17 +473,19 @@ const Settings = () => {
             </div>
           )}
 
-          {/* Notifications */}
-          <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
-            <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2"><Bell className="w-4 h-4 text-primary" /> Notifiche</h3>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-foreground">Notifiche browser per fine timer</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Ricevi una notifica quando il timer di studio termina</p>
+          {/* Notifications (hide timer for docente) */}
+          {session?.profile?.school_level !== "docente" && (
+            <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
+              <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2"><Bell className="w-4 h-4 text-primary" /> Notifiche</h3>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Notifiche browser per fine timer</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Ricevi una notifica quando il timer di studio termina</p>
+                </div>
+                <Switch checked={notifTimer} onCheckedChange={handleNotifToggle} />
               </div>
-              <Switch checked={notifTimer} onCheckedChange={handleNotifToggle} />
             </div>
-          </div>
+          )}
 
           {/* Aspetto */}
           <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
