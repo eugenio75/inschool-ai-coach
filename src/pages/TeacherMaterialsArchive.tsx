@@ -684,6 +684,80 @@ ${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> __________
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Edit dialog ── */}
+      <Dialog open={!!editMaterial} onOpenChange={open => !open && setEditMaterial(null)}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifica materiale</DialogTitle>
+            <DialogDescription>Aggiorna i dettagli e il contenuto del materiale.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-medium">Titolo</Label>
+                <Input
+                  value={editForm.title}
+                  onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-xs font-medium">Materia</Label>
+                <Input
+                  value={editForm.subject}
+                  onChange={e => setEditForm(f => ({ ...f, subject: e.target.value }))}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-medium">Tipo</Label>
+                <Select value={editForm.type} onValueChange={v => setEditForm(f => ({ ...f, type: v }))}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {TYPE_OPTIONS.filter(t => t.key !== "all").map(t => (
+                      <SelectItem key={t.key} value={t.key}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs font-medium">Livello</Label>
+                <Select value={editForm.level} onValueChange={v => setEditForm(f => ({ ...f, level: v }))}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="base">Base</SelectItem>
+                    <SelectItem value="intermedio">Intermedio</SelectItem>
+                    <SelectItem value="avanzato">Avanzato</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs font-medium">Contenuto</Label>
+              <Textarea
+                value={editForm.content}
+                onChange={e => setEditForm(f => ({ ...f, content: e.target.value }))}
+                className="mt-1 min-h-[250px] font-mono text-xs"
+                placeholder="Contenuto del materiale (supporta markdown)..."
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditMaterial(null)}>Annulla</Button>
+            <Button disabled={saving || !editForm.title || !editForm.content} onClick={handleSaveEdit}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Pencil className="w-4 h-4 mr-1" />}
+              Salva
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
