@@ -156,8 +156,10 @@ export default function CoachDocente() {
   }
 
   async function loadMessages(chatId: string) {
-    const { data } = await (supabase as any).from("teacher_chat_messages")
+    const { data, error } = await (supabase as any).from("teacher_chat_messages")
       .select("*").eq("chat_id", chatId).order("created_at", { ascending: true });
+    console.log("MESSAGES DATA:", data);
+    console.log("MESSAGES ERROR:", error);
     setMessages((data || []) as ChatMessage[]);
   }
 
@@ -531,6 +533,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
 
         {/* Messages area */}
         <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-4 bg-muted/20">
+          {console.log("IS LOADING:", loading, "MESSAGES STATE:", messages)}
           {loading ? (
             <div className="space-y-3 max-w-2xl mx-auto">
               <Skeleton className="h-10 w-3/4" />
@@ -547,6 +550,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
           ) : (
             <div className="max-w-2xl mx-auto space-y-4">
               {messages.map((msg, i) => (
+                console.log("RENDERING MESSAGE:", msg),
                 <div key={msg.id || i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
                   {msg.role === "assistant" && (
                     <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center shrink-0 mt-0.5 mr-2">
