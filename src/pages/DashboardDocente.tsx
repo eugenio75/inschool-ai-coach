@@ -396,7 +396,7 @@ REGOLE DI RISPOSTA:
             Crea materiale
           </button>
           <button
-            onClick={() => navigate("/libreria")}
+            onClick={() => navigate("/materiali-docente")}
             className="flex items-center justify-center gap-2 bg-card border border-border text-foreground font-medium text-sm py-3.5 rounded-xl hover:bg-accent transition-colors"
           >
             <FolderOpen className="w-4 h-4" />

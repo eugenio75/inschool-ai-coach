@@ -45,6 +45,7 @@ const AgendaDocente = lazy(() => import("./pages/AgendaDocente"));
 const FreeStudySession = lazy(() => import("./pages/FreeStudySession"));
 const UnifiedSession = lazy(() => import("./pages/UnifiedSession"));
 const MaterialLibrary = lazy(() => import("./pages/MaterialLibrary"));
+const TeacherMaterialsArchive = lazy(() => import("./pages/TeacherMaterialsArchive"));
 const FlashcardSession = lazy(() => import("./pages/FlashcardSession"));
 const StudyTasks = lazy(() => import("./pages/StudyTasks"));
 const StudentReport = lazy(() => import("./pages/StudentReport"));
@@ -169,6 +170,7 @@ const AppRoutes = () => (
         <Route path="/flashcards" element={<AccessibleRoute><FlashcardSession /></AccessibleRoute>} />
         <Route path="/study-tasks" element={<AccessibleRoute><StudyTasks /></AccessibleRoute>} />
         <Route path="/libreria" element={<AccessibleRoute><MaybeAdultLayout><MaterialLibrary /></MaybeAdultLayout></AccessibleRoute>} />
+        <Route path="/materiali-docente" element={<AccessibleRoute><MaybeAdultLayout><TeacherMaterialsArchive /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/agenda-docente" element={<AccessibleRoute><MaybeAdultLayout><AgendaDocente /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/parent-dashboard" element={<ProtectedRoute><ParentDashboard /></ProtectedRoute>} />
         <Route path="/report" element={<AccessibleRoute><MaybeAdultLayout><StudentReport /></MaybeAdultLayout></AccessibleRoute>} />
