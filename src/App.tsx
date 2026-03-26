@@ -116,7 +116,7 @@ function RoleGuard({ children }: { children: React.ReactNode }) {
           // Persist session so we don't re-fetch on every navigation
           setChildSession({
             profileId: profile.id,
-            accessCode: profile.access_code || "",
+            accessCode: (profile as any).access_code || "",
             profile: profile as any,
           });
         }
