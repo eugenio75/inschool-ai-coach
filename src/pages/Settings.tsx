@@ -145,6 +145,7 @@ const Settings = () => {
       // Load docente materie from profile
       if (session?.profile?.school_level === "docente") {
         setDocenteMaterie(session.profile.favorite_subjects || []);
+      }
 
       setLoading(false);
     };
