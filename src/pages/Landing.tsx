@@ -165,7 +165,7 @@ export default function Landing() {
             <Link to="/auth">{t("home_final_cta1")}</Link>
           </Button>
           <Button asChild variant="outline" size="lg" className="rounded-lg px-6 py-3 border-white/40 hover:bg-white/10" style={{ color: "white", borderColor: "rgba(255,255,255,0.4)" }}>
-            <Link to="/docenti">{t("home_final_cta2")}</Link>
+            <Link to="/docenti" className="text-white">{t("home_final_cta2")}</Link>
           </Button>
         </motion.div>
       </section>
