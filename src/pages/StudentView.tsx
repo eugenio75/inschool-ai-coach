@@ -24,6 +24,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
+async function fetchStudentData(classId: string, studentId: string) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/teacher-class-data`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    },
+    body: JSON.stringify({ classId }),
+  });
+  if (!response.ok) throw new Error("Errore caricamento dati");
+  return response.json();
+}
+
 export default function StudentView() {
   const { studentId } = useParams();
   const [searchParams] = useSearchParams();
@@ -35,9 +50,14 @@ export default function StudentView() {
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
   const [classe, setClasse] = useState<any>(null);
-  const [assignments, setAssignments] = useState<any[]>([]);
-  const [errors, setErrors] = useState<any[]>([]);
-  const [sessions, setSessions] = useState<any[]>([]);
+  const [studentName, setStudentName] = useState("Studente");
+  const [studentAssignments, setStudentAssignments] = useState<any[]>([]);
+  const [studentScores, setStudentScores] = useState<number[]>([]);
+  const [totalSessions, setTotalSessions] = useState(0);
+  const [streakDays, setStreakDays] = useState(0);
+  const [lastAccess, setLastAccess] = useState<string | null>(null);
+  const [errorsByType, setErrorsByType] = useState<Record<string, number>>({});
+  const [signals, setSignals] = useState<string[]>([]);
 
   // Communication dialog
   const [showComm, setShowComm] = useState(false);
@@ -52,31 +72,83 @@ export default function StudentView() {
 
   async function verifyAndLoad() {
     setLoading(true);
-    // Verify teacher owns the class
     const profileId = session?.profileId;
     if (!profileId) { navigate("/dashboard"); return; }
 
-    const { data: cl } = await (supabase as any)
-      .from("classi").select("*").eq("id", classId)
-      .eq("docente_profile_id", profileId).maybeSingle();
+    try {
+      const data = await fetchStudentData(classId!, studentId!);
+      if (!data.classe) { navigate("/dashboard"); return; }
+      setClasse(data.classe);
 
-    if (!cl) { navigate("/dashboard"); return; }
-    setClasse(cl);
+      // Find student in enrolled list
+      const student = (data.students || []).find((s: any) => (s.student_id || s.id) === studentId);
+      if (!student) { navigate(`/classe/${classId}`); return; }
+      setAuthorized(true);
 
-    // Verify student is enrolled
-    const { data: enr } = await (supabase as any)
-      .from("class_enrollments").select("id").eq("class_id", classId)
-      .eq("student_id", studentId).maybeSingle();
+      const name = student.profile?.name || student.student_name || "Studente";
+      setStudentName(name);
 
-    if (!enr) { navigate(`/classe/${classId}`); return; }
-    setAuthorized(true);
+      // Extract student-specific assignment results
+      const allResults = data.assignmentResults || [];
+      const myAssignments: any[] = [];
+      const myScores: number[] = [];
 
-    // Load student data
-    const { data: ta } = await (supabase as any)
-      .from("teacher_assignments").select("*")
-      .eq("class_id", classId).order("assigned_at", { ascending: false }).limit(10);
-    setAssignments(ta || []);
+      allResults.forEach((a: any) => {
+        const myResult = (a.results || []).find((r: any) => (r.student_id || r.id) === studentId);
+        if (myResult) {
+          myAssignments.push({
+            title: a.title,
+            type: a.type,
+            subject: a.subject,
+            due_date: a.due_date,
+            assigned_at: a.assigned_at,
+            score: myResult.score,
+            status: myResult.status,
+            errors_summary: myResult.errors_summary,
+          });
+          if (myResult.score != null) myScores.push(myResult.score);
 
+          // Aggregate errors
+          if (myResult.errors_summary && typeof myResult.errors_summary === "object") {
+            Object.keys(myResult.errors_summary).forEach(k => {
+              setErrorsByType(prev => ({ ...prev, [k]: (prev[k] || 0) + 1 }));
+            });
+          }
+        }
+      });
+
+      setStudentAssignments(myAssignments);
+      setStudentScores(myScores);
+
+      // Compute signals
+      const sigs: string[] = [];
+      if (myScores.length >= 2) {
+        const avg = myScores.reduce((a, b) => a + b, 0) / myScores.length;
+        if (avg < 50) sigs.push("Media sotto soglia — potrebbe aver bisogno di supporto aggiuntivo.");
+        const recent = myScores.slice(-3);
+        if (recent.length >= 2 && recent[recent.length - 1] < recent[recent.length - 2] - 15) {
+          sigs.push("Calo recente nel rendimento — monitorare le prossime verifiche.");
+        }
+      }
+      const lateCount = myAssignments.filter(a => a.status !== "completed" && a.due_date && new Date(a.due_date) < new Date()).length;
+      if (lateCount >= 2) sigs.push(`${lateCount} attività in ritardo — verificare eventuali difficoltà.`);
+      setSignals(sigs);
+
+      // Session count & streak (from assignment completions as proxy)
+      setTotalSessions(myAssignments.filter(a => a.status === "completed").length);
+      const completedDates = myAssignments
+        .filter(a => a.status === "completed")
+        .map(a => new Date(a.assigned_at).toDateString());
+      const uniqueDays = [...new Set(completedDates)];
+      setStreakDays(uniqueDays.length);
+      if (uniqueDays.length > 0) {
+        setLastAccess(uniqueDays[uniqueDays.length - 1]);
+      }
+    } catch (error) {
+      console.error("StudentView load error:", error);
+      toast.error("Errore nel caricamento dei dati.");
+      navigate(`/classe/${classId}`);
+    }
     setLoading(false);
   }
 
@@ -112,6 +184,10 @@ export default function StudentView() {
 
   if (!authorized) return null;
 
+  const avgScore = studentScores.length > 0
+    ? Math.round(studentScores.reduce((a, b) => a + b, 0) / studentScores.length)
+    : null;
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 pb-24">
       {/* Header */}
@@ -121,9 +197,9 @@ export default function StudentView() {
             <ArrowLeft className="w-4 h-4 mr-1" /> {classe?.nome}
           </Button>
           <div className="flex items-center gap-3">
-            <AvatarInitials name="Studente" size="md" />
+            <AvatarInitials name={studentName} size="md" />
             <div>
-              <h1 className="text-xl font-bold text-foreground">Studente</h1>
+              <h1 className="text-xl font-bold text-foreground">{studentName}</h1>
               {classe && <Badge variant="secondary" className="text-xs mt-0.5">{classe.nome}</Badge>}
             </div>
           </div>
@@ -139,41 +215,90 @@ export default function StudentView() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}
           className="bg-card border border-border rounded-2xl p-5">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Progressi</p>
-          <div className="flex flex-col items-center py-6">
-            <BarChart2 className="w-8 h-8 text-muted-foreground/30 mb-2" />
-            <p className="text-sm text-muted-foreground">Nessuna sessione ancora</p>
-          </div>
+          {totalSessions === 0 ? (
+            <div className="flex flex-col items-center py-6">
+              <BarChart2 className="w-8 h-8 text-muted-foreground/30 mb-2" />
+              <p className="text-sm text-muted-foreground">Nessuna sessione ancora</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground">{totalSessions}</p>
+                  <p className="text-[10px] text-muted-foreground">Sessioni completate</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-foreground">{avgScore != null ? `${avgScore}%` : "—"}</p>
+                  <p className="text-[10px] text-muted-foreground">Media punteggio</p>
+                </div>
+              </div>
+              {studentScores.length >= 2 && (
+                <div className="flex items-center gap-1 mt-2">
+                  {studentScores.slice(-6).map((s, i) => (
+                    <div key={i} className="flex-1 bg-muted rounded-sm overflow-hidden" style={{ height: "40px" }}>
+                      <div
+                        className="bg-primary/60 w-full rounded-sm"
+                        style={{ height: `${s}%`, marginTop: `${40 - (s * 40 / 100)}px` }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </motion.div>
 
         {/* Verifiche */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
           className="bg-card border border-border rounded-2xl p-5">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Verifiche</p>
-          {assignments.length === 0 ? (
+          {studentAssignments.length === 0 ? (
             <div className="flex flex-col items-center py-6">
               <CheckCircle2 className="w-8 h-8 text-muted-foreground/30 mb-2" />
               <p className="text-sm text-muted-foreground">Nessuna verifica ancora</p>
             </div>
           ) : (
             <div className="space-y-2">
-              {assignments.slice(0, 5).map(a => (
-                <div key={a.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                  <span className="text-sm text-foreground truncate">{a.title}</span>
-                  <Badge variant="outline" className="text-xs capitalize">{a.type}</Badge>
-                </div>
-              ))}
+              {studentAssignments.slice(0, 5).map((a, i) => {
+                let statusLabel = "Non iniziato";
+                let statusVariant: "default" | "secondary" | "destructive" | "outline" = "outline";
+                if (a.status === "completed") { statusLabel = "Completato"; statusVariant = "default"; }
+                else if (a.status === "in_progress") { statusLabel = "In corso"; statusVariant = "secondary"; }
+                else if (a.due_date && new Date(a.due_date) < new Date()) { statusLabel = "In ritardo"; statusVariant = "destructive"; }
+                const belowThreshold = a.score != null && a.score < 50;
+
+                return (
+                  <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                    <span className="text-sm text-foreground truncate flex-1">{a.title}</span>
+                    {belowThreshold && <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0 mx-1" />}
+                    {a.score != null && <span className="text-xs font-semibold text-foreground mr-2">{Math.round(a.score)}%</span>}
+                    <Badge variant={statusVariant} className="text-[10px]">{statusLabel}</Badge>
+                  </div>
+                );
+              })}
             </div>
           )}
         </motion.div>
 
-        {/* Difficoltà */}
+        {/* Difficoltà rilevate */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="bg-card border border-border rounded-2xl p-5">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Difficoltà rilevate</p>
-          <div className="flex flex-col items-center py-6">
-            <Brain className="w-8 h-8 text-muted-foreground/30 mb-2" />
-            <p className="text-sm text-muted-foreground">Nessuna difficoltà rilevata</p>
-          </div>
+          {Object.keys(errorsByType).length === 0 ? (
+            <div className="flex flex-col items-center py-6">
+              <Brain className="w-8 h-8 text-muted-foreground/30 mb-2" />
+              <p className="text-sm text-muted-foreground">Nessuna difficoltà rilevata</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {Object.entries(errorsByType).sort(([, a], [, b]) => b - a).slice(0, 5).map(([type, count]) => (
+                <div key={type} className="flex items-center justify-between py-1.5">
+                  <span className="text-sm text-foreground capitalize">{type}</span>
+                  <Badge variant="secondary" className="text-xs">{count} volta{count > 1 ? "e" : ""}</Badge>
+                </div>
+              ))}
+            </div>
+          )}
         </motion.div>
 
         {/* Continuità */}
@@ -183,24 +308,39 @@ export default function StudentView() {
           <div className="flex items-center gap-4 mb-4">
             <div className="flex items-center gap-1.5">
               <Flame className="w-5 h-5 text-orange-500" />
-              <span className="text-2xl font-bold text-foreground">0</span>
-              <span className="text-xs text-muted-foreground">giorni</span>
+              <span className="text-2xl font-bold text-foreground">{streakDays}</span>
+              <span className="text-xs text-muted-foreground">giorni attivi</span>
             </div>
-            <Badge variant="secondary" className="text-xs">In sviluppo</Badge>
+            <Badge variant="secondary" className="text-xs">
+              {streakDays === 0 ? "In sviluppo" : streakDays < 3 ? "In sviluppo" : "Costante"}
+            </Badge>
           </div>
-          <p className="text-xs text-muted-foreground">Nessuna sessione registrata</p>
+          <p className="text-xs text-muted-foreground">
+            {lastAccess ? `Ultimo accesso: ${lastAccess}` : "Nessuna sessione registrata"}
+          </p>
         </motion.div>
 
-        {/* Segnali di fatica */}
+        {/* Segnali da osservare */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
           className="bg-card border border-border rounded-2xl p-5">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Segnali da osservare</p>
-          <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl p-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
-              <p className="text-sm text-green-700 dark:text-green-400">Nessun segnale da osservare</p>
+          {signals.length === 0 ? (
+            <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl p-4">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                <p className="text-sm text-green-700 dark:text-green-400">Nessun segnale da osservare</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-2">
+              {signals.map((sig, i) => (
+                <div key={i} className="flex items-start gap-2 text-xs text-amber-600 bg-amber-500/10 rounded-lg p-2.5">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <span>{sig}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </motion.div>
 
         {/* Azioni suggerite */}
@@ -209,9 +349,9 @@ export default function StudentView() {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Azioni suggerite</p>
           <div className="flex flex-wrap gap-2">
             {[
-              { label: "Prepara recupero", route: `/classe/${classId}` },
-              { label: "Esercizio differenziato", route: `/classe/${classId}` },
-              { label: "Materiale semplificato", route: `/classe/${classId}` },
+              { label: "Prepara recupero", route: `/classe/${classId}?tab=materiali` },
+              { label: "Esercizio differenziato", route: `/classe/${classId}?tab=materiali` },
+              { label: "Materiale semplificato", route: `/classe/${classId}?tab=materiali` },
             ].map(action => (
               <button
                 key={action.label}
@@ -229,7 +369,7 @@ export default function StudentView() {
       <Dialog open={showComm} onOpenChange={setShowComm}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Scrivi ai genitori</DialogTitle>
+            <DialogTitle>Scrivi ai genitori di {studentName}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
@@ -257,7 +397,7 @@ export default function StudentView() {
           <AlertDialogHeader>
             <AlertDialogTitle>Conferma invio</AlertDialogTitle>
             <AlertDialogDescription>
-              Stai per inviare un messaggio privato ai genitori di questo studente.
+              Stai per inviare un messaggio privato ai genitori di {studentName}.
               Questo messaggio sarà visibile solo a loro. Continuare?
             </AlertDialogDescription>
           </AlertDialogHeader>

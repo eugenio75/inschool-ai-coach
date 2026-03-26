@@ -52,6 +52,13 @@ interface Props {
   autoCreate?: boolean;
 }
 
+const MATERIE_OPTIONS = [
+  "Italiano", "Matematica", "Scienze", "Storia", "Geografia", "Inglese",
+  "Francese", "Spagnolo", "Tedesco", "Arte", "Musica", "Educazione Fisica",
+  "Tecnologia", "Religione", "Filosofia", "Fisica", "Chimica", "Biologia",
+  "Informatica", "Latino", "Greco", "Diritto", "Economia",
+];
+
 export default function TeacherMaterialsTab({ classId, classe, students, materials, userId, onReload, autoCreate }: Props) {
   const [mode, setMode] = useState<FormMode>(null);
   const [activityType, setActivityType] = useState<ActivityType>("compito");
@@ -61,6 +68,12 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>(() => {
+    const classMateria = classe?.materia;
+    if (!classMateria) return [];
+    // Support multi-materia classes (comma separated)
+    return classMateria.split(",").map((m: string) => m.trim()).filter(Boolean);
+  });
 
   // AI state
   const [aiPrompt, setAiPrompt] = useState("");
@@ -98,6 +111,7 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     setUploadFile(null);
     setUploadUrl(null);
     setOcrText(null);
+    setSelectedSubjects(classe?.materia ? classe.materia.split(",").map((m: string) => m.trim()).filter(Boolean) : []);
   }
 
   function getPreviewContent(): string {
@@ -283,7 +297,7 @@ ${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span cla
         teacher_id: userId,
         class_id: classId,
         title,
-        subject: classe?.materia || null,
+        subject: selectedSubjects.join(", ") || classe?.materia || null,
         type: activityType,
         content: previewContent,
         status: destination === "pdf" ? "draft" : "assigned",
@@ -316,7 +330,7 @@ ${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span cla
           student_id: s.student_id || s.id,
           title,
           type: activityType,
-          subject: classe?.materia || null,
+          subject: selectedSubjects.join(", ") || classe?.materia || null,
           description: previewContent,
           due_date: dueDate ? dueDate.toISOString() : null,
           metadata,
@@ -482,6 +496,37 @@ ${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span cla
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Subject multi-select */}
+        <div>
+          <Label className="text-xs text-muted-foreground">Materia</Label>
+          <div className="mt-1.5 flex flex-wrap gap-1.5 mb-2">
+            {selectedSubjects.map(s => (
+              <span key={s} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                {s}
+                <button onClick={() => setSelectedSubjects(prev => prev.filter(x => x !== s))} className="hover:text-destructive">×</button>
+              </span>
+            ))}
+          </div>
+          <Select
+            value=""
+            onValueChange={(v) => {
+              if (v && !selectedSubjects.includes(v)) setSelectedSubjects(prev => [...prev, v]);
+            }}
+          >
+            <SelectTrigger className="rounded-xl">
+              <SelectValue placeholder={selectedSubjects.length === 0 ? "Seleziona materia" : "Aggiungi materia..."} />
+            </SelectTrigger>
+            <SelectContent>
+              {MATERIE_OPTIONS.filter(m => !selectedSubjects.includes(m)).map(m => (
+                <SelectItem key={m} value={m}>{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedSubjects.length === 0 && (
+            <p className="text-[10px] text-destructive mt-1">Seleziona almeno una materia</p>
+          )}
         </div>
 
         {/* --- FORM A: Scrivo io --- */}
