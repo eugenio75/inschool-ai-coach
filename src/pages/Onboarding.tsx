@@ -205,6 +205,133 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         return true; 
     };
 
+    function renderMedie(step: number, answers: any, setAnswers: any, toggleMax: any, toggle: any, locRef: any) {
+      switch (step) {
+        case 0:
+          return (
+            <div className="text-center w-full">
+                <h2 className="text-3xl font-bold text-foreground mb-2">Benvenuto in InSchool!</h2>
+                <p className="text-muted-foreground mb-8">Configuriamo insieme il tuo spazio di studio</p>
+                <div className="w-24 h-24 mx-auto bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4"><BookOpen className="w-12 h-12" /></div>
+            </div>
+          );
+        case 1:
+          return (
+            <div className="w-full space-y-6">
+                <h2 className="text-2xl font-bold text-foreground">La tua scuola</h2>
+                <div className="space-y-4">
+                   <select value={answers.medie_anno || ""} onChange={e => setAnswers({...answers, medie_anno: e.target.value})} className={inputClass}>
+                      <option value="" disabled>In che classe sei?</option>
+                      {["1\u00AA Media", "2\u00AA Media", "3\u00AA Media"].map(a => <option key={a} value={a}>{a}</option>)}
+                   </select>
+                   <select value={answers.medie_scuola_tipo || ""} onChange={e => setAnswers({...answers, medie_scuola_tipo: e.target.value})} className={inputClass}>
+                      <option value="" disabled>Tipo di scuola</option>
+                      {["Scuola pubblica", "Scuola paritaria", "Scuola privata"].map(a => <option key={a} value={a}>{a}</option>)}
+                   </select>
+                   <input ref={locRef} type="text" placeholder="Nome della scuola (opzionale)" className={inputClass} defaultValue={answers.medie_scuola || ""} />
+                </div>
+            </div>
+          );
+        case 2: {
+          const materie = ["Matematica", "Italiano", "Inglese", "Storia", "Geografia", "Scienze", "Tecnologia", "Francese", "Spagnolo", "Musica", "Arte"];
+          return (
+            <div className="w-full space-y-6">
+                <h2 className="text-2xl font-bold text-foreground">Le materie pi\u00F9 difficili</h2>
+                <p className="text-muted-foreground text-sm">Quali materie ti mettono pi\u00F9 in difficolt\u00E0? (max 4)</p>
+                <div className="flex flex-wrap gap-2 mt-4">
+                    {materie.map((m: string) => {
+                       const isSel = (answers.materie_critiche || []).includes(m);
+                       return <button key={m} onClick={() => toggleMax("materie_critiche", m, 4)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${isSel ? chipSelClass : chipUnselClass}`}>{m}</button>;
+                    })}
+                </div>
+            </div>
+          );
+        }
+        case 3:
+          return (
+            <div className="w-full space-y-6">
+                <h2 className="text-2xl font-bold text-foreground">Come preferisci studiare?</h2>
+                <div className="space-y-3">
+                   {[
+                     { id: "poco_spesso", title: "Un po' alla volta", sub: "Sessioni brevi, pi\u00F9 volte al giorno", icon: Timer },
+                     { id: "lungo", title: "Tutto insieme", sub: "Una sessione lunga e concentrata", icon: Brain },
+                     { id: "non_so", title: "Non ho un metodo", sub: "Aiutami a trovare il mio modo", icon: Lightbulb }
+                   ].map(opt => {
+                     const isSel = answers.metodo_studio === opt.id;
+                     return <button key={opt.id} onClick={() => setAnswers({...answers, metodo_studio: opt.id})} className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-6 h-6 mr-4 ${isSel ? selIconClass : unselIconClass}`}/><div className="text-left"><p className={`font-bold ${isSel ? selTextClass : "text-foreground"}`}>{opt.title}</p><p className="text-sm text-muted-foreground">{opt.sub}</p></div></button>
+                   })}
+                </div>
+            </div>
+          );
+        case 4:
+          return (
+            <div className="w-full space-y-6">
+                <h2 className="text-2xl font-bold text-foreground">Cosa vorresti migliorare?</h2>
+                <div className="grid grid-cols-2 gap-3">
+                   {[
+                     { id: "voti", title: "Migliorare i voti", icon: TrendingUp },
+                     { id: "organizzazione", title: "Essere pi\u00F9 organizzato", icon: Calendar },
+                     { id: "interrogazioni", title: "Prepararmi meglio", icon: FileCheck },
+                     { id: "capire", title: "Capire di pi\u00F9", icon: Lightbulb }
+                   ].map(opt => {
+                     const isSel = answers.obiettivo === opt.id;
+                     return <button key={opt.id} onClick={() => setAnswers({...answers, obiettivo: opt.id})} className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-8 h-8 mb-3 ${isSel ? selIconClass : unselIconClass}`}/><span className={`font-bold text-sm text-center ${isSel ? selTextClass : unselTextClass}`}>{opt.title}</span></button>
+                   })}
+                </div>
+            </div>
+          );
+        case 5:
+          return (
+            <div className="w-full space-y-6">
+                <h2 className="text-2xl font-bold text-foreground">Come ti senti a scuola?</h2>
+                <p className="text-muted-foreground text-sm">Questo aiuta il coach a capirti meglio</p>
+                <div className="space-y-3">
+                   {[
+                     { id: "ok", title: "Tutto bene in generale", sub: "Mi trovo abbastanza bene" },
+                     { id: "fatica", title: "Faccio fatica a concentrarmi", sub: "Mi distraggo spesso" },
+                     { id: "ansia", title: "Mi agito per le verifiche", sub: "Le prove mi mettono ansia" },
+                     { id: "noia", title: "Mi annoio in classe", sub: "Non mi sento stimolato" },
+                   ].map(opt => {
+                     const isSel = (answers.sfide_emotive || []).includes(opt.id);
+                     return <button key={opt.id} onClick={() => {
+                       const arr = answers.sfide_emotive || [];
+                       if (arr.includes(opt.id)) setAnswers({...answers, sfide_emotive: arr.filter((x: string) => x !== opt.id)});
+                       else if (arr.length < 2) setAnswers({...answers, sfide_emotive: [...arr, opt.id]});
+                     }} className={`w-full flex items-start p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}>
+                       <div className="text-left"><p className={`font-bold ${isSel ? selTextClass : "text-foreground"}`}>{opt.title}</p><p className="text-sm text-muted-foreground">{opt.sub}</p></div>
+                     </button>;
+                   })}
+                </div>
+            </div>
+          );
+        case 6:
+          return (
+            <div className="w-full space-y-6">
+                <h2 className="text-2xl font-bold text-foreground">Dai un nome al tuo coach</h2>
+                <p className="text-muted-foreground text-sm">Il tuo assistente AI ti aiuter\u00E0 ogni giorno</p>
+                <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
+                  <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
+                </div>
+                <input type="text" placeholder="Es. Coach, Leo, Aria..." value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
+                <p className="text-xs text-muted-foreground text-center">Puoi cambiarlo quando vuoi</p>
+            </div>
+          );
+        case 7:
+          return (
+            <div className="text-left w-full space-y-6">
+                <h2 className="text-3xl font-bold text-foreground mb-2">Tutto pronto!</h2>
+                <p className="text-muted-foreground mb-6">Ecco il tuo profilo</p>
+                <div className={summaryBoxClass}>
+                    <div><span className={summaryLabelClass}>Classe</span><p className={summaryValueClass}>{answers.medie_anno}</p></div>
+                    <div><span className={summaryLabelClass}>Materie difficili</span><p className={summaryValueClass}>{(answers.materie_critiche || []).join(", ")}</p></div>
+                    <div><span className={summaryLabelClass}>Metodo</span><p className={summaryValueClass}>{answers.metodo_studio === "poco_spesso" ? "Un po' alla volta" : answers.metodo_studio === "lungo" ? "Tutto insieme" : "Da scoprire"}</p></div>
+                    {answers.coach_name && <div><span className={summaryLabelClass}>Il tuo Coach</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
+                </div>
+            </div>
+          );
+      }
+    }
+
     function renderSuperiori(step: number, answers: any, setAnswers: any, toggleMax: any, toggle: any, locRef: any) {
       switch (step) {
         case 0:
