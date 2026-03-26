@@ -13,13 +13,29 @@ interface UseGuidedSessionProps {
   profileName: string;
 }
 
-// Only oral/study tasks should ask familiarity — exercises go straight to solving
-function shouldAskFamiliarity(taskType: string, title: string): boolean {
-  return isOralStudyTask(taskType, title);
-}
-
 // Task types that use the oral/study method (vs exercise method)
 const ORAL_STUDY_TYPES = new Set(["study", "memorize", "teoria", "memorizzazione", "ripasso", "interrogazione", "esame", "riassunto", "summarize", "read"]);
+
+// Recovery tasks always default to first_time
+const RECOVERY_TYPES = new Set(["recupero", "recovery", "rinforzo"]);
+
+function isRecoveryTask(taskType: string, title: string): boolean {
+  const types = taskType.split(",").map(t => t.trim().toLowerCase());
+  if (types.some(t => RECOVERY_TYPES.has(t))) return true;
+  return title.toLowerCase().includes("recupero") || title.toLowerCase().includes("rinforzo");
+}
+
+// Familiarity memory — persist per homework so we don't ask twice
+function getSavedFamiliarity(homeworkId: string): Familiarity | null {
+  try {
+    const stored = localStorage.getItem(`inschool-familiarity-${homeworkId}`);
+    return stored as Familiarity | null;
+  } catch { return null; }
+}
+
+function saveFamiliarity(homeworkId: string, fam: Familiarity) {
+  try { localStorage.setItem(`inschool-familiarity-${homeworkId}`, fam); } catch {}
+}
 
 function isOralStudyTask(taskType: string, title: string): boolean {
   const types = taskType.split(",").map(t => t.trim().toLowerCase());
@@ -28,28 +44,37 @@ function isOralStudyTask(taskType: string, title: string): boolean {
   return ["studia", "ripeti", "memorizza", "prepara", "ripasso", "interrogazione", "esame", "riassumi"].some(k => lowerTitle.includes(k));
 }
 
-type MethodPhase = "none" | "ask_familiarity" | "propose_method" | "ready";
+type MethodPhase = "none" | "propose_method" | "ready";
 type Familiarity = "first_time" | "already_know" | "partial";
+
+function isMixedWritingTask(taskType: string, title: string): boolean {
+  const types = taskType.split(",").map(t => t.trim().toLowerCase());
+  if (types.some(t => ["riassunto", "summarize", "write", "tema", "testo"].includes(t))) return true;
+  const lowerTitle = title.toLowerCase();
+  return ["riassumi", "scrivi", "tema", "testo"].some(k => lowerTitle.includes(k));
+}
 
 function getMethodProposal(familiarity: Familiarity, taskType: string, title: string): string {
   const lowerTitle = title.toLowerCase();
   const isPrep = ["interrogazione", "esame", "prepara"].some(k => lowerTitle.includes(k)) || taskType === "interrogazione" || taskType === "esame";
-  const isSummary = lowerTitle.includes("riassumi") || lowerTitle.includes("riassunto") || taskType === "riassunto";
   const isMemorize = lowerTitle.includes("memorizza") || taskType === "memorizzazione";
-  const isExercise = !isOralStudyTask(taskType, title);
+  const isExercise = !isOralStudyTask(taskType, title) && !isMixedWritingTask(taskType, title);
+  const isMixed = isMixedWritingTask(taskType, title);
 
   switch (familiarity) {
     case "first_time":
-      if (isSummary) return "Ok. Mentre leggi cerca l'idea principale di ogni parte: non sottolineare tutto, solo la cosa più importante per blocco. Poi costruiamo il riassunto insieme.";
+      if (isMixed) return "Ok. Ti guido io nella struttura passo per passo prima di iniziare a scrivere.";
       if (isExercise) return "Ok, è la prima volta. Ti spiego prima la teoria necessaria, poi affrontiamo l'esercizio passo dopo passo insieme.";
       return "Allora partiamo leggendolo una volta per capire di cosa si tratta. Poi lo dividiamo in pezzi piccoli e lavoriamo su ognuno insieme.";
     case "already_know":
       if (isPrep) return "Bene. Partiamo da quello che ricordi già. Ti faccio qualche domanda e vediamo subito dove sei sicuro e dove serve rinforzare.";
       if (isMemorize) return "Perfetto. Allora chiudiamo il materiale e partiamo da quello che hai in testa. Quello che non ricordi lo riprendiamo insieme.";
       if (isExercise) return "Bene, allora proviamo subito l'esercizio. Se ti blocchi ti do un suggerimento.";
+      if (isMixed) return "Perfetto. Partiamo direttamente — intervento solo sulla revisione.";
       return "Bene. Partiamo da quello che ricordi già. Ti faccio qualche domanda e vediamo subito dove sei sicuro e dove serve rinforzare.";
     case "partial":
       if (isExercise) return "Ok. Rivediamo velocemente la parte che non ricordi bene, poi affrontiamo l'esercizio insieme.";
+      if (isMixed) return "Ok. Ti propongo uno schema di partenza, poi ti lascio procedere e intervengo dove serve.";
       return "Ok. Finiamo prima le parti che non hai ancora studiato, poi passiamo a richiamare tutto dalla memoria.";
   }
 }
@@ -113,6 +138,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   const [familiarity, setFamiliarity] = useState<Familiarity | null>(null);
   const [pendingEmotion, setPendingEmotion] = useState<string>("");
   const [sessionEmotion, setSessionEmotion] = useState<string>("");
+  const [showFamiliarity, setShowFamiliarity] = useState(false);
 
   const progressPercent = totalSteps > 0 ? ((currentStep - 1) / totalSteps) * 100 : 0;
   const progressLabel = totalSteps > 0 ? `Step ${currentStep} di ${totalSteps}` : undefined;
@@ -126,10 +152,18 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       if (!hw) { navigate("/dashboard"); return; }
       setHomework(hw);
 
+      // Check if we already know familiarity for this homework
+      if (isRecoveryTask(hw.task_type, hw.title)) {
+        setFamiliarity("first_time");
+        saveFamiliarity(homeworkId, "first_time");
+      } else {
+        const saved = getSavedFamiliarity(homeworkId);
+        if (saved) setFamiliarity(saved);
+      }
+
       if (isChild) {
         const result = await childApi("get-paused-session", { homeworkId });
         if (result.completed && result.session) {
-          // Completed session — show conversation history read-only
           const conv = (result.session as any).conversation_sessions;
           const savedMessages = conv?.messaggi;
           if (Array.isArray(savedMessages) && savedMessages.length > 0) {
@@ -144,14 +178,14 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
             setTotalSteps(result.session.total_steps || 0);
             setSetupDone(true);
           } else {
-            setShowCheckin(true);
+            showInitialScreen(hw);
           }
         } else if (result.session && !result.completed) {
           const sess = result.session;
           const hasRealProgress = (sess.current_step || 1) > 1 || sess.last_difficulty;
           
           if (!hasRealProgress) {
-            setShowCheckin(true);
+            showInitialScreen(hw);
           } else {
             setSessionEmotion(sess.emotional_checkin || "");
             setSessionId(sess.id);
@@ -167,15 +201,13 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
             setSetupDone(true);
           }
         } else if (hw.completed) {
-          // Homework marked completed but no session found — show as completed
           setSessionCompleted(true);
           setMessages([{ role: "assistant", content: `Questo compito è già stato completato! ✅\n\n**${hw.title}**\n\nPuoi ripassare i concetti nella sezione "Ripassa e rafforza".` }]);
           setSetupDone(true);
         } else {
-          setShowCheckin(true);
+          showInitialScreen(hw);
         }
       } else {
-        // Check for paused sessions first
         const { data: existing } = await supabase
           .from("guided_sessions")
           .select("*")
@@ -189,7 +221,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
           const hasRealProgress = (sess.current_step || 1) > 1 || sess.last_difficulty;
           
           if (!hasRealProgress) {
-            setShowCheckin(true);
+            showInitialScreen(hw);
           } else {
             setSessionEmotion(sess.emotional_checkin || "");
             setSessionId(sess.id);
@@ -212,7 +244,6 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
             setSetupDone(true);
           }
         } else if (hw.completed) {
-          // Task is completed — load conversation history if available
           const { data: completedSession } = await supabase
             .from("guided_sessions")
             .select("*, conversation_sessions(messaggi)")
@@ -238,13 +269,13 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
               setTotalSteps(sess.total_steps || 0);
               setSetupDone(true);
             } else {
-              setShowCheckin(true);
+              showInitialScreen(hw);
             }
           } else {
-            setShowCheckin(true);
+            showInitialScreen(hw);
           }
         } else {
-          setShowCheckin(true);
+          showInitialScreen(hw);
         }
       }
     } catch (err) {
@@ -253,33 +284,56 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     setLoading(false);
   }
 
+  // Decides whether to show familiarity or skip to checkin
+  function showInitialScreen(hw: any) {
+    // Recovery tasks skip familiarity (always first_time)
+    if (isRecoveryTask(hw.task_type, hw.title)) {
+      setFamiliarity("first_time");
+      saveFamiliarity(homeworkId!, "first_time");
+      setShowCheckin(true);
+      return;
+    }
+    // If we already know familiarity from a previous session, skip to checkin
+    const saved = getSavedFamiliarity(homeworkId!);
+    if (saved) {
+      setFamiliarity(saved);
+      setShowCheckin(true);
+      return;
+    }
+    // Show familiarity selection first
+    setShowFamiliarity(true);
+  }
+
+  // Called from familiarity UI — stores choice then shows checkin
+  function selectFamiliarity(fam: Familiarity) {
+    setFamiliarity(fam);
+    saveFamiliarity(homeworkId!, fam);
+    setShowFamiliarity(false);
+    setShowCheckin(true);
+  }
+
+  // Called after emotional checkin — now familiarity is already set
   async function startNewSession(emotion: string) {
     setShowCheckin(false);
     setSessionEmotion(emotion);
-    
-    // Always ask familiarity to tailor coach approach
-    if (homework && shouldAskFamiliarity(homework.task_type, homework.title)) {
-      setPendingEmotion(emotion);
-      setMethodPhase("ask_familiarity");
-      setSetupDone(true);
-      setLoading(false);
 
-      // Emotional response first, then familiarity question
-      const emotionResponse = getEmotionResponse(emotion);
-      setMessages([{
-        role: "assistant",
-        content: `${emotionResponse}\n\nPrima di iniziare, dimmi: questo argomento lo conosci già oppure è la prima volta che lo studi?`,
-        actions: [
-          { label: "🆕  Prima volta", value: "first_time", icon: "🆕" },
-          { label: "✅  Lo conosco già", value: "already_know", icon: "✅" },
-          { label: "🔄  Solo in parte", value: "partial", icon: "🔄" },
-        ],
-      }]);
-      return;
-    }
+    // Show method proposal in chat then start
+    const fam = familiarity || "first_time";
+    setPendingEmotion(emotion);
+    setMethodPhase("propose_method");
+    setSetupDone(true);
+    setLoading(false);
 
-    // For exercise tasks, go directly to session creation
-    await createAndStartSession(emotion, null);
+    const emotionResponse = getEmotionResponse(emotion);
+    const proposal = getMethodProposal(fam, homework?.task_type || "study", homework?.title || "");
+
+    setMessages([{
+      role: "assistant",
+      content: `${emotionResponse}\n\n${proposal}`,
+      actions: [
+        { label: "🚀  Cominciamo", value: "start_session", primary: true },
+      ],
+    }]);
   }
 
   function handleMethodAction(value: string) {
@@ -291,26 +345,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       return;
     }
 
-    if (methodPhase === "ask_familiarity") {
-      const fam = value as Familiarity;
-      setFamiliarity(fam);
-      setMethodPhase("propose_method");
-
-      const familiarityLabel = fam === "first_time" ? "Prima volta" : fam === "already_know" ? "Lo conosco già" : "Solo in parte";
-      const proposal = getMethodProposal(fam, homework?.task_type || "study", homework?.title || "");
-
-      setMessages(prev => [
-        ...prev.map(m => ({ ...m, actions: undefined })),
-        { role: "user", content: familiarityLabel },
-        {
-          role: "assistant",
-          content: proposal,
-          actions: [
-            { label: "🚀  Cominciamo", value: "start_session", primary: true },
-          ],
-        },
-      ]);
-    } else if (methodPhase === "propose_method" && value === "start_session") {
+    if (methodPhase === "propose_method" && value === "start_session") {
       setMethodPhase("ready");
       setMessages(prev => [
         ...prev.map(m => ({ ...m, actions: undefined })),
@@ -823,6 +858,8 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
     showCelebration,
     setShowCelebration,
     showCheckin,
+    showFamiliarity,
+    selectFamiliarity,
     setupDone,
     sessionCompleted,
     progressPercent,

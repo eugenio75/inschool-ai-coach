@@ -333,6 +333,52 @@ Inizia con la prima domanda.`;
       );
     }
 
+    if (guided.showFamiliarity) {
+      const familiarityOptions = [
+        { key: "first_time" as const, label: "È la prima volta", desc: "Non l'ho mai visto", icon: "🆕" },
+        { key: "partial" as const, label: "Lo conosco in parte", desc: "L'ho studiato ma non sono sicuro", icon: "🔄" },
+        { key: "already_know" as const, label: "Lo conosco già", desc: "L'ho studiato e lo ricordo", icon: "✅" },
+      ];
+
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-md w-full bg-card rounded-xl border border-border p-8 text-center"
+          >
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <BookOpen className="w-5 h-5 text-primary" />
+            </div>
+            <h2 className="font-display text-xl font-bold text-foreground mb-2">
+              Prima di iniziare, dimmi:
+            </h2>
+            <p className="text-sm text-muted-foreground mb-2">
+              Hai già studiato questo argomento?
+            </p>
+            <p className="text-xs text-primary font-medium mb-6">
+              {guided.homework?.title}
+            </p>
+            <div className="space-y-3">
+              {familiarityOptions.map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => guided.selectFamiliarity(opt.key)}
+                  className="w-full flex items-center gap-4 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
+                >
+                  <span className="text-2xl">{opt.icon}</span>
+                  <div>
+                    <span className="font-medium text-foreground block">{opt.label}</span>
+                    <span className="text-xs text-muted-foreground">{opt.desc}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      );
+    }
+
     if (guided.showCheckin) {
       const guidedEmotionOptions = [
         { key: "concentrato", label: "Concentrato", icon: "🎯" },
