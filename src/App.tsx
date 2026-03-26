@@ -87,6 +87,7 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 import { useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { LangProvider } from "@/contexts/LangContext";
+import { TeacherLayout } from "@/components/TeacherLayout";
 
 function GuidedRedirect() {
   const { homeworkId } = useParams<{ homeworkId: string }>();
@@ -131,8 +132,9 @@ function RoleGuard({ children }: { children: React.ReactNode }) {
 
 function MaybeAdultLayout({ children }: { children: React.ReactNode }) {
   const session = getCS();
-  const isAdult = ["superiori", "universitario", "docente"].includes(session?.profile?.school_level || "");
-  if (isAdult) return <AdultLayout>{children}</AdultLayout>;
+  const level = session?.profile?.school_level || "";
+  if (level === "docente") return <TeacherLayout>{children}</TeacherLayout>;
+  if (["superiori", "universitario"].includes(level)) return <AdultLayout>{children}</AdultLayout>;
   return <>{children}</>;
 }
 
