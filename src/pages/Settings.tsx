@@ -445,6 +445,7 @@ const Settings = () => {
             {!isAdult && (
               <Button variant="outline" onClick={() => navigate("/parent-dashboard")} className="w-full rounded-2xl border-border text-foreground">Area genitori</Button>
             )}
+            <LogoutButton showLabel className="w-full rounded-2xl justify-center text-base py-3" />
           </div>
 
           {/* Delete Account */}
