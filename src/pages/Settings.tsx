@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Lock, Loader2, Users, Shield, Pencil, Bell,
-  Eye, EyeOff, Trash2, RotateCcw, Moon, Brain,
+  Eye, EyeOff, Trash2, RotateCcw, Moon, Brain, BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
