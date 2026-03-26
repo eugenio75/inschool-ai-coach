@@ -227,47 +227,69 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
     return base;
   }
 
+  // Use a ref to always have latest messages for closures
+  const messagesRef = useRef<ChatMessage[]>([]);
+  messagesRef.current = messages;
+
   async function sendMessage(text: string, overrideChatId?: string) {
     const chatId = overrideChatId || activeChatId;
     if (!text.trim() || !chatId) return;
     setInput("");
 
-    // Save user message
-    const { data: userMsgData } = await (supabase as any).from("teacher_chat_messages")
+    // Save user message to DB
+    const { data: userMsgData, error: insertError } = await (supabase as any).from("teacher_chat_messages")
       .insert({ chat_id: chatId, role: "user", content: text.trim() }).select("*").single();
 
-    const userMsg = userMsgData as ChatMessage;
-    const updatedMessages = [...messages, userMsg];
-    setMessages(updatedMessages);
+    // Create user message (use DB data or fallback to local)
+    const userMsg: ChatMessage = userMsgData || {
+      id: `local-${Date.now()}`,
+      chat_id: chatId,
+      role: "user" as const,
+      content: text.trim(),
+      created_at: new Date().toISOString(),
+    };
+
+    if (insertError) {
+      console.error("Failed to save user message:", insertError);
+    }
+
+    const currentMessages = [...messagesRef.current, userMsg];
+    setMessages(currentMessages);
     setIsReplying(true);
 
     // Add placeholder for assistant
     const placeholder: ChatMessage = {
-      id: "temp",
+      id: "temp-assistant",
       chat_id: chatId,
       role: "assistant",
       content: "",
       created_at: new Date().toISOString(),
     };
-    setMessages([...updatedMessages, placeholder]);
+    setMessages([...currentMessages, placeholder]);
 
     const aiMessages: ChatMsg[] = [
       { role: "assistant", content: buildSystemPrompt(chatId) },
-      ...updatedMessages.map(m => ({ role: m.role as "user" | "assistant", content: m.content })),
+      ...currentMessages.map(m => ({ role: m.role as "user" | "assistant", content: m.content })),
     ];
 
     try {
       await streamChat({
         messages: aiMessages,
         onDelta: (fullSoFar) => {
-          setMessages([...updatedMessages, { ...placeholder, content: fullSoFar }]);
+          setMessages([...currentMessages, { ...placeholder, content: fullSoFar }]);
         },
         onDone: async (fullText) => {
           // Save assistant message
           const { data: asstData } = await (supabase as any).from("teacher_chat_messages")
             .insert({ chat_id: chatId, role: "assistant", content: fullText }).select("*").single();
-          const asstMsg = asstData as ChatMessage;
-          setMessages([...updatedMessages, asstMsg]);
+          const asstMsg: ChatMessage = asstData || {
+            id: `local-asst-${Date.now()}`,
+            chat_id: chatId,
+            role: "assistant",
+            content: fullText,
+            created_at: new Date().toISOString(),
+          };
+          setMessages([...currentMessages, asstMsg]);
           setIsReplying(false);
 
           // Update chat updated_at
