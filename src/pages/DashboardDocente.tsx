@@ -308,6 +308,14 @@ REGOLE DI RISPOSTA:
                     }`}>
                       {msg.content || (isCoachReplying && i === coachMessages.length - 1 ? "..." : "")}
                     </p>
+                    {/* Inline CTA for welcome message */}
+                    {msg.role === "assistant" && classi.length === 0 && i === 0 && !loadingClassi && (
+                      <div className="mt-2">
+                        <Button size="sm" onClick={() => setShowClasseModal(true)} className="gap-1.5">
+                          <Plus className="w-3.5 h-3.5" /> Crea la prima classe
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
