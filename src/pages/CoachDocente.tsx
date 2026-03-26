@@ -77,7 +77,10 @@ export default function CoachDocente() {
 
   // Load sidebar data
   useEffect(() => {
-    if (!teacherId) return;
+    if (!teacherId) {
+      setLoading(false);
+      return;
+    }
     loadSidebarData();
   }, [teacherId]);
 
