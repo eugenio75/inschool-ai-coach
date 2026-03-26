@@ -63,9 +63,13 @@ export default function DashboardDocente() {
 
   // Modal
   const [showClasseModal, setShowClasseModal] = useState(false);
-  const [newClasse, setNewClasse] = useState({ nome: "", materia: "", ordine_scolastico: "", num_studenti: "" });
+  const [newClasse, setNewClasse] = useState({ nome: "", materie: [] as string[], ordine_scolastico: "", num_studenti: "" });
   const [savingClasse, setSavingClasse] = useState(false);
   const [classeCreata, setClasseCreata] = useState<any>(null);
+
+  // Delete class
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [deletingClasse, setDeletingClasse] = useState(false);
 
   // Crea materiale — class picker
   const [showMaterialClassPicker, setShowMaterialClassPicker] = useState(false);
