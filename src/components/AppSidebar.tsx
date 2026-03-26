@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import { getChildSession } from "@/lib/childSession";
 import { NavLink } from "@/components/NavLink";
+import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { LangToggle } from "@/components/LangToggle";
 import { CommandSearch } from "@/components/CommandSearch";
 import {
@@ -53,45 +54,7 @@ export function AppSidebar() {
   const profile = session?.profile;
   const role = profile?.school_level || "";
   const name = profile?.name || "Utente";
-  const roleLabel = role === "superiori" ? "Studente" : role === "universitario" ? "Universitario" : role === "docente" ? "Docente" : "";
-
-  // Docente: load classes for sidebar
-  const [classi, setClassi] = useState<any[]>([]);
-  const [feedCounts, setFeedCounts] = useState<Record<string, number>>({});
-  const [totalUnread, setTotalUnread] = useState(0);
-
-  useEffect(() => {
-    if (role !== "docente" || !session?.profileId) return;
-    loadDocente();
-  }, [role, session?.profileId]);
-
-  async function loadDocente() {
-    const { data: c } = await (supabase as any)
-      .from("classi").select("id, nome, materia, codice_invito")
-      .eq("docente_profile_id", session?.profileId)
-      .order("created_at", { ascending: false });
-    setClassi(c || []);
-
-    if (c && c.length > 0) {
-      const { data: feed } = await (supabase as any)
-        .from("teacher_activity_feed")
-        .select("class_id")
-        .eq("teacher_id", session?.profileId)
-        .is("read_at", null);
-      if (feed) {
-        const counts: Record<string, number> = {};
-        let total = 0;
-        for (const f of feed) {
-          if (f.class_id) {
-            counts[f.class_id] = (counts[f.class_id] || 0) + 1;
-          }
-          total++;
-        }
-        setFeedCounts(counts);
-        setTotalUnread(total);
-      }
-    }
-  }
+  const roleLabel = role === "superiori" ? "Studente" : role === "universitario" ? "Universitario" : "";
 
   // Docente uses TeacherLayout — no sidebar needed
   if (role === "docente") {
