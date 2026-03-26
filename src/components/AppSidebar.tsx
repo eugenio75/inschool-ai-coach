@@ -1,15 +1,11 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
 import {
-  LayoutDashboard, BookOpen, Plus, LogOut, Settings, CalendarDays, FolderOpen,
+  LayoutDashboard, BookOpen, Settings, FolderOpen,
 } from "lucide-react";
 import { getChildSession } from "@/lib/childSession";
 import { NavLink } from "@/components/NavLink";
-import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { LangToggle } from "@/components/LangToggle";
 import { CommandSearch } from "@/components/CommandSearch";
-import { LogoutButton } from "@/components/shared/LogoutButton";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
   SidebarContent,
