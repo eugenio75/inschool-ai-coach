@@ -150,6 +150,9 @@ export default function CoachDocente() {
       }
     }
     setLoading(false);
+    
+    // Process initial message AFTER sidebar is fully loaded
+    await processInitialMessage();
   }
 
   async function loadMessages(chatId: string) {
