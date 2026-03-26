@@ -116,7 +116,7 @@ function RoleGuard({ children }: { children: React.ReactNode }) {
 
       if (profile) {
         const role = profile.school_level;
-        if (["medie", "superiori", "universitario", "docente"].includes(role)) {
+        if (["superiori", "universitario", "docente"].includes(role)) {
           if (!(profile as any).onboarding_completed && location.pathname !== "/onboarding") {
             navigate("/onboarding", { replace: true });
           } else if ((profile as any).onboarding_completed && (location.pathname === "/onboarding" || location.pathname === "/profiles")) {
@@ -135,7 +135,7 @@ function MaybeAdultLayout({ children }: { children: React.ReactNode }) {
   const session = getCS();
   const level = session?.profile?.school_level || "";
   if (level === "docente") return <TeacherLayout>{children}</TeacherLayout>;
-  if (["medie", "superiori", "universitario"].includes(level)) return <AdultLayout>{children}</AdultLayout>;
+  if (["superiori", "universitario"].includes(level)) return <AdultLayout>{children}</AdultLayout>;
   return <>{children}</>;
 }
 

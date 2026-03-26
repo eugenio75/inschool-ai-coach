@@ -12,7 +12,7 @@ import DashboardSuperiori from "./DashboardSuperiori";
 import DashboardUniversitario from "./DashboardUniversitario";
 import DashboardDocente from "./DashboardDocente";
 
-const ADULT_ROLES = ["medie", "superiori", "universitario", "docente"];
+const ADULT_ROLES = ["superiori", "universitario", "docente"];
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -74,7 +74,7 @@ export default function Dashboard() {
     );
   }
 
-  if (role === "medie") return <DashboardMedie />;
+  if (role === "medie" || role?.startsWith("media-")) return <DashboardMedie />;
   if (role === "superiori") return <DashboardSuperiori />;
   if (role === "universitario") return <DashboardUniversitario />;
   if (role === "docente") return <DashboardDocente />;
