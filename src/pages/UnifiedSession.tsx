@@ -109,6 +109,19 @@ export default function UnifiedSession() {
   const [sending, setSending] = useState(false);
   const [showPauseDialog, setShowPauseDialog] = useState(false);
   const [guidedCustomEmotion, setGuidedCustomEmotion] = useState("");
+  const [coachName, setCoachName] = useState<string | undefined>(undefined);
+
+  // Load coach name from preferences
+  useEffect(() => {
+    const loadCoachName = async () => {
+      const pid = getChildSession()?.profileId || profile?.id;
+      if (!pid) return;
+      const { data } = await supabase.from("user_preferences").select("data").eq("profile_id", pid).maybeSingle();
+      const prefs = (data?.data as any) || {};
+      if (prefs.coach_name) setCoachName(prefs.coach_name);
+    };
+    loadCoachName();
+  }, []);
 
   // Fetch learning gaps for prep mode
   useEffect(() => {
@@ -484,6 +497,7 @@ Inizia con la prima domanda.`;
     return (
       <>
         <ChatShell
+          coachName={coachName}
           title={guided.homework?.title || "Sessione guidata"}
           subtitle={isReadOnly ? `${guided.homework?.subject} · ✅ Completato` : guided.homework?.subject}
           progress={!isReadOnly && (guided.methodPhase === "none" || guided.methodPhase === "ready") ? guided.progressPercent : undefined}
@@ -736,6 +750,7 @@ Inizia con la prima domanda.`;
 
   return (
     <ChatShell
+      coachName={coachName}
       title={topic || subject || getTitle()}
       subtitle={subject && topic ? subject : undefined}
       badgeText={type === "prep" ? (mode === "orale" ? "Orale" : "Scritta") : undefined}

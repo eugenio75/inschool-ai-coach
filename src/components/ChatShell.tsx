@@ -13,6 +13,7 @@ interface ChatShellProps {
   title: string;
   subtitle?: string;
   badgeText?: string;
+  coachName?: string;
   messages: ChatMsg[];
   streamingText: string;
   sending: boolean;
@@ -34,7 +35,7 @@ interface ChatShellProps {
 }
 
 export function ChatShell({
-  title, subtitle, badgeText,
+  title, subtitle, badgeText, coachName,
   messages, streamingText, sending,
   onSend, onBack, onAction,
   progress, progressLabel,
@@ -168,7 +169,13 @@ export function ChatShell({
         <button onClick={onBack} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
           <ArrowLeft className="w-5 h-5 text-muted-foreground" />
         </button>
+        {coachName && (
+          <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden bg-primary/5">
+            <img src={getCoachMoodSrc("happy")} alt={coachName} className="w-full h-full object-cover" width={32} height={32} />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
+          {coachName && <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">{coachName}</p>}
           <h1 className="text-sm font-semibold text-foreground truncate">{title}</h1>
           {subtitle && <p className="text-xs text-muted-foreground truncate">{subtitle}</p>}
           {progress !== undefined && (
