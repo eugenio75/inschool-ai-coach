@@ -533,7 +533,6 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
 
         {/* Messages area */}
         <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 space-y-4 bg-muted/20">
-          {console.log("IS LOADING:", loading, "MESSAGES STATE:", messages)}
           {loading ? (
             <div className="space-y-3 max-w-2xl mx-auto">
               <Skeleton className="h-10 w-3/4" />
