@@ -434,6 +434,85 @@ ${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> __________
     );
   }
 
+  // Reassign functions
+  async function openReassign(m: any) {
+    setReassignMaterial(m);
+    setReassignClassId("");
+    setReassignDest("all");
+    setReassignStudents([]);
+    setReassignStudentsList([]);
+    setReassignDueDate(undefined);
+  }
+
+  async function loadClassStudents(classId: string) {
+    setLoadingStudents(true);
+    const { data } = await supabase
+      .from("class_enrollments")
+      .select("student_id")
+      .eq("class_id", classId);
+    if (data && data.length > 0) {
+      const ids = data.map(d => d.student_id);
+      const { data: profiles } = await supabase
+        .from("child_profiles")
+        .select("id, name")
+        .in("id", ids);
+      setReassignStudentsList(profiles || []);
+    } else {
+      setReassignStudentsList([]);
+    }
+    setLoadingStudents(false);
+  }
+
+  async function handleReassign() {
+    if (!reassignMaterial || !reassignClassId || !user) return;
+
+    if (reassignDest === "pdf") {
+      handleDownloadPdf(reassignMaterial);
+      setReassignMaterial(null);
+      return;
+    }
+
+    setReassigning(true);
+    try {
+      const targetStudents = reassignDest === "all"
+        ? reassignStudentsList
+        : reassignStudentsList.filter(s => reassignStudents.includes(s.id));
+
+      if (targetStudents.length === 0) {
+        toast.error("Nessuno studente selezionato");
+        setReassigning(false);
+        return;
+      }
+
+      const inserts = targetStudents.map(s => ({
+        teacher_id: user.id,
+        class_id: reassignClassId,
+        student_id: s.id,
+        title: reassignMaterial.title,
+        type: reassignMaterial.type || "esercizi",
+        subject: reassignMaterial.subject || null,
+        description: reassignMaterial.content,
+        due_date: reassignDueDate ? reassignDueDate.toISOString() : null,
+        metadata: { reassigned: true },
+      }));
+
+      const { error } = await supabase.from("teacher_assignments").insert(inserts);
+      if (error) throw error;
+
+      await supabase.from("teacher_materials").update({
+        status: "assigned",
+        assigned_at: new Date().toISOString(),
+      }).eq("id", reassignMaterial.id);
+
+      toast.success(`Assegnato a ${targetStudents.length} studenti`);
+      setReassignMaterial(null);
+      loadData();
+    } catch (err: any) {
+      toast.error("Errore: " + (err.message || "Riprova"));
+    }
+    setReassigning(false);
+  }
+
   // Available classes to share to (exclude the material's current class)
   const shareableClasses = useMemo(() => {
     if (!shareMaterial) return classi;
