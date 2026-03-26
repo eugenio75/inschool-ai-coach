@@ -4,24 +4,19 @@ import { motion } from "framer-motion";
 import { useLang } from "@/contexts/LangContext";
 import type { TranslationKey } from "@/lib/i18n";
 
-interface TrustSectionProps {
-  extraLine?: string;
-}
+const trustItems: { title: TranslationKey; desc: TranslationKey }[] = [
+  { title: "trust_1", desc: "trust_1_desc" },
+  { title: "trust_2", desc: "trust_2_desc" },
+  { title: "trust_3", desc: "trust_3_desc" },
+  { title: "trust_4", desc: "trust_4_desc" },
+  { title: "trust_5", desc: "trust_5_desc" },
+];
 
-export function TrustSection({ extraLine }: TrustSectionProps) {
+export function TrustSection() {
   const { t } = useLang();
 
-  const trustKeys: TranslationKey[] = [
-    "trust_1",
-    "trust_2",
-    "trust_3",
-    "trust_4",
-    "trust_5",
-    "trust_6",
-  ];
-
   return (
-    <section className="py-16 px-6" style={{ backgroundColor: "#F8FAFC" }}>
+    <section className="py-16 px-6 bg-white">
       <div className="max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -30,41 +25,32 @@ export function TrustSection({ extraLine }: TrustSectionProps) {
           transition={{ duration: 0.3 }}
           className="text-center mb-10"
         >
-          <h2 className="font-display text-2xl md:text-3xl font-bold" style={{ color: "#0F172A" }}>
+          <h2 className="font-display text-2xl md:text-3xl font-bold" style={{ color: "#1A3A5C" }}>
             {t("trust_title")}
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {trustKeys.map((key, i) => (
+        <div className="space-y-4 max-w-2xl mx-auto">
+          {trustItems.map((item, i) => (
             <motion.div
-              key={key}
+              key={item.title}
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.05, duration: 0.2 }}
-              className="flex items-start gap-3 p-4"
+              className="flex items-start gap-4"
             >
               <Shield className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: "#0070C0" }} />
-              <span className="text-sm" style={{ color: "#475569" }}>
-                {t(key)}
-              </span>
+              <div>
+                <p className="font-semibold text-sm" style={{ color: "#1A3A5C" }}>
+                  {t(item.title)}
+                </p>
+                <p className="text-sm mt-0.5" style={{ color: "#64748B" }}>
+                  {t(item.desc)}
+                </p>
+              </div>
             </motion.div>
           ))}
-          {extraLine && (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3, duration: 0.2 }}
-              className="flex items-start gap-3 p-4"
-            >
-              <Shield className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: "#0070C0" }} />
-              <span className="text-sm" style={{ color: "#475569" }}>
-                {extraLine}
-              </span>
-            </motion.div>
-          )}
         </div>
 
         <div className="text-center mt-8">
