@@ -540,3 +540,181 @@ export default function ClassView() {
     </div>
   );
 }
+
+/* ─── Coach AI Chat Component ─── */
+function ClassCoachChat({ classe, students, materials, assignmentResults, stats, userId }: {
+  classe: any;
+  students: any[];
+  materials: any[];
+  assignmentResults: any[];
+  stats: any;
+  userId: string;
+}) {
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  function buildClassContext() {
+    const studentsSummary = students.map(s => {
+      const name = s.profile?.name || s.student_name || "Studente";
+      const sid = s.student_id || s.id;
+      const badge = getStudentBadge(sid, stats.studentScores, assignmentResults);
+      return `- ${name}: ${badge ? badge.label : "Regolare"}`;
+    }).join("\n");
+
+    const materialsSummary = materials.slice(0, 10).map(m =>
+      `- ${m.title} (${m.type || "materiale"}, ${m.status || "draft"})`
+    ).join("\n");
+
+    const verificationsSummary = assignmentResults.slice(0, 5).map((a: any) => {
+      const completed = (a.results || []).filter((r: any) => r.status === "completed").length;
+      const total = (a.results || []).length;
+      return `- ${a.title}: ${completed}/${total} completati`;
+    }).join("\n");
+
+    return `CONTESTO CLASSE "${classe.nome}":
+Materia: ${classe.materia || "Non specificata"}
+Ordine scolastico: ${classe.ordine_scolastico || "Non specificato"}
+Studenti totali: ${students.length}
+Media classe: ${stats.avg}%
+Completamento: ${stats.completion}%
+Da seguire: ${stats.toFollow}
+
+STUDENTI E STATO:
+${studentsSummary || "Nessuno studente iscritto"}
+
+MATERIALI RECENTI:
+${materialsSummary || "Nessun materiale"}
+
+VERIFICHE IN CORSO:
+${verificationsSummary || "Nessuna verifica"}`;
+  }
+
+  async function sendMessage(text: string) {
+    if (!text.trim()) return;
+    const userMsg = { role: "user", content: text };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const classContext = buildClassContext();
+      const systemPrompt = `Sei il Coach AI di InSchool per la classe "${classe.nome}". Il docente ti chiede aiuto.
+
+${classContext}
+
+REGOLE:
+- Rispondi SEMPRE con dati specifici della classe — nomi, numeri, verifiche reali.
+- Se ti chiedono chi ha bisogno di attenzione, usa i dati reali degli studenti.
+- Max 3-4 frasi per risposta, chiare e operative.
+- Tono: collegiale, professionale, concreto.
+- MAI risposte generiche. Usa i dati che hai.
+- Quando suggerisci azioni, sii specifico (es. "Potresti creare un esercizio di recupero su X per Y e Z").`;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({
+          stream: false,
+          maxTokens: 500,
+          systemPrompt,
+          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+        }),
+      });
+      const data = await res.json();
+      const aiContent = data.choices?.[0]?.message?.content?.trim() || "Mi dispiace, non sono riuscito a rispondere. Riprova.";
+      setMessages(prev => [...prev, { role: "assistant", content: aiContent }]);
+    } catch {
+      setMessages(prev => [...prev, { role: "assistant", content: "Errore nella comunicazione. Riprova." }]);
+    }
+    setLoading(false);
+  }
+
+  const quickActions = [
+    "Chi ha bisogno di più attenzione questa settimana?",
+    "Suggeriscimi un'attività di recupero per la classe",
+    "Come posso aiutare gli studenti in difficoltà?",
+  ];
+
+  return (
+    <div className="bg-card border border-border rounded-2xl overflow-hidden flex flex-col" style={{ height: "500px" }}>
+      {/* Header */}
+      <div className="px-5 py-3 border-b border-border bg-muted/30">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="w-4 h-4 text-primary" />
+          <p className="font-semibold text-sm text-foreground">Coach AI — {classe.nome}</p>
+        </div>
+        <p className="text-xs text-muted-foreground mt-0.5">Il coach conosce già la tua classe. Chiedigli quello che vuoi.</p>
+      </div>
+
+      {/* Messages */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+        {messages.length === 0 && (
+          <div className="text-center py-8">
+            <MessageSquare className="w-8 h-8 text-muted-foreground/20 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground mb-4">Inizia una conversazione</p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {quickActions.map((q, i) => (
+                <button
+                  key={i}
+                  onClick={() => sendMessage(q)}
+                  className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {messages.map((msg, i) => (
+          <div key={i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
+            <div className={cn(
+              "max-w-[80%] rounded-xl px-4 py-2.5 text-sm",
+              msg.role === "user"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-foreground"
+            )}>
+              {msg.content}
+            </div>
+          </div>
+        ))}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="bg-muted rounded-xl px-4 py-2.5 text-sm text-muted-foreground animate-pulse">
+              Sto pensando...
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Input */}
+      <div className="px-4 py-3 border-t border-border">
+        <form onSubmit={(e) => { e.preventDefault(); sendMessage(input); }} className="flex gap-2">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Scrivi al coach..."
+            className="rounded-xl flex-1"
+            disabled={loading}
+          />
+          <Button type="submit" size="sm" className="rounded-xl" disabled={loading || !input.trim()}>
+            <Send className="w-4 h-4" />
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+}

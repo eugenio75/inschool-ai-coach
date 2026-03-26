@@ -52,6 +52,13 @@ interface Props {
   autoCreate?: boolean;
 }
 
+const MATERIE_OPTIONS = [
+  "Italiano", "Matematica", "Scienze", "Storia", "Geografia", "Inglese",
+  "Francese", "Spagnolo", "Tedesco", "Arte", "Musica", "Educazione Fisica",
+  "Tecnologia", "Religione", "Filosofia", "Fisica", "Chimica", "Biologia",
+  "Informatica", "Latino", "Greco", "Diritto", "Economia",
+];
+
 export default function TeacherMaterialsTab({ classId, classe, students, materials, userId, onReload, autoCreate }: Props) {
   const [mode, setMode] = useState<FormMode>(null);
   const [activityType, setActivityType] = useState<ActivityType>("compito");
