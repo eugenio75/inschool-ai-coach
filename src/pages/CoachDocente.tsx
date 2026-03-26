@@ -549,8 +549,9 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
             </div>
           ) : (
             <div className="max-w-2xl mx-auto space-y-4">
-              {messages.map((msg, i) => (
-                console.log("RENDERING MESSAGE:", msg),
+              {messages.map((msg, i) => {
+                console.log("RENDERING MESSAGE:", msg);
+                return (
                 <div key={msg.id || i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
                   {msg.role === "assistant" && (
                     <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center shrink-0 mt-0.5 mr-2">
