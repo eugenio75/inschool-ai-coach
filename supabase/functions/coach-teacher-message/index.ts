@@ -65,6 +65,7 @@ REGOLE LINGUAGGIO:
 Stai rispondendo nella chat della classe ${classId ? "selezionata" : ""}.
 
 CONTESTO CLASSE:
+- Materie insegnate dal docente: ${(teacherSubjects || []).length > 0 ? (teacherSubjects || []).join(", ") : "non specificate"}
 - Studenti: ${JSON.stringify(students || [])}
 - Materiali recenti: ${JSON.stringify(materials || [])}
 - Verifiche: ${JSON.stringify(verifications || [])}
