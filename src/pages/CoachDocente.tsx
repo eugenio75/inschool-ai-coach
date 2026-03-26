@@ -110,56 +110,65 @@ export default function CoachDocente() {
 
   async function loadSidebarData() {
     setLoading(true);
-    const [{ data: cls }, { data: cts }] = await Promise.all([
-      (supabase as any).from("classi").select("id, nome, materia, num_studenti")
-        .eq("docente_profile_id", profileId).order("created_at", { ascending: true }),
-      (supabase as any).from("teacher_chats").select("*")
-        .eq("teacher_id", teacherId).order("updated_at", { ascending: false }),
-    ]);
-    setClasses(cls || []);
-    const loadedChats = (cts || []) as TeacherChat[];
-    setChats(loadedChats);
+    try {
+      const [{ data: cls }, { data: cts }] = await Promise.all([
+        (supabase as any).from("classi").select("id, nome, materia, num_studenti")
+          .eq("docente_profile_id", profileId).order("created_at", { ascending: true }),
+        (supabase as any).from("teacher_chats").select("*")
+          .eq("teacher_id", teacherId).order("updated_at", { ascending: false }),
+      ]);
 
-    // Auto-create class chats if missing
-    const existingClassIds = new Set(loadedChats.filter(c => c.class_id).map(c => c.class_id));
-    const missingClasses = (cls || []).filter((c: ClassInfo) => !existingClassIds.has(c.id));
-    if (missingClasses.length > 0) {
-      const inserts = missingClasses.map((c: ClassInfo) => ({
-        teacher_id: teacherId,
-        class_id: c.id,
-        name: `${c.nome}${c.materia ? ` — ${c.materia}` : ""}`,
-      }));
-      const { data: newChats } = await (supabase as any).from("teacher_chats").insert(inserts).select("*");
-      if (newChats) {
-        setChats(prev => [...newChats, ...prev]);
+      setClasses(cls || []);
+      const loadedChats = (cts || []) as TeacherChat[];
+      let mergedChats = loadedChats;
+      setChats(loadedChats);
+
+      const existingClassIds = new Set(loadedChats.filter(c => c.class_id).map(c => c.class_id));
+      const missingClasses = (cls || []).filter((c: ClassInfo) => !existingClassIds.has(c.id));
+      if (missingClasses.length > 0) {
+        const inserts = missingClasses.map((c: ClassInfo) => ({
+          teacher_id: teacherId,
+          class_id: c.id,
+          name: `${c.nome}${c.materia ? ` — ${c.materia}` : ""}`,
+        }));
+        const { data: newChats } = await (supabase as any).from("teacher_chats").insert(inserts).select("*");
+        if (newChats?.length) {
+          mergedChats = [...newChats, ...loadedChats] as TeacherChat[];
+          setChats(mergedChats);
+        }
       }
+
+      if (initialClassId) {
+        const classChat = mergedChats.find(c => c.class_id === initialClassId);
+        if (classChat) {
+          setActiveChatId(classChat.id);
+          await loadMessages(classChat.id);
+        } else {
+          setMessages([]);
+        }
+      } else if (!activeChatId && mergedChats.length > 0 && !initialMessage) {
+        setActiveChatId(mergedChats[0].id);
+        await loadMessages(mergedChats[0].id);
+      } else if (!activeChatId && !initialMessage) {
+        setMessages([]);
+      }
+    } finally {
+      setLoading(false);
     }
 
-    // Select initial chat or first available
-    if (initialClassId) {
-      const classChat = loadedChats.find(c => c.class_id === initialClassId);
-      if (classChat) {
-        setActiveChatId(classChat.id);
-        await loadMessages(classChat.id);
-      }
-    } else if (!activeChatId && loadedChats.length > 0) {
-      // Don't auto-select if we're about to create from initialMessage
-      if (!initialMessage) {
-        setActiveChatId(loadedChats[0].id);
-        await loadMessages(loadedChats[0].id);
-      }
-    }
-    setLoading(false);
-    
-    // Process initial message AFTER sidebar is fully loaded
     await processInitialMessage();
   }
 
   async function loadMessages(chatId: string) {
     const { data, error } = await (supabase as any).from("teacher_chat_messages")
       .select("*").eq("chat_id", chatId).order("created_at", { ascending: true });
-    console.log("MESSAGES DATA:", data);
-    console.log("MESSAGES ERROR:", error);
+
+    if (error) {
+      console.error("Errore caricamento messaggi:", error);
+      setMessages([]);
+      return;
+    }
+
     setMessages((data || []) as ChatMessage[]);
   }
 
@@ -172,8 +181,14 @@ export default function CoachDocente() {
   async function createNewChat(name?: string) {
     if (!teacherId) return null;
     const chatName = name || `Chat del ${format(new Date(), "d MMMM", { locale: it })}`;
-    const { data } = await (supabase as any).from("teacher_chats")
-      .insert({ teacher_id: teacherId, name: chatName }).select("*").single();
+    const { data, error } = await (supabase as any).from("teacher_chats")
+      .insert({ teacher_id: teacherId, name: chatName, class_id: null }).select("*").single();
+
+    if (error) {
+      console.error("Errore creazione chat:", error);
+      return null;
+    }
+
     if (data) {
       setChats(prev => [data, ...prev]);
       setActiveChatId(data.id);
@@ -181,27 +196,29 @@ export default function CoachDocente() {
       if (isMobile) setSidebarOpen(false);
       return data as TeacherChat;
     }
+
     return null;
   }
 
   async function handleInitialMessage(text: string, classId?: string) {
-    let chatId: string;
+    let chatId: string | null = null;
+
     if (classId) {
       const existing = chatsRef.current.find(c => c.class_id === classId);
       if (existing) {
         chatId = existing.id;
         setActiveChatId(chatId);
         await loadMessages(chatId);
-      } else {
-        return;
       }
     } else {
-      // Create new general chat
       const newChat = await createNewChat();
-      if (!newChat) return;
-      chatId = newChat.id;
+      if (newChat) {
+        chatId = newChat.id;
+      }
     }
-    sendMessage(text, chatId);
+
+    if (!chatId) return;
+    await sendMessage(text, chatId);
   }
 
   function buildSystemPrompt(chatId?: string) {
@@ -234,32 +251,29 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
   messagesRef.current = messages;
 
   async function sendMessage(text: string, overrideChatId?: string) {
-    const chatId = overrideChatId || activeChatId;
-    if (!text.trim() || !chatId) return;
+    let chatId = overrideChatId || activeChatId;
+    if (!text.trim()) return;
     setInput("");
 
-    // Save user message to DB
+    if (!chatId) {
+      const newChat = await createNewChat();
+      if (!newChat) return;
+      chatId = newChat.id;
+    }
+
     const { data: userMsgData, error: insertError } = await (supabase as any).from("teacher_chat_messages")
       .insert({ chat_id: chatId, role: "user", content: text.trim() }).select("*").single();
 
-    // Create user message (use DB data or fallback to local)
-    const userMsg: ChatMessage = userMsgData || {
-      id: `local-${Date.now()}`,
-      chat_id: chatId,
-      role: "user" as const,
-      content: text.trim(),
-      created_at: new Date().toISOString(),
-    };
-
     if (insertError) {
-      console.error("Failed to save user message:", insertError);
+      console.error("Errore inserimento messaggio:", insertError);
+      return;
     }
 
+    const userMsg = userMsgData as ChatMessage;
     const currentMessages = [...messagesRef.current, userMsg];
     setMessages(currentMessages);
     setIsReplying(true);
 
-    // Add placeholder for assistant
     const placeholder: ChatMessage = {
       id: "temp-assistant",
       chat_id: chatId,
@@ -281,24 +295,19 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
           setMessages([...currentMessages, { ...placeholder, content: fullSoFar }]);
         },
         onDone: async (fullText) => {
-          // Save assistant message
-          const { data: asstData } = await (supabase as any).from("teacher_chat_messages")
+          const { data: asstData, error: replyError } = await (supabase as any).from("teacher_chat_messages")
             .insert({ chat_id: chatId, role: "assistant", content: fullText }).select("*").single();
-          const asstMsg: ChatMessage = asstData || {
-            id: `local-asst-${Date.now()}`,
-            chat_id: chatId,
-            role: "assistant",
-            content: fullText,
-            created_at: new Date().toISOString(),
-          };
-          setMessages([...currentMessages, asstMsg]);
-          setIsReplying(false);
 
-          // Update chat updated_at
+          if (replyError) {
+            console.error("Errore inserimento risposta coach:", replyError);
+            setMessages([...currentMessages, { ...placeholder, content: fullText }]);
+          } else {
+            setMessages([...currentMessages, asstData as ChatMessage]);
+          }
+
+          setIsReplying(false);
           await (supabase as any).from("teacher_chats")
             .update({ updated_at: new Date().toISOString() }).eq("id", chatId);
-
-          // Update home coach cache
           sessionStorage.setItem("teacher_coach_msg", fullText);
           sessionStorage.setItem("teacher_coach_msg_at", Date.now().toString());
         },
@@ -549,7 +558,6 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
           ) : (
             <div className="max-w-2xl mx-auto space-y-4">
               {messages.map((msg, i) => {
-                console.log("RENDERING MESSAGE:", msg);
                 return (
                   <div key={msg.id || i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
                     {msg.role === "assistant" && (
