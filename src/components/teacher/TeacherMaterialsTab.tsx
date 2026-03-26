@@ -4,6 +4,7 @@ import {
   PenLine, Sparkles, Upload, ArrowLeft, Send, Download,
   FileText, Trash2, CalendarIcon, BookOpen, Eye, Archive, RotateCcw, Pencil,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -784,6 +785,39 @@ function SavedMaterialsList({
   students: any[];
   onReload: () => void;
 }) {
+  const [editMaterial, setEditMaterial] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", subject: "", type: "", level: "", content: "" });
+  const [saving, setSaving] = useState(false);
+
+  function openEdit(m: any) {
+    setEditMaterial(m);
+    setEditForm({
+      title: m.title || "",
+      subject: m.subject || "",
+      type: m.type || "",
+      level: m.level || "",
+      content: (m.content || "").replace(/\\n/g, "\n"),
+    });
+  }
+
+  async function handleSaveEdit() {
+    if (!editMaterial) return;
+    setSaving(true);
+    const { error } = await supabase.from("teacher_materials").update({
+      title: editForm.title,
+      subject: editForm.subject,
+      type: editForm.type,
+      level: editForm.level,
+      content: editForm.content,
+      updated_at: new Date().toISOString(),
+    }).eq("id", editMaterial.id);
+    setSaving(false);
+    if (error) { toast.error("Errore nel salvataggio"); return; }
+    toast.success("Materiale aggiornato");
+    setEditMaterial(null);
+    onReload();
+  }
+
   async function archiveMaterial(id: string) {
     await supabase.from("teacher_materials").update({ status: "archived" }).eq("id", id);
     toast.success("Materiale archiviato");
@@ -816,7 +850,16 @@ function SavedMaterialsList({
     }
   }
 
+  const TYPE_EDIT_OPTIONS = [
+    { key: "compito", label: "Compito" },
+    { key: "verifica", label: "Verifica" },
+    { key: "esercizi", label: "Esercizi" },
+    { key: "recupero", label: "Recupero" },
+    { key: "potenziamento", label: "Potenziamento" },
+  ];
+
   return (
+    <>
     <div>
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -877,6 +920,10 @@ function SavedMaterialsList({
                     <Download className="w-3.5 h-3.5" />
                   </Button>
                 )}
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg" title="Modifica"
+                  onClick={() => openEdit(m)}>
+                  <Pencil className="w-3.5 h-3.5" />
+                </Button>
                 {m.status !== "archived" && (
                   <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg" title="Archivia"
                     onClick={() => archiveMaterial(m.id)}>
@@ -889,5 +936,67 @@ function SavedMaterialsList({
         </div>
       )}
     </div>
+
+    {/* Edit dialog */}
+    <Dialog open={!!editMaterial} onOpenChange={open => !open && setEditMaterial(null)}>
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Modifica materiale</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs font-medium">Titolo</Label>
+              <Input value={editForm.title} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs font-medium">Materia</Label>
+              <Input value={editForm.subject} onChange={e => setEditForm(f => ({ ...f, subject: e.target.value }))} className="mt-1" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs font-medium">Tipo</Label>
+              <Select value={editForm.type} onValueChange={v => setEditForm(f => ({ ...f, type: v }))}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {TYPE_EDIT_OPTIONS.map(t => (
+                    <SelectItem key={t.key} value={t.key}>{t.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs font-medium">Livello</Label>
+              <Select value={editForm.level} onValueChange={v => setEditForm(f => ({ ...f, level: v }))}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="base">Base</SelectItem>
+                  <SelectItem value="intermedio">Intermedio</SelectItem>
+                  <SelectItem value="avanzato">Avanzato</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <Label className="text-xs font-medium">Contenuto</Label>
+            <Textarea
+              value={editForm.content}
+              onChange={e => setEditForm(f => ({ ...f, content: e.target.value }))}
+              className="mt-1 min-h-[250px] font-mono text-xs"
+              placeholder="Contenuto del materiale (supporta markdown)..."
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setEditMaterial(null)}>Annulla</Button>
+          <Button disabled={saving || !editForm.title || !editForm.content} onClick={handleSaveEdit}>
+            <Pencil className="w-4 h-4 mr-1" />
+            {saving ? "Salvataggio..." : "Salva"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
