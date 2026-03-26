@@ -50,7 +50,7 @@ export default function Onboarding() {
           .from("child_profiles")
           .select("*")
           .eq("parent_id", user.id)
-          .in("school_level", ["superiori", "universitario", "docente"])
+          .in("school_level", ["medie", "superiori", "universitario", "docente"])
           .order("created_at", { ascending: false });
 
         if (profiles && profiles.length > 0) {
@@ -84,7 +84,7 @@ export default function Onboarding() {
 
   if (loading || loadingData) return <div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
 
-  if (["superiori", "universitario", "docente"].includes(role || "")) {
+  if (["medie", "superiori", "universitario", "docente"].includes(role || "")) {
     return <OnboardingAdult role={role!} profileId={profileId!} initialStep={initialStep} initialData={initialData} />;
   }
   return <OnboardingLegacy />;
