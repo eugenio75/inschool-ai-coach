@@ -239,6 +239,16 @@ export default function TeacherMaterialsArchive() {
   const [shareClassIds, setShareClassIds] = useState<string[]>([]);
   const [sharing, setSharing] = useState(false);
 
+  // Reassign dialog
+  const [reassignMaterial, setReassignMaterial] = useState<any | null>(null);
+  const [reassignClassId, setReassignClassId] = useState("");
+  const [reassignDest, setReassignDest] = useState<"all" | "selected" | "pdf">("all");
+  const [reassignStudents, setReassignStudents] = useState<string[]>([]);
+  const [reassignStudentsList, setReassignStudentsList] = useState<any[]>([]);
+  const [reassignDueDate, setReassignDueDate] = useState<Date | undefined>(undefined);
+  const [reassigning, setReassigning] = useState(false);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+
   // Edit dialog
   const [editMaterial, setEditMaterial] = useState<any | null>(null);
   const [editForm, setEditForm] = useState({ title: "", subject: "", type: "", level: "", content: "" });
