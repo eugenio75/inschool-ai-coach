@@ -363,6 +363,7 @@ export default function ClassView() {
             materials={materials}
             userId={user!.id}
             onReload={loadClass}
+            autoCreate={searchParams.get("create") === "true"}
           />
         </TabsContent>
 
