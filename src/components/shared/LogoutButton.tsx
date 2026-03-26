@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 
-export function LogoutButton({ showLabel = false }: { showLabel?: boolean }) {
+export function LogoutButton({ showLabel = false, className }: { showLabel?: boolean; className?: string }) {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -23,9 +23,9 @@ export function LogoutButton({ showLabel = false }: { showLabel?: boolean }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <button className="flex items-center gap-2 p-2 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors">
+        <button className={className || "flex items-center gap-2 p-2 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"}>
           <LogOut className="w-4 h-4" />
-          {showLabel && <span className="text-sm font-medium hidden sm:inline">Esci</span>}
+          {showLabel && <span className="text-sm font-medium">Esci</span>}
         </button>
       </AlertDialogTrigger>
       <AlertDialogContent className="rounded-2xl">
