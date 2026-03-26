@@ -87,6 +87,7 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 import { useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { LangProvider } from "@/contexts/LangContext";
+import { TeacherLayout } from "@/components/TeacherLayout";
 
 function GuidedRedirect() {
   const { homeworkId } = useParams<{ homeworkId: string }>();
