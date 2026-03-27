@@ -24,6 +24,7 @@ const homeTrustItems = [
   { title: "trust_3" as const, desc: "trust_3_desc" as const },
   { title: "trust_st_support" as const, desc: "trust_st_support_desc" as const },
   { title: "trust_4" as const, desc: "trust_bc_desc" as const },
+  { title: "trust_5" as const, desc: "trust_5_desc" as const },
 ];
 
 export default function Landing() {
