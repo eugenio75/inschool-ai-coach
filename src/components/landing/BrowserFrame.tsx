@@ -11,32 +11,59 @@ export function BrowserFrame({ children, className = "" }: BrowserFrameProps) {
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.4 }}
+      transition={{ duration: 0.5 }}
       className={`mx-auto w-full ${className}`}
-      style={{ maxWidth: 680 }}
+      style={{ maxWidth: 520 }}
     >
-      <div className="rounded-xl overflow-hidden shadow-xl border border-slate-200">
-        {/* Browser bar */}
+      {/* Laptop body */}
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{
+          background: "linear-gradient(145deg, #3A3A3A, #1A1A1A)",
+          padding: "8px 8px 6px",
+          boxShadow: "0 30px 60px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.04) inset",
+        }}
+      >
+        {/* Camera dot */}
+        <div className="flex justify-center mb-[6px]">
+          <div className="w-[6px] h-[6px] rounded-full" style={{ backgroundColor: "#555" }} />
+        </div>
+
+        {/* Screen bezel */}
         <div
-          className="flex items-center gap-2 px-4 py-2.5"
-          style={{ backgroundColor: "#F1F5F9" }}
+          className="rounded-[4px] overflow-hidden"
+          style={{ border: "1px solid rgba(0,0,0,0.3)" }}
         >
-          <div className="flex gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#FD5F57" }} />
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#FDBB2E" }} />
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#27C83F" }} />
-          </div>
-          <div
-            className="flex-1 rounded-md px-3 py-1 text-xs font-mono ml-3"
-            style={{ backgroundColor: "#E2E8F0", color: "#94A3B8" }}
-          >
-            inschool.azarlabs.com
+          {/* Content */}
+          <div className="bg-white p-5 text-left" style={{ minHeight: 280 }}>
+            {children}
           </div>
         </div>
-        {/* Content */}
-        <div className="bg-white p-6 text-left">
-          {children}
-        </div>
+      </div>
+
+      {/* Laptop base */}
+      <div
+        className="mx-auto relative"
+        style={{
+          width: "110%",
+          maxWidth: "110%",
+          marginLeft: "-5%",
+          height: 14,
+          background: "linear-gradient(180deg, #3A3A3A, #2A2A2A)",
+          borderRadius: "0 0 8px 8px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+        }}
+      >
+        {/* Hinge notch */}
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2"
+          style={{
+            width: 60,
+            height: 4,
+            backgroundColor: "#555",
+            borderRadius: "0 0 4px 4px",
+          }}
+        />
       </div>
     </motion.div>
   );

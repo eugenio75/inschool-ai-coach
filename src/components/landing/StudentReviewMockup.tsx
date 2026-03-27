@@ -1,51 +1,32 @@
-import { BrowserFrame } from "./BrowserFrame";
-import { AlertTriangle } from "lucide-react";
+import { PhoneFrame } from "./PhoneFrame";
 
-function StrengthBar({ filled, total }: { filled: number; total: number }) {
+function TaskRow({
+  subject,
+  title,
+  deadline,
+  minutes,
+}: {
+  subject: string;
+  title: string;
+  deadline: string;
+  minutes: number;
+}) {
   return (
-    <div className="flex gap-0.5">
-      {Array.from({ length: total }).map((_, i) => (
-        <span
-          key={i}
-          className="w-3 h-2 rounded-sm"
-          style={{ backgroundColor: i < filled ? "#0070C0" : "#E2E8F0" }}
-        />
-      ))}
-    </div>
-  );
-}
-
-interface TopicRow {
-  name: string;
-  filled: number;
-  warn?: boolean;
-}
-
-function SubjectBlock({ subject, topics }: { subject: string; topics: TopicRow[] }) {
-  return (
-    <div className="mb-4">
-      <p className="text-xs font-bold mb-2" style={{ color: "#1A3A5C" }}>
-        {subject}
-      </p>
-      <div className="space-y-2">
-        {topics.map((t) => (
-          <div key={t.name} className="flex items-center justify-between">
-            <span className="text-[11px]" style={{ color: "#334155" }}>
-              {t.name}
-            </span>
-            <div className="flex items-center gap-1.5">
-              <StrengthBar filled={t.filled} total={5} />
-              {t.warn && (
-                <span
-                  className="flex items-center gap-0.5 text-[9px] font-medium rounded px-1 py-0.5"
-                  style={{ backgroundColor: "#FEF3C7", color: "#92400E" }}
-                >
-                  <AlertTriangle className="w-2.5 h-2.5" /> da rinforzare
-                </span>
-              )}
-            </div>
-          </div>
-        ))}
+    <div
+      className="flex items-start gap-3 rounded-xl p-3"
+      style={{ backgroundColor: "#F8FAFC", border: "1px solid #E2E8F0" }}
+    >
+      <div
+        className="w-5 h-5 rounded border-2 flex-shrink-0 mt-0.5"
+        style={{ borderColor: "#CBD5E1" }}
+      />
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-semibold" style={{ color: "#1A3A5C" }}>
+          {subject} — {title}
+        </p>
+        <p className="text-[11px] mt-0.5" style={{ color: "#94A3B8" }}>
+          {deadline} · {minutes} min
+        </p>
       </div>
     </div>
   );
@@ -53,28 +34,51 @@ function SubjectBlock({ subject, topics }: { subject: string; topics: TopicRow[]
 
 export function StudentReviewMockup() {
   return (
-    <BrowserFrame>
-      <p className="text-sm font-bold mb-1" style={{ color: "#1A3A5C" }}>
-        Ripassa
-      </p>
-      <p className="text-[10px] mb-4" style={{ color: "#94A3B8" }}>
-        Questa settimana
+    <PhoneFrame>
+      {/* Greeting */}
+      <p className="text-[16px] font-bold" style={{ color: "#1A3A5C" }}>
+        Buonasera, Sofia
       </p>
 
-      <SubjectBlock
-        subject="Matematica"
-        topics={[
-          { name: "Espressioni algebriche", filled: 4 },
-          { name: "Frazioni", filled: 2, warn: true },
-        ]}
-      />
-      <SubjectBlock
-        subject="Italiano"
-        topics={[
-          { name: "Analisi del testo", filled: 5 },
-          { name: "Grammatica", filled: 3 },
-        ]}
-      />
-    </BrowserFrame>
+      {/* Coach message */}
+      <div className="flex gap-2 mt-3 mb-4">
+        <div
+          className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-white mt-0.5"
+          style={{ backgroundColor: "#0070C0" }}
+        >
+          IN
+        </div>
+        <div
+          className="rounded-2xl rounded-tl-md px-3 py-2.5 text-[13px] leading-relaxed"
+          style={{ backgroundColor: "#F1F5F9", color: "#1A3A5C" }}
+        >
+          Hai due cose per domani. Iniziamo dalla più urgente?
+        </div>
+      </div>
+
+      {/* Section label */}
+      <p
+        className="text-[11px] font-semibold uppercase tracking-wider mb-3"
+        style={{ color: "#94A3B8" }}
+      >
+        Oggi
+      </p>
+
+      {/* Task list */}
+      <div className="space-y-2.5">
+        <TaskRow
+          subject="Matematica"
+          title="Espressioni"
+          deadline="Scade domani"
+          minutes={20}
+        />
+        <TaskRow
+          subject="Italiano"
+          title="Analisi testo"
+          deadline="Scade giovedì"
+          minutes={35}
+        />
+      </div>
+    </PhoneFrame>
   );
 }
