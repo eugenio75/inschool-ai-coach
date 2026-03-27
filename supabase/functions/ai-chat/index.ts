@@ -242,6 +242,7 @@ Leggi il profilo cognitivo dinamico e applica queste regole:
 - bestLearningStyle = analogico → usa più analogie concrete e quotidiane
 - bestLearningStyle = narrativo → costruisci storie e scenari attorno ai concetti
 - bestLearningStyle = logico → presenta strutture, passaggi sequenziali, causa-effetto
+- NOTA: se _learningStyleSource = "observed", il bestLearningStyle è calcolato dal comportamento reale dello studente (minimo 3 sessioni per formato) — affidati a questo dato. Se = "declared", è auto-dichiarato dall'onboarding — usalo come ipotesi iniziale ma osserva se il comportamento lo conferma.
 - bestTimeOfDay = mattina E sessione in corso di sera → abbassa leggermente le aspettative: "La sera il cervello è più stanco — facciamo qualcosa di solido ma senza spingere troppo."
 - subjectWeaknesses include materia corrente → usa più analogie dagli interessi, più indizi preventivi, inizia sempre da L1 indipendentemente dal bloomBaseline generale
 - avgSessionsToLevelUp = 2 E sono già 4 sessioni sullo stesso livello → segnala il progresso: "Stai lavorando su questo da un po' — e si vede. Oggi proviamo a fare un passo in più." Poi tenta il livello successivo.
@@ -309,8 +310,36 @@ ZERO alert esterni per i docenti. Mai. Autonomia professionale totale.`;
   return prompt;
 }
 
+// Map session format strings to the four canonical format categories
+function mapToFormatCategory(sessionFormat?: string): string | null {
+  if (!sessionFormat) return null;
+  const map: Record<string, string> = {
+    // From UnifiedSession types
+    study: "text",
+    review: "dialogue",
+    prep: "dialogue",
+    guided: "schema",
+    // From taskType values
+    exercise: "schema",
+    memorization: "text",
+    oral: "dialogue",
+    writing: "example",
+    // From method proposals in useGuidedSession
+    memorizzazione: "text",
+    orale: "dialogue",
+    esercizio: "schema",
+    scrittura: "example",
+    // Direct mappings
+    schema: "schema",
+    text: "text",
+    dialogue: "dialogue",
+    example: "example",
+  };
+  return map[sessionFormat.toLowerCase()] || null;
+}
+
 // Fire-and-forget: update adaptive & cognitive profiles after each session
-async function updateAdaptiveProfile(profileId: string, messages: any[], sessionSubject?: string) {
+async function updateAdaptiveProfile(profileId: string, messages: any[], sessionSubject?: string, sessionFormat?: string) {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -445,6 +474,53 @@ async function updateAdaptiveProfile(profileId: string, messages: any[], session
       }
     }
 
+    // ── Format performance tracking ──
+    const formatCategory = mapToFormatCategory(sessionFormat);
+    if (formatCategory) {
+      const fp: Record<string, any> = adaptive.formatPerformance || {};
+      const fmt = fp[formatCategory] || { sessions: 0, totalHints: 0, totalBloom: 0, totalErrors: 0 };
+      fmt.sessions += 1;
+      fmt.totalHints += hintRequests;
+      fmt.totalBloom += bloomEstimate;
+      // Error rate: proportion of hesitation messages as proxy
+      fmt.totalErrors += hesitationMessages;
+      fmt.avgHintsPerSession = fmt.totalHints / fmt.sessions;
+      fmt.avgBloomReached = fmt.totalBloom / fmt.sessions;
+      fmt.errorRate = fmt.totalErrors / (userMessages.length || 1);
+      fp[formatCategory] = fmt;
+      adaptive.formatPerformance = fp;
+
+      // ── Recalculate bestLearningStyle from observed behavior ──
+      const categories = ["schema", "text", "dialogue", "example"];
+      const eligible = categories.filter(c => (fp[c]?.sessions || 0) >= 3);
+      if (eligible.length >= 2) {
+        // Score: lower hints = better, higher bloom = better. Weighted equally via rank.
+        const scored = eligible.map(c => {
+          const f = fp[c];
+          // Normalize: hintsScore inverted (lower is better), bloomScore direct (higher is better)
+          return { category: c, hints: f.avgHintsPerSession, bloom: f.avgBloomReached };
+        });
+        // Rank by hints ascending (lower = better rank)
+        const byHints = [...scored].sort((a, b) => a.hints - b.hints);
+        // Rank by bloom descending (higher = better rank)
+        const byBloom = [...scored].sort((a, b) => b.bloom - a.bloom);
+        const rankMap: Record<string, number> = {};
+        byHints.forEach((s, i) => { rankMap[s.category] = i; });
+        byBloom.forEach((s, i) => { rankMap[s.category] = (rankMap[s.category] || 0) + i; });
+        // Best = lowest combined rank
+        const best = Object.entries(rankMap).sort((a, b) => a[1] - b[1])[0][0];
+        // Map format categories to learning style labels
+        const styleMap: Record<string, string> = { schema: "logico", text: "narrativo", dialogue: "analogico", example: "visivo" };
+        cognitive.bestLearningStyle = styleMap[best] || best;
+        cognitive._learningStyleSource = "observed";
+      } else {
+        // Keep onboarding value (if any), mark as declared
+        if (cognitive.bestLearningStyle && cognitive._learningStyleSource !== "observed") {
+          cognitive._learningStyleSource = "declared";
+        }
+      }
+    }
+
     // Update cognitive dynamic profile
     cognitive.bloomPeak = Math.max(cognitive.bloomPeak || 1, bloomEstimate);
     cognitive.avgHintsPerSession = adaptive.avgHintsPerSession;
@@ -477,7 +553,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, systemPrompt, stream, model, maxTokens, generateTitle, profileId, subject: chatSubject, lang } = await req.json();
+    const { messages, systemPrompt, stream, model, maxTokens, generateTitle, profileId, subject: chatSubject, sessionFormat, lang } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -661,7 +737,7 @@ ${clientSystemPrompt}`
     if (shouldStream) {
       // Fire-and-forget: update adaptive profile + blockchain log
       if (profileId) {
-        updateAdaptiveProfile(profileId, messages, chatSubject).catch(() => {});
+        updateAdaptiveProfile(profileId, messages, chatSubject, sessionFormat).catch(() => {});
       // Blockchain log — fire-and-forget, mai blocca la risposta
         try {
           const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -677,7 +753,7 @@ ${clientSystemPrompt}`
       const data = await response.json();
       // Fire-and-forget: update adaptive profile + blockchain log
       if (profileId) {
-        updateAdaptiveProfile(profileId, messages, chatSubject).catch(() => {});
+        updateAdaptiveProfile(profileId, messages, chatSubject, sessionFormat).catch(() => {});
         try {
           const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
           const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
