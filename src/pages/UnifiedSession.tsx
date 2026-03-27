@@ -560,9 +560,9 @@ Inizia con la prima domanda.`;
               <label className="text-sm font-medium text-foreground mb-2 block">Scegli cosa ripassare</label>
               <div className="grid grid-cols-1 gap-2">
                 {[
-                  { id: "today", label: "Ripassa quello di oggi", icon: CalendarDays },
-                  { id: "cumulative", label: "Ripasso cumulativo", icon: Brain },
-                  { id: "prep", label: getPrepLabel(schoolLevel), icon: GraduationCap },
+                  { id: "today", label: t("review_today"), icon: CalendarDays },
+                  { id: "cumulative", label: t("review_cumulative"), icon: Brain },
+                  { id: "prep", label: t(getPrepLabelKey(schoolLevel)), icon: GraduationCap },
                 ].map((opt) => (
                   <button
                     key={opt.id}
@@ -590,9 +590,9 @@ Inizia con la prima domanda.`;
                   <Sparkles className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <Input
-                  value={topic.startsWith("Ripassa") || topic.startsWith("Ripasso") || topic === getPrepLabel(schoolLevel) ? "" : topic}
+                  value={topic.startsWith("Ripassa") || topic.startsWith("Ripasso") || topic.startsWith("Review") || topic.startsWith("Prepare") || topic === t(getPrepLabelKey(schoolLevel)) ? "" : topic}
                   onChange={e => setTopic(e.target.value)}
-                  placeholder="Oppure scrivi un argomento specifico..."
+                  placeholder={t("review_topic_placeholder")}
                   className="text-sm pl-9"
                 />
               </div>
