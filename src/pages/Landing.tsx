@@ -10,6 +10,7 @@ import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { TrustSection } from "@/components/landing/TrustSection";
 import { HomeChatMockup } from "@/components/landing/HomeChatMockup";
+import { TeacherHomeMockup } from "@/components/landing/TeacherHomeMockup";
 
 const fade = {
   initial: { opacity: 0, y: 16 },
@@ -91,13 +92,26 @@ export default function Landing() {
 
       {/* ── MOCKUP ── */}
       <section className="py-20 px-6" style={{ backgroundColor: "#F3F0FA" }}>
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <motion.h2 {...fade} className="font-display text-2xl font-bold text-center mb-10" style={{ color: "#1A3A5C" }}>
             {t("home_mockup_title")}
           </motion.h2>
-          <motion.div {...fade} transition={{ delay: 0.05 }}>
-            <HomeChatMockup />
-          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+            {/* Students */}
+            <motion.div {...fade} transition={{ delay: 0.05 }} className="flex flex-col items-center gap-4">
+              <span className="inline-block rounded-full px-4 py-1.5 text-xs font-semibold" style={{ backgroundColor: "rgba(0,112,192,0.12)", color: "#0070C0" }}>
+                Per gli studenti
+              </span>
+              <HomeChatMockup />
+            </motion.div>
+            {/* Teachers */}
+            <motion.div {...fade} transition={{ delay: 0.15 }} className="flex flex-col items-center gap-4">
+              <span className="inline-block rounded-full px-4 py-1.5 text-xs font-semibold" style={{ backgroundColor: "rgba(26,58,92,0.1)", color: "#1A3A5C" }}>
+                Per i docenti
+              </span>
+              <TeacherHomeMockup />
+            </motion.div>
+          </div>
         </div>
       </section>
 
