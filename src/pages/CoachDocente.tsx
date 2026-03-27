@@ -48,7 +48,8 @@ interface ClassInfo {
 export default function CoachDocente() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language === "en" ? enUS : it;
   const locState = location.state as any;
   const initialMessage = locState?.initialMessage as string | undefined;
   const initialClassId = locState?.classId as string | undefined;
