@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Sparkles, Mail, Lock, KeyRound, MapPin, User, ArrowRight, Loader2, Hexagon, Building2, Chrome, Globe, Users, BookOpen, GraduationCap, Laptop, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { loginWithChildCode, setChildSession } from "@/lib/childSession";
@@ -74,6 +75,11 @@ const Auth = () => {
   
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  // GDPR consent checkboxes
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [parentalConsent, setParentalConsent] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
 
   // Form states
   const [email, setEmail] = useState("");
