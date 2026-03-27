@@ -527,9 +527,40 @@ serve(async (req) => {
         if (prof) {
           const role = mapRole(prof.school_level || "alunno");
           const prefsData = (prefs?.data as Record<string, any>) || {};
-          const adaptiveProfile = prefs?.adaptive_profile || {};
+          const adaptiveProfileRaw = (prefs?.adaptive_profile || {}) as Record<string, any>;
           const cognitiveProfile = prefs?.cognitive_dynamic_profile || {};
           const correlation = prefs?.emotional_cognitive_correlation ?? 0.5;
+
+          // ── Resolve per-subject adaptive profile (fall back to global) ──
+          const subjectKey = chatSubject ? chatSubject.toLowerCase().trim() : "";
+          const bySubject = adaptiveProfileRaw.bySubject || {};
+          const subjectProfile = subjectKey && bySubject[subjectKey] ? bySubject[subjectKey] : null;
+
+          // Merge: subject-specific fields override global where present
+          let effectiveAdaptive: Record<string, any>;
+          if (subjectProfile) {
+            effectiveAdaptive = {
+              ...adaptiveProfileRaw,
+              // Override global fields with per-subject values
+              hintRequests: subjectProfile.hintRequests ?? adaptiveProfileRaw.hintRequests,
+              avgHintsPerSession: subjectProfile.avgHintsPerSession ?? adaptiveProfileRaw.avgHintsPerSession,
+              hesitationScore: subjectProfile.hesitationScore ?? adaptiveProfileRaw.hesitationScore,
+              needsReassurance: subjectProfile.needsReassurance ?? adaptiveProfileRaw.needsReassurance,
+              bloomLevel: subjectProfile.bloomLevel ?? adaptiveProfileRaw.bloomLevel,
+              lastFamiliarity: subjectProfile.lastFamiliarity ?? adaptiveProfileRaw.lastFamiliarity,
+              prefersVoice: subjectProfile.prefersVoice ?? adaptiveProfileRaw.prefersVoice,
+              methodStats: subjectProfile.methodStats ?? adaptiveProfileRaw.methodStats,
+              sessionCount: subjectProfile.sessionCount ?? adaptiveProfileRaw.sessionCount,
+              _source: "per-subject",
+              _subject: subjectKey,
+            };
+            // Remove bySubject map from what goes to the LLM to save tokens
+            delete effectiveAdaptive.bySubject;
+          } else {
+            effectiveAdaptive = { ...adaptiveProfileRaw };
+            delete effectiveAdaptive.bySubject;
+            if (subjectKey) effectiveAdaptive._source = "global-fallback";
+          }
 
           const coachName = prefsData.coachName || "Coach";
           const interests = prof.interests?.join(", ") || prefsData.interests?.join?.(", ") || "non specificati";
@@ -576,7 +607,7 @@ Regole benessere: mai linguaggio diagnostico, mai minimizzare, mai drammatizzare
             age: prof.age || null,
             studentInterests: interests,
             sessionHistory,
-            adaptiveProfile: JSON.stringify(adaptiveProfile),
+            adaptiveProfile: JSON.stringify(effectiveAdaptive),
             cognitiveDynamicProfile: JSON.stringify(cognitiveProfile),
             emotionalCognitiveCorrelation: correlation,
             moodToday,
