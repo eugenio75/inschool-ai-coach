@@ -492,7 +492,7 @@ export default function GuidedSession() {
                 </div>
               )}
               <div
-                className={`max-w-[80%] rounded-xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                className={`max-w-[80%] rounded-xl px-4 py-3 text-[15px] leading-[1.7] whitespace-pre-wrap ${
                   msg.role === "user"
                     ? "bg-[var(--color-accent)] text-white rounded-br-sm"
                     : "bg-slate-100 text-[var(--color-text-primary)] rounded-bl-sm"
@@ -509,7 +509,7 @@ export default function GuidedSession() {
             <div className="w-7 h-7 rounded-full bg-[var(--color-navy)] flex items-center justify-center mr-2 mt-1 flex-shrink-0">
               <span className="text-white text-xs font-bold">C</span>
             </div>
-            <div className="max-w-[80%] rounded-xl rounded-bl-sm bg-slate-100 px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap text-[var(--color-text-primary)]">
+            <div className="max-w-[80%] rounded-xl rounded-bl-sm bg-slate-100 px-4 py-3 text-[15px] leading-[1.7] whitespace-pre-wrap text-[var(--color-text-primary)]">
               <MathText>{streamingText}</MathText>
               <span className="inline-block w-1.5 h-4 bg-[var(--color-accent)] ml-0.5 animate-pulse" />
             </div>
