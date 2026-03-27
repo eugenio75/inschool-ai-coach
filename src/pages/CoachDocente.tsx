@@ -618,7 +618,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
                         ) : "")}
                       </div>
                       <p className="text-[10px] text-muted-foreground/60 px-1">
-                        {format(new Date(msg.created_at), "HH:mm", { locale: it })}
+                        {format(new Date(msg.created_at), "HH:mm", { locale: dateLocale })}
                       </p>
                     </div>
                   </div>
