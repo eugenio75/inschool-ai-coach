@@ -8,6 +8,7 @@ import { ChatMsg } from "@/lib/streamChat";
 import { PomodoroTimer } from "@/components/PomodoroTimer";
 import { getCoachMoodSrc, detectMoodFromText, type CoachMood } from "@/components/shared/CoachAvatarPicker";
 import { MathText } from "@/components/shared/MathText";
+import { useTranslation } from "react-i18next";
 
 interface ChatShellProps {
   title: string;
@@ -42,9 +43,11 @@ export function ChatShell({
   showHint = true, showStuck = true, showExplain = true,
   showVoice = true, showAttach = true,
   showPomodoro = false, pomodoroMinutes = 25,
-  extraFooter, inputPlaceholder = "Scrivi la tua risposta...",
+  extraFooter, inputPlaceholder,
   disabled = false,
 }: ChatShellProps) {
+  const { t } = useTranslation();
+  const resolvedPlaceholder = inputPlaceholder || t("chat_input_placeholder");
   const [input, setInput] = useState("");
   const [showExplainOptions, setShowExplainOptions] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -128,7 +131,7 @@ export function ChatShell({
     try {
       const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (!SR) {
-        alert("Il tuo browser non supporta il riconoscimento vocale. Prova con Chrome.");
+        alert(t("chat_mic_denied"));
         return;
       }
       const recognition = new SR();
@@ -144,7 +147,7 @@ export function ChatShell({
       recognition.onerror = (e: any) => {
         setIsListening(false);
         if (e.error === "not-allowed") {
-          alert("Permesso microfono negato. Controlla le impostazioni del browser.");
+          alert(t("chat_mic_denied"));
         } else if (e.error === "no-speech") {
           // silenzio, nessun feedback necessario
         } else {
@@ -306,40 +309,40 @@ export function ChatShell({
                     ? "border-red-500 text-red-500 bg-red-50 dark:bg-red-950 animate-pulse"
                     : "border-border text-muted-foreground hover:bg-muted"
                 }`}>
-                <Mic className="w-3.5 h-3.5" /> {isListening ? "Ascolto..." : "Voce"}
+                <Mic className="w-3.5 h-3.5" /> {isListening ? t("chat_listening") : t("chat_voice")}
               </button>
             )}
             {showAttach && (
               <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-muted-foreground text-xs font-medium hover:bg-muted transition-colors cursor-pointer">
-                <Paperclip className="w-3.5 h-3.5" /> {attachProcessing ? "Analisi..." : "Allega"}
+                <Paperclip className="w-3.5 h-3.5" /> {attachProcessing ? t("chat_analyzing") : t("chat_attach")}
                 <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleAttachFile} disabled={attachProcessing} />
               </label>
             )}
             {showHint && (
               <button onClick={() => onSend("Dammi un indizio.")} disabled={sending}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary text-primary text-xs font-medium hover:bg-primary/5 transition-colors">
-                <Lightbulb className="w-3.5 h-3.5" /> Indizio
+                <Lightbulb className="w-3.5 h-3.5" /> {t("chat_hint")}
               </button>
             )}
             {showStuck && (
               <button onClick={() => onSend("Sono bloccato — cambia approccio e aiutami in modo più semplice.")} disabled={sending}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-muted-foreground text-xs font-medium hover:bg-muted transition-colors">
-                <AlertCircle className="w-3.5 h-3.5" /> Bloccato
+                <AlertCircle className="w-3.5 h-3.5" /> {t("chat_stuck")}
               </button>
             )}
             {showExplain && (
               <div className="relative">
                 <button onClick={() => setShowExplainOptions(!showExplainOptions)} disabled={sending}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-muted-foreground text-xs font-medium hover:bg-muted transition-colors">
-                  <RefreshCw className="w-3.5 h-3.5" /> Spiega diversamente
+                  <RefreshCw className="w-3.5 h-3.5" /> {t("chat_explain_differently")}
                 </button>
                 {showExplainOptions && (
                   <div className="absolute bottom-full left-0 mb-1 bg-card border border-border rounded-lg shadow-lg py-1 z-10 min-w-[180px]">
                     {[
-                      { label: "Più semplice", msg: "Spiegamelo in modo più semplice." },
-                      { label: "Con un esempio", msg: "Fammi un esempio pratico per capire meglio." },
-                      { label: "Passo passo", msg: "Spiegamelo passo passo, più lentamente." },
-                      { label: "Più breve", msg: "Spiegamelo in modo più breve e diretto." },
+                      { label: t("chat_simpler"), msg: "Spiegamelo in modo più semplice." },
+                      { label: t("chat_example"), msg: "Fammi un esempio pratico per capire meglio." },
+                      { label: t("chat_step_by_step"), msg: "Spiegamelo passo passo, più lentamente." },
+                      { label: t("chat_shorter"), msg: "Spiegamelo in modo più breve e diretto." },
                     ].map(opt => (
                       <button key={opt.label} onClick={() => { setShowExplainOptions(false); onSend(opt.msg); }}
                         className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-muted transition-colors">
@@ -357,7 +360,7 @@ export function ChatShell({
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={inputPlaceholder}
+              placeholder={resolvedPlaceholder}
               className="flex-1 bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
               disabled={sending}
             />
