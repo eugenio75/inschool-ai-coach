@@ -388,6 +388,12 @@ export const translations = {
     doc_new_final_title: "Più metodo. Più fiducia. Più futuro.",
     doc_new_final_body: "Per chi ogni giorno aiuta gli altri a crescere.",
 
+    home_mockup_title: "Guarda il coach in azione",
+    doc_mockup_title: "Genera materiali in pochi secondi",
+    badge_studenti: "Per studenti",
+    badge_docenti: "Per docenti",
+    home_cta_final_body: "InSchool è per chi vuole crescere imparando.\nE per chi ogni giorno aiuta gli altri a farlo.",
+
     // Security new
     sec_hero_title: "Progettato per meritare fiducia.",
     sec_hero_sub: "InSchool è costruito su standard di sicurezza, privacy e conformità normativa che pochi prodotti educativi possono vantare.",
@@ -810,6 +816,12 @@ export const translations = {
     st_new_final_body: "InSchool is for those who want to grow by learning.\nAnd for those who every day want to face studying with more peace of mind, confidence and autonomy.",
     doc_new_final_title: "More method. More trust. More future.",
     doc_new_final_body: "For those who every day help others grow.",
+
+    home_mockup_title: "See the coach in action",
+    doc_mockup_title: "Generate materials in seconds",
+    badge_studenti: "For students",
+    badge_docenti: "For teachers",
+    home_cta_final_body: "InSchool is for those who want to grow by learning.\nAnd for those who every day help others do the same.",
 
     // Security new EN
     sec_hero_title: "Built to earn trust.",

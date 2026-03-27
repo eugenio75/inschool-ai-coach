@@ -9,6 +9,7 @@ import { useLang } from "@/contexts/LangContext";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { TrustSection } from "@/components/landing/TrustSection";
+import { HomeChatMockup } from "@/components/landing/HomeChatMockup";
 
 const fade = {
   initial: { opacity: 0, y: 16 },
@@ -21,6 +22,7 @@ const homeTrustItems = [
   { title: "trust_1" as const, desc: "trust_1_desc" as const },
   { title: "trust_2" as const, desc: "trust_home_minor_desc" as const },
   { title: "trust_3" as const, desc: "trust_3_desc" as const },
+  { title: "trust_st_support" as const, desc: "trust_st_support_desc" as const },
   { title: "trust_4" as const, desc: "trust_bc_desc" as const },
 ];
 
@@ -86,8 +88,20 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── COSA CAMBIA DAVVERO ── */}
+      {/* ── MOCKUP ── */}
       <section className="py-20 px-6 bg-white">
+        <div className="max-w-3xl mx-auto">
+          <motion.h2 {...fade} className="font-display text-2xl font-bold text-center mb-10" style={{ color: "#1A3A5C" }}>
+            {t("home_mockup_title")}
+          </motion.h2>
+          <motion.div {...fade} transition={{ delay: 0.05 }}>
+            <HomeChatMockup />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── COSA CAMBIA DAVVERO ── */}
+      <section className="py-20 px-6" style={{ backgroundColor: "#F8FAFC" }}>
         <div className="max-w-4xl mx-auto">
           <motion.h2 {...fade} className="font-display text-2xl font-bold text-center" style={{ color: "#1A3A5C" }}>
             {t("home_new_diff_title")}
@@ -164,7 +178,7 @@ export default function Landing() {
           {t("home_final_title")}
         </motion.h2>
         <motion.p {...fade} transition={{ delay: 0.05 }} className="text-lg mt-4 whitespace-pre-line" style={{ color: "rgba(255,255,255,0.7)" }}>
-          {t("home_final_body")}
+          {t("home_cta_final_body")}
         </motion.p>
         <motion.div {...fade} transition={{ delay: 0.1 }} className="mt-8 flex gap-4 justify-center flex-wrap">
           <Button asChild size="lg" className="rounded-lg bg-white font-semibold px-6 py-3 hover:bg-white/90" style={{ color: "#1A3A5C" }}>
