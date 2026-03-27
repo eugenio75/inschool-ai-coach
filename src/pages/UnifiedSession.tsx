@@ -22,6 +22,8 @@ import { ChatMsg, streamChat } from "@/lib/streamChat";
 import { SessionCelebration } from "@/components/SessionCelebration";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
+import { useLang } from "@/contexts/LangContext";
+import { getPrepLabelKey } from "@/lib/schoolTerms";
 import { useGuidedSession } from "@/hooks/useGuidedSession";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -46,17 +48,7 @@ function getProfile() {
   }
 }
 
-function getPrepLabel(schoolLevel: string) {
-  switch (schoolLevel) {
-    case "alunno":
-    case "medie":
-      return "Prepara l'interrogazione";
-    case "universitario":
-      return "Prepara l'esame";
-    default:
-      return "Prepara la verifica";
-  }
-}
+// getPrepLabel now handled via i18n — see getTitle()
 
 const OUTPUT_TYPES = [
   { id: "schema", label: "Schema", icon: List },
