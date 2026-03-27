@@ -19,7 +19,7 @@ import { streamChat, type ChatMsg } from "@/lib/streamChat";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { it } from "date-fns/locale";
+import { it, enUS } from "date-fns/locale";
 
 interface TeacherChat {
   id: string;
