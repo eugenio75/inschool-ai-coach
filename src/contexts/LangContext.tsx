@@ -1,32 +1,28 @@
-import { createContext, useContext, useState, ReactNode } from "react";
-import { Lang, translations, TranslationKey } from "@/lib/i18n";
+import { createContext, useContext, useCallback, ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import "@/lib/i18nConfig";
+
+export type Lang = "it" | "en";
 
 interface LangContextType {
   lang: Lang;
   setLang: (lang: Lang) => void;
-  t: (key: TranslationKey) => string;
+  t: (key: string) => string;
 }
 
 const LangContext = createContext<LangContextType | null>(null);
 
 export function LangProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(() => {
-    try {
-      const saved = localStorage.getItem("inschool_lang");
-      return saved === "en" ? "en" : "it";
-    } catch {
-      return "it";
-    }
-  });
+  const { t, i18n } = useTranslation();
 
-  const setLang = (newLang: Lang) => {
-    setLangState(newLang);
-    try {
-      localStorage.setItem("inschool_lang", newLang);
-    } catch {}
-  };
+  const lang = (i18n.language === "en" ? "en" : "it") as Lang;
 
-  const t = (key: TranslationKey): string => translations[lang][key];
+  const setLang = useCallback(
+    (newLang: Lang) => {
+      i18n.changeLanguage(newLang);
+    },
+    [i18n]
+  );
 
   return (
     <LangContext.Provider value={{ lang, setLang, t }}>
