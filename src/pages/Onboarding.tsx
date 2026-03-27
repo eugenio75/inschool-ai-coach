@@ -532,7 +532,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
               return (
                 <div className="text-center w-full">
                     <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_welcome')}</h2>
-                    <p className="text-muted-foreground mb-8">{t('onb_welcome_sub_personal')}</p>
+                    <p className="text-muted-foreground mb-8">{t('onb_configure_adult')}</p>
                     <div className="w-24 h-24 mx-auto bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4"><BookOpen className="w-12 h-12" /></div>
                 </div>
               );
