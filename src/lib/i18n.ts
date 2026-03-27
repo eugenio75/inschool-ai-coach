@@ -807,7 +807,7 @@ export const translations = {
 
     // Trust page-specific EN
     trust_home_title: "Security and compliance",
-    trust_home_minor_desc: "Experience designed with care for age, context and vulnerability. When signs of difficulty emerge, InSchool can help the family notice them discreetly.",
+    trust_home_minor_desc: "Experience designed with care for age, context and vulnerability.",
     trust_bc_desc: "Credentials, consents and progress are managed securely, traceably and verifiably over time through Azar Chain, InSchool's proprietary private blockchain.",
     trust_st_minor_desc: "Experience designed with care for age, context and vulnerability.",
     trust_st_support: "Attentive and discreet support",
