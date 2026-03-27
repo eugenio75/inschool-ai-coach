@@ -833,5 +833,6 @@
   "chat_send_example": "Fammi un esempio pratico per capire meglio.",
   "chat_send_step_by_step": "Spiegamelo passo passo, più lentamente.",
   "chat_send_shorter": "Spiegamelo in modo più breve e diretto.",
-  "chat_stop": "Stop"
+  "chat_stop": "Stop",
+  "coach_chat_default_name": "Chat del {{date}}"
 }
