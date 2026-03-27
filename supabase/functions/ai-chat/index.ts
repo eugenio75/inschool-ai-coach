@@ -830,6 +830,44 @@ ${clientSystemPrompt}`
       }
     }
 
+    // ── STATO ROSSO — keyword matching lato server ──
+    const RED_STATE_KEYWORDS = [
+      "voglio morire", "voglio morirmi", "vorrei morire",
+      "non voglio più vivere", "non ha senso vivere",
+      "mi voglio ammazzare", "ammazzarmi",
+      "suicidio", "suicidarmi", "togliermi la vita",
+      "farmi del male", "farmi qualcosa",
+      // English equivalents
+      "i want to die", "i want to kill myself", "kill myself",
+      "suicide", "end my life", "hurt myself",
+    ];
+
+    const lastUserMsg = [...messages].reverse().find((m: any) => m.role === "user");
+    const lastUserText = lastUserMsg && typeof lastUserMsg.content === "string" ? lastUserMsg.content.toLowerCase() : "";
+    const isRedState = RED_STATE_KEYWORDS.some(kw => lastUserText.includes(kw));
+
+    if (isRedState) {
+      // Force crisis prompt injection
+      finalSystemPrompt = `STATO ROSSO ATTIVO — segui SOLO il protocollo di sicurezza.
+Non rispondere al contenuto educativo. Non minimizzare.
+Rispondi con: "Questa cosa che hai detto è importante. Non devi gestirla da solo. Coinvolgi subito un adulto di cui ti fidi. Telefono Amico: 19696"
+Non aggiungere altro. Non tornare sul compito.`;
+
+      // Log crisis event (fire-and-forget)
+      try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const sbCrisis = createClient(supabaseUrl, serviceRoleKey);
+        sbCrisis.from("crisis_events").insert({
+          user_id: profileId || "unknown",
+          trigger_message: lastUserMsg?.content || "",
+          session_status: "crisis",
+        }).then(() => {});
+      } catch (e) {
+        console.error("Failed to log crisis event:", e);
+      }
+    }
+
     const shouldStream = stream !== false;
     const allMessages = [
       ...(finalSystemPrompt ? [{ role: "system", content: finalSystemPrompt }] : []),
