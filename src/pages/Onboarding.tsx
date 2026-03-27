@@ -243,7 +243,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
           return (
             <div className="text-center w-full">
                 <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_welcome')}</h2>
-                <p className="text-muted-foreground mb-8">{t('onb_welcome_sub')}</p>
+                <p className="text-muted-foreground mb-8">{t('onb_configure')}</p>
                 <div className="w-24 h-24 mx-auto bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4"><BookOpen className="w-12 h-12" /></div>
             </div>
           );
@@ -253,7 +253,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 <h2 className="text-2xl font-bold text-foreground">{t('onb_your_school')}</h2>
                 <div className="space-y-4">
                    <select value={answers.medie_anno || ""} onChange={e => setAnswers({...answers, medie_anno: e.target.value})} className={inputClass}>
-                      <option value="" disabled>{t('onb_select_class')}</option>
+                      <option value="" disabled>{t('onb_class_prompt')}</option>
                       {medieAnni.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
                    </select>
                    <select value={answers.medie_scuola_tipo || ""} onChange={e => setAnswers({...answers, medie_scuola_tipo: e.target.value})} className={inputClass}>
@@ -269,7 +269,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
           return (
             <div className="w-full space-y-6">
                 <h2 className="text-2xl font-bold text-foreground">{t('onb_hard_subjects')}</h2>
-                <p className="text-muted-foreground text-sm">{t('onb_hard_subjects_sub')} ({t('onb_max')} 4)</p>
+                <p className="text-muted-foreground text-sm">{t('onb_hard_subjects_prompt')} ({t('onb_max')} 4)</p>
                 <div className="flex flex-wrap gap-2 mt-4">
                     {materie.map((m: string) => {
                        const isSel = (answers.materie_critiche || []).includes(m);
@@ -282,12 +282,12 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         case 3:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">{t('onb_study_preference')}</h2>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_study_pref')}</h2>
                 <div className="space-y-3">
                    {[
-                     { id: "poco_spesso", title: t('onb_method_little'), sub: t('onb_method_little_sub'), icon: Timer },
-                     { id: "lungo", title: t('onb_method_long'), sub: t('onb_method_long_sub'), icon: Brain },
-                     { id: "non_so", title: t('onb_method_none'), sub: t('onb_method_none_sub'), icon: Lightbulb }
+                     { id: "poco_spesso", title: t('onb_study_short'), sub: t('onb_study_short_sub'), icon: Timer },
+                     { id: "lungo", title: t('onb_study_long'), sub: t('onb_study_long_sub'), icon: Brain },
+                     { id: "non_so", title: t('onb_study_none'), sub: t('onb_study_none_sub'), icon: Lightbulb }
                    ].map(opt => {
                      const isSel = answers.metodo_studio === opt.id;
                      return <button key={opt.id} onClick={() => setAnswers({...answers, metodo_studio: opt.id})} className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-6 h-6 mr-4 ${isSel ? selIconClass : unselIconClass}`}/><div className="text-left"><p className={`font-bold ${isSel ? selTextClass : "text-foreground"}`}>{opt.title}</p><p className="text-sm text-muted-foreground">{opt.sub}</p></div></button>
@@ -298,13 +298,13 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         case 4:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">{t('onb_goal')}</h2>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_improve')}</h2>
                 <div className="grid grid-cols-2 gap-3">
                    {[
-                     { id: "voti", title: t('onb_goal_grades'), icon: TrendingUp },
-                     { id: "organizzazione", title: t('onb_goal_organized'), icon: Calendar },
-                     { id: "interrogazioni", title: t('onb_goal_prepare'), icon: FileCheck },
-                     { id: "capire", title: t('onb_goal_understand'), icon: Lightbulb }
+                     { id: "voti", title: t('onb_improve_grades'), icon: TrendingUp },
+                     { id: "organizzazione", title: t('onb_improve_org'), icon: Calendar },
+                     { id: "interrogazioni", title: t('onb_improve_prep'), icon: FileCheck },
+                     { id: "capire", title: t('onb_improve_understand'), icon: Lightbulb }
                    ].map(opt => {
                      const isSel = answers.obiettivo === opt.id;
                      return <button key={opt.id} onClick={() => setAnswers({...answers, obiettivo: opt.id})} className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-8 h-8 mb-3 ${isSel ? selIconClass : unselIconClass}`}/><span className={`font-bold text-sm text-center ${isSel ? selTextClass : unselTextClass}`}>{opt.title}</span></button>
@@ -315,12 +315,12 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         case 5:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">{t('onb_school_feeling')}</h2>
-                <p className="text-muted-foreground text-sm">{t('onb_school_feeling_sub')}</p>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_feelings')}</h2>
+                <p className="text-muted-foreground text-sm">{t('onb_feelings_help')}</p>
                 <div className="space-y-3">
                    {[
                      { id: "ok", title: t('onb_feel_ok'), sub: t('onb_feel_ok_sub') },
-                     { id: "fatica", title: t('onb_feel_struggle'), sub: t('onb_feel_struggle_sub') },
+                     { id: "fatica", title: t('onb_feel_focus'), sub: t('onb_feel_focus_sub') },
                      { id: "ansia", title: t('onb_feel_anxiety'), sub: t('onb_feel_anxiety_sub') },
                      { id: "noia", title: t('onb_feel_bored'), sub: t('onb_feel_bored_sub') },
                    ].map(opt => {
