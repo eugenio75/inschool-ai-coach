@@ -708,6 +708,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
         extraBody: {
           systemPrompt: `${coachBehavior}\n\nCompito: ${homework?.title}. Materia: ${homework?.subject}. Livello: ${schoolLevel}.\nOBIETTIVO: ${goalStr}.${contentInstruction}${systemAddition}${emotionContext}${hintEscalation}${markDifficult}\n\nSe lo studente completa lo step correttamente, scrivi [STEP_COMPLETATO: ${currentStep}]. Se tutti gli step sono completati, scrivi [SESSIONE_COMPLETATA]. Se lo studente mostra una difficoltà specifica, scrivi [SEGNALA_DIFFICOLTÀ: descrizione].`,
           sessionFormat: "guided",
+          subject: homework?.subject || undefined,
         },
       });
 
