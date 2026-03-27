@@ -97,6 +97,7 @@ export default function PrepSession() {
   const navigate = useNavigate();
   const { subject: paramSubject } = useParams();
   const { user } = useAuth();
+  const { t } = useLang();
   const profile = getProfile();
   const schoolLevel = profile?.school_level || "superiori";
 
@@ -118,7 +119,7 @@ export default function PrepSession() {
   const recognitionRef = useRef<any>(null);
 
   const subjects = profile?.favorite_subjects || profile?.difficult_subjects || ["Matematica", "Italiano", "Inglese", "Storia", "Scienze"];
-  const prepLabel = getPrepLabel(schoolLevel);
+  const prepLabel = t(getPrepLabelKey(schoolLevel));
   const isUniversity = schoolLevel === "universitario";
 
   useEffect(() => {
