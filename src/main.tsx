@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./App.css";
 import "./index.css";
+import "./lib/i18nConfig";
 
 // Initialize theme before render to prevent flash
 const savedTheme = localStorage.getItem("inschool-theme");
