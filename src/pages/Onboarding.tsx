@@ -387,14 +387,14 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
           return (
             <div className="text-center w-full">
                 <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_welcome')}</h2>
-                <p className="text-muted-foreground mb-8">{t('onb_welcome_sub_personal')}</p>
+                <p className="text-muted-foreground mb-8">{t('onb_configure_adult')}</p>
                 <div className="w-24 h-24 mx-auto bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4"><BookOpen className="w-12 h-12" /></div>
             </div>
           );
         case 1:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">{t('onb_school_path')}</h2>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_path')}</h2>
                 <div className="space-y-4">
                    <select value={answers.superiori_anno || ""} onChange={e => setAnswers({...answers, superiori_anno: e.target.value})} className={inputClass}>
                       <option value="" disabled>{t('onb_select_year')}</option>
@@ -415,7 +415,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
           return (
             <div className="w-full space-y-6">
                 <h2 className="text-2xl font-bold text-foreground">{t('onb_critical_subjects')}</h2>
-                <p className="text-muted-foreground text-sm">{t('onb_critical_subjects_sub')} ({t('onb_max')} 5)</p>
+                <p className="text-muted-foreground text-sm">{t('onb_critical_subjects_prompt')} ({t('onb_max')} 5)</p>
                 <div className="flex flex-wrap gap-2 mt-4">
                     {materie.map((m: string) => {
                        const isSel = (answers.materie_critiche || []).includes(m);
