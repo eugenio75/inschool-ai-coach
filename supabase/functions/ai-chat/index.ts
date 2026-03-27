@@ -630,7 +630,7 @@ ${clientSystemPrompt}`
     if (shouldStream) {
       // Fire-and-forget: update adaptive profile + blockchain log
       if (profileId) {
-        updateAdaptiveProfile(profileId, messages).catch(() => {});
+        updateAdaptiveProfile(profileId, messages, chatSubject).catch(() => {});
       // Blockchain log — fire-and-forget, mai blocca la risposta
         try {
           const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -646,7 +646,7 @@ ${clientSystemPrompt}`
       const data = await response.json();
       // Fire-and-forget: update adaptive profile + blockchain log
       if (profileId) {
-        updateAdaptiveProfile(profileId, messages).catch(() => {});
+        updateAdaptiveProfile(profileId, messages, chatSubject).catch(() => {});
         try {
           const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
           const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
