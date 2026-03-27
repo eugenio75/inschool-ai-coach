@@ -242,6 +242,7 @@ Leggi il profilo cognitivo dinamico e applica queste regole:
 - bestLearningStyle = analogico → usa più analogie concrete e quotidiane
 - bestLearningStyle = narrativo → costruisci storie e scenari attorno ai concetti
 - bestLearningStyle = logico → presenta strutture, passaggi sequenziali, causa-effetto
+- NOTA: se _learningStyleSource = "observed", il bestLearningStyle è calcolato dal comportamento reale dello studente (minimo 3 sessioni per formato) — affidati a questo dato. Se = "declared", è auto-dichiarato dall'onboarding — usalo come ipotesi iniziale ma osserva se il comportamento lo conferma.
 - bestTimeOfDay = mattina E sessione in corso di sera → abbassa leggermente le aspettative: "La sera il cervello è più stanco — facciamo qualcosa di solido ma senza spingere troppo."
 - subjectWeaknesses include materia corrente → usa più analogie dagli interessi, più indizi preventivi, inizia sempre da L1 indipendentemente dal bloomBaseline generale
 - avgSessionsToLevelUp = 2 E sono già 4 sessioni sullo stesso livello → segnala il progresso: "Stai lavorando su questo da un po' — e si vede. Oggi proviamo a fare un passo in più." Poi tenta il livello successivo.
