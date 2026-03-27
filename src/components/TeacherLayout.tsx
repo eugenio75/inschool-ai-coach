@@ -4,6 +4,7 @@ import { Bell, Calendar, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { LangToggle } from "@/components/LangToggle";
 
 function TeacherNavbar() {
   const navigate = useNavigate();
@@ -36,6 +37,7 @@ function TeacherNavbar() {
         InSchool
       </button>
       <div className="flex items-center gap-1">
+        <LangToggle />
         {navItems.map(({ icon: Icon, route, label, badge }) => (
           <button
             key={route}
