@@ -1,6 +1,7 @@
 import { PhoneFrame } from "./PhoneFrame";
+import { useLang } from "@/contexts/LangContext";
 
-function ProgressDots({ current, total }: { current: number; total: number }) {
+function ProgressDots({ current, total, stepLabel }: { current: number; total: number; stepLabel: string }) {
   return (
     <div className="flex gap-1.5 items-center">
       {Array.from({ length: total }).map((_, i) => (
@@ -11,38 +12,36 @@ function ProgressDots({ current, total }: { current: number; total: number }) {
         />
       ))}
       <span className="text-[11px] ml-1.5 font-medium" style={{ color: "#94A3B8" }}>
-        Passo {current} di {total}
+        {stepLabel}
       </span>
     </div>
   );
 }
 
 export function StudentSessionMockup() {
+  const { t } = useLang();
   return (
     <PhoneFrame>
-      {/* Header */}
       <div className="mb-2">
         <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#94A3B8" }}>
-          Sessione guidata
+          {t("mockup_session_label")}
         </p>
       </div>
 
-      {/* Task info card */}
       <div
         className="rounded-xl p-3 mb-3"
         style={{ backgroundColor: "#F8FAFC", border: "1px solid #E2E8F0" }}
       >
         <p className="text-[14px] font-bold" style={{ color: "#1A3A5C" }}>
-          Analisi del testo
+          {t("mockup_session_title")}
         </p>
         <p className="text-[12px] mt-0.5" style={{ color: "#64748B" }}>
-          I Promessi Sposi — Cap. 3
+          {t("mockup_session_subtitle")}
         </p>
       </div>
 
-      <ProgressDots current={2} total={5} />
+      <ProgressDots current={2} total={5} stepLabel={t("mockup_session_step", { current: 2, total: 5 })} />
 
-      {/* Coach message */}
       <div className="mt-4 mb-4">
         <div className="flex gap-2">
           <div
@@ -55,24 +54,23 @@ export function StudentSessionMockup() {
             className="rounded-2xl rounded-tl-md px-3 py-2.5 text-[13px] leading-relaxed"
             style={{ backgroundColor: "#F1F5F9", color: "#1A3A5C" }}
           >
-            Hai letto il brano. Dimmi con parole tue di cosa parla questo paragrafo.
+            {t("mockup_session_coach")}
           </div>
         </div>
       </div>
 
-      {/* Action buttons */}
       <div className="flex gap-2">
         <span
           className="rounded-full px-4 py-2 text-[12px] font-medium cursor-pointer"
           style={{ backgroundColor: "#F1F5F9", color: "#64748B", border: "1px solid #E2E8F0" }}
         >
-          Sono bloccato
+          {t("mockup_session_stuck")}
         </span>
         <span
           className="rounded-full px-4 py-2 text-[12px] font-medium cursor-pointer"
           style={{ backgroundColor: "#F1F5F9", color: "#64748B", border: "1px solid #E2E8F0" }}
         >
-          Indizio
+          {t("mockup_session_hint")}
         </span>
       </div>
     </PhoneFrame>

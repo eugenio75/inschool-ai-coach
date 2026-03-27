@@ -847,5 +847,21 @@
   "mockup_input_placeholder": "Type a message...",
   "mockup_coach_label": "InSchool Coach",
   "mockup_teacher_input": "Write to the coach...",
-  "mockup_classes_title": "Active classes"
+  "mockup_classes_title": "Active classes",
+  "mockup_review_greeting": "Good evening, Sophie",
+  "mockup_review_coach": "You have two things due tomorrow. Shall we start with the most urgent?",
+  "mockup_review_today": "Today",
+  "mockup_review_task1_subject": "Maths",
+  "mockup_review_task1_title": "Expressions",
+  "mockup_review_task1_deadline": "Due tomorrow",
+  "mockup_review_task2_subject": "English",
+  "mockup_review_task2_title": "Text analysis",
+  "mockup_review_task2_deadline": "Due Thursday",
+  "mockup_session_label": "Guided session",
+  "mockup_session_title": "Text analysis",
+  "mockup_session_subtitle": "Great Expectations — Ch. 3",
+  "mockup_session_step": "Step {{current}} of {{total}}",
+  "mockup_session_coach": "You've read the passage. Tell me in your own words what this paragraph is about.",
+  "mockup_session_stuck": "I'm stuck",
+  "mockup_session_hint": "Hint"
 }

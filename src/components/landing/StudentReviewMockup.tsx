@@ -1,4 +1,5 @@
 import { PhoneFrame } from "./PhoneFrame";
+import { useLang } from "@/contexts/LangContext";
 
 function TaskRow({
   subject,
@@ -33,14 +34,13 @@ function TaskRow({
 }
 
 export function StudentReviewMockup() {
+  const { t } = useLang();
   return (
     <PhoneFrame>
-      {/* Greeting */}
       <p className="text-[16px] font-bold" style={{ color: "#1A3A5C" }}>
-        Buonasera, Sofia
+        {t("mockup_review_greeting")}
       </p>
 
-      {/* Coach message */}
       <div className="flex gap-2 mt-3 mb-4">
         <div
           className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-white mt-0.5"
@@ -52,30 +52,28 @@ export function StudentReviewMockup() {
           className="rounded-2xl rounded-tl-md px-3 py-2.5 text-[13px] leading-relaxed"
           style={{ backgroundColor: "#F1F5F9", color: "#1A3A5C" }}
         >
-          Hai due cose per domani. Iniziamo dalla più urgente?
+          {t("mockup_review_coach")}
         </div>
       </div>
 
-      {/* Section label */}
       <p
         className="text-[11px] font-semibold uppercase tracking-wider mb-3"
         style={{ color: "#94A3B8" }}
       >
-        Oggi
+        {t("mockup_review_today")}
       </p>
 
-      {/* Task list */}
       <div className="space-y-2.5">
         <TaskRow
-          subject="Matematica"
-          title="Espressioni"
-          deadline="Scade domani"
+          subject={t("mockup_review_task1_subject")}
+          title={t("mockup_review_task1_title")}
+          deadline={t("mockup_review_task1_deadline")}
           minutes={20}
         />
         <TaskRow
-          subject="Italiano"
-          title="Analisi testo"
-          deadline="Scade giovedì"
+          subject={t("mockup_review_task2_subject")}
+          title={t("mockup_review_task2_title")}
+          deadline={t("mockup_review_task2_deadline")}
           minutes={35}
         />
       </div>

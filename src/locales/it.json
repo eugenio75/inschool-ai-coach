@@ -847,5 +847,21 @@
   "mockup_input_placeholder": "Scrivi un messaggio...",
   "mockup_coach_label": "Coach InSchool",
   "mockup_teacher_input": "Scrivi al coach...",
-  "mockup_classes_title": "Classi attive"
+  "mockup_classes_title": "Classi attive",
+  "mockup_review_greeting": "Buonasera, Sofia",
+  "mockup_review_coach": "Hai due cose per domani. Iniziamo dalla più urgente?",
+  "mockup_review_today": "Oggi",
+  "mockup_review_task1_subject": "Matematica",
+  "mockup_review_task1_title": "Espressioni",
+  "mockup_review_task1_deadline": "Scade domani",
+  "mockup_review_task2_subject": "Italiano",
+  "mockup_review_task2_title": "Analisi testo",
+  "mockup_review_task2_deadline": "Scade giovedì",
+  "mockup_session_label": "Sessione guidata",
+  "mockup_session_title": "Analisi del testo",
+  "mockup_session_subtitle": "I Promessi Sposi — Cap. 3",
+  "mockup_session_step": "Passo {{current}} di {{total}}",
+  "mockup_session_coach": "Hai letto il brano. Dimmi con parole tue di cosa parla questo paragrafo.",
+  "mockup_session_stuck": "Sono bloccato",
+  "mockup_session_hint": "Indizio"
 }
