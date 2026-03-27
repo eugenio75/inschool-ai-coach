@@ -6,6 +6,7 @@ import { useLang } from "@/contexts/LangContext";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { TrustSection } from "@/components/landing/TrustSection";
+import { TeacherGenerateMockup } from "@/components/landing/TeacherGenerateMockup";
 
 const fade = {
   initial: { opacity: 0, y: 16 },
@@ -44,6 +45,9 @@ export default function LandingDocenti() {
       {/* ── HERO ── */}
       <section className="pt-24 pb-20 px-6 text-center">
         <div className="max-w-3xl mx-auto">
+          <motion.span {...fade} className="inline-block rounded-full px-4 py-1.5 text-xs font-semibold mb-6" style={{ backgroundColor: "rgba(26,58,92,0.1)", color: "#1A3A5C" }}>
+            {t("badge_docenti")}
+          </motion.span>
           <motion.h1 {...fade} className="font-display text-5xl font-bold leading-tight" style={{ color: "#1A3A5C" }}>
             {t("doc_new_hero_title")}
           </motion.h1>
@@ -107,8 +111,20 @@ export default function LandingDocenti() {
         </div>
       </section>
 
-      {/* ── PENSATO PER CHI INSEGNA ── */}
+      {/* ── MOCKUP ── */}
       <section className="py-20 px-6" style={{ backgroundColor: "#F8FAFC" }}>
+        <div className="max-w-3xl mx-auto">
+          <motion.h2 {...fade} className="font-display text-2xl font-bold text-center mb-10" style={{ color: "#1A3A5C" }}>
+            {t("doc_mockup_title")}
+          </motion.h2>
+          <motion.div {...fade} transition={{ delay: 0.05 }}>
+            <TeacherGenerateMockup />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── PENSATO PER CHI INSEGNA ── */}
+      <section className="py-20 px-6 bg-white">
         <div className="max-w-4xl mx-auto">
           <motion.h2 {...fade} className="font-display text-2xl font-bold text-center" style={{ color: "#1A3A5C" }}>
             {t("doc_new_who_title")}
@@ -143,10 +159,10 @@ export default function LandingDocenti() {
       {/* ── CTA FINALE ── */}
       <section className="py-20 px-6 text-center" style={{ background: "linear-gradient(135deg, #1A3A5C, #0070C0)" }}>
         <motion.h2 {...fade} className="font-display text-3xl font-bold text-white">
-          {t("doc_new_final_title")}
+          {t("home_final_title")}
         </motion.h2>
-        <motion.p {...fade} transition={{ delay: 0.05 }} className="mt-4" style={{ color: "rgba(255,255,255,0.7)" }}>
-          {t("doc_new_final_body")}
+        <motion.p {...fade} transition={{ delay: 0.05 }} className="mt-4 whitespace-pre-line" style={{ color: "rgba(255,255,255,0.7)" }}>
+          {t("home_cta_final_body")}
         </motion.p>
         <motion.div {...fade} transition={{ delay: 0.1 }} className="mt-8 flex gap-4 justify-center flex-wrap">
           <Button asChild size="lg" className="rounded-lg bg-white font-semibold px-6 py-3 hover:bg-white/90" style={{ color: "#1A3A5C" }}>

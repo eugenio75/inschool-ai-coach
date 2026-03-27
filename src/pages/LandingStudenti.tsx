@@ -45,6 +45,9 @@ export default function LandingStudenti() {
       {/* ── HERO ── */}
       <section className="pt-24 pb-20 px-6 text-center">
         <div className="max-w-3xl mx-auto">
+          <motion.span {...fade} className="inline-block rounded-full px-4 py-1.5 text-xs font-semibold mb-6" style={{ backgroundColor: "rgba(0,112,192,0.1)", color: "#0070C0" }}>
+            {t("badge_studenti")}
+          </motion.span>
           <motion.h1 {...fade} className="font-display text-5xl font-bold leading-tight" style={{ color: "#1A3A5C" }}>
             {t("st_new_hero_title")}
           </motion.h1>
@@ -150,10 +153,10 @@ export default function LandingStudenti() {
       {/* ── CTA FINALE ── */}
       <section className="py-20 px-6 text-center" style={{ background: "linear-gradient(135deg, #1A3A5C, #0070C0)" }}>
         <motion.h2 {...fade} className="font-display text-3xl font-bold text-white">
-          {t("st_final_title")}
+          {t("home_final_title")}
         </motion.h2>
         <motion.p {...fade} transition={{ delay: 0.05 }} className="mt-4 whitespace-pre-line" style={{ color: "rgba(255,255,255,0.7)" }}>
-          {t("st_new_final_body")}
+          {t("home_cta_final_body")}
         </motion.p>
         <motion.div {...fade} transition={{ delay: 0.1 }} className="mt-8 flex gap-4 justify-center flex-wrap">
           <Button asChild size="lg" className="rounded-lg bg-white font-semibold px-6 py-3 hover:bg-white/90" style={{ color: "#1A3A5C" }}>
