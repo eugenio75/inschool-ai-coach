@@ -347,7 +347,7 @@ export const translations = {
     st_new_uni_title: "Università",
     st_new_uni_body: "Più ordine, comprensione e continuità per affrontare esami e obiettivi con più consapevolezza.",
     st_new_fam_title: "Più serenità nell'apprendimento. Anche a casa.",
-    st_new_fam_body: "InSchool aiuta gli studenti a sentirsi più capaci, più sereni e più autonomi. E offre alle famiglie un supporto concreto: se emergono segnali di difficoltà, aiuta a notarli con discrezione.",
+    st_new_fam_body: "InSchool aiuta gli studenti a sentirsi più capaci, più sereni e più autonomi. E offre alle famiglie un supporto concreto per seguire il percorso di crescita.",
 
     // Docenti new
     doc_new_hero_title: "Insegnare con più supporto e serenità.",
@@ -378,11 +378,11 @@ export const translations = {
 
     // Trust page-specific
     trust_home_title: "Sicurezza e conformità",
-    trust_home_minor_desc: "Esperienza progettata con attenzione per età, contesto e fragilità. Se emergono segnali di difficoltà, InSchool può aiutare la famiglia a notarli con discrezione.",
+    trust_home_minor_desc: "Esperienza progettata con attenzione per età, contesto e fragilità.",
     trust_bc_desc: "Credenziali, consensi e progressi sono gestiti in modo sicuro, tracciabile e verificabile nel tempo grazie ad Azar Chain, la blockchain privata proprietaria di InSchool.",
     trust_st_minor_desc: "Esperienza progettata con attenzione per età, contesto e fragilità.",
     trust_st_support: "Supporto attento e discreto",
-    trust_st_support_desc: "Se emergono segnali di difficoltà, InSchool aiuta a notarli nel modo giusto.",
+    trust_st_support_desc: "InSchool nota quando qualcosa non va — e aiuta a trovare il supporto giusto.",
     trust_doc_minor_desc: "Esperienza progettata con attenzione per età, contesto e fragilità.",
     st_new_final_body: "InSchool è per chi vuole crescere imparando.\nE per chi ogni giorno vuole affrontare lo studio con più serenità, fiducia e autonomia.",
     doc_new_final_title: "Più metodo. Più fiducia. Più futuro.",
@@ -807,11 +807,11 @@ export const translations = {
 
     // Trust page-specific EN
     trust_home_title: "Security and compliance",
-    trust_home_minor_desc: "Experience designed with care for age, context and vulnerability. When signs of difficulty emerge, InSchool can help the family notice them discreetly.",
+    trust_home_minor_desc: "Experience designed with care for age, context and vulnerability.",
     trust_bc_desc: "Credentials, consents and progress are managed securely, traceably and verifiably over time through Azar Chain, InSchool's proprietary private blockchain.",
     trust_st_minor_desc: "Experience designed with care for age, context and vulnerability.",
     trust_st_support: "Attentive and discreet support",
-    trust_st_support_desc: "When signs of difficulty emerge, InSchool helps notice them in the right way.",
+    trust_st_support_desc: "InSchool notices when something is off — and helps find the right support.",
     trust_doc_minor_desc: "Experience designed with care for age, context and vulnerability.",
     st_new_final_body: "InSchool is for those who want to grow by learning.\nAnd for those who every day want to face studying with more peace of mind, confidence and autonomy.",
     doc_new_final_title: "More method. More trust. More future.",
