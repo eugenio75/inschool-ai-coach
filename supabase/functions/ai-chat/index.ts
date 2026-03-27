@@ -473,6 +473,53 @@ async function updateAdaptiveProfile(profileId: string, messages: any[], session
       }
     }
 
+    // ── Format performance tracking ──
+    const formatCategory = mapToFormatCategory(sessionFormat);
+    if (formatCategory) {
+      const fp: Record<string, any> = adaptive.formatPerformance || {};
+      const fmt = fp[formatCategory] || { sessions: 0, totalHints: 0, totalBloom: 0, totalErrors: 0 };
+      fmt.sessions += 1;
+      fmt.totalHints += hintRequests;
+      fmt.totalBloom += bloomEstimate;
+      // Error rate: proportion of hesitation messages as proxy
+      fmt.totalErrors += hesitationMessages;
+      fmt.avgHintsPerSession = fmt.totalHints / fmt.sessions;
+      fmt.avgBloomReached = fmt.totalBloom / fmt.sessions;
+      fmt.errorRate = fmt.totalErrors / (userMessages.length || 1);
+      fp[formatCategory] = fmt;
+      adaptive.formatPerformance = fp;
+
+      // ── Recalculate bestLearningStyle from observed behavior ──
+      const categories = ["schema", "text", "dialogue", "example"];
+      const eligible = categories.filter(c => (fp[c]?.sessions || 0) >= 3);
+      if (eligible.length >= 2) {
+        // Score: lower hints = better, higher bloom = better. Weighted equally via rank.
+        const scored = eligible.map(c => {
+          const f = fp[c];
+          // Normalize: hintsScore inverted (lower is better), bloomScore direct (higher is better)
+          return { category: c, hints: f.avgHintsPerSession, bloom: f.avgBloomReached };
+        });
+        // Rank by hints ascending (lower = better rank)
+        const byHints = [...scored].sort((a, b) => a.hints - b.hints);
+        // Rank by bloom descending (higher = better rank)
+        const byBloom = [...scored].sort((a, b) => b.bloom - a.bloom);
+        const rankMap: Record<string, number> = {};
+        byHints.forEach((s, i) => { rankMap[s.category] = i; });
+        byBloom.forEach((s, i) => { rankMap[s.category] = (rankMap[s.category] || 0) + i; });
+        // Best = lowest combined rank
+        const best = Object.entries(rankMap).sort((a, b) => a[1] - b[1])[0][0];
+        // Map format categories to learning style labels
+        const styleMap: Record<string, string> = { schema: "logico", text: "narrativo", dialogue: "analogico", example: "visivo" };
+        cognitive.bestLearningStyle = styleMap[best] || best;
+        cognitive._learningStyleSource = "observed";
+      } else {
+        // Keep onboarding value (if any), mark as declared
+        if (cognitive.bestLearningStyle && cognitive._learningStyleSource !== "observed") {
+          cognitive._learningStyleSource = "declared";
+        }
+      }
+    }
+
     // Update cognitive dynamic profile
     cognitive.bloomPeak = Math.max(cognitive.bloomPeak || 1, bloomEstimate);
     cognitive.avgHintsPerSession = adaptive.avgHintsPerSession;
