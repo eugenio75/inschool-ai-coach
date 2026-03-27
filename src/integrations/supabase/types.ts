@@ -298,6 +298,30 @@ export type Database = {
           },
         ]
       }
+      crisis_events: {
+        Row: {
+          created_at: string
+          id: string
+          session_status: string
+          trigger_message: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          session_status?: string
+          trigger_message: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          session_status?: string
+          trigger_message?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_missions: {
         Row: {
           child_profile_id: string
