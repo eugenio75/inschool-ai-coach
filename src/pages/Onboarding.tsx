@@ -355,8 +355,8 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 <p className="text-muted-foreground mb-6">{t('onb_your_profile')}</p>
                 <div className={summaryBoxClass}>
                     <div><span className={summaryLabelClass}>{t('onb_summary_class')}</span><p className={summaryValueClass}>{answers.medie_anno}</p></div>
-                    <div><span className={summaryLabelClass}>{t('onb_summary_hard_subjects')}</span><p className={summaryValueClass}>{(answers.materie_critiche || []).join(", ")}</p></div>
-                    <div><span className={summaryLabelClass}>{t('onb_summary_method')}</span><p className={summaryValueClass}>{answers.metodo_studio === "poco_spesso" ? t('onb_method_little') : answers.metodo_studio === "lungo" ? t('onb_method_long') : t('onb_method_discover')}</p></div>
+                    <div><span className={summaryLabelClass}>{t('onb_summary_hard')}</span><p className={summaryValueClass}>{(answers.materie_critiche || []).join(", ")}</p></div>
+                    <div><span className={summaryLabelClass}>{t('onb_summary_method')}</span><p className={summaryValueClass}>{answers.metodo_studio === "poco_spesso" ? t('onb_summary_method_short') : answers.metodo_studio === "lungo" ? t('onb_summary_method_long') : t('onb_summary_method_discover')}</p></div>
                     {answers.coach_name && <div><span className={summaryLabelClass}>{t('onb_summary_coach')}</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
                 </div>
             </div>
