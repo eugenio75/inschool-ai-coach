@@ -408,81 +408,38 @@ export default function GuidedSession() {
     );
   }
 
-  // Emotional checkin screen — unified style with daily EmotionalCheckin
+  // Emotional checkin screen
   if (showCheckin) {
-    const checkinOptions = schoolLevel === "universitario"
-      ? [
-          { key: "concentrato", label: "Concentrato" },
-          { key: "stanco", label: "Stanco" },
-          { key: "bloccato", label: "Non benissimo" },
-        ]
-      : schoolLevel === "superiori"
-      ? [
-          { key: "concentrato", label: "Concentrato" },
-          { key: "stanco", label: "Stanco" },
-          { key: "bloccato", label: "Sotto pressione" },
-          { key: "notgreat", label: "Non benissimo" },
-        ]
-      : [
-          { key: "concentrato", label: "Benissimo", emoji: "😄" },
-          { key: "good", label: "Bene", emoji: "🙂" },
-          { key: "stanco", label: "Stanco", emoji: "😴" },
-          { key: "bloccato", label: "Bloccato", emoji: "😕" },
-        ];
-
-    const useEmoji = schoolLevel !== "superiori" && schoolLevel !== "universitario";
-
     return (
-      <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center px-6">
-        <button
-          onClick={() => { setShowCheckin(false); startNewSession("concentrato"); }}
-          className="absolute top-6 right-6 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 260, damping: 30 }}
-          className="max-w-sm w-full text-center"
+          className="max-w-md w-full bg-card rounded-xl border border-border p-8 text-center"
         >
-          <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-2">
+          <h2 className="font-display text-xl font-bold text-foreground mb-2">
             Come ti senti per iniziare?
           </h2>
-          <p className="text-muted-foreground mb-8 text-sm">
+          <p className="text-sm text-muted-foreground mb-6">
             {homework?.title}
           </p>
-
-          <div className={`grid ${useEmoji ? "grid-cols-1 gap-3" : "grid-cols-2 gap-3"}`}>
-            {checkinOptions.map((opt) => (
+          <div className="flex flex-col gap-3">
+            {[
+              { key: "concentrato", label: "Concentrato", icon: "🎯" },
+              { key: "stanco", label: "Un po' stanco", icon: "😴" },
+              { key: "bloccato", label: "Bloccato in partenza", icon: "😕" },
+            ].map(opt => (
               <button
                 key={opt.key}
                 onClick={() => startNewSession(opt.key)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all ${
-                  useEmoji ? "justify-start" : "justify-center flex-col gap-2"
-                }`}
+                className="flex items-center gap-3 p-4 rounded-lg border border-border hover:border-primary/30 hover:bg-muted transition-all text-left"
               >
-                {useEmoji && (opt as any).emoji && (
-                  <span className="text-2xl">{(opt as any).emoji}</span>
-                )}
-                <span className="text-sm font-medium text-foreground">{opt.label}</span>
+                <span className="text-2xl">{opt.icon}</span>
+                <span className="font-medium text-foreground">{opt.label}</span>
               </button>
             ))}
           </div>
-
-          <button
-            onClick={() => { setShowCheckin(false); startNewSession("concentrato"); }}
-            className="mt-6 text-xs text-muted-foreground hover:text-foreground"
-          >
-            Salta
-          </button>
         </motion.div>
-
-        <div className="absolute bottom-8 flex gap-2">
-          <div className="w-2 h-2 rounded-full bg-primary" />
-          <div className="w-2 h-2 rounded-full bg-muted" />
-        </div>
       </div>
     );
   }

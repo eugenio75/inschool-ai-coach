@@ -248,61 +248,61 @@ const EmotionalCheckin = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={spring}
-            className="max-w-sm w-full text-center"
+            className="max-w-md w-full text-center"
           >
-            <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-2">
-              Ciao {name}!
-            </h2>
-            <p className="text-muted-foreground mb-8 text-sm">
-              {config.moodQuestion}
-            </p>
+            <div className="bg-card rounded-xl border border-border p-8">
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-2">
+                Ciao {name}!
+              </h2>
+              <p className="text-muted-foreground mb-6 text-sm">
+                {config.moodQuestion}
+              </p>
 
-            <div className={`grid ${config.useEmoji ? "grid-cols-1 gap-3" : "grid-cols-2 gap-3"}`}>
-              {config.moodOptions.map((opt) => (
+              <div className="flex flex-col gap-3">
+                {config.moodOptions.map((opt) => (
+                  <button
+                    key={opt.id}
+                    onClick={() => handleMoodSelect(opt)}
+                    className="flex items-center gap-3 p-4 rounded-lg border border-border hover:border-primary/30 hover:bg-muted transition-all text-left"
+                  >
+                    {config.useEmoji && opt.emoji && (
+                      <span className="text-2xl">{opt.emoji}</span>
+                    )}
+                    <span className="text-sm font-medium text-foreground">{opt.label}</span>
+                  </button>
+                ))}
                 <button
-                  key={opt.id}
-                  onClick={() => handleMoodSelect(opt)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl border border-border bg-card hover:bg-muted hover:border-primary/30 transition-all ${
-                    config.useEmoji ? "justify-start" : "justify-center flex-col gap-2"
+                  onClick={() => setShowCustom(true)}
+                  className={`flex items-center gap-3 p-4 rounded-lg border transition-all text-left ${
+                    showCustom ? "border-primary bg-primary/5" : "border-border hover:bg-muted hover:border-primary/30"
                   }`}
                 >
-                  {config.useEmoji && opt.emoji && (
-                    <span className="text-2xl">{opt.emoji}</span>
-                  )}
-                  <span className="text-sm font-medium text-foreground">{opt.label}</span>
+                  <PenLine className="w-5 h-5 text-primary" />
+                  <span className="text-sm font-medium text-foreground">Altro...</span>
                 </button>
-              ))}
-              <button
-                onClick={() => setShowCustom(true)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${
-                  showCustom ? "border-primary bg-primary/5" : "border-border bg-card hover:bg-muted hover:border-primary/30"
-                } ${config.useEmoji ? "justify-start" : "justify-center flex-col gap-2"}`}
-              >
-                <PenLine className="w-5 h-5 text-primary" />
-                <span className="text-sm font-medium text-foreground">Altro...</span>
-              </button>
-            </div>
-
-            {showCustom && (
-              <div className="mt-3 flex gap-2">
-                <input
-                  type="text"
-                  value={customAnswer}
-                  onChange={(e) => setCustomAnswer(e.target.value)}
-                  placeholder="Scrivi come ti senti..."
-                  className="flex-1 rounded-2xl border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  autoFocus
-                />
-                <Button
-                  size="sm"
-                  disabled={!customAnswer.trim()}
-                  onClick={handleCustomMood}
-                  className="rounded-2xl px-4"
-                >
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
               </div>
-            )}
+
+              {showCustom && (
+                <div className="mt-3 flex gap-2">
+                  <input
+                    type="text"
+                    value={customAnswer}
+                    onChange={(e) => setCustomAnswer(e.target.value)}
+                    placeholder="Scrivi come ti senti..."
+                    className="flex-1 rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    autoFocus
+                  />
+                  <Button
+                    size="sm"
+                    disabled={!customAnswer.trim()}
+                    onClick={handleCustomMood}
+                    className="rounded-lg px-4"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
 
             <button onClick={handleSkip} className="mt-6 text-xs text-muted-foreground hover:text-foreground">
               Salta per oggi
