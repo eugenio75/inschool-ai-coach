@@ -14,7 +14,7 @@ export function LandingFooter() {
               InSchool <span className="text-slate-500 font-normal text-sm">— Do Better</span>
             </p>
             <p className="text-xs text-slate-500 mt-2">AzarLabs · Tenks S.r.l.s.</p>
-            <p className="text-xs text-slate-500">inschool@azalabs.com</p>
+            <p className="text-xs text-slate-500">inschool.privacy@azarlabs.com</p>
           </div>
 
           {/* Prodotto */}
