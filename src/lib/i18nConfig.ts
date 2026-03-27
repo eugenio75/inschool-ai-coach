@@ -4,6 +4,15 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import it from "@/locales/it.json";
 import en from "@/locales/en.json";
 
+// Migrate old localStorage key
+try {
+  const oldKey = localStorage.getItem("inschool_lang");
+  if (oldKey && !localStorage.getItem("preferred_language")) {
+    localStorage.setItem("preferred_language", oldKey);
+  }
+  localStorage.removeItem("inschool_lang");
+} catch {}
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
