@@ -834,5 +834,18 @@
   "chat_send_step_by_step": "Explain it step by step, more slowly.",
   "chat_send_shorter": "Explain it more briefly and directly.",
   "chat_stop": "Stop",
-  "coach_chat_default_name": "Chat of {{date}}"
+  "coach_chat_default_name": "Chat of {{date}}",
+  "mockup_student_coach_1": "Hi Marcus. Today you have maths and history. Where do you want to start?",
+  "mockup_student_user": "Maths",
+  "mockup_student_coach_2": "Great. Quick question — have you studied algebraic expressions before or is this your first time?",
+  "mockup_teacher_greeting": "Good afternoon, Prof. Mitchell",
+  "mockup_teacher_coach": "The Science test for 3G is due tomorrow — only 3 students have completed it. How do you want to proceed?",
+  "mockup_class_1": "History",
+  "mockup_class_2": "Science",
+  "mockup_status_follow": "To follow",
+  "mockup_status_regular": "Regular",
+  "mockup_input_placeholder": "Type a message...",
+  "mockup_coach_label": "InSchool Coach",
+  "mockup_teacher_input": "Write to the coach...",
+  "mockup_classes_title": "Active classes"
 }

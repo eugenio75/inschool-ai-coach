@@ -1,4 +1,5 @@
 import { BrowserFrame } from "./BrowserFrame";
+import { useLang } from "@/contexts/LangContext";
 
 function ClassRow({
   name,
@@ -33,11 +34,12 @@ function ClassRow({
 }
 
 export function TeacherHomeMockup() {
+  const { t } = useLang();
   return (
     <BrowserFrame>
       {/* Greeting */}
       <p className="text-[17px] font-bold" style={{ color: "#1A3A5C" }}>
-        Buon pomeriggio, Prof. Chieffe
+        {t("mockup_teacher_greeting")}
       </p>
 
       {/* Coach message */}
@@ -52,7 +54,7 @@ export function TeacherHomeMockup() {
           IN
         </div>
         <p className="text-[13px] leading-relaxed" style={{ color: "#334155" }}>
-          La verifica di Musica della 3G scade domani — solo 3 studenti l'hanno completata. Come vuoi procedere?
+          {t("mockup_teacher_coach")}
         </p>
       </div>
 
@@ -65,7 +67,7 @@ export function TeacherHomeMockup() {
           color: "#94A3B8",
         }}
       >
-        Scrivi al coach...
+        {t("mockup_teacher_input")}
       </div>
 
       {/* Classes */}
@@ -74,11 +76,11 @@ export function TeacherHomeMockup() {
           className="text-[11px] font-semibold uppercase tracking-wider mb-2"
           style={{ color: "#94A3B8" }}
         >
-          Classi attive
+          {t("mockup_classes_title")}
         </p>
-        <ClassRow name="1D" subject="Educazione Civica" status="2 da seguire" statusColor="#D97706" />
-        <ClassRow name="2E" subject="Musica" status="Regolare" statusColor="#16A34A" />
-        <ClassRow name="3G" subject="Musica" status="3 da seguire" statusColor="#D97706" />
+        <ClassRow name="1D" subject={t("mockup_class_1")} status={`2 ${t("mockup_status_follow").toLowerCase()}`} statusColor="#D97706" />
+        <ClassRow name="2E" subject={t("mockup_class_2")} status={t("mockup_status_regular")} statusColor="#16A34A" />
+        <ClassRow name="3G" subject={t("mockup_class_2")} status={`3 ${t("mockup_status_follow").toLowerCase()}`} statusColor="#D97706" />
       </div>
     </BrowserFrame>
   );

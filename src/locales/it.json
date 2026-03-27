@@ -834,5 +834,18 @@
   "chat_send_step_by_step": "Spiegamelo passo passo, più lentamente.",
   "chat_send_shorter": "Spiegamelo in modo più breve e diretto.",
   "chat_stop": "Stop",
-  "coach_chat_default_name": "Chat del {{date}}"
+  "coach_chat_default_name": "Chat del {{date}}",
+  "mockup_student_coach_1": "Ciao Marco. Oggi hai matematica e italiano. Da dove partiamo?",
+  "mockup_student_user": "Matematica",
+  "mockup_student_coach_2": "Perfetto. Prima dimmi — le espressioni algebriche le hai già viste o è la prima volta?",
+  "mockup_teacher_greeting": "Buon pomeriggio, Prof. Chieffe",
+  "mockup_teacher_coach": "La verifica di Musica della 3G scade domani — solo 3 studenti l'hanno completata. Come vuoi procedere?",
+  "mockup_class_1": "Educazione Civica",
+  "mockup_class_2": "Musica",
+  "mockup_status_follow": "Da seguire",
+  "mockup_status_regular": "Regolare",
+  "mockup_input_placeholder": "Scrivi un messaggio...",
+  "mockup_coach_label": "Coach InSchool",
+  "mockup_teacher_input": "Scrivi al coach...",
+  "mockup_classes_title": "Classi attive"
 }

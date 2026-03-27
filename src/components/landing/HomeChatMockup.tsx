@@ -1,4 +1,5 @@
 import { PhoneFrame } from "./PhoneFrame";
+import { useLang } from "@/contexts/LangContext";
 
 function CoachBubble({ text }: { text: string }) {
   return (
@@ -33,17 +34,18 @@ function UserBubble({ text }: { text: string }) {
 }
 
 export function HomeChatMockup() {
+  const { t } = useLang();
   return (
     <PhoneFrame>
       <p
         className="text-[11px] font-semibold uppercase tracking-wider mb-4"
         style={{ color: "#94A3B8" }}
       >
-        Coach InSchool
+        {t("mockup_coach_label")}
       </p>
-      <CoachBubble text="Ciao Marco. Oggi hai matematica e italiano. Da dove partiamo?" />
-      <UserBubble text="Matematica" />
-      <CoachBubble text="Perfetto. Prima dimmi — le espressioni algebriche le hai già viste o è la prima volta?" />
+      <CoachBubble text={t("mockup_student_coach_1")} />
+      <UserBubble text={t("mockup_student_user")} />
+      <CoachBubble text={t("mockup_student_coach_2")} />
 
       {/* Input bar */}
       <div
@@ -54,7 +56,7 @@ export function HomeChatMockup() {
           color: "#94A3B8",
         }}
       >
-        Scrivi un messaggio...
+        {t("mockup_input_placeholder")}
       </div>
     </PhoneFrame>
   );
