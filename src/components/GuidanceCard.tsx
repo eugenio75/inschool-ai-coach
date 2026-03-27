@@ -658,7 +658,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                         } disabled:opacity-40`}
                       >
                         {isRecording ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-                        <span className="hidden xs:inline">{isRecording ? "Stop" : t("gc_voice")}</span>
+                        <span className="hidden xs:inline">{isRecording ? t("chat_stop") : t("gc_voice")}</span>
                       </button>
                     </div>
                     {/* Text input + send row */}

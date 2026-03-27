@@ -319,13 +319,13 @@ export function ChatShell({
               </label>
             )}
             {showHint && (
-              <button onClick={() => onSend("Dammi un indizio.")} disabled={sending}
+              <button onClick={() => onSend(t("chat_send_hint"))} disabled={sending}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary text-primary text-xs font-medium hover:bg-primary/5 transition-colors">
                 <Lightbulb className="w-3.5 h-3.5" /> {t("chat_hint")}
               </button>
             )}
             {showStuck && (
-              <button onClick={() => onSend("Sono bloccato — cambia approccio e aiutami in modo più semplice.")} disabled={sending}
+              <button onClick={() => onSend(t("chat_send_stuck"))} disabled={sending}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-muted-foreground text-xs font-medium hover:bg-muted transition-colors">
                 <AlertCircle className="w-3.5 h-3.5" /> {t("chat_stuck")}
               </button>
@@ -339,10 +339,10 @@ export function ChatShell({
                 {showExplainOptions && (
                   <div className="absolute bottom-full left-0 mb-1 bg-card border border-border rounded-lg shadow-lg py-1 z-10 min-w-[180px]">
                     {[
-                      { label: t("chat_simpler"), msg: "Spiegamelo in modo più semplice." },
-                      { label: t("chat_example"), msg: "Fammi un esempio pratico per capire meglio." },
-                      { label: t("chat_step_by_step"), msg: "Spiegamelo passo passo, più lentamente." },
-                      { label: t("chat_shorter"), msg: "Spiegamelo in modo più breve e diretto." },
+                      { label: t("chat_simpler"), msg: t("chat_send_simpler") },
+                      { label: t("chat_example"), msg: t("chat_send_example") },
+                      { label: t("chat_step_by_step"), msg: t("chat_send_step_by_step") },
+                      { label: t("chat_shorter"), msg: t("chat_send_shorter") },
                     ].map(opt => (
                       <button key={opt.label} onClick={() => { setShowExplainOptions(false); onSend(opt.msg); }}
                         className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-muted transition-colors">
