@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft, Brain, Send, Trash2, Plus, Pencil, Menu, X,
 } from "lucide-react";
@@ -47,6 +48,7 @@ interface ClassInfo {
 export default function CoachDocente() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const locState = location.state as any;
   const initialMessage = locState?.initialMessage as string | undefined;
   const initialClassId = locState?.classId as string | undefined;
