@@ -4,17 +4,25 @@ import { motion } from "framer-motion";
 import { useLang } from "@/contexts/LangContext";
 import type { TranslationKey } from "@/lib/i18n";
 
-const trustItems: { title: TranslationKey; desc: TranslationKey }[] = [
+interface TrustItem {
+  title: TranslationKey;
+  desc: TranslationKey;
+}
+
+const defaultItems: TrustItem[] = [
   { title: "trust_1", desc: "trust_1_desc" },
   { title: "trust_2", desc: "trust_2_desc" },
   { title: "trust_3", desc: "trust_3_desc" },
-  { title: "trust_6", desc: "trust_6_desc" },
-  { title: "trust_7", desc: "trust_7_desc" },
   { title: "trust_4", desc: "trust_4_desc" },
   { title: "trust_5", desc: "trust_5_desc" },
 ];
 
-export function TrustSection() {
+interface TrustSectionProps {
+  items?: TrustItem[];
+  titleKey?: TranslationKey;
+}
+
+export function TrustSection({ items = defaultItems, titleKey = "trust_title" }: TrustSectionProps) {
   const { t } = useLang();
 
   return (
@@ -28,12 +36,12 @@ export function TrustSection() {
           className="text-center mb-10"
         >
           <h2 className="font-display text-2xl md:text-3xl font-bold" style={{ color: "#1A3A5C" }}>
-            {t("trust_title")}
+            {t(titleKey)}
           </h2>
         </motion.div>
 
         <div className="space-y-4 max-w-2xl mx-auto">
-          {trustItems.map((item, i) => (
+          {items.map((item, i) => (
             <motion.div
               key={item.title}
               initial={{ opacity: 0, y: 12 }}
