@@ -1,44 +1,47 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function EuAiAct() {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
       <div className="max-w-3xl mx-auto px-6 py-12">
-        <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">← Torna alla home</Link>
+        <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">← {t("legal_back_home")}</Link>
 
-        <h1 className="text-3xl font-display font-bold mt-8 mb-2">InSchool — Conformità EU AI Act</h1>
-        <p className="text-sm text-muted-foreground mb-10">Ultimo aggiornamento: marzo 2026</p>
+        <h1 className="text-3xl font-display font-bold mt-8 mb-2">{t("euai_page_title")}</h1>
+        <p className="text-sm text-muted-foreground mb-10">{t("legal_updated")}</p>
 
         <div className="prose prose-neutral dark:prose-invert max-w-none space-y-6 text-sm leading-relaxed">
           <section>
-            <h2 className="text-lg font-semibold">Impegno di conformità</h2>
-            <p>InSchool è sviluppato in linea con i principi e i requisiti chiave del Regolamento Europeo sull'Intelligenza Artificiale (EU AI Act), con scadenza di conformità agosto 2026.</p>
+            <h2 className="text-lg font-semibold">{t("euai_commitment_title")}</h2>
+            <p>{t("euai_commitment_body")}</p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">Classificazione del sistema</h2>
-            <p>InSchool è classificato come sistema AI ad uso educativo. In quanto tale adotta misure specifiche di trasparenza, supervisione umana e protezione degli utenti vulnerabili.</p>
+            <h2 className="text-lg font-semibold">{t("euai_classification_title")}</h2>
+            <p>{t("euai_classification_body")}</p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">Misure adottate</h2>
+            <h2 className="text-lg font-semibold">{t("euai_measures_title")}</h2>
             <ul className="list-disc pl-5 space-y-2">
-              <li><strong>Trasparenza:</strong> gli utenti sono sempre informati che stanno interagendo con un sistema AI. Il coach non si presenta mai come umano.</li>
-              <li><strong>Supervisione umana:</strong> il coach AI supporta — non sostituisce — il giudizio di insegnanti e famiglie.</li>
-              <li><strong>Protezione dei minori:</strong> protocolli specifici per fascia d'età, consenso genitoriale obbligatorio per i minori di 14 anni.</li>
-              <li><strong>Tracciabilità:</strong> ogni sessione AI viene registrata con log immutabile su Azar Chain per garantire audit trail completo.</li>
-              <li><strong>Non discriminazione:</strong> il sistema è progettato per non amplificare bias legati a genere, etnia, disabilità o background socioeconomico.</li>
+              <li><strong>{t("euai_m1_label")}</strong> {t("euai_m1_body")}</li>
+              <li><strong>{t("euai_m2_label")}</strong> {t("euai_m2_body")}</li>
+              <li><strong>{t("euai_m3_label")}</strong> {t("euai_m3_body")}</li>
+              <li><strong>{t("euai_m4_label")}</strong> {t("euai_m4_body")}</li>
+              <li><strong>{t("euai_m5_label")}</strong> {t("euai_m5_body")}</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">Blockchain e audit trail</h2>
-            <p>InSchool usa Azar Chain (Chain ID 24780) — blockchain privata proprietaria — per registrare in modo immutabile e verificabile i log delle sessioni AI. Questo garantisce la conformità agli obblighi di tracciabilità del EU AI Act.</p>
+            <h2 className="text-lg font-semibold">{t("euai_blockchain_title")}</h2>
+            <p>{t("euai_blockchain_body")}</p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold">Contatti</h2>
-            <p>Per informazioni sulla conformità: <a href="mailto:inschool.privacy@azarlabs.com" className="text-primary">inschool.privacy@azarlabs.com</a></p>
+            <h2 className="text-lg font-semibold">{t("euai_contact_title")}</h2>
+            <p>{t("euai_contact_body")} <a href="mailto:inschool.privacy@azarlabs.com" className="text-primary">inschool.privacy@azarlabs.com</a></p>
           </section>
         </div>
       </div>
