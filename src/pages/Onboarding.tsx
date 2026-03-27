@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { 
   ArrowRight, ArrowLeft, Timer, Brain, Sliders, TrendingUp, 
   FileCheck, BookOpen, Calendar, Lightbulb, ClipboardCheck, 
@@ -105,6 +106,7 @@ const summaryLabelClass = "text-xs font-bold text-muted-foreground uppercase tra
 const summaryValueClass = "font-medium text-foreground";
 
 function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const totalSteps = role === "docente" ? 4 : 8;
     const [step, setStep] = useState(Math.min(initialStep, totalSteps - 1));
@@ -132,7 +134,6 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         if (step < totalSteps - 1) {
             const nextStep = step + 1;
             setSaving(true);
-            // Merge with existing data to preserve teacherBehavior etc
             const { data: existingPref } = await supabase
               .from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
             const existingData = (existingPref?.data as any) || {};
@@ -153,7 +154,6 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                profile_id: profileId, role: role, current_step: step, data: mergedData
             });
             await supabase.from("child_profiles").update({ onboarding_completed: true } as any).eq("id", profileId);
-            // Update localStorage session so RoleGuard doesn't redirect back
             const currentSession = getChildSession();
             if (currentSession?.profile) {
               setChildSession({
@@ -212,30 +212,55 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         return true; 
     };
 
-    function renderMedie(step: number, answers: any, setAnswers: any, toggleMax: any, toggle: any, locRef: any) {
+    // Subject keys map — internal value -> i18n key
+    const subjectKey = (s: string): string => {
+      const map: Record<string, string> = {
+        "Matematica": "subject_matematica", "Italiano": "subject_italiano", "Inglese": "subject_inglese",
+        "Storia": "subject_storia", "Geografia": "subject_geografia", "Scienze": "subject_scienze",
+        "Tecnologia": "subject_tecnologia", "Francese": "subject_francese", "Spagnolo": "subject_spagnolo",
+        "Musica": "subject_musica", "Arte": "subject_arte", "Fisica": "subject_fisica",
+        "Chimica": "subject_chimica", "Latino": "subject_latino", "Filosofia": "subject_filosofia",
+        "Informatica": "subject_informatica", "Greco": "subject_greco", "Economia": "subject_economia",
+        "Diritto": "subject_diritto", "Lingue": "subject_lingue", "Educazione Fisica": "subject_ed_fisica",
+        "Educazione Civica": "subject_ed_civica", "Religione": "subject_religione", "Tedesco": "subject_tedesco",
+      };
+      return map[s] || s;
+    };
+
+    function renderMedie(step: number) {
+      const medieAnni = [
+        { value: "1ª Media", key: "onb_medie_1" },
+        { value: "2ª Media", key: "onb_medie_2" },
+        { value: "3ª Media", key: "onb_medie_3" },
+      ];
+      const schoolTypes = [
+        { value: "Scuola pubblica", key: "onb_school_public" },
+        { value: "Scuola paritaria", key: "onb_school_paritaria" },
+        { value: "Scuola privata", key: "onb_school_private" },
+      ];
       switch (step) {
         case 0:
           return (
             <div className="text-center w-full">
-                <h2 className="text-3xl font-bold text-foreground mb-2">Benvenuto in InSchool!</h2>
-                <p className="text-muted-foreground mb-8">Configuriamo insieme il tuo spazio di studio</p>
+                <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_welcome')}</h2>
+                <p className="text-muted-foreground mb-8">{t('onb_welcome_sub')}</p>
                 <div className="w-24 h-24 mx-auto bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4"><BookOpen className="w-12 h-12" /></div>
             </div>
           );
         case 1:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">La tua scuola</h2>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_your_school')}</h2>
                 <div className="space-y-4">
                    <select value={answers.medie_anno || ""} onChange={e => setAnswers({...answers, medie_anno: e.target.value})} className={inputClass}>
-                      <option value="" disabled>In che classe sei?</option>
-                      {["1\u00AA Media", "2\u00AA Media", "3\u00AA Media"].map(a => <option key={a} value={a}>{a}</option>)}
+                      <option value="" disabled>{t('onb_select_class')}</option>
+                      {medieAnni.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
                    </select>
                    <select value={answers.medie_scuola_tipo || ""} onChange={e => setAnswers({...answers, medie_scuola_tipo: e.target.value})} className={inputClass}>
-                      <option value="" disabled>Tipo di scuola</option>
-                      {["Scuola pubblica", "Scuola paritaria", "Scuola privata"].map(a => <option key={a} value={a}>{a}</option>)}
+                      <option value="" disabled>{t('onb_school_type')}</option>
+                      {schoolTypes.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
                    </select>
-                   <input ref={locRef} type="text" placeholder="Nome della scuola (opzionale)" className={inputClass} defaultValue={answers.medie_scuola || ""} />
+                   <input ref={locationInputRef} type="text" placeholder={t('onb_school_name_optional')} className={inputClass} defaultValue={answers.medie_scuola || ""} />
                 </div>
             </div>
           );
@@ -243,12 +268,12 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
           const materie = ["Matematica", "Italiano", "Inglese", "Storia", "Geografia", "Scienze", "Tecnologia", "Francese", "Spagnolo", "Musica", "Arte"];
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">Le materie pi\u00F9 difficili</h2>
-                <p className="text-muted-foreground text-sm">Quali materie ti mettono pi\u00F9 in difficolt\u00E0? (max 4)</p>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_hard_subjects')}</h2>
+                <p className="text-muted-foreground text-sm">{t('onb_hard_subjects_sub')} ({t('onb_max')} 4)</p>
                 <div className="flex flex-wrap gap-2 mt-4">
                     {materie.map((m: string) => {
                        const isSel = (answers.materie_critiche || []).includes(m);
-                       return <button key={m} onClick={() => toggleMax("materie_critiche", m, 4)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${isSel ? chipSelClass : chipUnselClass}`}>{m}</button>;
+                       return <button key={m} onClick={() => toggleArrayMax("materie_critiche", m, 4)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${isSel ? chipSelClass : chipUnselClass}`}>{t(subjectKey(m))}</button>;
                     })}
                 </div>
             </div>
@@ -257,12 +282,12 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         case 3:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">Come preferisci studiare?</h2>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_study_preference')}</h2>
                 <div className="space-y-3">
                    {[
-                     { id: "poco_spesso", title: "Un po' alla volta", sub: "Sessioni brevi, pi\u00F9 volte al giorno", icon: Timer },
-                     { id: "lungo", title: "Tutto insieme", sub: "Una sessione lunga e concentrata", icon: Brain },
-                     { id: "non_so", title: "Non ho un metodo", sub: "Aiutami a trovare il mio modo", icon: Lightbulb }
+                     { id: "poco_spesso", title: t('onb_method_little'), sub: t('onb_method_little_sub'), icon: Timer },
+                     { id: "lungo", title: t('onb_method_long'), sub: t('onb_method_long_sub'), icon: Brain },
+                     { id: "non_so", title: t('onb_method_none'), sub: t('onb_method_none_sub'), icon: Lightbulb }
                    ].map(opt => {
                      const isSel = answers.metodo_studio === opt.id;
                      return <button key={opt.id} onClick={() => setAnswers({...answers, metodo_studio: opt.id})} className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-6 h-6 mr-4 ${isSel ? selIconClass : unselIconClass}`}/><div className="text-left"><p className={`font-bold ${isSel ? selTextClass : "text-foreground"}`}>{opt.title}</p><p className="text-sm text-muted-foreground">{opt.sub}</p></div></button>
@@ -273,13 +298,13 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         case 4:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">Cosa vorresti migliorare?</h2>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_goal')}</h2>
                 <div className="grid grid-cols-2 gap-3">
                    {[
-                     { id: "voti", title: "Migliorare i voti", icon: TrendingUp },
-                     { id: "organizzazione", title: "Essere pi\u00F9 organizzato", icon: Calendar },
-                     { id: "interrogazioni", title: "Prepararmi meglio", icon: FileCheck },
-                     { id: "capire", title: "Capire di pi\u00F9", icon: Lightbulb }
+                     { id: "voti", title: t('onb_goal_grades'), icon: TrendingUp },
+                     { id: "organizzazione", title: t('onb_goal_organized'), icon: Calendar },
+                     { id: "interrogazioni", title: t('onb_goal_prepare'), icon: FileCheck },
+                     { id: "capire", title: t('onb_goal_understand'), icon: Lightbulb }
                    ].map(opt => {
                      const isSel = answers.obiettivo === opt.id;
                      return <button key={opt.id} onClick={() => setAnswers({...answers, obiettivo: opt.id})} className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-8 h-8 mb-3 ${isSel ? selIconClass : unselIconClass}`}/><span className={`font-bold text-sm text-center ${isSel ? selTextClass : unselTextClass}`}>{opt.title}</span></button>
@@ -290,14 +315,14 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         case 5:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">Come ti senti a scuola?</h2>
-                <p className="text-muted-foreground text-sm">Questo aiuta il coach a capirti meglio</p>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_school_feeling')}</h2>
+                <p className="text-muted-foreground text-sm">{t('onb_school_feeling_sub')}</p>
                 <div className="space-y-3">
                    {[
-                     { id: "ok", title: "Tutto bene in generale", sub: "Mi trovo abbastanza bene" },
-                     { id: "fatica", title: "Faccio fatica a concentrarmi", sub: "Mi distraggo spesso" },
-                     { id: "ansia", title: "Mi agito per le verifiche", sub: "Le prove mi mettono ansia" },
-                     { id: "noia", title: "Mi annoio in classe", sub: "Non mi sento stimolato" },
+                     { id: "ok", title: t('onb_feel_ok'), sub: t('onb_feel_ok_sub') },
+                     { id: "fatica", title: t('onb_feel_struggle'), sub: t('onb_feel_struggle_sub') },
+                     { id: "ansia", title: t('onb_feel_anxiety'), sub: t('onb_feel_anxiety_sub') },
+                     { id: "noia", title: t('onb_feel_bored'), sub: t('onb_feel_bored_sub') },
                    ].map(opt => {
                      const isSel = (answers.sfide_emotive || []).includes(opt.id);
                      return <button key={opt.id} onClick={() => {
@@ -314,83 +339,101 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         case 6:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">Dai un nome al tuo coach</h2>
-                <p className="text-muted-foreground text-sm">Il tuo assistente AI ti aiuter\u00E0 ogni giorno</p>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_coach_name')}</h2>
+                <p className="text-muted-foreground text-sm">{t('onb_coach_name_sub')}</p>
                 <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
                   <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
                 </div>
-                <input type="text" placeholder="Es. Coach, Leo, Aria..." value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
-                <p className="text-xs text-muted-foreground text-center">Puoi cambiarlo quando vuoi</p>
+                <input type="text" placeholder={t('onb_coach_placeholder')} value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
+                <p className="text-xs text-muted-foreground text-center">{t('onb_coach_change')}</p>
             </div>
           );
         case 7:
           return (
             <div className="text-left w-full space-y-6">
-                <h2 className="text-3xl font-bold text-foreground mb-2">Tutto pronto!</h2>
-                <p className="text-muted-foreground mb-6">Ecco il tuo profilo</p>
+                <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_all_set')}</h2>
+                <p className="text-muted-foreground mb-6">{t('onb_your_profile')}</p>
                 <div className={summaryBoxClass}>
-                    <div><span className={summaryLabelClass}>Classe</span><p className={summaryValueClass}>{answers.medie_anno}</p></div>
-                    <div><span className={summaryLabelClass}>Materie difficili</span><p className={summaryValueClass}>{(answers.materie_critiche || []).join(", ")}</p></div>
-                    <div><span className={summaryLabelClass}>Metodo</span><p className={summaryValueClass}>{answers.metodo_studio === "poco_spesso" ? "Un po' alla volta" : answers.metodo_studio === "lungo" ? "Tutto insieme" : "Da scoprire"}</p></div>
-                    {answers.coach_name && <div><span className={summaryLabelClass}>Il tuo Coach</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
+                    <div><span className={summaryLabelClass}>{t('onb_summary_class')}</span><p className={summaryValueClass}>{answers.medie_anno}</p></div>
+                    <div><span className={summaryLabelClass}>{t('onb_summary_hard_subjects')}</span><p className={summaryValueClass}>{(answers.materie_critiche || []).join(", ")}</p></div>
+                    <div><span className={summaryLabelClass}>{t('onb_summary_method')}</span><p className={summaryValueClass}>{answers.metodo_studio === "poco_spesso" ? t('onb_method_little') : answers.metodo_studio === "lungo" ? t('onb_method_long') : t('onb_method_discover')}</p></div>
+                    {answers.coach_name && <div><span className={summaryLabelClass}>{t('onb_summary_coach')}</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
                 </div>
             </div>
           );
       }
     }
 
-    function renderSuperiori(step: number, answers: any, setAnswers: any, toggleMax: any, toggle: any, locRef: any) {
+    function renderSuperiori(step: number) {
+      const supAnni = [
+        { value: "1ª", key: "onb_sup_1" },
+        { value: "2ª", key: "onb_sup_2" },
+        { value: "3ª", key: "onb_sup_3" },
+        { value: "4ª", key: "onb_sup_4" },
+        { value: "5ª Superiore", key: "onb_sup_5" },
+      ];
+      const tracks = [
+        { value: "Scientifico", key: "onb_track_scientifico" },
+        { value: "Classico", key: "onb_track_classico" },
+        { value: "Linguistico", key: "onb_track_linguistico" },
+        { value: "Tecnico Economico", key: "onb_track_tecn_eco" },
+        { value: "Tecnico Tecnologico", key: "onb_track_tecn_tech" },
+        { value: "Professionale", key: "onb_track_prof" },
+        { value: "Artistico", key: "onb_track_art" },
+        { value: "Altro", key: "onb_track_other" },
+      ];
       switch (step) {
         case 0:
           return (
             <div className="text-center w-full">
-                <h2 className="text-3xl font-bold text-foreground mb-2">Benvenuto in InSchool</h2>
-                <p className="text-muted-foreground mb-8">Configuriamo il tuo spazio di studio personale</p>
+                <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_welcome')}</h2>
+                <p className="text-muted-foreground mb-8">{t('onb_welcome_sub_personal')}</p>
                 <div className="w-24 h-24 mx-auto bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4"><BookOpen className="w-12 h-12" /></div>
             </div>
           );
         case 1:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">Il tuo percorso scolastico</h2>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_school_path')}</h2>
                 <div className="space-y-4">
                    <select value={answers.superiori_anno || ""} onChange={e => setAnswers({...answers, superiori_anno: e.target.value})} className={inputClass}>
-                      <option value="" disabled>Seleziona anno scolastico</option>
-                      {["1ª", "2ª", "3ª", "4ª", "5ª Superiore"].map(a => <option key={a} value={a}>{a}</option>)}
+                      <option value="" disabled>{t('onb_select_year')}</option>
+                      {supAnni.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
                    </select>
                    <select value={answers.superiori_indirizzo || ""} onChange={e => setAnswers({...answers, superiori_indirizzo: e.target.value})} className={inputClass}>
-                      <option value="" disabled>Seleziona indirizzo</option>
-                      {["Scientifico", "Classico", "Linguistico", "Tecnico Economico", "Tecnico Tecnologico", "Professionale", "Artistico", "Altro"].map(a => <option key={a} value={a}>{a}</option>)}
+                      <option value="" disabled>{t('onb_select_track')}</option>
+                      {tracks.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
                    </select>
-                   <input ref={locRef} type="text" placeholder="Nome Scuola (Opzionale)" className={inputClass} defaultValue={answers.superiori_scuola || ""} />
+                   <input ref={locationInputRef} type="text" placeholder={t('onb_school_name_optional')} className={inputClass} defaultValue={answers.superiori_scuola || ""} />
                 </div>
             </div>
           );
-        case 2:
+        case 2: {
           const materie = answers.superiori_indirizzo === "Scientifico" ? ["Matematica", "Fisica", "Chimica", "Latino", "Inglese", "Storia", "Filosofia", "Informatica", "Scienze", "Arte"] : 
                           answers.superiori_indirizzo === "Classico" ? ["Greco", "Latino", "Italiano", "Matematica", "Fisica", "Storia", "Filosofia", "Arte", "Inglese"] :
                           ["Matematica", "Italiano", "Storia", "Inglese", "Scienze", "Fisica", "Chimica", "Economia", "Informatica", "Diritto", "Lingue"];
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">Le tue materie critiche</h2>
-                <p className="text-muted-foreground text-sm">Seleziona le materie su cui vuoi concentrarti (max 5)</p>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_critical_subjects')}</h2>
+                <p className="text-muted-foreground text-sm">{t('onb_critical_subjects_sub')} ({t('onb_max')} 5)</p>
                 <div className="flex flex-wrap gap-2 mt-4">
                     {materie.map((m: string) => {
                        const isSel = (answers.materie_critiche || []).includes(m);
-                       return <button key={m} onClick={() => toggleMax("materie_critiche", m, 5)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${isSel ? chipSelClass : chipUnselClass}`}>{m}</button>;
+                       return <button key={m} onClick={() => toggleArrayMax("materie_critiche", m, 5)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${isSel ? chipSelClass : chipUnselClass}`}>{t(subjectKey(m))}</button>;
                     })}
                 </div>
             </div>
           );
+        }
         case 3:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">Come studi meglio?</h2>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_study_method')}</h2>
                 <div className="space-y-3">
                    {[
-                     { id: "pomodoro", title: "Sessioni brevi e frequenti", sub: "Pomodoro 25/5 min", icon: Timer },
-                     { id: "deep", title: "Sessioni lunghe e immersive", sub: "Deep Work 50/10 min", icon: Brain },
-                     { id: "flex", title: "Flexible", sub: "Imposto io i tempi", icon: Sliders }
+                     { id: "pomodoro", title: t('onb_sup_pomodoro'), sub: t('onb_sup_pomodoro_sub'), icon: Timer },
+                     { id: "deep", title: t('onb_sup_deep'), sub: t('onb_sup_deep_sub'), icon: Brain },
+                     { id: "flex", title: t('onb_sup_flex'), sub: t('onb_sup_flex_sub'), icon: Sliders }
                    ].map(opt => {
                      const isSel = answers.metodo_studio === opt.id;
                      return <button key={opt.id} onClick={() => setAnswers({...answers, metodo_studio: opt.id})} className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-6 h-6 mr-4 ${isSel ? selIconClass : unselIconClass}`}/><div className="text-left"><p className={`font-bold ${isSel ? selTextClass : "text-foreground"}`}>{opt.title}</p><p className="text-sm text-muted-foreground">{opt.sub}</p></div></button>
@@ -401,13 +444,13 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         case 4:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">Il tuo obiettivo principale</h2>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_main_goal')}</h2>
                 <div className="grid grid-cols-2 gap-3">
                    {[
-                     { id: "lacune", title: "Recuperare lacune", icon: TrendingUp },
-                     { id: "esami", title: "Prepararmi agli esami", icon: FileCheck },
-                     { id: "approfondire", title: "Approfondire", icon: BookOpen },
-                     { id: "organizzare", title: "Organizzazione", icon: Calendar }
+                     { id: "lacune", title: t('onb_goal_gaps'), icon: TrendingUp },
+                     { id: "esami", title: t('onb_goal_exams'), icon: FileCheck },
+                     { id: "approfondire", title: t('onb_goal_deepen'), icon: BookOpen },
+                     { id: "organizzare", title: t('onb_goal_organize'), icon: Calendar }
                    ].map(opt => {
                      const isSel = answers.obiettivo === opt.id;
                      return <button key={opt.id} onClick={() => setAnswers({...answers, obiettivo: opt.id})} className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-8 h-8 mb-3 ${isSel ? selIconClass : unselIconClass}`}/><span className={`font-bold text-sm text-center ${isSel ? selTextClass : unselTextClass}`}>{opt.title}</span></button>
@@ -418,14 +461,14 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         case 5:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">Come ti senti di solito a scuola?</h2>
-                <p className="text-muted-foreground text-sm">Questo aiuta il coach a supportarti meglio</p>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_school_feeling')}</h2>
+                <p className="text-muted-foreground text-sm">{t('onb_school_feeling_coach_sub')}</p>
                 <div className="space-y-3">
                    {[
-                     { id: "ansioso", title: "Spesso ansioso per verifiche", sub: "Ti senti sotto pressione prima degli esami" },
-                     { id: "svogliato", title: "Faccio fatica a motivarmi", sub: "Ti distrai facilmente o rimandi" },
-                     { id: "insicuro", title: "Non sono sicuro di me", sub: "Dubiti delle tue risposte anche quando sai" },
-                     { id: "tranquillo", title: "Generalmente tranquillo", sub: "Ti senti a tuo agio con lo studio" },
+                     { id: "ansioso", title: t('onb_sup_feel_anxious'), sub: t('onb_sup_feel_anxious_sub') },
+                     { id: "svogliato", title: t('onb_sup_feel_unmotivated'), sub: t('onb_sup_feel_unmotivated_sub') },
+                     { id: "insicuro", title: t('onb_sup_feel_insecure'), sub: t('onb_sup_feel_insecure_sub') },
+                     { id: "tranquillo", title: t('onb_sup_feel_calm'), sub: t('onb_sup_feel_calm_sub') },
                    ].map(opt => {
                      const isSel = (answers.sfide_emotive || []).includes(opt.id);
                      return <button key={opt.id} onClick={() => {
@@ -442,67 +485,76 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         case 6:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">Dai un nome al tuo coach</h2>
-                <p className="text-muted-foreground text-sm">Il tuo assistente AI ti accompagnerà ogni giorno nello studio</p>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_coach_name')}</h2>
+                <p className="text-muted-foreground text-sm">{t('onb_sup_coach_sub')}</p>
                 <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
                   <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
                 </div>
-                <input
-                  type="text"
-                  placeholder="Es. Coach, Maestro, Aria, Leo..."
-                  value={answers.coach_name || ""}
-                  onChange={e => setAnswers({...answers, coach_name: e.target.value})}
-                  className={inputClass}
-                  maxLength={20}
-                />
-                <p className="text-xs text-muted-foreground text-center">Puoi cambiarlo quando vuoi nelle impostazioni</p>
+                <input type="text" placeholder={t('onb_sup_coach_placeholder')} value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
+                <p className="text-xs text-muted-foreground text-center">{t('onb_sup_coach_change')}</p>
             </div>
           );
         case 7:
           return (
             <div className="text-left w-full space-y-6">
-                <h2 className="text-3xl font-bold text-foreground mb-2">Tutto pronto!</h2>
-                <p className="text-muted-foreground mb-6">Ecco il tuo profilo accademico</p>
+                <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_all_set')}</h2>
+                <p className="text-muted-foreground mb-6">{t('onb_your_academic_profile')}</p>
                 <div className={summaryBoxClass}>
-                    <div><span className={summaryLabelClass}>Percorso</span><p className={summaryValueClass}>{answers.superiori_anno} {answers.superiori_indirizzo}</p></div>
-                    <div><span className={summaryLabelClass}>Materie Focus</span><p className={summaryValueClass}>{(answers.materie_critiche || []).join(", ")}</p></div>
-                    <div><span className={summaryLabelClass}>Metodo</span><p className={summaryValueClass}>{answers.metodo_studio === "pomodoro" ? "Pomodoro" : answers.metodo_studio === "deep" ? "Deep Work" : "Flessibile"}</p></div>
-                    {answers.coach_name && <div><span className={summaryLabelClass}>Il tuo Coach</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
+                    <div><span className={summaryLabelClass}>{t('onb_summary_track')}</span><p className={summaryValueClass}>{answers.superiori_anno} {answers.superiori_indirizzo}</p></div>
+                    <div><span className={summaryLabelClass}>{t('onb_summary_focus_subjects')}</span><p className={summaryValueClass}>{(answers.materie_critiche || []).join(", ")}</p></div>
+                    <div><span className={summaryLabelClass}>{t('onb_summary_method')}</span><p className={summaryValueClass}>{answers.metodo_studio === "pomodoro" ? t('onb_summary_method_pomodoro') : answers.metodo_studio === "deep" ? t('onb_summary_method_deep') : t('onb_summary_method_flex')}</p></div>
+                    {answers.coach_name && <div><span className={summaryLabelClass}>{t('onb_summary_coach')}</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
                 </div>
             </div>
           );
       }
     }
 
-    function renderUniversitario(step: number, answers: any, setAnswers: any, toggleMax: any, toggle: any, locRef: any) {
+    function renderUniversitario(step: number) {
+        const faculties = [
+          { value: "Medicina", key: "onb_faculty_medicina" }, { value: "Ingegneria", key: "onb_faculty_ingegneria" },
+          { value: "Economia", key: "onb_faculty_economia" }, { value: "Giurisprudenza", key: "onb_faculty_giurisprudenza" },
+          { value: "Lettere", key: "onb_faculty_lettere" }, { value: "Psicologia", key: "onb_faculty_psicologia" },
+          { value: "Architettura", key: "onb_faculty_architettura" }, { value: "Scienze", key: "onb_faculty_scienze" },
+          { value: "Farmacia", key: "onb_faculty_farmacia" }, { value: "Scienze Politiche", key: "onb_faculty_scienze_pol" },
+          { value: "Informatica", key: "onb_faculty_informatica" }, { value: "Matematica", key: "onb_faculty_matematica" },
+          { value: "Fisica", key: "onb_faculty_fisica" }, { value: "Chimica", key: "onb_faculty_chimica" },
+          { value: "Biologia", key: "onb_faculty_biologia" }, { value: "Altro", key: "onb_faculty_altro" },
+        ];
+        const uniYears = [
+          { value: "1°", key: "onb_uni_year_1" }, { value: "2°", key: "onb_uni_year_2" },
+          { value: "3°", key: "onb_uni_year_3" }, { value: "Fuori corso", key: "onb_uni_year_fc" },
+          { value: "Magistrale 1°", key: "onb_uni_year_m1" }, { value: "Magistrale 2°", key: "onb_uni_year_m2" },
+          { value: "Dottorato", key: "onb_uni_year_phd" },
+        ];
         switch (step) {
             case 0:
               return (
                 <div className="text-center w-full">
-                    <h2 className="text-3xl font-bold text-foreground mb-2">Benvenuto in InSchool</h2>
-                    <p className="text-muted-foreground mb-8">Configuriamo il tuo spazio di studio personale</p>
+                    <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_welcome')}</h2>
+                    <p className="text-muted-foreground mb-8">{t('onb_welcome_sub_personal')}</p>
                     <div className="w-24 h-24 mx-auto bg-primary/10 text-primary rounded-full flex items-center justify-center mb-4"><BookOpen className="w-12 h-12" /></div>
                 </div>
               );
             case 1:
               return (
                 <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Il tuo percorso universitario</h2>
+                    <h2 className="text-2xl font-bold text-foreground">{t('onb_uni_path')}</h2>
                     <div className="space-y-4">
-                       <input ref={locRef} type="text" placeholder="Nome Università" className={inputClass} defaultValue={answers.uni_nome || ""} />
+                       <input ref={locationInputRef} type="text" placeholder={t('onb_uni_name')} className={inputClass} defaultValue={answers.uni_nome || ""} />
                        <select value={answers.uni_facolta || ""} onChange={e => setAnswers({...answers, uni_facolta: e.target.value})} className={inputClass}>
-                          <option value="" disabled>Seleziona Facoltà</option>
-                          {["Medicina", "Ingegneria", "Economia", "Giurisprudenza", "Lettere", "Psicologia", "Architettura", "Scienze", "Farmacia", "Scienze Politiche", "Informatica", "Matematica", "Fisica", "Chimica", "Biologia", "Altro"].map(a => <option key={a} value={a}>{a}</option>)}
+                          <option value="" disabled>{t('onb_uni_select_faculty')}</option>
+                          {faculties.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
                        </select>
                        <select value={answers.uni_anno || ""} onChange={e => setAnswers({...answers, uni_anno: e.target.value})} className={inputClass}>
-                          <option value="" disabled>Seleziona Anno</option>
-                          {["1°", "2°", "3°", "Fuori corso", "Magistrale 1°", "Magistrale 2°", "Dottorato"].map(a => <option key={a} value={a}>{a}</option>)}
+                          <option value="" disabled>{t('onb_uni_select_year')}</option>
+                          {uniYears.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
                        </select>
-                       <input type="text" placeholder="Corso di laurea (Es. Ingegneria Aerospaziale)" value={answers.uni_corso || ""} onChange={e => setAnswers({...answers, uni_corso: e.target.value})} className={inputClass} />
+                       <input type="text" placeholder={t('onb_uni_course')} value={answers.uni_corso || ""} onChange={e => setAnswers({...answers, uni_corso: e.target.value})} className={inputClass} />
                     </div>
                 </div>
               );
-            case 2:
+            case 2: {
               const tempEsami = answers.uni_esami || [];
               const handleAddEsame = (e: any) => {
                   e.preventDefault();
@@ -516,12 +568,12 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
               };
               return (
                 <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Esami in vista</h2>
-                    <p className="text-muted-foreground text-sm">Aggiungi gli esami che devi sostenere nei prossimi mesi (Max 5)</p>
+                    <h2 className="text-2xl font-bold text-foreground">{t('onb_uni_exams')}</h2>
+                    <p className="text-muted-foreground text-sm">{t('onb_uni_exams_sub')}</p>
                     <form onSubmit={handleAddEsame} className="flex gap-2">
-                        <input name="nome" type="text" placeholder="Es. Analisi II" className="flex-1 p-3 rounded-xl border border-border bg-muted/50 outline-none text-sm text-foreground focus:border-primary" required />
+                        <input name="nome" type="text" placeholder={t('onb_uni_exam_name')} className="flex-1 p-3 rounded-xl border border-border bg-muted/50 outline-none text-sm text-foreground focus:border-primary" required />
                         <input name="data" type="date" className="p-3 rounded-xl border border-border bg-muted/50 outline-none text-sm text-muted-foreground focus:border-primary" />
-                        <Button type="submit" disabled={tempEsami.length >= 5} className="rounded-xl">Add</Button>
+                        <Button type="submit" disabled={tempEsami.length >= 5} className="rounded-xl">{t('onb_uni_add')}</Button>
                     </form>
                     {tempEsami.map((es: any, i: number) => (
                         <div key={i} className="flex justify-between items-center p-3 border border-border bg-muted/50 rounded-xl">
@@ -534,16 +586,17 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     ))}
                 </div>
               );
+            }
             case 3:
               return (
                 <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Metodologia di studio</h2>
+                    <h2 className="text-2xl font-bold text-foreground">{t('onb_uni_study_method')}</h2>
                     <div className="space-y-3">
                        {[
-                         { id: "pomodoro", title: "Pomodoro Tecnica", sub: "Timer 25/5 min", icon: Timer },
-                         { id: "deep", title: "Deep Work", sub: "Sessioni 1h+", icon: Brain },
-                         { id: "misto", title: "Misto", sub: "Flessibile", icon: Sliders },
-                         { id: "nessuno", title: "Non ho un metodo fisso", sub: "Suggerisci tu", icon: Lightbulb }
+                         { id: "pomodoro", title: t('onb_uni_pomodoro'), sub: t('onb_uni_pomodoro_sub'), icon: Timer },
+                         { id: "deep", title: t('onb_uni_deep'), sub: t('onb_uni_deep_sub'), icon: Brain },
+                         { id: "misto", title: t('onb_uni_mixed'), sub: t('onb_uni_mixed_sub'), icon: Sliders },
+                         { id: "nessuno", title: t('onb_uni_none'), sub: t('onb_uni_none_sub'), icon: Lightbulb }
                        ].map(opt => {
                          const isSel = answers.metodo_studio === opt.id;
                          return <button key={opt.id} onClick={() => setAnswers({...answers, metodo_studio: opt.id})} className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-6 h-6 mr-4 ${isSel ? selIconClass : unselIconClass}`}/><div className="text-left"><p className={`font-bold ${isSel ? selTextClass : "text-foreground"}`}>{opt.title}</p><p className="text-sm text-muted-foreground">{opt.sub}</p></div></button>
@@ -554,19 +607,19 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             case 4:
               return (
                 <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Cosa ti serve di più dall'AI?</h2>
-                    <p className="text-muted-foreground text-sm">Seleziona max 3 opzioni</p>
+                    <h2 className="text-2xl font-bold text-foreground">{t('onb_uni_ai_needs')}</h2>
+                    <p className="text-muted-foreground text-sm">{t('onb_uni_ai_needs_sub')}</p>
                     <div className="grid grid-cols-2 gap-3">
                        {[
-                         { id: "spiegazione", title: "Spiegare concetti", icon: Lightbulb },
-                         { id: "ripasso", title: "Ripasso e quiz", icon: ClipboardCheck },
-                         { id: "ricerca", title: "Supporto ricerca", icon: Search },
-                         { id: "schemi", title: "Schemi e mappe", icon: Network },
-                         { id: "orale", title: "Simulazione orale", icon: Mic },
-                         { id: "correzione", title: "Revisione paper", icon: PenLine },
+                         { id: "spiegazione", title: t('onb_uni_ai_explain'), icon: Lightbulb },
+                         { id: "ripasso", title: t('onb_uni_ai_review'), icon: ClipboardCheck },
+                         { id: "ricerca", title: t('onb_uni_ai_research'), icon: Search },
+                         { id: "schemi", title: t('onb_uni_ai_maps'), icon: Network },
+                         { id: "orale", title: t('onb_uni_ai_oral'), icon: Mic },
+                         { id: "correzione", title: t('onb_uni_ai_paper'), icon: PenLine },
                        ].map(opt => {
                          const isSel = (answers.serve_ai || []).includes(opt.id);
-                         return <button key={opt.id} onClick={() => toggleMax("serve_ai", opt.id, 3)} className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-6 h-6 mb-2 ${isSel ? selIconClass : unselIconClass}`}/><span className={`font-medium text-xs text-center ${isSel ? selTextClass : unselTextClass}`}>{opt.title}</span></button>
+                         return <button key={opt.id} onClick={() => toggleArrayMax("serve_ai", opt.id, 3)} className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-6 h-6 mb-2 ${isSel ? selIconClass : unselIconClass}`}/><span className={`font-medium text-xs text-center ${isSel ? selTextClass : unselTextClass}`}>{opt.title}</span></button>
                        })}
                     </div>
                 </div>
@@ -574,13 +627,13 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             case 5:
               return (
                 <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Come ti senti di solito prima di studiare?</h2>
+                    <h2 className="text-2xl font-bold text-foreground">{t('onb_uni_feel_before')}</h2>
                     <div className="space-y-3">
                        {[
-                         { id: "ansioso", title: "Ansioso per gli esami" },
-                         { id: "procrastino", title: "Tendo a procrastinare" },
-                         { id: "solo", title: "Studio meglio in compagnia" },
-                         { id: "ok", title: "Generalmente motivato" },
+                         { id: "ansioso", title: t('onb_uni_feel_anxious') },
+                         { id: "procrastino", title: t('onb_uni_feel_procrastinate') },
+                         { id: "solo", title: t('onb_uni_feel_social') },
+                         { id: "ok", title: t('onb_uni_feel_motivated') },
                        ].map(opt => {
                          const isSel = (answers.sfide_emotive || []).includes(opt.id);
                          return <button key={opt.id} onClick={() => {
@@ -597,32 +650,32 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             case 6:
               return (
                 <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Dai un nome al tuo coach</h2>
-                    <p className="text-muted-foreground text-sm">Il tuo assistente AI personale per lo studio</p>
+                    <h2 className="text-2xl font-bold text-foreground">{t('onb_coach_name')}</h2>
+                    <p className="text-muted-foreground text-sm">{t('onb_uni_coach_sub')}</p>
                     <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
                       <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
                     </div>
-                    <input type="text" placeholder="Es. Coach, Aria, Leo..." value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
+                    <input type="text" placeholder={t('onb_coach_placeholder')} value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
                 </div>
               );
             case 7:
               return (
                 <div className="text-left w-full space-y-6">
-                    <h2 className="text-3xl font-bold text-foreground mb-2">Tutto pronto!</h2>
-                    <p className="text-muted-foreground mb-6">Ecco il tuo profilo Universitario</p>
+                    <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_all_set')}</h2>
+                    <p className="text-muted-foreground mb-6">{t('onb_uni_profile')}</p>
                     <div className={summaryBoxClass}>
-                        <div><span className={summaryLabelClass}>Laurea</span><p className={summaryValueClass}>{answers.uni_anno} {answers.uni_facolta}</p></div>
-                        {answers.uni_corso && <div><span className={summaryLabelClass}>Corso di laurea</span><p className={summaryValueClass}>{answers.uni_corso}</p></div>}
-                        <div><span className={summaryLabelClass}>Skill IA</span><p className={summaryValueClass}>{(answers.serve_ai || []).join(", ")}</p></div>
-                        <div><span className={summaryLabelClass}>Esami tracciati</span><p className={summaryValueClass}>{(answers.uni_esami || []).length} inseriti</p></div>
-                        {answers.coach_name && <div><span className={summaryLabelClass}>Il tuo Coach</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
+                        <div><span className={summaryLabelClass}>{t('onb_uni_summary_degree')}</span><p className={summaryValueClass}>{answers.uni_anno} {answers.uni_facolta}</p></div>
+                        {answers.uni_corso && <div><span className={summaryLabelClass}>{t('onb_uni_summary_course')}</span><p className={summaryValueClass}>{answers.uni_corso}</p></div>}
+                        <div><span className={summaryLabelClass}>{t('onb_uni_summary_skills')}</span><p className={summaryValueClass}>{(answers.serve_ai || []).join(", ")}</p></div>
+                        <div><span className={summaryLabelClass}>{t('onb_uni_summary_exams')}</span><p className={summaryValueClass}>{(answers.uni_esami || []).length} {t('onb_uni_summary_exams_count')}</p></div>
+                        {answers.coach_name && <div><span className={summaryLabelClass}>{t('onb_summary_coach')}</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
                     </div>
                 </div>
               );
         }
     }
 
-    function renderDocente(step: number, answers: any, setAnswers: any, toggleMax: any, toggle: any, locRef: any) {
+    function renderDocente(step: number) {
         const addCustomMateria = () => {
             const val = (answers._customMateria || "").trim();
             if (!val) return;
@@ -640,6 +693,13 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         };
 
         const docenteMaterie = ["Matematica","Fisica","Chimica","Italiano","Latino","Greco","Storia","Filosofia","Inglese","Francese","Spagnolo","Tedesco","Informatica","Scienze","Arte","Musica","Educazione Fisica","Educazione Civica","Diritto","Economia","Geografia","Religione","Tecnologia"];
+        const orders = [
+          { value: "Primaria", key: "onb_order_primaria" },
+          { value: "Secondaria I grado", key: "onb_order_sec1" },
+          { value: "Secondaria II grado", key: "onb_order_sec2" },
+          { value: "Università", key: "onb_order_uni" },
+          { value: "Formazione Professionale", key: "onb_order_fp" },
+        ];
 
         switch (step) {
             case 0:
@@ -648,22 +708,20 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
                       <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
                     </div>
-                    <h2 className="text-2xl font-bold text-foreground">Ciao, sono il tuo assistente didattico.</h2>
-                    <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                      Ti aiuto a preparare materiali, seguire le tue classi e lavorare con più chiarezza ogni giorno. Più mi conosci, più divento utile. Iniziamo con qualche domanda per capire come lavori.
-                    </p>
+                    <h2 className="text-2xl font-bold text-foreground">{t('onb_doc_welcome')}</h2>
+                    <p className="text-muted-foreground text-sm max-w-md mx-auto">{t('onb_doc_welcome_sub')}</p>
                     <div className="grid grid-cols-3 gap-4 mt-6">
                       <div className="flex flex-col items-center text-center p-4 rounded-2xl border border-border bg-muted/30">
                         <span className="text-2xl mb-2">📚</span>
-                        <p className="text-xs font-medium text-foreground">Preparo materiali su misura per le tue classi</p>
+                        <p className="text-xs font-medium text-foreground">{t('onb_doc_feat_1')}</p>
                       </div>
                       <div className="flex flex-col items-center text-center p-4 rounded-2xl border border-border bg-muted/30">
                         <span className="text-2xl mb-2">👥</span>
-                        <p className="text-xs font-medium text-foreground">Seguo i progressi dei tuoi studenti con te</p>
+                        <p className="text-xs font-medium text-foreground">{t('onb_doc_feat_2')}</p>
                       </div>
                       <div className="flex flex-col items-center text-center p-4 rounded-2xl border border-border bg-muted/30">
                         <span className="text-2xl mb-2">🤝</span>
-                        <p className="text-xs font-medium text-foreground">Sono qui anche quando la giornata è pesante</p>
+                        <p className="text-xs font-medium text-foreground">{t('onb_doc_feat_3')}</p>
                       </div>
                     </div>
                 </div>
@@ -671,30 +729,30 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             case 1:
               return (
                 <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Dati essenziali</h2>
+                    <h2 className="text-2xl font-bold text-foreground">{t('onb_doc_essentials')}</h2>
                     <div className="space-y-4">
                        <div>
-                         <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Ordine scolastico</label>
+                         <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t('onb_doc_school_order')}</label>
                          <select value={answers.docente_ordine || ""} onChange={e => setAnswers({...answers, docente_ordine: e.target.value})} className={inputClass}>
-                            <option value="" disabled>Seleziona</option>
-                            {["Primaria", "Secondaria I grado", "Secondaria II grado", "Università", "Formazione Professionale"].map(a => <option key={a} value={a}>{a}</option>)}
+                            <option value="" disabled>{t('onb_doc_select')}</option>
+                            {orders.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
                          </select>
                        </div>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-foreground mb-2">Le tue materie (max 5, almeno 1 obbligatoria)</p>
+                      <p className="text-sm font-semibold text-foreground mb-2">{t('onb_doc_subjects')}</p>
                       <div className="flex flex-wrap gap-2">
                         {docenteMaterie.map((m: string) => {
                           const isSel = (answers.docente_materie || []).includes(m);
-                          return <button key={m} onClick={() => toggleMax("docente_materie", m, 5)} className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${isSel ? chipSelClass : chipUnselClass}`}>{m}</button>;
+                          return <button key={m} onClick={() => toggleArrayMax("docente_materie", m, 5)} className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${isSel ? chipSelClass : chipUnselClass}`}>{t(subjectKey(m))}</button>;
                         })}
                         {(answers.docente_materie || []).filter((m: string) => !docenteMaterie.includes(m)).map((m: string) => (
-                          <button key={m} onClick={() => toggleMax("docente_materie", m, 5)} className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${chipSelClass}`}>{m}</button>
+                          <button key={m} onClick={() => toggleArrayMax("docente_materie", m, 5)} className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${chipSelClass}`}>{m}</button>
                         ))}
                       </div>
                       <div className="flex gap-2 mt-3">
-                        <input type="text" placeholder="Altra materia..." value={answers._customMateria || ""} onChange={e => setAnswers((prev: any) => ({...prev, _customMateria: e.target.value}))} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addCustomMateria(); } }} className="flex-1 p-3 rounded-xl border border-border bg-muted/50 outline-none text-sm text-foreground focus:border-primary" />
-                        <Button type="button" variant="outline" onClick={() => addCustomMateria()} disabled={(answers.docente_materie || []).length >= 5} className="rounded-xl text-sm">Aggiungi</Button>
+                        <input type="text" placeholder={t('onb_doc_other_subject')} value={answers._customMateria || ""} onChange={e => setAnswers((prev: any) => ({...prev, _customMateria: e.target.value}))} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addCustomMateria(); } }} className="flex-1 p-3 rounded-xl border border-border bg-muted/50 outline-none text-sm text-foreground focus:border-primary" />
+                        <Button type="button" variant="outline" onClick={() => addCustomMateria()} disabled={(answers.docente_materie || []).length >= 5} className="rounded-xl text-sm">{t('onb_doc_add')}</Button>
                       </div>
                     </div>
                 </div>
@@ -702,24 +760,24 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             case 2:
               return (
                 <div className="w-full space-y-6">
-                    <h2 className="text-2xl font-bold text-foreground">Personalizza il tuo assistente AI</h2>
-                    <p className="text-muted-foreground text-sm">Scegli un nome per il tuo assistente AI</p>
+                    <h2 className="text-2xl font-bold text-foreground">{t('onb_doc_customize')}</h2>
+                    <p className="text-muted-foreground text-sm">{t('onb_doc_customize_sub')}</p>
                     <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
                       <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
                     </div>
-                    <input type="text" placeholder="Es. Alex, Maya, o lascia il nome di default" value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
-                    <p className="text-xs text-muted-foreground text-center">Puoi cambiarlo quando vuoi dalle impostazioni</p>
+                    <input type="text" placeholder={t('onb_doc_name_placeholder')} value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
+                    <p className="text-xs text-muted-foreground text-center">{t('onb_doc_name_change')}</p>
                 </div>
               );
             case 3:
               return (
                 <div className="text-left w-full space-y-6">
-                    <h2 className="text-3xl font-bold text-foreground mb-2">Tutto pronto!</h2>
-                    <p className="text-muted-foreground mb-6">Puoi modificare queste informazioni in qualsiasi momento dalle impostazioni.</p>
+                    <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_all_set')}</h2>
+                    <p className="text-muted-foreground mb-6">{t('onb_doc_ready_sub')}</p>
                     <div className={summaryBoxClass}>
-                        <div><span className={summaryLabelClass}>Ordine scolastico</span><p className={summaryValueClass}>{answers.docente_ordine}</p></div>
-                        <div><span className={summaryLabelClass}>Materie</span><p className={summaryValueClass}>{(answers.docente_materie || []).join(", ")}</p></div>
-                        {answers.coach_name && <div><span className={summaryLabelClass}>Assistente AI</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
+                        <div><span className={summaryLabelClass}>{t('onb_doc_summary_order')}</span><p className={summaryValueClass}>{answers.docente_ordine}</p></div>
+                        <div><span className={summaryLabelClass}>{t('onb_doc_summary_subjects')}</span><p className={summaryValueClass}>{(answers.docente_materie || []).join(", ")}</p></div>
+                        {answers.coach_name && <div><span className={summaryLabelClass}>{t('onb_doc_summary_ai')}</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
                     </div>
                 </div>
               );
@@ -731,7 +789,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         <div className="absolute top-0 w-full p-6 z-20">
             <div className="max-w-2xl mx-auto flex items-center justify-between">
                 <span className="font-display font-bold text-foreground text-lg">InSchool Onboarding</span>
-                <span className="text-sm font-medium text-muted-foreground">Step {step + 1} di {totalSteps}</span>
+                <span className="text-sm font-medium text-muted-foreground">Step {step + 1} {t('onb_step_of')} {totalSteps}</span>
             </div>
             <div className="max-w-2xl mx-auto mt-4 h-1.5 bg-muted rounded-full overflow-hidden">
                 <motion.div className="h-full bg-primary rounded-full" animate={{ width: `${((step + 1) / totalSteps) * 100}%` }} transition={{ duration: 0.3 }} />
@@ -744,10 +802,10 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     key={step} custom={direction} variants={variants} initial="enter" animate="center" exit="exit"
                     className="w-full max-w-2xl absolute flex flex-col items-center justify-center p-8 bg-card rounded-[2rem] shadow-sm border border-border"
                 >
-                    {role === "medie" && renderMedie(step, answers, setAnswers, toggleArrayMax, toggleArray, locationInputRef)}
-                    {role === "superiori" && renderSuperiori(step, answers, setAnswers, toggleArrayMax, toggleArray, locationInputRef)}
-                    {role === "universitario" && renderUniversitario(step, answers, setAnswers, toggleArrayMax, toggleArray, locationInputRef)}
-                    {role === "docente" && renderDocente(step, answers, setAnswers, toggleArrayMax, toggleArray, locationInputRef)}
+                    {role === "medie" && renderMedie(step)}
+                    {role === "superiori" && renderSuperiori(step)}
+                    {role === "universitario" && renderUniversitario(step)}
+                    {role === "docente" && renderDocente(step)}
                 </motion.div>
             </AnimatePresence>
         </div>
@@ -755,10 +813,10 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         <div className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-md border-t border-border p-6 z-20">
             <div className="max-w-2xl mx-auto flex items-center justify-between">
                 <Button variant="ghost" onClick={handleBack} disabled={step === 0 || saving} className="text-muted-foreground font-medium hover:bg-muted hover:text-foreground rounded-xl">
-                    <ArrowLeft className="w-4 h-4 mr-2" /> Indietro
+                    <ArrowLeft className="w-4 h-4 mr-2" /> {t('onb_back')}
                 </Button>
                 <Button onClick={handleNext} disabled={!canProceed() || saving} className="rounded-xl px-8 font-bold shadow-sm transition-all h-12">
-                    {step === totalSteps - 1 ? (saving ? "Salvataggio..." : (role === "docente" ? "Entra nella tua dashboard" : "Inizia")) : (step === 0 && role === "docente" ? "Iniziamo" : "Avanti")} <ArrowRight className="ml-2 w-4 h-4" />
+                    {step === totalSteps - 1 ? (saving ? t('onb_saving') : (role === "docente" ? t('onb_doc_enter_dashboard') : t('onb_start'))) : (step === 0 && role === "docente" ? t('onb_doc_start') : t('onb_next'))} <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
             </div>
         </div>
