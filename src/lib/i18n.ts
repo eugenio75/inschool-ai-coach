@@ -276,7 +276,7 @@ export const translations = {
     home_new_hero_title_1: "Studiare meglio.",
     home_new_hero_title_2: "Insegnare meglio.",
     home_new_hero_sub: "Non si sostituisce a te. Ti rende migliore.",
-    home_new_hero_body: "Il coach AI per studiare e insegnare con più chiarezza, efficacia e serenità.",
+    home_new_hero_body: "Il primo coach AI che si prende cura di chi impara e di chi insegna.",
 
     home_new_split_title: "Scegli il tuo percorso.",
     home_new_split_s_body: "Più chiarezza, più metodo, più serenità nello studio.",
@@ -705,7 +705,7 @@ export const translations = {
     home_new_hero_title_1: "Study better.",
     home_new_hero_title_2: "Teach better.",
     home_new_hero_sub: "It doesn't replace you. It makes you better.",
-    home_new_hero_body: "The AI coach for studying and teaching with more clarity, effectiveness and peace of mind.",
+    home_new_hero_body: "The first AI coach that takes care of learners and teachers.",
 
     home_new_split_title: "Choose your path.",
     home_new_split_s_body: "More clarity, more method, more peace of mind in studying.",
