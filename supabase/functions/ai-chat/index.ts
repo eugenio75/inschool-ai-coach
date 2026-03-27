@@ -309,8 +309,36 @@ ZERO alert esterni per i docenti. Mai. Autonomia professionale totale.`;
   return prompt;
 }
 
+// Map session format strings to the four canonical format categories
+function mapToFormatCategory(sessionFormat?: string): string | null {
+  if (!sessionFormat) return null;
+  const map: Record<string, string> = {
+    // From UnifiedSession types
+    study: "text",
+    review: "dialogue",
+    prep: "dialogue",
+    guided: "schema",
+    // From taskType values
+    exercise: "schema",
+    memorization: "text",
+    oral: "dialogue",
+    writing: "example",
+    // From method proposals in useGuidedSession
+    memorizzazione: "text",
+    orale: "dialogue",
+    esercizio: "schema",
+    scrittura: "example",
+    // Direct mappings
+    schema: "schema",
+    text: "text",
+    dialogue: "dialogue",
+    example: "example",
+  };
+  return map[sessionFormat.toLowerCase()] || null;
+}
+
 // Fire-and-forget: update adaptive & cognitive profiles after each session
-async function updateAdaptiveProfile(profileId: string, messages: any[], sessionSubject?: string) {
+async function updateAdaptiveProfile(profileId: string, messages: any[], sessionSubject?: string, sessionFormat?: string) {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
