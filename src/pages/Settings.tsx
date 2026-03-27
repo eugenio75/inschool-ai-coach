@@ -546,7 +546,7 @@ const Settings = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Conferma eliminazione</AlertDialogTitle>
             <AlertDialogDescription>
-              Scrivi DELETE per confermare l'eliminazione del tuo account.
+              Per confermare scrivi DELETE nel campo sottostante.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <Input
