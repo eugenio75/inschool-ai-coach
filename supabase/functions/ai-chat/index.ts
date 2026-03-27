@@ -310,7 +310,7 @@ ZERO alert esterni per i docenti. Mai. Autonomia professionale totale.`;
 }
 
 // Fire-and-forget: update adaptive & cognitive profiles after each session
-async function updateAdaptiveProfile(profileId: string, messages: any[]) {
+async function updateAdaptiveProfile(profileId: string, messages: any[], sessionSubject?: string) {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -404,6 +404,47 @@ async function updateAdaptiveProfile(profileId: string, messages: any[]) {
       adaptive.methodStats = methodStats;
     }
 
+    // ── Per-subject profile mirroring ──
+    if (sessionSubject) {
+      const subjectKey = sessionSubject.toLowerCase().trim();
+      if (subjectKey) {
+        const bySubject: Record<string, any> = adaptive.bySubject || {};
+        const subj = bySubject[subjectKey] || {};
+
+        const subjSessionCount = (subj.sessionCount || 0) + 1;
+        subj.hintRequests = (subj.hintRequests || 0) + hintRequests;
+        subj.avgHintsPerSession = subj.hintRequests / subjSessionCount;
+        subj.hesitationScore = (subj.hesitationScore || 0) * 0.7 + hesitationScore * 0.3;
+        subj.needsReassurance = subj.hesitationScore > 0.4 || hintRequests > 2;
+        subj.bloomLevel = bloomEstimate;
+        subj.sessionCount = subjSessionCount;
+        subj.lastSessionAt = new Date().toISOString();
+
+        if (detectedFamiliarity) {
+          subj.lastFamiliarity = detectedFamiliarity;
+          subj.prefersVoice = voiceUsageRatio > 0.3;
+          const subjMethodStats = subj.methodStats || {};
+          const cs = subjMethodStats[detectedFamiliarity] || { count: 0, avgBloom: 0, voiceSuccessRate: 0 };
+          cs.count += 1;
+          cs.avgBloom = ((cs.avgBloom * (cs.count - 1)) + bloomEstimate) / cs.count;
+          if (voiceUsageRatio > 0.3) {
+            cs.voiceSuccessRate = ((cs.voiceSuccessRate * (cs.count - 1)) + bloomEstimate) / cs.count;
+          }
+          subjMethodStats[detectedFamiliarity] = cs;
+          subj.methodStats = subjMethodStats;
+        }
+
+        // Per-subject cognitive peaks
+        subj.bloomPeak = Math.max(subj.bloomPeak || 1, bloomEstimate);
+        const prevSubjRate = subj.progressionRate || "medio";
+        if (bloomEstimate > (subj.bloomLevel || 1)) subj.progressionRate = "veloce";
+        else if (bloomEstimate < (subj.bloomLevel || 1)) subj.progressionRate = prevSubjRate;
+
+        bySubject[subjectKey] = subj;
+        adaptive.bySubject = bySubject;
+      }
+    }
+
     // Update cognitive dynamic profile
     cognitive.bloomPeak = Math.max(cognitive.bloomPeak || 1, bloomEstimate);
     cognitive.avgHintsPerSession = adaptive.avgHintsPerSession;
@@ -486,9 +527,40 @@ serve(async (req) => {
         if (prof) {
           const role = mapRole(prof.school_level || "alunno");
           const prefsData = (prefs?.data as Record<string, any>) || {};
-          const adaptiveProfile = prefs?.adaptive_profile || {};
+          const adaptiveProfileRaw = (prefs?.adaptive_profile || {}) as Record<string, any>;
           const cognitiveProfile = prefs?.cognitive_dynamic_profile || {};
           const correlation = prefs?.emotional_cognitive_correlation ?? 0.5;
+
+          // ── Resolve per-subject adaptive profile (fall back to global) ──
+          const subjectKey = chatSubject ? chatSubject.toLowerCase().trim() : "";
+          const bySubject = adaptiveProfileRaw.bySubject || {};
+          const subjectProfile = subjectKey && bySubject[subjectKey] ? bySubject[subjectKey] : null;
+
+          // Merge: subject-specific fields override global where present
+          let effectiveAdaptive: Record<string, any>;
+          if (subjectProfile) {
+            effectiveAdaptive = {
+              ...adaptiveProfileRaw,
+              // Override global fields with per-subject values
+              hintRequests: subjectProfile.hintRequests ?? adaptiveProfileRaw.hintRequests,
+              avgHintsPerSession: subjectProfile.avgHintsPerSession ?? adaptiveProfileRaw.avgHintsPerSession,
+              hesitationScore: subjectProfile.hesitationScore ?? adaptiveProfileRaw.hesitationScore,
+              needsReassurance: subjectProfile.needsReassurance ?? adaptiveProfileRaw.needsReassurance,
+              bloomLevel: subjectProfile.bloomLevel ?? adaptiveProfileRaw.bloomLevel,
+              lastFamiliarity: subjectProfile.lastFamiliarity ?? adaptiveProfileRaw.lastFamiliarity,
+              prefersVoice: subjectProfile.prefersVoice ?? adaptiveProfileRaw.prefersVoice,
+              methodStats: subjectProfile.methodStats ?? adaptiveProfileRaw.methodStats,
+              sessionCount: subjectProfile.sessionCount ?? adaptiveProfileRaw.sessionCount,
+              _source: "per-subject",
+              _subject: subjectKey,
+            };
+            // Remove bySubject map from what goes to the LLM to save tokens
+            delete effectiveAdaptive.bySubject;
+          } else {
+            effectiveAdaptive = { ...adaptiveProfileRaw };
+            delete effectiveAdaptive.bySubject;
+            if (subjectKey) effectiveAdaptive._source = "global-fallback";
+          }
 
           const coachName = prefsData.coachName || "Coach";
           const interests = prof.interests?.join(", ") || prefsData.interests?.join?.(", ") || "non specificati";
@@ -535,7 +607,7 @@ Regole benessere: mai linguaggio diagnostico, mai minimizzare, mai drammatizzare
             age: prof.age || null,
             studentInterests: interests,
             sessionHistory,
-            adaptiveProfile: JSON.stringify(adaptiveProfile),
+            adaptiveProfile: JSON.stringify(effectiveAdaptive),
             cognitiveDynamicProfile: JSON.stringify(cognitiveProfile),
             emotionalCognitiveCorrelation: correlation,
             moodToday,
@@ -589,7 +661,7 @@ ${clientSystemPrompt}`
     if (shouldStream) {
       // Fire-and-forget: update adaptive profile + blockchain log
       if (profileId) {
-        updateAdaptiveProfile(profileId, messages).catch(() => {});
+        updateAdaptiveProfile(profileId, messages, chatSubject).catch(() => {});
       // Blockchain log — fire-and-forget, mai blocca la risposta
         try {
           const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -605,7 +677,7 @@ ${clientSystemPrompt}`
       const data = await response.json();
       // Fire-and-forget: update adaptive profile + blockchain log
       if (profileId) {
-        updateAdaptiveProfile(profileId, messages).catch(() => {});
+        updateAdaptiveProfile(profileId, messages, chatSubject).catch(() => {});
         try {
           const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
           const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
