@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getTask as fetchTask, getDailyMissions, completeMission } from "@/lib/database";
 import { isChildSession, childApi, getChildSession } from "@/lib/childSession";
 import { ChatMsg, ChatAction, streamChat } from "@/lib/streamChat";
+import { getCurrentLang } from "@/lib/langUtils";
 import { playCelebrationSound } from "@/lib/celebrationSound";
 
 interface UseGuidedSessionProps {
@@ -421,6 +422,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
             schoolLevel,
             description: homework.description,
             familiarity: fam || undefined,
+            lang: getCurrentLang(),
           }),
         }
       );
@@ -805,6 +807,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
               subject: homework?.subject,
               conversationHistory: newMessages,
               schoolLevel,
+              lang: getCurrentLang(),
             }),
           }).then(async (r) => {
             if (r.ok) {
@@ -838,6 +841,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
               taskTitle: homework?.title,
               childProfileId: isChild ? childSession?.profileId : (homework?.child_profile_id || undefined),
               accessCode: isChild ? childSession?.accessCode : undefined,
+              lang: getCurrentLang(),
             }),
           }).catch(() => {});
         } catch {}

@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { isChildSession, childApi } from "@/lib/childSession";
+import { getCurrentLang } from "@/lib/langUtils";
 
 // ============ CHILD PROFILE CONTEXT ============
 
@@ -394,7 +395,7 @@ export async function getDailyMissions(childProfileId?: string): Promise<any[]> 
           Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({ childProfileId: profileId }),
+        body: JSON.stringify({ childProfileId: profileId, lang: getCurrentLang() }),
       }
     );
     if (!response.ok) return [];
@@ -512,7 +513,7 @@ async function triggerEmotionalAnalysis(profileId: string) {
           Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({ childProfileId: profileId }),
+        body: JSON.stringify({ childProfileId: profileId, lang: getCurrentLang() }),
       }
     );
   } catch (err) {

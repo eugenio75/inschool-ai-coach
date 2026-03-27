@@ -8,6 +8,7 @@ import { GuidanceCard, ChatMessage } from "@/components/GuidanceCard";
 import { CelebrationOverlay } from "@/components/CelebrationOverlay";
 import { getTask, saveFocusSession, updateTask, getActiveChildProfileId, getMemoryItems, getDailyMissions, completeMission } from "@/lib/database";
 import { isChildSession, getChildSession } from "@/lib/childSession";
+import { getCurrentLang } from "@/lib/langUtils";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -244,7 +245,7 @@ const FocusSession = () => {
 
       await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-concepts`,
-        { method: "POST", headers, body: JSON.stringify(body) }
+        { method: "POST", headers, body: JSON.stringify({ ...body, lang: getCurrentLang() }) }
       );
     } catch (err) {
       console.error("Failed to extract concepts:", err);

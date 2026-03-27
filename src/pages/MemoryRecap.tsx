@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { getMemoryItems, updateMemoryStrength, getDailyMissions, completeMission, autoCompleteMissions } from "@/lib/database";
 import { subjectColors } from "@/lib/mockData";
 import { isChildSession, getChildSession } from "@/lib/childSession";
+import { getCurrentLang } from "@/lib/langUtils";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -77,7 +78,7 @@ const ReviewChat = ({ topic, subject, section, onClose }: {
         {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-          body: JSON.stringify({ messages: allMessages, concept: topic, summary: "", subject, strength: 50, studentProfile: profile, studyMode }),
+          body: JSON.stringify({ messages: allMessages, concept: topic, summary: "", subject, strength: 50, studentProfile: profile, studyMode, lang: getCurrentLang() }),
         }
       );
       if (!response.ok || !response.body) throw new Error("Errore");
@@ -231,7 +232,7 @@ const ChallengeSession = ({ subject, topic, section, concepts, onClose }: {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
           body: JSON.stringify({
-            subject,
+            lang: getCurrentLang(), subject,
             schoolLevel,
             conversationHistory: `Genera 5 domande a risposta multipla (4 opzioni, 1 corretta) come ${challengeType}.
 Argomento: ${topic}
@@ -470,7 +471,7 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
         {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
-          body: JSON.stringify({ subject, schoolLevel, conversationHistory: prompt }),
+          body: JSON.stringify({ subject, schoolLevel, conversationHistory: prompt, lang: getCurrentLang() }),
         }
       );
       if (response.ok) {
@@ -716,7 +717,7 @@ const ConceptRow = ({ item, index, showStrength, checked, onToggle }: {
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
           body: JSON.stringify({
             messages: [], concept: item.concept, summary: item.summary || "",
-            subject: item.subject || "", studentProfile: profile, mode: "deep-summary",
+            subject: item.subject || "", studentProfile: profile, mode: "deep-summary", lang: getCurrentLang(),
           }),
         }
       );
@@ -1028,6 +1029,7 @@ const MemoryRecap = () => {
               subject,
               conversationHistory: conceptTexts + errorContext,
               schoolLevel: profile?.school_level || "superiori",
+              lang: getCurrentLang(),
             }),
           }
         );
