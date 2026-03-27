@@ -198,7 +198,7 @@ export default function CoachDocente() {
 
   async function createNewChat(name?: string) {
     if (!teacherId) return null;
-    const chatName = name || `Chat del ${format(new Date(), "d MMMM", { locale: dateLocale })}`;
+    const chatName = name || t('coach_chat_default_name', { date: format(new Date(), "d MMMM", { locale: dateLocale }) });
     const { data, error } = await (supabase as any).from("teacher_chats")
       .insert({ teacher_id: teacherId, name: chatName, class_id: null }).select("*").single();
 
