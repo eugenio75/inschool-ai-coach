@@ -428,12 +428,12 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         case 3:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">{t('onb_study_method')}</h2>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_study_better')}</h2>
                 <div className="space-y-3">
                    {[
-                     { id: "pomodoro", title: t('onb_sup_pomodoro'), sub: t('onb_sup_pomodoro_sub'), icon: Timer },
-                     { id: "deep", title: t('onb_sup_deep'), sub: t('onb_sup_deep_sub'), icon: Brain },
-                     { id: "flex", title: t('onb_sup_flex'), sub: t('onb_sup_flex_sub'), icon: Sliders }
+                     { id: "pomodoro", title: t('onb_study_pomodoro'), sub: t('onb_study_pomodoro_sub'), icon: Timer },
+                     { id: "deep", title: t('onb_study_deep'), sub: t('onb_study_deep_sub'), icon: Brain },
+                     { id: "flex", title: t('onb_study_flex'), sub: t('onb_study_flex_sub'), icon: Sliders }
                    ].map(opt => {
                      const isSel = answers.metodo_studio === opt.id;
                      return <button key={opt.id} onClick={() => setAnswers({...answers, metodo_studio: opt.id})} className={`w-full flex items-center p-4 rounded-2xl border transition-all ${isSel ? selBtnClass : unselBtnClass}`}><opt.icon className={`w-6 h-6 mr-4 ${isSel ? selIconClass : unselIconClass}`}/><div className="text-left"><p className={`font-bold ${isSel ? selTextClass : "text-foreground"}`}>{opt.title}</p><p className="text-sm text-muted-foreground">{opt.sub}</p></div></button>
@@ -461,14 +461,14 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         case 5:
           return (
             <div className="w-full space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">{t('onb_school_feeling')}</h2>
-                <p className="text-muted-foreground text-sm">{t('onb_school_feeling_coach_sub')}</p>
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_feel_school_sup')}</h2>
+                <p className="text-muted-foreground text-sm">{t('onb_feel_school_help')}</p>
                 <div className="space-y-3">
                    {[
-                     { id: "ansioso", title: t('onb_sup_feel_anxious'), sub: t('onb_sup_feel_anxious_sub') },
-                     { id: "svogliato", title: t('onb_sup_feel_unmotivated'), sub: t('onb_sup_feel_unmotivated_sub') },
-                     { id: "insicuro", title: t('onb_sup_feel_insecure'), sub: t('onb_sup_feel_insecure_sub') },
-                     { id: "tranquillo", title: t('onb_sup_feel_calm'), sub: t('onb_sup_feel_calm_sub') },
+                     { id: "ansioso", title: t('onb_feel_anxious'), sub: t('onb_feel_anxious_sub') },
+                     { id: "svogliato", title: t('onb_feel_unmotivated'), sub: t('onb_feel_unmotivated_sub') },
+                     { id: "insicuro", title: t('onb_feel_insecure'), sub: t('onb_feel_insecure_sub') },
+                     { id: "tranquillo", title: t('onb_feel_calm'), sub: t('onb_feel_calm_sub') },
                    ].map(opt => {
                      const isSel = (answers.sfide_emotive || []).includes(opt.id);
                      return <button key={opt.id} onClick={() => {
@@ -486,12 +486,12 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
           return (
             <div className="w-full space-y-6">
                 <h2 className="text-2xl font-bold text-foreground">{t('onb_coach_name')}</h2>
-                <p className="text-muted-foreground text-sm">{t('onb_sup_coach_sub')}</p>
+                <p className="text-muted-foreground text-sm">{t('onb_coach_name_sup_sub')}</p>
                 <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
                   <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
                 </div>
-                <input type="text" placeholder={t('onb_sup_coach_placeholder')} value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
-                <p className="text-xs text-muted-foreground text-center">{t('onb_sup_coach_change')}</p>
+                <input type="text" placeholder={t('onb_coach_name_sup_placeholder')} value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
+                <p className="text-xs text-muted-foreground text-center">{t('onb_coach_name_sup_change')}</p>
             </div>
           );
         case 7:
