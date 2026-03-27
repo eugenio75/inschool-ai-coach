@@ -7,6 +7,7 @@ import { NavLink } from "@/components/NavLink";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { LangToggle } from "@/components/LangToggle";
 import { CommandSearch } from "@/components/CommandSearch";
+import { useLang } from "@/contexts/LangContext";
 import {
   Sidebar,
   SidebarContent,
@@ -19,57 +20,57 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const navByRole: Record<string, { title: string; url: string; icon: React.ComponentType<{ className?: string }> }[]> = {
-  superiori: [
-    { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-    { title: "Studia con AI", url: "/challenge/new", icon: BookOpen },
-    { title: "Studio libero", url: "/study", icon: BookOpen },
-    { title: "I miei task", url: "/add-homework", icon: LayoutDashboard },
-    { title: "Ripassa e Rafforza", url: "/memory", icon: BookOpen },
-    { title: "Libreria", url: "/libreria", icon: FolderOpen },
-    { title: "Agenda", url: "/agenda", icon: LayoutDashboard },
-    { title: "Progressi", url: "/progress", icon: BookOpen },
-    { title: "Impostazioni", url: "/settings", icon: Settings },
-  ],
-  universitario: [
-    { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-    { title: "Studia con AI", url: "/challenge/new", icon: BookOpen },
-    { title: "Studio libero", url: "/study", icon: BookOpen },
-    { title: "Esami", url: "/dashboard", icon: BookOpen },
-    { title: "Ripassa e Rafforza", url: "/memory", icon: BookOpen },
-    { title: "Libreria", url: "/libreria", icon: FolderOpen },
-    { title: "Agenda", url: "/agenda", icon: LayoutDashboard },
-    { title: "Progressi", url: "/progress", icon: BookOpen },
-    { title: "Impostazioni", url: "/settings", icon: Settings },
-  ],
-};
+function useNavByRole() {
+  const { t } = useLang();
+  return {
+    superiori: [
+      { title: t("nav_dashboard"), url: "/dashboard", icon: LayoutDashboard },
+      { title: t("nav_study_ai"), url: "/challenge/new", icon: BookOpen },
+      { title: t("nav_free_study"), url: "/study", icon: BookOpen },
+      { title: t("nav_my_tasks"), url: "/add-homework", icon: LayoutDashboard },
+      { title: t("nav_review_reinforce"), url: "/memory", icon: BookOpen },
+      { title: t("nav_library"), url: "/libreria", icon: FolderOpen },
+      { title: t("nav_agenda"), url: "/agenda", icon: LayoutDashboard },
+      { title: t("nav_progress"), url: "/progress", icon: BookOpen },
+      { title: t("nav_settings"), url: "/settings", icon: Settings },
+    ],
+    universitario: [
+      { title: t("nav_dashboard"), url: "/dashboard", icon: LayoutDashboard },
+      { title: t("nav_study_ai"), url: "/challenge/new", icon: BookOpen },
+      { title: t("nav_free_study"), url: "/study", icon: BookOpen },
+      { title: t("nav_exams"), url: "/dashboard", icon: BookOpen },
+      { title: t("nav_review_reinforce"), url: "/memory", icon: BookOpen },
+      { title: t("nav_library"), url: "/libreria", icon: FolderOpen },
+      { title: t("nav_agenda"), url: "/agenda", icon: LayoutDashboard },
+      { title: t("nav_progress"), url: "/progress", icon: BookOpen },
+      { title: t("nav_settings"), url: "/settings", icon: Settings },
+    ],
+  };
+}
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLang();
+  const navByRole = useNavByRole();
 
   const session = getChildSession();
   const profile = session?.profile;
   const role = profile?.school_level || "";
   const name = profile?.name || "Utente";
-  const roleLabel = role === "superiori" ? "Studente" : role === "universitario" ? "Universitario" : "";
+  const roleLabel = role === "superiori" ? t("role_student") : role === "universitario" ? t("role_university") : "";
 
-  // Docente uses TeacherLayout — no sidebar needed
   if (role === "docente") {
     return null;
   }
 
-  // ═══════════════════════════════════════
-  // DEFAULT SIDEBAR (superiori, universitario)
-  // ═══════════════════════════════════════
-  const items = navByRole[role] || navByRole.superiori;
+  const items = navByRole[role as keyof typeof navByRole] || navByRole.superiori;
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarContent className="bg-sidebar">
-        {/* Logo */}
         <div className="px-4 py-4 border-b border-sidebar-border">
           <button onClick={() => navigate("/dashboard")} className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center shrink-0">
@@ -84,7 +85,6 @@ export function AppSidebar() {
           </button>
         </div>
 
-        {/* Search */}
         {!collapsed && (
           <div className="px-3 mb-2">
             <CommandSearch />
@@ -92,7 +92,7 @@ export function AppSidebar() {
         )}
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest">{collapsed ? "" : "Menu"}</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest">{collapsed ? "" : t("nav_menu")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -114,7 +114,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Bottom: user info */}
         {!collapsed && (
           <div className="mt-auto px-4 py-4 border-t border-sidebar-border space-y-3">
             <LangToggle />

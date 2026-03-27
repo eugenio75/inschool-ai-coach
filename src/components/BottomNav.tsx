@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Brain, User, Plus, FolderOpen } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildSession } from "@/lib/childSession";
+import { useLang } from "@/contexts/LangContext";
 
 const ADULT_ROLES = ["superiori", "universitario", "docente"];
 
@@ -9,6 +10,7 @@ export const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { t } = useLang();
 
   const session = getChildSession();
   const role = session?.profile?.school_level || "";
@@ -23,11 +25,11 @@ export const BottomNav = () => {
   const isParentView = Boolean(user);
 
   const navItems = [
-    { path: "/dashboard", label: "Home", icon: Home },
-    { path: "/add-homework", label: "Aggiungi", icon: Plus, isAdd: true },
-    { path: "/libreria", label: "Libreria", icon: FolderOpen },
-    { path: "/memory", label: "Ripassa", icon: Brain },
-    ...(isParentView ? [{ path: "/profiles", label: "Profilo", icon: User }] : []),
+    { path: "/dashboard", label: t("nav_home"), icon: Home },
+    { path: "/add-homework", label: t("nav_add"), icon: Plus, isAdd: true },
+    { path: "/libreria", label: t("nav_library"), icon: FolderOpen },
+    { path: "/memory", label: t("nav_review"), icon: Brain },
+    ...(isParentView ? [{ path: "/profiles", label: t("nav_profile"), icon: User }] : []),
   ];
 
   return (
@@ -43,12 +45,12 @@ export const BottomNav = () => {
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 className="flex flex-col items-center gap-0.5 px-2 py-0.5 rounded-xl transition-colors min-w-[56px] text-primary"
-                aria-label="Aggiungi compito"
+                aria-label={t("nav_add")}
               >
                 <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md">
                   <Plus className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-semibold">Aggiungi</span>
+                <span className="text-[10px] font-semibold">{t("nav_add")}</span>
               </button>
             );
           }
