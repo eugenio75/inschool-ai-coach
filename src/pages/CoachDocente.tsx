@@ -335,7 +335,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
     } catch {
       const fallbackMsg: ChatMessage = {
         ...placeholder,
-        content: "Mi dispiace, non sono riuscito a rispondere. Riprova tra poco.",
+        content: t("coach_fallback"),
       };
       setMessages([...currentMessages, fallbackMsg]);
       setIsReplying(false);
@@ -361,14 +361,14 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
       // Class chat: just delete messages, keep the chat
       await (supabase as any).from("teacher_chat_messages").delete().eq("chat_id", activeChatId);
       setMessages([]);
-      toast.success("Messaggi eliminati.");
+      toast.success(t("coach_messages_deleted"));
     } else {
       // General chat: delete entirely
       await (supabase as any).from("teacher_chats").delete().eq("id", activeChatId);
       setChats(prev => prev.filter(c => c.id !== activeChatId));
       setActiveChatId(null);
       setMessages([]);
-      toast.success("Chat eliminata.");
+      toast.success(t("coach_chat_deleted"));
     }
     setShowDeleteChat(false);
   }
@@ -389,14 +389,14 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
       setActiveChatId(null);
       setMessages([]);
     }
-    toast.success("Chat eliminata.");
+    toast.success(t("coach_chat_deleted"));
   }
 
   const activeChat = chats.find(c => c.id === activeChatId);
   const classChats = chats.filter(c => c.class_id);
   const generalChats = chats.filter(c => !c.class_id);
 
-  const quickActions = ["Organizza il lavoro", "Chiedi un suggerimento", "Rivedi le priorità"];
+  const quickActions = [t("coach_quick_organize"), t("coach_quick_suggest"), t("coach_quick_review")];
 
   // --- SIDEBAR ---
   const sidebarContent = (
@@ -409,7 +409,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
           variant="outline"
           size="sm"
         >
-          <Plus className="w-4 h-4" /> Nuova chat
+          <Plus className="w-4 h-4" /> {t("coach_new_chat")}
         </Button>
       </div>
 
@@ -418,7 +418,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
         {classChats.length > 0 && (
           <div>
             <p className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-2 mb-1.5">
-              Le tue classi
+              {t("coach_your_classes")}
             </p>
             {classChats.map(chat => {
               const cls = classes.find(c => c.id === chat.class_id);
@@ -445,7 +445,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
         {generalChats.length > 0 && (
           <div>
             <p className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/70 px-2 mb-1.5">
-              Conversazioni
+              {t("coach_conversations")}
             </p>
             {generalChats.map(chat => {
               return (
@@ -459,7 +459,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
                   )}
                   onClick={() => selectChat(chat.id)}
                 >
-                  <span className="truncate flex-1">{chat.name || "Chat senza nome"}</span>
+                  <span className="truncate flex-1">{chat.name || t("coach_unnamed_chat")}</span>
                   <button
                     onClick={(e) => deleteGeneralChat(chat.id, e)}
                     className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:text-destructive"
@@ -515,7 +515,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
               className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Torna alla home</span>
+              <span className="hidden sm:inline">{t("coach_back_home")}</span>
             </button>
           </div>
 
@@ -543,7 +543,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
                 }}
                 className="font-semibold text-foreground text-sm truncate max-w-[200px] hover:text-primary transition-colors"
               >
-                {activeChat?.name || (coachName ? `Chat con ${coachName}` : "Chat con il coach")}
+                {activeChat?.name || (coachName ? `${t("coach_chat_with")} ${coachName}` : t("coach_chat_with"))}
               </button>
             )}
           </div>
@@ -554,7 +554,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
               className="flex items-center gap-1.5 text-sm text-destructive hover:text-destructive/80 transition-colors"
             >
               <Trash2 className="w-4 h-4" />
-              <span className="hidden sm:inline">Elimina</span>
+              <span className="hidden sm:inline">{t("coach_delete")}</span>
             </button>
           )}
         </div>
@@ -572,7 +572,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
                 <Brain className="w-8 h-8 text-primary" />
               </div>
-              <p className="text-lg font-medium text-foreground">Come posso aiutarti oggi?</p>
+              <p className="text-lg font-medium text-foreground">{t("coach_how_help")}</p>
             </div>
           ) : (
             <div className="max-w-2xl mx-auto space-y-4">
@@ -625,7 +625,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
                     handleSend();
                   }
                 }}
-                placeholder="Scrivi al coach..."
+                placeholder={t("coach_write_placeholder")}
                 disabled={isReplying}
                 rows={1}
                 className="flex-1 text-sm border border-input rounded-xl px-3 py-2.5 bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 disabled:opacity-50 transition-colors resize-none overflow-hidden"
@@ -671,18 +671,18 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {activeChat?.class_id ? "Svuotare la chat della classe?" : "Eliminare questa chat?"}
+              {activeChat?.class_id ? t("coach_clear_class_title") : t("coach_delete_chat_title")}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {activeChat?.class_id
-                ? "Tutti i messaggi della chat di classe verranno eliminati. La chat resterà disponibile."
-                : "Questa azione cancellerà l'intera conversazione. Non è reversibile."}
+                ? t("coach_clear_class_body")
+                : t("coach_delete_chat_body")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogCancel>{t("coach_cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={deleteChat} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
-              {activeChat?.class_id ? "Svuota messaggi" : "Elimina"}
+              {activeChat?.class_id ? t("coach_clear_messages") : t("coach_delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
