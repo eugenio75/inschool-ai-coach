@@ -64,6 +64,7 @@ type SessionType = "study" | "review" | "prep" | "guided";
 export default function UnifiedSession() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { t } = useLang();
   const type = (searchParams.get("type") || "study") as SessionType;
   const homeworkId = searchParams.get("hw");
   const urlSubject = searchParams.get("subject");
