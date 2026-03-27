@@ -90,7 +90,7 @@ export default function Landing() {
       </section>
 
       {/* ── MOCKUP ── */}
-      <section className="py-20 px-6 bg-white">
+      <section className="py-20 px-6" style={{ backgroundColor: "#F3F0FA" }}>
         <div className="max-w-3xl mx-auto">
           <motion.h2 {...fade} className="font-display text-2xl font-bold text-center mb-10" style={{ color: "#1A3A5C" }}>
             {t("home_mockup_title")}

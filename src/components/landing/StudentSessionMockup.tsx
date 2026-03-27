@@ -1,4 +1,4 @@
-import { BrowserFrame } from "./BrowserFrame";
+import { PhoneFrame } from "./PhoneFrame";
 
 function ProgressDots({ current, total }: { current: number; total: number }) {
   return (
@@ -10,7 +10,7 @@ function ProgressDots({ current, total }: { current: number; total: number }) {
           style={{ backgroundColor: i < current ? "#0070C0" : "#E2E8F0" }}
         />
       ))}
-      <span className="text-[10px] ml-1.5" style={{ color: "#94A3B8" }}>
+      <span className="text-[11px] ml-1.5 font-medium" style={{ color: "#94A3B8" }}>
         Passo {current} di {total}
       </span>
     </div>
@@ -19,20 +19,31 @@ function ProgressDots({ current, total }: { current: number; total: number }) {
 
 export function StudentSessionMockup() {
   return (
-    <BrowserFrame>
+    <PhoneFrame>
       {/* Header */}
-      <div className="mb-3">
-        <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#94A3B8" }}>
+      <div className="mb-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#94A3B8" }}>
           Sessione guidata
-        </p>
-        <p className="text-sm font-bold mt-1" style={{ color: "#1A3A5C" }}>
-          Analisi del testo — "I Promessi Sposi"
         </p>
       </div>
 
-      <ProgressDots current={2} total={6} />
+      {/* Task info card */}
+      <div
+        className="rounded-xl p-3 mb-3"
+        style={{ backgroundColor: "#F8FAFC", border: "1px solid #E2E8F0" }}
+      >
+        <p className="text-[14px] font-bold" style={{ color: "#1A3A5C" }}>
+          Analisi del testo
+        </p>
+        <p className="text-[12px] mt-0.5" style={{ color: "#64748B" }}>
+          I Promessi Sposi — Cap. 3
+        </p>
+      </div>
 
-      <div className="mt-4 mb-3">
+      <ProgressDots current={2} total={5} />
+
+      {/* Coach message */}
+      <div className="mt-4 mb-4">
         <div className="flex gap-2">
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-white mt-0.5"
@@ -41,7 +52,7 @@ export function StudentSessionMockup() {
             IN
           </div>
           <div
-            className="rounded-2xl rounded-tl-md px-3 py-2 text-xs leading-relaxed"
+            className="rounded-2xl rounded-tl-md px-3 py-2.5 text-[13px] leading-relaxed"
             style={{ backgroundColor: "#F1F5F9", color: "#1A3A5C" }}
           >
             Hai letto il brano. Dimmi con parole tue di cosa parla questo paragrafo.
@@ -49,34 +60,21 @@ export function StudentSessionMockup() {
         </div>
       </div>
 
-      {/* Input area */}
-      <div
-        className="rounded-xl px-3 py-3 text-xs mb-3"
-        style={{
-          backgroundColor: "#FAFAFA",
-          border: "1px solid #0070C0",
-          color: "#94A3B8",
-          minHeight: 56,
-        }}
-      >
-        Scrivi la tua risposta...
-      </div>
-
       {/* Action buttons */}
       <div className="flex gap-2">
-        <button
-          className="rounded-full px-3 py-1.5 text-[11px] font-medium"
+        <span
+          className="rounded-full px-4 py-2 text-[12px] font-medium cursor-pointer"
           style={{ backgroundColor: "#F1F5F9", color: "#64748B", border: "1px solid #E2E8F0" }}
         >
           Sono bloccato
-        </button>
-        <button
-          className="rounded-full px-3 py-1.5 text-[11px] font-medium"
+        </span>
+        <span
+          className="rounded-full px-4 py-2 text-[12px] font-medium cursor-pointer"
           style={{ backgroundColor: "#F1F5F9", color: "#64748B", border: "1px solid #E2E8F0" }}
         >
-          Dammi un indizio
-        </button>
+          Indizio
+        </span>
       </div>
-    </BrowserFrame>
+    </PhoneFrame>
   );
 }
