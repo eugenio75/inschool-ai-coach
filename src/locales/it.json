@@ -826,5 +826,12 @@
   "euai_blockchain_title": "Blockchain e audit trail",
   "euai_blockchain_body": "InSchool usa Azar Chain (Chain ID 24780) — blockchain privata proprietaria — per registrare in modo immutabile e verificabile i log delle sessioni AI. Questo garantisce la conformità agli obblighi di tracciabilità del EU AI Act.",
   "euai_contact_title": "Contatti",
-  "euai_contact_body": "Per informazioni sulla conformità:"
+  "euai_contact_body": "Per informazioni sulla conformità:",
+  "chat_send_hint": "Dammi un indizio.",
+  "chat_send_stuck": "Sono bloccato — cambia approccio e aiutami in modo più semplice.",
+  "chat_send_simpler": "Spiegamelo in modo più semplice.",
+  "chat_send_example": "Fammi un esempio pratico per capire meglio.",
+  "chat_send_step_by_step": "Spiegamelo passo passo, più lentamente.",
+  "chat_send_shorter": "Spiegamelo in modo più breve e diretto.",
+  "chat_stop": "Stop"
 }
