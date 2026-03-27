@@ -221,7 +221,7 @@ export function ChatShell({
                 </div>
               )}
               <div className="max-w-[80%]">
-                <div className={`rounded-xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                <div className={`rounded-xl px-4 py-3 text-[15px] leading-[1.7] whitespace-pre-wrap ${
                   msg.role === "user"
                     ? "bg-primary text-primary-foreground rounded-br-sm"
                     : "bg-muted text-foreground rounded-bl-sm"
@@ -266,7 +266,7 @@ export function ChatShell({
                 transition={{ repeat: Infinity, duration: 2 }}
               />
             </div>
-            <div className="max-w-[80%] rounded-xl rounded-bl-sm bg-muted px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap text-foreground">
+            <div className="max-w-[80%] rounded-xl rounded-bl-sm bg-muted px-4 py-3 text-[15px] leading-[1.7] whitespace-pre-wrap text-foreground">
               <MathText>{streamingText}</MathText>
               <span className="inline-block w-1.5 h-4 bg-primary ml-0.5 animate-pulse" />
             </div>
