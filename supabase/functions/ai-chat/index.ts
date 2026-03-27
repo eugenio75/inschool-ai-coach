@@ -310,7 +310,7 @@ ZERO alert esterni per i docenti. Mai. Autonomia professionale totale.`;
 }
 
 // Fire-and-forget: update adaptive & cognitive profiles after each session
-async function updateAdaptiveProfile(profileId: string, messages: any[]) {
+async function updateAdaptiveProfile(profileId: string, messages: any[], sessionSubject?: string) {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
