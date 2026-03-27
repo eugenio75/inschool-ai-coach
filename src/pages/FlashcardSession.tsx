@@ -12,6 +12,7 @@ import { ChatMsg, streamChat } from "@/lib/streamChat";
 import { supabase } from "@/integrations/supabase/client";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
+import { getCurrentLang } from "@/lib/langUtils";
 import { playCelebrationSound } from "@/lib/celebrationSound";
 
 function getProfile() {
@@ -322,6 +323,7 @@ export default function FlashcardSession() {
             subject: topic || "Programma di studio",
             conversationHistory: prompt,
             schoolLevel,
+            lang: getCurrentLang(),
           }),
         }
       );

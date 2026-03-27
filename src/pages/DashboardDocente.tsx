@@ -9,6 +9,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
+import { getCurrentLang } from "@/lib/langUtils";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -148,6 +149,7 @@ export default function DashboardDocente() {
             currentHour: new Date().getHours(),
             materialsThisWeek: materialiCount,
             openVerifications: assignments.filter(a => a.type === "verifica").length,
+            lang: getCurrentLang(),
           },
         });
 

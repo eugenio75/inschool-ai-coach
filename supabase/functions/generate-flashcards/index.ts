@@ -10,18 +10,45 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { subject, conversationHistory, schoolLevel } = await req.json();
+    const { subject, conversationHistory, schoolLevel, lang } = await req.json();
 
-    const levelConfig: Record<string, { maxCards: number; style: string }> = {
-      alunno: { maxCards: 8, style: "Linguaggio semplice. Una parola/concetto per carta. Domande dirette." },
-      medie: { maxCards: 8, style: "Linguaggio chiaro. Definizioni e connessioni semplici." },
-      superiori: { maxCards: 12, style: "Definizioni, causa-effetto, connessioni tra concetti." },
-      universitario: { maxCards: 15, style: "Terminologia tecnica. Frammenti densi e precisi." },
-    };
+    const effectiveLang = lang || "it";
+    const isEN = effectiveLang === "en";
+
+    const levelConfig: Record<string, { maxCards: number; style: string }> = isEN
+      ? {
+          alunno: { maxCards: 8, style: "Simple language. One word/concept per card. Direct questions." },
+          medie: { maxCards: 8, style: "Clear language. Simple definitions and connections." },
+          superiori: { maxCards: 12, style: "Definitions, cause-effect, connections between concepts." },
+          universitario: { maxCards: 15, style: "Technical terminology. Dense and precise fragments." },
+        }
+      : {
+          alunno: { maxCards: 8, style: "Linguaggio semplice. Una parola/concetto per carta. Domande dirette." },
+          medie: { maxCards: 8, style: "Linguaggio chiaro. Definizioni e connessioni semplici." },
+          superiori: { maxCards: 12, style: "Definizioni, causa-effetto, connessioni tra concetti." },
+          universitario: { maxCards: 15, style: "Terminologia tecnica. Frammenti densi e precisi." },
+        };
 
     const config = levelConfig[schoolLevel] || levelConfig.superiori;
 
-    const systemPrompt = `Sei un esperto di didattica. Genera flashcard di ripasso dai contenuti della sessione di studio.
+    const conversationText = Array.isArray(conversationHistory)
+      ? conversationHistory.map((m: any) => `${m.role}: ${m.content}`).join("\n")
+      : String(conversationHistory || "");
+
+    const systemPrompt = isEN
+      ? `You are a teaching expert. Generate review flashcards from the study session content.
+
+Rules:
+- Maximum ${config.maxCards} cards
+- ${config.style}
+- Difficulty 1: simple definitions
+- Difficulty 2: cause-effect connections
+- Difficulty 3: application and reasoning
+- Output ONLY valid JSON
+- All content must be in English
+
+Format: {"cards":[{"question":"...","answer":"...","difficulty":1}]}`
+      : `Sei un esperto di didattica. Genera flashcard di ripasso dai contenuti della sessione di studio.
 
 Regole:
 - Massimo ${config.maxCards} carte
@@ -32,10 +59,6 @@ Regole:
 - Output SOLO JSON valido
 
 Formato: {"cards":[{"question":"...","answer":"...","difficulty":1}]}`;
-
-    const conversationText = Array.isArray(conversationHistory)
-      ? conversationHistory.map((m: any) => `${m.role}: ${m.content}`).join("\n")
-      : String(conversationHistory || "");
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -48,7 +71,9 @@ Formato: {"cards":[{"question":"...","answer":"...","difficulty":1}]}`;
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Materia: ${subject}\n\nConversazione:\n${conversationText}` },
+          { role: "user", content: isEN
+            ? `Subject: ${subject}\n\nConversation:\n${conversationText}`
+            : `Materia: ${subject}\n\nConversazione:\n${conversationText}` },
         ],
         temperature: 0.7,
       }),

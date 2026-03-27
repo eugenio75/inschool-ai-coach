@@ -9,6 +9,7 @@ import { SessionCelebration } from "@/components/SessionCelebration";
 import { playCelebrationSound } from "@/lib/celebrationSound";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrentLang } from "@/lib/langUtils";
 import { useAuth } from "@/hooks/useAuth";
 import { MathText } from "@/components/shared/MathText";
 import {
@@ -144,6 +145,7 @@ export default function GuidedSession() {
             subject: homework.subject,
             schoolLevel,
             description: homework.description,
+            lang: getCurrentLang(),
           }),
         }
       );
@@ -330,6 +332,7 @@ export default function GuidedSession() {
               subject: homework?.subject,
               conversationHistory: newMessages,
               schoolLevel,
+              lang: getCurrentLang(),
             }),
           }).then(async (r) => {
             if (r.ok) {

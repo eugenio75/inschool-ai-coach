@@ -13,9 +13,11 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { teacherName, teacherProfileId, teacherSubjects, activeClasses, recentFeed, materialsThisWeek, openVerifications, currentHour, mode, classId, students, materials, verifications, topics } = body;
+    const { teacherName, teacherProfileId, teacherSubjects, activeClasses, recentFeed, materialsThisWeek, openVerifications, currentHour, mode, classId, students, materials, verifications, topics, lang } = body;
 
-    // Fetch teacher behavior data from user_preferences if available
+    const effectiveLang = lang || "it";
+    const isEN = effectiveLang === "en";
+
     let behaviorContext = "";
     if (teacherProfileId) {
       try {
@@ -31,7 +33,28 @@ serve(async (req) => {
 
         const teacherBehavior = (prefs?.data as any)?.teacherBehavior;
         if (teacherBehavior) {
-          behaviorContext = `
+          behaviorContext = isEN
+            ? `
+REAL BEHAVIORAL DATA (do not disclose to teacher):
+- Average session duration: ${teacherBehavior.sessionDuration} minutes
+- Sessions in last 14 days: ${teacherBehavior.sessionFrequency}
+- Late-night sessions (after 22:00): ${teacherBehavior.lateNightSessions}
+- Short sessions (< 3 min): ${teacherBehavior.shortSessions}
+- Days since last access: ${teacherBehavior.daysSinceLastAccess}
+- Behavioral level: ${teacherBehavior.behaviorLevel}
+- Active triggers: ${(teacherBehavior.triggers || []).join(", ") || "none"}
+
+RESPONSE RULES based on level:
+- NORMAL: acknowledge specific work done. Never generic motivation.
+- ATTENTION: at session end, ONE sentence only: "Seems like an intense period. Everything ok?" Nothing more. Don't insist.
+- SUPPORT: "You're carrying a lot alone. There are resources designed for teachers — would you like me to tell you about them?"
+- URGENT: adult urgency protocol. Respond with deep empathy. ALWAYS include: "If you feel the need to talk to someone, Telefono Amico is available at 02 2327 2327, every day." Don't minimize. Don't give solutions. Just listen and provide a concrete resource.
+
+LANGUAGE RULES:
+- NEVER use "burnout" or "exhaustion" — use "tiredness", "intense period", "a lot to carry"
+- Tone ALWAYS collegial — never protective or patronizing
+- ZERO external alerts — never, no exceptions`
+            : `
 DATI COMPORTAMENTALI REALI (non dichiarare al docente):
 - Durata media sessioni: ${teacherBehavior.sessionDuration} minuti
 - Sessioni ultimi 14 giorni: ${teacherBehavior.sessionFrequency}
@@ -57,11 +80,28 @@ REGOLE LINGUAGGIO:
       }
     }
 
-    // Build system prompt based on mode
     let systemPrompt: string;
 
     if (mode === "class_chat") {
-      systemPrompt = `Sei il coach personale di ${teacherName || "un docente"}, docente su InSchool.
+      systemPrompt = isEN
+        ? `You are the personal coach of ${teacherName || "a teacher"}, a teacher on InSchool.
+You are responding in the chat of the ${classId ? "selected " : ""}class.
+
+CLASS CONTEXT:
+- Subjects taught by the teacher: ${(teacherSubjects || []).length > 0 ? (teacherSubjects || []).join(", ") : "not specified"}
+- Students: ${JSON.stringify(students || [])}
+- Recent materials: ${JSON.stringify(materials || [])}
+- Tests: ${JSON.stringify(verifications || [])}
+- Topics covered: ${JSON.stringify(topics || [])}
+${behaviorContext}
+
+Rules:
+- Always respond in context with real class data
+- Max 2-3 sentences. Always an open-ended question at the end.
+- Tone: collegial, precise, warm but not patronizing.
+- ALWAYS respond in English
+- Reply ONLY with valid JSON: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }`
+        : `Sei il coach personale di ${teacherName || "un docente"}, docente su InSchool.
 Stai rispondendo nella chat della classe ${classId ? "selezionata" : ""}.
 
 CONTESTO CLASSE:
@@ -78,7 +118,33 @@ Regole:
 - Tono: collegiale, preciso, caldo ma non paternalistico.
 - Rispondi SOLO con JSON valido: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }`;
     } else {
-      systemPrompt = `Sei il coach personale di ${teacherName || "un docente"}, docente su InSchool.
+      systemPrompt = isEN
+        ? `You are the personal coach of ${teacherName || "a teacher"}, a teacher on InSchool.
+
+FUNDAMENTAL RULE: speak first with something specific and contextual.
+NEVER open with 'How can I help you today?' or generic phrases.
+
+Real data:
+- Subjects taught: ${(teacherSubjects || []).length > 0 ? (teacherSubjects || []).join(", ") : "not specified"}
+- Active classes: ${JSON.stringify(activeClasses || [])}
+- Recent feed: ${JSON.stringify(recentFeed || [])}
+- Materials created this week: ${materialsThisWeek || 0}
+- Tests to grade: ${openVerifications || 0}
+- Current hour: ${currentHour || new Date().getHours()}
+${behaviorContext}
+
+Rules:
+- If openVerifications > 0: mention the class and tests to grade
+- If materialsThisWeek >= 3: specifically acknowledge the work done
+- If currentHour >= 21: keep the message brief and human, close with 'Have a good rest.'
+- Max 2-3 sentences. Always an open-ended question at the end.
+- Acknowledging work is structural, not flattery.
+- NEVER use 'burnout' or 'exhaustion' — use 'tiredness', 'intense period'.
+- Tone: collegial, precise, warm but not patronizing.
+- ALWAYS respond in English
+
+Reply ONLY with valid JSON: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }`
+        : `Sei il coach personale di ${teacherName || "un docente"}, docente su InSchool.
 
 REGOLA FONDAMENTALE: parla per primo con qualcosa di specifico e contestuale.
 MAI aprire con 'Come posso aiutarti oggi?' o frasi generiche.
@@ -115,7 +181,9 @@ Rispondi SOLO con JSON valido: { "message": "...", "suggestedAction": "...", "ac
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: mode === "class_chat" ? "Genera un messaggio contestuale per questa classe." : "Genera il messaggio di apertura per il docente." },
+          { role: "user", content: isEN
+            ? (mode === "class_chat" ? "Generate a contextual message for this class." : "Generate the opening message for the teacher.")
+            : (mode === "class_chat" ? "Genera un messaggio contestuale per questa classe." : "Genera il messaggio di apertura per il docente.") },
         ],
         max_tokens: 300,
       }),

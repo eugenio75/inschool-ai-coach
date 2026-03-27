@@ -12,7 +12,10 @@ serve(async (req) => {
   }
 
   try {
-    const { chatMessages, taskSubject, taskTitle, childProfileId, accessCode } = await req.json();
+    const { chatMessages, taskSubject, taskTitle, childProfileId, accessCode, lang } = await req.json();
+
+    const effectiveLang = lang || "it";
+    const isEN = effectiveLang === "en";
 
     if (!chatMessages || chatMessages.length < 3) {
       return new Response(JSON.stringify({ concepts: [] }), {
@@ -23,7 +26,6 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    // Validate access: either via auth token or child access code
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
@@ -33,7 +35,7 @@ serve(async (req) => {
     if (accessCode) {
       const { data: codeResult } = await supabase.rpc("validate_child_code", { code: accessCode });
       if (!codeResult?.valid) {
-        return new Response(JSON.stringify({ error: "Codice non valido" }), {
+        return new Response(JSON.stringify({ error: isEN ? "Invalid code" : "Codice non valido" }), {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -42,7 +44,7 @@ serve(async (req) => {
     } else {
       const authHeader = req.headers.get("Authorization");
       if (!authHeader) {
-        return new Response(JSON.stringify({ error: "Non autorizzato" }), {
+        return new Response(JSON.stringify({ error: isEN ? "Unauthorized" : "Non autorizzato" }), {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -52,7 +54,7 @@ serve(async (req) => {
       });
       const { data: { user } } = await userClient.auth.getUser();
       if (!user) {
-        return new Response(JSON.stringify({ error: "Non autorizzato" }), {
+        return new Response(JSON.stringify({ error: isEN ? "Unauthorized" : "Non autorizzato" }), {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -65,21 +67,38 @@ serve(async (req) => {
       });
     }
 
-    // Fetch child name for personalized summaries
     const { data: childProfile } = await supabase
       .from("child_profiles")
       .select("name")
       .eq("id", resolvedChildId)
       .maybeSingle();
-    const studentName = childProfile?.name || "Lo studente";
+    const studentName = childProfile?.name || (isEN ? "The student" : "Lo studente");
 
-    // Build conversation text for analysis
     const conversationText = chatMessages
       .filter((m: any) => typeof m.text === "string" && m.text.trim())
-      .map((m: any) => `${m.role === "coach" ? "Coach" : "Studente"}: ${m.text}`)
+      .map((m: any) => `${m.role === "coach" ? "Coach" : (isEN ? "Student" : "Studente")}: ${m.text}`)
       .join("\n");
 
-    const extractPrompt = `Analizza questa conversazione di studio tra un coach AI e ${studentName}.
+    const extractPrompt = isEN
+      ? `Analyze this study conversation between an AI coach and ${studentName}.
+Extract the KEY CONCEPTS that ${studentName} learned or worked on during the session.
+
+Subject: ${taskSubject || "not specified"}
+Topic: ${taskTitle || "not specified"}
+
+Conversation:
+${conversationText}
+
+Reply ONLY with a JSON array of objects, each with:
+- "concept": the short concept name (max 6 words)
+- "summary": a 1-2 sentence summary of what ${studentName} understood/worked on. ALWAYS use the name "${studentName}" and never "the student".
+- "recall_questions": array of 2-3 review questions to verify understanding
+- "strength": a number from 20 to 80 estimating how well ${studentName} understood (based on chat responses)
+
+Extract 1 to 4 concepts. If the conversation is too short or doesn't contain significant learning, reply with an empty array [].
+
+Reply ONLY with JSON, no markdown or other text.`
+      : `Analizza questa conversazione di studio tra un coach AI e ${studentName}.
 Estrai i CONCETTI CHIAVE che ${studentName} ha imparato o su cui ha lavorato durante la sessione.
 
 Materia: ${taskSubject || "non specificata"}
@@ -119,8 +138,6 @@ Rispondi SOLO con il JSON, senza markdown o altro testo.`;
 
     const aiData = await aiResponse.json();
     let rawText = aiData.choices?.[0]?.message?.content || "[]";
-    
-    // Clean markdown code blocks
     rawText = rawText.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
 
     let concepts: any[] = [];
@@ -132,18 +149,16 @@ Rispondi SOLO con il JSON, senza markdown o altro testo.`;
       concepts = [];
     }
 
-    // Save to memory_items
     if (concepts.length > 0) {
       const items = concepts.map((c: any) => ({
         child_profile_id: resolvedChildId,
-        subject: taskSubject || "Generale",
-        concept: c.concept || "Concetto",
+        subject: taskSubject || (isEN ? "General" : "Generale"),
+        concept: c.concept || (isEN ? "Concept" : "Concetto"),
         summary: c.summary || "",
         recall_questions: c.recall_questions || [],
         strength: Math.max(20, Math.min(80, c.strength || 50)),
       }));
 
-      // Check for duplicates - don't insert if concept already exists for same subject
       for (const item of items) {
         const { data: existing } = await supabase
           .from("memory_items")
