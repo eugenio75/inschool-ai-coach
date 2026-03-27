@@ -542,6 +542,7 @@ Regole benessere: mai linguaggio diagnostico, mai minimizzare, mai drammatizzare
             subject: chatSubject || "generale",
             alertContext,
             isDocente: prof.school_level === "docente",
+            lang: lang || "it",
           });
 
           finalSystemPrompt = clientSystemPrompt
