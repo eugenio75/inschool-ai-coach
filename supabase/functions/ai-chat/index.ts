@@ -404,6 +404,47 @@ async function updateAdaptiveProfile(profileId: string, messages: any[], session
       adaptive.methodStats = methodStats;
     }
 
+    // ── Per-subject profile mirroring ──
+    if (sessionSubject) {
+      const subjectKey = sessionSubject.toLowerCase().trim();
+      if (subjectKey) {
+        const bySubject: Record<string, any> = adaptive.bySubject || {};
+        const subj = bySubject[subjectKey] || {};
+
+        const subjSessionCount = (subj.sessionCount || 0) + 1;
+        subj.hintRequests = (subj.hintRequests || 0) + hintRequests;
+        subj.avgHintsPerSession = subj.hintRequests / subjSessionCount;
+        subj.hesitationScore = (subj.hesitationScore || 0) * 0.7 + hesitationScore * 0.3;
+        subj.needsReassurance = subj.hesitationScore > 0.4 || hintRequests > 2;
+        subj.bloomLevel = bloomEstimate;
+        subj.sessionCount = subjSessionCount;
+        subj.lastSessionAt = new Date().toISOString();
+
+        if (detectedFamiliarity) {
+          subj.lastFamiliarity = detectedFamiliarity;
+          subj.prefersVoice = voiceUsageRatio > 0.3;
+          const subjMethodStats = subj.methodStats || {};
+          const cs = subjMethodStats[detectedFamiliarity] || { count: 0, avgBloom: 0, voiceSuccessRate: 0 };
+          cs.count += 1;
+          cs.avgBloom = ((cs.avgBloom * (cs.count - 1)) + bloomEstimate) / cs.count;
+          if (voiceUsageRatio > 0.3) {
+            cs.voiceSuccessRate = ((cs.voiceSuccessRate * (cs.count - 1)) + bloomEstimate) / cs.count;
+          }
+          subjMethodStats[detectedFamiliarity] = cs;
+          subj.methodStats = subjMethodStats;
+        }
+
+        // Per-subject cognitive peaks
+        subj.bloomPeak = Math.max(subj.bloomPeak || 1, bloomEstimate);
+        const prevSubjRate = subj.progressionRate || "medio";
+        if (bloomEstimate > (subj.bloomLevel || 1)) subj.progressionRate = "veloce";
+        else if (bloomEstimate < (subj.bloomLevel || 1)) subj.progressionRate = prevSubjRate;
+
+        bySubject[subjectKey] = subj;
+        adaptive.bySubject = bySubject;
+      }
+    }
+
     // Update cognitive dynamic profile
     cognitive.bloomPeak = Math.max(cognitive.bloomPeak || 1, bloomEstimate);
     cognitive.avgHintsPerSession = adaptive.avgHintsPerSession;
