@@ -10,11 +10,14 @@ import { BadgeDisplay } from "@/components/BadgeDisplay";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 import { getTasks, getActiveChildProfileId, getChildProfile } from "@/lib/database";
 import { supabase } from "@/integrations/supabase/client";
+import { useLang } from "@/contexts/LangContext";
+import { getPrepLabelKey } from "@/lib/schoolTerms";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
 function SessionEntryCardsMedie({ hasTasks }: { hasTasks: boolean }) {
   const navigate = useNavigate();
+  const { t } = useLang();
   const sessions = [
     {
       id: "guided",
@@ -34,8 +37,8 @@ function SessionEntryCardsMedie({ hasTasks }: { hasTasks: boolean }) {
     },
     {
       id: "prep",
-      label: "Prepara l'interrogazione",
-      desc: "Simulazione sui tuoi punti deboli",
+      label: t(getPrepLabelKey("medie")),
+      desc: t("prep_desc"),
       color: "bg-amber-50 dark:bg-amber-900/20",
       iconColor: "text-amber-600 dark:text-amber-400",
       action: () => navigate("/us?type=prep"),
