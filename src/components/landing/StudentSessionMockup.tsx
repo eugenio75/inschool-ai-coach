@@ -40,7 +40,7 @@ export function StudentSessionMockup() {
         </p>
       </div>
 
-      <ProgressDots current={2} total={5} stepLabel={t("mockup_session_step", { current: 2, total: 5 })} />
+      <ProgressDots current={2} total={5} stepLabel={t("mockup_session_step").replace("{{current}}", "2").replace("{{total}}", "5")} />
 
       <div className="mt-4 mb-4">
         <div className="flex gap-2">
