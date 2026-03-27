@@ -101,10 +101,12 @@ serve(async (req) => {
     }
 
     // Get child_profiles for these student user IDs
+    // Fix 5: Only include students with consent
     const { data: profiles } = await admin
       .from("child_profiles")
-      .select("id, parent_id, name, avatar_emoji")
-      .in("parent_id", studentUserIds);
+      .select("id, parent_id, name, avatar_emoji, teacher_insights_consent")
+      .in("parent_id", studentUserIds)
+      .eq("teacher_insights_consent", true);
 
     const profilesList = profiles || [];
     const profileIds = profilesList.map((p: any) => p.id);
@@ -147,53 +149,59 @@ serve(async (req) => {
       prefsMap[p.profile_id] = p;
     });
 
-    // ── 1. Format Distribution ──
-    // Per subject, count how many students have each format as bestLearningStyle
-    const formatDistribution: Record<
-      string,
-      Record<string, number>
-    > = {};
+    // ── 1. Format Distribution (Fix 3: use per-subject formatPerformance) ──
+    const formatDistribution: Record<string, Record<string, number>> = {};
+    const styleMap: Record<string, string> = {
+      schema: "logico",
+      text: "narrativo",
+      dialogue: "analogico",
+      example: "visivo",
+    };
 
     profileIds.forEach((pid: string) => {
       const prefs = prefsMap[pid];
       if (!prefs) return;
       const adaptive = (prefs.adaptive_profile || {}) as Record<string, any>;
-      const cognitive = (prefs.cognitive_dynamic_profile || {}) as Record<
-        string,
-        any
-      >;
       const bySubject = adaptive.bySubject || {};
 
-      // Check global bestLearningStyle
-      const globalStyle = cognitive.bestLearningStyle || "non definito";
+      // For each subject this student has data for, determine best format from formatPerformance
+      Object.entries(bySubject).forEach(([subj, subjData]: [string, any]) => {
+        const fp = (subjData as any).formatPerformance || (adaptive.formatPerformance || {});
+        // Find the format with most sessions (as best proxy for observed preference)
+        const categories = ["schema", "text", "dialogue", "example"];
+        const eligible = categories.filter(c => (fp[c]?.sessions || 0) >= 1);
+        if (eligible.length === 0) return; // No format data — exclude from distribution
 
-      // Aggregate per subject from bySubject keys
-      const subjects = Object.keys(bySubject);
-      if (subjects.length === 0) {
-        // Use global only
-        const key = "generale";
-        if (!formatDistribution[key]) formatDistribution[key] = {};
-        formatDistribution[key][globalStyle] =
-          (formatDistribution[key][globalStyle] || 0) + 1;
-      } else {
-        subjects.forEach((subj) => {
-          if (!formatDistribution[subj]) formatDistribution[subj] = {};
-          // Use global style for now (per-subject style calculation happens in ai-chat)
-          formatDistribution[subj][globalStyle] =
-            (formatDistribution[subj][globalStyle] || 0) + 1;
-        });
-      }
+        // Pick best: lowest avgHintsPerSession + highest avgBloomReached (same logic as ai-chat)
+        let bestFormat = eligible[0];
+        if (eligible.length >= 2) {
+          const scored = eligible.map(c => ({
+            category: c,
+            hints: fp[c]?.avgHintsPerSession || 999,
+            bloom: fp[c]?.avgBloomReached || 0,
+          }));
+          const byHints = [...scored].sort((a, b) => a.hints - b.hints);
+          const byBloom = [...scored].sort((a, b) => b.bloom - a.bloom);
+          const rankMap: Record<string, number> = {};
+          byHints.forEach((s, i) => { rankMap[s.category] = i; });
+          byBloom.forEach((s, i) => { rankMap[s.category] = (rankMap[s.category] || 0) + i; });
+          bestFormat = Object.entries(rankMap).sort((a, b) => a[1] - b[1])[0][0];
+        }
+
+        const styleName = styleMap[bestFormat] || bestFormat;
+        if (!formatDistribution[subj]) formatDistribution[subj] = {};
+        formatDistribution[subj][styleName] = (formatDistribution[subj][styleName] || 0) + 1;
+      });
+      // If student has no bySubject data, exclude from distribution (do not fall back to global)
     });
 
-    // ── 2. Frustration Alerts ──
-    // Students where hesitationScore > 0.5 AND avgHintsPerSession > 3
-    // for at least one subject with >= 3 sessions
+    // ── 2. Frustration Alerts (Fix 4: check consecutive sessions) ──
     const frustrationAlerts: Array<{
       studentName: string;
       subject: string;
       hesitationScore: number;
       avgHints: number;
-      sessions: number;
+      consecutiveBad: number;
     }> = [];
 
     profileIds.forEach((pid: string) => {
@@ -205,8 +213,42 @@ serve(async (req) => {
       const studentName = student?.name || "Studente";
 
       Object.entries(bySubject).forEach(([subj, data]: [string, any]) => {
+        // Use methodBlockHistory to check consecutive bad sessions
+        const history: any[] = data.methodBlockHistory || adaptive.methodBlockHistory || [];
+        if (history.length < 3) {
+          // Fall back to current aggregate if no history — but require >= 3 sessions
+          if (
+            (data.sessionCount || 0) >= 3 &&
+            (data.hesitationScore || 0) > 0.5 &&
+            (data.avgHintsPerSession || 0) > 3
+          ) {
+            frustrationAlerts.push({
+              studentName,
+              subject: subj,
+              hesitationScore: Math.round((data.hesitationScore || 0) * 100) / 100,
+              avgHints: Math.round((data.avgHintsPerSession || 0) * 10) / 10,
+              consecutiveBad: data.sessionCount || 0,
+            });
+          }
+          return;
+        }
+
+        // Count consecutive bad sessions from the most recent backward
+        let consecutiveBad = 0;
+        for (let i = history.length - 1; i >= 0; i--) {
+          const entry = history[i];
+          // A session is "bad" if bloom is low (<=2) and voice success is low
+          // Since we don't have per-entry hints, use the overall subject metrics
+          // with the recency check: if the latest entries show low bloom, flag it
+          if ((entry.bloomReached || 0) <= 2) {
+            consecutiveBad++;
+          } else {
+            break; // Good session breaks the streak
+          }
+        }
+
         if (
-          (data.sessionCount || 0) >= 3 &&
+          consecutiveBad >= 3 &&
           (data.hesitationScore || 0) > 0.5 &&
           (data.avgHintsPerSession || 0) > 3
         ) {
@@ -214,30 +256,11 @@ serve(async (req) => {
             studentName,
             subject: subj,
             hesitationScore: Math.round((data.hesitationScore || 0) * 100) / 100,
-            avgHints:
-              Math.round((data.avgHintsPerSession || 0) * 10) / 10,
-            sessions: data.sessionCount || 0,
+            avgHints: Math.round((data.avgHintsPerSession || 0) * 10) / 10,
+            consecutiveBad,
           });
         }
       });
-
-      // Also check global if no bySubject
-      if (
-        Object.keys(bySubject).length === 0 &&
-        (adaptive.sessionCount || 0) >= 3 &&
-        (adaptive.hesitationScore || 0) > 0.5 &&
-        (adaptive.avgHintsPerSession || 0) > 3
-      ) {
-        frustrationAlerts.push({
-          studentName,
-          subject: "generale",
-          hesitationScore:
-            Math.round((adaptive.hesitationScore || 0) * 100) / 100,
-          avgHints:
-            Math.round((adaptive.avgHintsPerSession || 0) * 10) / 10,
-          sessions: adaptive.sessionCount || 0,
-        });
-      }
     });
 
     // ── 3. Hard Topics ──

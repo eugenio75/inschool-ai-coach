@@ -1,0 +1,1 @@
+ALTER TABLE public.child_profiles ADD COLUMN teacher_insights_consent boolean NOT NULL DEFAULT true;

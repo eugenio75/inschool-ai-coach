@@ -478,15 +478,15 @@ async function updateAdaptiveProfile(profileId: string, messages: any[], session
     const formatCategory = mapToFormatCategory(sessionFormat);
     if (formatCategory) {
       const fp: Record<string, any> = adaptive.formatPerformance || {};
-      const fmt = fp[formatCategory] || { sessions: 0, totalHints: 0, totalBloom: 0, totalErrors: 0 };
+      const fmt = fp[formatCategory] || { sessions: 0, totalHints: 0, totalBloom: 0, errorRate: 0 };
       fmt.sessions += 1;
       fmt.totalHints += hintRequests;
       fmt.totalBloom += bloomEstimate;
-      // Error rate: proportion of hesitation messages as proxy
-      fmt.totalErrors += hesitationMessages;
       fmt.avgHintsPerSession = fmt.totalHints / fmt.sessions;
       fmt.avgBloomReached = fmt.totalBloom / fmt.sessions;
-      fmt.errorRate = fmt.totalErrors / (userMessages.length || 1);
+      // Error rate: EMA (alpha 0.3) of per-session hesitation ratio
+      const sessionErrorRate = userMessages.length > 0 ? hesitationMessages / userMessages.length : 0;
+      fmt.errorRate = (fmt.errorRate || 0) * 0.7 + sessionErrorRate * 0.3;
       fp[formatCategory] = fmt;
       adaptive.formatPerformance = fp;
 

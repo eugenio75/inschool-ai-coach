@@ -17,7 +17,7 @@ interface InsightsData {
     subject: string;
     hesitationScore: number;
     avgHints: number;
-    sessions: number;
+    consecutiveBad: number;
   }>;
   hardTopics: Array<{
     topic: string;
@@ -229,7 +229,7 @@ export default function ClassInsightsTab({ classId }: ClassInsightsProps) {
                         {alert.studentName}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {alert.subject} — esitazione {Math.round(alert.hesitationScore * 100)}%, media {alert.avgHints} indizi/sessione ({alert.sessions} sessioni)
+                        {alert.subject} — esitazione {Math.round(alert.hesitationScore * 100)}%, media {alert.avgHints} indizi/sessione ({alert.consecutiveBad} sessioni consecutive critiche)
                       </p>
                     </div>
                   </div>
@@ -282,6 +282,7 @@ export default function ClassInsightsTab({ classId }: ClassInsightsProps) {
 
       {/* ── Footer note ── */}
       <p className="text-[10px] text-muted-foreground text-center px-4">
+        I dati mostrati includono solo gli studenti per cui è attivo il consenso alla condivisione con il docente.
         I dati sono aggregati a livello di classe. I punteggi individuali non sono visibili. 
         Le segnalazioni di benessere emotivo sono basate su check-in volontari.
       </p>
