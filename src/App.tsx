@@ -31,6 +31,10 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Security = lazy(() => import("./pages/Security"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TerminiDiServizio = lazy(() => import("./pages/TerminiDiServizio"));
+const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
+const EuAiAct = lazy(() => import("./pages/EuAiAct"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const CredentialVerify = lazy(() => import("./pages/CredentialVerify"));
 const LandingStudenti = lazy(() => import("./pages/LandingStudenti"));
@@ -91,6 +95,7 @@ import { useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { LangProvider } from "@/contexts/LangContext";
 import { TeacherLayout } from "@/components/TeacherLayout";
+import { CookieBanner } from "@/components/CookieBanner";
 
 function GuidedRedirect() {
   const { homeworkId } = useParams<{ homeworkId: string }>();
@@ -159,6 +164,10 @@ const AppRoutes = () => (
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/checkin" element={<AccessibleRoute><EmotionalCheckin /></AccessibleRoute>} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/termini-di-servizio" element={<TerminiDiServizio />} />
+        <Route path="/cookie-policy" element={<CookiePolicy />} />
+        <Route path="/eu-ai-act" element={<EuAiAct />} />
         <Route path="/security" element={<Security />} />
         <Route path="/verify" element={<CredentialVerify />} />
         <Route path="/reset-password" element={<ResetPassword />} />
@@ -204,6 +213,7 @@ const App = () => (
           <BrowserRouter>
             <AppRoutes />
             <BottomNav />
+            <CookieBanner />
           </BrowserRouter>
         </TooltipProvider>
       </LangProvider>
