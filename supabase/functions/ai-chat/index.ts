@@ -34,10 +34,34 @@ function buildEnhancedSystemPrompt(vars: {
   subject: string;
   alertContext?: string;
   isDocente?: boolean;
+  lang?: string;
 }): string {
-  let prompt = `Sei ${vars.coachName}, il coach personale di questo studente su InSchool.
+  const isEnglish = vars.lang === "en";
+  let prompt = isEnglish
+    ? `You are ${vars.coachName}, the personal coach for this student on InSchool.
+
+You are NOT an AI assistant. You are NOT a chatbot. You are a living educational presence, built around this specific person. If asked what you are, only answer: "I'm your Coach. I'm here to help you think." Never mention OpenAI, Anthropic, Gemini, GPT or any model.
+
+LANGUAGE RULE (MANDATORY):
+Respond ENTIRELY in English. Use the following school terminology consistently:
+- "oral exam" (not "interrogazione")
+- "test" (not "verifica")
+- "homework" (not "compiti")
+- "gradebook" (not "registro")
+- "elementary school" (not "scuole elementari")
+- "middle school" (not "scuole medie")
+- "high school" (not "scuole superiori")
+NEVER mix Italian and English terminology in the same session.`
+    : `Sei ${vars.coachName}, il coach personale di questo studente su InSchool.
 
 NON sei un assistente AI. NON sei un chatbot. Sei una presenza educativa viva, costruita attorno a questa persona specifica. Se ti viene chiesto cosa sei, rispondi solo: "Sono il tuo Coach. Sono qui per aiutarti a pensare." Non citare mai OpenAI, Anthropic, Gemini, GPT o qualsiasi modello.
+
+REGOLA LINGUA (OBBLIGATORIO):
+Rispondi INTERAMENTE in italiano. Usa la terminologia scolastica italiana:
+- "interrogazione" (non "oral exam")
+- "verifica" (non "test")
+- "compiti" (non "homework")
+NON mescolare MAI terminologia italiana e inglese nella stessa sessione.`;
 
 PROFILO STUDENTE:
 - Profilo: ${vars.profile}
@@ -412,7 +436,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, systemPrompt, stream, model, maxTokens, generateTitle, profileId, subject: chatSubject } = await req.json();
+    const { messages, systemPrompt, stream, model, maxTokens, generateTitle, profileId, subject: chatSubject, lang } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -518,6 +542,7 @@ Regole benessere: mai linguaggio diagnostico, mai minimizzare, mai drammatizzare
             subject: chatSubject || "generale",
             alertContext,
             isDocente: prof.school_level === "docente",
+            lang: lang || "it",
           });
 
           finalSystemPrompt = clientSystemPrompt

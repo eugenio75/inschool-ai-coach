@@ -22,6 +22,8 @@ import { ChatMsg, streamChat } from "@/lib/streamChat";
 import { SessionCelebration } from "@/components/SessionCelebration";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
+import { useLang } from "@/contexts/LangContext";
+import { getPrepLabelKey } from "@/lib/schoolTerms";
 import { useGuidedSession } from "@/hooks/useGuidedSession";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -46,17 +48,7 @@ function getProfile() {
   }
 }
 
-function getPrepLabel(schoolLevel: string) {
-  switch (schoolLevel) {
-    case "alunno":
-    case "medie":
-      return "Prepara l'interrogazione";
-    case "universitario":
-      return "Prepara l'esame";
-    default:
-      return "Prepara la verifica";
-  }
-}
+// getPrepLabel now handled via i18n — see getTitle()
 
 const OUTPUT_TYPES = [
   { id: "schema", label: "Schema", icon: List },
@@ -72,6 +64,7 @@ type SessionType = "study" | "review" | "prep" | "guided";
 export default function UnifiedSession() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { t } = useLang();
   const type = (searchParams.get("type") || "study") as SessionType;
   const homeworkId = searchParams.get("hw");
   const urlSubject = searchParams.get("subject");
@@ -248,11 +241,11 @@ Inizia con la prima domanda.`;
       case "study":
         return "Studio libero";
       case "review":
-        return "Ripasso profondo";
+        return t("session_review");
       case "prep":
-        return getPrepLabel(schoolLevel);
+        return t(getPrepLabelKey(schoolLevel));
       default:
-        return "Sessione";
+        return t("session_default");
     }
   }
 
@@ -567,9 +560,9 @@ Inizia con la prima domanda.`;
               <label className="text-sm font-medium text-foreground mb-2 block">Scegli cosa ripassare</label>
               <div className="grid grid-cols-1 gap-2">
                 {[
-                  { id: "today", label: "Ripassa quello di oggi", icon: CalendarDays },
-                  { id: "cumulative", label: "Ripasso cumulativo", icon: Brain },
-                  { id: "prep", label: getPrepLabel(schoolLevel), icon: GraduationCap },
+                  { id: "today", label: t("review_today"), icon: CalendarDays },
+                  { id: "cumulative", label: t("review_cumulative"), icon: Brain },
+                  { id: "prep", label: t(getPrepLabelKey(schoolLevel)), icon: GraduationCap },
                 ].map((opt) => (
                   <button
                     key={opt.id}
@@ -597,9 +590,9 @@ Inizia con la prima domanda.`;
                   <Sparkles className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <Input
-                  value={topic.startsWith("Ripassa") || topic.startsWith("Ripasso") || topic === getPrepLabel(schoolLevel) ? "" : topic}
+                  value={topic.startsWith("Ripassa") || topic.startsWith("Ripasso") || topic.startsWith("Review") || topic.startsWith("Prepare") || topic === t(getPrepLabelKey(schoolLevel)) ? "" : topic}
                   onChange={e => setTopic(e.target.value)}
-                  placeholder="Oppure scrivi un argomento specifico..."
+                  placeholder={t("review_topic_placeholder")}
                   className="text-sm pl-9"
                 />
               </div>

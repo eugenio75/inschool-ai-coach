@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
 import { MathText } from "@/components/shared/MathText";
+import { useLang } from "@/contexts/LangContext";
+import { getPrepLabelKey } from "@/lib/schoolTerms";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -30,15 +32,7 @@ function getProfile() {
   } catch { return null; }
 }
 
-function getPrepLabel(schoolLevel: string): string {
-  switch (schoolLevel) {
-    case "alunno": return "Prepara l'interrogazione";
-    case "medie": return "Prepara l'interrogazione";
-    case "superiori": return "Prepara la verifica o l'interrogazione";
-    case "universitario": return "Prepara l'esame";
-    default: return "Prepara la prova";
-  }
-}
+// getPrepLabel now uses i18n — see usage below
 
 function getSchoolLevelPrompt(schoolLevel: string, mode: string, subject: string, weaknessContext: string): string {
   const modeLabel = mode === "orale" ? "interrogazione orale" : "verifica scritta";
@@ -103,6 +97,7 @@ export default function PrepSession() {
   const navigate = useNavigate();
   const { subject: paramSubject } = useParams();
   const { user } = useAuth();
+  const { t } = useLang();
   const profile = getProfile();
   const schoolLevel = profile?.school_level || "superiori";
 
@@ -124,7 +119,7 @@ export default function PrepSession() {
   const recognitionRef = useRef<any>(null);
 
   const subjects = profile?.favorite_subjects || profile?.difficult_subjects || ["Matematica", "Italiano", "Inglese", "Storia", "Scienze"];
-  const prepLabel = getPrepLabel(schoolLevel);
+  const prepLabel = t(getPrepLabelKey(schoolLevel));
   const isUniversity = schoolLevel === "universitario";
 
   useEffect(() => {

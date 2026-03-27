@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { BookOpen, PenLine, Brain, GraduationCap, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isChildSession, getChildSession } from "@/lib/childSession";
+import { useLang } from "@/contexts/LangContext";
+import { getPrepLabelKey } from "@/lib/schoolTerms";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -14,22 +16,13 @@ function getProfile() {
   } catch { return null; }
 }
 
-function getPrepLabel(schoolLevel: string): string {
-  switch (schoolLevel) {
-    case "alunno": return "Prepara l'interrogazione";
-    case "medie": return "Prepara l'interrogazione";
-    case "superiori": return "Prepara la verifica o l'interrogazione";
-    case "universitario": return "Prepara l'esame";
-    default: return "Prepara la prova";
-  }
-}
-
 interface SessionEntryCardsProps {
   hasTasks: boolean;
 }
 
 export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
   const navigate = useNavigate();
+  const { t } = useLang();
   const profile = getProfile();
   const schoolLevel = profile?.school_level || "superiori";
 
@@ -81,8 +74,8 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
     },
     {
       id: "prep",
-      label: getPrepLabel(schoolLevel),
-      desc: "Simulazione calibrata sui tuoi punti deboli",
+      label: t(getPrepLabelKey(schoolLevel)),
+      desc: t("prep_desc"),
       icon: GraduationCap,
       color: "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400",
       iconColor: "text-amber-600 dark:text-amber-400",
