@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import i18n from "i18next";
 
 export interface ChatAction {
   label: string;
@@ -41,6 +42,7 @@ export async function streamChat({
       body: JSON.stringify({
         messages: messages.map(m => ({ role: m.role, content: m.content })),
         stream: true,
+        lang: i18n.language || "it",
         ...extraBody,
       }),
     }
