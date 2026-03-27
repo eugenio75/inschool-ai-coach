@@ -241,11 +241,11 @@ Inizia con la prima domanda.`;
       case "study":
         return "Studio libero";
       case "review":
-        return "Ripasso profondo";
+        return t("session_review");
       case "prep":
-        return getPrepLabel(schoolLevel);
+        return t(getPrepLabelKey(schoolLevel));
       default:
-        return "Sessione";
+        return t("session_default");
     }
   }
 
