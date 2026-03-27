@@ -198,7 +198,7 @@ export default function CoachDocente() {
 
   async function createNewChat(name?: string) {
     if (!teacherId) return null;
-    const chatName = name || `Chat del ${format(new Date(), "d MMMM", { locale: it })}`;
+    const chatName = name || `Chat del ${format(new Date(), "d MMMM", { locale: dateLocale })}`;
     const { data, error } = await (supabase as any).from("teacher_chats")
       .insert({ teacher_id: teacherId, name: chatName, class_id: null }).select("*").single();
 
@@ -245,16 +245,33 @@ export default function CoachDocente() {
     const className = activeChat?.name || "";
     const subjects = profile?.favorite_subjects || [];
 
-    let base = `Sei il coach AI personale di ${profile?.name || "un docente"} su InSchool.
+    const isEN = i18n.language === "en";
+    let base = isEN
+      ? `You are the personal AI coach of ${profile?.name || "a teacher"} on InSchool.
+${subjects.length > 0 ? `Subjects taught: ${subjects.join(", ")}.` : ""}
+Collegial, efficient, warm but never patronising tone. Max 2-3 sentences.
+NEVER ask "How can I help you?" or "What do you want to do?". Understand from context and respond.`
+      : `Sei il coach AI personale di ${profile?.name || "un docente"} su InSchool.
 ${subjects.length > 0 ? `Materie insegnate: ${subjects.join(", ")}.` : ""}
 Tono collegiale, efficiente, caldo ma mai paternalistico. Max 2-3 frasi.
 NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contesto e rispondi.`;
 
     if (isClassChat) {
-      base += `\n\nQuesta è una chat di classe: ${className}. Rispondi sempre in contesto con la classe, i suoi studenti e le attività correlate.`;
+      base += isEN
+        ? `\n\nThis is a class chat: ${className}. Always respond in the context of the class, its students and related activities.`
+        : `\n\nQuesta è una chat di classe: ${className}. Rispondi sempre in contesto con la classe, i suoi studenti e le attività correlate.`;
     }
 
-    base += `\n\nREGOLE DI RISPOSTA:
+    base += isEN
+      ? `\n\nRESPONSE RULES:
+- If the message is a reply to your previous message → continue the conversation coherently
+- If it's a greeting → respond briefly and suggest a concrete action
+- If it's an operational request → guide toward the feature
+- If it's an emotional vent → acknowledge the state, don't force actions
+- If it's a typo or nonsensical text → gently ask to repeat in ONE sentence
+- Never respond with identical consecutive replies — always vary
+- Respond ONLY text, no JSON.`
+      : `\n\nREGOLE DI RISPOSTA:
 - Se il messaggio è una risposta al tuo messaggio precedente → continua la conversazione coerentemente
 - Se è un saluto → rispondi brevemente e proponi un'azione concreta
 - Se è una richiesta operativa → guida verso la funzione
