@@ -516,6 +516,11 @@ export default function ClassView() {
           )}
         </TabsContent>
 
+        {/* ━━━ TAB: INSIGHTS ━━━ */}
+        <TabsContent value="insights" className="mt-6">
+          <ClassInsightsTab classId={classId!} />
+        </TabsContent>
+
         {/* ━━━ TAB: MATERIALI ━━━ */}
         <TabsContent value="materiali" className="mt-6">
           <TeacherMaterialsTab
