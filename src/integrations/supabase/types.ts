@@ -133,6 +133,7 @@ export type Database = {
           school_name: string | null
           struggles: string[] | null
           support_style: string | null
+          teacher_insights_consent: boolean
           updated_at: string
         }
         Insert: {
@@ -155,6 +156,7 @@ export type Database = {
           school_name?: string | null
           struggles?: string[] | null
           support_style?: string | null
+          teacher_insights_consent?: boolean
           updated_at?: string
         }
         Update: {
@@ -177,6 +179,7 @@ export type Database = {
           school_name?: string | null
           struggles?: string[] | null
           support_style?: string | null
+          teacher_insights_consent?: boolean
           updated_at?: string
         }
         Relationships: []
