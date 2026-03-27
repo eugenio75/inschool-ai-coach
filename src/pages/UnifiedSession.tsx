@@ -169,7 +169,7 @@ export default function UnifiedSession() {
             setStreamingText("");
             setSending(false);
           },
-          extraBody: { profileId, subject: subject || undefined },
+          extraBody: { profileId, subject: subject || undefined, sessionFormat: type },
         });
       }, 150);
       return () => clearTimeout(t);
@@ -270,7 +270,7 @@ Inizia con la prima domanda.`;
         setStreamingText("");
         setSending(false);
       },
-      extraBody: { profileId, subject: subject || undefined },
+      extraBody: { profileId, subject: subject || undefined, sessionFormat: type },
     }).catch(() => {
       setMessages([{ role: "assistant", content: "Mi dispiace, c'è stato un problema. Riprova." }]);
       setStreamingText("");
@@ -310,7 +310,7 @@ Inizia con la prima domanda.`;
         setStreamingText("");
         setSending(false);
       },
-      extraBody: { profileId, subject: subject || undefined },
+      extraBody: { profileId, subject: subject || undefined, sessionFormat: type },
     }).catch(() => {
       setMessages(prev => [...prev, { role: "assistant", content: "Errore. Riprova." }]);
       setStreamingText("");

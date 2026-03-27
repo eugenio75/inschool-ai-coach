@@ -552,7 +552,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, systemPrompt, stream, model, maxTokens, generateTitle, profileId, subject: chatSubject, lang } = await req.json();
+    const { messages, systemPrompt, stream, model, maxTokens, generateTitle, profileId, subject: chatSubject, sessionFormat, lang } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -736,7 +736,7 @@ ${clientSystemPrompt}`
     if (shouldStream) {
       // Fire-and-forget: update adaptive profile + blockchain log
       if (profileId) {
-        updateAdaptiveProfile(profileId, messages, chatSubject).catch(() => {});
+        updateAdaptiveProfile(profileId, messages, chatSubject, sessionFormat).catch(() => {});
       // Blockchain log — fire-and-forget, mai blocca la risposta
         try {
           const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -752,7 +752,7 @@ ${clientSystemPrompt}`
       const data = await response.json();
       // Fire-and-forget: update adaptive profile + blockchain log
       if (profileId) {
-        updateAdaptiveProfile(profileId, messages, chatSubject).catch(() => {});
+        updateAdaptiveProfile(profileId, messages, chatSubject, sessionFormat).catch(() => {});
         try {
           const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
           const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
