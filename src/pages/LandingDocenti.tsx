@@ -75,6 +75,15 @@ export default function LandingDocenti() {
         </div>
       </section>
 
+      {/* ── MOCKUP DASHBOARD ── */}
+      <section className="py-20 px-6 bg-white">
+        <div className="max-w-3xl mx-auto">
+          <motion.div {...fade}>
+            <TeacherHomeMockup />
+          </motion.div>
+        </div>
+      </section>
+
       {/* ── COME TI AIUTA ── */}
       <section className="py-20 px-6" style={{ backgroundColor: "#F8FAFC" }}>
         <div className="max-w-3xl mx-auto">
