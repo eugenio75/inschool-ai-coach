@@ -9,7 +9,6 @@ import { useLang } from "@/contexts/LangContext";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { TrustSection } from "@/components/landing/TrustSection";
-import { HomeChatMockup } from "@/components/landing/HomeChatMockup";
 
 const fade = {
   initial: { opacity: 0, y: 16 },
@@ -17,6 +16,13 @@ const fade = {
   viewport: { once: true as const },
   transition: { duration: 0.3 },
 };
+
+const homeTrustItems = [
+  { title: "trust_1" as const, desc: "trust_1_desc" as const },
+  { title: "trust_2" as const, desc: "trust_home_minor_desc" as const },
+  { title: "trust_3" as const, desc: "trust_3_desc" as const },
+  { title: "trust_4" as const, desc: "trust_bc_desc" as const },
+];
 
 export default function Landing() {
   const { t } = useLang();
@@ -39,10 +45,10 @@ export default function Landing() {
           </motion.p>
           <motion.div {...fade} transition={{ delay: 0.15 }} className="mt-8 flex gap-3 justify-center flex-wrap">
             <Button asChild size="lg" style={{ backgroundColor: "#0070C0" }} className="rounded-lg hover:opacity-90">
-              <Link to="/auth">{t("home_hero_cta1") || "Inizia gratis"}</Link>
+              <Link to="/auth">{t("home_hero_cta1")}</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="rounded-lg border-slate-300 text-slate-700">
-              <a href="#come-funziona">{t("home_hero_cta2") || "Scopri come funziona"}</a>
+              <a href="#come-funziona">{t("home_hero_cta2")}</a>
             </Button>
           </motion.div>
           <motion.div {...fade} transition={{ delay: 0.2 }} className="mt-5 flex gap-6 justify-center text-xs" style={{ color: "#94A3B8" }}>
@@ -149,42 +155,15 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── MOCKUP COACH ── */}
-      <section className="py-20 px-6 bg-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.h2
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.3 }}
-            className="font-display text-2xl font-bold mb-4"
-            style={{ color: "#1A3A5C" }}
-          >
-            Guarda il coach in azione
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.05, duration: 0.3 }}
-            className="text-sm mb-10"
-            style={{ color: "#64748B" }}
-          >
-            Una conversazione reale tra il coach e uno studente.
-          </motion.p>
-          <HomeChatMockup />
-        </div>
-      </section>
-
       {/* ── TRUST ── */}
-      <TrustSection />
+      <TrustSection items={homeTrustItems} titleKey="trust_home_title" />
 
       {/* ── CTA FINALE ── */}
       <section className="py-24 px-6 text-center" style={{ background: "linear-gradient(135deg, #1A3A5C, #0070C0)" }}>
         <motion.h2 {...fade} className="font-display text-4xl font-bold text-white">
           {t("home_final_title")}
         </motion.h2>
-        <motion.p {...fade} transition={{ delay: 0.05 }} className="text-lg mt-4" style={{ color: "rgba(255,255,255,0.7)" }}>
+        <motion.p {...fade} transition={{ delay: 0.05 }} className="text-lg mt-4 whitespace-pre-line" style={{ color: "rgba(255,255,255,0.7)" }}>
           {t("home_final_body")}
         </motion.p>
         <motion.div {...fade} transition={{ delay: 0.1 }} className="mt-8 flex gap-4 justify-center flex-wrap">

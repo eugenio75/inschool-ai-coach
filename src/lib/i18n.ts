@@ -138,7 +138,7 @@ export const translations = {
     home_trust_link: "Approfondisci sicurezza e conformità",
 
     home_final_title: "Più metodo. Più fiducia. Più futuro.",
-    home_final_body: "Scegli il percorso più adatto a te e scopri un modo più umano, guidato ed efficace di imparare e insegnare.",
+    home_final_body: "InSchool è per chi vuole crescere imparando.\nE per chi ogni giorno aiuta gli altri a farlo.",
     home_final_cta1: "Inizia come Studente",
     home_final_cta2: "Sono un Docente",
 
@@ -326,7 +326,7 @@ export const translations = {
     st_new_ben_2_title: "Costruisci il tuo metodo",
     st_new_ben_2_body: "Ti aiuta a organizzarti meglio, pensare con più chiarezza e diventare più autonomo.",
     st_new_ben_3_title: "Ti sostiene quando serve",
-    st_new_ben_3_body: "Quando lo studio pesa di più, ti aiuta a ritrovare calma, fiducia e continuità. Non è solo un aiuto compiti — si accorge di come stai.",
+    st_new_ben_3_body: "Quando lo studio pesa di più, ti aiuta a ritrovare calma, fiducia e continuità. Non è solo un aiuto compiti: riconosce anche la fatica.",
     st_new_how_1: "Inserisci i compiti",
     st_new_how_1b: "Li aggiungi in modo semplice e veloce.",
     st_new_how_2: "Il coach li rende più chiari",
@@ -347,7 +347,7 @@ export const translations = {
     st_new_uni_title: "Università",
     st_new_uni_body: "Più ordine, comprensione e continuità per affrontare esami e obiettivi con più consapevolezza.",
     st_new_fam_title: "Più serenità nell'apprendimento. Anche a casa.",
-    st_new_fam_body: "InSchool aiuta gli studenti a sentirsi più capaci, più sereni e più autonomi. E offre alle famiglie un supporto concreto — se tuo figlio attraversa un momento difficile, InSchool lo nota e ti avvisa in modo discreto.",
+    st_new_fam_body: "InSchool aiuta gli studenti a sentirsi più capaci, più sereni e più autonomi. E offre alle famiglie un supporto concreto: se emergono segnali di difficoltà, aiuta a notarli con discrezione.",
 
     // Docenti new
     doc_new_hero_title: "Insegnare con più supporto e serenità.",
@@ -374,7 +374,19 @@ export const translations = {
     doc_new_who_3_title: "Docenti universitari",
     doc_new_who_3_body: "Supporto agli studenti fuori dall'aula, verifica continua, ragionamento autonomo.",
     doc_new_time_title: "Perché il tuo tempo fuori dalla scuola è tuo.",
-    doc_new_time_body: "InSchool riduce il peso delle cose non finite, dei materiali da rifare e dei pensieri che restano. Così, quando esci, esci davvero.",
+    doc_new_time_body: "InSchool riduce il peso delle cose non finite, dei materiali da rifare e dei pensieri che restano. Per aiutarti a ritrovare più tempo libero e più serenità.",
+
+    // Trust page-specific
+    trust_home_title: "Sicurezza e conformità",
+    trust_home_minor_desc: "Esperienza progettata con attenzione per età, contesto e fragilità. Se emergono segnali di difficoltà, InSchool può aiutare la famiglia a notarli con discrezione.",
+    trust_bc_desc: "Credenziali, consensi e progressi sono gestiti in modo sicuro, tracciabile e verificabile nel tempo grazie ad Azar Chain, la blockchain privata proprietaria di InSchool.",
+    trust_st_minor_desc: "Esperienza progettata con attenzione per età, contesto e fragilità.",
+    trust_st_support: "Supporto attento e discreto",
+    trust_st_support_desc: "Se emergono segnali di difficoltà, InSchool aiuta a notarli nel modo giusto.",
+    trust_doc_minor_desc: "Esperienza progettata con attenzione per età, contesto e fragilità.",
+    st_new_final_body: "InSchool è per chi vuole crescere imparando.\nE per chi ogni giorno vuole affrontare lo studio con più serenità, fiducia e autonomia.",
+    doc_new_final_title: "Più metodo. Più fiducia. Più futuro.",
+    doc_new_final_body: "Per chi ogni giorno aiuta gli altri a crescere.",
 
     // Security new
     sec_hero_title: "Progettato per meritare fiducia.",
@@ -549,7 +561,7 @@ export const translations = {
     home_trust_link: "Learn more about security and compliance",
 
     home_final_title: "More method. More trust. More future.",
-    home_final_body: "Choose the right path and discover a more human, guided and effective way to learn and teach.",
+    home_final_body: "InSchool is for those who want to grow by learning.\nAnd for those who every day help others do the same.",
     home_final_cta1: "Start as a Student",
     home_final_cta2: "I'm a Teacher",
 
@@ -737,7 +749,7 @@ export const translations = {
     st_new_ben_2_title: "Build your method",
     st_new_ben_2_body: "Helps you organise better, think more clearly and become more independent.",
     st_new_ben_3_title: "Supports you when needed",
-    st_new_ben_3_body: "When studying gets heavy, it helps you find calm, confidence and continuity. It's not just homework help — it notices how you're doing.",
+    st_new_ben_3_body: "When studying gets heavy, it helps you find calm, confidence and continuity. It's not just homework help: it recognises the effort too.",
     st_new_how_1: "Add your homework",
     st_new_how_1b: "Quickly and easily.",
     st_new_how_2: "The coach makes it clearer",
@@ -758,7 +770,7 @@ export const translations = {
     st_new_uni_title: "University",
     st_new_uni_body: "More order, understanding and continuity to face exams and goals with more awareness.",
     st_new_fam_title: "More peace of mind in learning. At home too.",
-    st_new_fam_body: "InSchool helps students feel more capable, calmer and more independent. And offers families concrete support — if your child is going through a difficult time, InSchool notices and lets you know discreetly.",
+    st_new_fam_body: "InSchool helps students feel more capable, calmer and more independent. And offers families concrete support: when signs of difficulty emerge, it helps notice them discreetly.",
 
     // Docenti new EN
     doc_new_hero_title: "Teach with more support and peace of mind.",
@@ -785,7 +797,19 @@ export const translations = {
     doc_new_who_3_title: "University lecturers",
     doc_new_who_3_body: "Student support outside the classroom, continuous verification, independent reasoning.",
     doc_new_time_title: "Because your time outside school is yours.",
-    doc_new_time_body: "InSchool reduces the weight of unfinished things, materials to redo and lingering thoughts. So when you leave, you really leave.",
+    doc_new_time_body: "InSchool reduces the weight of unfinished things, materials to redo and lingering thoughts. To help you find more free time and more peace of mind.",
+
+    // Trust page-specific EN
+    trust_home_title: "Security and compliance",
+    trust_home_minor_desc: "Experience designed with care for age, context and vulnerability. When signs of difficulty emerge, InSchool can help the family notice them discreetly.",
+    trust_bc_desc: "Credentials, consents and progress are managed securely, traceably and verifiably over time through Azar Chain, InSchool's proprietary private blockchain.",
+    trust_st_minor_desc: "Experience designed with care for age, context and vulnerability.",
+    trust_st_support: "Attentive and discreet support",
+    trust_st_support_desc: "When signs of difficulty emerge, InSchool helps notice them in the right way.",
+    trust_doc_minor_desc: "Experience designed with care for age, context and vulnerability.",
+    st_new_final_body: "InSchool is for those who want to grow by learning.\nAnd for those who every day want to face studying with more peace of mind, confidence and autonomy.",
+    doc_new_final_title: "More method. More trust. More future.",
+    doc_new_final_body: "For those who every day help others grow.",
 
     // Security new EN
     sec_hero_title: "Built to earn trust.",

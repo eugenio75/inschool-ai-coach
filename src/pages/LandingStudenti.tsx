@@ -6,8 +6,6 @@ import { useLang } from "@/contexts/LangContext";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { TrustSection } from "@/components/landing/TrustSection";
-import { StudentSessionMockup } from "@/components/landing/StudentSessionMockup";
-import { StudentReviewMockup } from "@/components/landing/StudentReviewMockup";
 
 const fade = {
   initial: { opacity: 0, y: 16 },
@@ -15,6 +13,14 @@ const fade = {
   viewport: { once: true as const },
   transition: { duration: 0.3 },
 };
+
+const studentTrustItems = [
+  { title: "trust_1" as const, desc: "trust_1_desc" as const },
+  { title: "trust_2" as const, desc: "trust_st_minor_desc" as const },
+  { title: "trust_3" as const, desc: "trust_3_desc" as const },
+  { title: "trust_st_support" as const, desc: "trust_st_support_desc" as const },
+  { title: "trust_4" as const, desc: "trust_bc_desc" as const },
+];
 
 export default function LandingStudenti() {
   const { t } = useLang();
@@ -39,19 +45,16 @@ export default function LandingStudenti() {
       {/* ── HERO ── */}
       <section className="pt-24 pb-20 px-6 text-center">
         <div className="max-w-3xl mx-auto">
-          <motion.span {...fade} className="inline-block rounded-full px-4 py-1.5 text-xs font-semibold mb-6" style={{ backgroundColor: "rgba(0,112,192,0.1)", color: "#0070C0" }}>
-            {t("st_hero_label")}
-          </motion.span>
-          <motion.h1 {...fade} transition={{ delay: 0.05 }} className="font-display text-5xl font-bold leading-tight" style={{ color: "#1A3A5C" }}>
+          <motion.h1 {...fade} className="font-display text-5xl font-bold leading-tight" style={{ color: "#1A3A5C" }}>
             {t("st_new_hero_title")}
           </motion.h1>
-          <motion.p {...fade} transition={{ delay: 0.1 }} className="text-xl mt-2" style={{ color: "#64748B" }}>
+          <motion.p {...fade} transition={{ delay: 0.05 }} className="text-xl mt-2" style={{ color: "#64748B" }}>
             {t("st_new_hero_sub")}
           </motion.p>
-          <motion.p {...fade} transition={{ delay: 0.15 }} className="text-base max-w-xl mx-auto mt-3" style={{ color: "#94A3B8" }}>
+          <motion.p {...fade} transition={{ delay: 0.1 }} className="text-base max-w-xl mx-auto mt-3" style={{ color: "#94A3B8" }}>
             {t("st_new_hero_body")}
           </motion.p>
-          <motion.div {...fade} transition={{ delay: 0.2 }} className="mt-8 flex gap-3 justify-center flex-wrap">
+          <motion.div {...fade} transition={{ delay: 0.15 }} className="mt-8 flex gap-3 justify-center flex-wrap">
             <Button asChild size="lg" style={{ backgroundColor: "#0070C0" }} className="rounded-lg hover:opacity-90">
               <Link to="/auth">{t("st_hero_cta1")}</Link>
             </Button>
@@ -59,7 +62,7 @@ export default function LandingStudenti() {
               <a href="#come-funziona">{t("st_hero_cta2")}</a>
             </Button>
           </motion.div>
-          <motion.div {...fade} transition={{ delay: 0.25 }} className="mt-5 flex gap-6 justify-center text-xs" style={{ color: "#94A3B8" }}>
+          <motion.div {...fade} transition={{ delay: 0.2 }} className="mt-5 flex gap-6 justify-center text-xs" style={{ color: "#94A3B8" }}>
             <span>{t("home_hero_micro1")}</span>
             <span>{t("home_hero_micro2")}</span>
             <span>{t("home_hero_micro3")}</span>
@@ -67,25 +70,20 @@ export default function LandingStudenti() {
         </div>
       </section>
 
-      {/* ── COME TI AIUTA + MOCKUP ── */}
+      {/* ── COME TI AIUTA ── */}
       <section className="py-20 px-6" style={{ backgroundColor: "#F8FAFC" }}>
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <motion.h2 {...fade} className="font-display text-2xl font-bold text-center" style={{ color: "#1A3A5C" }}>
             {t("st_new_ben_title")}
           </motion.h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10 items-center">
-            <div className="space-y-6">
-              {benefits.map(({ icon: Icon, tTitle, tBody }, i) => (
-                <motion.div key={tTitle} {...fade} transition={{ delay: i * 0.05 }} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                  <Icon className="w-7 h-7 mb-4" style={{ color: "#0070C0" }} />
-                  <h3 className="font-semibold" style={{ color: "#1A3A5C" }}>{t(tTitle)}</h3>
-                  <p className="text-sm mt-2" style={{ color: "#64748B" }}>{t(tBody)}</p>
-                </motion.div>
-              ))}
-            </div>
-            <div className="flex justify-center">
-              <StudentSessionMockup />
-            </div>
+          <div className="space-y-6 mt-10">
+            {benefits.map(({ icon: Icon, tTitle, tBody }, i) => (
+              <motion.div key={tTitle} {...fade} transition={{ delay: i * 0.05 }} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                <Icon className="w-7 h-7 mb-4" style={{ color: "#0070C0" }} />
+                <h3 className="font-semibold" style={{ color: "#1A3A5C" }}>{t(tTitle)}</h3>
+                <p className="text-sm mt-2" style={{ color: "#64748B" }}>{t(tBody)}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -120,46 +118,19 @@ export default function LandingStudenti() {
             {ageCards.map((card, i) => {
               const roleMap = ["/auth?role=alunno", "/auth?role=alunno", "/auth?role=superiori", "/auth?role=universitario"];
               return (
-              <motion.div key={card.title} {...fade} transition={{ delay: i * 0.05 }} className="bg-white border-t-4 rounded-xl p-6 shadow-sm" style={{ borderColor: "#0070C0" }}>
-                <span className="inline-block rounded-full px-3 py-1 text-xs font-semibold mb-3" style={{ backgroundColor: "rgba(0,112,192,0.1)", color: "#0070C0" }}>
-                  {t(card.badge)}
-                </span>
-                <h3 className="font-semibold" style={{ color: "#1A3A5C" }}>{t(card.title)}</h3>
-                <p className="text-sm mt-2" style={{ color: "#64748B" }}>{t(card.body)}</p>
-                <Link to={roleMap[i]} className="inline-flex items-center gap-1 text-sm font-medium mt-4" style={{ color: "#0070C0" }}>
-                  <ArrowRight className="w-3.5 h-3.5" /> {t("profile_cta")}
-                </Link>
-              </motion.div>
+                <motion.div key={card.title} {...fade} transition={{ delay: i * 0.05 }} className="bg-white border-t-4 rounded-xl p-6 shadow-sm" style={{ borderColor: "#0070C0" }}>
+                  <span className="inline-block rounded-full px-3 py-1 text-xs font-semibold mb-3" style={{ backgroundColor: "rgba(0,112,192,0.1)", color: "#0070C0" }}>
+                    {t(card.badge)}
+                  </span>
+                  <h3 className="font-semibold" style={{ color: "#1A3A5C" }}>{t(card.title)}</h3>
+                  <p className="text-sm mt-2" style={{ color: "#64748B" }}>{t(card.body)}</p>
+                  <Link to={roleMap[i]} className="inline-flex items-center gap-1 text-sm font-medium mt-4" style={{ color: "#0070C0" }}>
+                    <ArrowRight className="w-3.5 h-3.5" /> {t("profile_cta")}
+                  </Link>
+                </motion.div>
               );
             })}
           </div>
-        </div>
-      </section>
-
-      {/* ── MOCKUP RIPASSO ── */}
-      <section className="py-20 px-6 bg-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.h2
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.3 }}
-            className="font-display text-2xl font-bold mb-4"
-            style={{ color: "#1A3A5C" }}
-          >
-            Il ripasso, semplificato
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.05, duration: 0.3 }}
-            className="text-sm mb-10"
-            style={{ color: "#64748B" }}
-          >
-            Vedi subito dove sei forte e dove serve rinforzare.
-          </motion.p>
-          <StudentReviewMockup />
         </div>
       </section>
 
@@ -174,15 +145,15 @@ export default function LandingStudenti() {
       </section>
 
       {/* ── TRUST ── */}
-      <TrustSection />
+      <TrustSection items={studentTrustItems} />
 
       {/* ── CTA FINALE ── */}
       <section className="py-20 px-6 text-center" style={{ background: "linear-gradient(135deg, #1A3A5C, #0070C0)" }}>
         <motion.h2 {...fade} className="font-display text-3xl font-bold text-white">
           {t("st_final_title")}
         </motion.h2>
-        <motion.p {...fade} transition={{ delay: 0.05 }} className="mt-4" style={{ color: "rgba(255,255,255,0.7)" }}>
-          {t("st_final_body")}
+        <motion.p {...fade} transition={{ delay: 0.05 }} className="mt-4 whitespace-pre-line" style={{ color: "rgba(255,255,255,0.7)" }}>
+          {t("st_new_final_body")}
         </motion.p>
         <motion.div {...fade} transition={{ delay: 0.1 }} className="mt-8 flex gap-4 justify-center flex-wrap">
           <Button asChild size="lg" className="rounded-lg bg-white font-semibold px-6 py-3 hover:bg-white/90" style={{ color: "#1A3A5C" }}>
