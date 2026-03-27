@@ -506,14 +506,14 @@ const Settings = () => {
             <LogoutButton showLabel className="w-full flex items-center justify-center gap-2 rounded-2xl border border-border text-foreground hover:text-destructive hover:bg-destructive/5 transition-colors py-3 text-sm font-medium" />
           </div>
 
-          {/* Delete Account */}
-          <div className="bg-card rounded-2xl border border-destructive/20 p-6">
-            <h3 className="font-display font-semibold text-destructive mb-3 flex items-center gap-2"><Trash2 className="w-4 h-4" /> Elimina Account</h3>
+          {/* Privacy e dati */}
+          <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
+            <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2"><Shield className="w-4 h-4 text-primary" /> Privacy e dati</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Tutti i tuoi dati verranno eliminati permanentemente. Questa azione non può essere annullata.
+              Puoi eliminare il tuo account e tutti i dati associati in qualsiasi momento. L'operazione è irreversibile.
             </p>
-            <Button variant="destructive" className="rounded-xl" onClick={() => setShowDelete1(true)}>
-              Elimina il mio account
+            <Button variant="outline" className="rounded-xl border-destructive text-destructive hover:bg-destructive/5" onClick={() => setShowDelete1(true)}>
+              <Trash2 className="w-4 h-4 mr-2" /> Elimina il mio account
             </Button>
           </div>
         </div>
@@ -523,9 +523,9 @@ const Settings = () => {
       <AlertDialog open={showDelete1} onOpenChange={setShowDelete1}>
         <AlertDialogContent className="rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
+            <AlertDialogTitle>Sei sicuro di voler eliminare il tuo account?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tutti i tuoi dati, profili e conversazioni verranno eliminati permanentemente.
+              Questa azione è irreversibile. Tutti i tuoi dati verranno cancellati entro 30 giorni.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -546,7 +546,7 @@ const Settings = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Conferma eliminazione</AlertDialogTitle>
             <AlertDialogDescription>
-              Scrivi DELETE per confermare l'eliminazione del tuo account.
+              Per confermare scrivi DELETE nel campo sottostante.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <Input

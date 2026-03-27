@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Sparkles, Mail, Lock, KeyRound, MapPin, User, ArrowRight, Loader2, Hexagon, Building2, Chrome, Globe, Users, BookOpen, GraduationCap, Laptop, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { loginWithChildCode, setChildSession } from "@/lib/childSession";
@@ -74,6 +75,11 @@ const Auth = () => {
   
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  // GDPR consent checkboxes
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [parentalConsent, setParentalConsent] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
 
   // Form states
   const [email, setEmail] = useState("");
@@ -345,7 +351,29 @@ const Auth = () => {
                                 <input type="password" required value={password} onChange={e => setPassword(e.target.value)} className={inputClass} />
                             </div>
                         </div>
-                        <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl font-bold shadow-sm">
+                        {!isLogin && (
+                          <div className="space-y-3 mt-2">
+                            <label className="flex items-start gap-2 cursor-pointer">
+                              <Checkbox checked={acceptTerms} onCheckedChange={(v) => setAcceptTerms(!!v)} className="mt-0.5" />
+                              <span className="text-xs text-muted-foreground leading-relaxed">
+                                Ho letto e accetto la <Link to="/privacy-policy" className="text-primary underline">Privacy Policy</Link> e i <Link to="/termini-di-servizio" className="text-primary underline">Termini di Servizio</Link>
+                              </span>
+                            </label>
+                            <label className="flex items-start gap-2 cursor-pointer">
+                              <Checkbox checked={parentalConsent} onCheckedChange={(v) => setParentalConsent(!!v)} className="mt-0.5" />
+                              <span className="text-xs text-muted-foreground leading-relaxed">
+                                Confermo di essere il genitore o tutore legale e fornisco il consenso al trattamento dei dati del minore ai sensi dell'art. 8 GDPR
+                              </span>
+                            </label>
+                            <label className="flex items-start gap-2 cursor-pointer">
+                              <Checkbox checked={marketingConsent} onCheckedChange={(v) => setMarketingConsent(!!v)} className="mt-0.5" />
+                              <span className="text-xs text-muted-foreground leading-relaxed">
+                                Acconsento a ricevere comunicazioni su novità e aggiornamenti di InSchool
+                              </span>
+                            </label>
+                          </div>
+                        )}
+                        <Button type="submit" disabled={loading || (!isLogin && (!acceptTerms || !parentalConsent))} className="w-full h-12 rounded-xl font-bold shadow-sm">
                             {loading ? <Loader2 className="animate-spin w-5 h-5 mx-auto"/> : (isLogin ? "Accedi" : "Registrati")}
                         </Button>
                     </form>
@@ -469,7 +497,32 @@ const Auth = () => {
                         </div>
                     </div>
 
-                    <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl font-bold shadow-sm mt-4 transition-all">
+                    {!isLogin && (
+                      <div className="space-y-3 mt-2">
+                        <label className="flex items-start gap-2 cursor-pointer">
+                          <Checkbox checked={acceptTerms} onCheckedChange={(v) => setAcceptTerms(!!v)} className="mt-0.5" />
+                          <span className="text-xs text-muted-foreground leading-relaxed">
+                            Ho letto e accetto la <Link to="/privacy-policy" className="text-primary underline">Privacy Policy</Link> e i <Link to="/termini-di-servizio" className="text-primary underline">Termini di Servizio</Link>
+                          </span>
+                        </label>
+                        {(role === "alunno") && (
+                          <label className="flex items-start gap-2 cursor-pointer">
+                            <Checkbox checked={parentalConsent} onCheckedChange={(v) => setParentalConsent(!!v)} className="mt-0.5" />
+                            <span className="text-xs text-muted-foreground leading-relaxed">
+                              Confermo di essere il genitore o tutore legale e fornisco il consenso al trattamento dei dati del minore ai sensi dell'art. 8 GDPR
+                            </span>
+                          </label>
+                        )}
+                        <label className="flex items-start gap-2 cursor-pointer">
+                          <Checkbox checked={marketingConsent} onCheckedChange={(v) => setMarketingConsent(!!v)} className="mt-0.5" />
+                          <span className="text-xs text-muted-foreground leading-relaxed">
+                            Acconsento a ricevere comunicazioni su novità e aggiornamenti di InSchool
+                          </span>
+                        </label>
+                      </div>
+                    )}
+
+                    <Button type="submit" disabled={loading || (!isLogin && (!acceptTerms || (role === "alunno" && !parentalConsent)))} className="w-full h-12 rounded-xl font-bold shadow-sm mt-4 transition-all">
                         {loading ? <Loader2 className="animate-spin w-5 h-5 mx-auto"/> : (isLogin ? "Accedi all'Account" : "Termina Iscrizione")}
                     </Button>
                 </form>

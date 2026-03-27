@@ -39,20 +39,31 @@ export function LandingFooter() {
           <div>
             <p className="text-xs uppercase font-semibold text-slate-500 mb-3 tracking-wider">Legal</p>
             <div className="flex flex-col gap-2">
-              <Link to="/privacy" className="text-sm hover:text-white transition-colors">
+              <Link to="/privacy-policy" className="text-sm hover:text-white transition-colors">
                 Privacy Policy
+              </Link>
+              <Link to="/termini-di-servizio" className="text-sm hover:text-white transition-colors">
+                Termini di servizio
+              </Link>
+              <Link to="/cookie-policy" className="text-sm hover:text-white transition-colors">
+                Cookie Policy
+              </Link>
+              <Link to="/eu-ai-act" className="text-sm hover:text-white transition-colors">
+                EU AI Act Compliance
               </Link>
               <Link to="/verify" className="text-sm hover:text-white transition-colors">
                 {t("nav_verify")}
               </Link>
-              <span className="text-sm text-slate-500">EU AI Act Compliance</span>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-slate-800 pt-6 text-center">
+        <div className="border-t border-slate-800 pt-6 text-center space-y-2">
           <p className="text-xs text-slate-500">
             © 2026 InSchool · AzarLabs · Tutti i diritti riservati / All rights reserved
+          </p>
+          <p className="text-xs text-slate-600">
+            InSchool tratta i dati personali nel rispetto del GDPR (Reg. UE 2016/679). Titolare del trattamento: Tenks S.r.l.s. — inschool.privacy@azarlabs.com
           </p>
         </div>
       </div>
