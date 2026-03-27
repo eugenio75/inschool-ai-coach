@@ -61,7 +61,7 @@ Rispondi INTERAMENTE in italiano. Usa la terminologia scolastica italiana:
 - "interrogazione" (non "oral exam")
 - "verifica" (non "test")
 - "compiti" (non "homework")
-NON mescolare MAI terminologia italiana e inglese nella stessa sessione.`;
+NON mescolare MAI terminologia italiana e inglese nella stessa sessione.
 
 PROFILO STUDENTE:
 - Profilo: ${vars.profile}
