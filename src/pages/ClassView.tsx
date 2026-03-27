@@ -3,10 +3,11 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Users, BookOpen, MessageSquare,
   Copy, ChevronRight, ChevronDown, AlertTriangle,
-  BarChart2, Send,
+  BarChart2, Send, Lightbulb,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import TeacherMaterialsTab from "@/components/teacher/TeacherMaterialsTab";
+import ClassInsightsTab from "@/components/teacher/ClassInsightsTab";
 import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -278,11 +279,14 @@ export default function ClassView() {
         </div>
       </div>
 
-      {/* ─── Tabs — 3 voci ─── */}
+      {/* ─── Tabs — 4 voci ─── */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full grid grid-cols-3 rounded-xl">
+        <TabsList className="w-full grid grid-cols-4 rounded-xl">
           <TabsTrigger value="classe" className="text-xs rounded-lg">
             <Users className="w-3.5 h-3.5 mr-1" /> La classe
+          </TabsTrigger>
+          <TabsTrigger value="insights" className="text-xs rounded-lg">
+            <Lightbulb className="w-3.5 h-3.5 mr-1" /> Insights
           </TabsTrigger>
           <TabsTrigger value="materiali" className="text-xs rounded-lg">
             <BookOpen className="w-3.5 h-3.5 mr-1" /> Materiali
