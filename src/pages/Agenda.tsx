@@ -29,6 +29,7 @@ interface AgendaItem {
 }
 
 export default function Agenda() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const profile = getProfile();
