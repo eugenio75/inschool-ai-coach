@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, ChevronUp, ChevronDown, Send, Mic, MicOff, Camera, Image, X, Calculator } from "lucide-react";
 import { MathNotepad } from "@/components/MathNotepad";
+import { useTranslation } from "react-i18next";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -41,20 +42,9 @@ export interface ChatMessage {
   imageUrl?: string;
 }
 
-const thinkingPaths = [
-  { id: "stuck", label: "Sono bloccato", variant: "sage" as const },
-  { id: "hint", label: "Dammi un indizio", variant: "clay" as const },
-  { id: "check", label: "Controlla la mia risposta", variant: "muted" as const },
-];
-
-const variantClasses = {
-  sage: "bg-sage-light text-sage-dark hover:bg-accent",
-  clay: "bg-clay-light text-clay-dark hover:bg-accent",
-  muted: "bg-muted text-muted-foreground hover:bg-accent",
-};
-
 export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bottomOffset, sessionKey, onMessagesChange, weakConcepts }: GuidanceCardProps) => {
-  const isMathSubject = /matem|aritm|geometr|algebra/i.test((taskSubject || "") + " " + (taskContext?.subject || ""));
+  const { t, i18n } = useTranslation();
+  const isMathSubject = /matem|aritm|geometr|algebra|math/i.test((taskSubject || "") + " " + (taskContext?.subject || ""));
   const CHAT_SESSION_VERSION = "v4";
   const [expanded, setExpanded] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
@@ -90,6 +80,18 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
   const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  const thinkingPaths = [
+    { id: "stuck", label: t("gc_stuck"), variant: "sage" as const },
+    { id: "hint", label: t("gc_hint"), variant: "clay" as const },
+    { id: "check", label: t("gc_check"), variant: "muted" as const },
+  ];
+
+  const variantClasses = {
+    sage: "bg-sage-light text-sage-dark hover:bg-accent",
+    clay: "bg-clay-light text-clay-dark hover:bg-accent",
+    muted: "bg-muted text-muted-foreground hover:bg-accent",
+  };
 
   // Speech recognition
   const getProfile = () => {
@@ -129,7 +131,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     if (!SpeechRecognition) return;
 
     const recognition = new SpeechRecognition();
-    recognition.lang = "it-IT";
+    recognition.lang = i18n.language === 'en' ? "en-US" : "it-IT";
     recognition.interimResults = false;
     recognition.continuous = false;
 
@@ -154,7 +156,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
       } catch {}
       recognitionRef.current = null;
     };
-  }, []);
+  }, [i18n.language]);
 
   const toggleRecording = () => {
     const recognition = recognitionRef.current;
@@ -181,71 +183,70 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
 
   // Initial message - wait for task context when a task is present
   useEffect(() => {
-    if (messages.length > 0) return; // Already restored from sessionStorage
+    if (messages.length > 0) return;
 
     const hasTaskIdentity = Boolean(taskTitle || taskSubject || taskContext?.title);
     const isTaskContextReady = !hasTaskIdentity || Boolean(taskContext);
     if (!isTaskContextReady) return;
     
     const profile = getProfile();
-    const name = profile?.name || "campione";
+    const name = profile?.name || t("gc_default_name");
     const sourceType = taskContext?.sourceType || "manual";
     const isPhotoTask = ["photo", "textbook", "photo-book", "photo-diary"].includes(sourceType);
     const hasSourcePage = Boolean(taskContext?.sourceImageUrl);
     const readingContext = `${taskTitle || ""} ${taskSubject || ""} ${taskContext?.title || ""} ${taskContext?.description || ""}`.toLowerCase();
-    const isReadingComprehensionTask = /(comprension|comprendere|brano|testo|lettura|leggi e rispondi|rispondi alle domande|domande sul testo|racconto)/i.test(readingContext);
+    const isReadingComprehensionTask = /(comprension|comprendere|brano|testo|lettura|leggi e rispondi|rispondi alle domande|domande sul testo|racconto|reading|comprehension|passage|text|read and answer)/i.test(readingContext);
     const hasReadingText = (taskContext?.description || "").trim().length > 80;
     
-    // Detect oral/study tasks: subjects like Storia, Geografia, Scienze with manual source
     const oralContext = `${taskTitle || ""} ${taskContext?.title || ""} ${taskContext?.description || ""}`.toLowerCase();
-    const isOralSubject = /stori|geografi|scienz|italian|letteratur|grammati|biologi|filosof|diritt|civic|religion|music/i.test((taskSubject || "") + " " + (taskContext?.subject || ""));
+    const isOralSubject = /stori|geografi|scienz|italian|letteratur|grammati|biologi|filosof|diritt|civic|religion|music|history|geography|science|literature|grammar|biology|philosophy/i.test((taskSubject || "") + " " + (taskContext?.subject || ""));
     const isManualSource = sourceType === "manual";
     const isOralStudyTask = isManualSource && (
-      /(studia|ripeti|ripassa|ripetere|ripassare|orale|interrogazione|esponi|esporre|presentazione|memorizza|impara|leggere e studiare|preparare)/i.test(oralContext) ||
-      (isOralSubject && !isReadingComprehensionTask && !/(eserciz|calcol|risolv|complet|scrivi|traduci|osserva|indica|parlane|conversando|prova a capire)/i.test(oralContext))
+      /(studia|ripeti|ripassa|ripetere|ripassare|orale|interrogazione|esponi|esporre|presentazione|memorizza|impara|leggere e studiare|preparare|study|repeat|review|oral|exam|present|memorise|memorize|prepare)/i.test(oralContext) ||
+      (isOralSubject && !isReadingComprehensionTask && !/(eserciz|calcol|risolv|complet|scrivi|traduci|osserva|indica|parlane|conversando|prova a capire|exercise|calculate|solve|complete|write|translate)/i.test(oralContext))
     );
     
     const isStudyTask = taskContext?.taskType === "study";
+    const taskLabel = taskContext?.title || taskTitle || t("gc_the_topic");
+    const subjectLabel = taskSubject ? ` ${t("gc_of")} ${taskSubject}` : "";
     
     let initial: string;
     let shouldAutoAnalyze = false;
 
     if (isStudyTask) {
-      // Study tasks: go directly to interrogation mode
-      initial = `Ciao ${name}! Oggi studiamo "${taskContext?.title || taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""}. Ho il testo della pagina e ti farò delle domande per aiutarti a capire e memorizzare tutto. Partiamo!`;
+      initial = t("gc_init_study", { name, title: taskLabel, subject: subjectLabel });
       shouldAutoAnalyze = true;
     } else if (isPhotoTask && hasSourcePage) {
-      const title = taskContext?.title || taskTitle || "";
-      initial = `Perfetto ${name}! Ho la pagina davanti${taskSubject ? ` di ${taskSubject}` : ""}. Lavoriamo su "${title}". Analizzo l'esercizio e ti preparo il ripasso...`;
+      initial = t("gc_init_photo_page", { name, subject: subjectLabel, title: taskLabel });
       shouldAutoAnalyze = true;
     } else if (isPhotoTask) {
-      initial = `Perfetto ${name}! Ho già il testo dell'attività${taskSubject ? ` di ${taskSubject}` : ""}. Partiamo da qui: ${taskContext?.description ? `"${taskContext.description}"` : `guardiamo insieme cosa chiede l'esercizio`}.`;
+      initial = t("gc_init_photo", { name, subject: subjectLabel, description: taskContext?.description ? `"${taskContext.description}"` : t("gc_init_photo_fallback") });
       shouldAutoAnalyze = true;
     } else if (isOralStudyTask) {
       if (emotion === "frustrated" || emotion === "worried") {
-        initial = `Capisco che può sembrare tanto, ${name}. Ma facciamo un passo alla volta — ti faccio io qualche domanda su "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""} per capire da dove partiamo.`;
+        initial = t("gc_init_oral_frustrated", { name, title: taskLabel, subject: subjectLabel });
       } else if (emotion === "tired") {
-        initial = `Sei stanco, ${name}, va bene. Facciamo una cosa leggera: ti faccio qualche domanda su "${taskTitle || "l'argomento"}" e vediamo cosa ricordi. Niente stress!`;
+        initial = t("gc_init_oral_tired", { name, title: taskLabel });
       } else {
-        initial = `Perfetto ${name}! Oggi studiamo "${taskTitle || "l'argomento"}"${taskSubject ? ` di ${taskSubject}` : ""}. Ti faccio subito qualche domanda per capire cosa sai già — poi approfondiamo dove serve!`;
+        initial = t("gc_init_oral", { name, title: taskLabel, subject: subjectLabel });
       }
       shouldAutoAnalyze = true;
     } else if (emotion === "frustrated" || emotion === "worried") {
       initial = isReadingComprehensionTask
-        ? `Capisco che può sembrare difficile, ${name}. Facciamo un passo alla volta: di chi o di cosa parla il brano?`
-        : `Capisco che può sembrare difficile, ${name}. Facciamo il primo piccolo passo insieme — solo quello. Cosa dice la consegna?`;
+        ? t("gc_init_frustrated_reading", { name })
+        : t("gc_init_frustrated", { name });
     } else if (emotion === "tired") {
       initial = isReadingComprehensionTask
-        ? `Sei stanco, ${name}, va bene. Partiamo con una domanda semplice sul brano: qual è il fatto principale che hai letto?`
-        : `Sei stanco, ${name}, è normale. Facciamo solo un micro-passo, poi vediamo come va. Cosa dice la consegna dell'esercizio?`;
+        ? t("gc_init_tired_reading", { name })
+        : t("gc_init_tired", { name });
     } else if (isReadingComprehensionTask && hasReadingText) {
-      initial = `Perfetto ${name}! Ti faccio domande sul brano per vedere se l'hai capito bene. Iniziamo: di chi o di cosa parla il testo?`;
+      initial = t("gc_init_reading_text", { name });
     } else if (isReadingComprehensionTask) {
-      initial = `Perfetto ${name}! Facciamo comprensione del testo. Raccontami in 2 frasi cosa hai letto e poi ti faccio domande mirate.`;
-    } else if (taskTitle?.toLowerCase().includes("legg") || taskTitle?.toLowerCase().includes("lettura") || taskTitle?.toLowerCase().includes("libro")) {
-      initial = `Perfetto ${name}! Vedo che devi leggere. Quale libro o capitolo stai leggendo? Raccontami un po'!`;
+      initial = t("gc_init_reading", { name });
+    } else if (taskTitle?.toLowerCase().includes("legg") || taskTitle?.toLowerCase().includes("lettura") || taskTitle?.toLowerCase().includes("libro") || taskTitle?.toLowerCase().includes("read")) {
+      initial = t("gc_init_free_reading", { name });
     } else {
-      initial = `Perfetto ${name}, iniziamo! ${taskTitle ? `Stiamo lavorando su "${taskTitle}"${taskSubject ? ` di ${taskSubject}` : ""}.` : ""} Cosa dice la consegna?`;
+      initial = t("gc_init_default", { name, taskInfo: taskTitle ? `${t("gc_working_on")} "${taskTitle}"${subjectLabel}.` : "" });
     }
     
     const initMessages: ChatMessage[] = [{ id: "init", role: "coach", text: initial }];
@@ -254,7 +255,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     if (shouldAutoAnalyze) {
       autoAnalyzeRef.current = true;
     }
-  }, [messages.length, taskTitle, taskSubject, taskContext, emotion]);
+  }, [messages.length, taskTitle, taskSubject, taskContext, emotion, t, i18n.language]);
 
   // Auto-trigger AI analysis after initial message is set
   useEffect(() => {
@@ -263,7 +264,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
       const studentMsg: ChatMessage = {
         id: `student-auto-${Date.now()}`,
         role: "student",
-        text: "Sì, partiamo! Fammi delle domande.",
+        text: t("gc_auto_start"),
       };
       const updated = [...messages, studentMsg];
       setMessages(updated);
@@ -275,21 +276,21 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
   useEffect(() => {
     const sourceType = taskContext?.sourceType || "manual";
     const isPhotoTask = ["photo", "textbook", "photo-book", "photo-diary"].includes(sourceType);
-    const staleGenericPrompt = /cosa dice la consegna dell'esercizio\?/i.test(messages[0]?.text || "");
+    const staleGenericPrompt = /cosa dice la consegna dell'esercizio\?|what does the assignment ask/i.test(messages[0]?.text || "");
 
     if (!isPhotoTask || !staleGenericPrompt || messages.length !== 1 || messages[0]?.id !== "init") {
       return;
     }
 
     const profile = getProfile();
-    const name = profile?.name || "campione";
+    const name = profile?.name || t("gc_default_name");
     const safeInitial = taskContext?.description
-      ? `Perfetto ${name}! Ho già il testo dell'attività${taskSubject ? ` di ${taskSubject}` : ""}. Partiamo da qui: "${taskContext.description}".`
-      : `Perfetto ${name}! Ho già il compito${taskSubject ? ` di ${taskSubject}` : ""}. Lo guardo io e partiamo insieme.`;
+      ? t("gc_init_photo", { name, subject: taskSubject ? ` ${t("gc_of")} ${taskSubject}` : "", description: `"${taskContext.description}"` })
+      : t("gc_recovery_photo", { name, subject: taskSubject ? ` ${t("gc_of")} ${taskSubject}` : "" });
 
     autoAnalyzeRef.current = true;
     setMessages([{ id: "init", role: "coach", text: safeInitial }]);
-  }, [messages, taskContext, taskSubject]);
+  }, [messages, taskContext, taskSubject, t]);
 
   // Persist messages to sessionStorage and notify parent
   useEffect(() => {
@@ -315,7 +316,6 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     // Build chat messages, including images as multimodal content
     const chatMessages = allMessages.map(m => {
       if (m.imageUrl && m.role === "student") {
-        // Multimodal message with image
         const content: any[] = [];
         if (m.text) {
           content.push({ type: "text", text: m.text });
@@ -325,7 +325,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
           image_url: { url: m.imageUrl },
         });
         if (!m.text) {
-          content.push({ type: "text", text: "Ho fotografato il mio quaderno con gli esercizi svolti. Puoi controllare le mie risposte?" });
+          content.push({ type: "text", text: t("gc_photo_check") });
         }
         return { role: "user" as const, content };
       }
@@ -348,6 +348,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
             messages: chatMessages,
             studentProfile: profile,
             weakConcepts: weakConcepts?.length ? weakConcepts : undefined,
+            lang: i18n.language,
             taskContext: taskContext ? {
               title: taskContext.title || taskTitle,
               subject: taskContext.subject || taskSubject,
@@ -368,7 +369,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || "Errore di connessione");
+        throw new Error(errData.error || t("gc_connection_error"));
       }
       if (!response.body) throw new Error("No stream body");
 
@@ -423,27 +424,27 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
   const getFallbackResponse = (input: string): string => {
     const lower = input.toLowerCase();
     const readingContext = `${taskTitle || ""} ${taskSubject || ""} ${taskContext?.title || ""} ${taskContext?.description || ""}`.toLowerCase();
-    const isReadingComprehensionTask = /(comprension|comprendere|brano|testo|lettura|leggi e rispondi|rispondi alle domande|domande sul testo|racconto)/i.test(readingContext);
+    const isReadingComprehensionTask = /(comprension|comprendere|brano|testo|lettura|leggi e rispondi|rispondi alle domande|domande sul testo|racconto|reading|comprehension|passage)/i.test(readingContext);
 
     if (isReadingComprehensionTask) {
-      if (lower.match(/non capisco|difficile|non so|aiuto|non riesco/)) {
-        return "Va bene, torniamo al brano. Chi o che cosa è al centro del testo?";
+      if (lower.match(/non capisco|difficile|non so|aiuto|non riesco|don't understand|difficult|help|can't/)) {
+        return t("gc_fb_reading_help");
       }
-      if (lower.match(/capito|compreso|ho capito|ho compreso/)) {
-        return "Bene, controlliamo subito. Qual è il fatto più importante raccontato nel brano?";
+      if (lower.match(/capito|compreso|ho capito|ho compreso|understood|got it/)) {
+        return t("gc_fb_reading_check");
       }
-      return "Ti faccio una domanda sul testo: chi è il protagonista, oppure di che cosa parla il brano?";
+      return t("gc_fb_reading_default");
     }
 
-    if (lower.match(/non capisco|difficile|non so|aiuto|non riesco/))
-      return "Respira un attimo. È normale sentirsi così. Facciamo solo un piccolo passo — qual è la prima cosa che vedi nell'esercizio?";
+    if (lower.match(/non capisco|difficile|non so|aiuto|non riesco|don't understand|difficult|help|can't/))
+      return t("gc_fb_help");
     if (lower.match(/bloccato|stuck/))
-      return "Nessun problema! Rileggiamo insieme la consegna. Cosa ti chiede di fare esattamente?";
+      return t("gc_fb_stuck");
     if (lower.match(/indizio|hint|suggerimento/))
-      return "Un piccolo indizio: guarda bene i dati che hai. Cosa noti? C'è qualcosa che già conosci?";
-    if (lower.match(/capito|ho capito|fatto/))
-      return "Fantastico! Spiegami con parole tue cosa hai capito. Così vediamo se ci siamo!";
-    return "Partiamo da un passo preciso: cosa ti chiede esattamente la consegna?";
+      return t("gc_fb_hint");
+    if (lower.match(/capito|ho capito|fatto|understood|got it|done/))
+      return t("gc_fb_understood");
+    return t("gc_fb_default");
   };
 
   const handleSend = () => {
@@ -453,7 +454,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
     const newMsg: ChatMessage = {
       id: `student-${Date.now()}`,
       role: "student",
-      text: trimmed || (pendingImage ? "Ho fotografato i miei esercizi" : ""),
+      text: trimmed || (pendingImage ? t("gc_photo_sent") : ""),
       imageUrl: pendingImage || undefined,
     };
     const updated = [...messages, newMsg];
@@ -556,7 +557,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                           {msg.imageUrl && (
                             <img
                               src={msg.imageUrl}
-                              alt="Esercizio fotografato"
+                              alt={t("gc_photo_alt")}
                               className="rounded-lg mb-2 max-h-32 object-cover"
                             />
                           )}
@@ -590,7 +591,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                   {/* Pending image preview */}
                   {pendingImage && (
                     <div className="mb-3 relative inline-block">
-                      <img src={pendingImage} alt="Anteprima" className="h-20 rounded-xl border border-border object-cover" />
+                      <img src={pendingImage} alt={t("gc_preview")} className="h-20 rounded-xl border border-border object-cover" />
                       <button
                         onClick={removePendingImage}
                         className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
@@ -614,7 +615,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                     ))}
                   </div>
 
-                  {/* Input area - two rows on mobile for better touch targets */}
+                  {/* Input area */}
                   <div className="flex flex-col gap-2">
                     {/* Media buttons row */}
                     <div className="flex items-center gap-1.5">
@@ -622,29 +623,29 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                         onClick={() => cameraInputRef.current?.click()}
                         disabled={isTyping || isUploading}
                         className="h-8 px-2.5 rounded-lg bg-muted text-muted-foreground hover:bg-accent hover:text-foreground flex items-center gap-1.5 transition-colors shrink-0 disabled:opacity-40 text-xs font-medium"
-                        title="Fotografa il quaderno"
+                        title={t("gc_camera_title")}
                       >
                         <Camera className="w-3.5 h-3.5" />
-                        <span className="hidden xs:inline">Foto</span>
+                        <span className="hidden xs:inline">{t("gc_photo")}</span>
                       </button>
                       <button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isTyping || isUploading}
                         className="h-8 px-2.5 rounded-lg bg-muted text-muted-foreground hover:bg-accent hover:text-foreground flex items-center gap-1.5 transition-colors shrink-0 disabled:opacity-40 text-xs font-medium"
-                        title="Carica foto"
+                        title={t("gc_gallery_title")}
                       >
                         <Image className="w-3.5 h-3.5" />
-                        <span className="hidden xs:inline">Galleria</span>
+                        <span className="hidden xs:inline">{t("gc_gallery")}</span>
                       </button>
                       {isMathSubject && (
                         <button
                           onClick={() => setNotepadOpen(true)}
                           disabled={isTyping}
                           className="h-8 px-2.5 rounded-lg bg-sage-light text-sage-dark hover:bg-accent hover:text-foreground flex items-center gap-1.5 transition-colors shrink-0 disabled:opacity-40 text-xs font-medium"
-                          title="Blocco note per i calcoli"
+                          title={t("gc_notepad_title")}
                         >
                           <Calculator className="w-3.5 h-3.5" />
-                          <span className="hidden xs:inline">Calcoli</span>
+                          <span className="hidden xs:inline">{t("gc_notepad")}</span>
                         </button>
                       )}
                       <button
@@ -657,7 +658,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                         } disabled:opacity-40`}
                       >
                         {isRecording ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-                        <span className="hidden xs:inline">{isRecording ? "Stop" : "Voce"}</span>
+                        <span className="hidden xs:inline">{isRecording ? "Stop" : t("gc_voice")}</span>
                       </button>
                     </div>
                     {/* Text input + send row */}
@@ -668,7 +669,7 @@ export const GuidanceCard = ({ emotion, taskTitle, taskSubject, taskContext, bot
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder={isRecording ? "Sto ascoltando..." : pendingImage ? "Aggiungi un messaggio..." : "Scrivi qui..."}
+                        placeholder={isRecording ? t("gc_listening") : pendingImage ? t("gc_add_message") : t("gc_write_here")}
                         disabled={isTyping}
                         className={`flex-1 min-w-0 bg-muted/50 border rounded-xl px-3 py-2.5 text-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 transition-all ${isRecording ? "border-destructive/50 bg-destructive/5" : "border-border"}`}
                       />
