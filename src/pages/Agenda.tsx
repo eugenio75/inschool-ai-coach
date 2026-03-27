@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, BookOpen, FileText, Brain, Clock } from "lucide-react";
@@ -94,7 +95,7 @@ export default function Agenda() {
 
     for (const f of (flashRes.data || [])) {
       agendaItems.push({
-        id: f.id, type: "review", title: `Ripasso ${f.subject}`, subject: f.subject,
+        id: f.id, type: "review", title: t('agenda_review', { subject: f.subject }), subject: f.subject,
         date: f.next_review_at?.split("T")[0] || startStr, completed: false,
         route: "/memory",
       });
