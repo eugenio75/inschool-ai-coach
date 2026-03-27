@@ -7,6 +7,7 @@ import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { TrustSection } from "@/components/landing/TrustSection";
 import { TeacherGenerateMockup } from "@/components/landing/TeacherGenerateMockup";
+import { TeacherHomeMockup } from "@/components/landing/TeacherHomeMockup";
 
 const fade = {
   initial: { opacity: 0, y: 16 },
@@ -70,6 +71,15 @@ export default function LandingDocenti() {
             <span>{t("home_hero_micro1")}</span>
             <span>{t("home_hero_micro3")}</span>
             <span>{t("home_hero_micro2")}</span>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── MOCKUP DASHBOARD ── */}
+      <section className="py-20 px-6 bg-white">
+        <div className="max-w-3xl mx-auto">
+          <motion.div {...fade}>
+            <TeacherHomeMockup />
           </motion.div>
         </div>
       </section>
