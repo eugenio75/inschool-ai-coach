@@ -13,20 +13,31 @@ serve(async (req) => {
     const {
       userName, schoolLevel, gender, lastSession, pendingHomework,
       recentEmotions, recentErrors, recentSessions,
-      streak, teacherAssignments, urgentCount, gamification,
+      streak, teacherAssignments, urgentCount, gamification, lang,
     } = await req.json();
 
-    const pronoun = gender === "F" ? "a" : "o";
-    const toneMap: Record<string, string> = {
-      alunno: "Tono caldo e giocoso ma non infantile. Frasi corte. Usa analogie semplici.",
-      medie: "Tono amichevole e strutturato. Incoraggiante ma mai condiscendente.",
-      superiori: "Tono diretto e concreto, senza condiscendenza. Focus sui risultati.",
-      universitario: "Tono sobrio ed efficiente, da mentor a pari.",
-      docente: "Tono collegiale, efficiente, preciso.",
-    };
-    const tone = toneMap[schoolLevel] || toneMap.superiori;
+    const effectiveLang = lang || "it";
+    const isEN = effectiveLang === "en";
 
-    // Analyze emotional patterns
+    const pronoun = gender === "F" ? "a" : "o";
+
+    const toneMap: Record<string, string> = isEN
+      ? {
+          alunno: "Warm and playful tone but not childish. Short sentences. Use simple analogies.",
+          medie: "Friendly and structured tone. Encouraging but never condescending.",
+          superiori: "Direct and concrete tone, no condescension. Focus on results.",
+          universitario: "Sober and efficient tone, mentor to peer.",
+          docente: "Collegial, efficient, precise tone.",
+        }
+      : {
+          alunno: "Tono caldo e giocoso ma non infantile. Frasi corte. Usa analogie semplici.",
+          medie: "Tono amichevole e strutturato. Incoraggiante ma mai condiscendente.",
+          superiori: "Tono diretto e concreto, senza condiscendenza. Focus sui risultati.",
+          universitario: "Tono sobrio ed efficiente, da mentor a pari.",
+          docente: "Tono collegiale, efficiente, preciso.",
+        };
+    const tone = toneMap[schoolLevel] || (isEN ? toneMap.superiori : toneMap.superiori);
+
     let emotionalNote = "";
     if (recentEmotions?.length > 0) {
       const tones = recentEmotions.map((e: any) => e.emotional_tone).filter(Boolean);
@@ -35,21 +46,66 @@ serve(async (req) => {
       const lowEnergy = energyLevels.filter((e: string) => e === "low").length;
 
       if (negativeCount >= 2) {
-        emotionalNote = `ATTENZIONE EMOTIVA: ${userName} ha mostrato segnali di difficoltà emotiva nei check-in recenti (${tones.join(", ")}). Sii particolarmente accogliente e chiedi come sta SENZA pressione.`;
+        emotionalNote = isEN
+          ? `EMOTIONAL ATTENTION: ${userName} has shown signs of emotional difficulty in recent check-ins (${tones.join(", ")}). Be particularly welcoming and ask how they are WITHOUT pressure.`
+          : `ATTENZIONE EMOTIVA: ${userName} ha mostrato segnali di difficoltà emotiva nei check-in recenti (${tones.join(", ")}). Sii particolarmente accogliente e chiedi come sta SENZA pressione.`;
       } else if (lowEnergy >= 2) {
-        emotionalNote = `NOTA: ${userName} ha energia bassa ultimamente. Proponi attività leggere e brevi, non sovraccaricare.`;
+        emotionalNote = isEN
+          ? `NOTE: ${userName} has low energy lately. Suggest light and short activities, don't overload.`
+          : `NOTA: ${userName} ha energia bassa ultimamente. Proponi attività leggere e brevi, non sovraccaricare.`;
       }
     }
 
-    // Analyze learning errors
     let errorsNote = "";
     if (recentErrors?.length > 0) {
       const subjects = [...new Set(recentErrors.map((e: any) => e.subject).filter(Boolean))];
       const errorTypes = [...new Set(recentErrors.map((e: any) => e.error_type).filter(Boolean))];
-      errorsNote = `ERRORI RECENTI NON RISOLTI: ${recentErrors.length} errori in ${subjects.join(", ")}. Tipi: ${errorTypes.join(", ")}. Se opportuno, suggerisci un ripasso mirato.`;
+      errorsNote = isEN
+        ? `RECENT UNRESOLVED ERRORS: ${recentErrors.length} errors in ${subjects.join(", ")}. Types: ${errorTypes.join(", ")}. If appropriate, suggest a targeted review.`
+        : `ERRORI RECENTI NON RISOLTI: ${recentErrors.length} errori in ${subjects.join(", ")}. Tipi: ${errorTypes.join(", ")}. Se opportuno, suggerisci un ripasso mirato.`;
     }
 
-    const systemPrompt = `Sei il coach AI personale di ${userName} su InSchool. Sei un compagno fidato — conosci ${userName}, ricordi le sue sessioni, i suoi progressi e le sue difficoltà. Non sei uno psicologo, sei un amico attento che si accorge di come sta l'altro.
+    const systemPrompt = isEN
+      ? `You are ${userName}'s personal AI coach on InSchool. You are a trusted companion — you know ${userName}, remember their sessions, progress and difficulties. You're not a psychologist, you're an attentive friend who notices how the other person is doing.
+
+Generate ONE opening message for the home. Max 2-3 sentences.
+
+MESSAGE STRUCTURE (mandatory):
+1. FIRST SENTENCE: show you care about how ${userName} is doing in a natural, non-clinical way. Don't ask "how are you?" generically. Use context: if it's Monday morning "New Monday, how's it going?", if it's late "You're here at this hour, long day?", if they have low energy "Hey, you seem a bit tired — no worries", if streak is high "You're on fire!". Be genuine, like a friend would.
+2. SECOND SENTENCE: concrete suggestion based on data (homework, errors, review).
+3. End with a question or open proposal.
+
+${tone}
+
+${emotionalNote}
+${errorsNote}
+
+ABSOLUTE RULES:
+- NEVER clinical greetings like "How do you feel today?" or "How are you emotionally?"
+- NEVER generic greetings like "Hi! How can I help you?"
+- The emotional tone must be NATURAL: like a friend who notices, not a psychologist who investigates
+- Use the provided data to say something SPECIFIC and TRUE about ${userName}
+- If emotional state is negative, prioritize well-being — suggest something light, never pressure
+- If there are urgent tasks but low mood, acknowledge the mood first then suggest lightly
+- If there's a streak, briefly acknowledge it
+- If there are teacher assignments, mention them
+- Be human and warm, never robotic
+- ALWAYS respond in English
+
+Output JSON: {"message":"...","suggestedAction":"button text","actionRoute":"/path"}
+
+Available routes (VERY IMPORTANT — use subject parameter when specifying a subject):
+- /us?type=guided&hw=ID (guided session on a specific task)
+- /us?type=study&subject=Mathematics (free study on specific subject)
+- /us?type=review&subject=Mathematics (review on specific subject)
+- /us?type=prep&subject=Mathematics (test prep on specific subject)
+- /study-tasks (student's task list)
+- /add-homework (add homework)
+- /memory (memory and review)
+- /flashcards?subject=Mathematics (flashcards on specific subject)
+
+ROUTE RULE: when suggesting an action on a specific subject, ALWAYS include &subject=SubjectName in the route.`
+      : `Sei il coach AI personale di ${userName} su InSchool. Sei un compagno fidato — conosci ${userName}, ricordi le sue sessioni, i suoi progressi e le sue difficoltà. Non sei uno psicologo, sei un amico attento che si accorge di come sta l'altro.
 
 Genera UN messaggio di apertura per la home. Max 2-3 frasi.
 
@@ -89,7 +145,22 @@ Route disponibili (IMPORTANTISSIMO — usa il parametro subject quando specifich
 
 REGOLA ROUTE: quando suggerisci un'azione su una materia specifica, SEMPRE includere &subject=NomeMateria nella route.`;
 
-    const context = `
+    const context = isEN
+      ? `
+Name: ${userName}
+Gender: ${gender || "not specified"}
+Level: ${schoolLevel}
+Current streak: ${streak || 0} consecutive days
+Gamification: ${gamification ? JSON.stringify(gamification) : "not available"}
+Urgent tasks (today/tomorrow): ${urgentCount || 0}
+Pending homework: ${pendingHomework?.length ? JSON.stringify(pendingHomework) : "none"}
+Recent sessions: ${recentSessions?.length ? JSON.stringify(recentSessions) : "none"}
+Teacher assignments: ${teacherAssignments?.length ? JSON.stringify(teacherAssignments) : "none"}
+Recent emotional check-ins: ${recentEmotions?.length ? JSON.stringify(recentEmotions) : "none"}
+Unresolved learning errors: ${recentErrors?.length ? JSON.stringify(recentErrors) : "none"}
+Time: ${new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+Day: ${new Date().toLocaleDateString("en-US", { weekday: "long" })}`
+      : `
 Nome: ${userName}
 Genere: ${gender || "non specificato"}
 Livello: ${schoolLevel}
@@ -144,8 +215,10 @@ Giorno: ${new Date().toLocaleDateString("it-IT", { weekday: "long" })}`;
     }
 
     return new Response(JSON.stringify({
-      message: `Ciao ${userName}! Sono qui per te. Da dove vuoi partire?`,
-      suggestedAction: "Inizia a studiare",
+      message: isEN
+        ? `Hi ${userName}! I'm here for you. Where would you like to start?`
+        : `Ciao ${userName}! Sono qui per te. Da dove vuoi partire?`,
+      suggestedAction: isEN ? "Start studying" : "Inizia a studiare",
       actionRoute: "/us?type=study",
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
