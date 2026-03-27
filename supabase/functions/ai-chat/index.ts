@@ -34,6 +34,7 @@ function buildEnhancedSystemPrompt(vars: {
   subject: string;
   alertContext?: string;
   isDocente?: boolean;
+  lang?: string;
 }): string {
   let prompt = `Sei ${vars.coachName}, il coach personale di questo studente su InSchool.
 
