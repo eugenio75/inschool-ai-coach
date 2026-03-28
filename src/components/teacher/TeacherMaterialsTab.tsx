@@ -233,7 +233,50 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     try {
       const subjectStr = selectedSubjects.join(", ") || classe?.materia || "";
 
-      let systemPrompt = `Sei un docente esperto. Genera materiale didattico di tipo "${activityType}". Classe: ${classe?.nome || ""}. Materia: ${subjectStr}.
+      const isLezione = activityType === "lezione";
+
+      let systemPrompt = isLezione
+        ? `Sei un docente esperto con anni di esperienza in aula. Genera un PIANO DI LEZIONE COMPLETO E DETTAGLIATO. Classe: ${classe?.nome || ""}. Materia: ${subjectStr}.
+
+REGOLE IMPORTANTI:
+1. La PRIMA RIGA del tuo output DEVE essere: TITOLO: [titolo contestuale della lezione, es. "Lezione di Storia — La Rivoluzione Francese"]
+
+2. Il piano di lezione DEVE seguire ESATTAMENTE questa struttura, con titoli chiari per ogni sezione:
+
+### Intestazione
+Materia, Classe, Durata stimata, Obiettivi di apprendimento (conoscenze + competenze)
+
+### Prerequisiti
+Cosa gli studenti devono già sapere per seguire la lezione
+
+### Introduzione / Aggancio motivazionale (5-10 minuti)
+Come aprire la lezione — domanda provocatoria, caso reale, curiosità, collegamento con l'attualità
+
+### Corpo della lezione
+Spiegazione COMPLETA e DETTAGLIATA dei contenuti, suddivisa in blocchi tematici con titoli. Ogni blocco deve includere: concetti chiave, esempi concreti, analogie, eventuali errori concettuali comuni da anticipare. MINIMO 600-800 parole per questa sezione — questo è un documento che il docente porta in classe e usa direttamente, NON un riassunto.
+
+### Attività in classe
+1-2 attività pratiche o di discussione guidata da fare durante la lezione
+
+### Verifica di comprensione in itinere
+3-5 domande rapide (orali o scritte) da fare durante la lezione per capire se la classe sta seguendo
+
+### Sintesi finale
+Riepilogo dei punti chiave in forma di mappa o elenco — qualcosa che lo studente può scrivere sul quaderno
+
+### Compito per casa (opzionale)
+Breve consolidamento — non una nuova verifica, solo rinforzo
+
+3. DOPO tutto il contenuto per lo studente, inserisci una riga con ESATTAMENTE: ===SOLUZIONI===
+4. DOPO il separatore, scrivi la sezione "Note per il docente" che include:
+   - Suggerimenti metodologici
+   - Possibili domande difficili degli studenti con risposta suggerita
+   - Riferimenti a risorse multimediali (video, audio, immagini)
+   - Differenziazione per studenti in difficoltà o avanzati
+   Questa parte sarà visibile SOLO al docente.
+
+5. Genera contenuto LUNGO e DETTAGLIATO. Il corpo della lezione deve essere esaustivo, pronto per l'uso in aula.`
+        : `Sei un docente esperto. Genera materiale didattico di tipo "${activityType}". Classe: ${classe?.nome || ""}. Materia: ${subjectStr}.
 
 REGOLE IMPORTANTI:
 1. La PRIMA RIGA del tuo output DEVE essere: TITOLO: [titolo contestuale del materiale]
