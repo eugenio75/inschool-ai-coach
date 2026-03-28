@@ -405,7 +405,7 @@ ${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> __________
 
     setSaving(true);
     try {
-      // Always save as material
+      // Always save as material (student content only — no solutions)
       const materialPayload = {
         teacher_id: userId,
         class_id: classId,
@@ -418,9 +418,27 @@ ${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> __________
       };
       await supabase.from("teacher_materials").insert(materialPayload);
 
+      // Save solutions as a separate teacher-only material
+      if (aiSolutions) {
+        await supabase.from("teacher_materials").insert({
+          teacher_id: userId,
+          class_id: classId,
+          title: `${title} — Soluzioni`,
+          subject: selectedSubjects.join(", ") || classe?.materia || null,
+          type: activityType,
+          content: aiSolutions,
+          status: "draft", // Never assigned to students
+          target_profile: "docente",
+        });
+      }
+
       if (destination === "pdf") {
         exportToPdf(title, previewContent, activityType);
-        toast.success("Materiale salvato e PDF generato");
+        // Also export solutions PDF if available
+        if (aiSolutions) {
+          setTimeout(() => exportSolutionsPdf(title, aiSolutions), 600);
+        }
+        toast.success(aiSolutions ? "PDF studente e soluzioni generati" : "Materiale salvato e PDF generato");
       } else {
         const targetStudents = destination === "all"
           ? students
@@ -437,6 +455,7 @@ ${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> __________
         if (uploadFile) metadata.attachment_name = uploadFile.name;
         if (mode === "ai") metadata.ai_generated = true;
 
+        // Student assignments get ONLY the student content (no solutions)
         const inserts = targetStudents.map(s => ({
           teacher_id: userId,
           class_id: classId,
