@@ -72,7 +72,6 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>(() => {
     const classMateria = classe?.materia;
     if (!classMateria) return [];
-    // Support multi-materia classes (comma separated)
     return classMateria.split(",").map((m: string) => m.trim()).filter(Boolean);
   });
 
@@ -80,6 +79,8 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiOutput, setAiOutput] = useState<string | null>(null);
+  const [aiSolutions, setAiSolutions] = useState<string | null>(null);
+  const [aiTitle, setAiTitle] = useState<string | null>(null);
   const [aiContextFile, setAiContextFile] = useState<File | null>(null);
   const [aiContextText, setAiContextText] = useState<string | null>(null);
   const [aiContextUploading, setAiContextUploading] = useState(false);
@@ -106,6 +107,8 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     setShowPreview(false);
     setAiPrompt("");
     setAiOutput(null);
+    setAiSolutions(null);
+    setAiTitle(null);
     setAiLoading(false);
     setAiContextFile(null);
     setAiContextText(null);
@@ -123,6 +126,8 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   }
 
   function getTitle(): string {
+    // Use AI-generated contextual title if available
+    if (aiTitle) return aiTitle;
     const previewContent = getPreviewContent();
     if (previewContent) {
       return previewContent.slice(0, 60).replace(/\n/g, " ").trim() || `${activityType.charAt(0).toUpperCase() + activityType.slice(1)} — ${classe?.nome || ""}`;
@@ -220,8 +225,22 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     }
     setAiLoading(true);
     setAiOutput(null);
+    setAiSolutions(null);
+    setAiTitle(null);
     try {
-      let systemPrompt = `Sei un docente esperto. Genera materiale didattico di tipo "${activityType}". Classe: ${classe?.nome || ""}. Materia: ${classe?.materia || ""}.`;
+      const isVerifica = activityType === "verifica";
+      const subjectStr = selectedSubjects.join(", ") || classe?.materia || "";
+
+      let systemPrompt = `Sei un docente esperto. Genera materiale didattico di tipo "${activityType}". Classe: ${classe?.nome || ""}. Materia: ${subjectStr}.
+
+REGOLE IMPORTANTI:
+1. La PRIMA RIGA del tuo output DEVE essere: TITOLO: [titolo contestuale del materiale]
+   Il titolo deve descrivere il contenuto (es. "Verifica di Storia — Le Guerre Puniche", "Esercizi di Matematica — Equazioni di secondo grado"), NON la richiesta usata per generarlo.
+${isVerifica ? `
+2. Il materiale per lo studente NON deve MAI contenere le risposte corrette, la griglia di valutazione o le soluzioni.
+3. DOPO il contenuto per lo studente, inserisci una riga con ESATTAMENTE: ===SOLUZIONI===
+4. DOPO il separatore, scrivi le risposte corrette e la griglia di valutazione. Questa parte sarà visibile SOLO al docente.` : ""}`;
+
       let userMessage = aiPrompt;
       if (aiContextText) {
         userMessage = `CONTESTO DAL DOCUMENTO CARICATO:\n---\n${aiContextText}\n---\n\nRICHIESTA: ${aiPrompt || "Genera materiale basandoti sul documento caricato."}`;
@@ -243,8 +262,23 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
         }
       );
       const data = await res.json();
-      const aiContent = data.choices?.[0]?.message?.content?.trim() || "Errore nella generazione.";
-      setAiOutput(aiContent);
+      let aiContent = data.choices?.[0]?.message?.content?.trim() || "Errore nella generazione.";
+
+      // Extract title from first line
+      const titleMatch = aiContent.match(/^TITOLO:\s*(.+)/i);
+      if (titleMatch) {
+        setAiTitle(titleMatch[1].trim());
+        aiContent = aiContent.replace(/^TITOLO:\s*.+\n*/i, "").trim();
+      }
+
+      // Split solutions for verifiche
+      if (isVerifica && aiContent.includes("===SOLUZIONI===")) {
+        const parts = aiContent.split("===SOLUZIONI===");
+        setAiOutput(parts[0].trim());
+        setAiSolutions(parts[1].trim());
+      } else {
+        setAiOutput(aiContent);
+      }
     } catch {
       toast.error("Errore nella generazione.");
     } finally {
@@ -257,25 +291,103 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     const printWin = window.open("", "_blank");
     if (!printWin) { toast.error("Popup bloccato dal browser"); return; }
     const isVerifica = type === "verifica";
-    const headerColor = isVerifica ? "#b91c1c" : "#1a3a5c";
-    const headerLabel = type.charAt(0).toUpperCase() + type.slice(1);
-    printWin.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>
+    const headerColor = isVerifica ? "#c0392b" : "#1A3A5C";
+
+    // Convert markdown to structured HTML (same logic as TeacherMaterialsArchive)
+    const content = pdfContent.replace(/\\n/g, "\n");
+    const htmlContent = content
+      .split("\n")
+      .map((line: string) => {
+        const t = line.trim();
+        if (!t) return "<br/>";
+        if (/^-{3,}$/.test(t)) return '<hr style="margin:16px 0;border:none;border-top:1px solid #ddd"/>';
+        if (t.startsWith("#### ")) return `<h4 style="margin:18px 0 6px;font-size:14px;font-weight:700;color:#1A3A5C">${t.slice(5)}</h4>`;
+        if (t.startsWith("### ")) return `<h3 style="margin:20px 0 8px;font-size:16px;font-weight:700;border-bottom:1px solid #eee;padding-bottom:4px">${t.slice(4)}</h3>`;
+        if (t.startsWith("## ")) return `<h2 style="margin:24px 0 10px;font-size:18px;font-weight:700">${t.slice(3)}</h2>`;
+        const numMatch = t.match(/^(\d+)[.)]\s+(.*)/);
+        if (numMatch) return `<div style="display:flex;gap:10px;margin:4px 0 4px 8px"><span style="font-weight:600;color:#0070C0;min-width:20px;text-align:right">${numMatch[1]}.</span><span>${numMatch[2]}</span></div>`;
+        const bulletMatch = t.match(/^[-•]\s+(.*)/);
+        if (bulletMatch) return `<div style="display:flex;gap:10px;margin:4px 0 4px 8px"><span style="color:#0070C0">•</span><span>${bulletMatch[1]}</span></div>`;
+        return `<p style="margin:4px 0">${t}</p>`;
+      })
+      .join("")
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+    const subjectStr = selectedSubjects.join(", ") || classe?.materia || "";
+    const dateStr = new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+    const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+
+    printWin.document.write(`<!DOCTYPE html>
+<html><head><meta charset="utf-8"/><title>${title}</title>
 <style>
-@page { margin: 2cm; }
-body { font-family: Georgia, 'Times New Roman', serif; max-width: 700px; margin: 0 auto; padding: 40px 20px; line-height: 1.8; color: #1a1a1a; font-size: 14px; }
-h1 { font-size: 1.5em; color: ${headerColor}; border-bottom: 3px solid ${headerColor}; padding-bottom: 10px; margin-bottom: 5px; }
-.meta { color: #666; font-size: 0.85em; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid #e5e5e5; }
-.badge { display: inline-block; background: ${headerColor}15; color: ${headerColor}; padding: 2px 10px; border-radius: 12px; font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-pre { white-space: pre-wrap; font-family: inherit; font-size: 0.95em; }
-${isVerifica ? `.student-info { margin-top: 20px; margin-bottom: 24px; border: 1px solid #ddd; border-radius: 8px; padding: 12px 16px; } .student-info span { color: #888; font-size: 0.85em; } .line { display: inline-block; border-bottom: 1px solid #333; width: 200px; margin-left: 8px; }` : ""}
-footer { margin-top: 40px; font-size: 0.7em; color: #999; border-top: 1px solid #e5e5e5; padding-top: 10px; display: flex; justify-content: space-between; }
-@media print { body { padding: 0; } }
+  @page { margin: 20mm; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; line-height: 1.6; color: #1a1a1a; max-width: 700px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid ${headerColor}; }
+  .header h1 { font-size: 20px; margin: 0 0 8px; color: ${headerColor}; }
+  .header .meta { font-size: 11px; color: #888; }
+  ${isVerifica ? `.student-fields { margin: 16px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+  .student-fields p { margin: 4px 0; font-size: 12px; }` : ""}
+  .content { margin-top: 16px; }
+  @media print { body { -webkit-print-color-adjust: exact; } }
 </style></head><body>
-<h1>${title}</h1>
-<div class="meta"><span class="badge">${headerLabel}</span> · ${classe?.nome || ""} · ${classe?.materia || ""}</div>
-${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span class="line"></span> &nbsp;&nbsp; <span>Data:</span> <span class="line" style="width:120px"></span></div>` : ""}
-<pre>${pdfContent}</pre>
-<footer><span>Generato con InSchool</span><span>${new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}</span></footer>
+<div class="header">
+  <h1>${title}</h1>
+  <div class="meta">${[typeLabel, subjectStr, classe?.nome, dateStr].filter(Boolean).join(" · ")}</div>
+</div>
+${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> _________________________ <strong>Classe:</strong> _______ <strong>Data:</strong> _____________</p></div>` : ""}
+<div class="content">${htmlContent}</div>
+</body></html>`);
+    printWin.document.close();
+    setTimeout(() => printWin.print(), 400);
+  }
+
+  /** Export teacher-only solutions PDF */
+  function exportSolutionsPdf(title: string, solutionsContent: string) {
+    const printWin = window.open("", "_blank");
+    if (!printWin) { toast.error("Popup bloccato dal browser"); return; }
+
+    const content = solutionsContent.replace(/\\n/g, "\n");
+    const htmlContent = content
+      .split("\n")
+      .map((line: string) => {
+        const t = line.trim();
+        if (!t) return "<br/>";
+        if (/^-{3,}$/.test(t)) return '<hr style="margin:16px 0;border:none;border-top:1px solid #ddd"/>';
+        if (t.startsWith("#### ")) return `<h4 style="margin:18px 0 6px;font-size:14px;font-weight:700;color:#1A3A5C">${t.slice(5)}</h4>`;
+        if (t.startsWith("### ")) return `<h3 style="margin:20px 0 8px;font-size:16px;font-weight:700;border-bottom:1px solid #eee;padding-bottom:4px">${t.slice(4)}</h3>`;
+        if (t.startsWith("## ")) return `<h2 style="margin:24px 0 10px;font-size:18px;font-weight:700">${t.slice(3)}</h2>`;
+        const numMatch = t.match(/^(\d+)[.)]\s+(.*)/);
+        if (numMatch) return `<div style="display:flex;gap:10px;margin:4px 0 4px 8px"><span style="font-weight:600;color:#0070C0;min-width:20px;text-align:right">${numMatch[1]}.</span><span>${numMatch[2]}</span></div>`;
+        const bulletMatch = t.match(/^[-•]\s+(.*)/);
+        if (bulletMatch) return `<div style="display:flex;gap:10px;margin:4px 0 4px 8px"><span style="color:#0070C0">•</span><span>${bulletMatch[1]}</span></div>`;
+        return `<p style="margin:4px 0">${t}</p>`;
+      })
+      .join("")
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+    const subjectStr = selectedSubjects.join(", ") || classe?.materia || "";
+    const dateStr = new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+
+    printWin.document.write(`<!DOCTYPE html>
+<html><head><meta charset="utf-8"/><title>${title} — Soluzioni</title>
+<style>
+  @page { margin: 20mm; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; line-height: 1.6; color: #1a1a1a; max-width: 700px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #2E7D32; }
+  .header h1 { font-size: 20px; margin: 0 0 8px; color: #2E7D32; }
+  .header .meta { font-size: 11px; color: #888; }
+  .header .badge { display:inline-block; background:#2E7D3220; color:#2E7D32; padding:2px 12px; border-radius:12px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }
+  .content { margin-top: 16px; }
+  @media print { body { -webkit-print-color-adjust: exact; } }
+</style></head><body>
+<div class="header">
+  <div class="badge">⚠ RISERVATO AL DOCENTE</div>
+  <h1>${title} — Soluzioni</h1>
+  <div class="meta">${[subjectStr, classe?.nome, dateStr].filter(Boolean).join(" · ")}</div>
+</div>
+<div class="content">${htmlContent}</div>
 </body></html>`);
     printWin.document.close();
     setTimeout(() => printWin.print(), 400);
@@ -293,7 +405,7 @@ ${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span cla
 
     setSaving(true);
     try {
-      // Always save as material
+      // Always save as material (student content only — no solutions)
       const materialPayload = {
         teacher_id: userId,
         class_id: classId,
@@ -306,9 +418,27 @@ ${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span cla
       };
       await supabase.from("teacher_materials").insert(materialPayload);
 
+      // Save solutions as a separate teacher-only material
+      if (aiSolutions) {
+        await supabase.from("teacher_materials").insert({
+          teacher_id: userId,
+          class_id: classId,
+          title: `${title} — Soluzioni`,
+          subject: selectedSubjects.join(", ") || classe?.materia || null,
+          type: activityType,
+          content: aiSolutions,
+          status: "draft", // Never assigned to students
+          target_profile: "docente",
+        });
+      }
+
       if (destination === "pdf") {
         exportToPdf(title, previewContent, activityType);
-        toast.success("Materiale salvato e PDF generato");
+        // Also export solutions PDF if available
+        if (aiSolutions) {
+          setTimeout(() => exportSolutionsPdf(title, aiSolutions), 600);
+        }
+        toast.success(aiSolutions ? "PDF studente e soluzioni generati" : "Materiale salvato e PDF generato");
       } else {
         const targetStudents = destination === "all"
           ? students
@@ -325,6 +455,7 @@ ${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span cla
         if (uploadFile) metadata.attachment_name = uploadFile.name;
         if (mode === "ai") metadata.ai_generated = true;
 
+        // Student assignments get ONLY the student content (no solutions)
         const inserts = targetStudents.map(s => ({
           teacher_id: userId,
           class_id: classId,
@@ -444,11 +575,22 @@ ${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span cla
             <Badge variant="secondary">{activityType.charAt(0).toUpperCase() + activityType.slice(1)}</Badge>
           </div>
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">Contenuto</p>
+            <p className="text-xs text-muted-foreground">Contenuto per lo studente</p>
             <div className="bg-muted/50 border border-border rounded-xl p-4 text-sm whitespace-pre-wrap max-h-64 overflow-y-auto">
               {previewContent}
             </div>
           </div>
+          {aiSolutions && (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
+                Soluzioni (solo docente — non visibili allo studente)
+              </p>
+              <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-xl p-4 text-sm whitespace-pre-wrap max-h-48 overflow-y-auto">
+                {aiSolutions}
+              </div>
+            </div>
+          )}
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground">Destinazione</p>
             <p className="text-sm text-foreground">
@@ -608,13 +750,30 @@ ${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span cla
             </Button>
 
             {aiOutput && (
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Anteprima generata (modificabile)</Label>
-                <Textarea
-                  value={aiOutput}
-                  onChange={e => setAiOutput(e.target.value)}
-                  className="rounded-xl min-h-[160px] text-sm"
-                />
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">
+                    {aiSolutions ? "Contenuto studente (modificabile)" : "Anteprima generata (modificabile)"}
+                  </Label>
+                  <Textarea
+                    value={aiOutput}
+                    onChange={e => setAiOutput(e.target.value)}
+                    className="rounded-xl min-h-[160px] text-sm"
+                  />
+                </div>
+                {aiSolutions && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
+                      Soluzioni (solo docente — modificabili)
+                    </Label>
+                    <Textarea
+                      value={aiSolutions}
+                      onChange={e => setAiSolutions(e.target.value)}
+                      className="rounded-xl min-h-[120px] text-sm border-emerald-200 dark:border-emerald-800"
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
