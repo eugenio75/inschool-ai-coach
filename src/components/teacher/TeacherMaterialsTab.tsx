@@ -291,25 +291,103 @@ ${isVerifica ? `
     const printWin = window.open("", "_blank");
     if (!printWin) { toast.error("Popup bloccato dal browser"); return; }
     const isVerifica = type === "verifica";
-    const headerColor = isVerifica ? "#b91c1c" : "#1a3a5c";
-    const headerLabel = type.charAt(0).toUpperCase() + type.slice(1);
-    printWin.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>
+    const headerColor = isVerifica ? "#c0392b" : "#1A3A5C";
+
+    // Convert markdown to structured HTML (same logic as TeacherMaterialsArchive)
+    const content = pdfContent.replace(/\\n/g, "\n");
+    const htmlContent = content
+      .split("\n")
+      .map((line: string) => {
+        const t = line.trim();
+        if (!t) return "<br/>";
+        if (/^-{3,}$/.test(t)) return '<hr style="margin:16px 0;border:none;border-top:1px solid #ddd"/>';
+        if (t.startsWith("#### ")) return `<h4 style="margin:18px 0 6px;font-size:14px;font-weight:700;color:#1A3A5C">${t.slice(5)}</h4>`;
+        if (t.startsWith("### ")) return `<h3 style="margin:20px 0 8px;font-size:16px;font-weight:700;border-bottom:1px solid #eee;padding-bottom:4px">${t.slice(4)}</h3>`;
+        if (t.startsWith("## ")) return `<h2 style="margin:24px 0 10px;font-size:18px;font-weight:700">${t.slice(3)}</h2>`;
+        const numMatch = t.match(/^(\d+)[.)]\s+(.*)/);
+        if (numMatch) return `<div style="display:flex;gap:10px;margin:4px 0 4px 8px"><span style="font-weight:600;color:#0070C0;min-width:20px;text-align:right">${numMatch[1]}.</span><span>${numMatch[2]}</span></div>`;
+        const bulletMatch = t.match(/^[-•]\s+(.*)/);
+        if (bulletMatch) return `<div style="display:flex;gap:10px;margin:4px 0 4px 8px"><span style="color:#0070C0">•</span><span>${bulletMatch[1]}</span></div>`;
+        return `<p style="margin:4px 0">${t}</p>`;
+      })
+      .join("")
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+    const subjectStr = selectedSubjects.join(", ") || classe?.materia || "";
+    const dateStr = new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+    const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+
+    printWin.document.write(`<!DOCTYPE html>
+<html><head><meta charset="utf-8"/><title>${title}</title>
 <style>
-@page { margin: 2cm; }
-body { font-family: Georgia, 'Times New Roman', serif; max-width: 700px; margin: 0 auto; padding: 40px 20px; line-height: 1.8; color: #1a1a1a; font-size: 14px; }
-h1 { font-size: 1.5em; color: ${headerColor}; border-bottom: 3px solid ${headerColor}; padding-bottom: 10px; margin-bottom: 5px; }
-.meta { color: #666; font-size: 0.85em; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid #e5e5e5; }
-.badge { display: inline-block; background: ${headerColor}15; color: ${headerColor}; padding: 2px 10px; border-radius: 12px; font-size: 0.75em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-pre { white-space: pre-wrap; font-family: inherit; font-size: 0.95em; }
-${isVerifica ? `.student-info { margin-top: 20px; margin-bottom: 24px; border: 1px solid #ddd; border-radius: 8px; padding: 12px 16px; } .student-info span { color: #888; font-size: 0.85em; } .line { display: inline-block; border-bottom: 1px solid #333; width: 200px; margin-left: 8px; }` : ""}
-footer { margin-top: 40px; font-size: 0.7em; color: #999; border-top: 1px solid #e5e5e5; padding-top: 10px; display: flex; justify-content: space-between; }
-@media print { body { padding: 0; } }
+  @page { margin: 20mm; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; line-height: 1.6; color: #1a1a1a; max-width: 700px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid ${headerColor}; }
+  .header h1 { font-size: 20px; margin: 0 0 8px; color: ${headerColor}; }
+  .header .meta { font-size: 11px; color: #888; }
+  ${isVerifica ? `.student-fields { margin: 16px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+  .student-fields p { margin: 4px 0; font-size: 12px; }` : ""}
+  .content { margin-top: 16px; }
+  @media print { body { -webkit-print-color-adjust: exact; } }
 </style></head><body>
-<h1>${title}</h1>
-<div class="meta"><span class="badge">${headerLabel}</span> · ${classe?.nome || ""} · ${classe?.materia || ""}</div>
-${isVerifica ? `<div class="student-info"><span>Nome e cognome:</span> <span class="line"></span> &nbsp;&nbsp; <span>Data:</span> <span class="line" style="width:120px"></span></div>` : ""}
-<pre>${pdfContent}</pre>
-<footer><span>Generato con InSchool</span><span>${new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}</span></footer>
+<div class="header">
+  <h1>${title}</h1>
+  <div class="meta">${[typeLabel, subjectStr, classe?.nome, dateStr].filter(Boolean).join(" · ")}</div>
+</div>
+${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> _________________________ <strong>Classe:</strong> _______ <strong>Data:</strong> _____________</p></div>` : ""}
+<div class="content">${htmlContent}</div>
+</body></html>`);
+    printWin.document.close();
+    setTimeout(() => printWin.print(), 400);
+  }
+
+  /** Export teacher-only solutions PDF */
+  function exportSolutionsPdf(title: string, solutionsContent: string) {
+    const printWin = window.open("", "_blank");
+    if (!printWin) { toast.error("Popup bloccato dal browser"); return; }
+
+    const content = solutionsContent.replace(/\\n/g, "\n");
+    const htmlContent = content
+      .split("\n")
+      .map((line: string) => {
+        const t = line.trim();
+        if (!t) return "<br/>";
+        if (/^-{3,}$/.test(t)) return '<hr style="margin:16px 0;border:none;border-top:1px solid #ddd"/>';
+        if (t.startsWith("#### ")) return `<h4 style="margin:18px 0 6px;font-size:14px;font-weight:700;color:#1A3A5C">${t.slice(5)}</h4>`;
+        if (t.startsWith("### ")) return `<h3 style="margin:20px 0 8px;font-size:16px;font-weight:700;border-bottom:1px solid #eee;padding-bottom:4px">${t.slice(4)}</h3>`;
+        if (t.startsWith("## ")) return `<h2 style="margin:24px 0 10px;font-size:18px;font-weight:700">${t.slice(3)}</h2>`;
+        const numMatch = t.match(/^(\d+)[.)]\s+(.*)/);
+        if (numMatch) return `<div style="display:flex;gap:10px;margin:4px 0 4px 8px"><span style="font-weight:600;color:#0070C0;min-width:20px;text-align:right">${numMatch[1]}.</span><span>${numMatch[2]}</span></div>`;
+        const bulletMatch = t.match(/^[-•]\s+(.*)/);
+        if (bulletMatch) return `<div style="display:flex;gap:10px;margin:4px 0 4px 8px"><span style="color:#0070C0">•</span><span>${bulletMatch[1]}</span></div>`;
+        return `<p style="margin:4px 0">${t}</p>`;
+      })
+      .join("")
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+    const subjectStr = selectedSubjects.join(", ") || classe?.materia || "";
+    const dateStr = new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+
+    printWin.document.write(`<!DOCTYPE html>
+<html><head><meta charset="utf-8"/><title>${title} — Soluzioni</title>
+<style>
+  @page { margin: 20mm; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; line-height: 1.6; color: #1a1a1a; max-width: 700px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #2E7D32; }
+  .header h1 { font-size: 20px; margin: 0 0 8px; color: #2E7D32; }
+  .header .meta { font-size: 11px; color: #888; }
+  .header .badge { display:inline-block; background:#2E7D3220; color:#2E7D32; padding:2px 12px; border-radius:12px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }
+  .content { margin-top: 16px; }
+  @media print { body { -webkit-print-color-adjust: exact; } }
+</style></head><body>
+<div class="header">
+  <div class="badge">⚠ RISERVATO AL DOCENTE</div>
+  <h1>${title} — Soluzioni</h1>
+  <div class="meta">${[subjectStr, classe?.nome, dateStr].filter(Boolean).join(" · ")}</div>
+</div>
+<div class="content">${htmlContent}</div>
 </body></html>`);
     printWin.document.close();
     setTimeout(() => printWin.print(), 400);
