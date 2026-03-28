@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { renderAndPrintPdf, splitTeacherContent } from "@/lib/pdfExport";
 
 const ACTIVITY_TYPES = ["compito", "verifica", "esercizi", "recupero", "potenziamento"] as const;
 type ActivityType = typeof ACTIVITY_TYPES[number];
