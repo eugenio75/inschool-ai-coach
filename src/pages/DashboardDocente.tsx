@@ -589,27 +589,26 @@ export default function DashboardDocente() {
                     </span>
                   ))}
                 </div>
-                {materie.length > 0 ? (
+                {materie.filter(m => !newClasse.materie.includes(m)).length > 0 && (
                   <Select value="" onValueChange={v => {
                     if (v && !newClasse.materie.includes(v)) setNewClasse(p => ({ ...p, materie: [...p.materie, v] }));
                   }}>
-                    <SelectTrigger className="border-0 p-0 h-8 shadow-none"><SelectValue placeholder="Aggiungi materia..." /></SelectTrigger>
+                    <SelectTrigger className="border-0 p-0 h-8 shadow-none"><SelectValue placeholder="Seleziona materia..." /></SelectTrigger>
                     <SelectContent>{materie.filter(m => !newClasse.materie.includes(m)).map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
                   </Select>
-                ) : (
-                  <Input placeholder="es. Matematica" className="border-0 p-0 h-8 shadow-none"
-                    onKeyDown={e => {
-                      if (e.key === "Enter") {
-                        const v = (e.target as HTMLInputElement).value.trim();
-                        if (v && !newClasse.materie.includes(v)) {
-                          setNewClasse(p => ({ ...p, materie: [...p.materie, v] }));
-                          (e.target as HTMLInputElement).value = "";
-                        }
-                        e.preventDefault();
-                      }
-                    }}
-                  />
                 )}
+                <Input placeholder="Scrivi materia e premi Invio" className="border-0 p-0 h-8 shadow-none"
+                  onKeyDown={e => {
+                    if (e.key === "Enter") {
+                      const v = (e.target as HTMLInputElement).value.trim();
+                      if (v && !newClasse.materie.includes(v)) {
+                        setNewClasse(p => ({ ...p, materie: [...p.materie, v] }));
+                        (e.target as HTMLInputElement).value = "";
+                      }
+                      e.preventDefault();
+                    }
+                  }}
+                />
               </div>
             </div>
             <div>
