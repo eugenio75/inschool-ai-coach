@@ -581,8 +581,8 @@ export default function DashboardDocente() {
       </div>
 
       {/* ═══ DIALOGS ═══ */}
-      <Dialog open={showClasseModal && !classeCreata} onOpenChange={v => { setShowClasseModal(v); if (!v) setClasseCreata(null); }}>
-        <DialogContent className="rounded-xl">
+      <Dialog open={showClasseModal && !classeCreata} onOpenChange={v => { setShowClasseModal(v); if (!v) { setClasseCreata(null); setShowCustomSubject(false); setCustomSubjectInput(""); } }}>
+        <DialogContent className="rounded-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Nuova Classe</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div>
@@ -591,44 +591,13 @@ export default function DashboardDocente() {
                 onChange={e => setNewClasse(p => ({ ...p, nome: e.target.value }))} className="mt-1" />
             </div>
             <div>
-              <Label>Materie *</Label>
-              <div className="mt-1 border border-input rounded-lg p-2 min-h-[42px]">
-                <div className="flex flex-wrap gap-1.5 mb-1">
-                  {newClasse.materie.map(m => (
-                    <span key={m} className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium px-2 py-1 rounded-md">
-                      {m}
-                      <button onClick={() => setNewClasse(p => ({ ...p, materie: p.materie.filter(x => x !== m) }))} className="hover:text-destructive">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-                {materie.filter(m => !newClasse.materie.includes(m)).length > 0 && (
-                  <Select value="" onValueChange={v => {
-                    if (v && !newClasse.materie.includes(v)) setNewClasse(p => ({ ...p, materie: [...p.materie, v] }));
-                  }}>
-                    <SelectTrigger className="border-0 p-0 h-8 shadow-none"><SelectValue placeholder="Seleziona materia..." /></SelectTrigger>
-                    <SelectContent>{materie.filter(m => !newClasse.materie.includes(m)).map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-                  </Select>
-                )}
-                <Input placeholder="Scrivi materia e premi Invio" className="border-0 p-0 h-8 shadow-none"
-                  onKeyDown={e => {
-                    if (e.key === "Enter") {
-                      const v = (e.target as HTMLInputElement).value.trim();
-                      if (v && !newClasse.materie.includes(v)) {
-                        setNewClasse(p => ({ ...p, materie: [...p.materie, v] }));
-                        (e.target as HTMLInputElement).value = "";
-                      }
-                      e.preventDefault();
-                    }
-                  }}
-                />
-              </div>
-            </div>
-            <div>
-              <Label>Ordine scolastico</Label>
-              <Select value={newClasse.ordine_scolastico} onValueChange={v => setNewClasse(p => ({ ...p, ordine_scolastico: v }))}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder={ordine || "Seleziona..."} /></SelectTrigger>
+              <Label>Ordine scolastico *</Label>
+              <Select value={newClasse.ordine_scolastico || ordine} onValueChange={v => {
+                setNewClasse(p => ({ ...p, ordine_scolastico: v, materie: [] }));
+                setShowCustomSubject(false);
+                setCustomSubjectInput("");
+              }}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Seleziona..." /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Scuola Primaria">Scuola Primaria</SelectItem>
                   <SelectItem value="Scuola Secondaria I grado">Scuola Secondaria I grado</SelectItem>
@@ -637,6 +606,78 @@ export default function DashboardDocente() {
                   <SelectItem value="Formazione Professionale">Formazione Professionale</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label>Materie *</Label>
+              <div className="mt-1 border border-input rounded-lg p-2 min-h-[42px]">
+                {newClasse.materie.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {newClasse.materie.map(m => (
+                      <span key={m} className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-medium px-2 py-1 rounded-md">
+                        {m}
+                        <button onClick={() => setNewClasse(p => ({ ...p, materie: p.materie.filter(x => x !== m) }))} className="hover:text-destructive">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {isUniversitaFreeText ? (
+                  <Input placeholder="Scrivi materia e premi Invio" className="border-0 p-0 h-8 shadow-none"
+                    onKeyDown={e => {
+                      if (e.key === "Enter") {
+                        const v = (e.target as HTMLInputElement).value.trim();
+                        if (v && !newClasse.materie.includes(v)) {
+                          setNewClasse(p => ({ ...p, materie: [...p.materie, v] }));
+                          (e.target as HTMLInputElement).value = "";
+                        }
+                        e.preventDefault();
+                      }
+                    }}
+                  />
+                ) : effectiveOrdine ? (
+                  <>
+                    {[...availableSubjects, "__altra__"].filter(m => m === "__altra__" || !newClasse.materie.includes(m)).length > 0 && (
+                      <Select value="" onValueChange={v => {
+                        if (v === "__altra__") {
+                          setShowCustomSubject(true);
+                        } else if (v && !newClasse.materie.includes(v)) {
+                          setNewClasse(p => ({ ...p, materie: [...p.materie, v] }));
+                        }
+                      }}>
+                        <SelectTrigger className="border-0 p-0 h-8 shadow-none"><SelectValue placeholder="Seleziona materia..." /></SelectTrigger>
+                        <SelectContent>
+                          {availableSubjects.filter(m => !newClasse.materie.includes(m)).map(m => (
+                            <SelectItem key={m} value={m}>{m}</SelectItem>
+                          ))}
+                          <SelectItem value="__altra__">Altra materia…</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                    {showCustomSubject && (
+                      <Input
+                        placeholder="Nome materia personalizzata…"
+                        className="mt-1 h-8 text-sm"
+                        value={customSubjectInput}
+                        onChange={e => setCustomSubjectInput(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") {
+                            const v = customSubjectInput.trim();
+                            if (v && !newClasse.materie.includes(v)) {
+                              setNewClasse(p => ({ ...p, materie: [...p.materie, v] }));
+                            }
+                            setCustomSubjectInput("");
+                            setShowCustomSubject(false);
+                            e.preventDefault();
+                          }
+                        }}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground py-1">Seleziona prima l'ordine scolastico</p>
+                )}
+              </div>
             </div>
             <div>
               <Label>Numero studenti</Label>
