@@ -154,7 +154,9 @@ export default function ClassView() {
   async function loadClass() {
     setLoading(true);
     try {
-      if (user) {
+      // Always try the edge function first for authenticated users
+      const { data: { session: authSession } } = await supabase.auth.getSession();
+      if (authSession?.access_token) {
         const data = await fetchTeacherClassData(classId!);
         setClasse(data.classe);
         setStudents(data.students || []);
@@ -163,7 +165,7 @@ export default function ClassView() {
         const { data: mats } = await (supabase as any)
           .from("teacher_materials")
           .select("*")
-          .eq("teacher_id", user.id)
+          .eq("teacher_id", authSession.user.id)
           .eq("class_id", classId)
           .order("created_at", { ascending: false });
         setMaterials(mats || []);
