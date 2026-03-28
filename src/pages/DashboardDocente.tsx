@@ -67,8 +67,32 @@ export default function DashboardDocente() {
   const [classeCreata, setClasseCreata] = useState<any>(null);
   const [showCustomSubject, setShowCustomSubject] = useState(false);
   const [customSubjectInput, setCustomSubjectInput] = useState("");
+
+  // Delete class
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [deletingClasse, setDeletingClasse] = useState(false);
+
+  // Crea materiale — class picker
+  const [showMaterialClassPicker, setShowMaterialClassPicker] = useState(false);
+  const [selectedMaterialClassId, setSelectedMaterialClassId] = useState("");
+
+  const od = onboarding;
+  const materie: string[] = od?.docente_materie || [];
+  const ordine: string = od?.docente_ordine || "";
   const cognome = profile?.name?.split(" ").slice(-1)[0] || profile?.name || "";
   const studentiCount = classi.reduce((s, c) => s + (c.num_studenti || 0), 0);
+
+  // Subject lists by school level
+  const SUBJECTS_BY_LEVEL: Record<string, string[]> = {
+    "Scuola Primaria": ["Italiano", "Matematica", "Scienze", "Storia", "Geografia", "Inglese", "Arte e Immagine", "Musica", "Educazione Fisica", "Religione"],
+    "Scuola Secondaria I grado": ["Italiano", "Matematica", "Scienze", "Storia", "Geografia", "Inglese", "Seconda lingua comunitaria", "Arte e Immagine", "Musica", "Tecnologia", "Educazione Fisica", "Religione"],
+    "Scuola Secondaria II grado": ["Italiano", "Matematica", "Fisica", "Chimica", "Storia", "Filosofia", "Inglese", "Scienze Naturali", "Latino", "Greco", "Informatica", "Economia", "Diritto", "Arte", "Musica", "Educazione Fisica", "Religione"],
+    "Università": materie.length > 0 ? materie : [],
+  };
+
+  const effectiveOrdine = newClasse.ordine_scolastico || ordine || "";
+  const availableSubjects = SUBJECTS_BY_LEVEL[effectiveOrdine] || [];
+  const isUniversitaFreeText = effectiveOrdine === "Università" && availableSubjects.length === 0;
 
   useEffect(() => { if (!profileId) return; loadAll(); }, [profileId, userId]);
 
