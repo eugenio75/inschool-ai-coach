@@ -750,14 +750,30 @@ ${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> __________
             </Button>
 
             {aiOutput && (
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Anteprima generata (modificabile)</Label>
-                <Textarea
-                  value={aiOutput}
-                  onChange={e => setAiOutput(e.target.value)}
-                  className="rounded-xl min-h-[160px] text-sm"
-                />
-              </div>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">
+                    {aiSolutions ? "Contenuto studente (modificabile)" : "Anteprima generata (modificabile)"}
+                  </Label>
+                  <Textarea
+                    value={aiOutput}
+                    onChange={e => setAiOutput(e.target.value)}
+                    className="rounded-xl min-h-[160px] text-sm"
+                  />
+                </div>
+                {aiSolutions && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
+                      Soluzioni (solo docente — modificabili)
+                    </Label>
+                    <Textarea
+                      value={aiSolutions}
+                      onChange={e => setAiSolutions(e.target.value)}
+                      className="rounded-xl min-h-[120px] text-sm border-emerald-200 dark:border-emerald-800"
+                    />
+                  </div>
+                )}
             )}
           </div>
         )}
