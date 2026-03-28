@@ -22,10 +22,11 @@ import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { renderAndPrintPdf, splitTeacherContent } from "@/lib/pdfExport";
 
-const ACTIVITY_TYPES = ["compito", "verifica", "esercizi", "recupero", "potenziamento"] as const;
+const ACTIVITY_TYPES = ["lezione", "compito", "verifica", "esercizi", "recupero", "potenziamento"] as const;
 type ActivityType = typeof ACTIVITY_TYPES[number];
 
 const PLACEHOLDERS_FORM_A: Record<ActivityType, string> = {
+  lezione: "Es. Scrivi qui la tua scaletta di lezione completa — introduzione, corpo, attività, sintesi e compito per casa.",
   compito: "Es. Leggi il brano a pagina 34 e rispondi alle domande 1, 2 e 3 sul quaderno.",
   verifica: "Es. Parte A — 5 domande aperte sulla Rivoluzione Francese. Parte B — 5 domande a scelta multipla. Tempo: 45 minuti.",
   esercizi: "Es. Completa gli esercizi 5, 6 e 7 a pagina 52. Mostra il procedimento per ogni calcolo.",
@@ -34,6 +35,7 @@ const PLACEHOLDERS_FORM_A: Record<ActivityType, string> = {
 };
 
 const PLACEHOLDERS_FORM_B: Record<ActivityType, string> = {
+  lezione: "Es. Una lezione di 50 minuti sulla Rivoluzione Francese per una terza media — con aggancio motivazionale, attività in classe e verifica di comprensione.",
   compito: "Es. Un compito di comprensione del testo per una seconda media — brano di narrativa con 5 domande aperte, livello medio.",
   verifica: "Es. Una verifica sui Promessi Sposi per una terza media, 8 domande misto aperto e chiuso, con soluzione, difficoltà media.",
   esercizi: "Es. 5 esercizi sulle equazioni di secondo grado con procedimento guidato, livello medio, per un quarto liceo scientifico.",
