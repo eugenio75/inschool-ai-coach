@@ -89,6 +89,10 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   const [aiContextUploading, setAiContextUploading] = useState(false);
   const aiFileRef = useRef<HTMLInputElement>(null);
 
+  // Inline refinement state
+  const [aiRefinePrompt, setAiRefinePrompt] = useState("");
+  const [aiRefining, setAiRefining] = useState(false);
+
   // File upload state
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadUrl, setUploadUrl] = useState<string | null>(null);
