@@ -119,6 +119,8 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     setAiLoading(false);
     setAiContextFile(null);
     setAiContextText(null);
+    setAiRefinePrompt("");
+    setAiRefining(false);
     setUploadFile(null);
     setUploadUrl(null);
     setOcrText(null);
