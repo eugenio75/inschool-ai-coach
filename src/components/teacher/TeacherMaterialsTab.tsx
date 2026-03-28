@@ -229,7 +229,6 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     setAiSolutions(null);
     setAiTitle(null);
     try {
-      const isVerifica = activityType === "verifica";
       const subjectStr = selectedSubjects.join(", ") || classe?.materia || "";
 
       let systemPrompt = `Sei un docente esperto. Genera materiale didattico di tipo "${activityType}". Classe: ${classe?.nome || ""}. Materia: ${subjectStr}.
@@ -237,10 +236,10 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
 REGOLE IMPORTANTI:
 1. La PRIMA RIGA del tuo output DEVE essere: TITOLO: [titolo contestuale del materiale]
    Il titolo deve descrivere il contenuto (es. "Verifica di Storia — Le Guerre Puniche", "Esercizi di Matematica — Equazioni di secondo grado"), NON la richiesta usata per generarlo.
-${isVerifica ? `
-2. Il materiale per lo studente NON deve MAI contenere le risposte corrette, la griglia di valutazione o le soluzioni.
-3. DOPO il contenuto per lo studente, inserisci una riga con ESATTAMENTE: ===SOLUZIONI===
-4. DOPO il separatore, scrivi le risposte corrette e la griglia di valutazione. Questa parte sarà visibile SOLO al docente.` : ""}`;
+2. Se il contenuto include una griglia di valutazione, risposte corrette, soluzioni, chiave di correzione o note riservate al docente, il materiale per lo studente NON deve MAI contenerle.
+3. In quel caso, DOPO il contenuto per lo studente, inserisci una riga con ESATTAMENTE: ===SOLUZIONI===
+4. DOPO il separatore, scrivi le risposte corrette, la griglia di valutazione e/o le note per il docente. Questa parte sarà visibile SOLO al docente.
+5. Questa regola vale per TUTTI i tipi di attività (verifica, compito, progetto, laboratorio, esercizi, recupero, potenziamento).`;
 
       let userMessage = aiPrompt;
       if (aiContextText) {
@@ -272,11 +271,14 @@ ${isVerifica ? `
         aiContent = aiContent.replace(/^TITOLO:\s*.+\n*/i, "").trim();
       }
 
-      // Split solutions for verifiche
-      if (isVerifica && aiContent.includes("===SOLUZIONI===")) {
-        const parts = aiContent.split("===SOLUZIONI===");
-        setAiOutput(parts[0].trim());
-        setAiSolutions(parts[1].trim());
+      // Split teacher-only content (works for ALL activity types)
+      const { studentContent, teacherContent, wasAutoSplit } = splitTeacherContent(aiContent);
+      if (teacherContent) {
+        setAiOutput(studentContent);
+        setAiSolutions(teacherContent);
+        if (wasAutoSplit) {
+          toast.warning("Griglia di valutazione rilevata e separata automaticamente. Verifica la suddivisione.");
+        }
       } else {
         setAiOutput(aiContent);
       }
