@@ -65,18 +65,8 @@ export default function DashboardDocente() {
   const [newClasse, setNewClasse] = useState({ nome: "", materie: [] as string[], ordine_scolastico: "", num_studenti: "" });
   const [savingClasse, setSavingClasse] = useState(false);
   const [classeCreata, setClasseCreata] = useState<any>(null);
-
-  // Delete class
-  const [deleteTarget, setDeleteTarget] = useState<any>(null);
-  const [deletingClasse, setDeletingClasse] = useState(false);
-
-  // Crea materiale — class picker
-  const [showMaterialClassPicker, setShowMaterialClassPicker] = useState(false);
-  const [selectedMaterialClassId, setSelectedMaterialClassId] = useState("");
-
-  const od = onboarding;
-  const materie: string[] = od?.docente_materie || [];
-  const ordine: string = od?.docente_ordine || "";
+  const [showCustomSubject, setShowCustomSubject] = useState(false);
+  const [customSubjectInput, setCustomSubjectInput] = useState("");
   const cognome = profile?.name?.split(" ").slice(-1)[0] || profile?.name || "";
   const studentiCount = classi.reduce((s, c) => s + (c.num_studenti || 0), 0);
 
