@@ -300,7 +300,7 @@ REGOLE IMPORTANTI:
           },
           body: JSON.stringify({
             stream: false,
-            maxTokens: 3000,
+            maxTokens: isLezione ? 6000 : 3000,
             systemPrompt,
             messages: [{ role: "user", content: userMessage }],
           }),
