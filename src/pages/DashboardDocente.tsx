@@ -704,15 +704,24 @@ export default function DashboardDocente() {
               {classeCreata?.codice_invito}
             </p>
           </div>
-          <Button className="w-full"
-            onClick={() => {
-              navigator.clipboard.writeText(classeCreata?.codice_invito);
-              toast.success("Codice copiato!");
-              setClasseCreata(null);
-              setShowClasseModal(false);
-            }}>
-            <Copy className="w-4 h-4 mr-2" />Copia codice e chiudi
-          </Button>
+          <div className="flex flex-col gap-2">
+            <Button className="w-full"
+              onClick={() => {
+                navigator.clipboard.writeText(classeCreata?.codice_invito);
+                toast.success("Codice copiato!");
+              }}>
+              <Copy className="w-4 h-4 mr-2" />Copia codice
+            </Button>
+            <Button variant="outline" className="w-full"
+              onClick={() => {
+                const id = classeCreata?.id;
+                setClasseCreata(null);
+                setShowClasseModal(false);
+                if (id) navigate(`/classe/${id}`);
+              }}>
+              Vai alla classe
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
