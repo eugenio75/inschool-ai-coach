@@ -774,6 +774,7 @@ ${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> __________
                     />
                   </div>
                 )}
+              </div>
             )}
           </div>
         )}
