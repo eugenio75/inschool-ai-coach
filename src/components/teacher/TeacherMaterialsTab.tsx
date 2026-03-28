@@ -340,7 +340,69 @@ REGOLE IMPORTANTI:
     }
   }
 
-  // --- Export PDF (shared renderer) ---
+  // --- Inline refinement ---
+  async function refineAiContent() {
+    if (!aiRefinePrompt.trim()) return;
+    setAiRefining(true);
+    try {
+      const fullCurrent = aiSolutions
+        ? `${aiOutput}\n\n===SOLUZIONI===\n\n${aiSolutions}`
+        : (aiOutput || getPreviewContent());
+
+      const systemPrompt = `You are refining an existing educational document. Apply the requested modification and return the complete updated document with the same structure and formatting. Do not add commentary or explanations — return only the document content.
+
+REGOLE:
+1. La PRIMA RIGA del tuo output DEVE essere: TITOLO: [titolo contestuale aggiornato]
+2. Se il documento contiene il separatore ===SOLUZIONI===, DEVI mantenerlo nella stessa posizione logica. Tutto ciò che era dopo il separatore deve restare dopo il separatore.
+3. Restituisci il documento COMPLETO modificato, non un riassunto.`;
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            stream: false,
+            maxTokens: 6000,
+            systemPrompt,
+            messages: [{ role: "user", content: `DOCUMENTO ATTUALE:\n---\n${fullCurrent}\n---\n\nMODIFICA RICHIESTA: ${aiRefinePrompt}` }],
+          }),
+        }
+      );
+      const data = await res.json();
+      let refined = data.choices?.[0]?.message?.content?.trim() || "";
+      if (!refined) { toast.error("Errore nel raffinamento."); return; }
+
+      // Extract title
+      const titleMatch = refined.match(/^TITOLO:\s*(.+)/i);
+      if (titleMatch) {
+        setAiTitle(titleMatch[1].trim());
+        refined = refined.replace(/^TITOLO:\s*.+\n*/i, "").trim();
+      }
+
+      // Split teacher content
+      const { studentContent, teacherContent, wasAutoSplit } = splitTeacherContent(refined);
+      if (teacherContent) {
+        setAiOutput(studentContent);
+        setAiSolutions(teacherContent);
+        if (wasAutoSplit) toast.warning("Contenuto docente separato automaticamente.");
+      } else {
+        setAiOutput(refined);
+        setAiSolutions(null);
+      }
+
+      setAiRefinePrompt("");
+      toast.success("Contenuto aggiornato!");
+    } catch {
+      toast.error("Errore nel raffinamento.");
+    } finally {
+      setAiRefining(false);
+    }
+  }
+
   function exportToPdf(title: string, pdfContent: string, type: string) {
     const subjectStr = selectedSubjects.join(", ") || classe?.materia || "";
     renderAndPrintPdf(pdfContent, {
