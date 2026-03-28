@@ -145,9 +145,11 @@ export default function ClassView() {
   const [verificheOpen, setVerificheOpen] = useState(false);
 
   useEffect(() => {
-    if (!classId || (!profileId && !user)) return;
+    if (!classId) return;
+    // Wait for auth user to be available for teachers (avoid race condition)
+    if (!profileId && !user) return;
     loadClass();
-  }, [classId, profileId, user]);
+  }, [classId, profileId, user?.id]);
 
   async function loadClass() {
     setLoading(true);
