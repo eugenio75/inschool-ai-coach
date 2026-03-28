@@ -575,11 +575,22 @@ ${isVerifica ? `<div class="student-fields"><p><strong>Nome:</strong> __________
             <Badge variant="secondary">{activityType.charAt(0).toUpperCase() + activityType.slice(1)}</Badge>
           </div>
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">Contenuto</p>
+            <p className="text-xs text-muted-foreground">Contenuto per lo studente</p>
             <div className="bg-muted/50 border border-border rounded-xl p-4 text-sm whitespace-pre-wrap max-h-64 overflow-y-auto">
               {previewContent}
             </div>
           </div>
+          {aiSolutions && (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
+                Soluzioni (solo docente — non visibili allo studente)
+              </p>
+              <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-xl p-4 text-sm whitespace-pre-wrap max-h-48 overflow-y-auto">
+                {aiSolutions}
+              </div>
+            </div>
+          )}
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground">Destinazione</p>
             <p className="text-sm text-foreground">
