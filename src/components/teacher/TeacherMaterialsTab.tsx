@@ -126,6 +126,8 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   }
 
   function getTitle(): string {
+    // Use AI-generated contextual title if available
+    if (aiTitle) return aiTitle;
     const previewContent = getPreviewContent();
     if (previewContent) {
       return previewContent.slice(0, 60).replace(/\n/g, " ").trim() || `${activityType.charAt(0).toUpperCase() + activityType.slice(1)} — ${classe?.nome || ""}`;
@@ -223,8 +225,22 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     }
     setAiLoading(true);
     setAiOutput(null);
+    setAiSolutions(null);
+    setAiTitle(null);
     try {
-      let systemPrompt = `Sei un docente esperto. Genera materiale didattico di tipo "${activityType}". Classe: ${classe?.nome || ""}. Materia: ${classe?.materia || ""}.`;
+      const isVerifica = activityType === "verifica";
+      const subjectStr = selectedSubjects.join(", ") || classe?.materia || "";
+
+      let systemPrompt = `Sei un docente esperto. Genera materiale didattico di tipo "${activityType}". Classe: ${classe?.nome || ""}. Materia: ${subjectStr}.
+
+REGOLE IMPORTANTI:
+1. La PRIMA RIGA del tuo output DEVE essere: TITOLO: [titolo contestuale del materiale]
+   Il titolo deve descrivere il contenuto (es. "Verifica di Storia — Le Guerre Puniche", "Esercizi di Matematica — Equazioni di secondo grado"), NON la richiesta usata per generarlo.
+${isVerifica ? `
+2. Il materiale per lo studente NON deve MAI contenere le risposte corrette, la griglia di valutazione o le soluzioni.
+3. DOPO il contenuto per lo studente, inserisci una riga con ESATTAMENTE: ===SOLUZIONI===
+4. DOPO il separatore, scrivi le risposte corrette e la griglia di valutazione. Questa parte sarà visibile SOLO al docente.` : ""}`;
+
       let userMessage = aiPrompt;
       if (aiContextText) {
         userMessage = `CONTESTO DAL DOCUMENTO CARICATO:\n---\n${aiContextText}\n---\n\nRICHIESTA: ${aiPrompt || "Genera materiale basandoti sul documento caricato."}`;
@@ -246,8 +262,23 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
         }
       );
       const data = await res.json();
-      const aiContent = data.choices?.[0]?.message?.content?.trim() || "Errore nella generazione.";
-      setAiOutput(aiContent);
+      let aiContent = data.choices?.[0]?.message?.content?.trim() || "Errore nella generazione.";
+
+      // Extract title from first line
+      const titleMatch = aiContent.match(/^TITOLO:\s*(.+)/i);
+      if (titleMatch) {
+        setAiTitle(titleMatch[1].trim());
+        aiContent = aiContent.replace(/^TITOLO:\s*.+\n*/i, "").trim();
+      }
+
+      // Split solutions for verifiche
+      if (isVerifica && aiContent.includes("===SOLUZIONI===")) {
+        const parts = aiContent.split("===SOLUZIONI===");
+        setAiOutput(parts[0].trim());
+        setAiSolutions(parts[1].trim());
+      } else {
+        setAiOutput(aiContent);
+      }
     } catch {
       toast.error("Errore nella generazione.");
     } finally {
