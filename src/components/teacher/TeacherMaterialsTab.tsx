@@ -637,7 +637,32 @@ REGOLE:
               <p className="text-sm text-foreground">{format(dueDate, "dd MMMM yyyy", { locale: it })}</p>
             </div>
           )}
-          <Button className="w-full rounded-xl" onClick={handleConfirm} disabled={saving}>
+          {/* Inline refinement */}
+          {mode === "ai" && aiOutput && (
+            <div className="space-y-2 border-t border-border pt-4">
+              <Label className="text-xs text-muted-foreground">Vuoi modificare qualcosa?</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={aiRefinePrompt}
+                  onChange={e => setAiRefinePrompt(e.target.value)}
+                  placeholder="Es: 'Aggiungi un esempio sulla Rivoluzione Francese', 'Togli la griglia di valutazione', 'Rendi le domande più semplici'"
+                  className="rounded-xl text-sm"
+                  disabled={aiRefining}
+                  onKeyDown={e => { if (e.key === "Enter" && aiRefinePrompt.trim()) refineAiContent(); }}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl shrink-0"
+                  onClick={refineAiContent}
+                  disabled={!aiRefinePrompt.trim() || aiRefining}
+                >
+                  {aiRefining ? <><RotateCcw className="w-3.5 h-3.5 mr-1 animate-spin" /> Aggiorno...</> : <><Pencil className="w-3.5 h-3.5 mr-1" /> Aggiorna</>}
+                </Button>
+              </div>
+            </div>
+          )}
+          <Button className="w-full rounded-xl" onClick={handleConfirm} disabled={saving || aiRefining}>
             <Send className="w-3.5 h-3.5 mr-1" />
             {saving ? "Salvataggio..." : "Conferma e assegna"}
           </Button>
