@@ -233,6 +233,7 @@ ABSOLUTE RULES:
 - Be human and warm, never robotic
 - ALWAYS respond in English
 ${tipInstruction}
+${pensieroInstruction}
 
 Output JSON: {"message":"...","suggestedAction":"button text","actionRoute":"/path"}
 
@@ -273,6 +274,7 @@ REGOLE ASSOLUTE:
 - Se ci sono assegnazioni dal professore, segnalale
 - Sii umano e caldo, mai robotico
 ${tipInstruction}
+${pensieroInstruction}
 
 Output JSON: {"message":"...","suggestedAction":"testo bottone","actionRoute":"/percorso"}
 
