@@ -589,8 +589,17 @@ Return only the three versions with no commentary, separated exactly by ===BES==
         toast.success(`Attività assegnata a ${targetStudents.length} studenti`);
       }
 
-      resetForm();
+      // Show download panel and trigger adapted versions generation
+      setConfirmedContent(previewContent);
+      setConfirmedTitle(title);
+      setConfirmedSolutions(aiSolutions);
+      setShowDownloadPanel(true);
+      setShowPreview(false);
       onReload();
+      toast.success("Materiale confermato! Scarica le versioni qui sotto.");
+
+      // Generate adapted versions in background
+      generateAdaptedVersions(previewContent);
     } catch (err: any) {
       toast.error("Errore: " + (err.message || "Riprova"));
     }
