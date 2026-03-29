@@ -74,7 +74,7 @@ export function JoinClassModal({ open, onOpenChange, profileId, onJoined }: Join
 
         {success ? (
           <div className="text-center py-4 space-y-3">
-            <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto" />
+            <CheckCircle2 className="w-12 h-12 text-primary mx-auto" />
             <p className="font-semibold text-foreground">
               {t("class_join_success", { name: success.class_name })}
             </p>
@@ -155,8 +155,8 @@ export function JoinClassInline({ profileId, onJoined }: { profileId: string; on
 
   if (success) {
     return (
-      <div className="flex items-center gap-3 p-4 rounded-2xl border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
-        <CheckCircle2 className="w-6 h-6 text-green-500 shrink-0" />
+      <div className="flex items-center gap-3 p-4 rounded-2xl border border-primary/20 bg-primary/5">
+        <CheckCircle2 className="w-6 h-6 text-primary shrink-0" />
         <div>
           <p className="font-semibold text-foreground text-sm">
             {t("class_join_success", { name: success.class_name })}

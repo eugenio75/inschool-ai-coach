@@ -30,7 +30,7 @@ export function MyClassesSection({ profileId }: { profileId: string }) {
   const loadClasses = async () => {
     setLoading(true);
     const { data } = await supabase.rpc("get_student_classes", { student_profile_id: profileId });
-    setClasses(Array.isArray(data) ? data : []);
+    setClasses(Array.isArray(data) ? (data as unknown as EnrolledClass[]) : []);
     setLoading(false);
   };
 
