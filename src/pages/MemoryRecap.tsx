@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { getMemoryItems, updateMemoryStrength, getDailyMissions, completeMission, autoCompleteMissions } from "@/lib/database";
 import { subjectColors } from "@/lib/mockData";
 import { isChildSession, getChildSession } from "@/lib/childSession";
+import { childApi } from "@/lib/childSession";
 import { getCurrentLang } from "@/lib/langUtils";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
