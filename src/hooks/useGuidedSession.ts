@@ -170,6 +170,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   const [celebrationPoints, setCelebrationPoints] = useState<PointsEarned | undefined>();
   const [celebrationTotalPoints, setCelebrationTotalPoints] = useState<number | undefined>();
   const [celebrationPreviousTotal, setCelebrationPreviousTotal] = useState<number | undefined>();
+  const [celebrationStreak, setCelebrationStreak] = useState<number | undefined>();
   const sessionStartTime = useRef<number>(Date.now());
 
   // Method block state
