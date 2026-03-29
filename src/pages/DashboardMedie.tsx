@@ -12,6 +12,7 @@ import { getTasks, getActiveChildProfileId, getChildProfile } from "@/lib/databa
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { getPrepLabelKey } from "@/lib/schoolTerms";
+import { JoinClassPrompt } from "@/components/JoinClassPrompt";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -119,6 +120,11 @@ export default function DashboardMedie() {
             <p className="text-sm text-muted-foreground">
               {tasks.length > 0 ? `Hai ${tasks.filter(t => !t.completed).length} compiti da fare` : "Nessun compito per oggi."}
             </p>
+            {profile?.id && (
+              <div className="mt-2">
+                <JoinClassPrompt profileId={profile.id} />
+              </div>
+            )}
           </motion.div>
 
           {!loading && (
