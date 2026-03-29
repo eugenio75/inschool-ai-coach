@@ -1,12 +1,9 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Scale } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Scale } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 
 const Privacy = () => {
-  const navigate = useNavigate();
   const { t } = useTranslation();
 
   return (

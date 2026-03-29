@@ -1,10 +1,8 @@
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 
 export default function CookiePolicy() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
