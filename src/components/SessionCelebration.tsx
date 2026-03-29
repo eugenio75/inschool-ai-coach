@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Trophy, Brain, Target, Flame } from "lucide-react";
+import { Star, Trophy, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export interface PointsEarned {
