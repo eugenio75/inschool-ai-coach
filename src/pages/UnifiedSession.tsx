@@ -542,6 +542,9 @@ Inizia con la prima domanda.`;
           bloomLevel={guided.currentStep}
           subject={guided.homework?.subject || ""}
           isJunior={isJunior}
+          pointsEarned={guided.celebrationPoints}
+          totalPoints={guided.celebrationTotalPoints}
+          previousTotalPoints={guided.celebrationPreviousTotal}
         />
       </>
     );

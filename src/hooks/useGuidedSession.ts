@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { getTask as fetchTask, getDailyMissions, completeMission } from "@/lib/database";
+import { getTask as fetchTask, getDailyMissions, completeMission, saveFocusSession, getGamification } from "@/lib/database";
+import type { PointsEarned } from "@/components/SessionCelebration";
 import { isChildSession, childApi, getChildSession } from "@/lib/childSession";
 import { ChatMsg, ChatAction, streamChat } from "@/lib/streamChat";
 import { getCurrentLang } from "@/lib/langUtils";
@@ -164,6 +165,12 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   const [showCheckin, setShowCheckin] = useState(false);
   const [setupDone, setSetupDone] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
+
+  // Points tracking
+  const [celebrationPoints, setCelebrationPoints] = useState<PointsEarned | undefined>();
+  const [celebrationTotalPoints, setCelebrationTotalPoints] = useState<number | undefined>();
+  const [celebrationPreviousTotal, setCelebrationPreviousTotal] = useState<number | undefined>();
+  const sessionStartTime = useRef<number>(Date.now());
 
   // Method block state
   const [methodPhase, setMethodPhase] = useState<MethodPhase>("none");
@@ -368,11 +375,60 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     }]);
   }
 
-  function handleMethodAction(value: string) {
+  async function handleMethodAction(value: string) {
     // Handle finish session action
     if (value === "finish_session") {
       setMessages(prev => prev.map(m => ({ ...m, actions: undefined })));
       playCelebrationSound();
+
+      // Calculate and save points
+      try {
+        const durationSec = Math.floor((Date.now() - sessionStartTime.current) / 1000);
+        const durationMin = Math.floor(durationSec / 60);
+
+        // focus_points: base 10 + 1 per minute, max 20
+        const focusPoints = Math.min(10 + durationMin, 20);
+
+        // autonomy_points: based on total hint count across all steps
+        const totalHints = Object.values(hintCountPerStep).reduce((sum, c) => sum + c, 0);
+        const autonomyPoints = totalHints <= 1 ? 10 : totalHints <= 3 ? 5 : 0;
+
+        // consistency_points: check streak
+        const profileId = isChild ? getChildSession()?.profileId : homework?.child_profile_id;
+        let consistencyPoints = 5;
+        if (profileId) {
+          const gam = await getGamification(profileId);
+          if (gam && (gam.streak || 0) >= 2) consistencyPoints = 10;
+          const prevTotal = (gam?.focus_points || 0) + (gam?.autonomy_points || 0) + (gam?.consistency_points || 0);
+          setCelebrationPreviousTotal(prevTotal);
+        }
+
+        const earned: PointsEarned = { focus: focusPoints, autonomy: autonomyPoints, consistency: consistencyPoints };
+        setCelebrationPoints(earned);
+
+        // Save focus session
+        await saveFocusSession({
+          task_id: homeworkId || undefined,
+          emotion: sessionEmotion || undefined,
+          duration_seconds: durationSec,
+          focus_points: focusPoints,
+          autonomy_points: autonomyPoints,
+          consistency_points: consistencyPoints,
+        });
+
+        // Fetch updated totals
+        if (profileId) {
+          const updatedGam = await getGamification(profileId);
+          if (updatedGam) {
+            setCelebrationTotalPoints(
+              (updatedGam.focus_points || 0) + (updatedGam.autonomy_points || 0) + (updatedGam.consistency_points || 0)
+            );
+          }
+        }
+      } catch (err) {
+        console.error("Points calculation error:", err);
+      }
+
       setShowCelebration(true);
       return;
     }
@@ -939,5 +995,8 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
     methodPhase,
     pauseSession,
     abandonSession,
+    celebrationPoints,
+    celebrationTotalPoints,
+    celebrationPreviousTotal,
   };
 }
