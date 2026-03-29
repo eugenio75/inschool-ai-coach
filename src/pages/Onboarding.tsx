@@ -14,6 +14,7 @@ import { getChildSession, setChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
 import OnboardingLegacy from "./OnboardingLegacy";
 import { coachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
+import { JoinClassInline } from "@/components/JoinClassModal";
 
 const variants = {
   enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0 }),
