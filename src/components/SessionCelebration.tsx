@@ -240,6 +240,19 @@ export function SessionCelebration({
                   ))}
                 </div>
 
+                {/* Streak badge */}
+                {streak !== undefined && streak >= 2 && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 1.4 }}
+                    className="flex items-center justify-center gap-1.5 mb-3 text-sm font-semibold text-foreground"
+                  >
+                    <span>🔥</span>
+                    <span>Streak: {streak} giorni</span>
+                  </motion.div>
+                )}
+
                 {/* Session progress bar */}
                 <div className="mb-2">
                   <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
