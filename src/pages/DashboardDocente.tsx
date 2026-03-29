@@ -68,9 +68,17 @@ export default function DashboardDocente() {
   const [showCustomSubject, setShowCustomSubject] = useState(false);
   const [customSubjectInput, setCustomSubjectInput] = useState("");
 
-  // Delete class
+  // Delete class — two-step flow
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [deletingClasse, setDeletingClasse] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [deleteStats, setDeleteStats] = useState({ students: 0, materials: 0, assignments: 0 });
+
+  // Sample data banner
+  const [showSampleBanner, setShowSampleBanner] = useState(() => {
+    return !localStorage.getItem("sample_banner_dismissed");
+  });
 
   // Crea materiale — class picker
   const [showMaterialClassPicker, setShowMaterialClassPicker] = useState(false);
@@ -217,6 +225,49 @@ export default function DashboardDocente() {
     }
   }
 
+  // ━━━ Sample data creation on first access ━━━
+  useEffect(() => {
+    if (loadingClassi || !profileId || !userId) return;
+    if (classi.length > 0) return;
+    if (localStorage.getItem("sample_created")) return;
+
+    const createSampleData = async () => {
+      try {
+        const { data: sampleClass, error: classErr } = await (supabase as any)
+          .from("classi").insert({
+            docente_profile_id: profileId,
+            nome: "Classe di Esempio",
+            materia: "Italiano",
+            ordine_scolastico: "Scuola Secondaria I grado",
+            num_studenti: 15,
+            is_sample: true,
+          }).select().single();
+
+        if (classErr || !sampleClass) throw classErr;
+
+        const sampleContent = `# La struttura del testo narrativo\n\n## Piano della lezione\n\n**Materia:** Italiano\n**Classe:** Scuola Secondaria I grado\n**Durata:** 2 ore (con pausa intermedia)\n\n---\n\n### Obiettivi di apprendimento\n- Riconoscere le tre parti fondamentali di un testo narrativo: introduzione, sviluppo e conclusione\n- Identificare gli elementi narrativi: personaggi, ambientazione, tempo, narratore\n- Analizzare la struttura narrativa in brani di letteratura italiana classica\n- Produrre un breve testo narrativo rispettando la struttura studiata\n\n### Prerequisiti\n- Conoscenza base della grammatica italiana\n- Capacità di lettura e comprensione di testi brevi\n\n---\n\n### Aggancio (15 minuti)\nChiedere agli studenti: *"Qual è l'ultima storia che avete letto o visto al cinema?"*\n\nMostrare un breve estratto da *I Promessi Sposi* di Alessandro Manzoni (cap. 1):\n> "Quel ramo del lago di Como, che volge a mezzogiorno, tra due catene non interrotte di monti..."\n\n---\n\n### Corpo della lezione (50 minuti)\n\n#### 1. L'Introduzione (15 min)\nL'introduzione presenta:\n- **Chi**: i personaggi principali\n- **Dove**: l'ambientazione\n- **Quando**: il tempo della narrazione\n- **La situazione iniziale**: lo stato di equilibrio\n\n**Esempio:** In *Pinocchio* di Carlo Collodi, l'introduzione ci presenta Mastro Ciliegia che trova un pezzo di legno parlante.\n\n#### 2. Lo Sviluppo (20 min)\nLo sviluppo contiene:\n- **L'evento scatenante**: ciò che rompe l'equilibrio iniziale\n- **Le peripezie**: le avventure e i conflitti del protagonista\n- **Il climax**: il momento di massima tensione\n\n**Esempio:** Ne *Il Barone Rampante* di Italo Calvino, Cosimo sale sugli alberi e decide di non scendere mai più.\n\n#### 3. La Conclusione (15 min)\nLa conclusione include:\n- **La risoluzione**: come si risolve il conflitto\n- **Il nuovo equilibrio**: la situazione finale\n- **La morale** (opzionale)\n\n**Esempio:** Alla fine di *Pinocchio*, il burattino diventa un bambino vero.\n\n---\n\n### Attività pratica (40 minuti)\n\n**Attività 1 — Analisi guidata (20 min)**\nDistribuire un racconto breve e chiedere agli studenti di:\n1. Sottolineare in verde l'introduzione\n2. Sottolineare in giallo lo sviluppo\n3. Sottolineare in rosso la conclusione\n4. Identificare l'evento scatenante e il climax\n\n**Attività 2 — Scrittura creativa (20 min)**\nOgni studente scrive un breve racconto (10-15 righe) seguendo lo schema studiato.\n\n---\n\n### Sintesi (15 minuti)\n\n| Parte | Funzione | Domanda chiave |\n|-------|----------|----------------|\n| Introduzione | Presentare personaggi, tempo, luogo | Chi? Dove? Quando? |\n| Sviluppo | Raccontare conflitti e avventure | Cosa succede? |\n| Conclusione | Risolvere e chiudere la storia | Come finisce? |\n\n===SOLUZIONI===\n\n### Note per il docente\n\n**Attività 1 — Criteri di valutazione:**\n- Corretta identificazione delle tre parti: 3 punti ciascuna (tot. 9)\n- Identificazione evento scatenante: 3 punti\n- Identificazione climax: 3 punti\n- Totale: 15 punti\n\n**Attività 2 — Griglia di valutazione:**\n- Presenza delle tre parti: 4 punti\n- Coerenza narrativa: 3 punti\n- Creatività: 3 punti\n- Correttezza linguistica: 3 punti\n- Totale: 13 punti — Sufficienza a 8\n\n**Suggerimenti BES:** Fornire schema precompilato, ridurre lunghezza a 5-8 righe, permettere lavoro in coppia.\n**Studenti avanzati:** Identificare tipo di narratore, analizzare racconto complesso, introdurre il flashback.`;
+
+        await (supabase as any).from("teacher_materials").insert({
+          teacher_id: userId,
+          class_id: sampleClass.id,
+          title: "La struttura del testo narrativo",
+          subject: "Italiano",
+          type: "Lezione",
+          content: sampleContent,
+          status: "draft",
+          is_sample: true,
+        });
+
+        localStorage.setItem("sample_created", "true");
+        loadAll();
+      } catch (err) {
+        console.error("Error creating sample data:", err);
+      }
+    };
+
+    createSampleData();
+  }, [loadingClassi, classi.length, profileId, userId]);
+
   async function saveClasse() {
     if (!newClasse.nome.trim() || newClasse.materie.length === 0 || !profileId) return;
     setSavingClasse(true);
@@ -238,22 +289,36 @@ export default function DashboardDocente() {
     }
   }
 
+  async function openDeleteFlow(classe: any) {
+    setDeleteTarget(classe);
+    setDeleteStep(1);
+    setDeleteConfirmName("");
+    const [enrollRes, matRes, assignRes] = await Promise.all([
+      (supabase as any).from("class_enrollments").select("id", { count: "exact", head: true }).eq("class_id", classe.id).eq("status", "active"),
+      (supabase as any).from("teacher_materials").select("id", { count: "exact", head: true }).eq("class_id", classe.id),
+      (supabase as any).from("teacher_assignments").select("id", { count: "exact", head: true }).eq("class_id", classe.id),
+    ]);
+    setDeleteStats({
+      students: enrollRes.count || 0,
+      materials: matRes.count || 0,
+      assignments: assignRes.count || 0,
+    });
+  }
+
   async function deleteClasse(classeId: string) {
     setDeletingClasse(true);
-    // Unlink materials (set class_id to null)
-    await (supabase as any).from("teacher_materials").update({ class_id: null }).eq("class_id", classeId);
-    // Delete enrollments
+    await (supabase as any).from("teacher_materials").delete().eq("class_id", classeId);
     await (supabase as any).from("class_enrollments").delete().eq("class_id", classeId);
-    // Delete assignments
     await (supabase as any).from("teacher_assignments").delete().eq("class_id", classeId);
-    // Delete feed
     await (supabase as any).from("teacher_activity_feed").delete().eq("class_id", classeId);
-    // Delete class
+    const deletedName = deleteTarget?.nome || "";
     const { error } = await (supabase as any).from("classi").delete().eq("id", classeId);
     setDeletingClasse(false);
     setDeleteTarget(null);
+    setDeleteStep(1);
+    setDeleteConfirmName("");
     if (!error) {
-      toast.success("Classe eliminata correttamente.");
+      toast.success(`Classe "${deletedName}" eliminata.`);
       loadAll();
     } else {
       toast.error("Errore nell'eliminazione della classe.");
@@ -367,6 +432,24 @@ export default function DashboardDocente() {
           </div>
         </div>
 
+        {/* ━━━ SAMPLE BANNER ━━━ */}
+        {showSampleBanner && classi.some((c: any) => c.is_sample) && (
+          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-start gap-3">
+            <span className="text-lg shrink-0 mt-0.5">✨</span>
+            <div className="flex-1">
+              <p className="text-sm text-foreground leading-relaxed">
+                Abbiamo creato una classe di esempio per mostrarti come funziona InSchool. Esplorala liberamente — puoi modificarla o eliminarla quando vuoi.
+              </p>
+            </div>
+            <button
+              onClick={() => { setShowSampleBanner(false); localStorage.setItem("sample_banner_dismissed", "true"); }}
+              className="text-xs font-medium text-amber-700 dark:text-amber-300 hover:underline shrink-0 mt-0.5"
+            >
+              Ho capito
+            </button>
+          </div>
+        )}
+
         {/* ━━━ BLOCK 3 — KPI ━━━ */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
@@ -426,8 +509,8 @@ export default function DashboardDocente() {
                           <DropdownMenuItem onClick={() => navigate(`/classe/${c.id}`)}>
                             <Pencil className="w-3.5 h-3.5 mr-2" /> Modifica classe
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteTarget(c)}>
-                            <Trash2 className="w-3.5 h-3.5 mr-2" /> Elimina classe
+                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => openDeleteFlow(c)}>
+                            <Trash2 className="w-3.5 h-3.5 mr-2" /> {c.is_sample ? "Elimina classe di esempio" : "Elimina classe"}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -437,6 +520,11 @@ export default function DashboardDocente() {
                         <div className="flex items-center gap-2">
                           <div className={`w-2.5 h-2.5 rounded-full ${hasAlert ? "bg-amber-400" : "bg-emerald-400"}`} />
                           <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">{c.nome}</span>
+                          {c.is_sample && (
+                            <span className="text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 px-1.5 py-0.5 rounded-full">
+                              ✨ Esempio
+                            </span>
+                          )}
                         </div>
                         {hasAlert && (
                           <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
@@ -754,32 +842,58 @@ export default function DashboardDocente() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete class confirmation */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={v => { if (!v) setDeleteTarget(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Eliminare la classe "{deleteTarget?.nome}"?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Questa azione non può essere annullata. I materiali assegnati rimarranno nel tuo archivio.
-              {deleteTarget?.num_studenti > 0 && (
-                <span className="block mt-2 font-medium text-foreground">
-                  ⚠ Questa classe ha {deleteTarget.num_studenti} studenti attivi. Eliminandola perderanno l'accesso al codice classe.
-                </span>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deletingClasse}>Annulla</AlertDialogCancel>
-            <AlertDialogAction
+      {/* Delete class — Step 1 */}
+      <Dialog open={!!deleteTarget && deleteStep === 1} onOpenChange={v => { if (!v) { setDeleteTarget(null); setDeleteStep(1); } }}>
+        <DialogContent className="rounded-xl">
+          <DialogHeader>
+            <DialogTitle>Vuoi eliminare "{deleteTarget?.nome}"?</DialogTitle>
+          </DialogHeader>
+          <div className="text-sm text-muted-foreground space-y-2 py-2">
+            <p>Verranno eliminati:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              {deleteStats.students > 0 && <li><span className="font-medium text-foreground">{deleteStats.students}</span> collegamenti studenti</li>}
+              {deleteStats.materials > 0 && <li><span className="font-medium text-foreground">{deleteStats.materials}</span> materiali associati</li>}
+              {deleteStats.assignments > 0 && <li><span className="font-medium text-foreground">{deleteStats.assignments}</span> compiti assegnati</li>}
+              {deleteStats.students === 0 && deleteStats.materials === 0 && deleteStats.assignments === 0 && <li>Nessun dato collegato</li>}
+            </ul>
+            <p className="text-xs pt-1">I profili degli studenti <strong>non</strong> verranno eliminati.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteStep(1); }}>Annulla</Button>
+            <Button variant="destructive" onClick={() => setDeleteStep(2)}>Continua</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete class — Step 2 */}
+      <Dialog open={!!deleteTarget && deleteStep === 2} onOpenChange={v => { if (!v) { setDeleteTarget(null); setDeleteStep(1); setDeleteConfirmName(""); } }}>
+        <DialogContent className="rounded-xl">
+          <DialogHeader>
+            <DialogTitle>Questa azione è irreversibile</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              Digita il nome della classe per confermare: <span className="font-semibold text-foreground">"{deleteTarget?.nome}"</span>
+            </p>
+            <Input
+              placeholder="Nome della classe..."
+              value={deleteConfirmName}
+              onChange={e => setDeleteConfirmName(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteStep(1); setDeleteConfirmName(""); }}>Annulla</Button>
+            <Button
+              variant="destructive"
+              disabled={deleteConfirmName !== deleteTarget?.nome || deletingClasse}
               onClick={() => deleteTarget && deleteClasse(deleteTarget.id)}
-              disabled={deletingClasse}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deletingClasse ? "Eliminazione..." : "Elimina"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              {deletingClasse ? "Eliminazione..." : "Elimina definitivamente"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -222,6 +222,7 @@ export type Database = {
           created_at: string | null
           docente_profile_id: string
           id: string
+          is_sample: boolean
           materia: string | null
           nome: string
           num_studenti: number | null
@@ -232,6 +233,7 @@ export type Database = {
           created_at?: string | null
           docente_profile_id: string
           id?: string
+          is_sample?: boolean
           materia?: string | null
           nome: string
           num_studenti?: number | null
@@ -242,6 +244,7 @@ export type Database = {
           created_at?: string | null
           docente_profile_id?: string
           id?: string
+          is_sample?: boolean
           materia?: string | null
           nome?: string
           num_studenti?: number | null
@@ -1394,6 +1397,7 @@ export type Database = {
           content: string
           created_at: string | null
           id: string
+          is_sample: boolean
           level: string | null
           status: string | null
           subject: string | null
@@ -1409,6 +1413,7 @@ export type Database = {
           content: string
           created_at?: string | null
           id?: string
+          is_sample?: boolean
           level?: string | null
           status?: string | null
           subject?: string | null
@@ -1424,6 +1429,7 @@ export type Database = {
           content?: string
           created_at?: string | null
           id?: string
+          is_sample?: boolean
           level?: string | null
           status?: string | null
           subject?: string | null
