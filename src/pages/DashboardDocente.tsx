@@ -520,6 +520,11 @@ export default function DashboardDocente() {
                         <div className="flex items-center gap-2">
                           <div className={`w-2.5 h-2.5 rounded-full ${hasAlert ? "bg-amber-400" : "bg-emerald-400"}`} />
                           <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">{c.nome}</span>
+                          {c.is_sample && (
+                            <span className="text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 px-1.5 py-0.5 rounded-full">
+                              ✨ Esempio
+                            </span>
+                          )}
                         </div>
                         {hasAlert && (
                           <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
