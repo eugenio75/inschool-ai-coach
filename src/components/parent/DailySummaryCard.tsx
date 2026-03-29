@@ -145,11 +145,11 @@ export const DailySummaryCard = ({ childProfileId, childName, missions }: DailyS
             <Skeleton className="h-5 w-4/5 rounded-lg" />
           </div>
         ) : error ? (
-          <p className="text-[15px] text-muted-foreground leading-relaxed">
+          <p className="text-[15px] text-muted-foreground leading-[1.75]">
             Il riassunto di oggi non è disponibile al momento. Riprova tra poco.
           </p>
         ) : (
-          <p className="text-[15px] text-foreground/90 leading-[1.6]">
+          <p className="text-[15px] text-foreground/90 leading-[1.75]">
             {summary}
           </p>
         )}
