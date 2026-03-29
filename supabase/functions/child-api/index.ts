@@ -433,6 +433,33 @@ serve(async (req) => {
         break;
       }
 
+      case "get-learning-errors": {
+        const { data } = await supabase
+          .from("learning_errors")
+          .select("topic, error_type, description, subject")
+          .eq("user_id", ownerUserId)
+          .eq("resolved", false)
+          .order("created_at", { ascending: false })
+          .limit(50);
+        result = data || [];
+        break;
+      }
+
+      case "get-flagged-flashcards": {
+        let query = supabase
+          .from("flashcards")
+          .select("question, answer")
+          .eq("user_id", ownerUserId)
+          .eq("is_flagged", true)
+          .limit(10);
+        if (payload?.subject) {
+          query = query.eq("subject", payload.subject);
+        }
+        const { data } = await query;
+        result = data || [];
+        break;
+      }
+
       case "insert-learning-error": {
         const { error } = await supabase.from("learning_errors").insert({
           user_id: ownerUserId,
