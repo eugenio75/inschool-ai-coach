@@ -1380,6 +1380,16 @@ const MemoryRecap = () => {
 
                 return (
                   <div className="space-y-3">
+                    {wizard.section === "rinforza" && weakFallbackLevel === 1 && (
+                      <div className="rounded-xl bg-accent/50 border border-border px-4 py-3 text-sm text-muted-foreground">
+                        💡 {t("rafforza_fallback_level1", "Nessun concetto critico trovato — ti mostriamo quelli che puoi ancora migliorare.")}
+                      </div>
+                    )}
+                    {wizard.section === "rinforza" && weakFallbackLevel === 2 && (
+                      <div className="rounded-xl bg-accent/50 border border-border px-4 py-3 text-sm text-muted-foreground">
+                        🎉 {t("rafforza_fallback_level2", "Ottimo lavoro — nessun punto debole rilevato. Ecco un ripasso completo.")}
+                      </div>
+                    )}
                     {exerciseGroups.map((group, gi) => {
                       const showStrength = wizard.section === "rinforza";
                       return (
