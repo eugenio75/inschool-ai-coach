@@ -1,5 +1,5 @@
 import { useLang, Lang } from "@/contexts/LangContext";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useState } from "react";
 
@@ -13,7 +13,7 @@ const languages: { code: Lang; flag: string; label: string }[] = [
 ];
 
 export function LangToggle() {
-  const { lang, setLang } = useLang();
+  const { lang, setLang, translating } = useLang();
   const [open, setOpen] = useState(false);
   const current = languages.find((l) => l.code === lang) || languages[0];
 
@@ -22,11 +22,15 @@ export function LangToggle() {
       <PopoverTrigger asChild>
         <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-sm font-medium">
           <span className="text-base leading-none">{current.flag}</span>
-          <span className="hidden sm:inline text-xs text-foreground">{current.code.toUpperCase()}</span>
+          {translating ? (
+            <Loader2 className="w-3 h-3 animate-spin text-primary" />
+          ) : (
+            <span className="hidden sm:inline text-xs text-foreground">{current.code.toUpperCase()}</span>
+          )}
           <ChevronDown className="w-3 h-3 text-muted-foreground" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-44 p-1" align="end">
+      <PopoverContent className="w-48 p-1" align="end">
         {languages.map((l) => (
           <button
             key={l.code}

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Lock, Loader2, Users, Shield, Pencil, Bell,
-  Eye, EyeOff, Trash2, RotateCcw, Moon, Brain, BookOpen,
+  Eye, EyeOff, Trash2, RotateCcw, Moon, Brain, BookOpen, Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ import { LogoutButton } from "@/components/shared/LogoutButton";
 import { getChildSession, setChildSession } from "@/lib/childSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { coachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
+import { BlockchainTab } from "@/components/BlockchainTab";
 
 // Avatar colors for profile customization
 const AVATAR_COLORS = [
@@ -505,6 +506,16 @@ const Settings = () => {
             )}
             <LogoutButton showLabel className="w-full flex items-center justify-center gap-2 rounded-2xl border border-border text-foreground hover:text-destructive hover:bg-destructive/5 transition-colors py-3 text-sm font-medium" />
           </div>
+
+          {/* Blockchain */}
+          {user && (
+            <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
+              <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Link2 className="w-4 h-4 text-primary" /> Blockchain
+              </h3>
+              <BlockchainTab userId={user.id} />
+            </div>
+          )}
 
           {/* Privacy e dati */}
           <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">

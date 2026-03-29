@@ -56,6 +56,8 @@ const StudyTasks = lazy(() => import("./pages/StudyTasks"));
 const StudentReport = lazy(() => import("./pages/StudentReport"));
 const TeacherNotifications = lazy(() => import("./pages/TeacherNotifications"));
 const CoachDocente = lazy(() => import("./pages/CoachDocente"));
+const AdminEmailPreview = lazy(() => import("./pages/AdminEmailPreview"));
+const BlockchainTest = lazy(() => import("./pages/BlockchainTest"));
 
 const queryClient = new QueryClient();
 
@@ -199,6 +201,8 @@ const AppRoutes = () => (
         <Route path="/classe/:classId" element={<AccessibleRoute><MaybeAdultLayout><ClassView /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/studente/:studentId" element={<AccessibleRoute><MaybeAdultLayout><StudentView /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/settings" element={<AccessibleRoute><MaybeAdultLayout><Settings /></MaybeAdultLayout></AccessibleRoute>} />
+        <Route path="/admin/email-preview" element={<ProtectedRoute><AdminEmailPreview /></ProtectedRoute>} />
+        <Route path="/admin/blockchain-test" element={<BlockchainTest />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
