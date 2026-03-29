@@ -32,6 +32,9 @@ interface CognitiveCardProps {
 export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItems, schoolLevel = "superiori" }: CognitiveCardProps) => {
   const [expanded, setExpanded] = useState(true);
 
+  // Only show cognitive insights — emotional ones belong in EmotionalCard
+  const cognitiveInsights = insights.filter(i => i.category !== "emotivo");
+
   const weakConcepts = memoryItems.filter(m => (m.strength || 0) < 60);
   const strongConcepts = memoryItems.filter(m => (m.strength || 0) >= 80);
 
@@ -137,10 +140,7 @@ export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItem
                   <Loader2 className="w-4 h-4 animate-spin text-primary" />
                   <p className="text-xs text-muted-foreground">Analizzo i dati...</p>
                 </div>
-              ) : (() => {
-                // Filter: only cognitive insights (exclude emotional ones)
-                const cognitiveInsights = insights.filter(i => i.category !== "emotivo");
-                return cognitiveInsights.length > 0 ? (
+              ) : cognitiveInsights.length > 0 ? (
                 <div className="space-y-2">
                   {cognitiveInsights.map((insight, i) => {
                     const IconComponent = iconMap[insight.icon] || Lightbulb;
