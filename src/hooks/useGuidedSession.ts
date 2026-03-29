@@ -995,5 +995,8 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
     methodPhase,
     pauseSession,
     abandonSession,
+    celebrationPoints,
+    celebrationTotalPoints,
+    celebrationPreviousTotal,
   };
 }
