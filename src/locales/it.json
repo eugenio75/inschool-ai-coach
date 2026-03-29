@@ -1011,5 +1011,6 @@
   "parent_label_focus": "Concentrazione",
   "parent_label_streak": "Costanza",
   "parent_label_focus_total": "Concentrazione",
-  "parent_label_autonomy": "Autonomia"
+  "parent_label_autonomy": "Autonomia",
+  "session_inactivity_warning": "Sei ancora lì? Non ho ricevuto risposte negli ultimi 10 minuti. Se ti sei allontanato, metto la sessione in pausa così non perdiamo il tuo progresso. Torna quando vuoi! 😊"
 }

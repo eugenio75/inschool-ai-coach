@@ -1011,5 +1011,6 @@
   "parent_label_focus": "Focus",
   "parent_label_streak": "Streak",
   "parent_label_focus_total": "Total Focus",
-  "parent_label_autonomy": "Autonomy"
+  "parent_label_autonomy": "Autonomy",
+  "session_inactivity_warning": "Are you still there? I haven't received any responses in the last 10 minutes. If you've stepped away, I'll pause the session so we don't lose your progress. Come back whenever you're ready! 😊"
 }

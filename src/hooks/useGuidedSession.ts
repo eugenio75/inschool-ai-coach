@@ -173,6 +173,87 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   const [celebrationStreak, setCelebrationStreak] = useState<number | undefined>();
   const sessionStartTime = useRef<number>(Date.now());
 
+  // ── Smart time tracking: only count active intervals ≤ 10 min ──
+  const lastInteractionTime = useRef<number>(Date.now());
+  const activeStudySeconds = useRef<number>(0);
+  const INACTIVITY_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
+  const GRACE_PERIOD_MS = 2 * 60 * 1000; // 2 minutes
+
+  // ── Inactivity detection refs ──
+  const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const graceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inactivityWarned = useRef(false);
+  const activeStudySecondsRef = useRef(activeStudySeconds);
+  activeStudySecondsRef.current = activeStudySeconds;
+
+  /** Call on every user message to accumulate active time */
+  function recordInteraction() {
+    const now = Date.now();
+    const gap = now - lastInteractionTime.current;
+    if (gap <= INACTIVITY_THRESHOLD_MS) {
+      activeStudySeconds.current += Math.floor(gap / 1000);
+    }
+    lastInteractionTime.current = now;
+    inactivityWarned.current = false;
+  }
+
+  /** Reset inactivity timer — call after every user message */
+  function resetInactivityTimer() {
+    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+    if (graceTimerRef.current) clearTimeout(graceTimerRef.current);
+
+    inactivityTimerRef.current = setTimeout(() => {
+      // 10 min with no user message
+      if (sessionCompletedRef.current) return;
+      inactivityWarned.current = true;
+
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: "Sei ancora lì? Non ho ricevuto risposte negli ultimi 10 minuti. Se ti sei allontanato, metto la sessione in pausa così non perdiamo il tuo progresso. Torna quando vuoi! 😊",
+      }]);
+
+      // Grace period: 2 more minutes
+      graceTimerRef.current = setTimeout(() => {
+        if (sessionCompletedRef.current) return;
+        if (inactivityWarned.current) {
+          // No response — auto-pause
+          pauseSessionSilent();
+        }
+      }, GRACE_PERIOD_MS);
+    }, INACTIVITY_THRESHOLD_MS);
+  }
+
+  /** Pause without navigating (used by inactivity auto-pause) */
+  async function pauseSessionSilent() {
+    const sid = sessionIdRef.current;
+    if (!sid) return;
+    if (isChildSession()) {
+      await childApi("update-session", { sessionId: sid, updates: { status: "paused", current_step: currentStepRef.current, updated_at: new Date().toISOString() } }).catch(() => {});
+    } else {
+      await supabase.from("guided_sessions").update({
+        status: "paused",
+        current_step: currentStepRef.current,
+        updated_at: new Date().toISOString(),
+      }).eq("id", sid).then(() => {}, () => {});
+    }
+    // Save messages
+    const convId = conversationIdRef.current;
+    const msgs = messagesRef.current;
+    if (convId && msgs.length > 0 && !isChildSession()) {
+      const chatToSave = msgs.filter(m => m.content?.trim()).map(m => ({ role: m.role, text: m.content }));
+      await supabase.from("conversation_sessions").update({
+        messaggi: chatToSave as any,
+        updated_at: new Date().toISOString(),
+      }).eq("id", convId).then(() => {}, () => {});
+    }
+    navigate("/dashboard");
+  }
+
+  function clearInactivityTimers() {
+    if (inactivityTimerRef.current) { clearTimeout(inactivityTimerRef.current); inactivityTimerRef.current = null; }
+    if (graceTimerRef.current) { clearTimeout(graceTimerRef.current); graceTimerRef.current = null; }
+  }
+
   // Method block state
   const [methodPhase, setMethodPhase] = useState<MethodPhase>("none");
   const [familiarity, setFamiliarity] = useState<Familiarity | null>(null);
@@ -240,6 +321,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     // Cleanup on unmount (route change) — auto-pause if still active
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      clearInactivityTimers();
 
       const sid = sessionIdRef.current;
       const step = currentStepRef.current;
@@ -339,6 +421,9 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
               : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
             setMessages([{ role: "assistant", content: resumeMsg }]);
             setSetupDone(true);
+            lastInteractionTime.current = Date.now();
+            activeStudySeconds.current = 0;
+            resetInactivityTimer();
           }
         } else if (hw.completed) {
           setSessionCompleted(true);
@@ -404,6 +489,9 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
               setMessages([{ role: "assistant", content: resumeMsg }]);
             }
             setSetupDone(true);
+            lastInteractionTime.current = Date.now();
+            activeStudySeconds.current = 0;
+            resetInactivityTimer();
           }
         } else if (hw.completed) {
           const { data: completedSession } = await supabase
@@ -503,10 +591,13 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     if (value === "finish_session") {
       setMessages(prev => prev.map(m => ({ ...m, actions: undefined })));
       playCelebrationSound();
+      clearInactivityTimers();
 
-      // Calculate and save points
+      // Calculate and save points — use ACTIVE study time, not elapsed
       try {
-        const durationSec = Math.floor((Date.now() - sessionStartTime.current) / 1000);
+        // Record final interval (from last interaction to now, if ≤ threshold)
+        recordInteraction();
+        const durationSec = activeStudySeconds.current;
         const durationMin = Math.floor(durationSec / 60);
 
         // focus_points: base 10 + 1 per minute, max 20
@@ -753,6 +844,10 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
         content: `${stepIntro}${voicePrompt}`,
       }]);
       setSetupDone(true);
+      // Start inactivity timer and reset time tracking for fresh session
+      lastInteractionTime.current = Date.now();
+      activeStudySeconds.current = 0;
+      resetInactivityTimer();
     } catch (err) {
       console.error("startNewSession error:", err);
       setMessages(prev => [...prev, { role: "assistant", content: "Si è verificato un errore nell'avvio della sessione. Riprova." }]);
@@ -766,6 +861,10 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
 
   const handleSend = useCallback(async (text: string) => {
     if (sending || !text.trim()) return;
+
+    // ── Smart time tracking: record active interval ──
+    recordInteraction();
+    resetInactivityTimer();
 
     // Check if this is a hint request
     const isHintRequest = text.includes("Dammi un indizio") || text.includes("indizio") || text.includes("Sono bloccato");
@@ -997,7 +1096,8 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
             status: "completed",
             completed_at: new Date().toISOString(),
             conversation_id: conversationId,
-          }).eq("id", sessionId);
+            duration_seconds: activeStudySeconds.current,
+          } as any).eq("id", sessionId);
           await supabase.from("homework_tasks").update({ completed: true, updated_at: new Date().toISOString() }).eq("id", homeworkId);
         }
 
@@ -1095,6 +1195,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
   }, [messages, sending, steps, currentStep, totalSteps, sessionId, homework, userId, schoolLevel, homeworkId, isChild, familiarity, hintCountPerStep]);
 
   async function pauseSession() {
+    clearInactivityTimers();
     if (sessionId) {
       if (isChild) {
         await childApi("update-session", { sessionId, updates: { status: "paused", current_step: currentStep, updated_at: new Date().toISOString() } });
@@ -1110,6 +1211,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
   }
 
   async function abandonSession() {
+    clearInactivityTimers();
     if (sessionId) {
       if (isChild) {
         await childApi("update-session", { sessionId, updates: { status: "abandoned", updated_at: new Date().toISOString() } });
