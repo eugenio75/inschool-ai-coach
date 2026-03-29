@@ -7,7 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 import { DailySummaryCard } from "@/components/parent/DailySummaryCard";
 import { ProgressCard } from "@/components/parent/ProgressCard";
-import { DailySummaryCard } from "@/components/parent/DailySummaryCard";
 import { EmotionalCard } from "@/components/parent/EmotionalCard";
 import { CognitiveCard } from "@/components/parent/CognitiveCard";
 import { AccessCodeCard } from "@/components/parent/AccessCodeCard";
