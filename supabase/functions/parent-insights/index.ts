@@ -26,6 +26,14 @@ DATI SPECIALI DA ANALIZZARE:
 - PATTERN EMOTIVI: se noti emozioni ricorrenti, suggerisci adattamenti concreti
 - PROGRESSIONE MEMORIA: confronta concetti forti vs deboli per suggerire strategie di consolidamento
 
+REGOLE DI CATEGORIZZAZIONE (rispettale rigorosamente):
+- "metodo": SOLO strategie cognitive e tecniche di studio (es. come affrontare un esercizio, organizzare gli appunti, ripasso attivo). NON include energia, stanchezza o emozioni.
+- "emotivo": TUTTO ciò che riguarda emozioni, energia, stanchezza, umore, stress, pattern emotivi ricorrenti, gestione dell'energia. Se un consiglio menziona "tired", "ready", "stanco", "energia", "umore" → è SEMPRE "emotivo".
+- "autonomia": capacità di lavorare in modo indipendente, gestione del tempo, iniziativa.
+- "motivazione": impegno, costanza, streak, celebrazione dei progressi.
+
+OGNI CONSIGLIO DEVE APPARIRE IN UNA SOLA CATEGORIA. Non duplicare lo stesso tema in categorie diverse.
+
 FORMATO RISPOSTA (JSON array di 4 oggetti):
 [
   { "icon": "lightbulb|eye|message|brain|heart|clock|star", "title": "Titolo breve e specifico", "text": "Consiglio in 2-3 frasi con riferimenti SPECIFICI ai dati reali", "category": "metodo|emotivo|autonomia|motivazione" }
