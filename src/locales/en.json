@@ -915,5 +915,15 @@
   "back_button": "Back",
   "not_found_title": "Page not found",
   "not_found_body": "The page you're looking for doesn't exist or has been moved.",
-  "not_found_cta": "Go to Home"
+  "not_found_cta": "Go to Home",
+  "rafforza_empty_title": "You don't have any content to strengthen yet",
+  "rafforza_empty_desc": "Complete some study sessions first.",
+  "rafforza_empty_cta": "Start studying",
+  "rafforza_empty_today": "No content studied today",
+  "rafforza_empty_generic": "No content available",
+  "rafforza_no_content": "No content found",
+  "rafforza_try_other": "Try a different selection",
+  "rafforza_fallback_level1": "No critical concepts found — here are the ones you can still improve.",
+  "rafforza_fallback_level2": "Great job — no weak points detected. Here's a complete review.",
+  "back": "Go back"
 }
