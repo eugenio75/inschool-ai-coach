@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowLeft, Send, Mic, MicOff, Loader2, CheckCircle, AlertTriangle, Target, Clock,
+  ArrowLeft, Send, Mic, MicOff, Loader2, CheckCircle, AlertTriangle, Target, Clock, BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,10 +12,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { MathText } from "@/components/shared/MathText";
 import { useLang } from "@/contexts/LangContext";
 import { getPrepLabelKey } from "@/lib/schoolTerms";
+import { findMaturitaTrack, type MaturitaTrack } from "@/lib/maturitaMapping";
+import UniversityStudyPlan, { type StudyPlanExam } from "@/components/UniversityStudyPlan";
 
 /* ── Types ── */
 interface ChatMessage { role: "user" | "assistant"; content: string; }
-
 type ExamType = "verifica" | "orale" | "terza_media" | "maturita" | "universitario";
 
 interface ExamConfig {
@@ -42,10 +43,21 @@ function daysUntil(dateStr: string): number {
   return Math.max(0, Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000));
 }
 
-function formatTimeRemaining(daysLeft: number): string {
-  if (daysLeft <= 0) return "La prova è oggi!";
-  if (daysLeft === 1) return "Manca 1 giorno alla prova";
-  return `Mancano ${daysLeft} giorni alla prova`;
+function formatTimeRemaining(d: number): string {
+  if (d <= 0) return "La prova è oggi!";
+  if (d === 1) return "Manca 1 giorno alla prova";
+  return `Mancano ${d} giorni alla prova`;
+}
+
+/* ── Progressive difficulty tier ── */
+function getTimeTierPrompt(days: number): string {
+  if (days > 30)
+    return "Mancano più di 30 giorni alla prova. Modalità comprensione profonda: concentrati su metodo, struttura, identificazione delle lacune fondamentali. Sii paziente e approfondito.";
+  if (days >= 8)
+    return `Mancano ${days} giorni alla prova. Modalità consolidamento: alterna ripasso concettuale a simulazioni parziali. Sii focalizzato ed efficiente.`;
+  if (days >= 3)
+    return `Mancano ${days} giorni alla prova. Modalità ripasso mirato: concentrati solo sugli essenziali. Simulazioni complete. Sii diretto e privilegia i temi ad alto impatto.`;
+  return `Mancano meno di 3 giorni alla prova. Modalità massima concentrazione: rafforza ciò che lo studente sa meglio (costruisci sicurezza) + ripasso rapido dei punti critici. Sii conciso, rassicurante, energizzante.`;
 }
 
 /* ── System prompt builder ── */
@@ -59,9 +71,7 @@ function buildSystemPrompt(config: ExamConfig, weaknessContext: string): string 
   let dateBlock = "";
   if (examDate) {
     const days = daysUntil(examDate);
-    dateBlock = `\n\nLa prova è il ${examDate}. ${days < 3
-      ? "Mancano meno di 3 giorni: sii diretto e focalizzato sugli aspetti essenziali."
-      : `Mancano ${days} giorni.`}`;
+    dateBlock = `\n\nLa prova è il ${examDate}. ${getTimeTierPrompt(days)}`;
   }
 
   const endInstructions = `\n\nAl termine della simulazione (dopo 5-8 domande/risposte), scrivi [SIMULAZIONE_COMPLETATA] e genera un report JSON con questo schema esatto:
@@ -96,7 +106,7 @@ Se emergono lacune ricorrenti, segnalatele esplicitamente nelle priorities.`;
   return core + weakBlock + dateBlock + endInstructions;
 }
 
-/* ── Exam type cards data ── */
+/* ── Exam type cards ── */
 const EXAM_TYPES: { id: ExamType; emoji: string; labelKey: string; descKey: string }[] = [
   { id: "verifica", emoji: "📝", labelKey: "exam_type_verifica", descKey: "exam_type_verifica_desc" },
   { id: "orale", emoji: "🎤", labelKey: "exam_type_orale", descKey: "exam_type_orale_desc" },
@@ -105,12 +115,8 @@ const EXAM_TYPES: { id: ExamType; emoji: string; labelKey: string; descKey: stri
   { id: "universitario", emoji: "🎓", labelKey: "exam_type_universitario", descKey: "exam_type_universitario_desc" },
 ];
 
-const TERZA_MEDIA_PROVE = [
-  "Italiano scritto", "Matematica scritta", "Lingua straniera scritta", "Colloquio orale interdisciplinare",
-];
-const MATURITA_PROVE = [
-  "Prima prova (italiano)", "Seconda prova", "Colloquio orale",
-];
+const TERZA_MEDIA_PROVE = ["Italiano scritto", "Matematica scritta", "Lingua straniera scritta", "Colloquio orale interdisciplinare"];
+const MATURITA_PROVE = ["Prima prova (italiano)", "Seconda prova", "Colloquio orale"];
 
 /* ══════════════ Component ══════════════ */
 export default function PrepSession() {
@@ -123,7 +129,7 @@ export default function PrepSession() {
   const prepLabel = t(getPrepLabelKey(schoolLevel));
 
   /* State */
-  const [step, setStep] = useState<"type" | "setup" | "simulation" | "report">("type");
+  const [step, setStep] = useState<"type" | "setup" | "plan" | "simulation" | "report">("type");
   const [examType, setExamType] = useState<ExamType | null>(null);
 
   // Setup fields
@@ -134,6 +140,14 @@ export default function PrepSession() {
   const [selectedProve, setSelectedProve] = useState<string[]>([]);
   const [indirizzo, setIndirizzo] = useState("");
   const [uniMode, setUniMode] = useState<"orale" | "scritto">("orale");
+
+  // Maturità auto-detect
+  const [detectedTrack, setDetectedTrack] = useState<MaturitaTrack | null>(null);
+  const [trackConfirmed, setTrackConfirmed] = useState(false);
+
+  // University study plan
+  const [studyPlan, setStudyPlan] = useState<StudyPlanExam[]>([]);
+  const [planLoaded, setPlanLoaded] = useState(false);
 
   // Chat state
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -161,6 +175,48 @@ export default function PrepSession() {
     if (!subject || !profile?.id) { setWeaknessContext(""); return; }
     loadWeaknessData(subject, profile.id);
   }, [subject, profile?.id]);
+
+  // Load user_preferences for maturità indirizzo + study plan
+  useEffect(() => {
+    if (!profile?.id) return;
+    loadUserPreferences(profile.id);
+  }, [profile?.id]);
+
+  async function loadUserPreferences(profileId: string) {
+    try {
+      const { data } = await supabase.from("user_preferences")
+        .select("data").eq("profile_id", profileId).maybeSingle();
+      const prefData = data?.data as any;
+      if (prefData?.indirizzo_scolastico) {
+        const track = findMaturitaTrack(prefData.indirizzo_scolastico);
+        if (track) {
+          setDetectedTrack(track);
+          setIndirizzo(track.label);
+        }
+      }
+      if (prefData?.piano_studi && Array.isArray(prefData.piano_studi)) {
+        setStudyPlan(prefData.piano_studi);
+      }
+      setPlanLoaded(true);
+    } catch { setPlanLoaded(true); }
+  }
+
+  async function saveStudyPlan(newPlan: StudyPlanExam[]) {
+    setStudyPlan(newPlan);
+    if (!profile?.id) return;
+    try {
+      // Fetch-and-merge pattern
+      const { data: existing } = await supabase.from("user_preferences")
+        .select("data").eq("profile_id", profile.id).maybeSingle();
+      const existingData = (existing?.data as any) || {};
+      const merged = { ...existingData, piano_studi: newPlan };
+      await supabase.from("user_preferences").upsert({
+        profile_id: profile.id,
+        data: merged,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "profile_id" });
+    } catch (err) { console.error("Failed to save study plan:", err); }
+  }
 
   async function loadWeaknessData(subj: string, profileId: string) {
     try {
@@ -213,11 +269,7 @@ export default function PrepSession() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const allMsgs = [...history, { role: "user" as const, content: userText }];
-
-      const body: any = {
-        messages: allMsgs.map(m => ({ role: m.role, content: m.content })),
-        stream: true,
-      };
+      const body: any = { messages: allMsgs.map(m => ({ role: m.role, content: m.content })), stream: true };
       if (systemPrompt) body.systemPrompt = systemPrompt;
 
       const res = await fetch(
@@ -267,11 +319,8 @@ export default function PrepSession() {
       }
 
       setStreamingText("");
-      if (isFirst) {
-        setMessages([{ role: "assistant", content: displayText }]);
-      } else {
-        setMessages(prev => [...prev, { role: "assistant", content: displayText }]);
-      }
+      if (isFirst) setMessages([{ role: "assistant", content: displayText }]);
+      else setMessages(prev => [...prev, { role: "assistant", content: displayText }]);
     } catch {
       const fallback = "Si è verificato un errore. Riprova.";
       if (isFirst) setMessages([{ role: "assistant", content: fallback }]);
@@ -283,8 +332,7 @@ export default function PrepSession() {
   function sendMessage() {
     if (!input.trim() || sending) return;
     const text = input.trim();
-    setInput("");
-    setVoiceTranscript("");
+    setInput(""); setVoiceTranscript("");
     setMessages(prev => [...prev, { role: "user", content: text }]);
     sendToAI(messages, text);
   }
@@ -295,25 +343,20 @@ export default function PrepSession() {
       const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (!SR) return;
       const recognition = new SR();
-      recognition.lang = "it-IT";
-      recognition.continuous = true;
-      recognition.interimResults = true;
+      recognition.lang = "it-IT"; recognition.continuous = true; recognition.interimResults = true;
       let finalTranscript = "";
       recognition.onresult = (e: any) => {
         let interim = "";
         for (let i = e.resultIndex; i < e.results.length; i++) {
-          const t = e.results[i][0].transcript;
-          if (e.results[i].isFinal) finalTranscript += t + " "; else interim = t;
+          const tr = e.results[i][0].transcript;
+          if (e.results[i].isFinal) finalTranscript += tr + " "; else interim = tr;
         }
         const combined = (finalTranscript + interim).trim();
-        setVoiceTranscript(combined);
-        setInput(combined);
+        setVoiceTranscript(combined); setInput(combined);
       };
       recognition.onerror = () => setIsListening(false);
       recognition.onend = () => setIsListening(false);
-      recognitionRef.current = recognition;
-      recognition.start();
-      setIsListening(true);
+      recognitionRef.current = recognition; recognition.start(); setIsListening(true);
     } catch {}
   }
 
@@ -321,7 +364,10 @@ export default function PrepSession() {
     setSelectedProve(prev => prev.includes(prova) ? prev.filter(p => p !== prova) : [...prev, prova]);
   }
 
-  const isOralMode = examType === "orale" || examType === "universitario" && uniMode === "orale";
+  const isOralMode = examType === "orale" || (examType === "universitario" && uniMode === "orale");
+
+  // University exams available for quick select
+  const availableUniExams = studyPlan.filter(e => e.stato !== "superato");
 
   /* ══════════════ STEP: Type selector ══════════════ */
   if (step === "type") {
@@ -333,16 +379,12 @@ export default function PrepSession() {
           </button>
           <h1 className="text-lg font-bold text-foreground">{prepLabel}</h1>
         </div>
-
         <div className="max-w-lg mx-auto px-4 py-6 space-y-3">
           <p className="text-sm text-muted-foreground mb-4">{t("exam_select_type")}</p>
           {EXAM_TYPES.map((et) => (
-            <motion.button
-              key={et.id}
-              whileTap={{ scale: 0.98 }}
+            <motion.button key={et.id} whileTap={{ scale: 0.98 }}
               onClick={() => { setExamType(et.id); setStep("setup"); }}
-              className="w-full flex items-start gap-4 p-4 rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-sm transition-all text-left"
-            >
+              className="w-full flex items-start gap-4 p-4 rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-sm transition-all text-left">
               <span className="text-2xl mt-0.5">{et.emoji}</span>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-foreground text-sm">{t(et.labelKey)}</p>
@@ -350,6 +392,28 @@ export default function PrepSession() {
               </div>
             </motion.button>
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════ STEP: Study Plan ══════════════ */
+  if (step === "plan") {
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
+          <button onClick={() => setStep("setup")} className="text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <BookOpen className="w-5 h-5 text-primary" />
+          <h1 className="text-lg font-bold text-foreground">{t("plan_title")}</h1>
+        </div>
+        <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
+          <p className="text-sm text-muted-foreground">{t("plan_description")}</p>
+          <UniversityStudyPlan exams={studyPlan} onChange={saveStudyPlan} />
+          <Button onClick={() => setStep("setup")} className="w-full" variant="outline">
+            {t("plan_done")}
+          </Button>
         </div>
       </div>
     );
@@ -373,29 +437,70 @@ export default function PrepSession() {
         </div>
 
         <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
-          {/* Subject — for verifica, orale, universitario */}
-          {needsSubject && (
+
+          {/* ── Subject for verifica, orale ── */}
+          {(examType === "verifica" || examType === "orale") && (
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                {examType === "universitario" ? t("exam_field_uni_subject") : t("exam_field_subject")}
+                {t("exam_field_subject")}
               </label>
-              {examType === "universitario" ? (
-                <Input value={subject} onChange={e => setSubject(e.target.value)}
-                  placeholder={t("exam_field_uni_subject_placeholder")} />
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {subjects.map((s: string) => (
-                    <button key={s} onClick={() => setSubject(subject === s ? "" : s)}
+              <div className="flex flex-wrap gap-2">
+                {subjects.map((s: string) => (
+                  <button key={s} onClick={() => setSubject(subject === s ? "" : s)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+                      subject === s ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary"
+                    }`}>{s}</button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Subject for university — with study plan integration ── */}
+          {examType === "universitario" && (
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                {t("exam_field_uni_subject")}
+              </label>
+
+              {/* Quick select from study plan */}
+              {availableUniExams.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {availableUniExams.map(e => (
+                    <button key={e.id} onClick={() => setSubject(e.nome)}
                       className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
-                        subject === s ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary"
-                      }`}>{s}</button>
+                        subject === e.nome ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary"
+                      }`}>
+                      {e.stato === "in_preparazione" ? "🟡 " : ""}{e.nome}
+                    </button>
                   ))}
                 </div>
+              )}
+
+              {/* No study plan CTA */}
+              {planLoaded && studyPlan.length === 0 && (
+                <div className="bg-muted/50 border border-border rounded-xl p-4 mb-3">
+                  <p className="text-sm text-muted-foreground mb-2">{t("plan_empty_cta")}</p>
+                  <Button size="sm" variant="outline" onClick={() => setStep("plan")}>
+                    <BookOpen className="w-3.5 h-3.5 mr-1.5" />{t("plan_setup_cta")}
+                  </Button>
+                </div>
+              )}
+
+              {/* Manual input */}
+              <Input value={subject} onChange={e => setSubject(e.target.value)}
+                placeholder={t("exam_field_uni_subject_placeholder")} />
+
+              {/* Link to plan if exists */}
+              {studyPlan.length > 0 && (
+                <button onClick={() => setStep("plan")}
+                  className="text-xs text-primary hover:underline mt-2 inline-block">
+                  {t("plan_manage_link")}
+                </button>
               )}
             </div>
           )}
 
-          {/* Topic — for verifica, orale */}
+          {/* ── Topic for verifica, orale ── */}
           {(examType === "verifica" || examType === "orale") && (
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
@@ -406,26 +511,26 @@ export default function PrepSession() {
             </div>
           )}
 
-          {/* Tone — orale only */}
+          {/* ── Tone for orale ── */}
           {examType === "orale" && (
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
                 {t("exam_field_tone")}
               </label>
               <div className="grid grid-cols-2 gap-3">
-                {(["normale", "esigente"] as const).map(t_val => (
-                  <button key={t_val} onClick={() => setTone(t_val)}
+                {(["normale", "esigente"] as const).map(tv => (
+                  <button key={tv} onClick={() => setTone(tv)}
                     className={`p-3 rounded-lg border text-sm font-medium transition-all ${
-                      tone === t_val ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
+                      tone === tv ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"
                     }`}>
-                    {t_val === "normale" ? t("exam_tone_normale") : t("exam_tone_esigente")}
+                    {tv === "normale" ? t("exam_tone_normale") : t("exam_tone_esigente")}
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Prove — terza media */}
+          {/* ── Prove for terza media ── */}
           {examType === "terza_media" && (
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
@@ -442,16 +547,52 @@ export default function PrepSession() {
             </div>
           )}
 
-          {/* Prove + Indirizzo — maturità */}
+          {/* ── Maturità with auto-detection ── */}
           {examType === "maturita" && (
             <>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                  {t("exam_field_indirizzo")}
-                </label>
-                <Input value={indirizzo} onChange={e => setIndirizzo(e.target.value)}
-                  placeholder={t("exam_field_indirizzo_placeholder")} />
-              </div>
+              {/* Auto-detected track confirmation */}
+              {detectedTrack && !trackConfirmed && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  className="bg-primary/5 border border-primary/20 rounded-xl p-4">
+                  <p className="text-sm text-foreground mb-2">
+                    {t("exam_maturita_detected").replace("{indirizzo}", detectedTrack.label)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    {t("exam_maturita_seconda")}: <strong>{detectedTrack.secondaProva}</strong>
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    {t("exam_maturita_colloquio")}: {detectedTrack.colloquioMaterie.join(", ")}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => setTrackConfirmed(true)}>
+                      {t("exam_maturita_confirm")}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => { setDetectedTrack(null); setIndirizzo(""); }}>
+                      {t("exam_maturita_modify")}
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Manual indirizzo if no detection or user wants to modify */}
+              {(!detectedTrack || trackConfirmed) && (
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                    {t("exam_field_indirizzo")}
+                  </label>
+                  <Input value={indirizzo} onChange={e => {
+                    setIndirizzo(e.target.value);
+                    const track = findMaturitaTrack(e.target.value);
+                    if (track) setDetectedTrack(track);
+                  }} placeholder={t("exam_field_indirizzo_placeholder")} />
+                  {detectedTrack && trackConfirmed && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {t("exam_maturita_seconda")}: {detectedTrack.secondaProva}
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
                   {t("exam_field_prove")}
@@ -468,7 +609,7 @@ export default function PrepSession() {
             </>
           )}
 
-          {/* Uni mode */}
+          {/* ── Uni mode ── */}
           {examType === "universitario" && (
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
@@ -487,17 +628,13 @@ export default function PrepSession() {
             </div>
           )}
 
-          {/* Date — all types */}
+          {/* ── Date ── */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
               {t("exam_field_date")}
             </label>
-            <input
-              type="date"
-              value={examDate}
-              onChange={e => setExamDate(e.target.value)}
-              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
-            />
+            <input type="date" value={examDate} onChange={e => setExamDate(e.target.value)}
+              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
           </div>
 
           {/* Weakness preview */}
@@ -519,7 +656,6 @@ export default function PrepSession() {
   /* ══════════════ STEP: Report ══════════════ */
   if (step === "report" && report) {
     const timeLabel = daysToExam !== null ? formatTimeRemaining(daysToExam) : null;
-    const examLabel = EXAM_TYPES.find(e => e.id === examType)?.labelKey || "";
 
     return (
       <div className="min-h-screen bg-background p-4">
@@ -529,14 +665,12 @@ export default function PrepSession() {
             {report.score && (
               <p className="text-center text-lg font-semibold text-primary mb-4">{t("exam_report_score")}: {report.score}</p>
             )}
-
             {timeLabel && (
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-4 flex items-center gap-2">
                 <Clock className="w-5 h-5 text-primary flex-shrink-0" />
                 <p className="text-sm font-medium text-primary">{timeLabel}</p>
               </div>
             )}
-
             <div className="space-y-4">
               <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl p-5">
                 <div className="flex items-center gap-2 mb-3">
@@ -544,44 +678,31 @@ export default function PrepSession() {
                   <h3 className="font-semibold text-green-700 dark:text-green-400">{t("exam_report_strengths")}</h3>
                 </div>
                 <ul className="space-y-1.5">
-                  {report.strengths.map((s, i) => (
-                    <li key={i} className="text-sm text-green-800 dark:text-green-300">{s}</li>
-                  ))}
+                  {report.strengths.map((s, i) => <li key={i} className="text-sm text-green-800 dark:text-green-300">{s}</li>)}
                 </ul>
               </div>
-
               <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                   <h3 className="font-semibold text-amber-700 dark:text-amber-400">{t("exam_report_weaknesses")}</h3>
                 </div>
                 <ul className="space-y-1.5">
-                  {report.weaknesses.map((s, i) => (
-                    <li key={i} className="text-sm text-amber-800 dark:text-amber-300">{s}</li>
-                  ))}
+                  {report.weaknesses.map((s, i) => <li key={i} className="text-sm text-amber-800 dark:text-amber-300">{s}</li>)}
                 </ul>
               </div>
-
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <Target className="w-5 h-5 text-primary" />
                   <h3 className="font-semibold text-primary">{t("exam_report_priorities")}</h3>
                 </div>
                 <ul className="space-y-1.5">
-                  {report.priorities.map((s, i) => (
-                    <li key={i} className="text-sm text-foreground">{i + 1}. {s}</li>
-                  ))}
+                  {report.priorities.map((s, i) => <li key={i} className="text-sm text-foreground">{i + 1}. {s}</li>)}
                 </ul>
               </div>
             </div>
-
             <div className="flex gap-3 mt-6">
-              <Button onClick={() => navigate("/memory")} variant="outline" className="flex-1">
-                {t("exam_report_review")}
-              </Button>
-              <Button onClick={() => navigate("/dashboard")} className="flex-1">
-                {t("exam_report_home")}
-              </Button>
+              <Button onClick={() => navigate("/memory")} variant="outline" className="flex-1">{t("exam_report_review")}</Button>
+              <Button onClick={() => navigate("/dashboard")} className="flex-1">{t("exam_report_home")}</Button>
             </div>
           </motion.div>
         </div>
@@ -661,14 +782,10 @@ export default function PrepSession() {
               {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
             </button>
           )}
-          <input
-            type="text"
-            value={input}
-            onChange={e => setInput(e.target.value)}
+          <input type="text" value={input} onChange={e => setInput(e.target.value)}
             placeholder={isOralMode ? t("exam_input_oral") : t("exam_input_written")}
             className="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary"
-            disabled={sending}
-          />
+            disabled={sending} />
           <Button type="submit" size="icon" disabled={!input.trim() || sending} className="rounded-xl h-10 w-10">
             <Send className="w-4 h-4" />
           </Button>
