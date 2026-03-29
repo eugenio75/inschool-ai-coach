@@ -20,14 +20,13 @@ export function LangToggle() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-sm font-medium">
+        <button className="inline-flex min-w-[84px] items-center justify-between gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5 text-sm font-medium text-foreground shadow-soft transition-colors hover:bg-accent hover:text-accent-foreground">
           <span className="text-base leading-none">{current.flag}</span>
-          {translating ? (
-            <Loader2 className="w-3 h-3 animate-spin text-primary" />
-          ) : (
-            <span className="hidden sm:inline text-xs text-foreground">{current.code.toUpperCase()}</span>
-          )}
-          <ChevronDown className="w-3 h-3 text-muted-foreground" />
+          <span className="text-xs font-semibold tracking-wide">{current.code.toUpperCase()}</span>
+          <span className="flex items-center gap-1">
+            {translating && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
+            <ChevronDown className="h-3 w-3 text-muted-foreground" />
+          </span>
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-48 p-1" align="end">
