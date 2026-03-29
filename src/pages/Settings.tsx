@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Lock, Loader2, Users, Shield, Pencil, Bell,
-  Eye, EyeOff, Trash2, RotateCcw, Moon, Brain, BookOpen,
+  Eye, EyeOff, Trash2, RotateCcw, Moon, Brain, BookOpen, Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ import { LogoutButton } from "@/components/shared/LogoutButton";
 import { getChildSession, setChildSession } from "@/lib/childSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { coachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
+import { BlockchainTab } from "@/components/BlockchainTab";
 
 // Avatar colors for profile customization
 const AVATAR_COLORS = [
