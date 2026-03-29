@@ -650,6 +650,7 @@ export type Database = {
           completed_at: string | null
           conversation_id: string | null
           current_step: number | null
+          duration_seconds: number | null
           emotional_checkin: string | null
           homework_id: string | null
           id: string
@@ -665,6 +666,7 @@ export type Database = {
           completed_at?: string | null
           conversation_id?: string | null
           current_step?: number | null
+          duration_seconds?: number | null
           emotional_checkin?: string | null
           homework_id?: string | null
           id?: string
@@ -680,6 +682,7 @@ export type Database = {
           completed_at?: string | null
           conversation_id?: string | null
           current_step?: number | null
+          duration_seconds?: number | null
           emotional_checkin?: string | null
           homework_id?: string | null
           id?: string
