@@ -925,5 +925,18 @@
   "rafforza_try_other": "Try a different selection",
   "rafforza_fallback_level1": "No critical concepts found — here are the ones you can still improve.",
   "rafforza_fallback_level2": "Great job — no weak points detected. Here's a complete review.",
-  "back": "Go back"
+  "back": "Go back",
+  "celebration_title": "Session completed!",
+  "celebration_body_junior": "Amazing! You did some great thinking today!",
+  "celebration_body_senior": "{name}, you reasoned really well today.",
+  "celebration_focus": "Focus",
+  "celebration_autonomy": "Autonomy",
+  "celebration_consistency": "Consistency",
+  "celebration_session_points": "Session points",
+  "celebration_perfect": "Perfect session! ⭐",
+  "celebration_great": "Great work! 💪",
+  "celebration_good": "Keep it up! 🚀",
+  "celebration_total": "Total points",
+  "celebration_review": "Review & Strengthen",
+  "celebration_home": "Back to home"
 }

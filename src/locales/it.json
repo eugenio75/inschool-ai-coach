@@ -925,5 +925,18 @@
   "rafforza_try_other": "Prova con un'altra selezione",
   "rafforza_fallback_level1": "Nessun concetto critico trovato — ti mostriamo quelli che puoi ancora migliorare.",
   "rafforza_fallback_level2": "Ottimo lavoro — nessun punto debole rilevato. Ecco un ripasso completo.",
-  "back": "Torna indietro"
+  "back": "Torna indietro",
+  "celebration_title": "Sessione completata!",
+  "celebration_body_junior": "Fantastico! Hai ragionato alla grande oggi!",
+  "celebration_body_senior": "{name}, hai ragionato davvero bene oggi.",
+  "celebration_focus": "Focus",
+  "celebration_autonomy": "Autonomia",
+  "celebration_consistency": "Costanza",
+  "celebration_session_points": "Punti sessione",
+  "celebration_perfect": "Sessione perfetta! ⭐",
+  "celebration_great": "Ottimo lavoro! 💪",
+  "celebration_good": "Continua così! 🚀",
+  "celebration_total": "Totale punti",
+  "celebration_review": "Ripassa e Rafforza",
+  "celebration_home": "Torna alla home"
 }
