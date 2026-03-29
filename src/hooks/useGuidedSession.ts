@@ -278,9 +278,9 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       if (!convId || msgs.length === 0) return;
       const chatToSave = msgs.filter(m => m.content?.trim()).map(m => ({ role: m.role, text: m.content }));
       supabase.from("conversation_sessions").update({
-        messaggi: chatToSave,
+        messaggi: chatToSave as any,
         updated_at: new Date().toISOString(),
-      }).eq("id", convId).then(() => {}).catch(err => console.error("Incremental save error:", err));
+      }).eq("id", convId).then(() => {}, err => console.error("Incremental save error:", err));
     }, 2000);
   }
 
