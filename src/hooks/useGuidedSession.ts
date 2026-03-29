@@ -849,6 +849,10 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   const handleSend = useCallback(async (text: string) => {
     if (sending || !text.trim()) return;
 
+    // ── Smart time tracking: record active interval ──
+    recordInteraction();
+    resetInactivityTimer();
+
     // Check if this is a hint request
     const isHintRequest = text.includes("Dammi un indizio") || text.includes("indizio") || text.includes("Sono bloccato");
     let currentHintCount = hintCountPerStep[currentStep] || 0;
