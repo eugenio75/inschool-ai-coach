@@ -509,8 +509,8 @@ export default function DashboardDocente() {
                           <DropdownMenuItem onClick={() => navigate(`/classe/${c.id}`)}>
                             <Pencil className="w-3.5 h-3.5 mr-2" /> Modifica classe
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteTarget(c)}>
-                            <Trash2 className="w-3.5 h-3.5 mr-2" /> Elimina classe
+                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => openDeleteFlow(c)}>
+                            <Trash2 className="w-3.5 h-3.5 mr-2" /> {c.is_sample ? "Elimina classe di esempio" : "Elimina classe"}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
