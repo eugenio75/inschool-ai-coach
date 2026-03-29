@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Lock, CheckCircle, Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -123,6 +123,13 @@ export default function ResetPassword() {
             {loading ? <Loader2 className="animate-spin w-5 h-5" /> : "Aggiorna password"}
           </Button>
         </form>
+
+        <Link
+          to="/auth"
+          className="mt-6 flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          ← Torna al login
+        </Link>
       </div>
     </div>
   );
