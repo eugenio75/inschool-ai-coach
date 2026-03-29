@@ -1,22 +1,52 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Flame, Star, Zap, Target, Loader2, Brain, MessageCircle, ArrowRight } from "lucide-react";
-import { getGamification, getDailyMissions, completeMission, getTasks, getActiveChildProfileId } from "@/lib/database";
+import { Flame, Star, Zap, Target, Loader2, Brain, MessageCircle, ArrowRight, HelpCircle } from "lucide-react";
+import { getGamification, getDailyMissions, completeMission, getTasks, getActiveChildProfileId, getChildProfile } from "@/lib/database";
 import { getChildSession, isChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { StreakShieldBadge } from "@/components/CelebrationOverlay";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
+const InfoTooltip = ({ text }: { text: string }) => (
+  <TooltipProvider delayDuration={0}>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          className="w-5 h-5 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 transition-colors"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <HelpCircle className="w-3 h-3 text-muted-foreground" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="max-w-[200px] text-xs">
+        {text}
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+);
+
 export const GamificationKPI = () => {
   const [g, setG] = useState<any>(null);
+  const [isJunior, setIsJunior] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       const data = await getGamification();
       setG(data);
+
+      // Check age for junior tooltips
+      const profileId = isChildSession()
+        ? getChildSession()?.profileId
+        : getActiveChildProfileId();
+      if (profileId) {
+        const profile = await getChildProfile(profileId);
+        if (profile?.age && profile.age < 11) setIsJunior(true);
+      }
     };
     load();
   }, []);
@@ -29,14 +59,31 @@ export const GamificationKPI = () => {
   const streak = g.streak || 0;
   const daysToShield = Math.max(0, nextShieldAt - streak);
 
+  const tooltips = isJunior
+    ? {
+        streak: "Quanti giorni di fila hai studiato! 🔥",
+        points: "I tuoi punti totali — più studi, più crescono! ⭐",
+        focus: "Punti per quanto hai studiato oggi! 🎯",
+        autonomy: "Punti per aver lavorato da solo senza troppi aiuti! 🧠",
+      }
+    : {
+        streak: "Giorni consecutivi in cui hai studiato. Se salti un giorno perdi la serie — a meno che tu non abbia uno Scudo! 🛡️",
+        points: "I tuoi punti totali. Si guadagnano studiando, completando missioni e mantenendo la costanza.",
+        focus: "Punti guadagnati in base a quanto a lungo studi. Più tempo di qualità studi, più punti guadagni!",
+        autonomy: "Punti guadagnati in base a quanti suggerimenti chiedi al coach. Meno aiuti chiedi, più punti guadagni!",
+      };
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      {/* Streak */}
+      {/* Costanza (Streak) */}
       <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Streak</span>
-          <div className="w-7 h-7 bg-terracotta-light rounded-lg flex items-center justify-center">
-            <Flame className="w-3.5 h-3.5 text-terracotta" />
+          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Costanza</span>
+          <div className="flex items-center gap-1">
+            <InfoTooltip text={tooltips.streak} />
+            <div className="w-7 h-7 bg-terracotta-light rounded-lg flex items-center justify-center">
+              <Flame className="w-3.5 h-3.5 text-terracotta" />
+            </div>
           </div>
         </div>
         <p className="font-display text-2xl font-bold text-foreground">{streak}</p>
@@ -47,8 +94,11 @@ export const GamificationKPI = () => {
       <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Punti</span>
-          <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
-            <Star className="w-3.5 h-3.5 text-primary" />
+          <div className="flex items-center gap-1">
+            <InfoTooltip text={tooltips.points} />
+            <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
+              <Star className="w-3.5 h-3.5 text-primary" />
+            </div>
           </div>
         </div>
         <p className="font-display text-2xl font-bold text-foreground">{total}</p>
@@ -58,26 +108,32 @@ export const GamificationKPI = () => {
         )}
       </div>
 
-      {/* Impegno */}
+      {/* Concentrazione (focus_points) */}
       <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Impegno</span>
-          <div className="w-7 h-7 bg-sage-light rounded-lg flex items-center justify-center">
-            <Zap className="w-3.5 h-3.5 text-sage-dark" />
+          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Concentrazione</span>
+          <div className="flex items-center gap-1">
+            <InfoTooltip text={tooltips.focus} />
+            <div className="w-7 h-7 bg-sage-light rounded-lg flex items-center justify-center">
+              <Target className="w-3.5 h-3.5 text-sage-dark" />
+            </div>
           </div>
         </div>
         <p className="font-display text-2xl font-bold text-foreground">{g.focus_points || 0}</p>
       </div>
 
-      {/* Costanza */}
+      {/* Autonomia (autonomy_points) */}
       <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Costanza</span>
-          <div className="w-7 h-7 bg-clay-light rounded-lg flex items-center justify-center">
-            <Target className="w-3.5 h-3.5 text-clay-dark" />
+          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Autonomia</span>
+          <div className="flex items-center gap-1">
+            <InfoTooltip text={tooltips.autonomy} />
+            <div className="w-7 h-7 bg-clay-light rounded-lg flex items-center justify-center">
+              <Brain className="w-3.5 h-3.5 text-clay-dark" />
+            </div>
           </div>
         </div>
-        <p className="font-display text-2xl font-bold text-foreground">{g.consistency_points || 0}</p>
+        <p className="font-display text-2xl font-bold text-foreground">{g.autonomy_points || 0}</p>
       </div>
     </div>
   );
@@ -125,7 +181,6 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
     loadMissions();
   }, [loadMissions]);
 
-  // Realtime subscription — update missions instantly when DB changes
   useEffect(() => {
     const profileId = isChildSession()
       ? getChildSession()?.profileId
@@ -143,7 +198,6 @@ export const DailyMissions = ({ onMissionComplete }: { onMissionComplete?: () =>
           filter: `child_profile_id=eq.${profileId}`,
         },
         (payload) => {
-          // Update the mission in local state immediately
           setMissions((prev) =>
             prev.map((m) =>
               m.id === payload.new.id ? { ...m, ...payload.new } : m

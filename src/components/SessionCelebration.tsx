@@ -117,8 +117,8 @@ export function SessionCelebration({
 
   const pointBadges = hasPoints
     ? [
-        { label: "Punti", value: pointsEarned!.focus, emoji: "🎯" },
-        { label: "Impegno", value: pointsEarned!.autonomy, emoji: "🧠" },
+        { label: "Concentrazione", value: pointsEarned!.focus, emoji: "🎯" },
+        { label: "Autonomia", value: pointsEarned!.autonomy, emoji: "🧠" },
         { label: "Costanza", value: pointsEarned!.consistency, emoji: "🔥" },
       ]
     : [];
