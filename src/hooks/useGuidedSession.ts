@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { getTask as fetchTask, getDailyMissions, completeMission } from "@/lib/database";
+import { getTask as fetchTask, getDailyMissions, completeMission, saveFocusSession, getGamification } from "@/lib/database";
+import type { PointsEarned } from "@/components/SessionCelebration";
 import { isChildSession, childApi, getChildSession } from "@/lib/childSession";
 import { ChatMsg, ChatAction, streamChat } from "@/lib/streamChat";
 import { getCurrentLang } from "@/lib/langUtils";
@@ -164,6 +165,12 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   const [showCheckin, setShowCheckin] = useState(false);
   const [setupDone, setSetupDone] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
+
+  // Points tracking
+  const [celebrationPoints, setCelebrationPoints] = useState<PointsEarned | undefined>();
+  const [celebrationTotalPoints, setCelebrationTotalPoints] = useState<number | undefined>();
+  const [celebrationPreviousTotal, setCelebrationPreviousTotal] = useState<number | undefined>();
+  const sessionStartTime = useRef<number>(Date.now());
 
   // Method block state
   const [methodPhase, setMethodPhase] = useState<MethodPhase>("none");
