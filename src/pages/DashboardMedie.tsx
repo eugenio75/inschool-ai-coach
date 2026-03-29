@@ -30,7 +30,7 @@ function SessionEntryCardsMedie({ hasTasks }: { hasTasks: boolean }) {
     },
     {
       id: "review",
-      label: "Ripasso",
+      label: t("nav_review"),
       desc: "Rivedi quello che hai studiato",
       color: "bg-clay-light",
       iconColor: "text-clay-dark",

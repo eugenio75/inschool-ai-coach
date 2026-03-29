@@ -50,7 +50,7 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
     },
     {
       id: "review",
-      label: "Ripasso",
+      label: t("nav_review"),
       desc: isElementari ? "Rivedi quello che hai imparato" : "Rivedi quello che hai studiato e rafforza la memoria",
       icon: Brain,
       color: "bg-clay-light text-clay-dark",
