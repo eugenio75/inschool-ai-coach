@@ -411,6 +411,7 @@ interface GameItem {
   isTrue?: boolean;
   answer?: string;
   correction?: string;
+  shuffledOptions?: string[];
 }
 
 const GameSession = ({ subject, topic, section, concepts, onClose }: {
@@ -435,6 +436,16 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
 
   const availableGames = gameOptions.filter(g => g.forSection.includes(section));
 
+  // Helper: shuffle array once (stable)
+  const shuffleArray = <T,>(arr: T[]): T[] => {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  };
+
   const startGame = async (type: GameType) => {
     setGameType(type);
     setLoading(true);
@@ -442,7 +453,6 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
     const schoolLevel = profile?.school_level || "superiori";
     const conceptTexts = concepts.map(c => `${c.concept}: ${c.summary || ""}`).join("\n");
 
-    // Profile-specific game instructions
     let levelInstructions = "";
     if (schoolLevel === "alunno") {
       levelInstructions = "Gioco per bambini 6-10 anni. Frasi brevissime. Parole semplici. Tono giocoso e leggero. Nessun termine tecnico.";
@@ -462,7 +472,8 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
     } else if (type === "find-error") {
       prompt = `Genera 5 affermazioni SBAGLIATE su: ${topic} che lo studente deve correggere.\nConcetti: ${conceptTexts}\n${levelInstructions}\nFormato JSON: {"cards":[{"question":"affermazione sbagliata","options":["correzione"],"correct":0,"explanation":"spiegazione dell'errore"}]}`;
     } else {
-      prompt = `Genera 5 domande a risposta multipla facili su: ${topic}\nConcetti: ${conceptTexts}\n${levelInstructions}\nFormato: {"cards":[{"question":"...","options":["A","B","C"],"correct":0,"explanation":""}]}`;
+      // memory-match: ask for proper multiple choice with 4 options
+      prompt = `Genera 5 domande a risposta multipla su: ${topic}\nConcetti: ${conceptTexts}\n${levelInstructions}\nOgni domanda DEVE avere esattamente 4 opzioni di risposta.\nFormato JSON: {"cards":[{"question":"...","options":["A","B","C","D"],"correct":0,"explanation":""}]}\ncorrect è l'indice (0-3) della risposta giusta.`;
     }
 
     try {
@@ -496,11 +507,17 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
             correction: c.explanation || "",
           })));
         } else {
-          setGameItems(cards.map((c: any) => ({
-            statement: c.question,
-            answer: c.options?.[c.correct] || "",
-            correction: c.explanation || "",
-          })));
+          // memory-match: pre-shuffle options at creation time (stable)
+          setGameItems(cards.filter((c: any) => c.options?.length >= 2).map((c: any) => {
+            const correctAnswer = c.options[c.correct] || c.options[0];
+            const shuffled = shuffleArray([...c.options]);
+            return {
+              statement: c.question,
+              answer: correctAnswer,
+              correction: c.explanation || "",
+              shuffledOptions: shuffled,
+            };
+          }));
         }
       }
     } catch (e) { console.error("Game gen error:", e); }
@@ -520,6 +537,13 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
     setUserAnswer(ans);
     const correct = gameItems[currentIdx]?.answer?.toLowerCase().trim();
     if (ans.toLowerCase().trim() === correct) setScore(s => s + 1);
+  };
+
+  const handleOptionSelect = (opt: string) => {
+    if (answered) return;
+    setAnswered(true);
+    setUserAnswer(opt);
+    if (opt === gameItems[currentIdx]?.answer) setScore(s => s + 1);
   };
 
   const nextItem = () => {
@@ -659,9 +683,9 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
           </div>
         )}
 
-        {gameType === "memory-match" && item.answer && (
+        {gameType === "memory-match" && item.shuffledOptions && (
           <div className="space-y-2">
-            {[item.answer, ...(concepts.slice(0, 2).map(c => c.concept).filter(c => c !== item.answer))].sort(() => Math.random() - 0.5).map((opt, i) => {
+            {item.shuffledOptions.map((opt, i) => {
               let style = "border-border bg-card hover:border-primary/30";
               if (answered) {
                 if (opt === item.answer) style = "border-green-400 bg-green-50 dark:bg-green-900/20";
@@ -669,9 +693,11 @@ const GameSession = ({ subject, topic, section, concepts, onClose }: {
                 else style = "border-border bg-card opacity-60";
               }
               return (
-                <button key={i} onClick={() => handleTextAnswer(opt)} disabled={answered}
+                <button key={`${currentIdx}-${i}`} onClick={() => handleOptionSelect(opt)} disabled={answered}
                   className={`w-full text-left p-3.5 rounded-xl border-2 transition-all text-sm ${style}`}>
                   <span className="font-medium text-foreground">{opt}</span>
+                  {answered && opt === item.answer && <CheckCircle2 className="w-4 h-4 text-green-500 inline ml-2" />}
+                  {answered && opt === userAnswer && opt !== item.answer && <XCircle className="w-4 h-4 text-destructive inline ml-2" />}
                 </button>
               );
             })}
@@ -960,10 +986,14 @@ const MemoryRecap = () => {
     );
   }, [items]);
 
-  const weakItems = useMemo(() =>
-    items.filter(i => (i.strength || 0) < 50).sort((a, b) => (a.strength || 0) - (b.strength || 0)),
-    [items]
-  );
+  const weakItems = useMemo(() => {
+    const weak = items.filter(i => (i.strength || 0) < 50).sort((a, b) => (a.strength || 0) - (b.strength || 0));
+    // Fallback: if no weak items, use all items sorted by lowest strength
+    if (weak.length === 0 && items.length > 0) {
+      return [...items].sort((a, b) => (a.strength || 50) - (b.strength || 50));
+    }
+    return weak;
+  }, [items]);
 
   const getRelevantItems = (section: Section, contentType: ContentType): any[] => {
     if (section === "ripasso") {
@@ -972,7 +1002,11 @@ const MemoryRecap = () => {
       return [];
     }
     if (section === "rinforza") {
-      if (contentType === "today") return weakItems.filter(i => i.created_at >= getTodayStart());
+      if (contentType === "today") {
+        const todayWeak = weakItems.filter(i => i.created_at >= getTodayStart());
+        // Fallback to today's items if no weak ones today
+        return todayWeak.length > 0 ? todayWeak : todayItems;
+      }
       if (contentType === "cumulative") return weakItems;
       return [];
     }
