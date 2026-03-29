@@ -902,5 +902,18 @@
   "adapted_error": "Errore nella generazione delle versioni adattate.",
   "adapted_retry": "Riprova",
   "adapted_back": "Torna ai materiali",
-  "adapted_confirmed_toast": "Materiale confermato! Scarica le versioni qui sotto."
+  "adapted_confirmed_toast": "Materiale confermato! Scarica le versioni qui sotto.",
+  "forgot_title": "Password dimenticata?",
+  "forgot_subtitle": "Inserisci la tua email e ti invieremo un link per reimpostarla.",
+  "forgot_email_label": "Il tuo indirizzo email",
+  "forgot_email_placeholder": "nome@email.com",
+  "forgot_help_text": "Ti invieremo un link sicuro per reimpostare la password.",
+  "forgot_send_button": "Invia link di reset",
+  "forgot_sent_title": "Email inviata!",
+  "forgot_sent_body": "Controlla la tua casella di posta e segui le istruzioni per reimpostare la password.",
+  "forgot_back": "← Torna al login",
+  "back_button": "Indietro",
+  "not_found_title": "Pagina non trovata",
+  "not_found_body": "La pagina che stai cercando non esiste o è stata spostata.",
+  "not_found_cta": "Torna alla Home"
 }
