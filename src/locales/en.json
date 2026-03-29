@@ -890,5 +890,17 @@
   "mockup_session_step": "Step {{current}} of {{total}}",
   "mockup_session_coach": "You've read the passage. Tell me in your own words what this paragraph is about.",
   "mockup_session_stuck": "I'm stuck",
-  "mockup_session_hint": "Hint"
+  "mockup_session_hint": "Hint",
+  "adapted_material_confirmed": "Material confirmed",
+  "adapted_download_versions": "Download versions",
+  "adapted_download_standard": "Download — Standard version",
+  "adapted_download_bes": "Download — BES version",
+  "adapted_download_dsa": "Download — DSA version",
+  "adapted_download_h": "Download — H version",
+  "adapted_download_solutions": "Download — Teacher solutions",
+  "adapted_generating": "Generating...",
+  "adapted_error": "Error generating adapted versions.",
+  "adapted_retry": "Retry",
+  "adapted_back": "Back to materials",
+  "adapted_confirmed_toast": "Material confirmed! Download versions below."
 }

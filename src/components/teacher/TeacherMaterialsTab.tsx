@@ -1,8 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   PenLine, Sparkles, Upload, ArrowLeft, Send, Download,
   FileText, Trash2, CalendarIcon, BookOpen, Eye, Archive, RotateCcw, Pencil,
+  Loader2, AlertCircle, CheckCircle2,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -104,6 +105,15 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   // Saved materials
   const [materialFilter, setMaterialFilter] = useState("tutti");
 
+  // Adapted versions (BES/DSA/H) state
+  const [showDownloadPanel, setShowDownloadPanel] = useState(false);
+  const [confirmedContent, setConfirmedContent] = useState<string>("");
+  const [confirmedTitle, setConfirmedTitle] = useState<string>("");
+  const [confirmedSolutions, setConfirmedSolutions] = useState<string | null>(null);
+  const [adaptedVersions, setAdaptedVersions] = useState<{ bes: string | null; dsa: string | null; h: string | null }>({ bes: null, dsa: null, h: null });
+  const [adaptedLoading, setAdaptedLoading] = useState(false);
+  const [adaptedError, setAdaptedError] = useState(false);
+
   function resetForm() {
     setMode(null);
     setActivityType("compito");
@@ -125,6 +135,13 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     setUploadUrl(null);
     setOcrText(null);
     setSelectedSubjects(classe?.materia ? classe.materia.split(",").map((m: string) => m.trim()).filter(Boolean) : []);
+    setShowDownloadPanel(false);
+    setConfirmedContent("");
+    setConfirmedTitle("");
+    setConfirmedSolutions(null);
+    setAdaptedVersions({ bes: null, dsa: null, h: null });
+    setAdaptedLoading(false);
+    setAdaptedError(false);
   }
 
   function getPreviewContent(): string {
@@ -425,6 +442,73 @@ REGOLE:
     });
   }
 
+  /** Export adapted version PDF (BES/DSA/H) */
+  function exportAdaptedPdf(title: string, adaptedContent: string, type: string, version: "BES" | "DSA" | "H") {
+    const subjectStr = selectedSubjects.join(", ") || classe?.materia || "";
+    renderAndPrintPdf(adaptedContent, {
+      title,
+      type,
+      subject: subjectStr,
+      className: classe?.nome || "",
+      adaptedVersion: version,
+    });
+  }
+
+  /** Generate adapted versions (BES, DSA, H) via AI */
+  const generateAdaptedVersions = useCallback(async (studentContent: string) => {
+    setAdaptedLoading(true);
+    setAdaptedError(false);
+    setAdaptedVersions({ bes: null, dsa: null, h: null });
+    try {
+      const systemPrompt = `You are an Italian special education specialist. Starting from the attached educational material, generate three separate adapted versions for inclusion in a student's individualized plan. Each version must cover the same topic and learning objectives as the original but adapted as follows:
+
+BES (Bisogni Educativi Speciali): Simplify language and instructions. Use shorter sentences. Break complex tasks into smaller steps. Reduce the total number of exercises if necessary but maintain the same topic coverage.
+
+DSA (Disturbi Specifici dell'Apprendimento): Further simplify written instructions. Use numbered lists instead of paragraphs. Avoid tasks that require copying from a board or long handwriting. Suggest compensatory tools where relevant (e.g. calculator, text-to-speech, concept maps). Use clear visual spacing.
+
+H (Disabilità certificata — obiettivi minimi): Reduce to core essential concepts only. Use very simple language. Maximum 3-4 tasks. Include visual support suggestions. Note that this version must be further adapted by the teacher to match the student's individual PEI.
+
+Return only the three versions with no commentary, separated exactly by ===BES===, ===DSA===, ===H=== on their own lines. Write in Italian.`;
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            stream: false,
+            maxTokens: 6000,
+            systemPrompt,
+            messages: [{ role: "user", content: `MATERIALE ORIGINALE:\n---\n${studentContent}\n---` }],
+          }),
+        }
+      );
+      const data = await res.json();
+      const output = data.choices?.[0]?.message?.content?.trim() || "";
+      if (!output) throw new Error("Empty response");
+
+      // Parse the three sections
+      const besMatch = output.split("===BES===");
+      const afterBes = besMatch.length > 1 ? besMatch.slice(1).join("===BES===") : output;
+      const dsaParts = afterBes.split("===DSA===");
+      const besContent = dsaParts[0]?.trim() || null;
+      const afterDsa = dsaParts.length > 1 ? dsaParts.slice(1).join("===DSA===") : "";
+      const hParts = afterDsa.split("===H===");
+      const dsaContent = hParts[0]?.trim() || null;
+      const hContent = hParts.length > 1 ? hParts.slice(1).join("===H===").trim() : null;
+
+      setAdaptedVersions({ bes: besContent, dsa: dsaContent, h: hContent });
+    } catch (err) {
+      console.error("Adapted versions generation failed:", err);
+      setAdaptedError(true);
+    } finally {
+      setAdaptedLoading(false);
+    }
+  }, []);
+
   // --- Confirm & assign ---
   async function handleConfirm() {
     const previewContent = getPreviewContent();
@@ -505,8 +589,17 @@ REGOLE:
         toast.success(`Attività assegnata a ${targetStudents.length} studenti`);
       }
 
-      resetForm();
+      // Show download panel and trigger adapted versions generation
+      setConfirmedContent(previewContent);
+      setConfirmedTitle(title);
+      setConfirmedSolutions(aiSolutions);
+      setShowDownloadPanel(true);
+      setShowPreview(false);
       onReload();
+      toast.success("Materiale confermato! Scarica le versioni qui sotto.");
+
+      // Generate adapted versions in background
+      generateAdaptedVersions(previewContent);
     } catch (err: any) {
       toast.error("Errore: " + (err.message || "Riprova"));
     }
@@ -519,6 +612,90 @@ REGOLE:
     : materialFilter === "archiviato"
       ? materials.filter(m => m.status === "archived")
       : materials.filter(m => m.status === materialFilter);
+
+  // --- Download panel (after confirmation) ---
+  if (showDownloadPanel) {
+    const adaptedButtons: { key: "bes" | "dsa" | "h"; version: "BES" | "DSA" | "H"; emoji: string; color: string; label: string }[] = [
+      { key: "bes", version: "BES", emoji: "🟡", color: "text-amber-600", label: "Scarica — Versione BES" },
+      { key: "dsa", version: "DSA", emoji: "🔵", color: "text-blue-600", label: "Scarica — Versione DSA" },
+      { key: "h", version: "H", emoji: "🟢", color: "text-emerald-600", label: "Scarica — Versione H" },
+    ];
+    return (
+      <div className="space-y-4">
+        <div className="bg-card border border-border rounded-2xl p-5 space-y-5">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+            <p className="text-sm font-semibold text-foreground">Materiale confermato</p>
+          </div>
+          <p className="text-xs text-muted-foreground">{confirmedTitle}</p>
+
+          {/* Download buttons */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Scarica versioni</p>
+
+            {/* Standard */}
+            <Button
+              variant="outline"
+              className="w-full justify-start rounded-xl"
+              onClick={() => exportToPdf(confirmedTitle, confirmedContent, activityType)}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              📄 Scarica — Versione standard
+            </Button>
+
+            {/* BES / DSA / H */}
+            {adaptedButtons.map(({ key, version, emoji, label }) => {
+              const content = adaptedVersions[key];
+              const isLoading = adaptedLoading && !content;
+              return (
+                <Button
+                  key={key}
+                  variant="outline"
+                  className="w-full justify-start rounded-xl"
+                  disabled={isLoading || (adaptedError && !content)}
+                  onClick={() => content && exportAdaptedPdf(confirmedTitle, content, activityType, version)}
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4 mr-2" />
+                  )}
+                  {emoji} {isLoading ? "Generazione in corso..." : label}
+                </Button>
+              );
+            })}
+
+            {/* Teacher solutions */}
+            {confirmedSolutions && (
+              <Button
+                variant="outline"
+                className="w-full justify-start rounded-xl border-emerald-200 dark:border-emerald-800"
+                onClick={() => exportSolutionsPdf(confirmedTitle, confirmedSolutions)}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                🔒 Scarica — Soluzioni docente
+              </Button>
+            )}
+
+            {/* Error + retry */}
+            {adaptedError && (
+              <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-xl">
+                <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
+                <p className="text-xs text-destructive flex-1">Errore nella generazione delle versioni adattate.</p>
+                <Button size="sm" variant="outline" className="shrink-0 rounded-lg" onClick={() => generateAdaptedVersions(confirmedContent)}>
+                  <RotateCcw className="w-3.5 h-3.5 mr-1" /> Riprova
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <Button variant="ghost" className="w-full rounded-xl" onClick={resetForm}>
+            <ArrowLeft className="w-4 h-4 mr-1" /> Torna ai materiali
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   // --- Card selector ---
   if (mode === null) {

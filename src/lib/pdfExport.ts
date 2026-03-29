@@ -34,13 +34,22 @@ interface PdfMeta {
   className?: string;
   date?: string;
   isTeacherOnly?: boolean;
+  /** Adapted version badge: "BES" | "DSA" | "H" */
+  adaptedVersion?: "BES" | "DSA" | "H";
 }
 
 /** Build a full PDF HTML document from content and metadata */
 export function buildPdfHtml(htmlContent: string, meta: PdfMeta): string {
   const isVerifica = meta.type === "verifica";
   const isTeacherOnly = meta.isTeacherOnly === true;
-  const headerColor = isTeacherOnly ? "#2E7D32" : isVerifica ? "#c0392b" : "#1A3A5C";
+  const adapted = meta.adaptedVersion;
+  const adaptedColors: Record<string, { bg: string; color: string; label: string }> = {
+    BES: { bg: "#FFF8E1", color: "#F9A825", label: "🟡 Versione BES" },
+    DSA: { bg: "#E3F2FD", color: "#1565C0", label: "🔵 Versione DSA" },
+    H: { bg: "#E8F5E9", color: "#2E7D32", label: "🟢 Versione H — da adattare al PEI" },
+  };
+  const adaptedMeta = adapted ? adaptedColors[adapted] : null;
+  const headerColor = adaptedMeta ? adaptedMeta.color : isTeacherOnly ? "#2E7D32" : isVerifica ? "#c0392b" : "#1A3A5C";
   const dateStr = meta.date || new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
   const typeLabel = meta.type ? meta.type.charAt(0).toUpperCase() + meta.type.slice(1) : "";
 
@@ -53,6 +62,7 @@ export function buildPdfHtml(htmlContent: string, meta: PdfMeta): string {
   .header h1 { font-size: 20px; margin: 0 0 8px; color: ${headerColor}; }
   .header .meta { font-size: 11px; color: #888; }
   ${isTeacherOnly ? `.header .badge { display:inline-block; background:#2E7D3220; color:#2E7D32; padding:2px 12px; border-radius:12px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }` : ""}
+  ${adaptedMeta ? `.header .adapted-badge { display:inline-block; background:${adaptedMeta.bg}; color:${adaptedMeta.color}; padding:4px 16px; border-radius:12px; font-size:12px; font-weight:700; letter-spacing:0.03em; margin-bottom:10px; border:1px solid ${adaptedMeta.color}30; }` : ""}
   ${isVerifica && !isTeacherOnly ? `.student-fields { margin: 16px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
   .student-fields p { margin: 4px 0; font-size: 12px; }` : ""}
   .content { margin-top: 16px; }
@@ -60,6 +70,7 @@ export function buildPdfHtml(htmlContent: string, meta: PdfMeta): string {
 </style></head><body>
 <div class="header">
   ${isTeacherOnly ? `<div class="badge">⚠ RISERVATO AL DOCENTE</div>` : ""}
+  ${adaptedMeta ? `<div class="adapted-badge">${adaptedMeta.label}</div>` : ""}
   <h1>${meta.title}${isTeacherOnly ? " — Soluzioni" : ""}</h1>
   <div class="meta">${[typeLabel, meta.subject, meta.className, dateStr].filter(Boolean).join(" · ")}</div>
 </div>
