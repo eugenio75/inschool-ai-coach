@@ -1037,20 +1037,35 @@ const MemoryRecap = () => {
 
         // In Rafforza mode, fetch learning errors and flagged cards for context
         let errorContext = "";
-        if (isStrengthen && user) {
-          const [errorsRes, flaggedRes] = await Promise.all([
-            supabase.from("learning_errors").select("topic, error_type, description").eq("user_id", user.id).eq("subject", subject).eq("resolved", false).limit(20),
-            supabase.from("flashcards").select("question, answer").eq("user_id", user.id).eq("subject", subject).eq("is_flagged", true).limit(10),
-          ]);
-          const errors = errorsRes.data || [];
-          const flagged = flaggedRes.data || [];
+        if (isStrengthen) {
+          let errors: any[] = [];
+          let flagged: any[] = [];
+
+          if (isChildSession()) {
+            // Child session: use child-api to bypass RLS
+            const [errorsData, flaggedData] = await Promise.all([
+              childApi("get-learning-errors").catch(() => []),
+              childApi("get-flagged-flashcards", { subject }).catch(() => []),
+            ]);
+            errors = (Array.isArray(errorsData) ? errorsData : []).filter((e: any) => e.subject === subject);
+            flagged = Array.isArray(flaggedData) ? flaggedData : [];
+          } else if (user) {
+            // Authenticated user: query directly
+            const [errorsRes, flaggedRes] = await Promise.all([
+              supabase.from("learning_errors").select("topic, error_type, description").eq("user_id", user.id).eq("subject", subject).eq("resolved", false).limit(20),
+              supabase.from("flashcards").select("question, answer").eq("user_id", user.id).eq("subject", subject).eq("is_flagged", true).limit(10),
+            ]);
+            errors = errorsRes.data || [];
+            flagged = flaggedRes.data || [];
+          }
+
           if (errors.length > 0 || flagged.length > 0) {
             errorContext = "\n\nCONTESTO ERRORI E DEBOLEZZE DELLO STUDENTE (PRIORITÀ MASSIMA - genera flashcard su questi punti deboli):\n";
             if (errors.length > 0) {
-              errorContext += "Errori ricorrenti:\n" + errors.map(e => `- ${e.topic}: ${e.description || e.error_type || "errore generico"}`).join("\n");
+              errorContext += "Errori ricorrenti:\n" + errors.map((e: any) => `- ${e.topic}: ${e.description || e.error_type || "errore generico"}`).join("\n");
             }
             if (flagged.length > 0) {
-              errorContext += "\nCarte precedentemente sbagliate:\n" + flagged.map(f => `- D: ${f.question} / R: ${f.answer}`).join("\n");
+              errorContext += "\nCarte precedentemente sbagliate:\n" + flagged.map((f: any) => `- D: ${f.question} / R: ${f.answer}`).join("\n");
             }
             errorContext += "\n\nGenera flashcard MIRATE su questi punti deboli, non sull'intero argomento.";
           }
