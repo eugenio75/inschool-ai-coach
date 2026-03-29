@@ -22,7 +22,7 @@ function ForgotPasswordInline() {
     if (!email.trim()) return;
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + "/reset-password",
+      redirectTo: "https://inschool.azarlabs.com/reset-password",
     });
     setLoading(false);
     if (!error) setSent(true);
@@ -300,7 +300,7 @@ const Auth = () => {
   const labelSmClass = "text-xs font-semibold text-muted-foreground mb-1.5 block";
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center py-10 px-4 relative overflow-hidden font-sans">
+    <div className="light min-h-screen bg-white text-foreground flex flex-col items-center justify-center py-10 px-4 relative overflow-hidden font-sans" data-theme="light">
       {/* Soft Light Background elements */}
       <div className="absolute top-0 w-full h-full pointer-events-none opacity-40">
         <div className="absolute top-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-primary/20 blur-[120px] rounded-full" />
