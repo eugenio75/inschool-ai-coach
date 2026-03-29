@@ -1086,7 +1086,8 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
             status: "completed",
             completed_at: new Date().toISOString(),
             conversation_id: conversationId,
-          }).eq("id", sessionId);
+            duration_seconds: activeStudySeconds.current,
+          } as any).eq("id", sessionId);
           await supabase.from("homework_tasks").update({ completed: true, updated_at: new Date().toISOString() }).eq("id", homeworkId);
         }
 
