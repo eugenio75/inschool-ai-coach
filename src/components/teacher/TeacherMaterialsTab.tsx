@@ -135,6 +135,13 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     setUploadUrl(null);
     setOcrText(null);
     setSelectedSubjects(classe?.materia ? classe.materia.split(",").map((m: string) => m.trim()).filter(Boolean) : []);
+    setShowDownloadPanel(false);
+    setConfirmedContent("");
+    setConfirmedTitle("");
+    setConfirmedSolutions(null);
+    setAdaptedVersions({ bes: null, dsa: null, h: null });
+    setAdaptedLoading(false);
+    setAdaptedError(false);
   }
 
   function getPreviewContent(): string {
