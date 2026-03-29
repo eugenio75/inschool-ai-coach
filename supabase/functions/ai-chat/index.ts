@@ -508,6 +508,12 @@ COSA NON FARE MAI:
 - Se lo studente usa il coach come unico sfogo per settimane senza apertura verso persone reali, introduci con delicatezza la dimensione delle relazioni reali`;
   }
 
+  // ── PENSIERI DI BENE — embedded in explanations ──
+  const pensierInstruction = vars.lang === "en"
+    ? `\n\nPENSIERI DI BENE: Approximately 1 in 5 explanations, weave a brief authentic thought naturally into your example. Not as a separate message — as part of the example itself. Never force it. If the concept does not lend itself naturally, skip it. Never preachy. Just true.`
+    : `\n\nPENSIERI DI BENE: Circa 1 spiegazione su 5, intreccia un breve pensiero autentico in modo naturale dentro il tuo esempio. Non come messaggio separato — come parte dell'esempio stesso. Non forzarlo mai. Se il concetto non si presta in modo naturale, saltalo. Mai predicatorio. Solo vero.`;
+  prompt += pensierInstruction;
+
   return prompt;
 }
 
