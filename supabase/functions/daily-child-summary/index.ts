@@ -214,11 +214,17 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Build data context for AI
-    const totalMinutes = sessions.reduce(
+    // Build data context for AI — use active study time from focus_sessions
+    // Also include guided_sessions.duration_seconds (corrected active time)
+    const focusMinutes = sessions.reduce(
       (a: number, s: any) => a + Math.round((s.duration_seconds || 0) / 60),
       0
     );
+    const guidedMinutes = (guidedSessions || []).reduce(
+      (a: number, s: any) => a + Math.round((s.duration_seconds || 0) / 60),
+      0
+    );
+    const totalMinutes = focusMinutes + guidedMinutes;
     const subjects = [
       ...new Set(
         sessions
