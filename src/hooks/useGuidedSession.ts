@@ -1185,6 +1185,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
   }, [messages, sending, steps, currentStep, totalSteps, sessionId, homework, userId, schoolLevel, homeworkId, isChild, familiarity, hintCountPerStep]);
 
   async function pauseSession() {
+    clearInactivityTimers();
     if (sessionId) {
       if (isChild) {
         await childApi("update-session", { sessionId, updates: { status: "paused", current_step: currentStep, updated_at: new Date().toISOString() } });
@@ -1200,6 +1201,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
   }
 
   async function abandonSession() {
+    clearInactivityTimers();
     if (sessionId) {
       if (isChild) {
         await childApi("update-session", { sessionId, updates: { status: "abandoned", updated_at: new Date().toISOString() } });
