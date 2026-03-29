@@ -865,19 +865,47 @@ ${L.interestsInstruction}`;
 
     if (taskContext) {
       const taskType = taskContext.taskType || "exercise";
+      const isExerciseType = taskType === "exercise" || taskType === "esercizio" || taskType === "esercizi";
       
       contextPrompt += `\n\n${L.taskContext}
 - ${L.title}: ${taskContext.title || L.notSpecified}
 - ${L.subject}: ${taskContext.subject || (lang === 'en' ? "not specified" : "non specificata")}
 - ${L.sourceType}: ${taskContext.sourceType || "manual"}
 - ${L.taskType}: ${taskType}
-- ${L.fullText}: ${taskContext.description || L.notAvailable}
 - ${L.keyConcepts}: ${taskContext.keyConcepts?.join(", ") || (lang === 'en' ? "not specified" : "non specificati")}
 - ${L.difficulty}: ${taskContext.difficulty || (lang === 'en' ? "not specified" : "non specificata")}/5`;
 
+      // Inject verbatim exercise text with clear labeling
+      if (taskContext.description) {
+        if (isExerciseType) {
+          contextPrompt += lang === 'en'
+            ? `\n\nORIGINAL EXERCISE TEXT (use with EXACT values — do NOT modify, round, paraphrase, or substitute ANY number, value, formula, unit of measurement, or data):\n---\n${taskContext.description}\n---`
+            : `\n\nTESTO ORIGINALE DELL'ESERCIZIO (da usare con i valori ESATTI — NON modificare, arrotondare, parafrasare o sostituire NESSUN numero, valore, formula, unità di misura o dato):\n---\n${taskContext.description}\n---`;
+        } else {
+          contextPrompt += `\n- ${L.fullText}: ${taskContext.description}`;
+        }
+      } else {
+        contextPrompt += `\n- ${L.fullText}: ${L.notAvailable}`;
+      }
+
+      // Add absolute exercise rule for exercise types
+      if (isExerciseType) {
+        contextPrompt += lang === 'en'
+          ? `\n\n═══════════════════════════════════════
+ABSOLUTE RULE FOR EXERCISES
+═══════════════════════════════════════
+NEVER modify, paraphrase, round, or substitute ANY number, value, formula, unit of measurement, or data present in the original exercise. Use EXCLUSIVELY the exact values provided in the exercise text. If you need to give an example, use exactly the same numbers from the assigned exercise. Any variation of the original data is a serious error.
+If the exercise text says "23.5 km", you MUST use "23.5 km" — never "24 km", "23 km", "about 24 km" or any other approximation.`
+          : `\n\n═══════════════════════════════════════
+REGOLA ASSOLUTA PER GLI ESERCIZI
+═══════════════════════════════════════
+Non modificare, parafrasare, arrotondare o sostituire MAI nessun numero, valore, formula, unità di misura o dato presente nell'esercizio originale. Usa esclusivamente i valori esatti forniti nel testo dell'esercizio. Se devi fare un esempio, usa esattamente gli stessi numeri dell'esercizio assegnato. Qualsiasi variazione dei dati originali è un errore grave.
+Se il testo dell'esercizio dice "23,5 km", tu DEVI usare "23,5 km" — mai "24 km", "23 km", "circa 24 km" o qualsiasi altra approssimazione.`;
+      }
+
       if (taskType === "study") {
         contextPrompt += getStudyTaskPrompt(lang);
-      } else {
+      } else if (!isExerciseType) {
         contextPrompt += lang === 'en'
           ? `\n\nIMPORTANT: The "FULL TEXT" field contains the literal transcription of the exercise from the photo. Use THIS text as the primary source to quote questions. The photo serves as visual confirmation.`
           : `\n\nIMPORTANTE: Il campo "TESTO COMPLETO" contiene la trascrizione letterale dell'esercizio dalla foto. Usa QUESTO testo come fonte primaria per citare le domande. La foto serve come conferma visiva.`;

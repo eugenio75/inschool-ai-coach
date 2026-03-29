@@ -46,13 +46,15 @@ serve(async (req) => {
 - Next steps: Guide reasoning step-by-step toward the solution
 - If formulas/rules are needed, ask the student if they know them before proceeding
 - Each step should be a question that makes them THINK about the next logical step
-- DO NOT ask "what do you already know" or "describe in your own words" — go straight to the problem`
+- DO NOT ask "what do you already know" or "describe in your own words" — go straight to the problem
+- ABSOLUTE RULE: NEVER modify, paraphrase, round, or substitute ANY number, value, formula, unit, or data from the original exercise. Use EXCLUSIVELY the exact values provided. Any variation is a serious error.`
         : `Questo è un ESERCIZIO da risolvere. Gli step devono guidare lo studente verso la SOLUZIONE:
 - Step 1: Identifica i dati e cosa chiede il problema
 - Step successivi: Guida il ragionamento passo-passo verso la soluzione
 - Se servono formule/regole, chiedi allo studente se le conosce prima di procedere
 - Ogni step deve essere una domanda che fa RAGIONARE sullo step logico successivo della risoluzione
-- NON chiedere "cosa sai già" o "descrivi con parole tue" — vai dritto al problema`;
+- NON chiedere "cosa sai già" o "descrivi con parole tue" — vai dritto al problema
+- REGOLA ASSOLUTA: Non modificare, parafrasare, arrotondare o sostituire MAI nessun numero, valore, formula, unità di misura o dato presente nell'esercizio originale. Usa esclusivamente i valori esatti forniti. Qualsiasi variazione dei dati originali è un errore grave.`;
     } else if (familiarity === "first_time") {
       taskInstructions = isEN
         ? `This is STUDYING a topic the student has NEVER STUDIED. It's the FIRST TIME.
