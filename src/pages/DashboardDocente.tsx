@@ -432,6 +432,24 @@ export default function DashboardDocente() {
           </div>
         </div>
 
+        {/* ━━━ SAMPLE BANNER ━━━ */}
+        {showSampleBanner && classi.some((c: any) => c.is_sample) && (
+          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-start gap-3">
+            <span className="text-lg shrink-0 mt-0.5">✨</span>
+            <div className="flex-1">
+              <p className="text-sm text-foreground leading-relaxed">
+                Abbiamo creato una classe di esempio per mostrarti come funziona InSchool. Esplorala liberamente — puoi modificarla o eliminarla quando vuoi.
+              </p>
+            </div>
+            <button
+              onClick={() => { setShowSampleBanner(false); localStorage.setItem("sample_banner_dismissed", "true"); }}
+              className="text-xs font-medium text-amber-700 dark:text-amber-300 hover:underline shrink-0 mt-0.5"
+            >
+              Ho capito
+            </button>
+          </div>
+        )}
+
         {/* ━━━ BLOCK 3 — KPI ━━━ */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
