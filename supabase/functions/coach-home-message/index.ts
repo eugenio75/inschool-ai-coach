@@ -69,6 +69,10 @@ serve(async (req) => {
     const showTip = Math.random() < 0.33;
     const hasNegativeEmotion = recentEmotions?.length > 0 &&
       recentEmotions.filter((e: any) => ["sad", "anxious", "frustrated", "angry"].includes(e.emotional_tone)).length >= 2;
+    const hasLowEnergy = recentEmotions?.length > 0 &&
+      recentEmotions.some((e: any) => e.energy_level === "low");
+    const hasLowTone = recentEmotions?.length > 0 &&
+      recentEmotions.some((e: any) => e.emotional_tone === "low");
     const shouldShowTip = showTip && !hasNegativeEmotion;
 
     const tipLibrary = isEN
@@ -120,6 +124,87 @@ Lingue (inglese, latino, greco, seconda lingua):
         ? `\n\nSTUDY TIP INSTRUCTION: At the END of your greeting (after the main message), add a brief study tip introduced naturally. Example: "Oh, a little trick for today: [tip]. Try it during your session!" Pick ONE tip from the library below that matches the student's pending subjects or recent sessions. The tip must feel spontaneous, like a friend sharing a secret — never mechanical. Max 2-3 sentences for the tip part.\n\n${tipLibrary}`
         : `\n\nISTRUZIONE TRUCCHETTO: Alla FINE del saluto (dopo il messaggio principale), aggiungi un breve trucchetto di studio introdotto in modo naturale. Esempio: "Ah, un piccolo trucco per oggi: [trucchetto]. Provaci durante la sessione!" Scegli UN trucchetto dalla libreria qui sotto che corrisponda alle materie o sessioni recenti dello studente. Il trucchetto deve sembrare spontaneo, come un amico che ti passa un segreto — mai meccanico. Max 2-3 frasi per la parte del trucchetto.\n\n${tipLibrary}`)
       : "";
+
+    // ── Pensieri di Bene — ~1/4 of the time, naturally embedded ──
+    const shouldShowPensiero = Math.random() < 0.25 && !hasNegativeEmotion && !hasLowEnergy && !hasLowTone;
+
+    const pensieroPoolIT: Record<string, string[]> = {
+      alunno: [
+        "Sbagliare vuol dire che stai imparando.",
+        "Ogni giorno sei un po' più grande di ieri.",
+        "Chiedere aiuto è una cosa coraggiosa.",
+        "Anche le cose difficili diventano facili se ci provi ogni giorno.",
+        "Non importa chi finisce prima. Importa che tu faccia del tuo meglio.",
+      ],
+      medie: [
+        "Non confrontarti con gli altri. Confrontati con chi eri ieri.",
+        "La fatica di oggi è la forza di domani.",
+        "La curiosità è il motore di tutto. Tienila accesa.",
+        "Chiedere aiuto non è debolezza — è intelligenza.",
+        "Il talento si allena. La gentilezza si sceglie.",
+      ],
+      superiori: [
+        "Non è importante cadere. È importante rialzarsi.",
+        "Il tuo valore non dipende dai tuoi voti.",
+        "Fare la cosa giusta quando è difficile — questo si chiama carattere.",
+        "Un piccolo passo ogni giorno porta lontano.",
+        "Sbagliare fa parte dell'imparare. Chi non sbaglia non sta provando abbastanza.",
+      ],
+      universitario: [
+        "La vera intelligenza è sapere quello che non sai.",
+        "Il successo misura i risultati. Il carattere misura come li hai ottenuti.",
+        "La conoscenza senza saggezza è potere senza direzione.",
+        "Impara a stare con il disagio — è lì che avviene la crescita vera.",
+        "Tratta ogni persona come se avesse qualcosa da insegnarti. Di solito ce l'ha.",
+      ],
+    };
+    const pensieroPoolEN: Record<string, string[]> = {
+      alunno: [
+        "Making mistakes means you're learning.",
+        "Every day you're a little bigger than yesterday.",
+        "Asking for help is a brave thing.",
+        "Even hard things become easy if you try every day.",
+        "It doesn't matter who finishes first. What matters is that you do your best.",
+      ],
+      medie: [
+        "Don't compare yourself to others. Compare yourself to who you were yesterday.",
+        "Today's effort is tomorrow's strength.",
+        "Curiosity drives everything. Keep it alive.",
+        "Asking for help isn't weakness — it's intelligence.",
+        "Talent is trained. Kindness is chosen.",
+      ],
+      superiori: [
+        "Falling isn't what matters. Getting back up is.",
+        "Your worth doesn't depend on your grades.",
+        "Doing the right thing when it's hard — that's called character.",
+        "A small step every day takes you far.",
+        "Making mistakes is part of learning. If you're not making mistakes, you're not trying hard enough.",
+      ],
+      universitario: [
+        "True intelligence is knowing what you don't know.",
+        "Success measures results. Character measures how you got them.",
+        "Knowledge without wisdom is power without direction.",
+        "Learn to sit with discomfort — that's where real growth happens.",
+        "Treat every person as if they have something to teach you. They usually do.",
+      ],
+    };
+
+    let pensieroInstruction = "";
+    if (shouldShowPensiero) {
+      const pool = isEN
+        ? (pensieroPoolEN[schoolLevel] || pensieroPoolEN.superiori)
+        : (pensieroPoolIT[schoolLevel] || pensieroPoolIT.superiori);
+      const dayIndex = new Date().getDate();
+      const thought = pool[dayIndex % pool.length];
+      const connectors = isEN
+        ? ["Oh, one thing:", "Before we start:", "Thought for today:"]
+        : ["Ah, una cosa:", "Prima di iniziare:", "Pensiero per oggi:"];
+      const connector = connectors[dayIndex % connectors.length];
+
+      pensieroInstruction = isEN
+        ? `\n\nPENSIERO DI BENE INSTRUCTION: At the very end of your message, add this thought as a natural final sentence — not a separate block, not a card. Introduce it with "${connector}" and then this thought: "${thought}". It must feel like a friend sharing a genuine reflection.`
+        : `\n\nISTRUZIONE PENSIERO DI BENE: Alla fine del tuo messaggio, aggiungi questo pensiero come ultima frase naturale — non un blocco separato, non una card. Introducilo con "${connector}" e poi questo pensiero: "${thought}". Deve sembrare un amico che condivide una riflessione genuina.`;
+    }
 
     const systemPrompt = isEN
       ? `You are ${userName}'s personal AI coach on InSchool. You are a trusted companion — you know ${userName}, remember their sessions, progress and difficulties. You're not a psychologist, you're an attentive friend who notices how the other person is doing.

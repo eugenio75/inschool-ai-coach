@@ -6,7 +6,7 @@ import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { GamificationKPI } from "@/components/GamificationBar";
 import { DailyMissions } from "@/components/GamificationBar";
 import { CoachPresence } from "@/components/CoachPresence";
-import { PensieroDiBene } from "@/components/PensieroDiBene";
+import { BadgeDisplay } from "@/components/BadgeDisplay";
 import { BadgeDisplay } from "@/components/BadgeDisplay";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 import { getTasks, getActiveChildProfileId, getChildProfile } from "@/lib/database";
@@ -139,10 +139,6 @@ export default function DashboardMedie() {
         )}
       </div></div>
 
-      {/* Pensiero di Bene */}
-      <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
-        <PensieroDiBene schoolLevel={profile?.school_level} />
-      </div></div>
       <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
         <BadgeDisplay variant="medie" />
       </div></div>

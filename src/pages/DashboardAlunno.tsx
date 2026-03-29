@@ -12,7 +12,7 @@ import { shouldShowCheckin } from "@/pages/EmotionalCheckin";
 import { getTasks, getActiveChildProfileId, getChildProfile, deleteTask } from "@/lib/database";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 import { CoachPresence } from "@/components/CoachPresence";
-import { PensieroDiBene } from "@/components/PensieroDiBene";
+import { BadgeDisplay } from "@/components/BadgeDisplay";
 import { BadgeDisplay } from "@/components/BadgeDisplay";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -131,10 +131,6 @@ const DashboardAlunno = () => {
         )}
       </div></div>
 
-      {/* Pensiero di Bene */}
-      <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
-        <PensieroDiBene schoolLevel={profile?.school_level} />
-      </div></div>
       <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
         <BadgeDisplay variant="elementari" />
       </div></div>

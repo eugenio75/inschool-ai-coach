@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { CoachPresence } from "@/components/CoachPresence";
-import { PensieroDiBene } from "@/components/PensieroDiBene";
+import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { motion } from "framer-motion";
 import {
@@ -304,7 +304,7 @@ export default function DashboardSuperiori() {
         </motion.div>
 
         <CoachPresence />
-        <div className="mt-3"><PensieroDiBene schoolLevel="superiori" /></div>
+        <BadgeDisplay variant="superiori" />
         <BadgeDisplay variant="superiori" />
         <TeacherAssignments />
 
