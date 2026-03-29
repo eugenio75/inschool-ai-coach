@@ -239,7 +239,7 @@ export default function DashboardDocente() {
             nome: "Classe di Esempio",
             materia: "Italiano",
             ordine_scolastico: "Scuola Secondaria I grado",
-            num_studenti: 15,
+            num_studenti: 1,
             is_sample: true,
           }).select().single();
 
