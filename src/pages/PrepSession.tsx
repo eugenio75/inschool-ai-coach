@@ -14,6 +14,7 @@ import { useLang } from "@/contexts/LangContext";
 import { getPrepLabelKey } from "@/lib/schoolTerms";
 import { findMaturitaTrack, type MaturitaTrack } from "@/lib/maturitaMapping";
 import UniversityStudyPlan, { type StudyPlanExam } from "@/components/UniversityStudyPlan";
+import { loadStudyPlan, saveStudyPlan as saveStudyPlanService } from "@/lib/studyPlanService";
 
 /* ── Types ── */
 interface ChatMessage { role: "user" | "assistant"; content: string; }
@@ -194,28 +195,15 @@ export default function PrepSession() {
           setIndirizzo(track.label);
         }
       }
-      if (prefData?.piano_studi && Array.isArray(prefData.piano_studi)) {
-        setStudyPlan(prefData.piano_studi);
-      }
+      const plan = await loadStudyPlan(profileId);
+      setStudyPlan(plan);
       setPlanLoaded(true);
     } catch { setPlanLoaded(true); }
   }
 
-  async function saveStudyPlan(newPlan: StudyPlanExam[]) {
+  function handleSaveStudyPlan(newPlan: StudyPlanExam[]) {
     setStudyPlan(newPlan);
-    if (!profile?.id) return;
-    try {
-      // Fetch-and-merge pattern
-      const { data: existing } = await supabase.from("user_preferences")
-        .select("data").eq("profile_id", profile.id).maybeSingle();
-      const existingData = (existing?.data as any) || {};
-      const merged = { ...existingData, piano_studi: newPlan };
-      await supabase.from("user_preferences").upsert({
-        profile_id: profile.id,
-        data: merged,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: "profile_id" });
-    } catch (err) { console.error("Failed to save study plan:", err); }
+    if (profile?.id) saveStudyPlanService(profile.id, newPlan);
   }
 
   async function loadWeaknessData(subj: string, profileId: string) {
