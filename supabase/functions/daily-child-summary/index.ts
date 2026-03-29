@@ -290,6 +290,13 @@ ${attentionSignals.length > 0 ? `Segnali di attenzione:\n${attentionSignals.map(
       has_attention_signal: attentionSignals.length > 0,
       attention_signals: attentionSignals,
       generated_at: new Date().toISOString(),
+      today_stats: {
+        study_minutes: totalMinutes,
+        focus_sessions: sessions.length,
+        guided_sessions: completedGuided,
+        total_sessions: sessions.length + completedGuided,
+        completed_tasks: (tasks || []).filter((t: any) => t.completed).length,
+      },
     };
 
     // Cache result
