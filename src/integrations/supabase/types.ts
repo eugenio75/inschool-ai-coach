@@ -1579,6 +1579,18 @@ export type Database = {
     }
     Functions: {
       generate_child_access_code: { Args: never; Returns: string }
+      get_student_classes: {
+        Args: { student_profile_id: string }
+        Returns: Json
+      }
+      join_class_by_code: {
+        Args: { code: string; student_profile_id: string }
+        Returns: Json
+      }
+      leave_class: {
+        Args: { enrollment_id: string; student_profile_id: string }
+        Returns: Json
+      }
       owns_child_profile: { Args: { profile_id: string }; Returns: boolean }
       validate_child_code: { Args: { code: string }; Returns: Json }
     }
