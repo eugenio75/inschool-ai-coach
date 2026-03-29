@@ -488,17 +488,32 @@ Return only the three versions with no commentary, separated exactly by ===BES==
       );
       const data = await res.json();
       const output = data.choices?.[0]?.message?.content?.trim() || "";
+      console.log("[Adapted] Raw AI response length:", output.length);
+      console.log("[Adapted] Contains markers:", {
+        BES: output.includes("===BES==="),
+        DSA: output.includes("===DSA==="),
+        H: output.includes("===H==="),
+      });
       if (!output) throw new Error("Empty response");
 
-      // Parse the three sections
-      const besMatch = output.split("===BES===");
-      const afterBes = besMatch.length > 1 ? besMatch.slice(1).join("===BES===") : output;
-      const dsaParts = afterBes.split("===DSA===");
+      // Parse the three sections — handle both formats:
+      // Format A: ===BES=== content ===DSA=== content ===H=== content
+      // Format B: content before first marker (preamble, ignored)
+      const besMatch = output.split(/===\s*BES\s*===/i);
+      const afterBes = besMatch.length > 1 ? besMatch.slice(1).join("===BES===") : "";
+      const dsaParts = afterBes.split(/===\s*DSA\s*===/i);
       const besContent = dsaParts[0]?.trim() || null;
       const afterDsa = dsaParts.length > 1 ? dsaParts.slice(1).join("===DSA===") : "";
-      const hParts = afterDsa.split("===H===");
+      const hParts = afterDsa.split(/===\s*H\s*===/i);
       const dsaContent = hParts[0]?.trim() || null;
       const hContent = hParts.length > 1 ? hParts.slice(1).join("===H===").trim() : null;
+
+      console.log("[Adapted] Parsed:", { bes: !!besContent, dsa: !!dsaContent, h: !!hContent });
+      
+      if (!besContent && !dsaContent && !hContent) {
+        console.warn("[Adapted] No sections parsed. Raw output preview:", output.substring(0, 500));
+        throw new Error("Could not parse adapted versions from AI response");
+      }
 
       setAdaptedVersions({ bes: besContent, dsa: dsaContent, h: hContent });
     } catch (err) {
