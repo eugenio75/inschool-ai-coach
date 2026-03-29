@@ -365,6 +365,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
           } else {
             setSessionEmotion(sess.emotional_checkin || "");
             setSessionId(sess.id);
+            setConversationId(sess.conversation_id || null);
             setCurrentStep(sess.current_step || 1);
             setTotalSteps(sess.total_steps || 0);
 
