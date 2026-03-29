@@ -14,6 +14,7 @@ import { isChildSession, clearChildSession, getChildSession } from "@/lib/childS
 import { CoachPresence } from "@/components/CoachPresence";
 import { BadgeDisplay } from "@/components/BadgeDisplay";
 import { supabase } from "@/integrations/supabase/client";
+import { JoinClassPrompt } from "@/components/JoinClassPrompt";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -108,8 +109,12 @@ const DashboardAlunno = () => {
                 <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-1">Ciao {name}!</h1>
                 <p className="text-sm sm:text-base text-muted-foreground">{tasks.length > 0 ? "" : "Non ci sono compiti per oggi."}</p>
               </div>
-              
             </div>
+            {profile?.id && (
+              <div className="mt-2">
+                <JoinClassPrompt profileId={profile.id} />
+              </div>
+            )}
           </motion.div>
 
           {/* KPI cards */}
