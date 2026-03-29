@@ -1,8 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   PenLine, Sparkles, Upload, ArrowLeft, Send, Download,
   FileText, Trash2, CalendarIcon, BookOpen, Eye, Archive, RotateCcw, Pencil,
+  Loader2, AlertCircle, CheckCircle2,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
