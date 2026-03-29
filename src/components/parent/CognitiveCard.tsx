@@ -70,7 +70,7 @@ export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItem
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...spring, delay: 0.15 }}
-      className="bg-card rounded-2xl border border-border p-6 shadow-soft"
+      className="bg-card rounded-2xl border border-border p-7 shadow-soft"
     >
       <button
         onClick={() => setExpanded(!expanded)}
@@ -144,18 +144,18 @@ export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItem
                   <p className="text-[13px] text-muted-foreground">Analizzo i dati...</p>
                 </div>
               ) : cognitiveInsights.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-5">
                   {cognitiveInsights.map((insight, i) => {
                     const IconComponent = iconMap[insight.icon] || Lightbulb;
                     const colors = categoryColors[insight.category] || categoryColors.metodo;
                     return (
-                      <div key={i} className="flex gap-3 py-1">
-                        <div className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0`}>
-                          <IconComponent className={`w-4 h-4 ${colors.text}`} />
+                      <div key={i} className="flex gap-3.5 py-1">
+                        <div className={`w-9 h-9 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0`}>
+                          <IconComponent className={`w-4.5 h-4.5 ${colors.text}`} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[15px] font-semibold text-foreground mb-0.5">{insight.title}</p>
-                          <p className="text-[13px] text-muted-foreground leading-[1.6]">{insight.text}</p>
+                          <p className="text-[16px] font-bold text-foreground mb-1">{insight.title}</p>
+                          <p className="text-sm text-muted-foreground leading-[1.7]">{insight.text}</p>
                         </div>
                       </div>
                     );
