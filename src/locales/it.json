@@ -1004,5 +1004,12 @@
   "plan_manage_link": "Gestisci piano di studi →",
   "profile_study_plan_title": "Il mio piano di studi",
   "profile_study_plan_desc": "Tieni traccia dei tuoi esami e monitora i tuoi progressi",
-  "pensiero_del_giorno": "Pensiero del giorno"
+  "pensiero_del_giorno": "Pensiero del giorno",
+  "parent_daily_summary_title": "La giornata di {{name}} — oggi",
+  "parent_daily_summary_unavailable": "Il riassunto di oggi non è disponibile al momento. Riprova tra poco.",
+  "parent_daily_summary_refresh": "Aggiorna",
+  "parent_label_focus": "Concentrazione",
+  "parent_label_streak": "Costanza",
+  "parent_label_focus_total": "Concentrazione",
+  "parent_label_autonomy": "Autonomia"
 }
