@@ -42,7 +42,6 @@ export const EmotionalCard = ({ alerts, onAlertRead, sessions, insights = [], in
 
   const totalEmotions = Object.entries(emotionCounts).filter(([k]) => k !== "non_registrata").reduce((a, [, v]) => a + v, 0);
 
-  // Filter emotional insights from AI
   const emotionalInsights = insights.filter(i => i.category === "emotivo");
 
   return (
@@ -50,21 +49,21 @@ export const EmotionalCard = ({ alerts, onAlertRead, sessions, insights = [], in
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...spring, delay: 0.1 }}
-      className="bg-card rounded-2xl border border-border p-5 shadow-soft"
+      className="bg-card rounded-2xl border border-border p-6 shadow-soft"
     >
       <button onClick={() => setExpanded(!expanded)} className="flex items-center justify-between w-full">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-destructive/10 flex items-center justify-center">
-            <Heart className="w-4 h-4 text-destructive" />
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-destructive/10 flex items-center justify-center">
+            <Heart className="w-4.5 h-4.5 text-destructive" />
           </div>
           <div className="text-left">
-            <h3 className="font-display font-semibold text-foreground text-sm">Benessere emotivo</h3>
+            <h3 className="font-display font-bold text-foreground text-lg">Benessere emotivo</h3>
             {unreadAlerts.length > 0 && (
-              <p className="text-[11px] text-destructive font-medium">{unreadAlerts.length} segnalazion{unreadAlerts.length === 1 ? "e" : "i"}</p>
+              <p className="text-[13px] text-destructive font-medium">{unreadAlerts.length} segnalazion{unreadAlerts.length === 1 ? "e" : "i"}</p>
             )}
           </div>
         </div>
-        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
+        <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
       </button>
 
       <AnimatePresence>
@@ -78,9 +77,9 @@ export const EmotionalCard = ({ alerts, onAlertRead, sessions, insights = [], in
           >
             {/* Emotion distribution */}
             {totalEmotions > 0 && (
-              <div className="mt-4 mb-3">
-                <p className="text-xs text-muted-foreground mb-2">Emozioni recenti</p>
-                <div className="flex gap-0.5 h-2 rounded-full overflow-hidden">
+              <div className="mt-5 mb-4">
+                <p className="text-[13px] text-muted-foreground mb-2.5">Emozioni recenti</p>
+                <div className="flex gap-0.5 h-2.5 rounded-full overflow-hidden">
                   {Object.entries(emotionCounts)
                     .filter(([k]) => k !== "non_registrata")
                     .sort(([, a], [, b]) => b - a)
@@ -91,7 +90,7 @@ export const EmotionalCard = ({ alerts, onAlertRead, sessions, insights = [], in
                       );
                     })}
                 </div>
-                <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-2.5">
                   {Object.entries(emotionCounts)
                     .filter(([k]) => k !== "non_registrata")
                     .sort(([, a], [, b]) => b - a)
@@ -99,9 +98,9 @@ export const EmotionalCard = ({ alerts, onAlertRead, sessions, insights = [], in
                     .map(([emotion, count]) => {
                       const info = emotionLabels[emotion] || { color: "bg-slate-300", label: emotion };
                       return (
-                        <div key={emotion} className="flex items-center gap-1">
-                          <div className={`w-2 h-2 rounded-full ${info.color}`} />
-                          <span className="text-[10px] text-muted-foreground">{info.label} ({count})</span>
+                        <div key={emotion} className="flex items-center gap-1.5">
+                          <div className={`w-2.5 h-2.5 rounded-full ${info.color}`} />
+                          <span className="text-xs text-muted-foreground">{info.label} ({count})</span>
                         </div>
                       );
                     })}
@@ -111,23 +110,23 @@ export const EmotionalCard = ({ alerts, onAlertRead, sessions, insights = [], in
 
             {/* Alerts */}
             {unreadAlerts.length > 0 && (
-              <div className="space-y-2 mt-3">
+              <div className="space-y-2.5 mt-4">
                 {unreadAlerts.map((alert) => {
                   const config = levelConfig[alert.alert_level] || levelConfig.low;
                   const IconComp = config.icon;
                   return (
-                    <div key={alert.id} className={`${config.bg} border ${config.border} rounded-xl p-3`}>
-                      <div className="flex gap-2">
-                        <IconComp className={`w-4 h-4 ${config.text} flex-shrink-0 mt-0.5`} />
+                    <div key={alert.id} className={`${config.bg} border ${config.border} rounded-xl p-4`}>
+                      <div className="flex gap-2.5">
+                        <IconComp className={`w-4.5 h-4.5 ${config.text} flex-shrink-0 mt-0.5`} />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <h4 className={`font-medium text-xs ${config.text}`}>{alert.title}</h4>
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${config.bg} ${config.text} font-medium`}>{config.label}</span>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className={`font-medium text-[13px] ${config.text}`}>{alert.title}</h4>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full ${config.bg} ${config.text} font-medium`}>{config.label}</span>
                           </div>
-                          <p className="text-xs text-foreground/70 leading-relaxed mb-2">{alert.message}</p>
+                          <p className="text-[13px] text-foreground/70 leading-[1.6] mb-2">{alert.message}</p>
                           <button
                             onClick={async () => { await markAlertRead(alert.id); onAlertRead(alert.id); }}
-                            className="text-[10px] text-muted-foreground hover:text-foreground font-medium"
+                            className="text-[11px] text-muted-foreground hover:text-foreground font-medium"
                           >
                             Ho letto ✓
                           </button>
@@ -139,39 +138,39 @@ export const EmotionalCard = ({ alerts, onAlertRead, sessions, insights = [], in
               </div>
             )}
 
-            {/* Emotional AI Insights / Consigli */}
-            <div className="border-t border-border pt-3 mt-3">
-              <div className="flex items-center gap-1.5 mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-destructive" />
-                <p className="text-xs font-medium text-foreground">Consigli per il benessere</p>
+            {/* Emotional AI Insights */}
+            <div className="border-t border-border pt-4 mt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-4 h-4 text-destructive" />
+                <p className="text-[13px] font-medium text-foreground">Consigli per il benessere</p>
               </div>
 
               {insightsLoading ? (
-                <div className="flex items-center gap-2 py-3 justify-center">
+                <div className="flex items-center gap-2 py-4 justify-center">
                   <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                  <p className="text-xs text-muted-foreground">Analizzo il benessere...</p>
+                  <p className="text-[13px] text-muted-foreground">Analizzo il benessere...</p>
                 </div>
               ) : emotionalInsights.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-4">
                   {emotionalInsights.map((insight, i) => (
-                    <div key={i} className="flex gap-2.5 py-1.5">
-                      <div className="w-7 h-7 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
-                        <Lightbulb className="w-3.5 h-3.5 text-destructive" />
+                    <div key={i} className="flex gap-3 py-1">
+                      <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                        <Lightbulb className="w-4 h-4 text-destructive" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-foreground mb-0.5">{insight.title}</p>
-                        <p className="text-[11px] text-muted-foreground leading-relaxed">{insight.text}</p>
+                        <p className="text-[15px] font-semibold text-foreground mb-0.5">{insight.title}</p>
+                        <p className="text-[13px] text-muted-foreground leading-[1.6]">{insight.text}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground text-center py-2">Nessun segnale particolare — tutto nella norma</p>
+                <p className="text-[13px] text-muted-foreground text-center py-3">Nessun segnale particolare — tutto nella norma</p>
               )}
             </div>
 
             {unreadAlerts.length === 0 && totalEmotions === 0 && emotionalInsights.length === 0 && (
-              <p className="text-xs text-muted-foreground mt-4 text-center py-2">Nessun segnale emotivo rilevato al momento</p>
+              <p className="text-[13px] text-muted-foreground mt-5 text-center py-3">Nessun segnale emotivo rilevato al momento</p>
             )}
           </motion.div>
         )}

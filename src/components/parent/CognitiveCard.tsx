@@ -45,7 +45,6 @@ export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItem
   const isMedie = schoolLevel === "medie";
   const isUniversitario = schoolLevel === "universitario";
 
-  // For medie: limit to 2 weak areas
   const weakBySubject: Record<string, number> = {};
   for (const c of weakConcepts) {
     weakBySubject[c.subject] = (weakBySubject[c.subject] || 0) + 1;
@@ -71,22 +70,22 @@ export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItem
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...spring, delay: 0.15 }}
-      className="bg-card rounded-2xl border border-border p-5 shadow-soft"
+      className="bg-card rounded-2xl border border-border p-6 shadow-soft"
     >
       <button
         onClick={() => setExpanded(!expanded)}
         className="flex items-center justify-between w-full"
       >
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Brain className="w-4 h-4 text-primary" />
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Brain className="w-4.5 h-4.5 text-primary" />
           </div>
           <div className="text-left">
-            <h3 className="font-display font-semibold text-foreground text-sm">{cardTitle}</h3>
-            <p className="text-[11px] text-muted-foreground">{cardSubtitle}</p>
+            <h3 className="font-display font-bold text-foreground text-lg">{cardTitle}</h3>
+            <p className="text-[13px] text-muted-foreground">{cardSubtitle}</p>
           </div>
         </div>
-        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
+        <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
       </button>
 
       <AnimatePresence>
@@ -98,18 +97,18 @@ export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItem
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            {/* Concept strength overview — hide percentages for medie */}
+            {/* Concept strength overview */}
             {memoryItems.length > 0 && (
-              <div className="mt-4 grid grid-cols-2 gap-2 mb-3">
-                <div className="bg-emerald-500/10 rounded-xl p-3 text-center">
-                  <p className="font-display font-bold text-foreground text-lg">{strongConcepts.length}</p>
-                  <p className="text-[10px] text-muted-foreground">
+              <div className="mt-5 grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-emerald-500/10 rounded-xl p-4 text-center">
+                  <p className="font-display font-bold text-foreground text-2xl">{strongConcepts.length}</p>
+                  <p className="text-[13px] text-muted-foreground mt-0.5">
                     {isMedie ? "Cose che sai bene" : "Concetti solidi"}
                   </p>
                 </div>
-                <div className={`${weakConcepts.length > 0 ? "bg-amber-500/10" : "bg-muted/50"} rounded-xl p-3 text-center`}>
-                  <p className="font-display font-bold text-foreground text-lg">{isMedie ? Math.min(2, Object.keys(weakBySubject).length) : weakConcepts.length}</p>
-                  <p className="text-[10px] text-muted-foreground">
+                <div className={`${weakConcepts.length > 0 ? "bg-amber-500/10" : "bg-muted/50"} rounded-xl p-4 text-center`}>
+                  <p className="font-display font-bold text-foreground text-2xl">{isMedie ? Math.min(2, Object.keys(weakBySubject).length) : weakConcepts.length}</p>
+                  <p className="text-[13px] text-muted-foreground mt-0.5">
                     {isMedie ? "Cose da ripassare" : "Da rafforzare"}
                   </p>
                 </div>
@@ -118,13 +117,13 @@ export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItem
 
             {/* Weak by subject */}
             {displayedWeakEntries.length > 0 && (
-              <div className="mb-3">
-                <p className="text-xs text-muted-foreground mb-2">
+              <div className="mb-4">
+                <p className="text-[13px] text-muted-foreground mb-2.5">
                   {isMedie ? "Dove puoi migliorare" : "Lacune per materia"}
                 </p>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {displayedWeakEntries.map(([subject, count]) => (
-                    <span key={subject} className="text-[11px] px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium">
+                    <span key={subject} className="text-[13px] px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium">
                       {subject}{!isMedie ? ` (${count})` : ""}
                     </span>
                   ))}
@@ -133,37 +132,37 @@ export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItem
             )}
 
             {/* AI Insights */}
-            <div className="border-t border-border pt-3 mt-3">
-              <div className="flex items-center gap-1.5 mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-primary" />
-                <p className="text-xs font-medium text-foreground">{insightsLabel}</p>
+            <div className="border-t border-border pt-4 mt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <p className="text-[13px] font-medium text-foreground">{insightsLabel}</p>
               </div>
 
               {insightsLoading ? (
-                <div className="flex items-center gap-2 py-4 justify-center">
+                <div className="flex items-center gap-2 py-5 justify-center">
                   <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                  <p className="text-xs text-muted-foreground">Analizzo i dati...</p>
+                  <p className="text-[13px] text-muted-foreground">Analizzo i dati...</p>
                 </div>
               ) : cognitiveInsights.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-4">
                   {cognitiveInsights.map((insight, i) => {
                     const IconComponent = iconMap[insight.icon] || Lightbulb;
                     const colors = categoryColors[insight.category] || categoryColors.metodo;
                     return (
-                      <div key={i} className="flex gap-2.5 py-2">
-                        <div className={`w-7 h-7 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0`}>
-                          <IconComponent className={`w-3.5 h-3.5 ${colors.text}`} />
+                      <div key={i} className="flex gap-3 py-1">
+                        <div className={`w-8 h-8 rounded-lg ${colors.bg} flex items-center justify-center flex-shrink-0`}>
+                          <IconComponent className={`w-4 h-4 ${colors.text}`} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-foreground mb-0.5">{insight.title}</p>
-                          <p className="text-[11px] text-muted-foreground leading-relaxed">{insight.text}</p>
+                          <p className="text-[15px] font-semibold text-foreground mb-0.5">{insight.title}</p>
+                          <p className="text-[13px] text-muted-foreground leading-[1.6]">{insight.text}</p>
                         </div>
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground text-center py-3">Nessun consiglio disponibile al momento</p>
+                <p className="text-[13px] text-muted-foreground text-center py-4">Nessun consiglio disponibile al momento</p>
               )}
             </div>
           </motion.div>

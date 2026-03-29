@@ -24,69 +24,67 @@ export const ProgressCard = ({ totalMinutes, totalSessions, gamification, school
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...spring, delay: 0.05 }}
-      className="bg-card rounded-2xl border border-border p-5 shadow-soft"
+      className="bg-card rounded-2xl border border-border p-6 shadow-soft"
     >
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-          <TrendingUp className="w-4 h-4 text-primary" />
+      <div className="flex items-center gap-2.5 mb-5">
+        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+          <TrendingUp className="w-4.5 h-4.5 text-primary" />
         </div>
-        <h3 className="font-display font-semibold text-foreground text-sm">{title}</h3>
+        <h3 className="font-display font-bold text-foreground text-lg">{title}</h3>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        {/* Show autonomy for superiori+, hide for medie */}
+      <div className="grid grid-cols-3 gap-3 mb-5">
         {schoolLevel !== "medie" && (
           <div className="text-center">
-            <div className="flex justify-center mb-1.5">
-              <ProgressSun progress={autonomyPercent / 100} size={36} />
+            <div className="flex justify-center mb-2">
+              <ProgressSun progress={autonomyPercent / 100} size={40} />
             </div>
-            <p className="font-display font-bold text-foreground text-sm">{autonomyPercent}%</p>
-            <p className="text-[10px] text-muted-foreground">Autonomia</p>
+            <p className="font-display font-bold text-foreground text-2xl">{autonomyPercent}%</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5">Autonomia</p>
           </div>
         )}
         <div className="text-center">
-          <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center mx-auto mb-1.5">
-            <Clock className="w-4 h-4 text-primary" />
+          <div className="w-10 h-10 rounded-xl bg-muted/60 flex items-center justify-center mx-auto mb-2">
+            <Clock className="w-5 h-5 text-primary" />
           </div>
-          <p className="font-display font-bold text-foreground text-sm">{totalMinutes}m</p>
-          <p className="text-[10px] text-muted-foreground">Concentrazione</p>
+          <p className="font-display font-bold text-foreground text-2xl">{totalMinutes}m</p>
+          <p className="text-[13px] text-muted-foreground mt-0.5">Concentrazione</p>
         </div>
         <div className="text-center">
-          <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center mx-auto mb-1.5">
-            <Brain className="w-4 h-4 text-primary" />
+          <div className="w-10 h-10 rounded-xl bg-muted/60 flex items-center justify-center mx-auto mb-2">
+            <Brain className="w-5 h-5 text-primary" />
           </div>
-          <p className="font-display font-bold text-foreground text-sm">{totalSessions}</p>
-          <p className="text-[10px] text-muted-foreground">Sessioni</p>
+          <p className="font-display font-bold text-foreground text-2xl">{totalSessions}</p>
+          <p className="text-[13px] text-muted-foreground mt-0.5">Sessioni</p>
         </div>
-        {/* For medie: show streak instead of autonomy */}
         {schoolLevel === "medie" && gamification && (
           <div className="text-center">
-            <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center mx-auto mb-1.5">
-              <Flame className="w-4 h-4 text-primary" />
+            <div className="w-10 h-10 rounded-xl bg-muted/60 flex items-center justify-center mx-auto mb-2">
+              <Flame className="w-5 h-5 text-primary" />
             </div>
-            <p className="font-display font-bold text-foreground text-sm">{gamification.streak || 0}</p>
-            <p className="text-[10px] text-muted-foreground">Giorni di fila</p>
+            <p className="font-display font-bold text-foreground text-2xl">{gamification.streak || 0}</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5">Giorni di fila</p>
           </div>
         )}
       </div>
 
       {gamification && schoolLevel !== "medie" && (
-        <div className="border-t border-border pt-3">
+        <div className="border-t border-border pt-4">
           <div className="grid grid-cols-3 gap-3 text-center">
-            <div className="flex flex-col items-center gap-1">
-              <Target className="w-3.5 h-3.5 text-primary" />
-              <p className="font-display font-bold text-foreground text-sm">{gamification.focus_points || 0}</p>
-              <p className="text-[10px] text-muted-foreground">Concentrazione</p>
+            <div className="flex flex-col items-center gap-1.5">
+              <Target className="w-4 h-4 text-primary" />
+              <p className="font-display font-bold text-foreground text-2xl">{gamification.focus_points || 0}</p>
+              <p className="text-[13px] text-muted-foreground">Concentrazione</p>
             </div>
-            <div className="flex flex-col items-center gap-1">
-              <Zap className="w-3.5 h-3.5 text-primary" />
-              <p className="font-display font-bold text-foreground text-sm">{gamification.autonomy_points || 0}</p>
-              <p className="text-[10px] text-muted-foreground">Autonomia</p>
+            <div className="flex flex-col items-center gap-1.5">
+              <Zap className="w-4 h-4 text-primary" />
+              <p className="font-display font-bold text-foreground text-2xl">{gamification.autonomy_points || 0}</p>
+              <p className="text-[13px] text-muted-foreground">Autonomia</p>
             </div>
-            <div className="flex flex-col items-center gap-1">
-              <Flame className="w-3.5 h-3.5 text-primary" />
-              <p className="font-display font-bold text-foreground text-sm">{gamification.streak || 0}</p>
-              <p className="text-[10px] text-muted-foreground">Costanza</p>
+            <div className="flex flex-col items-center gap-1.5">
+              <Flame className="w-4 h-4 text-primary" />
+              <p className="font-display font-bold text-foreground text-2xl">{gamification.streak || 0}</p>
+              <p className="text-[13px] text-muted-foreground">Costanza</p>
             </div>
           </div>
         </div>
