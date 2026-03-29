@@ -154,8 +154,8 @@ export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItem
                           <IconComponent className={`w-4.5 h-4.5 ${colors.text}`} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[16px] font-bold text-foreground mb-1">{insight.title}</p>
-                          <p className="text-sm text-muted-foreground leading-[1.7]">{insight.text}</p>
+                          <p className="text-base font-semibold text-foreground mb-1">{insight.title}</p>
+                          <p className="text-[15px] text-muted-foreground leading-[1.75]">{insight.text}</p>
                         </div>
                       </div>
                     );
