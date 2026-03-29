@@ -613,6 +613,90 @@ Return only the three versions with no commentary, separated exactly by ===BES==
       ? materials.filter(m => m.status === "archived")
       : materials.filter(m => m.status === materialFilter);
 
+  // --- Download panel (after confirmation) ---
+  if (showDownloadPanel) {
+    const adaptedButtons: { key: "bes" | "dsa" | "h"; version: "BES" | "DSA" | "H"; emoji: string; color: string; label: string }[] = [
+      { key: "bes", version: "BES", emoji: "🟡", color: "text-amber-600", label: "Scarica — Versione BES" },
+      { key: "dsa", version: "DSA", emoji: "🔵", color: "text-blue-600", label: "Scarica — Versione DSA" },
+      { key: "h", version: "H", emoji: "🟢", color: "text-emerald-600", label: "Scarica — Versione H" },
+    ];
+    return (
+      <div className="space-y-4">
+        <div className="bg-card border border-border rounded-2xl p-5 space-y-5">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+            <p className="text-sm font-semibold text-foreground">Materiale confermato</p>
+          </div>
+          <p className="text-xs text-muted-foreground">{confirmedTitle}</p>
+
+          {/* Download buttons */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Scarica versioni</p>
+
+            {/* Standard */}
+            <Button
+              variant="outline"
+              className="w-full justify-start rounded-xl"
+              onClick={() => exportToPdf(confirmedTitle, confirmedContent, activityType)}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              📄 Scarica — Versione standard
+            </Button>
+
+            {/* BES / DSA / H */}
+            {adaptedButtons.map(({ key, version, emoji, label }) => {
+              const content = adaptedVersions[key];
+              const isLoading = adaptedLoading && !content;
+              return (
+                <Button
+                  key={key}
+                  variant="outline"
+                  className="w-full justify-start rounded-xl"
+                  disabled={isLoading || (adaptedError && !content)}
+                  onClick={() => content && exportAdaptedPdf(confirmedTitle, content, activityType, version)}
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4 mr-2" />
+                  )}
+                  {emoji} {isLoading ? "Generazione in corso..." : label}
+                </Button>
+              );
+            })}
+
+            {/* Teacher solutions */}
+            {confirmedSolutions && (
+              <Button
+                variant="outline"
+                className="w-full justify-start rounded-xl border-emerald-200 dark:border-emerald-800"
+                onClick={() => exportSolutionsPdf(confirmedTitle, confirmedSolutions)}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                🔒 Scarica — Soluzioni docente
+              </Button>
+            )}
+
+            {/* Error + retry */}
+            {adaptedError && (
+              <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-xl">
+                <AlertCircle className="w-4 h-4 text-destructive shrink-0" />
+                <p className="text-xs text-destructive flex-1">Errore nella generazione delle versioni adattate.</p>
+                <Button size="sm" variant="outline" className="shrink-0 rounded-lg" onClick={() => generateAdaptedVersions(confirmedContent)}>
+                  <RotateCcw className="w-3.5 h-3.5 mr-1" /> Riprova
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <Button variant="ghost" className="w-full rounded-xl" onClick={resetForm}>
+            <ArrowLeft className="w-4 h-4 mr-1" /> Torna ai materiali
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // --- Card selector ---
   if (mode === null) {
     return (
