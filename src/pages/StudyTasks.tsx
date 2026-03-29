@@ -7,6 +7,9 @@ import { TaskCard } from "@/components/TaskCard";
 import { CoachPresence } from "@/components/CoachPresence";
 import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { getTasks, deleteTask } from "@/lib/database";
+import { supabase } from "@/integrations/supabase/client";
+import { isChildSession, getChildSession } from "@/lib/childSession";
+import { useAuth } from "@/hooks/useAuth";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -27,18 +30,48 @@ const subjectBgColors: Record<string, string> = {
 
 const StudyTasks = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  // Map homework_id → session status ("paused" | "active")
+  const [sessionStatuses, setSessionStatuses] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const load = async () => {
       const dbTasks = await getTasks();
       setTasks(dbTasks);
+
+      // Fetch all paused/active sessions in one query
+      try {
+        const isChild = isChildSession();
+        const userId = isChild ? getChildSession()?.profileId : user?.id;
+        if (userId) {
+          const { data: sessions } = await supabase
+            .from("guided_sessions")
+            .select("homework_id, status")
+            .eq("user_id", userId)
+            .in("status", ["paused", "active"])
+            .order("updated_at", { ascending: false });
+
+          if (sessions) {
+            const map: Record<string, string> = {};
+            for (const s of sessions) {
+              if (s.homework_id && !map[s.homework_id]) {
+                map[s.homework_id] = s.status!;
+              }
+            }
+            setSessionStatuses(map);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch session statuses:", err);
+      }
+
       setLoading(false);
     };
     load();
-  }, []);
+  }, [user]);
 
   const groupedBySubject = useMemo(() => {
     const groups: Record<string, any[]> = {};
