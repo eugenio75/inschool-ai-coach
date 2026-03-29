@@ -21,9 +21,20 @@ export const DailySummaryCard = ({ childProfileId, childName, sessions, tasks, m
   const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  const [guidedSessions, setGuidedSessions] = useState<any[]>([]);
+
   const today = new Date().toISOString().split("T")[0];
-  const todaySessions = sessions.filter(s => s.completed_at?.startsWith(today));
-  const todayMinutes = todaySessions.reduce((a: number, s: any) => a + Math.round((s.duration_seconds || 0) / 60), 0);
+  const todayFocusSessions = sessions.filter(s => s.completed_at?.startsWith(today));
+  const todayGuidedSessions = guidedSessions.filter(s => 
+    s.started_at?.startsWith(today) && s.status === "completed"
+  );
+  
+  // Combine: focus_sessions minutes + guided_sessions minutes
+  const focusMinutes = todayFocusSessions.reduce((a: number, s: any) => a + Math.round((s.duration_seconds || 0) / 60), 0);
+  const guidedMinutes = todayGuidedSessions.reduce((a: number, s: any) => a + Math.round((s.duration_seconds || 0) / 60), 0);
+  const todayMinutes = focusMinutes + guidedMinutes;
+  const todaySessionCount = todayFocusSessions.length + todayGuidedSessions.length;
+  
   const todayTasks = tasks.filter(t => t.completed && t.updated_at?.startsWith(today));
   const todayMissions = missions.filter(m => m.mission_date === today);
   const completedMissions = todayMissions.filter(m => m.completed);
@@ -50,7 +61,19 @@ export const DailySummaryCard = ({ childProfileId, childName, sessions, tasks, m
     }
   };
 
+  // Fetch guided sessions for today
   useEffect(() => {
+    const fetchGuidedSessions = async () => {
+      const todayDate = new Date().toISOString().split("T")[0];
+      const { data } = await supabase
+        .from("guided_sessions")
+        .select("id, status, started_at, duration_seconds")
+        .eq("user_id", childProfileId)
+        .gte("started_at", `${todayDate}T00:00:00`)
+        .lte("started_at", `${todayDate}T23:59:59`);
+      setGuidedSessions(data || []);
+    };
+    fetchGuidedSessions();
     fetchSummary();
   }, [childProfileId]);
 
@@ -103,7 +126,7 @@ export const DailySummaryCard = ({ childProfileId, childName, sessions, tasks, m
         </div>
         <div className="bg-muted/50 rounded-xl p-3 text-center">
           <BookOpen className="w-4 h-4 text-primary mx-auto mb-1" />
-          <p className="font-display font-bold text-foreground text-sm">{todaySessions.length}</p>
+          <p className="font-display font-bold text-foreground text-sm">{todaySessionCount}</p>
           <p className="text-[10px] text-muted-foreground">Sessioni</p>
         </div>
         <div className="bg-muted/50 rounded-xl p-3 text-center">
