@@ -105,6 +105,15 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   // Saved materials
   const [materialFilter, setMaterialFilter] = useState("tutti");
 
+  // Adapted versions (BES/DSA/H) state
+  const [showDownloadPanel, setShowDownloadPanel] = useState(false);
+  const [confirmedContent, setConfirmedContent] = useState<string>("");
+  const [confirmedTitle, setConfirmedTitle] = useState<string>("");
+  const [confirmedSolutions, setConfirmedSolutions] = useState<string | null>(null);
+  const [adaptedVersions, setAdaptedVersions] = useState<{ bes: string | null; dsa: string | null; h: string | null }>({ bes: null, dsa: null, h: null });
+  const [adaptedLoading, setAdaptedLoading] = useState(false);
+  const [adaptedError, setAdaptedError] = useState(false);
+
   function resetForm() {
     setMode(null);
     setActivityType("compito");
