@@ -376,12 +376,33 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
               .order("step_number", { ascending: true });
             setSteps(savedSteps || []);
 
-            const stepInfo = savedSteps?.[sess.current_step! - 1];
-            const stepContext = stepInfo ? `\n\n${hw.title} — Step ${sess.current_step} di ${sess.total_steps}:\n${stepInfo.step_text}` : "";
-            const resumeMsg = sess.last_difficulty
-              ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}.${stepContext}`
-              : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
-            setMessages([{ role: "assistant", content: resumeMsg }]);
+            // Try to restore conversation messages from incremental save
+            let restoredMessages = false;
+            if (sess.conversation_id) {
+              const { data: convData } = await supabase
+                .from("conversation_sessions")
+                .select("messaggi")
+                .eq("id", sess.conversation_id)
+                .single();
+              const savedMsgs = convData?.messaggi;
+              if (Array.isArray(savedMsgs) && savedMsgs.length > 0) {
+                const chatMsgs: ChatMsg[] = (savedMsgs as any[]).map((m: any) => ({
+                  role: m.role === "coach" || m.role === "assistant" ? "assistant" as const : "user" as const,
+                  content: m.text || m.content || "",
+                }));
+                setMessages(chatMsgs);
+                restoredMessages = true;
+              }
+            }
+
+            if (!restoredMessages) {
+              const stepInfo = savedSteps?.[sess.current_step! - 1];
+              const stepContext = stepInfo ? `\n\n${hw.title} — Step ${sess.current_step} di ${sess.total_steps}:\n${stepInfo.step_text}` : "";
+              const resumeMsg = sess.last_difficulty
+                ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}.${stepContext}`
+                : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
+              setMessages([{ role: "assistant", content: resumeMsg }]);
+            }
             setSetupDone(true);
           }
         } else if (hw.completed) {
