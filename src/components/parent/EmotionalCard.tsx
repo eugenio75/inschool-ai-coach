@@ -49,7 +49,7 @@ export const EmotionalCard = ({ alerts, onAlertRead, sessions, insights = [], in
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...spring, delay: 0.1 }}
-      className="bg-card rounded-2xl border border-border p-6 shadow-soft"
+      className="bg-card rounded-2xl border border-border p-7 shadow-soft"
     >
       <button onClick={() => setExpanded(!expanded)} className="flex items-center justify-between w-full">
         <div className="flex items-center gap-2.5">
@@ -78,7 +78,7 @@ export const EmotionalCard = ({ alerts, onAlertRead, sessions, insights = [], in
             {/* Emotion distribution */}
             {totalEmotions > 0 && (
               <div className="mt-5 mb-4">
-                <p className="text-[13px] text-muted-foreground mb-2.5">Emozioni recenti</p>
+                <p className="text-[13px] font-medium text-muted-foreground mb-2.5">Emozioni recenti</p>
                 <div className="flex gap-0.5 h-2.5 rounded-full overflow-hidden">
                   {Object.entries(emotionCounts)
                     .filter(([k]) => k !== "non_registrata")
@@ -100,7 +100,7 @@ export const EmotionalCard = ({ alerts, onAlertRead, sessions, insights = [], in
                       return (
                         <div key={emotion} className="flex items-center gap-1.5">
                           <div className={`w-2.5 h-2.5 rounded-full ${info.color}`} />
-                          <span className="text-xs text-muted-foreground">{info.label} ({count})</span>
+                          <span className="text-[12px] text-muted-foreground">{info.label} ({count})</span>
                         </div>
                       );
                     })}
@@ -151,15 +151,15 @@ export const EmotionalCard = ({ alerts, onAlertRead, sessions, insights = [], in
                   <p className="text-[13px] text-muted-foreground">Analizzo il benessere...</p>
                 </div>
               ) : emotionalInsights.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-5">
                   {emotionalInsights.map((insight, i) => (
-                    <div key={i} className="flex gap-3 py-1">
-                      <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
-                        <Lightbulb className="w-4 h-4 text-destructive" />
+                    <div key={i} className="flex gap-3.5 py-1">
+                      <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                        <Lightbulb className="w-4.5 h-4.5 text-destructive" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[15px] font-semibold text-foreground mb-0.5">{insight.title}</p>
-                        <p className="text-[13px] text-muted-foreground leading-[1.6]">{insight.text}</p>
+                        <p className="text-[16px] font-bold text-foreground mb-1">{insight.title}</p>
+                        <p className="text-sm text-muted-foreground leading-[1.7]">{insight.text}</p>
                       </div>
                     </div>
                   ))}
