@@ -4,10 +4,12 @@ import "./App.css";
 import "./index.css";
 import "./lib/i18nConfig";
 
-// Initialize theme before render to prevent flash
+// Initialize theme — default to light, only dark if explicitly chosen
 const savedTheme = localStorage.getItem("inschool-theme");
-if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+if (savedTheme === "dark") {
   document.documentElement.classList.add("dark");
+} else {
+  document.documentElement.classList.remove("dark");
 }
 
 createRoot(document.getElementById("root")!).render(<App />);

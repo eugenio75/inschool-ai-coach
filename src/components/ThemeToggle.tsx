@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 export function ThemeToggle() {
   const [dark, setDark] = useState(() => {
     if (typeof window === "undefined") return false;
-    return localStorage.getItem("inschool-theme") === "dark" ||
-      (!localStorage.getItem("inschool-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    return localStorage.getItem("inschool-theme") === "dark";
   });
 
   useEffect(() => {

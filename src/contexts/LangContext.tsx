@@ -1,11 +1,11 @@
 import { createContext, useContext, useCallback, useState, useEffect, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import "@/lib/i18nConfig";
-import { supabase } from "@/integrations/supabase/client";
+import { translateBundle, getCached, setCache } from "@/lib/translateService";
 
 export type Lang = "it" | "en" | "es" | "fr" | "de" | "ar";
 
-const SUPPORTED_STATIC = ["it", "en"];
+const SUPPORTED_STATIC: Lang[] = ["it", "en"];
 
 interface LangContextType {
   lang: Lang;
@@ -15,101 +15,6 @@ interface LangContextType {
 }
 
 const LangContext = createContext<LangContextType | null>(null);
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-
-// LocalStorage cache for fast load
-function getCachedBundle(lang: string): Record<string, string> | null {
-  try {
-    const raw = localStorage.getItem(`inschool_i18n_${lang}`);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function isFreshBundle(bundle: Record<string, string> | null) {
-  if (!bundle) return false;
-  const updatedAt = bundle.__meta_updatedAt;
-  if (!updatedAt) return true;
-  return Date.now() - Number(updatedAt) < CACHE_TTL_MS;
-}
-
-function setCachedBundle(lang: string, bundle: Record<string, string>) {
-  try {
-    localStorage.setItem(
-      `inschool_i18n_${lang}`,
-      JSON.stringify({ ...bundle, __meta_updatedAt: Date.now().toString() })
-    );
-  } catch {}
-}
-
-async function loadFromSupabase(lang: string): Promise<Record<string, string> | null> {
-  try {
-    const { data, error } = await supabase
-      .from("translation_cache")
-      .select("key, value")
-      .eq("lang", lang);
-    if (error || !data?.length) return null;
-    const bundle: Record<string, string> = {};
-    data.forEach((row: any) => { bundle[row.key] = row.value; });
-    return bundle;
-  } catch {
-    return null;
-  }
-}
-
-async function saveToSupabase(lang: string, bundle: Record<string, string>) {
-  try {
-    const rows = Object.entries(bundle).map(([key, value]) => ({
-      lang, key, value, updated_at: new Date().toISOString(),
-    }));
-    // Upsert in batches of 100
-    for (let i = 0; i < rows.length; i += 100) {
-      await supabase.from("translation_cache").upsert(rows.slice(i, i + 100), {
-        onConflict: "lang,key",
-      });
-    }
-  } catch (err) {
-    console.debug("[i18n] Failed to save to Supabase:", err);
-  }
-}
-
-async function translateViaEdgeFunction(
-  texts: string[],
-  keys: string[],
-  targetLang: string
-): Promise<string[]> {
-  const chunkSize = 80;
-  const allTranslations: string[] = [];
-
-  for (let i = 0; i < texts.length; i += chunkSize) {
-    const chunkTexts = texts.slice(i, i + chunkSize);
-    const chunkKeys = keys.slice(i, i + chunkSize);
-
-    try {
-      const { data, error } = await supabase.functions.invoke("translate-batch", {
-        body: {
-          texts: chunkTexts,
-          keys: chunkKeys,
-          targetLang,
-          sourceLang: "it",
-        },
-      });
-
-      if (error) {
-        console.warn("[i18n] Translation API error:", error.message);
-        allTranslations.push(...chunkTexts);
-        continue;
-      }
-
-      allTranslations.push(...(data.translations || chunkTexts));
-    } catch {
-      allTranslations.push(...chunkTexts);
-    }
-  }
-
-  return allTranslations;
-}
 
 export function LangProvider({ children }: { children: ReactNode }) {
   const { t: i18nT, i18n } = useTranslation();
@@ -133,61 +38,43 @@ export function LangProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // For other languages: cache → Supabase → AI translation
+    // For dynamic languages, base on Italian
     i18n.changeLanguage("it");
 
-    const cached = getCachedBundle(currentLang);
-    if (cached && Object.keys(cached).filter((key) => !key.startsWith("__meta_")).length > 10 && isFreshBundle(cached)) {
+    // Check cache first
+    const cached = getCached(currentLang);
+    if (cached && Object.keys(cached).length > 10) {
       setDynamicBundle(cached);
       return;
     }
 
+    // Translate via OpenAI
     const itBundle = i18n.getResourceBundle("it", "translation") as Record<string, string>;
     if (!itBundle) return;
 
-    const loadTranslations = async () => {
+    const doTranslate = async () => {
       setTranslating(true);
+      try {
+        const keys = Object.keys(itBundle);
+        const texts = keys.map((k) => itBundle[k]);
+        const translated = await translateBundle(texts, currentLang);
 
-      // Try Supabase first
-      const supabaseBundle = await loadFromSupabase(currentLang);
-      if (supabaseBundle && Object.keys(supabaseBundle).length > 10) {
-        setDynamicBundle(supabaseBundle);
-        setCachedBundle(currentLang, supabaseBundle);
+        const result: Record<string, string> = {};
+        keys.forEach((key, idx) => {
+          result[key] = translated[idx] || itBundle[key];
+        });
+
+        setDynamicBundle(result);
+        setCache(currentLang, result);
+      } catch {
+        // Fallback to Italian
+        setDynamicBundle({});
+      } finally {
         setTranslating(false);
-
-        // Check for new keys
-        const itKeys = Object.keys(itBundle);
-        const missingKeys = itKeys.filter((k) => !supabaseBundle[k]);
-        if (missingKeys.length > 0) {
-          const missingTexts = missingKeys.map((k) => itBundle[k]);
-          const translated = await translateViaEdgeFunction(missingTexts, missingKeys, currentLang);
-          const newEntries: Record<string, string> = {};
-          missingKeys.forEach((k, i) => { newEntries[k] = translated[i]; });
-          const fullBundle = { ...supabaseBundle, ...newEntries };
-          setDynamicBundle(fullBundle);
-          setCachedBundle(currentLang, fullBundle);
-          saveToSupabase(currentLang, newEntries);
-        }
-        return;
       }
-
-      // Full translation via AI
-      const keys = Object.keys(itBundle);
-      const texts = keys.map((k) => itBundle[k]);
-      const translated = await translateViaEdgeFunction(texts, keys, currentLang);
-
-      const result: Record<string, string> = {};
-      keys.forEach((key, idx) => {
-        result[key] = translated[idx] || itBundle[key];
-      });
-
-      setDynamicBundle(result);
-      setCachedBundle(currentLang, result);
-      saveToSupabase(currentLang, result);
-      setTranslating(false);
     };
 
-    loadTranslations().catch(() => setTranslating(false));
+    doTranslate();
   }, [currentLang, i18n]);
 
   const setLang = useCallback((newLang: Lang) => {
