@@ -42,7 +42,7 @@ function SessionEntryCardsMedie({ hasTasks }: { hasTasks: boolean }) {
       desc: t("prep_desc"),
       color: "bg-amber-50 dark:bg-amber-900/20",
       iconColor: "text-amber-600 dark:text-amber-400",
-      action: () => navigate("/us?type=prep"),
+      action: () => navigate("/prep"),
     },
   ];
 

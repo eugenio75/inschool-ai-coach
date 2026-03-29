@@ -79,7 +79,7 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
       icon: GraduationCap,
       color: "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400",
       iconColor: "text-amber-600 dark:text-amber-400",
-      action: () => navigate("/us?type=prep"),
+      action: () => navigate("/prep"),
       disabled: false,
       extraAction: null,
       showFor: "advanced",
