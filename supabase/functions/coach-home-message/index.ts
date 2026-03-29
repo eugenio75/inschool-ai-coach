@@ -65,6 +65,62 @@ serve(async (req) => {
         : `ERRORI RECENTI NON RISOLTI: ${recentErrors.length} errori in ${subjects.join(", ")}. Tipi: ${errorTypes.join(", ")}. Se opportuno, suggerisci un ripasso mirato.`;
     }
 
+    // ── Study tips ("trucchetti") — ~1/3 of the time ──
+    const showTip = Math.random() < 0.33;
+    const hasNegativeEmotion = recentEmotions?.length > 0 &&
+      recentEmotions.filter((e: any) => ["sad", "anxious", "frustrated", "angry"].includes(e.emotional_tone)).length >= 2;
+    const shouldShowTip = showTip && !hasNegativeEmotion;
+
+    const tipLibrary = isEN
+      ? `STUDY TIP LIBRARY (paraphrase and adapt to age/tone, never copy verbatim):
+Oral subjects (history, literature, philosophy, science, geography):
+- Repeat the concept aloud with eyes closed — the mind reconstructs without visual distractions
+- Explain the topic as if teaching someone who knows nothing — where you get stuck, that's the gap
+- After studying, wait 10 minutes and write everything you remember without looking at the book
+- Walk while repeating — movement helps procedural memory
+- Record your voice while explaining and listen back — you'll immediately hear what's missing
+- Ask yourself questions: "Why did this happen? What would have changed if...?"
+
+Written/math subjects (math, physics, chemistry, computer science):
+- Before solving, read the text twice and underline only the data — not the text
+- Solve the exercise without looking at the example, then compare. The mistake is more valuable than the solution
+- Say the steps aloud while doing them — it slows thinking and prevents distraction errors
+- After finishing, put down the pen and check with your eyes only — the brain finds errors better at rest
+- Always estimate the result before calculating — you'll immediately notice if something is way off
+
+Languages (English, Latin, Greek, second language):
+- Read the word, cover it, write it, uncover — never look while writing
+- Pair each new word with an absurd mental image — the stranger it is, the better you remember
+- Read the text once normally, then reread looking only for grammar structures — double pass, double memory
+- Write 3 of your own sentences using the new words — active production is worth 10 passive readings`
+      : `LIBRERIA TRUCCHETTI DI STUDIO (parafrasa e adatta al tono/età, mai copiare letteralmente):
+Materie orali (storia, letteratura, filosofia, scienze, geografia):
+- Ripeti il concetto ad alta voce a occhi chiusi — la mente ricostruisce senza distrazioni visive
+- Spiega l'argomento come se lo stessi insegnando a qualcuno che non sa niente — se ti blocchi, lì c'è il gap
+- Dopo aver studiato, aspetta 10 minuti e scrivi tutto quello che ricordi senza guardare il libro
+- Cammina mentre ripeti — il movimento aiuta la memoria procedurale
+- Registra la tua voce mentre spieghi e riascoltati — sentirai subito cosa manca
+- Fai domande a te stesso: "Perché è successo? Cosa sarebbe cambiato se...?"
+
+Materie scritte/matematiche (matematica, fisica, chimica, informatica):
+- Prima di risolvere, leggi il testo due volte e sottolinea solo i dati — non il testo
+- Risolvi l'esercizio senza guardare l'esempio, poi confronta. L'errore è più prezioso della soluzione
+- Scrivi i passaggi ad alta voce mentre li fai — rallenta il pensiero e previene errori di distrazione
+- Dopo aver finito, metti giù la penna e controlla solo con gli occhi — il cervello trova gli errori meglio a riposo
+- Stima sempre il risultato prima di calcolare — ti accorgi subito se hai sbagliato qualcosa di grosso
+
+Lingue (inglese, latino, greco, seconda lingua):
+- Leggi la parola, coprila, scrivi, scopri — non guardare mai mentre scrivi
+- Abbina ogni parola nuova a un'immagine mentale assurda — più è strana, più la ricordi
+- Rileggi il testo una volta normale, poi rileggilo cercando solo le strutture grammaticali — doppio passaggio, doppia memoria
+- Scrivi 3 frasi tue usando le parole nuove — la produzione attiva vale 10 letture passive`;
+
+    const tipInstruction = shouldShowTip
+      ? (isEN
+        ? `\n\nSTUDY TIP INSTRUCTION: At the END of your greeting (after the main message), add a brief study tip introduced naturally. Example: "Oh, a little trick for today: [tip]. Try it during your session!" Pick ONE tip from the library below that matches the student's pending subjects or recent sessions. The tip must feel spontaneous, like a friend sharing a secret — never mechanical. Max 2-3 sentences for the tip part.\n\n${tipLibrary}`
+        : `\n\nISTRUZIONE TRUCCHETTO: Alla FINE del saluto (dopo il messaggio principale), aggiungi un breve trucchetto di studio introdotto in modo naturale. Esempio: "Ah, un piccolo trucco per oggi: [trucchetto]. Provaci durante la sessione!" Scegli UN trucchetto dalla libreria qui sotto che corrisponda alle materie o sessioni recenti dello studente. Il trucchetto deve sembrare spontaneo, come un amico che ti passa un segreto — mai meccanico. Max 2-3 frasi per la parte del trucchetto.\n\n${tipLibrary}`)
+      : "";
+
     const systemPrompt = isEN
       ? `You are ${userName}'s personal AI coach on InSchool. You are a trusted companion — you know ${userName}, remember their sessions, progress and difficulties. You're not a psychologist, you're an attentive friend who notices how the other person is doing.
 
@@ -91,6 +147,7 @@ ABSOLUTE RULES:
 - If there are teacher assignments, mention them
 - Be human and warm, never robotic
 - ALWAYS respond in English
+${tipInstruction}
 
 Output JSON: {"message":"...","suggestedAction":"button text","actionRoute":"/path"}
 
@@ -130,6 +187,7 @@ REGOLE ASSOLUTE:
 - Se c'è streak, riconoscilo brevemente
 - Se ci sono assegnazioni dal professore, segnalale
 - Sii umano e caldo, mai robotico
+${tipInstruction}
 
 Output JSON: {"message":"...","suggestedAction":"testo bottone","actionRoute":"/percorso"}
 

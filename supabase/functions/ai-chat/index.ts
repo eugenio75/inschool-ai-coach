@@ -286,6 +286,78 @@ Non modificare, parafrasare, arrotondare o sostituire MAI nessun numero, valore,
 Se il testo dell'esercizio dice "23,5 km", tu DEVI usare "23,5 km" — mai "24 km", "23 km", "circa 24 km" o qualsiasi altra approssimazione.
 Questa regola si applica SOLO alle sessioni di tipo esercizio. NON si applica a sessioni di spiegazione, ripasso orale o preparazione interrogazione.`;
 
+  // ── Study tips ("trucchetti") — ~1/4 of sessions ──
+  const showSessionTip = Math.random() < 0.25;
+  const isNegativeMood = vars.moodToday && ["sad", "anxious", "frustrated", "angry", "low", "triste", "ansioso", "frustrato", "arrabbiato"].some(m => vars.moodToday.toLowerCase().includes(m));
+  const shouldShowSessionTip = showSessionTip && !isNegativeMood && !vars.isDocente;
+
+  if (shouldShowSessionTip) {
+    const subjectLower = (vars.subject || "").toLowerCase();
+    const oralSubjects = ["storia", "letteratura", "filosofia", "scienze", "geografia", "history", "literature", "philosophy", "science", "geography", "arte", "art", "diritto", "law", "religione", "religion"];
+    const mathSubjects = ["matematica", "fisica", "chimica", "informatica", "math", "mathematics", "physics", "chemistry", "computer science", "geometria", "geometry", "statistica", "statistics"];
+    const langSubjects = ["inglese", "english", "latino", "latin", "greco", "greek", "francese", "french", "spagnolo", "spanish", "tedesco", "german", "lingua", "language"];
+
+    let subjectCategory = "oral";
+    if (mathSubjects.some(s => subjectLower.includes(s))) subjectCategory = "math";
+    else if (langSubjects.some(s => subjectLower.includes(s))) subjectCategory = "lang";
+
+    const tipBlock = vars.lang === "en"
+      ? `
+═══════════════════════════════════════
+SESSION STUDY TIP (ONE-TIME, NATURAL)
+═══════════════════════════════════════
+At the START of this session (before beginning the actual study work), include ONE brief study tip. Introduce it naturally, like a friend sharing a secret. Example: "Before we start, a little trick that works for ${vars.subject}: [tip]. Ready?"
+
+The tip must:
+- Be relevant to the subject category: ${subjectCategory}
+- Feel spontaneous, never mechanical — adapt tone to student age
+- Be max 2-3 sentences
+- Come BEFORE the study work begins, not during
+
+Pick ONE tip from this library (paraphrase, never copy verbatim):
+${subjectCategory === "oral" ? `- Repeat the concept aloud with eyes closed — the mind reconstructs without visual distractions
+- Explain the topic as if teaching someone who knows nothing — where you get stuck, that's the gap
+- After studying, wait 10 minutes and write everything you remember without looking at the book
+- Walk while repeating — movement helps procedural memory
+- Record your voice while explaining and listen back — you'll immediately hear what's missing
+- Ask yourself questions: "Why did this happen? What would have changed if...?"` : ""}${subjectCategory === "math" ? `- Before solving, read the text twice and underline only the data — not the text
+- Solve the exercise without looking at the example, then compare. The mistake is more valuable than the solution
+- Say the steps aloud while doing them — it slows thinking and prevents distraction errors
+- After finishing, put down the pen and check with your eyes only — the brain finds errors better at rest
+- Always estimate the result before calculating — you'll immediately notice if something is way off` : ""}${subjectCategory === "lang" ? `- Read the word, cover it, write it, uncover — never look while writing
+- Pair each new word with an absurd mental image — the stranger it is, the better you remember
+- Read the text once normally, then reread looking only for grammar structures — double pass, double memory
+- Write 3 of your own sentences using the new words — active production is worth 10 passive readings` : ""}`
+      : `
+═══════════════════════════════════════
+TRUCCHETTO DI STUDIO SESSIONE (UNA TANTUM, NATURALE)
+═══════════════════════════════════════
+All'INIZIO di questa sessione (prima di iniziare il lavoro di studio vero e proprio), includi UN breve trucchetto di studio. Introducilo in modo naturale, come un amico che ti passa un segreto. Esempio: "Prima di iniziare, un trucchetto che funziona per ${vars.subject}: [trucchetto]. Pronto?"
+
+Il trucchetto deve:
+- Essere rilevante per la categoria della materia: ${subjectCategory === "oral" ? "orale" : subjectCategory === "math" ? "scritta/matematica" : "lingue"}
+- Sembrare spontaneo, mai meccanico — adatta il tono all'età dello studente
+- Essere max 2-3 frasi
+- Venire PRIMA dell'inizio del lavoro di studio, non durante
+
+Scegli UN trucchetto da questa libreria (parafrasa, mai copiare letteralmente):
+${subjectCategory === "oral" ? `- Ripeti il concetto ad alta voce a occhi chiusi — la mente ricostruisce senza distrazioni visive
+- Spiega l'argomento come se lo stessi insegnando a qualcuno che non sa niente — se ti blocchi, lì c'è il gap
+- Dopo aver studiato, aspetta 10 minuti e scrivi tutto quello che ricordi senza guardare il libro
+- Cammina mentre ripeti — il movimento aiuta la memoria procedurale
+- Registra la tua voce mentre spieghi e riascoltati — sentirai subito cosa manca
+- Fai domande a te stesso: "Perché è successo? Cosa sarebbe cambiato se...?"` : ""}${subjectCategory === "math" ? `- Prima di risolvere, leggi il testo due volte e sottolinea solo i dati — non il testo
+- Risolvi l'esercizio senza guardare l'esempio, poi confronta. L'errore è più prezioso della soluzione
+- Scrivi i passaggi ad alta voce mentre li fai — rallenta il pensiero e previene errori di distrazione
+- Dopo aver finito, metti giù la penna e controlla solo con gli occhi — il cervello trova gli errori meglio a riposo
+- Stima sempre il risultato prima di calcolare — ti accorgi subito se hai sbagliato qualcosa di grosso` : ""}${subjectCategory === "lang" ? `- Leggi la parola, coprila, scrivi, scopri — non guardare mai mentre scrivi
+- Abbina ogni parola nuova a un'immagine mentale assurda — più è strana, più la ricordi
+- Rileggi il testo una volta normale, poi rileggilo cercando solo le strutture grammaticali — doppio passaggio, doppia memoria
+- Scrivi 3 frasi tue usando le parole nuove — la produzione attiva vale 10 letture passive` : ""}`;
+
+    prompt += tipBlock;
+  }
+
   // Add alert context if present (CONCERN/URGENT behavior)
   if (vars.alertContext) {
     prompt += `\n\n${vars.alertContext}`;
