@@ -66,27 +66,27 @@ export const DailySummaryCard = ({ childProfileId, childName, missions }: DailyS
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...spring, delay: 0.1 }}
-      className={`bg-card rounded-2xl border p-5 shadow-soft ${
+      className={`bg-card rounded-2xl border p-6 shadow-soft ${
         hasAttention ? "border-amber-300 dark:border-amber-700" : "border-border"
       }`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2.5">
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
             hasAttention ? "bg-amber-100 dark:bg-amber-900/30" : "bg-primary/10"
           }`}>
             {hasAttention ? (
-              <AlertCircle className="w-4 h-4 text-amber-600" />
+              <AlertCircle className="w-4.5 h-4.5 text-amber-600" />
             ) : (
-              <Sun className="w-4 h-4 text-primary" />
+              <Sun className="w-4.5 h-4.5 text-primary" />
             )}
           </div>
           <div>
-            <h3 className="font-display font-semibold text-foreground text-sm">
+            <h3 className="font-display font-bold text-foreground text-lg">
               La giornata di {childName} — oggi
             </h3>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[13px] text-muted-foreground">
               {new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
             </p>
           </div>
@@ -94,43 +94,43 @@ export const DailySummaryCard = ({ childProfileId, childName, missions }: DailyS
         <button
           onClick={() => fetchSummary(true)}
           disabled={refreshing}
-          className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted/50"
+          className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-lg hover:bg-muted/50"
           title="Aggiorna"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+          <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
         </button>
       </div>
 
       {/* Quick stats */}
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        <div className="bg-muted/50 rounded-xl p-3 text-center">
-          <Clock className="w-4 h-4 text-primary mx-auto mb-1" />
-          <p className="font-display font-bold text-foreground text-sm">{todayStats.study_minutes}m</p>
-          <p className="text-[10px] text-muted-foreground">Studio</p>
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="bg-muted/50 rounded-xl p-4 text-center">
+          <Clock className="w-5 h-5 text-primary mx-auto mb-1.5" />
+          <p className="font-display font-bold text-foreground text-2xl">{todayStats.study_minutes}m</p>
+          <p className="text-[13px] text-muted-foreground mt-0.5">Studio</p>
         </div>
-        <div className="bg-muted/50 rounded-xl p-3 text-center">
-          <BookOpen className="w-4 h-4 text-primary mx-auto mb-1" />
-          <p className="font-display font-bold text-foreground text-sm">{todayStats.total_sessions}</p>
-          <p className="text-[10px] text-muted-foreground">Sessioni</p>
+        <div className="bg-muted/50 rounded-xl p-4 text-center">
+          <BookOpen className="w-5 h-5 text-primary mx-auto mb-1.5" />
+          <p className="font-display font-bold text-foreground text-2xl">{todayStats.total_sessions}</p>
+          <p className="text-[13px] text-muted-foreground mt-0.5">Sessioni</p>
         </div>
-        <div className="bg-muted/50 rounded-xl p-3 text-center">
-          <CheckCircle2 className="w-4 h-4 text-primary mx-auto mb-1" />
-          <p className="font-display font-bold text-foreground text-sm">{todayStats.completed_tasks}</p>
-          <p className="text-[10px] text-muted-foreground">Completati</p>
+        <div className="bg-muted/50 rounded-xl p-4 text-center">
+          <CheckCircle2 className="w-5 h-5 text-primary mx-auto mb-1.5" />
+          <p className="font-display font-bold text-foreground text-2xl">{todayStats.completed_tasks}</p>
+          <p className="text-[13px] text-muted-foreground mt-0.5">Completati</p>
         </div>
       </div>
 
       {/* Missions progress */}
       {todayMissions.length > 0 && (
-        <div className="bg-muted/30 rounded-xl p-3 mb-3">
-          <p className="text-xs font-medium text-muted-foreground mb-2">
+        <div className="bg-muted/30 rounded-xl p-4 mb-4">
+          <p className="text-[13px] font-medium text-muted-foreground mb-2">
             Missioni: {completedMissions.length}/{todayMissions.length}
           </p>
           <div className="flex gap-1">
             {todayMissions.map((_m: any, i: number) => (
               <div
                 key={i}
-                className={`h-1.5 flex-1 rounded-full ${todayMissions[i]?.completed ? "bg-primary" : "bg-border"}`}
+                className={`h-2 flex-1 rounded-full ${todayMissions[i]?.completed ? "bg-primary" : "bg-border"}`}
               />
             ))}
           </div>
@@ -138,18 +138,18 @@ export const DailySummaryCard = ({ childProfileId, childName, missions }: DailyS
       )}
 
       {/* Divider + AI narrative */}
-      <div className="border-t border-border pt-3">
+      <div className="border-t border-border pt-4">
         {loading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full rounded-lg" />
-            <Skeleton className="h-4 w-4/5 rounded-lg" />
+          <div className="space-y-2.5">
+            <Skeleton className="h-5 w-full rounded-lg" />
+            <Skeleton className="h-5 w-4/5 rounded-lg" />
           </div>
         ) : error ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-[15px] text-muted-foreground leading-relaxed">
             Il riassunto di oggi non è disponibile al momento. Riprova tra poco.
           </p>
         ) : (
-          <p className="text-sm text-foreground/90 leading-relaxed">
+          <p className="text-[15px] text-foreground/90 leading-[1.6]">
             {summary}
           </p>
         )}
