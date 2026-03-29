@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Plus, Brain, FolderOpen, BarChart3, LogOut } from "lucide-react";
+import { BookOpen, Plus, FolderOpen, BarChart3, LogOut } from "lucide-react";
 import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { GamificationKPI } from "@/components/GamificationBar";
 import { DailyMissions } from "@/components/GamificationBar";
@@ -107,7 +107,7 @@ export default function DashboardMedie() {
             <div className="flex items-center gap-2">
               <button onClick={() => navigate("/report")} className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors" title="Il tuo andamento"><BarChart3 className="w-4 h-4" /></button>
               <button onClick={() => navigate("/libreria")} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors" title="Libreria materiali"><FolderOpen className="w-4 h-4" /></button>
-              <button onClick={() => navigate("/memory")} className="w-9 h-9 rounded-xl bg-clay-light flex items-center justify-center text-clay-dark hover:bg-accent transition-colors" title="Memoria e ripasso"><Brain className="w-4 h-4" /></button>
+              
               <button onClick={() => navigate("/student-profile")} className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-accent transition-colors text-xs font-bold text-primary" title="Il mio profilo">
                 {avatarInitial}
               </button>
