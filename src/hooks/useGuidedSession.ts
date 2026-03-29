@@ -945,22 +945,30 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
         if (isChild) {
           await childApi("complete-session", { sessionId, homeworkId, chatMessages: chatToSave });
         } else {
-          // Save conversation to conversation_sessions
-          const { data: convSession } = await supabase
-            .from("conversation_sessions")
-            .insert({
-              profile_id: homework?.child_profile_id,
-              titolo: homework?.title || "Sessione guidata",
-              materia: homework?.subject,
-              messaggi: chatToSave,
-            })
-            .select("id")
-            .single();
+          // Update existing conversation_sessions with final messages, or create if missing
+          if (conversationId) {
+            await supabase.from("conversation_sessions").update({
+              messaggi: chatToSave as any,
+              updated_at: new Date().toISOString(),
+            }).eq("id", conversationId);
+          } else {
+            const { data: convSession } = await supabase
+              .from("conversation_sessions")
+              .insert({
+                profile_id: homework?.child_profile_id,
+                titolo: homework?.title || "Sessione guidata",
+                materia: homework?.subject,
+                messaggi: chatToSave,
+              })
+              .select("id")
+              .single();
+            setConversationId(convSession?.id || null);
+          }
 
           await supabase.from("guided_sessions").update({
             status: "completed",
             completed_at: new Date().toISOString(),
-            conversation_id: convSession?.id || null,
+            conversation_id: conversationId,
           }).eq("id", sessionId);
           await supabase.from("homework_tasks").update({ completed: true, updated_at: new Date().toISOString() }).eq("id", homeworkId);
         }
