@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getTask as fetchTask, getDailyMissions, completeMission, saveFocusSession, getGamification } from "@/lib/database";
@@ -180,9 +180,109 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   const [sessionEmotion, setSessionEmotion] = useState<string>("");
   const [showFamiliarity, setShowFamiliarity] = useState(false);
 
+  // Incremental save: conversation_sessions id
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const progressPercent = totalSteps > 0 ? ((currentStep - 1) / totalSteps) * 100 : 0;
   const progressLabel = totalSteps > 0 ? `Step ${currentStep} di ${totalSteps}` : undefined;
   const isChild = isChildSession();
+
+  // ── Refs for cleanup/beforeunload (must read latest state) ──
+  const sessionIdRef = useRef(sessionId);
+  const currentStepRef = useRef(currentStep);
+  const sessionCompletedRef = useRef(sessionCompleted);
+  const messagesRef = useRef(messages);
+  const conversationIdRef = useRef(conversationId);
+  const homeworkRef = useRef(homework);
+
+  useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
+  useEffect(() => { currentStepRef.current = currentStep; }, [currentStep]);
+  useEffect(() => { sessionCompletedRef.current = sessionCompleted; }, [sessionCompleted]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+  useEffect(() => { conversationIdRef.current = conversationId; }, [conversationId]);
+  useEffect(() => { homeworkRef.current = homework; }, [homework]);
+
+  // ── Fix 1: Auto-save on navigate away / beforeunload ──
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      const sid = sessionIdRef.current;
+      const step = currentStepRef.current;
+      const completed = sessionCompletedRef.current;
+      if (!sid || completed || step <= 0) return;
+
+      // Use sendBeacon for reliable save on page close
+      const payload = JSON.stringify({
+        sessionId: sid,
+        status: "paused",
+        current_step: step,
+        updated_at: new Date().toISOString(),
+      });
+      navigator.sendBeacon(
+        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/guided_sessions?id=eq.${sid}`,
+        new Blob([JSON.stringify({ status: "paused", current_step: step, updated_at: new Date().toISOString() })], { type: "application/json" })
+      );
+
+      // Also save messages
+      const convId = conversationIdRef.current;
+      const msgs = messagesRef.current;
+      if (convId && msgs.length > 0) {
+        const chatToSave = msgs.filter(m => m.content?.trim()).map(m => ({ role: m.role, text: m.content }));
+        navigator.sendBeacon(
+          `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/conversation_sessions?id=eq.${convId}`,
+          new Blob([JSON.stringify({ messaggi: chatToSave, updated_at: new Date().toISOString() })], { type: "application/json" })
+        );
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Cleanup on unmount (route change) — auto-pause if still active
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+
+      const sid = sessionIdRef.current;
+      const step = currentStepRef.current;
+      const completed = sessionCompletedRef.current;
+      if (sid && !completed && step > 0) {
+        // Fire-and-forget pause save
+        if (isChildSession()) {
+          childApi("update-session", { sessionId: sid, updates: { status: "paused", current_step: step, updated_at: new Date().toISOString() } }).catch(() => {});
+        } else {
+          supabase.from("guided_sessions").update({
+            status: "paused",
+            current_step: step,
+            updated_at: new Date().toISOString(),
+          }).eq("id", sid).then(() => {});
+        }
+
+        // Save messages too
+        const convId = conversationIdRef.current;
+        const msgs = messagesRef.current;
+        if (convId && msgs.length > 0 && !isChildSession()) {
+          const chatToSave = msgs.filter(m => m.content?.trim()).map(m => ({ role: m.role, text: m.content }));
+          supabase.from("conversation_sessions").update({
+            messaggi: chatToSave,
+            updated_at: new Date().toISOString(),
+          }).eq("id", convId).then(() => {});
+        }
+      }
+    };
+  }, []);
+
+  // ── Fix 3: Debounced incremental message save ──
+  function scheduleMessageSave(msgs: ChatMsg[]) {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      const convId = conversationIdRef.current;
+      if (!convId || msgs.length === 0) return;
+      const chatToSave = msgs.filter(m => m.content?.trim()).map(m => ({ role: m.role, text: m.content }));
+      supabase.from("conversation_sessions").update({
+        messaggi: chatToSave,
+        updated_at: new Date().toISOString(),
+      }).eq("id", convId).then(() => {}).catch(err => console.error("Incremental save error:", err));
+    }, 2000);
+  }
 
   async function loadSession() {
     if (!homeworkId) { setLoading(false); return; }
