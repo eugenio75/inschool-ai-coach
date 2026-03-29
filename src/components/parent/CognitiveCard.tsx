@@ -137,9 +137,12 @@ export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItem
                   <Loader2 className="w-4 h-4 animate-spin text-primary" />
                   <p className="text-xs text-muted-foreground">Analizzo i dati...</p>
                 </div>
-              ) : insights.length > 0 ? (
+              ) : (() => {
+                // Filter: only cognitive insights (exclude emotional ones)
+                const cognitiveInsights = insights.filter(i => i.category !== "emotivo");
+                return cognitiveInsights.length > 0 ? (
                 <div className="space-y-2">
-                  {insights.map((insight, i) => {
+                  {cognitiveInsights.map((insight, i) => {
                     const IconComponent = iconMap[insight.icon] || Lightbulb;
                     const colors = categoryColors[insight.category] || categoryColors.metodo;
                     return (
