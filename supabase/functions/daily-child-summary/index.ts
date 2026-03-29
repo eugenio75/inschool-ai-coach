@@ -142,6 +142,13 @@ Deno.serve(async (req) => {
         summary: `Oggi ${childName} non ha ancora studiato. Puoi incoraggiarlo ad aprire InSchool.`,
         has_attention_signal: false,
         generated_at: new Date().toISOString(),
+        today_stats: {
+          study_minutes: 0,
+          focus_sessions: 0,
+          guided_sessions: 0,
+          total_sessions: 0,
+          completed_tasks: 0,
+        },
       };
 
       // Don't cache "no activity" — might change later in the day
@@ -290,6 +297,13 @@ ${attentionSignals.length > 0 ? `Segnali di attenzione:\n${attentionSignals.map(
       has_attention_signal: attentionSignals.length > 0,
       attention_signals: attentionSignals,
       generated_at: new Date().toISOString(),
+      today_stats: {
+        study_minutes: totalMinutes,
+        focus_sessions: sessions.length,
+        guided_sessions: completedGuided,
+        total_sessions: sessions.length + completedGuided,
+        completed_tasks: (tasks || []).filter((t: any) => t.completed).length,
+      },
     };
 
     // Cache result

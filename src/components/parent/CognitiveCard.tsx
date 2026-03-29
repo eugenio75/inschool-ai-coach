@@ -33,7 +33,11 @@ export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItem
   const [expanded, setExpanded] = useState(true);
 
   // Only show cognitive insights — emotional ones belong in EmotionalCard
-  const cognitiveInsights = insights.filter(i => i.category !== "emotivo");
+  // Strict: only metodo, autonomia, motivazione, or unknown categories — never emotivo
+  const cognitiveInsights = insights.filter(i => {
+    const cat = (i.category || "").toLowerCase();
+    return cat !== "emotivo";
+  });
 
   const weakConcepts = memoryItems.filter(m => (m.strength || 0) < 60);
   const strongConcepts = memoryItems.filter(m => (m.strength || 0) >= 80);
@@ -57,10 +61,10 @@ export const CognitiveCard = ({ childName, insights, insightsLoading, memoryItem
     : (weakConcepts.length > 0 ? `${weakConcepts.length} concett${weakConcepts.length === 1 ? "o" : "i"} da rafforzare` : "Tutto in ordine");
 
   const insightsLabel = isMedie
-    ? `Suggerimenti per ${childName}`
+    ? "Come migliorare nello studio"
     : isUniversitario
     ? "Strategie di miglioramento"
-    : `Consigli per ${childName}`;
+    : "Suggerimenti didattici";
 
   return (
     <motion.div

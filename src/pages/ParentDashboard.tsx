@@ -302,8 +302,6 @@ const ParentDashboard = () => {
             <DailySummaryCard
               childProfileId={selectedChild}
               childName={selectedProfile?.name || "—"}
-              sessions={sessions}
-              tasks={tasks}
               missions={missions}
             />
           )}
