@@ -666,6 +666,20 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
         }));
         await childApi("insert-steps", { steps: stepRows });
       } else {
+        // Create conversation_sessions record for incremental saving
+        const { data: convSession } = await supabase
+          .from("conversation_sessions")
+          .insert({
+            profile_id: homework?.child_profile_id || userId,
+            titolo: homework?.title || "Sessione guidata",
+            materia: homework?.subject,
+            messaggi: [],
+          })
+          .select("id")
+          .single();
+        const convId = convSession?.id || null;
+        setConversationId(convId);
+
         const { data: newSession } = await supabase
           .from("guided_sessions")
           .insert({
@@ -675,6 +689,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
             current_step: 1,
             total_steps: generatedSteps.length,
             emotional_checkin: emotion,
+            conversation_id: convId,
           })
           .select()
           .single();
