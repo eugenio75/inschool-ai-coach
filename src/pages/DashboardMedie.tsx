@@ -7,7 +7,6 @@ import { GamificationKPI } from "@/components/GamificationBar";
 import { DailyMissions } from "@/components/GamificationBar";
 import { CoachPresence } from "@/components/CoachPresence";
 import { BadgeDisplay } from "@/components/BadgeDisplay";
-import { BadgeDisplay } from "@/components/BadgeDisplay";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 import { getTasks, getActiveChildProfileId, getChildProfile } from "@/lib/database";
 import { supabase } from "@/integrations/supabase/client";

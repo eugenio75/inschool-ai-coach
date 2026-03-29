@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { CoachPresence } from "@/components/CoachPresence";
 import { TeacherAssignments } from "@/components/TeacherAssignments";
-import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   GraduationCap, Lightbulb, ClipboardCheck, Search, Mic,
