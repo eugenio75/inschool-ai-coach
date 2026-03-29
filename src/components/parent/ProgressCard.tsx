@@ -49,7 +49,7 @@ export const ProgressCard = ({ totalMinutes, totalSessions, gamification, school
             <Clock className="w-4 h-4 text-primary" />
           </div>
           <p className="font-display font-bold text-foreground text-sm">{totalMinutes}m</p>
-          <p className="text-[10px] text-muted-foreground">Focus totale</p>
+          <p className="text-[10px] text-muted-foreground">Concentrazione</p>
         </div>
         <div className="text-center">
           <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center mx-auto mb-1.5">
@@ -76,7 +76,7 @@ export const ProgressCard = ({ totalMinutes, totalSessions, gamification, school
             <div className="flex flex-col items-center gap-1">
               <Target className="w-3.5 h-3.5 text-primary" />
               <p className="font-display font-bold text-foreground text-sm">{gamification.focus_points || 0}</p>
-              <p className="text-[10px] text-muted-foreground">Focus</p>
+              <p className="text-[10px] text-muted-foreground">Concentrazione</p>
             </div>
             <div className="flex flex-col items-center gap-1">
               <Zap className="w-3.5 h-3.5 text-primary" />
@@ -86,7 +86,7 @@ export const ProgressCard = ({ totalMinutes, totalSessions, gamification, school
             <div className="flex flex-col items-center gap-1">
               <Flame className="w-3.5 h-3.5 text-primary" />
               <p className="font-display font-bold text-foreground text-sm">{gamification.streak || 0}</p>
-              <p className="text-[10px] text-muted-foreground">Streak</p>
+              <p className="text-[10px] text-muted-foreground">Costanza</p>
             </div>
           </div>
         </div>
