@@ -585,10 +585,13 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     if (value === "finish_session") {
       setMessages(prev => prev.map(m => ({ ...m, actions: undefined })));
       playCelebrationSound();
+      clearInactivityTimers();
 
-      // Calculate and save points
+      // Calculate and save points — use ACTIVE study time, not elapsed
       try {
-        const durationSec = Math.floor((Date.now() - sessionStartTime.current) / 1000);
+        // Record final interval (from last interaction to now, if ≤ threshold)
+        recordInteraction();
+        const durationSec = activeStudySeconds.current;
         const durationMin = Math.floor(durationSec / 60);
 
         // focus_points: base 10 + 1 per minute, max 20
