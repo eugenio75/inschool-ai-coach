@@ -986,13 +986,14 @@ const MemoryRecap = () => {
     );
   }, [items]);
 
-  const weakItems = useMemo(() => {
-    const weak = items.filter(i => (i.strength || 0) < 50).sort((a, b) => (a.strength || 0) - (b.strength || 0));
-    // Fallback: if no weak items, use all items sorted by lowest strength
-    if (weak.length === 0 && items.length > 0) {
-      return [...items].sort((a, b) => (a.strength || 50) - (b.strength || 50));
-    }
-    return weak;
+  // 3-level fallback for Rafforza: 0 = strength<50, 1 = strength<75, 2 = all
+  const { weakItems, weakFallbackLevel } = useMemo(() => {
+    const level0 = items.filter(i => (i.strength || 0) < 50).sort((a, b) => (a.strength || 0) - (b.strength || 0));
+    if (level0.length > 0) return { weakItems: level0, weakFallbackLevel: 0 };
+    const level1 = items.filter(i => (i.strength || 0) < 75).sort((a, b) => (a.strength || 0) - (b.strength || 0));
+    if (level1.length > 0) return { weakItems: level1, weakFallbackLevel: 1 };
+    if (items.length > 0) return { weakItems: [...items].sort((a, b) => (a.strength || 50) - (b.strength || 50)), weakFallbackLevel: 2 };
+    return { weakItems: [], weakFallbackLevel: 0 };
   }, [items]);
 
   const getRelevantItems = (section: Section, contentType: ContentType): any[] => {
@@ -1268,11 +1269,24 @@ const MemoryRecap = () => {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Scegli la materia</p>
               {relevantSubjects.length === 0 ? (
                 <div className="text-center py-12 px-6">
-                  <BookOpen className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground font-medium">
-                    {wizard.contentType === "today" ? "Nessun contenuto studiato oggi" : "Nessun contenuto disponibile"}
+                  <BookOpen className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+                  <p className="font-medium text-foreground">
+                    {wizard.section === "rinforza" && items.length === 0
+                      ? t("rafforza_empty_title", "Non hai ancora contenuti da rafforzare")
+                      : wizard.contentType === "today"
+                        ? t("rafforza_empty_today", "Nessun contenuto studiato oggi")
+                        : t("rafforza_empty_generic", "Nessun contenuto disponibile")}
                   </p>
-                  <button onClick={goBack} className="mt-3 text-sm text-primary font-medium">Torna indietro</button>
+                  {wizard.section === "rinforza" && items.length === 0 ? (
+                    <>
+                      <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">{t("rafforza_empty_desc", "Completa qualche sessione di studio prima.")}</p>
+                      <Button variant="outline" size="sm" className="mt-4 rounded-xl" onClick={() => navigate("/dashboard")}>
+                        {t("rafforza_empty_cta", "Inizia a studiare")}
+                      </Button>
+                    </>
+                  ) : (
+                    <button onClick={goBack} className="mt-3 text-sm text-primary font-medium">{t("back", "Torna indietro")}</button>
+                  )}
                 </div>
               ) : (
                 <>
@@ -1322,9 +1336,22 @@ const MemoryRecap = () => {
                 if (summaryItems.length === 0) {
                   return (
                     <div className="text-center py-10 px-6">
-                      <Brain className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                      <p className="text-sm text-muted-foreground font-medium">Nessun contenuto trovato</p>
-                      <p className="text-xs text-muted-foreground mt-1">Prova con un'altra selezione</p>
+                      <Brain className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+                      <p className="font-medium text-foreground">
+                        {wizard.section === "rinforza" && items.length === 0
+                          ? t("rafforza_empty_title", "Non hai ancora contenuti da rafforzare")
+                          : t("rafforza_no_content", "Nessun contenuto trovato")}
+                      </p>
+                      {wizard.section === "rinforza" && items.length === 0 ? (
+                        <>
+                          <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">{t("rafforza_empty_desc", "Completa qualche sessione di studio prima.")}</p>
+                          <Button variant="outline" size="sm" className="mt-4 rounded-xl" onClick={() => navigate("/dashboard")}>
+                            {t("rafforza_empty_cta", "Inizia a studiare")}
+                          </Button>
+                        </>
+                      ) : (
+                        <p className="text-xs text-muted-foreground mt-1">{t("rafforza_try_other", "Prova con un'altra selezione")}</p>
+                      )}
                     </div>
                   );
                 }
