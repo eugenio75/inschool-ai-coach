@@ -351,6 +351,19 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
           );
         case 7:
           return (
+            <div className="w-full space-y-6">
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_class_code_title')}</h2>
+                <p className="text-muted-foreground text-sm">{t('onb_class_code_description')}</p>
+                <JoinClassInline profileId={profileId} onJoined={(result: any) => setAnswers({...answers, joined_class: result})} />
+                {!answers.joined_class && (
+                  <button onClick={handleNext} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">
+                    {t('onb_class_code_skip')}
+                  </button>
+                )}
+            </div>
+          );
+        case 8:
+          return (
             <div className="text-left w-full space-y-6">
                 <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_all_set')}</h2>
                 <p className="text-muted-foreground mb-6">{t('onb_your_profile')}</p>
@@ -359,6 +372,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     <div><span className={summaryLabelClass}>{t('onb_summary_hard')}</span><p className={summaryValueClass}>{(answers.materie_critiche || []).join(", ")}</p></div>
                     <div><span className={summaryLabelClass}>{t('onb_summary_method')}</span><p className={summaryValueClass}>{answers.metodo_studio === "poco_spesso" ? t('onb_summary_method_short') : answers.metodo_studio === "lungo" ? t('onb_summary_method_long') : t('onb_summary_method_discover')}</p></div>
                     {answers.coach_name && <div><span className={summaryLabelClass}>{t('onb_summary_coach')}</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
+                    {answers.joined_class && <div><span className={summaryLabelClass}>{t('onb_summary_class_enrolled')}</span><p className={summaryValueClass}>{answers.joined_class.class_name}</p></div>}
                 </div>
             </div>
           );
@@ -497,6 +511,19 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
           );
         case 7:
           return (
+            <div className="w-full space-y-6">
+                <h2 className="text-2xl font-bold text-foreground">{t('onb_class_code_title')}</h2>
+                <p className="text-muted-foreground text-sm">{t('onb_class_code_description')}</p>
+                <JoinClassInline profileId={profileId} onJoined={(result: any) => setAnswers({...answers, joined_class: result})} />
+                {!answers.joined_class && (
+                  <button onClick={handleNext} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">
+                    {t('onb_class_code_skip')}
+                  </button>
+                )}
+            </div>
+          );
+        case 8:
+          return (
             <div className="text-left w-full space-y-6">
                 <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_all_set')}</h2>
                 <p className="text-muted-foreground mb-6">{t('onb_your_academic_profile')}</p>
@@ -505,6 +532,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     <div><span className={summaryLabelClass}>{t('onb_summary_focus_subjects')}</span><p className={summaryValueClass}>{(answers.materie_critiche || []).join(", ")}</p></div>
                     <div><span className={summaryLabelClass}>{t('onb_summary_method')}</span><p className={summaryValueClass}>{answers.metodo_studio === "pomodoro" ? t('onb_summary_method_pomodoro') : answers.metodo_studio === "deep" ? t('onb_summary_method_deep') : t('onb_summary_method_flex')}</p></div>
                     {answers.coach_name && <div><span className={summaryLabelClass}>{t('onb_summary_coach')}</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
+                    {answers.joined_class && <div><span className={summaryLabelClass}>{t('onb_summary_class_enrolled')}</span><p className={summaryValueClass}>{answers.joined_class.class_name}</p></div>}
                 </div>
             </div>
           );
