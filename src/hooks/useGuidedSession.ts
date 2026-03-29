@@ -838,6 +838,10 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
         content: `${stepIntro}${voicePrompt}`,
       }]);
       setSetupDone(true);
+      // Start inactivity timer and reset time tracking for fresh session
+      lastInteractionTime.current = Date.now();
+      activeStudySeconds.current = 0;
+      resetInactivityTimer();
     } catch (err) {
       console.error("startNewSession error:", err);
       setMessages(prev => [...prev, { role: "assistant", content: "Si è verificato un errore nell'avvio della sessione. Riprova." }]);
