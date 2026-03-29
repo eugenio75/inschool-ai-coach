@@ -375,7 +375,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     }]);
   }
 
-  function handleMethodAction(value: string) {
+  async function handleMethodAction(value: string) {
     // Handle finish session action
     if (value === "finish_session") {
       setMessages(prev => prev.map(m => ({ ...m, actions: undefined })));
