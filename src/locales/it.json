@@ -890,5 +890,17 @@
   "mockup_session_step": "Passo {{current}} di {{total}}",
   "mockup_session_coach": "Hai letto il brano. Dimmi con parole tue di cosa parla questo paragrafo.",
   "mockup_session_stuck": "Sono bloccato",
-  "mockup_session_hint": "Indizio"
+  "mockup_session_hint": "Indizio",
+  "adapted_material_confirmed": "Materiale confermato",
+  "adapted_download_versions": "Scarica versioni",
+  "adapted_download_standard": "Scarica — Versione standard",
+  "adapted_download_bes": "Scarica — Versione BES",
+  "adapted_download_dsa": "Scarica — Versione DSA",
+  "adapted_download_h": "Scarica — Versione H",
+  "adapted_download_solutions": "Scarica — Soluzioni docente",
+  "adapted_generating": "Generazione in corso...",
+  "adapted_error": "Errore nella generazione delle versioni adattate.",
+  "adapted_retry": "Riprova",
+  "adapted_back": "Torna ai materiali",
+  "adapted_confirmed_toast": "Materiale confermato! Scarica le versioni qui sotto."
 }
