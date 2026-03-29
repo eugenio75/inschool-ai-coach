@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
         .single(),
       serviceClient
         .from("homework_tasks")
-        .select("id, subject, title")
+        .select("id, subject, title, completed, updated_at")
         .eq("child_profile_id", child_profile_id),
     ]);
 
@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
           focus_sessions: 0,
           guided_sessions: 0,
           total_sessions: 0,
-          completed_tasks: 0,
+          completed_tasks: (tasks || []).filter((t: any) => t.completed && t.updated_at?.startsWith(today)).length,
         },
       };
 
@@ -302,7 +302,7 @@ ${attentionSignals.length > 0 ? `Segnali di attenzione:\n${attentionSignals.map(
         focus_sessions: sessions.length,
         guided_sessions: completedGuided,
         total_sessions: sessions.length + completedGuided,
-        completed_tasks: (tasks || []).filter((t: any) => t.completed).length,
+        completed_tasks: (tasks || []).filter((t: any) => t.completed && t.updated_at?.startsWith(today)).length,
       },
     };
 
