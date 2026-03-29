@@ -915,5 +915,15 @@
   "back_button": "Indietro",
   "not_found_title": "Pagina non trovata",
   "not_found_body": "La pagina che stai cercando non esiste o è stata spostata.",
-  "not_found_cta": "Torna alla Home"
+  "not_found_cta": "Torna alla Home",
+  "rafforza_empty_title": "Non hai ancora contenuti da rafforzare",
+  "rafforza_empty_desc": "Completa qualche sessione di studio prima.",
+  "rafforza_empty_cta": "Inizia a studiare",
+  "rafforza_empty_today": "Nessun contenuto studiato oggi",
+  "rafforza_empty_generic": "Nessun contenuto disponibile",
+  "rafforza_no_content": "Nessun contenuto trovato",
+  "rafforza_try_other": "Prova con un'altra selezione",
+  "rafforza_fallback_level1": "Nessun concetto critico trovato — ti mostriamo quelli che puoi ancora migliorare.",
+  "rafforza_fallback_level2": "Ottimo lavoro — nessun punto debole rilevato. Ecco un ripasso completo.",
+  "back": "Torna indietro"
 }
