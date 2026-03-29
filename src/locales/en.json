@@ -1004,5 +1004,12 @@
   "plan_manage_link": "Manage study plan →",
   "profile_study_plan_title": "My study plan",
   "profile_study_plan_desc": "Track your exams and monitor your progress",
-  "pensiero_del_giorno": "Thought of the day"
+  "pensiero_del_giorno": "Thought of the day",
+  "parent_daily_summary_title": "{{name}}'s day — today",
+  "parent_daily_summary_unavailable": "Today's summary is not available at the moment. Try again shortly.",
+  "parent_daily_summary_refresh": "Refresh",
+  "parent_label_focus": "Focus",
+  "parent_label_streak": "Streak",
+  "parent_label_focus_total": "Total Focus",
+  "parent_label_autonomy": "Autonomy"
 }
