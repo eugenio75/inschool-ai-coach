@@ -430,6 +430,18 @@ REGOLE:
     });
   }
 
+  /** Export teacher-only solutions PDF */
+  function exportSolutionsPdf(title: string, solutionsContent: string) {
+    const subjectStr = selectedSubjects.join(", ") || classe?.materia || "";
+    renderAndPrintPdf(solutionsContent, {
+      title,
+      type: "verifica",
+      subject: subjectStr,
+      className: classe?.nome || "",
+      isTeacherOnly: true,
+    });
+  }
+
   /** Export adapted version PDF (BES/DSA/H) */
   function exportAdaptedPdf(title: string, adaptedContent: string, type: string, version: "BES" | "DSA" | "H") {
     const subjectStr = selectedSubjects.join(", ") || classe?.materia || "";
