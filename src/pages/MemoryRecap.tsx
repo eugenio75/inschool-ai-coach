@@ -986,10 +986,14 @@ const MemoryRecap = () => {
     );
   }, [items]);
 
-  const weakItems = useMemo(() =>
-    items.filter(i => (i.strength || 0) < 50).sort((a, b) => (a.strength || 0) - (b.strength || 0)),
-    [items]
-  );
+  const weakItems = useMemo(() => {
+    const weak = items.filter(i => (i.strength || 0) < 50).sort((a, b) => (a.strength || 0) - (b.strength || 0));
+    // Fallback: if no weak items, use all items sorted by lowest strength
+    if (weak.length === 0 && items.length > 0) {
+      return [...items].sort((a, b) => (a.strength || 50) - (b.strength || 50));
+    }
+    return weak;
+  }, [items]);
 
   const getRelevantItems = (section: Section, contentType: ContentType): any[] => {
     if (section === "ripasso") {
@@ -998,7 +1002,11 @@ const MemoryRecap = () => {
       return [];
     }
     if (section === "rinforza") {
-      if (contentType === "today") return weakItems.filter(i => i.created_at >= getTodayStart());
+      if (contentType === "today") {
+        const todayWeak = weakItems.filter(i => i.created_at >= getTodayStart());
+        // Fallback to today's items if no weak ones today
+        return todayWeak.length > 0 ? todayWeak : todayItems;
+      }
       if (contentType === "cumulative") return weakItems;
       return [];
     }
