@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Sun, RefreshCw, AlertCircle, Clock, BookOpen, CheckCircle2, TrendingUp } from "lucide-react";
+import { Sun, RefreshCw, AlertCircle, Clock, BookOpen, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -9,33 +9,22 @@ const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 interface DailySummaryCardProps {
   childProfileId: string;
   childName: string;
-  sessions: any[];
-  tasks: any[];
   missions: any[];
 }
 
-export const DailySummaryCard = ({ childProfileId, childName, sessions, tasks, missions }: DailySummaryCardProps) => {
+export const DailySummaryCard = ({ childProfileId, childName, missions }: DailySummaryCardProps) => {
   const [summary, setSummary] = useState<string | null>(null);
   const [hasAttention, setHasAttention] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
-  const [guidedSessions, setGuidedSessions] = useState<any[]>([]);
+  const [todayStats, setTodayStats] = useState<{
+    study_minutes: number;
+    total_sessions: number;
+    completed_tasks: number;
+  }>({ study_minutes: 0, total_sessions: 0, completed_tasks: 0 });
 
   const today = new Date().toISOString().split("T")[0];
-  const todayFocusSessions = sessions.filter(s => s.completed_at?.startsWith(today));
-  const todayGuidedSessions = guidedSessions.filter(s => 
-    s.started_at?.startsWith(today) && s.status === "completed"
-  );
-  
-  // Combine: focus_sessions minutes + guided_sessions minutes
-  const focusMinutes = todayFocusSessions.reduce((a: number, s: any) => a + Math.round((s.duration_seconds || 0) / 60), 0);
-  const guidedMinutes = todayGuidedSessions.reduce((a: number, s: any) => a + Math.round((s.duration_seconds || 0) / 60), 0);
-  const todayMinutes = focusMinutes + guidedMinutes;
-  const todaySessionCount = todayFocusSessions.length + todayGuidedSessions.length;
-  
-  const todayTasks = tasks.filter(t => t.completed && t.updated_at?.startsWith(today));
   const todayMissions = missions.filter(m => m.mission_date === today);
   const completedMissions = todayMissions.filter(m => m.completed);
 
@@ -52,6 +41,13 @@ export const DailySummaryCard = ({ childProfileId, childName, sessions, tasks, m
       if (fnError) throw fnError;
       setSummary(data?.summary || null);
       setHasAttention(data?.has_attention_signal || false);
+      if (data?.today_stats) {
+        setTodayStats({
+          study_minutes: data.today_stats.study_minutes || 0,
+          total_sessions: data.today_stats.total_sessions || 0,
+          completed_tasks: data.today_stats.completed_tasks || 0,
+        });
+      }
     } catch (e) {
       console.error("Failed to fetch daily summary:", e);
       setError(true);
@@ -61,19 +57,7 @@ export const DailySummaryCard = ({ childProfileId, childName, sessions, tasks, m
     }
   };
 
-  // Fetch guided sessions for today
   useEffect(() => {
-    const fetchGuidedSessions = async () => {
-      const todayDate = new Date().toISOString().split("T")[0];
-      const { data } = await supabase
-        .from("guided_sessions")
-        .select("id, status, started_at, duration_seconds")
-        .eq("user_id", childProfileId)
-        .gte("started_at", `${todayDate}T00:00:00`)
-        .lte("started_at", `${todayDate}T23:59:59`);
-      setGuidedSessions(data || []);
-    };
-    fetchGuidedSessions();
     fetchSummary();
   }, [childProfileId]);
 
@@ -121,17 +105,17 @@ export const DailySummaryCard = ({ childProfileId, childName, sessions, tasks, m
       <div className="grid grid-cols-3 gap-2 mb-3">
         <div className="bg-muted/50 rounded-xl p-3 text-center">
           <Clock className="w-4 h-4 text-primary mx-auto mb-1" />
-          <p className="font-display font-bold text-foreground text-sm">{todayMinutes}m</p>
+          <p className="font-display font-bold text-foreground text-sm">{todayStats.study_minutes}m</p>
           <p className="text-[10px] text-muted-foreground">Studio</p>
         </div>
         <div className="bg-muted/50 rounded-xl p-3 text-center">
           <BookOpen className="w-4 h-4 text-primary mx-auto mb-1" />
-          <p className="font-display font-bold text-foreground text-sm">{todaySessionCount}</p>
+          <p className="font-display font-bold text-foreground text-sm">{todayStats.total_sessions}</p>
           <p className="text-[10px] text-muted-foreground">Sessioni</p>
         </div>
         <div className="bg-muted/50 rounded-xl p-3 text-center">
           <CheckCircle2 className="w-4 h-4 text-primary mx-auto mb-1" />
-          <p className="font-display font-bold text-foreground text-sm">{todayTasks.length}</p>
+          <p className="font-display font-bold text-foreground text-sm">{todayStats.completed_tasks}</p>
           <p className="text-[10px] text-muted-foreground">Completati</p>
         </div>
       </div>
