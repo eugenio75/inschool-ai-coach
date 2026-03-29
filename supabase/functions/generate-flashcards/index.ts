@@ -35,7 +35,14 @@ serve(async (req) => {
       ? conversationHistory.map((m: any) => `${m.role}: ${m.content}`).join("\n")
       : String(conversationHistory || "");
 
-    const systemPrompt = isEN
+    // Detect if the caller is requesting a custom format (challenges, games, etc.)
+    const isCustomFormat = conversationText.includes('Formato JSON:') || conversationText.includes('Formato:');
+
+    const systemPrompt = isCustomFormat
+      ? (isEN
+        ? `You are a teaching expert. Follow the user's instructions EXACTLY. Output ONLY valid JSON matching the format they specify. All content must be in English.`
+        : `Sei un esperto di didattica. Segui le istruzioni dell'utente ESATTAMENTE. Output SOLO JSON valido nel formato che specificano.`)
+      : isEN
       ? `You are a teaching expert. Generate review flashcards from the study session content.
 
 Rules:
