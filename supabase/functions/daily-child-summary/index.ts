@@ -142,6 +142,13 @@ Deno.serve(async (req) => {
         summary: `Oggi ${childName} non ha ancora studiato. Puoi incoraggiarlo ad aprire InSchool.`,
         has_attention_signal: false,
         generated_at: new Date().toISOString(),
+        today_stats: {
+          study_minutes: 0,
+          focus_sessions: 0,
+          guided_sessions: 0,
+          total_sessions: 0,
+          completed_tasks: 0,
+        },
       };
 
       // Don't cache "no activity" — might change later in the day
