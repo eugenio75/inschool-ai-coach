@@ -173,6 +173,87 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   const [celebrationStreak, setCelebrationStreak] = useState<number | undefined>();
   const sessionStartTime = useRef<number>(Date.now());
 
+  // ── Smart time tracking: only count active intervals ≤ 10 min ──
+  const lastInteractionTime = useRef<number>(Date.now());
+  const activeStudySeconds = useRef<number>(0);
+  const INACTIVITY_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
+  const GRACE_PERIOD_MS = 2 * 60 * 1000; // 2 minutes
+
+  // ── Inactivity detection refs ──
+  const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const graceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inactivityWarned = useRef(false);
+  const activeStudySecondsRef = useRef(activeStudySeconds);
+  activeStudySecondsRef.current = activeStudySeconds;
+
+  /** Call on every user message to accumulate active time */
+  function recordInteraction() {
+    const now = Date.now();
+    const gap = now - lastInteractionTime.current;
+    if (gap <= INACTIVITY_THRESHOLD_MS) {
+      activeStudySeconds.current += Math.floor(gap / 1000);
+    }
+    lastInteractionTime.current = now;
+    inactivityWarned.current = false;
+  }
+
+  /** Reset inactivity timer — call after every user message */
+  function resetInactivityTimer() {
+    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+    if (graceTimerRef.current) clearTimeout(graceTimerRef.current);
+
+    inactivityTimerRef.current = setTimeout(() => {
+      // 10 min with no user message
+      if (sessionCompletedRef.current) return;
+      inactivityWarned.current = true;
+
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: "Sei ancora lì? Non ho ricevuto risposte negli ultimi 10 minuti. Se ti sei allontanato, metto la sessione in pausa così non perdiamo il tuo progresso. Torna quando vuoi! 😊",
+      }]);
+
+      // Grace period: 2 more minutes
+      graceTimerRef.current = setTimeout(() => {
+        if (sessionCompletedRef.current) return;
+        if (inactivityWarned.current) {
+          // No response — auto-pause
+          pauseSessionSilent();
+        }
+      }, GRACE_PERIOD_MS);
+    }, INACTIVITY_THRESHOLD_MS);
+  }
+
+  /** Pause without navigating (used by inactivity auto-pause) */
+  async function pauseSessionSilent() {
+    const sid = sessionIdRef.current;
+    if (!sid) return;
+    if (isChildSession()) {
+      await childApi("update-session", { sessionId: sid, updates: { status: "paused", current_step: currentStepRef.current, updated_at: new Date().toISOString() } }).catch(() => {});
+    } else {
+      await supabase.from("guided_sessions").update({
+        status: "paused",
+        current_step: currentStepRef.current,
+        updated_at: new Date().toISOString(),
+      }).eq("id", sid).then(() => {}, () => {});
+    }
+    // Save messages
+    const convId = conversationIdRef.current;
+    const msgs = messagesRef.current;
+    if (convId && msgs.length > 0 && !isChildSession()) {
+      const chatToSave = msgs.filter(m => m.content?.trim()).map(m => ({ role: m.role, text: m.content }));
+      await supabase.from("conversation_sessions").update({
+        messaggi: chatToSave as any,
+        updated_at: new Date().toISOString(),
+      }).eq("id", convId).then(() => {}, () => {});
+    }
+    navigate("/dashboard");
+  }
+
+  function clearInactivityTimers() {
+    if (inactivityTimerRef.current) { clearTimeout(inactivityTimerRef.current); inactivityTimerRef.current = null; }
+    if (graceTimerRef.current) { clearTimeout(graceTimerRef.current); graceTimerRef.current = null; }
+  }
+
   // Method block state
   const [methodPhase, setMethodPhase] = useState<MethodPhase>("none");
   const [familiarity, setFamiliarity] = useState<Familiarity | null>(null);
