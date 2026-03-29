@@ -842,32 +842,58 @@ export default function DashboardDocente() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete class confirmation */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={v => { if (!v) setDeleteTarget(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Eliminare la classe "{deleteTarget?.nome}"?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Questa azione non può essere annullata. I materiali assegnati rimarranno nel tuo archivio.
-              {deleteTarget?.num_studenti > 0 && (
-                <span className="block mt-2 font-medium text-foreground">
-                  ⚠ Questa classe ha {deleteTarget.num_studenti} studenti attivi. Eliminandola perderanno l'accesso al codice classe.
-                </span>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deletingClasse}>Annulla</AlertDialogCancel>
-            <AlertDialogAction
+      {/* Delete class — Step 1 */}
+      <Dialog open={!!deleteTarget && deleteStep === 1} onOpenChange={v => { if (!v) { setDeleteTarget(null); setDeleteStep(1); } }}>
+        <DialogContent className="rounded-xl">
+          <DialogHeader>
+            <DialogTitle>Vuoi eliminare "{deleteTarget?.nome}"?</DialogTitle>
+          </DialogHeader>
+          <div className="text-sm text-muted-foreground space-y-2 py-2">
+            <p>Verranno eliminati:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              {deleteStats.students > 0 && <li><span className="font-medium text-foreground">{deleteStats.students}</span> collegamenti studenti</li>}
+              {deleteStats.materials > 0 && <li><span className="font-medium text-foreground">{deleteStats.materials}</span> materiali associati</li>}
+              {deleteStats.assignments > 0 && <li><span className="font-medium text-foreground">{deleteStats.assignments}</span> compiti assegnati</li>}
+              {deleteStats.students === 0 && deleteStats.materials === 0 && deleteStats.assignments === 0 && <li>Nessun dato collegato</li>}
+            </ul>
+            <p className="text-xs pt-1">I profili degli studenti <strong>non</strong> verranno eliminati.</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteStep(1); }}>Annulla</Button>
+            <Button variant="destructive" onClick={() => setDeleteStep(2)}>Continua</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete class — Step 2 */}
+      <Dialog open={!!deleteTarget && deleteStep === 2} onOpenChange={v => { if (!v) { setDeleteTarget(null); setDeleteStep(1); setDeleteConfirmName(""); } }}>
+        <DialogContent className="rounded-xl">
+          <DialogHeader>
+            <DialogTitle>Questa azione è irreversibile</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              Digita il nome della classe per confermare: <span className="font-semibold text-foreground">"{deleteTarget?.nome}"</span>
+            </p>
+            <Input
+              placeholder="Nome della classe..."
+              value={deleteConfirmName}
+              onChange={e => setDeleteConfirmName(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteStep(1); setDeleteConfirmName(""); }}>Annulla</Button>
+            <Button
+              variant="destructive"
+              disabled={deleteConfirmName !== deleteTarget?.nome || deletingClasse}
               onClick={() => deleteTarget && deleteClasse(deleteTarget.id)}
-              disabled={deletingClasse}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deletingClasse ? "Eliminazione..." : "Elimina"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              {deletingClasse ? "Eliminazione..." : "Elimina definitivamente"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
