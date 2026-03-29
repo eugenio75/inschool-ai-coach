@@ -1001,5 +1001,7 @@
   "plan_status_passed": "Passed",
   "plan_empty_cta": "You haven't set up your study plan yet. Add it to quickly find your exams here.",
   "plan_setup_cta": "Set up study plan",
-  "plan_manage_link": "Manage study plan →"
+  "plan_manage_link": "Manage study plan →",
+  "profile_study_plan_title": "My study plan",
+  "profile_study_plan_desc": "Track your exams and monitor your progress"
 }

@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Sparkles, X, Plus, Loader2, School, MapPin, User } from "lucide-react";
+import { ArrowLeft, Sparkles, X, Plus, Loader2, School, MapPin, User, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isChildSession, getChildSession, setChildSession } from "@/lib/childSession";
 import { getActiveChildProfileId, getChildProfile, updateChildProfile } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
+import { useLang } from "@/contexts/LangContext";
+import UniversityStudyPlan, { type StudyPlanExam } from "@/components/UniversityStudyPlan";
+import { loadStudyPlan, saveStudyPlan } from "@/lib/studyPlanService";
 
 const AVATAR_COLORS = [
   { id: "blue", bg: "bg-blue-100", text: "text-blue-700" },
@@ -40,6 +43,8 @@ const StudentProfile = () => {
   const [city, setCity] = useState("");
   const [customInterest, setCustomInterest] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [studyPlan, setStudyPlan] = useState<StudyPlanExam[]>([]);
+  const { t } = useLang();
 
   useEffect(() => {
     const load = async () => {
@@ -58,6 +63,9 @@ const StudentProfile = () => {
         setClassSection(p.class_section || "");
         setSchoolName(p.school_name || "");
         setCity(p.city || "");
+        if (p.school_level === "università") {
+          loadStudyPlan(p.id).then(setStudyPlan);
+        }
       }
       setLoading(false);
     };
@@ -272,6 +280,24 @@ const StudentProfile = () => {
               <p className="text-xs text-muted-foreground mt-2">Massimo 10 interessi</p>
             )}
           </motion.div>
+
+          {/* University Study Plan */}
+          {profile.school_level === "università" && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
+              <div className="flex items-center gap-2 mb-1">
+                <GraduationCap className="w-4 h-4 text-primary" />
+                <h3 className="font-display font-semibold text-foreground text-sm">{t("profile_study_plan_title")}</h3>
+              </div>
+              <p className="text-xs text-muted-foreground mb-4">{t("profile_study_plan_desc")}</p>
+              <UniversityStudyPlan
+                exams={studyPlan}
+                onChange={(newPlan) => {
+                  setStudyPlan(newPlan);
+                  if (profile?.id) saveStudyPlan(profile.id, newPlan);
+                }}
+              />
+            </motion.div>
+          )}
 
           {/* Save */}
           {hasChanges && (
