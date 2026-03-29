@@ -420,11 +420,50 @@ export async function completeMission(missionId: string, pointsReward: number) {
     .update({ completed: true, completed_at: new Date().toISOString() })
     .eq("id", missionId);
 
-  // Add points to gamification
+  // Distribute mission points across categories based on mission type
   const current = await getGamification(profileId);
   if (current) {
+    // Look up the mission to determine its type
+    const { data: missionData } = await supabase
+      .from("daily_missions")
+      .select("mission_type")
+      .eq("id", missionId)
+      .single();
+
+    const mType = missionData?.mission_type || "study_session";
+    let focusAdd = 0;
+    let autonomyAdd = 0;
+    let consistencyAdd = 0;
+
+    // Split points by mission type
+    switch (mType) {
+      case "complete_task":
+        // 20 pts → 10 focus + 10 autonomy
+        focusAdd = Math.min(pointsReward, 10);
+        autonomyAdd = Math.max(0, pointsReward - 10);
+        break;
+      case "coach_challenge":
+        // 20 pts → 10 focus + 10 autonomy
+        focusAdd = Math.min(pointsReward, 10);
+        autonomyAdd = Math.max(0, pointsReward - 10);
+        break;
+      case "review_weak_concept":
+        // 15 pts → 10 focus + 5 consistency
+        focusAdd = Math.min(pointsReward, 10);
+        consistencyAdd = Math.max(0, pointsReward - 10);
+        break;
+      case "study_session":
+      default:
+        // 15 pts → 10 focus + 5 autonomy
+        focusAdd = Math.min(pointsReward, 10);
+        autonomyAdd = Math.max(0, pointsReward - 10);
+        break;
+    }
+
     await supabase.from("gamification").update({
-      focus_points: (current.focus_points || 0) + pointsReward,
+      focus_points: (current.focus_points || 0) + focusAdd,
+      autonomy_points: (current.autonomy_points || 0) + autonomyAdd,
+      consistency_points: (current.consistency_points || 0) + consistencyAdd,
       updated_at: new Date().toISOString(),
     }).eq("child_profile_id", profileId);
   }
