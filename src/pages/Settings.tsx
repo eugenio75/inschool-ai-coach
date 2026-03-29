@@ -507,6 +507,16 @@ const Settings = () => {
             <LogoutButton showLabel className="w-full flex items-center justify-center gap-2 rounded-2xl border border-border text-foreground hover:text-destructive hover:bg-destructive/5 transition-colors py-3 text-sm font-medium" />
           </div>
 
+          {/* Blockchain */}
+          {user && (
+            <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
+              <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Link2 className="w-4 h-4 text-primary" /> Blockchain
+              </h3>
+              <BlockchainTab userId={user.id} />
+            </div>
+          )}
+
           {/* Privacy e dati */}
           <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
             <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2"><Shield className="w-4 h-4 text-primary" /> Privacy e dati</h3>
