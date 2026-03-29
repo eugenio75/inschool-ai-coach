@@ -5,7 +5,7 @@ import { ArrowLeft, BookOpen, Loader2, Lock, Bell } from "lucide-react";
 import { getChildProfiles, getFocusSessions, getGamification, getParentSettings, getMemoryItems, getTasks, getDailyMissions, getEmotionalAlerts } from "@/lib/database";
 import { supabase } from "@/integrations/supabase/client";
 
-import { DailySnapshotCard } from "@/components/parent/DailySnapshotCard";
+import { DailySummaryCard } from "@/components/parent/DailySummaryCard";
 import { ProgressCard } from "@/components/parent/ProgressCard";
 import { DailySummaryCard } from "@/components/parent/DailySummaryCard";
 import { EmotionalCard } from "@/components/parent/EmotionalCard";
@@ -291,14 +291,6 @@ const ParentDashboard = () => {
             </motion.div>
           )}
 
-          {/* Daily snapshot */}
-          <DailySnapshotCard
-            childName={selectedProfile?.name || "—"}
-            sessions={sessions}
-            tasks={tasks}
-            missions={missions}
-          />
-
           {/* Progress */}
           <ProgressCard
             totalMinutes={totalMinutes}
@@ -306,11 +298,14 @@ const ParentDashboard = () => {
             gamification={gamification}
           />
 
-          {/* Daily AI summary */}
+          {/* Unified daily summary */}
           {selectedChild && (
             <DailySummaryCard
               childProfileId={selectedChild}
               childName={selectedProfile?.name || "—"}
+              sessions={sessions}
+              tasks={tasks}
+              missions={missions}
             />
           )}
 
