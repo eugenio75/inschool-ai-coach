@@ -91,6 +91,7 @@ ABSOLUTE RULES:
 - If there are teacher assignments, mention them
 - Be human and warm, never robotic
 - ALWAYS respond in English
+${tipInstruction}
 
 Output JSON: {"message":"...","suggestedAction":"button text","actionRoute":"/path"}
 
@@ -130,6 +131,7 @@ REGOLE ASSOLUTE:
 - Se c'è streak, riconoscilo brevemente
 - Se ci sono assegnazioni dal professore, segnalale
 - Sii umano e caldo, mai robotico
+${tipInstruction}
 
 Output JSON: {"message":"...","suggestedAction":"testo bottone","actionRoute":"/percorso"}
 
