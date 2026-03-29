@@ -21,6 +21,7 @@ interface SessionCelebrationProps {
   totalPoints?: number;
   previousTotalPoints?: number;
   maxPointsPossible?: number;
+  streak?: number;
 }
 
 const CONFETTI_COLORS = [
@@ -76,6 +77,7 @@ export function SessionCelebration({
   totalPoints,
   previousTotalPoints,
   maxPointsPossible = 40,
+  streak,
 }: SessionCelebrationProps) {
   const hasPoints = !!pointsEarned;
   const earnedTotal = pointsEarned ? pointsEarned.focus + pointsEarned.autonomy + pointsEarned.consistency : 0;
@@ -115,9 +117,9 @@ export function SessionCelebration({
 
   const pointBadges = hasPoints
     ? [
-        { icon: <Target className="w-4 h-4" />, label: "Focus", value: pointsEarned!.focus, emoji: "🎯" },
-        { icon: <Brain className="w-4 h-4" />, label: "Autonomia", value: pointsEarned!.autonomy, emoji: "🧠" },
-        { icon: <Flame className="w-4 h-4" />, label: "Costanza", value: pointsEarned!.consistency, emoji: "🔥" },
+        { label: "Punti", value: pointsEarned!.focus, emoji: "🎯" },
+        { label: "Impegno", value: pointsEarned!.autonomy, emoji: "🧠" },
+        { label: "Costanza", value: pointsEarned!.consistency, emoji: "🔥" },
       ]
     : [];
 
