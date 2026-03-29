@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Brain, Map, Heart, ArrowRight } from "lucide-react";
+import { Brain, Map, Heart, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLang } from "@/contexts/LangContext";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
@@ -27,6 +27,7 @@ const studentTrustItems = [
 
 export default function LandingStudenti() {
   const { t } = useLang();
+  const navigate = useNavigate();
 
   const benefits = [
     { icon: Brain, tTitle: "st_new_ben_1_title" as const, tBody: "st_new_ben_1_body" as const },
@@ -44,6 +45,14 @@ export default function LandingStudenti() {
   return (
     <div className="min-h-screen bg-white">
       <LandingNavbar />
+
+      {/* Back button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="fixed top-20 left-4 z-40 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/80 backdrop-blur-sm border border-border shadow-sm text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" /> {t("back_button")}
+      </button>
 
       {/* ── HERO ── */}
       <section className="pt-24 pb-20 px-6 text-center">

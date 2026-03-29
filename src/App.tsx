@@ -29,6 +29,7 @@ const StudentProfile = lazy(() => import("./pages/StudentProfile"));
 const EmotionalCheckin = lazy(() => import("./pages/EmotionalCheckin"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Security = lazy(() => import("./pages/Security"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
@@ -171,6 +172,7 @@ const AppRoutes = () => (
         <Route path="/security" element={<Security />} />
         <Route path="/verify" element={<CredentialVerify />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/dashboard" element={<AccessibleRoute><MaybeAdultLayout><Dashboard /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/add-homework" element={<AccessibleRoute><MaybeAdultLayout><AddHomework /></MaybeAdultLayout></AccessibleRoute>} />

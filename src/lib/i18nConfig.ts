@@ -22,13 +22,21 @@ i18n
       en: { translation: en },
     },
     fallbackLng: "it",
-    supportedLngs: ["it", "en"],
+    supportedLngs: ["it", "en", "es", "fr", "de", "ar"],
     interpolation: { escapeValue: false },
     detection: {
       order: ["localStorage", "navigator"],
       lookupLocalStorage: "preferred_language",
       caches: ["localStorage"],
-      convertDetectedLanguage: (lng: string) => (lng.startsWith("it") ? "it" : "en"),
+      convertDetectedLanguage: (lng: string) => {
+        if (lng.startsWith("it")) return "it";
+        if (lng.startsWith("en")) return "en";
+        if (lng.startsWith("es")) return "es";
+        if (lng.startsWith("fr")) return "fr";
+        if (lng.startsWith("de")) return "de";
+        if (lng.startsWith("ar")) return "ar";
+        return "it";
+      },
     },
     react: { useSuspense: false },
   });

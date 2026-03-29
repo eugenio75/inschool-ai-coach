@@ -548,8 +548,13 @@ const Auth = () => {
         </div>
 
         {/* Forgot password + Toggle Login/Signup */}
-        {isLogin && !isMinorRole && (
-          <ForgotPasswordInline />
+        {isLogin && (
+          <>
+            <ForgotPasswordInline />
+            <Link to="/forgot-password" className="block text-center mt-2 text-xs text-muted-foreground hover:text-primary transition-colors">
+              Vai alla pagina di recupero password →
+            </Link>
+          </>
         )}
         <div className="mt-6 text-center text-sm border-t border-border pt-6">
             <span className="text-muted-foreground">{isLogin ? "Prima volta in InSchool?" : "Hai già un account?"}</span>

@@ -902,5 +902,18 @@
   "adapted_error": "Error generating adapted versions.",
   "adapted_retry": "Retry",
   "adapted_back": "Back to materials",
-  "adapted_confirmed_toast": "Material confirmed! Download versions below."
+  "adapted_confirmed_toast": "Material confirmed! Download versions below.",
+  "forgot_title": "Forgot your password?",
+  "forgot_subtitle": "Enter your email and we'll send you a reset link.",
+  "forgot_email_label": "Your email address",
+  "forgot_email_placeholder": "name@email.com",
+  "forgot_help_text": "We'll send you a secure link to reset your password.",
+  "forgot_send_button": "Send reset link",
+  "forgot_sent_title": "Email sent!",
+  "forgot_sent_body": "Check your inbox and follow the instructions to reset your password.",
+  "forgot_back": "← Back to login",
+  "back_button": "Back",
+  "not_found_title": "Page not found",
+  "not_found_body": "The page you're looking for doesn't exist or has been moved.",
+  "not_found_cta": "Go to Home"
 }
