@@ -421,6 +421,9 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
               : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
             setMessages([{ role: "assistant", content: resumeMsg }]);
             setSetupDone(true);
+            lastInteractionTime.current = Date.now();
+            activeStudySeconds.current = 0;
+            resetInactivityTimer();
           }
         } else if (hw.completed) {
           setSessionCompleted(true);
@@ -486,6 +489,9 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
               setMessages([{ role: "assistant", content: resumeMsg }]);
             }
             setSetupDone(true);
+            lastInteractionTime.current = Date.now();
+            activeStudySeconds.current = 0;
+            resetInactivityTimer();
           }
         } else if (hw.completed) {
           const { data: completedSession } = await supabase
