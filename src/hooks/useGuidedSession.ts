@@ -170,6 +170,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   const [celebrationPoints, setCelebrationPoints] = useState<PointsEarned | undefined>();
   const [celebrationTotalPoints, setCelebrationTotalPoints] = useState<number | undefined>();
   const [celebrationPreviousTotal, setCelebrationPreviousTotal] = useState<number | undefined>();
+  const [celebrationStreak, setCelebrationStreak] = useState<number | undefined>();
   const sessionStartTime = useRef<number>(Date.now());
 
   // Method block state
@@ -416,13 +417,14 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
           consistency_points: consistencyPoints,
         });
 
-        // Fetch updated totals
+        // Fetch updated totals and streak
         if (profileId) {
           const updatedGam = await getGamification(profileId);
           if (updatedGam) {
             setCelebrationTotalPoints(
               (updatedGam.focus_points || 0) + (updatedGam.autonomy_points || 0) + (updatedGam.consistency_points || 0)
             );
+            setCelebrationStreak(updatedGam.streak || 0);
           }
         }
       } catch (err) {
@@ -998,5 +1000,6 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
     celebrationPoints,
     celebrationTotalPoints,
     celebrationPreviousTotal,
+    celebrationStreak,
   };
 }

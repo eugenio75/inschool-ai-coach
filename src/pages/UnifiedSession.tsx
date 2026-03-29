@@ -545,6 +545,7 @@ Inizia con la prima domanda.`;
           pointsEarned={guided.celebrationPoints}
           totalPoints={guided.celebrationTotalPoints}
           previousTotalPoints={guided.celebrationPreviousTotal}
+          streak={guided.celebrationStreak}
         />
       </>
     );

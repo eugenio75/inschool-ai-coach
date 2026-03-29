@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Trophy, Brain, Target, Flame } from "lucide-react";
+import { Star, Trophy, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export interface PointsEarned {
@@ -21,6 +21,7 @@ interface SessionCelebrationProps {
   totalPoints?: number;
   previousTotalPoints?: number;
   maxPointsPossible?: number;
+  streak?: number;
 }
 
 const CONFETTI_COLORS = [
@@ -76,6 +77,7 @@ export function SessionCelebration({
   totalPoints,
   previousTotalPoints,
   maxPointsPossible = 40,
+  streak,
 }: SessionCelebrationProps) {
   const hasPoints = !!pointsEarned;
   const earnedTotal = pointsEarned ? pointsEarned.focus + pointsEarned.autonomy + pointsEarned.consistency : 0;
@@ -115,9 +117,9 @@ export function SessionCelebration({
 
   const pointBadges = hasPoints
     ? [
-        { icon: <Target className="w-4 h-4" />, label: "Focus", value: pointsEarned!.focus, emoji: "🎯" },
-        { icon: <Brain className="w-4 h-4" />, label: "Autonomia", value: pointsEarned!.autonomy, emoji: "🧠" },
-        { icon: <Flame className="w-4 h-4" />, label: "Costanza", value: pointsEarned!.consistency, emoji: "🔥" },
+        { label: "Punti", value: pointsEarned!.focus, emoji: "🎯" },
+        { label: "Impegno", value: pointsEarned!.autonomy, emoji: "🧠" },
+        { label: "Costanza", value: pointsEarned!.consistency, emoji: "🔥" },
       ]
     : [];
 
@@ -237,6 +239,19 @@ export function SessionCelebration({
                     </motion.div>
                   ))}
                 </div>
+
+                {/* Streak badge */}
+                {streak !== undefined && streak >= 2 && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 1.4 }}
+                    className="flex items-center justify-center gap-1.5 mb-3 text-sm font-semibold text-foreground"
+                  >
+                    <span>🔥</span>
+                    <span>Streak: {streak} giorni</span>
+                  </motion.div>
+                )}
 
                 {/* Session progress bar */}
                 <div className="mb-2">
