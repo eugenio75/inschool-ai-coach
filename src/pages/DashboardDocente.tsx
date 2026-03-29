@@ -68,9 +68,17 @@ export default function DashboardDocente() {
   const [showCustomSubject, setShowCustomSubject] = useState(false);
   const [customSubjectInput, setCustomSubjectInput] = useState("");
 
-  // Delete class
+  // Delete class — two-step flow
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [deletingClasse, setDeletingClasse] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [deleteStats, setDeleteStats] = useState({ students: 0, materials: 0, assignments: 0 });
+
+  // Sample data banner
+  const [showSampleBanner, setShowSampleBanner] = useState(() => {
+    return !localStorage.getItem("sample_banner_dismissed");
+  });
 
   // Crea materiale — class picker
   const [showMaterialClassPicker, setShowMaterialClassPicker] = useState(false);
