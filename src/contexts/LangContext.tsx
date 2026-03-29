@@ -15,6 +15,7 @@ interface LangContextType {
 }
 
 const LangContext = createContext<LangContextType | null>(null);
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 // LocalStorage cache for fast load
 function getCachedBundle(lang: string): Record<string, string> | null {
@@ -26,9 +27,19 @@ function getCachedBundle(lang: string): Record<string, string> | null {
   }
 }
 
+function isFreshBundle(bundle: Record<string, string> | null) {
+  if (!bundle) return false;
+  const updatedAt = bundle.__meta_updatedAt;
+  if (!updatedAt) return true;
+  return Date.now() - Number(updatedAt) < CACHE_TTL_MS;
+}
+
 function setCachedBundle(lang: string, bundle: Record<string, string>) {
   try {
-    localStorage.setItem(`inschool_i18n_${lang}`, JSON.stringify(bundle));
+    localStorage.setItem(
+      `inschool_i18n_${lang}`,
+      JSON.stringify({ ...bundle, __meta_updatedAt: Date.now().toString() })
+    );
   } catch {}
 }
 
@@ -68,7 +79,6 @@ async function translateViaEdgeFunction(
   keys: string[],
   targetLang: string
 ): Promise<string[]> {
-  const FUNC_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/translate-batch`;
   const chunkSize = 80;
   const allTranslations: string[] = [];
 
@@ -77,22 +87,21 @@ async function translateViaEdgeFunction(
     const chunkKeys = keys.slice(i, i + chunkSize);
 
     try {
-      const res = await fetch(FUNC_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      const { data, error } = await supabase.functions.invoke("translate-batch", {
+        body: {
+          texts: chunkTexts,
+          keys: chunkKeys,
+          targetLang,
+          sourceLang: "it",
         },
-        body: JSON.stringify({ texts: chunkTexts, keys: chunkKeys, targetLang, sourceLang: "it" }),
       });
 
-      if (!res.ok) {
-        console.warn("[i18n] Translation API error:", res.status);
+      if (error) {
+        console.warn("[i18n] Translation API error:", error.message);
         allTranslations.push(...chunkTexts);
         continue;
       }
 
-      const data = await res.json();
       allTranslations.push(...(data.translations || chunkTexts));
     } catch {
       allTranslations.push(...chunkTexts);
@@ -128,7 +137,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
     i18n.changeLanguage("it");
 
     const cached = getCachedBundle(currentLang);
-    if (cached && Object.keys(cached).length > 10) {
+    if (cached && Object.keys(cached).filter((key) => !key.startsWith("__meta_")).length > 10 && isFreshBundle(cached)) {
       setDynamicBundle(cached);
       return;
     }

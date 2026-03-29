@@ -1,6 +1,6 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BarChart3, Zap, Coffee, ArrowRight, ArrowLeft } from "lucide-react";
+import { BarChart3, Zap, Coffee, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLang } from "@/contexts/LangContext";
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
@@ -8,6 +8,7 @@ import { LandingFooter } from "@/components/landing/LandingFooter";
 import { TrustSection } from "@/components/landing/TrustSection";
 import { TeacherGenerateMockup } from "@/components/landing/TeacherGenerateMockup";
 import { TeacherHomeMockup } from "@/components/landing/TeacherHomeMockup";
+import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 
 const fade = {
   initial: { opacity: 0, y: 16 },
@@ -27,7 +28,6 @@ const teacherTrustItems = [
 
 export default function LandingDocenti() {
   const { t } = useLang();
-  const navigate = useNavigate();
 
   const benefits = [
     { icon: BarChart3, tTitle: "doc_new_ben_1_title" as const, tBody: "doc_new_ben_1_body" as const },
@@ -44,14 +44,7 @@ export default function LandingDocenti() {
   return (
     <div className="min-h-screen bg-white">
       <LandingNavbar />
-
-      {/* Back button */}
-      <button
-        onClick={() => navigate(-1)}
-        className="fixed top-20 left-4 z-40 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/80 backdrop-blur-sm border border-border shadow-sm text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" /> {t("back_button")}
-      </button>
+      <FloatingBackButton />
 
       {/* ── HERO ── */}
       <section className="pt-24 pb-20 px-6 text-center">

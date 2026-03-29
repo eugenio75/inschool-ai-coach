@@ -3,17 +3,8 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { LogoutButton } from "@/components/shared/LogoutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LangToggle } from "@/components/LangToggle";
-import { getChildSession } from "@/lib/childSession";
-import { AvatarInitials } from "@/components/shared/AvatarInitials";
-import { useLang } from "@/contexts/LangContext";
 
 export function AdultLayout({ children }: { children: React.ReactNode }) {
-  const { t } = useLang();
-  const session = getChildSession();
-  const profile = session?.profile;
-  const role = profile?.school_level || "";
-  const roleLabel = role === "superiori" ? t("role_student") : role === "universitario" ? t("role_university") : role === "docente" ? t("role_teacher") : "";
-
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -21,12 +12,17 @@ export function AdultLayout({ children }: { children: React.ReactNode }) {
           <AppSidebar />
         </div>
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 hidden sm:flex items-center justify-between border-b border-border px-5 bg-card">
-            <SidebarTrigger className="ml-1" />
-            <div className="flex items-center gap-3">
+          <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-card px-4 sm:px-5">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger className="ml-1 hidden sm:inline-flex" />
+              <span className="font-display text-sm font-bold tracking-tight text-foreground sm:hidden">InSchool</span>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3">
               <LangToggle />
               <ThemeToggle />
-              <LogoutButton showLabel />
+              <div className="hidden sm:block">
+                <LogoutButton showLabel />
+              </div>
             </div>
           </header>
           <main className="flex-1 bg-background">

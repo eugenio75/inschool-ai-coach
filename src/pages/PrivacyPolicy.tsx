@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
+import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
-      <div className="max-w-3xl mx-auto px-6 py-12">
-        <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">← Torna alla home</Link>
+      <FloatingBackButton />
+      <div className="max-w-3xl mx-auto px-6 py-24">
 
         <h1 className="text-3xl font-display font-bold mt-8 mb-2">InSchool — Privacy Policy</h1>
         <p className="text-sm text-muted-foreground mb-10">Ultimo aggiornamento: marzo 2026</p>

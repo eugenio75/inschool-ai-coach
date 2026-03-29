@@ -1,24 +1,16 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Scale } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Scale } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 
 const Privacy = () => {
-  const navigate = useNavigate();
   const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-4xl mx-auto px-6 h-16 flex items-center">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2 text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="w-4 h-4" /> {t("legal_back")}
-          </Button>
-        </div>
-      </nav>
+      <FloatingBackButton />
 
-      <main className="pt-32 pb-20 px-6 max-w-4xl mx-auto">
+      <main className="pb-20 px-6 pt-24 max-w-4xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <div className="w-16 h-16 bg-muted text-muted-foreground rounded-2xl flex items-center justify-center mb-8">
             <Scale className="w-8 h-8" />

@@ -1,13 +1,13 @@
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 
 export default function CookiePolicy() {
   const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
-      <div className="max-w-3xl mx-auto px-6 py-12">
-        <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">← {t("legal_back_home")}</Link>
+      <FloatingBackButton />
+      <div className="max-w-3xl mx-auto px-6 py-24">
 
         <h1 className="text-3xl font-display font-bold mt-8 mb-2">{t("cookie_title")}</h1>
         <p className="text-sm text-muted-foreground mb-10">{t("legal_updated")}</p>

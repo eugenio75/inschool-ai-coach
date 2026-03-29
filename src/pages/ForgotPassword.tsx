@@ -4,6 +4,7 @@ import { Mail, ArrowLeft, MailCheck, Loader2, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
+import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 
 export default function ForgotPassword() {
   const { t } = useLang();
@@ -25,6 +26,7 @@ export default function ForgotPassword() {
   if (sent) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <FloatingBackButton />
         <div className="w-full max-w-md text-center">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-6">
             <MailCheck className="w-8 h-8" />
@@ -41,6 +43,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <FloatingBackButton />
       <div className="w-full max-w-md bg-card rounded-2xl border border-border p-8 shadow-soft">
         <div className="text-center mb-6">
           <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
