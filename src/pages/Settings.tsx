@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Lock, Loader2, Users, Shield, Pencil, Bell,
-  Eye, EyeOff, Trash2, RotateCcw, Moon, Brain, BookOpen, Link2,
+  Eye, EyeOff, Trash2, RotateCcw, Moon, Brain, BookOpen, Link2, Users2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ import { getChildSession, setChildSession } from "@/lib/childSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { coachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
 import { BlockchainTab } from "@/components/BlockchainTab";
+import { MyClassesSection } from "@/components/MyClassesSection";
 
 // Avatar colors for profile customization
 const AVATAR_COLORS = [
@@ -461,6 +462,11 @@ const Settings = () => {
                 </Button>
               </div>
             </div>
+          )}
+
+          {/* My Classes (for non-docente students) */}
+          {isAdult && session?.profile?.school_level !== "docente" && session?.profileId && (
+            <MyClassesSection profileId={session.profileId} />
           )}
 
           {/* Study preferences reset (non-docente adult) */}

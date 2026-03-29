@@ -33,7 +33,7 @@ import { toast } from "sonner";
 import { RecentConversations } from "@/components/shared/RecentConversations";
 import { LogoutButton } from "@/components/shared/LogoutButton";
 import { BadgeDisplay } from "@/components/BadgeDisplay";
-
+import { JoinClassPrompt } from "@/components/JoinClassPrompt";
 const TIMER_CONFIGS = {
   pomodoro:   { seconds: 25 * 60, label: "Pomodoro — 25 min" },
   deep_work:  { seconds: 50 * 60, label: "Deep Work — 50 min" },
@@ -287,6 +287,11 @@ export default function DashboardSuperiori() {
               <p className="text-muted-foreground mt-1 text-sm">
                 {[indirizzo, anno && `${anno} anno`].filter(Boolean).join(" · ")}
               </p>
+            )}
+            {profileId && (
+              <div className="mt-2">
+                <JoinClassPrompt profileId={profileId} />
+              </div>
             )}
           </div>
           <div className="flex items-center gap-3">
