@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 import { DailySnapshotCard } from "@/components/parent/DailySnapshotCard";
 import { ProgressCard } from "@/components/parent/ProgressCard";
+import { DailySummaryCard } from "@/components/parent/DailySummaryCard";
 import { EmotionalCard } from "@/components/parent/EmotionalCard";
 import { CognitiveCard } from "@/components/parent/CognitiveCard";
 import { AccessCodeCard } from "@/components/parent/AccessCodeCard";
@@ -304,6 +305,14 @@ const ParentDashboard = () => {
             totalSessions={totalSessions}
             gamification={gamification}
           />
+
+          {/* Daily AI summary */}
+          {selectedChild && (
+            <DailySummaryCard
+              childProfileId={selectedChild}
+              childName={selectedProfile?.name || "—"}
+            />
+          )}
 
           {/* Emotional wellbeing */}
           <EmotionalCard
