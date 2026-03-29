@@ -900,7 +900,13 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
       // Mic reminder removed — handled once-ever by the UI on session start
 
       setStreamingText("");
-      setMessages([...newMessages, { role: "assistant", content: displayText }]);
+      const updatedMsgs = [...newMessages, { role: "assistant" as const, content: displayText }];
+      setMessages(updatedMsgs);
+
+      // Fix 3: Incremental save after each AI response (debounced, fire-and-forget)
+      if (!isChild) {
+        scheduleMessageSave(updatedMsgs);
+      }
 
       if (stepComplete && sessionId) {
         const stepNum = parseInt(stepComplete[1]);
