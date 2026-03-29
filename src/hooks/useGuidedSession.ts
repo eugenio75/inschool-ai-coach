@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getTask as fetchTask, getDailyMissions, completeMission, saveFocusSession, getGamification } from "@/lib/database";
@@ -180,9 +180,109 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   const [sessionEmotion, setSessionEmotion] = useState<string>("");
   const [showFamiliarity, setShowFamiliarity] = useState(false);
 
+  // Incremental save: conversation_sessions id
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const progressPercent = totalSteps > 0 ? ((currentStep - 1) / totalSteps) * 100 : 0;
   const progressLabel = totalSteps > 0 ? `Step ${currentStep} di ${totalSteps}` : undefined;
   const isChild = isChildSession();
+
+  // ── Refs for cleanup/beforeunload (must read latest state) ──
+  const sessionIdRef = useRef(sessionId);
+  const currentStepRef = useRef(currentStep);
+  const sessionCompletedRef = useRef(sessionCompleted);
+  const messagesRef = useRef(messages);
+  const conversationIdRef = useRef(conversationId);
+  const homeworkRef = useRef(homework);
+
+  useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
+  useEffect(() => { currentStepRef.current = currentStep; }, [currentStep]);
+  useEffect(() => { sessionCompletedRef.current = sessionCompleted; }, [sessionCompleted]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+  useEffect(() => { conversationIdRef.current = conversationId; }, [conversationId]);
+  useEffect(() => { homeworkRef.current = homework; }, [homework]);
+
+  // ── Fix 1: Auto-save on navigate away / beforeunload ──
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      const sid = sessionIdRef.current;
+      const step = currentStepRef.current;
+      const completed = sessionCompletedRef.current;
+      if (!sid || completed || step <= 0) return;
+
+      // Use sendBeacon for reliable save on page close
+      const payload = JSON.stringify({
+        sessionId: sid,
+        status: "paused",
+        current_step: step,
+        updated_at: new Date().toISOString(),
+      });
+      navigator.sendBeacon(
+        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/guided_sessions?id=eq.${sid}`,
+        new Blob([JSON.stringify({ status: "paused", current_step: step, updated_at: new Date().toISOString() })], { type: "application/json" })
+      );
+
+      // Also save messages
+      const convId = conversationIdRef.current;
+      const msgs = messagesRef.current;
+      if (convId && msgs.length > 0) {
+        const chatToSave = msgs.filter(m => m.content?.trim()).map(m => ({ role: m.role, text: m.content }));
+        navigator.sendBeacon(
+          `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/conversation_sessions?id=eq.${convId}`,
+          new Blob([JSON.stringify({ messaggi: chatToSave, updated_at: new Date().toISOString() })], { type: "application/json" })
+        );
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Cleanup on unmount (route change) — auto-pause if still active
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+
+      const sid = sessionIdRef.current;
+      const step = currentStepRef.current;
+      const completed = sessionCompletedRef.current;
+      if (sid && !completed && step > 0) {
+        // Fire-and-forget pause save
+        if (isChildSession()) {
+          childApi("update-session", { sessionId: sid, updates: { status: "paused", current_step: step, updated_at: new Date().toISOString() } }).catch(() => {});
+        } else {
+          supabase.from("guided_sessions").update({
+            status: "paused",
+            current_step: step,
+            updated_at: new Date().toISOString(),
+          }).eq("id", sid).then(() => {});
+        }
+
+        // Save messages too
+        const convId = conversationIdRef.current;
+        const msgs = messagesRef.current;
+        if (convId && msgs.length > 0 && !isChildSession()) {
+          const chatToSave = msgs.filter(m => m.content?.trim()).map(m => ({ role: m.role, text: m.content }));
+          supabase.from("conversation_sessions").update({
+            messaggi: chatToSave,
+            updated_at: new Date().toISOString(),
+          }).eq("id", convId).then(() => {});
+        }
+      }
+    };
+  }, []);
+
+  // ── Fix 3: Debounced incremental message save ──
+  function scheduleMessageSave(msgs: ChatMsg[]) {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      const convId = conversationIdRef.current;
+      if (!convId || msgs.length === 0) return;
+      const chatToSave = msgs.filter(m => m.content?.trim()).map(m => ({ role: m.role, text: m.content }));
+      supabase.from("conversation_sessions").update({
+        messaggi: chatToSave as any,
+        updated_at: new Date().toISOString(),
+      }).eq("id", convId).then(() => {}, err => console.error("Incremental save error:", err));
+    }, 2000);
+  }
 
   async function loadSession() {
     if (!homeworkId) { setLoading(false); return; }
@@ -265,6 +365,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
           } else {
             setSessionEmotion(sess.emotional_checkin || "");
             setSessionId(sess.id);
+            setConversationId(sess.conversation_id || null);
             setCurrentStep(sess.current_step || 1);
             setTotalSteps(sess.total_steps || 0);
 
@@ -275,12 +376,33 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
               .order("step_number", { ascending: true });
             setSteps(savedSteps || []);
 
-            const stepInfo = savedSteps?.[sess.current_step! - 1];
-            const stepContext = stepInfo ? `\n\n${hw.title} — Step ${sess.current_step} di ${sess.total_steps}:\n${stepInfo.step_text}` : "";
-            const resumeMsg = sess.last_difficulty
-              ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}.${stepContext}`
-              : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
-            setMessages([{ role: "assistant", content: resumeMsg }]);
+            // Try to restore conversation messages from incremental save
+            let restoredMessages = false;
+            if (sess.conversation_id) {
+              const { data: convData } = await supabase
+                .from("conversation_sessions")
+                .select("messaggi")
+                .eq("id", sess.conversation_id)
+                .single();
+              const savedMsgs = convData?.messaggi;
+              if (Array.isArray(savedMsgs) && savedMsgs.length > 0) {
+                const chatMsgs: ChatMsg[] = (savedMsgs as any[]).map((m: any) => ({
+                  role: m.role === "coach" || m.role === "assistant" ? "assistant" as const : "user" as const,
+                  content: m.text || m.content || "",
+                }));
+                setMessages(chatMsgs);
+                restoredMessages = true;
+              }
+            }
+
+            if (!restoredMessages) {
+              const stepInfo = savedSteps?.[sess.current_step! - 1];
+              const stepContext = stepInfo ? `\n\n${hw.title} — Step ${sess.current_step} di ${sess.total_steps}:\n${stepInfo.step_text}` : "";
+              const resumeMsg = sess.last_difficulty
+                ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}.${stepContext}`
+                : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
+              setMessages([{ role: "assistant", content: resumeMsg }]);
+            }
             setSetupDone(true);
           }
         } else if (hw.completed) {
@@ -566,6 +688,20 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
         }));
         await childApi("insert-steps", { steps: stepRows });
       } else {
+        // Create conversation_sessions record for incremental saving
+        const { data: convSession } = await supabase
+          .from("conversation_sessions")
+          .insert({
+            profile_id: homework?.child_profile_id || userId,
+            titolo: homework?.title || "Sessione guidata",
+            materia: homework?.subject,
+            messaggi: [],
+          })
+          .select("id")
+          .single();
+        const convId = convSession?.id || null;
+        setConversationId(convId);
+
         const { data: newSession } = await supabase
           .from("guided_sessions")
           .insert({
@@ -575,6 +711,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
             current_step: 1,
             total_steps: generatedSteps.length,
             emotional_checkin: emotion,
+            conversation_id: convId,
           })
           .select()
           .single();
@@ -785,7 +922,13 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
       // Mic reminder removed — handled once-ever by the UI on session start
 
       setStreamingText("");
-      setMessages([...newMessages, { role: "assistant", content: displayText }]);
+      const updatedMsgs = [...newMessages, { role: "assistant" as const, content: displayText }];
+      setMessages(updatedMsgs);
+
+      // Fix 3: Incremental save after each AI response (debounced, fire-and-forget)
+      if (!isChild) {
+        scheduleMessageSave(updatedMsgs);
+      }
 
       if (stepComplete && sessionId) {
         const stepNum = parseInt(stepComplete[1]);
@@ -830,22 +973,30 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
         if (isChild) {
           await childApi("complete-session", { sessionId, homeworkId, chatMessages: chatToSave });
         } else {
-          // Save conversation to conversation_sessions
-          const { data: convSession } = await supabase
-            .from("conversation_sessions")
-            .insert({
-              profile_id: homework?.child_profile_id,
-              titolo: homework?.title || "Sessione guidata",
-              materia: homework?.subject,
-              messaggi: chatToSave,
-            })
-            .select("id")
-            .single();
+          // Update existing conversation_sessions with final messages, or create if missing
+          if (conversationId) {
+            await supabase.from("conversation_sessions").update({
+              messaggi: chatToSave as any,
+              updated_at: new Date().toISOString(),
+            }).eq("id", conversationId);
+          } else {
+            const { data: convSession } = await supabase
+              .from("conversation_sessions")
+              .insert({
+                profile_id: homework?.child_profile_id,
+                titolo: homework?.title || "Sessione guidata",
+                materia: homework?.subject,
+                messaggi: chatToSave,
+              })
+              .select("id")
+              .single();
+            setConversationId(convSession?.id || null);
+          }
 
           await supabase.from("guided_sessions").update({
             status: "completed",
             completed_at: new Date().toISOString(),
-            conversation_id: convSession?.id || null,
+            conversation_id: conversationId,
           }).eq("id", sessionId);
           await supabase.from("homework_tasks").update({ completed: true, updated_at: new Date().toISOString() }).eq("id", homeworkId);
         }

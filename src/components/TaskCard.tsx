@@ -22,6 +22,7 @@ interface Task {
   steps: number;
   completed: boolean;
   task_type?: string;
+  sessionStatus?: "paused" | "active" | null;
 }
 
 interface TaskCardProps {
@@ -111,17 +112,29 @@ export const TaskCard = ({ task, onClick, onDelete }: TaskCardProps) => {
               <Clock className="w-3 h-3" />
               {task.completed ? "Completato" : `${task.steps} passi da fare`}
             </div>
-            {task.completed ? (
-              <div className="flex items-center gap-1 text-primary text-xs font-medium bg-primary/10 px-2 py-0.5 rounded-full">
-                <Check className="w-3.5 h-3.5" />
-                Fatto
-              </div>
-            ) : (
-              <div className="flex items-center gap-1 text-primary text-xs font-medium">
-                Inizia
-                <ArrowRight className="w-3 h-3" />
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {task.sessionStatus === "paused" && !task.completed && (
+                <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                  ⏸ In pausa
+                </span>
+              )}
+              {task.sessionStatus === "active" && !task.completed && (
+                <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400">
+                  ▶ In corso
+                </span>
+              )}
+              {task.completed ? (
+                <div className="flex items-center gap-1 text-primary text-xs font-medium bg-primary/10 px-2 py-0.5 rounded-full">
+                  <Check className="w-3.5 h-3.5" />
+                  Fatto
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 text-primary text-xs font-medium">
+                  {task.sessionStatus === "paused" ? "Riprendi" : "Inizia"}
+                  <ArrowRight className="w-3 h-3" />
+                </div>
+              )}
+            </div>
           </div>
         </button>
       </motion.div>
