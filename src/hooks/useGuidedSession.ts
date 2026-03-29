@@ -321,6 +321,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     // Cleanup on unmount (route change) — auto-pause if still active
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      clearInactivityTimers();
 
       const sid = sessionIdRef.current;
       const step = currentStepRef.current;
