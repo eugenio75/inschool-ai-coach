@@ -1443,6 +1443,30 @@ export type Database = {
           },
         ]
       }
+      translation_cache: {
+        Row: {
+          id: string
+          key: string
+          lang: string
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          id?: string
+          key: string
+          lang: string
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          id?: string
+          key?: string
+          lang?: string
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           adaptive_profile: Json | null
