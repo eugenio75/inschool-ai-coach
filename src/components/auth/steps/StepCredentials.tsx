@@ -131,13 +131,21 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
+        <div className="grid grid-cols-2 gap-3">
           <input
             type="text"
             required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Come ti chiami?"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            placeholder="Nome"
+            className={inputClass}
+          />
+          <input
+            type="text"
+            required
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            placeholder="Cognome"
             className={inputClass}
           />
         </div>
