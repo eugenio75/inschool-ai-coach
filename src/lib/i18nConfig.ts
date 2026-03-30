@@ -2,6 +2,10 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import it from "@/locales/it.json";
+import es from "@/locales/es.json";
+import fr from "@/locales/fr.json";
+import de from "@/locales/de.json";
+import ar from "@/locales/ar.json";
 import en from "@/locales/en.json";
 
 // Migrate old localStorage key
@@ -18,6 +22,10 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
+      es: { translation: es },
+      fr: { translation: fr },
+      de: { translation: de },
+      ar: { translation: ar },
       it: { translation: it },
       en: { translation: en },
     },
