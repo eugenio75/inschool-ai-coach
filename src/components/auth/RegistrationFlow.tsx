@@ -4,6 +4,8 @@ import { StepDob } from "./steps/StepDob";
 import { StepUnderAge } from "./steps/StepUnderAge";
 import { StepRoleSelect } from "./steps/StepRoleSelect";
 import { StepCredentials } from "./steps/StepCredentials";
+import { StepTeacherDeclaration } from "./steps/StepTeacherDeclaration";
+import type { TeacherDeclaration } from "./steps/StepTeacherDeclaration";
 
 export type RegistrationRole = "studente" | "docente" | "genitore";
 
@@ -18,10 +20,11 @@ const slideVariants = {
 };
 
 export function RegistrationFlow({ onSwitchToLogin }: RegistrationFlowProps) {
-  const [step, setStep] = useState<"dob" | "underage" | "role" | "credentials">("dob");
+  const [step, setStep] = useState<"dob" | "underage" | "role" | "teacher_declaration" | "credentials">("dob");
   const [dob, setDob] = useState("");
   const [age, setAge] = useState<number | null>(null);
   const [selectedRole, setSelectedRole] = useState<RegistrationRole | null>(null);
+  const [teacherDeclaration, setTeacherDeclaration] = useState<TeacherDeclaration | null>(null);
 
   const handleDobContinue = (dobValue: string, ageValue: number) => {
     setDob(dobValue);
@@ -35,14 +38,22 @@ export function RegistrationFlow({ onSwitchToLogin }: RegistrationFlowProps) {
 
   const handleRoleSelect = (role: RegistrationRole) => {
     setSelectedRole(role);
+    if (role === "docente") {
+      setStep("teacher_declaration");
+    } else {
+      setStep("credentials");
+    }
+  };
+
+  const handleTeacherDeclarationComplete = (declaration: TeacherDeclaration) => {
+    setTeacherDeclaration(declaration);
+    // Store for later persistence
+    localStorage.setItem("inschool-teacher-declaration", JSON.stringify(declaration));
     setStep("credentials");
   };
 
   const handleParentFromUnderage = () => {
     setSelectedRole("genitore");
-    // Override age requirement — parent flow from underage sets the parent as the registering adult
-    // But actually the person is < 14, so they can't register as parent either
-    // The button should redirect to login as "switch to login" for the parent
     onSwitchToLogin();
   };
 
@@ -78,12 +89,18 @@ export function RegistrationFlow({ onSwitchToLogin }: RegistrationFlowProps) {
               onSwitchToLogin={onSwitchToLogin}
             />
           )}
+          {step === "teacher_declaration" && (
+            <StepTeacherDeclaration
+              onComplete={handleTeacherDeclarationComplete}
+              onBack={() => setStep("role")}
+            />
+          )}
           {step === "credentials" && selectedRole && (
             <StepCredentials
               role={selectedRole}
               dob={dob}
               age={age!}
-              onBack={() => setStep("role")}
+              onBack={() => selectedRole === "docente" ? setStep("teacher_declaration") : setStep("role")}
               onSwitchToLogin={onSwitchToLogin}
             />
           )}
