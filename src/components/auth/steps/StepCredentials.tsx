@@ -28,7 +28,8 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
   const { signUp } = useAuth();
   const { toast } = useToast();
 
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
