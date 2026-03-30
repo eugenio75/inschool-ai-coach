@@ -120,6 +120,7 @@ export type Database = {
           city: string | null
           class_section: string | null
           created_at: string
+          date_of_birth: string | null
           difficult_subjects: string[] | null
           favorite_subjects: string[] | null
           focus_time: number | null
@@ -143,6 +144,7 @@ export type Database = {
           city?: string | null
           class_section?: string | null
           created_at?: string
+          date_of_birth?: string | null
           difficult_subjects?: string[] | null
           favorite_subjects?: string[] | null
           focus_time?: number | null
@@ -166,6 +168,7 @@ export type Database = {
           city?: string | null
           class_section?: string | null
           created_at?: string
+          date_of_birth?: string | null
           difficult_subjects?: string[] | null
           favorite_subjects?: string[] | null
           focus_time?: number | null
@@ -1473,6 +1476,54 @@ export type Database = {
           lang?: string
           updated_at?: string | null
           value?: string
+        }
+        Relationships: []
+      }
+      user_consents: {
+        Row: {
+          age_at_registration: number | null
+          created_at: string
+          id: string
+          marketing_consent: boolean | null
+          marketing_consent_at: string | null
+          parental_consent: boolean | null
+          parental_consent_at: string | null
+          privacy_accepted: boolean
+          privacy_accepted_at: string | null
+          role_at_registration: string | null
+          tos_accepted: boolean
+          tos_accepted_at: string | null
+          user_id: string
+        }
+        Insert: {
+          age_at_registration?: number | null
+          created_at?: string
+          id?: string
+          marketing_consent?: boolean | null
+          marketing_consent_at?: string | null
+          parental_consent?: boolean | null
+          parental_consent_at?: string | null
+          privacy_accepted?: boolean
+          privacy_accepted_at?: string | null
+          role_at_registration?: string | null
+          tos_accepted?: boolean
+          tos_accepted_at?: string | null
+          user_id: string
+        }
+        Update: {
+          age_at_registration?: number | null
+          created_at?: string
+          id?: string
+          marketing_consent?: boolean | null
+          marketing_consent_at?: string | null
+          parental_consent?: boolean | null
+          parental_consent_at?: string | null
+          privacy_accepted?: boolean
+          privacy_accepted_at?: string | null
+          role_at_registration?: string | null
+          tos_accepted?: boolean
+          tos_accepted_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }

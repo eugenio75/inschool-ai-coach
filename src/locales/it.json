@@ -1036,5 +1036,13 @@
   "onb_class_code_title": "Hai un codice classe?",
   "onb_class_code_description": "Se il tuo insegnante usa InSchool, inserisci il codice per collegarti alla sua classe. Puoi anche farlo dopo dal tuo profilo.",
   "onb_class_code_skip": "Salta per ora",
-  "onb_summary_class_enrolled": "Classe"
+  "onb_summary_class_enrolled": "Classe",
+  "auth_age_min_14": "Devi avere almeno 14 anni per registrarti.",
+  "auth_age_min_18": "Devi avere almeno 18 anni per registrarti come docente.",
+  "auth_parental_consent_minor": "Ho il consenso dei miei genitori per utilizzare questo servizio, incluso il trattamento dei miei dati da parte di un sistema AI",
+  "auth_dob_label": "Data di nascita",
+  "auth_dob_optional": "Data di nascita (opzionale)",
+  "auth_age_label": "Età",
+  "auth_fill_all_fields": "Compila tutti i campi richiesti",
+  "auth_age_min_6": "L'età minima per creare un profilo è 6 anni"
 }

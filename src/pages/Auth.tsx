@@ -92,6 +92,7 @@ const Auth = () => {
   const [materiaDocente, setMateriaDocente] = useState("");
   const [ordineDocente, setOrdineDocente] = useState("");
   const [childCode, setChildCode] = useState("");
+  const [dobStr, setDobStr] = useState("");
   const locationInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -115,6 +116,17 @@ const Auth = () => {
   }, [role, isLogin]);
 
   const isMinorRole = role === "alunno";
+
+  const getAgeFromDob = (d: string): number | null => {
+    if (!d) return null;
+    const dob = new Date(d);
+    if (isNaN(dob.getTime())) return null;
+    const today = new Date();
+    let a = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) a--;
+    return a;
+  };
 
   const ensureAdultProfile = async (userId: string, userEmail?: string | null, profiles: any[] = []) => {
     if (!adultRoles.includes(role)) return null;
@@ -143,9 +155,10 @@ const Auth = () => {
         access_code: null,
         avatar_emoji: null,
         age: meta?.age || null,
+        date_of_birth: meta?.date_of_birth || null,
         city: meta?.city || null,
         school_name: meta?.school_name || null,
-      })
+      } as any)
       .select()
       .single();
 
@@ -176,11 +189,11 @@ const Auth = () => {
     if (!email.trim() || !password.trim()) return;
     if (!isLogin) {
       if (role === "docente") {
-        if (!firstName || !lastName || !materiaDocente || !ordineDocente || !schoolName || !locationStr) {
+        if (!firstName || !lastName || !materiaDocente || !ordineDocente || !schoolName || !locationStr || !age) {
           toast({ title: "Compila tutti i campi richiesti", variant: "destructive" });
           return;
         }
-      } else if (!firstName || !lastName || !age || !locationStr || !schoolName) {
+      } else if (!firstName || !lastName || !dobStr || !locationStr || !schoolName) {
         toast({ title: "Compila tutti i campi richiesti", variant: "destructive" });
         return;
       }
@@ -192,6 +205,15 @@ const Auth = () => {
         const { data, error } = await signIn(email, password);
         if (error) throw error;
         if (data.user) {
+          // Persist pending GDPR consents from signup
+          const pendingConsents = localStorage.getItem("inschool-pending-consents");
+          if (pendingConsents) {
+            try {
+              const c = JSON.parse(pendingConsents);
+              await (supabase.from as any)("user_consents").insert({ user_id: data.user.id, ...c });
+              localStorage.removeItem("inschool-pending-consents");
+            } catch {}
+          }
           const { data: profiles } = await supabase
             .from("child_profiles")
             .select("*")
@@ -222,8 +244,14 @@ const Auth = () => {
       } else {
         // SIGNUP — just create the auth account, redirect to verify-email.
         // The child_profile will be created on first login (after email verification).
-        if (role === "superiori" && parseInt(age) < 14) {
-          toast({ title: "Devi avere almeno 14 anni per registrarti come studente di superiori.", variant: "destructive" });
+        const calculatedAge = role === "docente" ? parseInt(age) : getAgeFromDob(dobStr);
+        if ((role === "superiori" || role === "universitario") && (calculatedAge === null || calculatedAge < 14)) {
+          toast({ title: "Devi avere almeno 14 anni per registrarti.", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
+        if (role === "docente" && (calculatedAge === null || calculatedAge < 18)) {
+          toast({ title: "Devi avere almeno 18 anni per registrarti come docente.", variant: "destructive" });
           setLoading(false);
           return;
         }
@@ -240,10 +268,24 @@ const Auth = () => {
         if (role === "docente") {
           meta.materia_principale = materiaDocente;
           meta.ordine_scolastico = ordineDocente;
-        } else {
           meta.age = parseInt(age);
+        } else {
+          meta.date_of_birth = dobStr;
+          meta.age = calculatedAge;
         }
         localStorage.setItem("inschool-signup-meta", JSON.stringify(meta));
+
+        // Save GDPR consent data for persistence on first login
+        localStorage.setItem("inschool-pending-consents", JSON.stringify({
+          privacy_accepted: true, privacy_accepted_at: new Date().toISOString(),
+          tos_accepted: true, tos_accepted_at: new Date().toISOString(),
+          parental_consent: parentalConsent || null,
+          parental_consent_at: parentalConsent ? new Date().toISOString() : null,
+          marketing_consent: marketingConsent,
+          marketing_consent_at: marketingConsent ? new Date().toISOString() : null,
+          age_at_registration: calculatedAge,
+          role_at_registration: role,
+        }));
 
         toast({ title: "Account creato! Controlla la tua email per confermare la registrazione." });
         navigate(`/verify-email?email=${encodeURIComponent(email)}`);
@@ -261,12 +303,32 @@ const Auth = () => {
     setLoading(true);
     try {
       if (isLogin) {
-        const { error } = await signIn(email, password);
+        const { data, error } = await signIn(email, password);
         if (error) throw error;
+        // Persist pending GDPR consents from signup
+        const pc = localStorage.getItem("inschool-pending-consents");
+        if (pc && data?.user) {
+          try {
+            const c = JSON.parse(pc);
+            await (supabase.from as any)("user_consents").insert({ user_id: data.user.id, ...c });
+            localStorage.removeItem("inschool-pending-consents");
+          } catch {}
+        }
         navigate("/profiles");
       } else {
         const { error } = await signUp(email, password);
         if (error) throw error;
+        // Save GDPR consent data for persistence on first login
+        localStorage.setItem("inschool-pending-consents", JSON.stringify({
+          privacy_accepted: true, privacy_accepted_at: new Date().toISOString(),
+          tos_accepted: true, tos_accepted_at: new Date().toISOString(),
+          parental_consent: parentalConsent,
+          parental_consent_at: parentalConsent ? new Date().toISOString() : null,
+          marketing_consent: marketingConsent,
+          marketing_consent_at: marketingConsent ? new Date().toISOString() : null,
+          age_at_registration: null,
+          role_at_registration: "alunno",
+        }));
         navigate(`/verify-email?email=${encodeURIComponent(email)}`);
       }
     } catch (err: any) {
@@ -450,6 +512,11 @@ const Auth = () => {
                                   className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-foreground placeholder-muted-foreground focus:border-primary transition-colors" />
                               </div>
                             </div>
+                            <div>
+                              <label className={labelSmClass}>Età</label>
+                              <input required type="number" min="18" max="99" value={age} onChange={e => setAge(e.target.value)} placeholder="Anni"
+                                className="w-full px-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-center text-foreground placeholder-muted-foreground focus:border-primary transition-colors" />
+                            </div>
                           </>
                         ) : (
                           <>
@@ -461,13 +528,13 @@ const Auth = () => {
                                   className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-foreground placeholder-muted-foreground focus:border-primary transition-colors" />
                               </div>
                             </div>
-                            <div className="grid grid-cols-3 gap-3">
-                              <div className="col-span-1">
-                                <label className={labelSmClass}>Età</label>
-                                <input required type="number" min="14" max="99" value={age} onChange={e => setAge(e.target.value)} placeholder="Anni"
-                                  className="w-full px-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-center text-foreground placeholder-muted-foreground focus:border-primary transition-colors" />
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className={labelSmClass}>Data di nascita</label>
+                                <input required type="date" value={dobStr} onChange={e => setDobStr(e.target.value)} max={new Date().toISOString().split("T")[0]}
+                                  className="w-full px-3 py-2.5 rounded-xl bg-muted/50 border border-border outline-none text-sm text-foreground focus:border-primary transition-colors" />
                               </div>
-                              <div className="col-span-2">
+                              <div>
                                 <label className={labelSmClass}>Città</label>
                                 <div className="relative">
                                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -505,11 +572,11 @@ const Auth = () => {
                             Ho letto e accetto la <Link to="/privacy-policy" className="text-primary underline">Privacy Policy</Link> e i <Link to="/termini-di-servizio" className="text-primary underline">Termini di Servizio</Link>
                           </span>
                         </label>
-                        {(role === "alunno") && (
+                        {(role === "superiori" && getAgeFromDob(dobStr) !== null && (getAgeFromDob(dobStr) ?? 18) < 18) && (
                           <label className="flex items-start gap-2 cursor-pointer">
                             <Checkbox checked={parentalConsent} onCheckedChange={(v) => setParentalConsent(!!v)} className="mt-0.5" />
                             <span className="text-xs text-muted-foreground leading-relaxed">
-                              Confermo di essere il genitore o tutore legale e fornisco il consenso al trattamento dei dati del minore ai sensi dell'art. 8 GDPR
+                              Ho il consenso dei miei genitori per utilizzare questo servizio, incluso il trattamento dei miei dati da parte di un sistema AI
                             </span>
                           </label>
                         )}
@@ -522,7 +589,7 @@ const Auth = () => {
                       </div>
                     )}
 
-                    <Button type="submit" disabled={loading || (!isLogin && (!acceptTerms || (role === "alunno" && !parentalConsent)))} className="w-full h-12 rounded-xl font-bold shadow-sm mt-4 transition-all">
+                    <Button type="submit" disabled={loading || (!isLogin && (!acceptTerms || (role === "superiori" && getAgeFromDob(dobStr) !== null && (getAgeFromDob(dobStr) ?? 18) < 18 && !parentalConsent)))} className="w-full h-12 rounded-xl font-bold shadow-sm mt-4 transition-all">
                         {loading ? <Loader2 className="animate-spin w-5 h-5 mx-auto"/> : (isLogin ? "Accedi all'Account" : "Termina Iscrizione")}
                     </Button>
                 </form>
