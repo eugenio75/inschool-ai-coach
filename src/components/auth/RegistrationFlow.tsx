@@ -34,19 +34,8 @@ export function RegistrationFlow({ onSwitchToLogin }: RegistrationFlowProps) {
   };
 
   const handleRoleSelect = (role: RegistrationRole) => {
-    // Age validation per role
-    if (role === "docente" && age !== null && age < 18) {
-      return "Per registrarsi come Docente devi avere almeno 18 anni.";
-    }
-    if (role === "genitore" && age !== null && age < 18) {
-      return "Per gestire profili di minori devi avere almeno 18 anni ai sensi dell'art. 8 GDPR.";
-    }
-    if (role === "studente" && age !== null && age < 14) {
-      return "Per registrarsi come Studente devi avere almeno 14 anni.";
-    }
     setSelectedRole(role);
     setStep("credentials");
-    return null;
   };
 
   const handleParentFromUnderage = () => {

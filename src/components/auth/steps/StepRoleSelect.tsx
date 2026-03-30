@@ -6,7 +6,7 @@ import type { RegistrationRole } from "../RegistrationFlow";
 
 interface StepRoleSelectProps {
   age: number;
-  onSelect: (role: RegistrationRole) => string | null;
+  onSelect: (role: RegistrationRole) => void;
   onBack: () => void;
   onSwitchToLogin: () => void;
 }
