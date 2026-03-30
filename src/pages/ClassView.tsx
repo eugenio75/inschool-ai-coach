@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
+import { ReportTeacherButton } from "@/components/shared/ReportTeacherButton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
