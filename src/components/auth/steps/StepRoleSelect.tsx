@@ -42,12 +42,24 @@ export function StepRoleSelect({ age, onSelect, onBack, onSwitchToLogin }: StepR
   const handleSelect = (role: RegistrationRole) => {
     setError(null);
     setShowMinorBanner(false);
-    const err = onSelect(role);
-    if (err) {
-      setError(err);
-    } else if (role === "studente" && age >= 14 && age < 18) {
-      setShowMinorBanner(true);
+
+    // Check age restrictions before proceeding
+    if (role === "docente" && age < 18) {
+      setError("Per registrarsi come Docente devi avere almeno 18 anni.");
+      return;
     }
+    if (role === "genitore" && age < 18) {
+      setError("Per gestire profili di minori devi avere almeno 18 anni ai sensi dell'art. 8 GDPR.");
+      return;
+    }
+
+    // For minor students, show banner then proceed
+    if (role === "studente" && age >= 14 && age < 18) {
+      setShowMinorBanner(true);
+      // Still proceed after showing banner
+    }
+
+    onSelect(role);
   };
 
   return (
