@@ -115,7 +115,7 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
 
   return (
     <div>
-      <StepIndicator currentStep={3} totalSteps={3} />
+      <StepIndicator currentStep={role === "docente" ? 4 : 3} totalSteps={role === "docente" ? 4 : 3} />
 
       <button
         onClick={onBack}
