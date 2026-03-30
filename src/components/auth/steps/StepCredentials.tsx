@@ -42,7 +42,8 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
   const schoolLevel = roleToSchoolLevel[role];
 
   const canSubmit =
-    name.trim() &&
+    firstName.trim() &&
+    lastName.trim() &&
     email.trim() &&
     password.length >= 6 &&
     acceptTerms &&
