@@ -34,7 +34,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
     document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
 
     if (SUPPORTED_STATIC.includes(currentLang)) {
-      await loadLanguage(currentLang);
+    loadLanguage(currentLang);
     i18n.changeLanguage(currentLang);
       setDynamicBundle({});
       return;
