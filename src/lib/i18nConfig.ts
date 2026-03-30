@@ -2,13 +2,8 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import it from "@/locales/it.json";
-import es from "@/locales/es.json";
-import fr from "@/locales/fr.json";
-import de from "@/locales/de.json";
-import ar from "@/locales/ar.json";
 import en from "@/locales/en.json";
 
-// Migrate old localStorage key
 try {
   const oldKey = localStorage.getItem("inschool_lang");
   if (oldKey && !localStorage.getItem("preferred_language")) {
@@ -22,10 +17,6 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      es: { translation: es },
-      fr: { translation: fr },
-      de: { translation: de },
-      ar: { translation: ar },
       it: { translation: it },
       en: { translation: en },
     },
@@ -49,11 +40,29 @@ i18n
     react: { useSuspense: false },
   });
 
-// Set document lang attribute
+// Lazy load other languages on demand
+export async function loadLanguage(lang: string) {
+  if (["it", "en"].includes(lang)) return;
+  if (i18n.hasResourceBundle(lang, "translation")) return;
+  
+  const bundles: Record<string, () => Promise<any>> = {
+    es: () => import("@/locales/es.json"),
+    fr: () => import("@/locales/fr.json"),
+    de: () => import("@/locales/de.json"),
+    ar: () => import("@/locales/ar.json"),
+  };
+  
+  if (bundles[lang]) {
+    const module = await bundles[lang]();
+    i18n.addResourceBundle(lang, "translation", module.default || module, true, true);
+  }
+}
+
 document.documentElement.lang = i18n.language;
 i18n.on("languageChanged", (lng) => {
   document.documentElement.lang = lng;
   localStorage.setItem("preferred_language", lng);
+  loadLanguage(lng);
 });
 
 export default i18n;

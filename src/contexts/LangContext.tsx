@@ -1,6 +1,7 @@
 import { createContext, useContext, useCallback, useState, useEffect, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import "@/lib/i18nConfig";
+import { loadLanguage } from "@/lib/i18nConfig";
 import { translateBundle, getCached, setCache } from "@/lib/translateService";
 
 export type Lang = "it" | "en" | "es" | "fr" | "de" | "ar";
@@ -33,7 +34,8 @@ export function LangProvider({ children }: { children: ReactNode }) {
     document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
 
     if (SUPPORTED_STATIC.includes(currentLang)) {
-      i18n.changeLanguage(currentLang);
+      await loadLanguage(currentLang);
+    i18n.changeLanguage(currentLang);
       setDynamicBundle({});
       return;
     }
