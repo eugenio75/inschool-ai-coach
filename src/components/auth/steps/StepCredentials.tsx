@@ -76,7 +76,7 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
       localStorage.setItem(
         "inschool-signup-meta",
         JSON.stringify({
-          name,
+          name: `${firstName.trim()} ${lastName.trim()}`,
           school_level: schoolLevel,
           date_of_birth: dob,
           age,
