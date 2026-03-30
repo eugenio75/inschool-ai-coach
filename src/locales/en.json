@@ -1084,5 +1084,22 @@
   "auth_underage_body": "Ask your parent to register and create your profile from the app. You can log in with the Magic Code.",
   "auth_min_18_university": "You must be at least 18 years old to register as a university student.",
   "auth_select_materia": "Select subject and school level",
-  "auth_parental_consent_parent": "I confirm that I am the parent or legal guardian and consent to the processing of the minor's data under Art. 8 GDPR"
+  "auth_parental_consent_parent": "I confirm that I am the parent or legal guardian and consent to the processing of the minor's data under Art. 8 GDPR",
+  "auth_teacher_declaration_title": "Professional information",
+  "auth_teacher_declaration_desc": "This information helps us personalize your experience",
+  "auth_school_name": "School name",
+  "auth_school_city": "City",
+  "auth_school_order": "School level",
+  "auth_main_subject": "Main subject",
+  "auth_school_verified": "Recognized Institution",
+  "auth_school_not_verified": "Not verified",
+  "auth_report_teacher": "Report",
+  "auth_report_title": "Report an issue",
+  "auth_report_desc": "The report will be handled confidentially.",
+  "auth_report_placeholder": "Describe the reason for the report...",
+  "auth_report_send": "Send report",
+  "auth_report_sent": "Report sent",
+  "auth_report_error": "Error sending the report",
+  "auth_first_name": "First name",
+  "auth_last_name": "Last name"
 }

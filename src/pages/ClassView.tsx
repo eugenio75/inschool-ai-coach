@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
+import { ReportTeacherButton } from "@/components/shared/ReportTeacherButton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -268,6 +269,10 @@ export default function ClassView() {
                 <span className="text-sm text-primary-foreground/50">{classe.ordine_scolastico}</span>
               )}
             </div>
+            {/* Student report button — only visible to enrolled students */}
+            {profileId && !user && (
+              <ReportTeacherButton teacherId={classe.docente_profile_id} className="mt-2 text-primary-foreground/40 hover:text-primary-foreground/70" />
+            )}
           </div>
           {/* Code — small, bottom-right */}
           <div className="absolute bottom-3 right-5 flex items-center gap-1.5">

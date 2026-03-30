@@ -28,7 +28,8 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
   const { signUp } = useAuth();
   const { toast } = useToast();
 
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -41,7 +42,8 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
   const schoolLevel = roleToSchoolLevel[role];
 
   const canSubmit =
-    name.trim() &&
+    firstName.trim() &&
+    lastName.trim() &&
     email.trim() &&
     password.length >= 6 &&
     acceptTerms &&
@@ -74,7 +76,7 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
       localStorage.setItem(
         "inschool-signup-meta",
         JSON.stringify({
-          name,
+          name: `${firstName.trim()} ${lastName.trim()}`,
           school_level: schoolLevel,
           date_of_birth: dob,
           age,
@@ -113,7 +115,7 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
 
   return (
     <div>
-      <StepIndicator currentStep={3} totalSteps={3} />
+      <StepIndicator currentStep={role === "docente" ? 4 : 3} totalSteps={role === "docente" ? 4 : 3} />
 
       <button
         onClick={onBack}
@@ -129,13 +131,21 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
+        <div className="grid grid-cols-2 gap-3">
           <input
             type="text"
             required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Come ti chiami?"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            placeholder="Nome"
+            className={inputClass}
+          />
+          <input
+            type="text"
+            required
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            placeholder="Cognome"
             className={inputClass}
           />
         </div>

@@ -40,7 +40,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
       if (pendingConsents) {
         try {
           const c = JSON.parse(pendingConsents);
-          await (supabase.from as any)("user_consents").insert({ user_id: data.user.id, ...c });
+          await (supabase as any).from("user_consents").insert({ user_id: data.user.id, ...c });
           localStorage.removeItem("inschool-pending-consents");
         } catch {}
       }

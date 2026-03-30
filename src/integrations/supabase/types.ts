@@ -1455,6 +1455,30 @@ export type Database = {
           },
         ]
       }
+      teacher_reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string | null
+          reported_by: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          reported_by: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          reported_by?: string
+          teacher_id?: string
+        }
+        Relationships: []
+      }
       translation_cache: {
         Row: {
           id: string
