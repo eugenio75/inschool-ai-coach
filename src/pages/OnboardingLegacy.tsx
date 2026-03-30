@@ -41,6 +41,7 @@ interface OnboardingData {
   name: string;
   avatar: string;
   age: string;
+  dateOfBirth: string;
   gender: string;
   schoolLevel: string;
   favoriteSubjects: string[];
@@ -57,7 +58,7 @@ const OnboardingLegacy = () => {
   const [saving, setSaving] = useState(false);
   const adultSession = getChildSession();
   const [data, setData] = useState<OnboardingData>({
-    name: "", avatar: "A", age: "", gender: "", schoolLevel: "", favoriteSubjects: [],
+    name: "", avatar: "A", age: "", dateOfBirth: "", gender: "", schoolLevel: "", favoriteSubjects: [],
     difficultSubjects: [], struggles: [], focusTime: "15", supportStyles: [],
   });
 
@@ -80,6 +81,23 @@ const OnboardingLegacy = () => {
 
   const next = async () => {
     if (step < totalSteps - 1) {
+      // Validate minimum age on step 0 before proceeding
+      if (step === 0) {
+        const childAge = parseInt(data.age);
+        if (childAge && childAge < 6) {
+          return; // Age buttons only show 6-13, but extra safety
+        }
+        if (data.dateOfBirth) {
+          const dob = new Date(data.dateOfBirth);
+          const today = new Date();
+          let dobAge = today.getFullYear() - dob.getFullYear();
+          const m = today.getMonth() - dob.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) dobAge--;
+          if (dobAge < 6) {
+            return; // Server-side trigger will also block this
+          }
+        }
+      }
       setStep(step + 1);
     } else {
       setSaving(true);
@@ -94,7 +112,8 @@ const OnboardingLegacy = () => {
         struggles: data.struggles,
         focus_time: parseInt(data.focusTime) || 15,
         support_style: data.supportStyles.join(","),
-      });
+        date_of_birth: data.dateOfBirth || undefined,
+      } as any);
       setSaving(false);
       if (profile) {
         if (adultSession?.profile?.school_level && ["superiori", "universitario", "docente"].includes(adultSession.profile.school_level)) {
@@ -140,6 +159,11 @@ const OnboardingLegacy = () => {
                     <button key={age} onClick={() => setData({ ...data, age })} className={`w-12 h-12 rounded-xl font-display font-semibold text-lg transition-all ${data.age === age ? "bg-primary text-primary-foreground shadow-soft" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{age}</button>
                   ))}
                 </div>
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-2 block">Data di nascita (opzionale)</label>
+                <input type="date" value={data.dateOfBirth} onChange={(e) => setData({ ...data, dateOfBirth: e.target.value })} max={new Date().toISOString().split("T")[0]}
+                  className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-base" />
               </div>
             </div>
           </div>
