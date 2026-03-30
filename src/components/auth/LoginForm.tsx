@@ -1,69 +1,21 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, KeyRound, ArrowRight, Loader2, MailCheck } from "lucide-react";
+import { KeyRound, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { loginWithChildCode } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
 import { setChildSession } from "@/lib/childSession";
-
-function ForgotPasswordInline() {
-  const [show, setShow] = useState(false);
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
-
-  const handleReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) return;
-    setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://inschool.azarlabs.com/reset-password",
-    });
-    setLoading(false);
-    if (!error) setSent(true);
-  };
-
-  if (!show) {
-    return (
-      <button onClick={() => setShow(true)} className="block mx-auto mt-4 text-sm text-muted-foreground hover:text-primary transition-colors font-medium">
-        Password dimenticata?
-      </button>
-    );
-  }
-
-  if (sent) {
-    return (
-      <div className="mt-4 bg-primary/10 border border-primary/20 rounded-xl p-4 text-center">
-        <MailCheck className="w-8 h-8 text-primary mx-auto mb-2" />
-        <p className="text-sm font-medium text-foreground">Email inviata!</p>
-        <p className="text-xs text-muted-foreground mt-1">Controlla la tua casella di posta e segui le istruzioni.</p>
-      </div>
-    );
-  }
-
-  return (
-    <form onSubmit={handleReset} className="mt-4 bg-muted/50 border border-border rounded-xl p-4 space-y-3">
-      <p className="text-sm font-medium text-foreground">Recupera la tua password</p>
-      <div className="relative">
-        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="La tua email"
-          className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-background border border-border text-foreground outline-none focus:border-primary text-sm" />
-      </div>
-      <div className="flex gap-2">
-        <Button type="button" variant="ghost" size="sm" onClick={() => setShow(false)} className="text-muted-foreground rounded-xl">Annulla</Button>
-        <Button type="submit" size="sm" disabled={loading || !email.trim()} className="rounded-xl flex-1">
-          {loading ? <Loader2 className="animate-spin w-4 h-4" /> : "Invia link di reset"}
-        </Button>
-      </div>
-    </form>
-  );
-}
+import { LegalDisclaimer } from "./LegalDisclaimer";
 
 const ADULT_ROLES = ["superiori", "universitario", "docente"];
 
-export function LoginForm() {
+interface LoginFormProps {
+  onSwitchToRegister: () => void;
+}
+
+export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
   const navigate = useNavigate();
   const { signIn } = useAuth();
   const { toast } = useToast();
@@ -100,7 +52,6 @@ export function LoginForm() {
           const meta = JSON.parse(storedMeta);
           const role = meta.school_level;
           if (ADULT_ROLES.includes(role)) {
-            // Check if profile already exists
             const { data: existing } = await supabase
               .from("child_profiles")
               .select("*")
@@ -120,8 +71,6 @@ export function LoginForm() {
                   avatar_emoji: null,
                   age: meta.age || null,
                   date_of_birth: meta.date_of_birth || null,
-                  city: meta.city || null,
-                  school_name: meta.school_name || null,
                 } as any)
                 .select()
                 .single();
@@ -163,7 +112,6 @@ export function LoginForm() {
         return;
       }
 
-      // If only one adult profile, go directly
       if (profiles.length === 1 && ADULT_ROLES.includes(profiles[0].school_level || "")) {
         setChildSession({
           profileId: profiles[0].id,
@@ -178,7 +126,6 @@ export function LoginForm() {
         return;
       }
 
-      // Multiple profiles → profile selector
       navigate("/profiles");
     } catch (err: any) {
       toast({ title: err.message || "Errore di accesso", variant: "destructive" });
@@ -201,47 +148,61 @@ export function LoginForm() {
     }
   };
 
-  const inputClass = "w-full pl-11 pr-4 py-3 rounded-xl bg-muted/50 border border-border text-foreground placeholder-muted-foreground outline-none focus:border-primary transition-colors";
+  const inputClass =
+    "w-full px-4 py-3 rounded-xl bg-muted/50 border border-border text-foreground placeholder-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200 text-sm";
 
   return (
-    <div className="space-y-5">
-      <div className="text-center mb-6">
+    <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
+      <div className="text-center mb-8">
         <h1 className="font-display text-2xl font-bold text-foreground tracking-tight">
           Bentornato su InSchool
         </h1>
-        <p className="text-sm text-muted-foreground mt-2">
-          Accedi al tuo account
-        </p>
+        <p className="text-sm text-muted-foreground mt-2">Accedi al tuo account</p>
       </div>
 
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
-          <label className="text-sm font-semibold text-foreground block mb-1.5">Email</label>
-          <div className="relative">
-            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="nome@email.com" className={inputClass} />
-          </div>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            className={inputClass}
+          />
         </div>
         <div>
-          <label className="text-sm font-semibold text-foreground block mb-1.5">Password</label>
-          <div className="relative">
-            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input type="password" required value={password} onChange={e => setPassword(e.target.value)} minLength={6} placeholder="••••••••" className={inputClass} />
-          </div>
+          <input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={6}
+            placeholder="Password"
+            className={inputClass}
+          />
+          <Link
+            to="/forgot-password"
+            className="block text-xs text-muted-foreground hover:text-primary transition-colors mt-2 font-medium"
+          >
+            Password dimenticata?
+          </Link>
         </div>
-        <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl font-bold shadow-sm">
+        <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl font-bold">
           {loading ? <Loader2 className="animate-spin w-5 h-5 mx-auto" /> : "Accedi"}
         </Button>
       </form>
 
-      <ForgotPasswordInline />
-      <Link to="/forgot-password" className="block text-center text-xs text-muted-foreground hover:text-primary transition-colors">
-        Vai alla pagina di recupero password →
-      </Link>
-
-      {/* Magic Code section */}
-      <div className="h-[1px] bg-border w-full relative my-6">
-        <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-card px-4 text-xs font-bold text-muted-foreground tracking-wider">OPPURE</span>
+      {/* Magic Code */}
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-card px-4 text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+            oppure
+          </span>
+        </div>
       </div>
 
       {!showMagicCode ? (
@@ -249,27 +210,57 @@ export function LoginForm() {
           onClick={() => setShowMagicCode(true)}
           className="w-full text-center text-sm font-medium text-primary hover:text-primary/80 transition-colors"
         >
-          Accedi con Codice Magico (studente minorenne) →
+          Accedi con Codice Magico
         </button>
       ) : (
-        <form onSubmit={handleChildCode} className="space-y-3 bg-primary/5 p-5 rounded-2xl border border-primary/20">
-          <label className="text-sm font-bold text-foreground block text-center">Codice Magico Studente</label>
-          <p className="text-xs text-primary text-center mb-2">Utilizza il codice generato dal genitore</p>
+        <form onSubmit={handleChildCode} className="space-y-3 bg-muted/30 p-4 rounded-xl border border-border">
+          <p className="text-xs text-muted-foreground text-center mb-2">
+            Inserisci il codice ricevuto dal tuo genitore
+          </p>
           <div className="relative">
-            <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/60" />
+            <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
-              placeholder="ES. LUNA42" required value={childCode} onChange={e => setChildCode(e.target.value.toUpperCase())} maxLength={10}
-              className="w-full pl-11 pr-4 py-3 rounded-xl bg-background border border-primary/20 text-foreground placeholder-muted-foreground focus:border-primary outline-none text-center font-mono uppercase tracking-widest font-bold shadow-sm"
+              placeholder="ES. LUNA42"
+              required
+              value={childCode}
+              onChange={(e) => setChildCode(e.target.value.toUpperCase())}
+              maxLength={10}
+              className="w-full pl-11 pr-4 py-3 rounded-xl bg-background border border-border text-foreground text-center font-mono uppercase tracking-widest font-bold outline-none focus:border-primary transition-colors"
             />
           </div>
           <div className="flex gap-2">
-            <Button type="button" variant="ghost" size="sm" onClick={() => setShowMagicCode(false)} className="rounded-xl">Annulla</Button>
-            <Button variant="secondary" type="submit" disabled={loading || !childCode} className="flex-1 h-11 rounded-xl font-bold">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowMagicCode(false)}
+              className="rounded-xl"
+            >
+              Annulla
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading || !childCode}
+              className="flex-1 h-10 rounded-xl font-bold"
+            >
               Entra <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
           </div>
         </form>
       )}
+
+      {/* Switch to register */}
+      <div className="mt-6 text-center">
+        <span className="text-sm text-muted-foreground">Non hai un account?</span>
+        <button
+          onClick={onSwitchToRegister}
+          className="ml-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors"
+        >
+          Registrati →
+        </button>
+      </div>
+
+      <LegalDisclaimer />
     </div>
   );
 }
