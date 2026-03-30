@@ -1036,5 +1036,13 @@
   "onb_class_code_title": "Have a class code?",
   "onb_class_code_description": "If your teacher uses InSchool, enter the code to connect to their class. You can also do this later from your profile.",
   "onb_class_code_skip": "Skip for now",
-  "onb_summary_class_enrolled": "Class"
+  "onb_summary_class_enrolled": "Class",
+  "auth_age_min_14": "You must be at least 14 years old to register.",
+  "auth_age_min_18": "You must be at least 18 years old to register as a teacher.",
+  "auth_parental_consent_minor": "I have my parents' consent to use this service, including AI-based data processing",
+  "auth_dob_label": "Date of birth",
+  "auth_dob_optional": "Date of birth (optional)",
+  "auth_age_label": "Age",
+  "auth_fill_all_fields": "Please fill in all required fields",
+  "auth_age_min_6": "Minimum age to create a profile is 6 years"
 }
