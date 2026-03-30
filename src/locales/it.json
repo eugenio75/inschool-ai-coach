@@ -1084,5 +1084,22 @@
   "auth_underage_body": "Chiedi al tuo genitore di registrarsi e creare il tuo profilo dall'app. Potrai accedere con il Codice Magico.",
   "auth_min_18_university": "Devi avere almeno 18 anni per registrarti come universitario.",
   "auth_select_materia": "Seleziona materia e ordine scolastico",
-  "auth_parental_consent_parent": "Confermo di essere il genitore o tutore legale e fornisco il consenso al trattamento dei dati del minore ai sensi dell'art. 8 GDPR"
+  "auth_parental_consent_parent": "Confermo di essere il genitore o tutore legale e fornisco il consenso al trattamento dei dati del minore ai sensi dell'art. 8 GDPR",
+  "auth_teacher_declaration_title": "Informazioni professionali",
+  "auth_teacher_declaration_desc": "Queste informazioni ci aiutano a personalizzare la tua esperienza",
+  "auth_school_name": "Nome istituto",
+  "auth_school_city": "Città",
+  "auth_school_order": "Ordine scolastico",
+  "auth_main_subject": "Materia principale",
+  "auth_school_verified": "Istituto Riconosciuto",
+  "auth_school_not_verified": "Non verificato",
+  "auth_report_teacher": "Segnala",
+  "auth_report_title": "Segnala un problema",
+  "auth_report_desc": "La segnalazione sarà gestita in modo riservato.",
+  "auth_report_placeholder": "Descrivi il motivo della segnalazione...",
+  "auth_report_send": "Invia segnalazione",
+  "auth_report_sent": "Segnalazione inviata",
+  "auth_report_error": "Errore nell'invio della segnalazione",
+  "auth_first_name": "Nome",
+  "auth_last_name": "Cognome"
 }
