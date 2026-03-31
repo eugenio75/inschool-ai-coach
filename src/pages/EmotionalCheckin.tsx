@@ -14,10 +14,6 @@ export function shouldShowCheckin(): boolean {
   // MODIFICA: Feature 5 — Skip for parent profiles
   const childSession = getChildSession();
   const schoolLevel = childSession?.profile?.school_level;
-  if (schoolLevel === "alunno" && childSession?.profile?.parent_id) {
-    // Check if this is being accessed by a parent (parent context)
-    // Parents don't need emotional check-ins
-  }
 
   const lastDate = localStorage.getItem(CHECKIN_DATE_KEY);
   const today = new Date().toISOString().split("T")[0];

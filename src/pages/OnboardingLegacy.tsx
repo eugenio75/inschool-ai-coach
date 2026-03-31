@@ -164,12 +164,6 @@ const OnboardingLegacy = () => {
   const next = async () => {
     // MODIFICA: Feature 6 — Create profile at step 7 (focus time), show access code at step 8
     if (step === 7) {
-      // Validate age
-      if (step === 0) {
-        const childAge = parseInt(data.age);
-        if (childAge && childAge < 6) return;
-      }
-
       setSaving(true);
       // MODIFICA: Feature 4 — Invert subject logic: unchecked subjects = difficult
       const allSubjects = subjects;
