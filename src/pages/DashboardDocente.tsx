@@ -263,42 +263,15 @@ export default function DashboardDocente() {
           });
         }
 
-        // Check 2: sample student (independent from class check)
+        // Check 2: sample student — use edge function (bypasses RLS)
         if (sampleClassId) {
-          const { data: existingStudents } = await (supabase as any)
-            .from("child_profiles")
-            .select("id")
-            .eq("parent_id", userId)
-            .eq("name", "Alunno di Esempio")
-            .eq("school_level", "media-1")
-            .limit(1);
+          const { data: result, error: fnErr } = await supabase.functions.invoke("create-sample-data", {
+            body: { teacher_id: userId, class_id: sampleClassId },
+          });
 
-          const hasSampleStudent = existingStudents && existingStudents.length > 0;
-
-          if (!hasSampleStudent) {
-            const { data: sampleStudent } = await (supabase as any)
-              .from("child_profiles").insert({
-                parent_id: userId,
-                name: "Alunno di Esempio",
-                school_level: "media-1",
-                age: 12,
-                avatar_emoji: "🧑‍🎓",
-                onboarding_completed: true,
-              }).select().single();
-
-            if (sampleStudent) {
-              await (supabase as any).from("class_enrollments").insert({
-                class_id: sampleClassId,
-                student_id: sampleStudent.id,
-                status: "active",
-              });
-
-              // Update num_studenti on the sample class
-              await (supabase as any).from("classi")
-                .update({ num_studenti: 1 })
-                .eq("id", sampleClassId);
-            }
-
+          if (fnErr) {
+            console.error("Error creating sample student:", fnErr);
+          } else if (result?.created) {
             loadAll();
           }
         }
