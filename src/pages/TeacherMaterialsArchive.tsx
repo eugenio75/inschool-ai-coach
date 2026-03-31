@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Search, FolderOpen, FileText, Download, Pencil, Archive, Share2, Loader2, X, Eye, RotateCcw, CalendarIcon, ChevronDown } from "lucide-react";
+import { Plus, Search, FolderOpen, FileText, Download, Pencil, Archive, Share2, Loader2, X, Eye, RotateCcw, CalendarIcon, ChevronDown, Sparkles } from "lucide-react";
 import { splitTeacherContent } from "@/lib/pdfExport";
 import { MathText } from "@/components/shared/MathText";
 import { format } from "date-fns";
@@ -239,7 +239,17 @@ export default function TeacherMaterialsArchive() {
 
   // Preview dialog
   const [previewMaterial, setPreviewMaterial] = useState<any | null>(null);
-  const [previewVersion, setPreviewVersion] = useState<"student" | "teacher">("student");
+  type PreviewTab = "student" | "teacher" | "bes" | "dsa" | "h";
+  const [previewVersion, setPreviewVersion] = useState<PreviewTab>("student");
+
+  // Inline edit state for preview
+  const [previewEditing, setPreviewEditing] = useState(false);
+  const [previewEditContent, setPreviewEditContent] = useState("");
+  const [previewEditSaving, setPreviewEditSaving] = useState(false);
+
+  // Regeneration state
+  const [regeneratingVersion, setRegeneratingVersion] = useState<string | null>(null);
+  const [showRegenPrompt, setShowRegenPrompt] = useState(false);
 
   // Share dialog
   const [shareMaterial, setShareMaterial] = useState<any | null>(null);
@@ -447,6 +457,131 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
     } finally {
       setGeneratingAdaptedFor(null);
     }
+  }
+  /** Save inline edit for a specific version */
+  async function handlePreviewEditSave() {
+    if (!previewMaterial) return;
+    setPreviewEditSaving(true);
+    try {
+      if (previewVersion === "student" || previewVersion === "teacher") {
+        // Editing the parent material
+        const hasSolutions = (previewMaterial.content || "").includes("===SOLUZIONI===");
+        let newContent: string;
+        if (previewVersion === "student" && hasSolutions) {
+          const { teacherContent } = splitTeacherContent(previewMaterial.content || "");
+          newContent = teacherContent
+            ? `${previewEditContent}\n\n===SOLUZIONI===\n\n${teacherContent}`
+            : previewEditContent;
+        } else if (previewVersion === "teacher" && hasSolutions) {
+          const { studentContent } = splitTeacherContent(previewMaterial.content || "");
+          newContent = `${studentContent}\n\n===SOLUZIONI===\n\n${previewEditContent}`;
+        } else {
+          newContent = previewEditContent;
+        }
+        await supabase.from("teacher_materials").update({ content: newContent, updated_at: new Date().toISOString() }).eq("id", previewMaterial.id);
+        setPreviewMaterial({ ...previewMaterial, content: newContent });
+        setMaterials(prev => prev.map(m => m.id === previewMaterial.id ? { ...m, content: newContent } : m));
+        toast.success("Contenuto aggiornato");
+
+        // If student version was edited, prompt to regenerate adapted versions
+        if (previewVersion === "student") {
+          const adapted = adaptedMap[previewMaterial.id];
+          if (adapted && Object.keys(adapted).length > 0) {
+            setShowRegenPrompt(true);
+          }
+        }
+      } else {
+        // Editing an adapted version (bes/dsa/h)
+        const adapted = adaptedMap[previewMaterial.id];
+        const adaptedMat = adapted?.[previewVersion];
+        if (adaptedMat) {
+          await supabase.from("teacher_materials").update({ content: previewEditContent, updated_at: new Date().toISOString() }).eq("id", adaptedMat.id);
+          setAdaptedMap(prev => ({
+            ...prev,
+            [previewMaterial.id]: {
+              ...prev[previewMaterial.id],
+              [previewVersion]: { ...adaptedMat, content: previewEditContent },
+            },
+          }));
+          toast.success("Versione adattata aggiornata");
+        }
+      }
+    } catch (err) {
+      toast.error("Errore nel salvataggio");
+    }
+    setPreviewEditSaving(false);
+    setPreviewEditing(false);
+  }
+
+  /** Regenerate a single adapted version */
+  async function regenerateSingleVersion(materialId: string, version: "bes" | "dsa" | "h") {
+    const mat = materials.find(m => m.id === materialId);
+    if (!mat) return;
+    setRegeneratingVersion(version);
+    try {
+      const { studentContent } = splitTeacherContent(mat.content || "");
+      const versionLabels: Record<string, string> = {
+        bes: "BES (Bisogni Educativi Speciali): Simplify language and instructions. Use shorter sentences. Break complex tasks into smaller steps.",
+        dsa: "DSA (Disturbi Specifici dell'Apprendimento): Further simplify written instructions. Use numbered lists. Avoid copying tasks. Suggest compensatory tools. Use clear visual spacing.",
+        h: "H (Disabilità certificata — obiettivi minimi): Reduce to core essential concepts. Very simple language. Maximum 3-4 tasks. Include visual support suggestions.",
+      };
+      const systemPrompt = `You are an Italian special education specialist. Adapt the following educational material for ${version.toUpperCase()} students:\n\n${versionLabels[version]}\n\nReturn only the adapted version in Italian, no commentary.`;
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+        body: JSON.stringify({ stream: false, maxTokens: 3000, systemPrompt, messages: [{ role: "user", content: `MATERIALE ORIGINALE:\n---\n${studentContent}\n---` }] }),
+      });
+      const data = await res.json();
+      const output = data.choices?.[0]?.message?.content?.trim() || "";
+      if (!output) throw new Error("Empty response");
+
+      // Update or insert in DB
+      const adapted = adaptedMap[materialId];
+      const existing = adapted?.[version];
+      if (existing) {
+        await supabase.from("teacher_materials").update({ content: output, updated_at: new Date().toISOString() }).eq("id", existing.id);
+        setAdaptedMap(prev => ({
+          ...prev,
+          [materialId]: { ...prev[materialId], [version]: { ...existing, content: output } },
+        }));
+      } else {
+        const { data: inserted } = await supabase.from("teacher_materials").insert({
+          teacher_id: user!.id, class_id: mat.class_id, title: `${mat.title} — ${version.toUpperCase()}`,
+          subject: mat.subject, type: mat.type, content: output, target_profile: version,
+          parent_material_id: materialId, is_sample: mat.is_sample || false, status: "draft",
+        }).select("*").single();
+        if (inserted) {
+          setAdaptedMap(prev => ({
+            ...prev,
+            [materialId]: { ...(prev[materialId] || {}), [version]: inserted },
+          }));
+        }
+      }
+      toast.success(`Versione ${version.toUpperCase()} rigenerata`);
+    } catch (err) {
+      toast.error("Errore nella rigenerazione");
+    } finally {
+      setRegeneratingVersion(null);
+    }
+  }
+
+  /** Regenerate all adapted versions after student content edit */
+  async function regenerateAllAdapted(materialId: string) {
+    setShowRegenPrompt(false);
+    for (const v of ["bes", "dsa", "h"] as const) {
+      await regenerateSingleVersion(materialId, v);
+    }
+  }
+
+  /** Delete a material and its adapted versions */
+  async function handleDeleteMaterial(id: string) {
+    if (!confirm("Sei sicuro di voler eliminare questo materiale e tutte le sue versioni?")) return;
+    await supabase.from("teacher_materials").delete().eq("parent_material_id", id);
+    await supabase.from("teacher_materials").delete().eq("id", id);
+    setMaterials(prev => prev.filter(m => m.id !== id));
+    setAdaptedMap(prev => { const copy = { ...prev }; delete copy[id]; return copy; });
+    setPreviewMaterial(null);
+    toast.success("Materiale eliminato");
   }
 
   function openEdit(m: any) {
@@ -846,145 +981,203 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
       </div>
 
       {/* ── Preview dialog ── */}
-      <Dialog open={!!previewMaterial} onOpenChange={open => { if (!open) { setPreviewMaterial(null); setPreviewVersion("student"); } }}>
+      <Dialog open={!!previewMaterial} onOpenChange={open => {
+        if (!open) {
+          setPreviewMaterial(null);
+          setPreviewVersion("student");
+          setPreviewEditing(false);
+          setShowRegenPrompt(false);
+        }
+      }}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
           {previewMaterial && (() => {
             const hasSolutions = (previewMaterial.content || "").includes("===SOLUZIONI===");
             const { studentContent, teacherContent } = hasSolutions
               ? splitTeacherContent(previewMaterial.content || "")
               : { studentContent: previewMaterial.content || "", teacherContent: null };
-            const displayContent = hasSolutions
-              ? (previewVersion === "teacher" ? previewMaterial.content : studentContent)
-              : previewMaterial.content;
+
+            const adapted = adaptedMap[previewMaterial.id] || {};
+            const hasAdapted = Object.keys(adapted).length > 0;
+
+            // Determine content for current tab
+            let displayContent = "";
+            if (previewVersion === "student") displayContent = studentContent;
+            else if (previewVersion === "teacher") displayContent = teacherContent || studentContent;
+            else if (adapted[previewVersion]) displayContent = adapted[previewVersion].content || "";
+
+            const isAdaptedTab = ["bes", "dsa", "h"].includes(previewVersion);
+            const adaptedExists = isAdaptedTab && adapted[previewVersion];
+            const isRegenerating = regeneratingVersion === previewVersion;
+
+            // Tab definitions
+            const tabs: { key: PreviewTab; emoji: string; label: string; show: boolean }[] = [
+              { key: "student", emoji: "📄", label: "Studente", show: true },
+              { key: "teacher", emoji: "🔒", label: "Docente", show: hasSolutions },
+              { key: "bes", emoji: "🟡", label: "BES", show: true },
+              { key: "dsa", emoji: "🔵", label: "DSA", show: true },
+              { key: "h", emoji: "🟢", label: "H", show: true },
+            ];
 
             return (
               <>
+                {/* Header */}
                 <DialogHeader>
-                  <DialogTitle className="text-lg">{previewMaterial.title}</DialogTitle>
-                  <DialogDescription asChild>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <Badge variant="outline" className="text-[10px]">{typeLabel(previewMaterial.type)}</Badge>
-                      {previewMaterial.subject && (
-                        <Badge variant="secondary" className="text-[10px]">{previewMaterial.subject}</Badge>
-                      )}
-                      {previewMaterial.level && (
-                        <Badge variant="secondary" className="text-[10px]">Livello: {previewMaterial.level}</Badge>
-                      )}
-                      {previewMaterial.class_id && classMap[previewMaterial.class_id] && (
-                        <span className="text-[11px] text-muted-foreground">{classMap[previewMaterial.class_id]}</span>
-                      )}
-                      <span className="text-[11px] text-muted-foreground">
-                        {new Date(previewMaterial.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}
-                      </span>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <DialogTitle className="text-lg">{previewMaterial.title}</DialogTitle>
+                      <DialogDescription asChild>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <Badge variant="outline" className="text-[10px]">{typeLabel(previewMaterial.type)}</Badge>
+                          {previewMaterial.subject && <Badge variant="secondary" className="text-[10px]">{previewMaterial.subject}</Badge>}
+                          {previewMaterial.class_id && classMap[previewMaterial.class_id] && (
+                            <span className="text-[11px] text-muted-foreground">{classMap[previewMaterial.class_id]}</span>
+                          )}
+                          <span className="text-[11px] text-muted-foreground">
+                            {new Date(previewMaterial.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}
+                          </span>
+                        </div>
+                      </DialogDescription>
                     </div>
-                  </DialogDescription>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive h-8 px-2" onClick={() => handleDeleteMaterial(previewMaterial.id)}>
+                        <X className="w-3.5 h-3.5 mr-1" /> Elimina
+                      </Button>
+                    </div>
+                  </div>
                 </DialogHeader>
 
-                {/* Student/Teacher toggle */}
-                {hasSolutions && (
-                  <div className="flex items-center gap-1 mt-3 p-1 bg-muted rounded-lg w-fit">
+                {/* Version toggle bar */}
+                <div className="flex items-center gap-1 mt-3 p-1 bg-muted rounded-lg overflow-x-auto">
+                  {tabs.filter(t => t.show).map(tab => (
                     <button
-                      onClick={() => setPreviewVersion("student")}
+                      key={tab.key}
+                      onClick={() => { setPreviewVersion(tab.key); setPreviewEditing(false); }}
                       className={cn(
-                        "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                        previewVersion === "student"
+                        "px-2.5 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap",
+                        previewVersion === tab.key
                           ? "bg-background text-foreground shadow-sm"
                           : "text-muted-foreground hover:text-foreground"
                       )}
                     >
-                      📄 Versione studente
+                      {tab.emoji} {tab.label}
                     </button>
-                    <button
-                      onClick={() => setPreviewVersion("teacher")}
-                      className={cn(
-                        "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                        previewVersion === "teacher"
-                          ? "bg-background text-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      🔒 Versione docente
-                    </button>
-                  </div>
-                )}
+                  ))}
+                </div>
 
-                {/* Teacher-only header */}
-                {hasSolutions && previewVersion === "teacher" && (
+                {/* Per-version action bar */}
+                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                  {!previewEditing ? (
+                    <>
+                      <Button
+                        variant="outline" size="sm" className="h-7 text-xs rounded-lg"
+                        onClick={() => {
+                          setPreviewEditing(true);
+                          setPreviewEditContent(displayContent);
+                        }}
+                        disabled={isAdaptedTab && !adaptedExists}
+                      >
+                        <Pencil className="w-3 h-3 mr-1" /> Modifica
+                      </Button>
+                      <Button
+                        variant="outline" size="sm" className="h-7 text-xs rounded-lg"
+                        onClick={() => {
+                          if (previewVersion === "student") handleDownloadPdf(previewMaterial, hasSolutions ? "student" : "full");
+                          else if (previewVersion === "teacher") handleDownloadPdf(previewMaterial, "teacher");
+                          else if (adaptedExists) handleDownloadAdaptedPdf(adapted[previewVersion], previewVersion.toUpperCase() as "BES" | "DSA" | "H");
+                        }}
+                        disabled={isAdaptedTab && !adaptedExists}
+                      >
+                        <Download className="w-3 h-3 mr-1" /> Scarica PDF
+                      </Button>
+                      <Button
+                        variant="outline" size="sm" className="h-7 text-xs rounded-lg"
+                        onClick={() => openShare(previewMaterial)}
+                      >
+                        <Share2 className="w-3 h-3 mr-1" /> Condividi
+                      </Button>
+                      {isAdaptedTab && (
+                        <Button
+                          variant="outline" size="sm" className="h-7 text-xs rounded-lg"
+                          disabled={isRegenerating}
+                          onClick={() => regenerateSingleVersion(previewMaterial.id, previewVersion as "bes" | "dsa" | "h")}
+                        >
+                          {isRegenerating ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <RotateCcw className="w-3 h-3 mr-1" />}
+                          {adaptedExists ? "Rigenera" : "Genera"}
+                        </Button>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <Button size="sm" className="h-7 text-xs rounded-lg" disabled={previewEditSaving} onClick={handlePreviewEditSave}>
+                        {previewEditSaving ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                        Salva
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs rounded-lg" onClick={() => setPreviewEditing(false)}>
+                        Annulla
+                      </Button>
+                    </>
+                  )}
+                </div>
+
+                {/* Teacher-only banner */}
+                {previewVersion === "teacher" && hasSolutions && (
                   <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-xs font-semibold text-amber-700 dark:text-amber-300">
                     🔒 Contenuto riservato al docente
                   </div>
                 )}
 
-                <div className="mt-2 bg-muted/30 border border-border rounded-xl p-5">
-                  <div className="prose prose-sm max-w-none text-foreground text-sm leading-relaxed">
-                    {formatMaterialContent(displayContent)}
+                {/* Content area */}
+                {isAdaptedTab && !adaptedExists && !isRegenerating ? (
+                  <div className="mt-2 bg-muted/30 border border-border rounded-xl p-8 text-center">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Versione {previewVersion.toUpperCase()} non ancora generata
+                    </p>
+                    <Button size="sm" onClick={() => regenerateSingleVersion(previewMaterial.id, previewVersion as "bes" | "dsa" | "h")}>
+                      <Sparkles className="w-3.5 h-3.5 mr-1" /> Genera versione {previewVersion.toUpperCase()}
+                    </Button>
                   </div>
-                </div>
+                ) : isRegenerating ? (
+                  <div className="mt-2 bg-muted/30 border border-border rounded-xl p-8 flex flex-col items-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground">Generazione in corso...</p>
+                  </div>
+                ) : previewEditing ? (
+                  <div className="mt-2">
+                    <Textarea
+                      value={previewEditContent}
+                      onChange={e => setPreviewEditContent(e.target.value)}
+                      className="min-h-[300px] font-mono text-xs"
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-2 bg-muted/30 border border-border rounded-xl p-5">
+                    <div className="prose prose-sm max-w-none text-foreground text-sm leading-relaxed">
+                      {formatMaterialContent(displayContent)}
+                    </div>
+                  </div>
+                )}
 
-                <DialogFooter className="mt-4 flex-row gap-2">
-                  <Button variant="outline" size="sm" onClick={() => openShare(previewMaterial)}>
-                    <Share2 className="w-3.5 h-3.5 mr-1" /> Condividi
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Download className="w-3.5 h-3.5 mr-1" /> Scarica PDF <ChevronDown className="w-3 h-3 ml-1" />
+                {/* Regen prompt after student edit */}
+                {showRegenPrompt && (
+                  <div className="mt-3 p-3 bg-primary/5 border border-primary/20 rounded-xl space-y-2">
+                    <p className="text-xs font-medium text-foreground">
+                      Hai modificato il materiale base. Vuoi rigenerare le versioni BES, DSA e H?
+                    </p>
+                    <div className="flex gap-2">
+                      <Button size="sm" className="h-7 text-xs" onClick={() => regenerateAllAdapted(previewMaterial.id)}>
+                        Sì, rigenera
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {hasSolutions ? (
-                        <>
-                          <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial, "student")}>
-                            📄 Scarica — Versione studente
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial, "teacher")}>
-                            🔒 Scarica — Versione docente
-                          </DropdownMenuItem>
-                        </>
-                      ) : (
-                        <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial)}>
-                          📄 Scarica PDF
-                        </DropdownMenuItem>
-                      )}
-                      {(() => {
-                        const adapted = adaptedMap[previewMaterial.id];
-                        const hasAdapted = adapted && Object.keys(adapted).length > 0;
-                        const isGenerating = generatingAdaptedFor === previewMaterial.id;
-                        return (
-                          <>
-                            {hasAdapted && adapted.bes && (
-                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.bes, "BES")}>
-                                🟡 Scarica — Versione BES
-                              </DropdownMenuItem>
-                            )}
-                            {hasAdapted && adapted.dsa && (
-                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.dsa, "DSA")}>
-                                🔵 Scarica — Versione DSA
-                              </DropdownMenuItem>
-                            )}
-                            {hasAdapted && adapted.h && (
-                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.h, "H")}>
-                                🟢 Scarica — Versione H
-                              </DropdownMenuItem>
-                            )}
-                            {!hasAdapted && (
-                              <DropdownMenuItem onClick={() => generateAdaptedForMaterial(previewMaterial)} disabled={isGenerating}>
-                                {isGenerating ? "⏳ Generazione in corso..." : "✨ Genera versioni BES/DSA/H"}
-                              </DropdownMenuItem>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Button size="sm" onClick={() => setPreviewMaterial(null)}>Chiudi</Button>
-                </DialogFooter>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowRegenPrompt(false)}>
+                        No, mantieni le versioni esistenti
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </>
             );
           })()}
         </DialogContent>
       </Dialog>
-
 
 
       {/* ── Share dialog ── */}
