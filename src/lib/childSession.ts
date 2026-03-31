@@ -103,7 +103,7 @@ export async function childApi(action: string, payload?: any): Promise<any> {
         return { success: true };
       }
       case "get-gamification": {
-        const { data } = await supabase.from("gamification").select("*").eq("child_profile_id", profileId).maybeSingle();
+        const { data } = await supabase.rpc("get_child_gamification", { p_profile_id: profileId });
         return data;
       }
       case "get-memory-items": {
@@ -136,7 +136,7 @@ export async function childApi(action: string, payload?: any): Promise<any> {
       }
       case "get-daily-missions": {
         const today = new Date().toISOString().split("T")[0];
-        const { data } = await supabase.from("daily_missions").select("*").eq("child_profile_id", profileId).eq("mission_date", today).order("created_at");
+        const { data } = await supabase.rpc("get_child_daily_missions", { p_profile_id: profileId, p_date: today });
         return data || [];
       }
       case "complete-mission": {

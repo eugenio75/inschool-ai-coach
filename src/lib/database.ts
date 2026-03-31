@@ -262,19 +262,19 @@ export async function getFocusSessions(childProfileId?: string) {
 
 // ============ GAMIFICATION ============
 
-export async function getGamification(childProfileId?: string) {
-  if (isChildSession()) {
-    try {
-      const result = await childApi("get-gamification");
-      if (result) return result;
-    } catch (e) {
-      console.warn("childApi get-gamification fallback:", e);
-    }
-  }
-
+export async function getGamification(childProfileId?: string): Promise<any> {
   const profileId = childProfileId || getActiveChildProfileId();
   if (!profileId) return null;
 
+  // Use RPC (SECURITY DEFINER) — works for both authenticated and child sessions
+  try {
+    const { data, error } = await supabase.rpc("get_child_gamification", { p_profile_id: profileId });
+    if (!error && data) return data as any;
+  } catch (e) {
+    console.warn("get_child_gamification RPC error:", e);
+  }
+
+  // Fallback to direct query (works only for authenticated parents)
   const { data, error } = await supabase
     .from("gamification")
     .select("*")
@@ -381,20 +381,21 @@ export async function updateMemoryStrength(itemId: string, strength: number) {
 // ============ DAILY MISSIONS ============
 
 export async function getDailyMissions(childProfileId?: string): Promise<any[]> {
-  if (isChildSession()) {
-    try {
-      const result = await childApi("get-daily-missions");
-      if (result && result.length > 0) return result;
-    } catch (e) {
-      console.warn("childApi get-daily-missions fallback:", e);
-    }
-  }
-
   const profileId = childProfileId || getActiveChildProfileId();
   if (!profileId) return [];
 
-  // First try direct query for today's missions
   const today = new Date().toISOString().split("T")[0];
+
+  // Use RPC (SECURITY DEFINER) — works for both authenticated and child sessions
+  try {
+    const { data, error } = await supabase.rpc("get_child_daily_missions", { p_profile_id: profileId, p_date: today });
+    const missions = data as any;
+    if (!error && missions && Array.isArray(missions) && missions.length > 0) return missions;
+  } catch (e) {
+    console.warn("get_child_daily_missions RPC error:", e);
+  }
+
+  // Fallback: direct query (authenticated parents only)
   const { data: existing } = await supabase
     .from("daily_missions")
     .select("*")

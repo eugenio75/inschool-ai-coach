@@ -1654,6 +1654,11 @@ export type Database = {
     }
     Functions: {
       generate_child_access_code: { Args: never; Returns: string }
+      get_child_daily_missions: {
+        Args: { p_date?: string; p_profile_id: string }
+        Returns: Json
+      }
+      get_child_gamification: { Args: { p_profile_id: string }; Returns: Json }
       get_student_classes: {
         Args: { student_profile_id: string }
         Returns: Json
