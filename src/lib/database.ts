@@ -263,18 +263,18 @@ export async function getFocusSessions(childProfileId?: string) {
 // ============ GAMIFICATION ============
 
 export async function getGamification(childProfileId?: string) {
-  if (isChildSession()) {
-    try {
-      const result = await childApi("get-gamification");
-      if (result) return result;
-    } catch (e) {
-      console.warn("childApi get-gamification fallback:", e);
-    }
-  }
-
   const profileId = childProfileId || getActiveChildProfileId();
   if (!profileId) return null;
 
+  // Use RPC (SECURITY DEFINER) — works for both authenticated and child sessions
+  try {
+    const { data, error } = await supabase.rpc("get_child_gamification", { p_profile_id: profileId });
+    if (!error && data) return data;
+  } catch (e) {
+    console.warn("get_child_gamification RPC error:", e);
+  }
+
+  // Fallback to direct query (works only for authenticated parents)
   const { data, error } = await supabase
     .from("gamification")
     .select("*")
