@@ -202,6 +202,24 @@ const OnboardingLegacy = () => {
           } as any);
         }
 
+        // FIX 1: Auto-create gamification + daily missions for new profile
+        await supabase.from("gamification").upsert({
+          child_profile_id: profile.id,
+          focus_points: 0,
+          consistency_points: 0,
+          autonomy_points: 0,
+          streak: 0,
+          streak_shields: 0,
+          next_shield_at: 7,
+        }, { onConflict: "child_profile_id" });
+
+        const today = new Date().toISOString().split("T")[0];
+        await supabase.from("daily_missions").insert([
+          { child_profile_id: profile.id, mission_date: today, title: "Studia 15 minuti", description: "Completa una sessione di studio", points_reward: 10, completed: false, mission_type: "study_session" },
+          { child_profile_id: profile.id, mission_date: today, title: "Aggiungi un compito", description: "Inserisci un compito da fare", points_reward: 5, completed: false, mission_type: "complete_task" },
+          { child_profile_id: profile.id, mission_date: today, title: "Fai il check-in", description: "Dicci come stai oggi", points_reward: 5, completed: false, mission_type: "study_minutes" },
+        ]);
+
         setCreatedProfile(profile);
         setSaving(false);
         setStep(8); // Go to access code step
