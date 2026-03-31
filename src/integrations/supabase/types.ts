@@ -1405,6 +1405,7 @@ export type Database = {
           id: string
           is_sample: boolean
           level: string | null
+          parent_material_id: string | null
           status: string | null
           subject: string | null
           target_profile: string | null
@@ -1421,6 +1422,7 @@ export type Database = {
           id?: string
           is_sample?: boolean
           level?: string | null
+          parent_material_id?: string | null
           status?: string | null
           subject?: string | null
           target_profile?: string | null
@@ -1437,6 +1439,7 @@ export type Database = {
           id?: string
           is_sample?: boolean
           level?: string | null
+          parent_material_id?: string | null
           status?: string | null
           subject?: string | null
           target_profile?: string | null
@@ -1451,6 +1454,13 @@ export type Database = {
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "classi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_materials_parent_material_id_fkey"
+            columns: ["parent_material_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_materials"
             referencedColumns: ["id"]
           },
         ]
