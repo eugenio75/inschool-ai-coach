@@ -69,38 +69,106 @@ export function isAdultProfileSession(): boolean {
   return !!session && ADULT_ROLES.has(schoolLevel || "");
 }
 
-// API calls through the child-api edge function
+// Direct Supabase queries for child session — no edge function needed
 export async function childApi(action: string, payload?: any) {
   const session = getChildSession();
   if (!session) throw new Error("Nessuna sessione bambino attiva");
 
-  const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/child-api`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        action,
-        accessCode: session.accessCode,
-        childProfileId: session.profileId,
-        payload,
-      }),
-    }
-  );
+  const { supabase } = await import("@/integrations/supabase/client");
+  const profileId = session.profileId;
 
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    if (response.status === 401) {
-      clearChildSession();
-      window.location.href = "/auth";
-      throw new Error("Sessione scaduta");
+  try {
+    switch (action) {
+      case "get-tasks": {
+        const { data } = await supabase
+          .from("homework_tasks")
+          .select("*")
+          .eq("child_profile_id", profileId)
+          .order("created_at", { ascending: false });
+        return data || [];
+      }
+      case "save-task": {
+        const { data } = await supabase
+          .from("homework_tasks")
+          .insert({ ...payload, child_profile_id: profileId })
+          .select()
+          .single();
+        return data;
+      }
+      case "update-task": {
+        const { taskId, ...updates } = payload;
+        const { data } = await supabase
+          .from("homework_tasks")
+          .update(updates)
+          .eq("id", taskId)
+          .eq("child_profile_id", profileId)
+          .select()
+          .single();
+        return data;
+      }
+      case "delete-task": {
+        await supabase
+          .from("homework_tasks")
+          .delete()
+          .eq("id", payload.taskId)
+          .eq("child_profile_id", profileId);
+        return { success: true };
+      }
+      case "get-gamification": {
+        const { data } = await supabase
+          .from("gamification")
+          .select("*")
+          .eq("child_profile_id", profileId)
+          .maybeSingle();
+        return data;
+      }
+      case "get-memory-items": {
+        const { data } = await supabase
+          .from("memory_items")
+          .select("*")
+          .eq("child_profile_id", profileId)
+          .order("created_at", { ascending: false });
+        return data || [];
+      }
+      case "get-learning-errors": {
+        const { data } = await supabase
+          .from("learning_errors")
+          .select("*")
+          .eq("user_id", profileId)
+          .order("created_at", { ascending: false });
+        return data || [];
+      }
+      case "get-flagged-flashcards": {
+        const { data } = await supabase
+          .from("flashcards")
+          .select("*")
+          .eq("user_id", profileId)
+          .eq("is_flagged", true);
+        return data || [];
+      }
+      case "get-badges": {
+        const { data } = await supabase
+          .from("badges")
+          .select("*")
+          .eq("child_profile_id", profileId);
+        return data || [];
+      }
+      case "get-focus-sessions": {
+        const { data } = await supabase
+          .from("focus_sessions")
+          .select("*")
+          .eq("child_profile_id", profileId)
+          .order("completed_at", { ascending: false });
+        return data || [];
+      }
+      default:
+        console.warn(`childApi: unknown action "${action}", returning empty`);
+        return [];
     }
-    throw new Error(err.error || "Errore di comunicazione");
+  } catch (err: any) {
+    console.error(`childApi error (${action}):`, err);
+    throw new Error(err.message || "Errore di comunicazione");
   }
-
-  return response.json();
 }
 
 // Login with access code — direct Supabase query (no edge function)
