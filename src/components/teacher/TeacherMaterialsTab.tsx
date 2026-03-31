@@ -454,11 +454,34 @@ REGOLE:
     });
   }
 
-  /** Generate adapted versions (BES, DSA, H) via AI */
-  const generateAdaptedVersions = useCallback(async (studentContent: string) => {
+  /** Generate adapted versions (BES, DSA, H) via AI and persist to DB */
+  const generateAdaptedVersions = useCallback(async (studentContent: string, parentMaterialId?: string) => {
     setAdaptedLoading(true);
     setAdaptedError(false);
     setAdaptedVersions({ bes: null, dsa: null, h: null });
+
+    // If we have a parentMaterialId, check DB first
+    if (parentMaterialId) {
+      const { data: existing } = await supabase
+        .from("teacher_materials")
+        .select("target_profile, content")
+        .eq("parent_material_id", parentMaterialId)
+        .in("target_profile", ["bes", "dsa", "h"]);
+      if (existing && existing.length > 0) {
+        const loaded: { bes: string | null; dsa: string | null; h: string | null } = { bes: null, dsa: null, h: null };
+        existing.forEach((r: any) => {
+          if (r.target_profile === "bes") loaded.bes = r.content;
+          if (r.target_profile === "dsa") loaded.dsa = r.content;
+          if (r.target_profile === "h") loaded.h = r.content;
+        });
+        if (loaded.bes || loaded.dsa || loaded.h) {
+          setAdaptedVersions(loaded);
+          setAdaptedLoading(false);
+          return;
+        }
+      }
+    }
+
     try {
       const systemPrompt = `You are an Italian special education specialist. Starting from the attached educational material, generate three separate adapted versions for inclusion in a student's individualized plan. Each version must cover the same topic and learning objectives as the original but adapted as follows:
 
@@ -488,17 +511,8 @@ Return only the three versions with no commentary, separated exactly by ===BES==
       );
       const data = await res.json();
       const output = data.choices?.[0]?.message?.content?.trim() || "";
-      console.log("[Adapted] Raw AI response length:", output.length);
-      console.log("[Adapted] Contains markers:", {
-        BES: output.includes("===BES==="),
-        DSA: output.includes("===DSA==="),
-        H: output.includes("===H==="),
-      });
       if (!output) throw new Error("Empty response");
 
-      // Parse the three sections — handle both formats:
-      // Format A: ===BES=== content ===DSA=== content ===H=== content
-      // Format B: content before first marker (preamble, ignored)
       const besMatch = output.split(/===\s*BES\s*===/i);
       const afterBes = besMatch.length > 1 ? besMatch.slice(1).join("===BES===") : "";
       const dsaParts = afterBes.split(/===\s*DSA\s*===/i);
@@ -508,21 +522,45 @@ Return only the three versions with no commentary, separated exactly by ===BES==
       const dsaContent = hParts[0]?.trim() || null;
       const hContent = hParts.length > 1 ? hParts.slice(1).join("===H===").trim() : null;
 
-      console.log("[Adapted] Parsed:", { bes: !!besContent, dsa: !!dsaContent, h: !!hContent });
-      
       if (!besContent && !dsaContent && !hContent) {
-        console.warn("[Adapted] No sections parsed. Raw output preview:", output.substring(0, 500));
         throw new Error("Could not parse adapted versions from AI response");
       }
 
       setAdaptedVersions({ bes: besContent, dsa: dsaContent, h: hContent });
+
+      // Persist to DB if we have a parent material ID
+      if (parentMaterialId) {
+        const parentMat = materials.find((m: any) => m.id === parentMaterialId);
+        const versions: { key: "bes" | "dsa" | "h"; content: string | null }[] = [
+          { key: "bes", content: besContent },
+          { key: "dsa", content: dsaContent },
+          { key: "h", content: hContent },
+        ];
+        const inserts = versions
+          .filter(v => v.content)
+          .map(v => ({
+            teacher_id: userId,
+            class_id: classId,
+            title: `${parentMat?.title || confirmedTitle} — ${v.key.toUpperCase()}`,
+            subject: parentMat?.subject || selectedSubjects.join(", ") || classe?.materia || null,
+            type: parentMat?.type || activityType,
+            content: v.content!,
+            target_profile: v.key,
+            parent_material_id: parentMaterialId,
+            is_sample: parentMat?.is_sample || false,
+            status: "draft",
+          }));
+        if (inserts.length > 0) {
+          await supabase.from("teacher_materials").insert(inserts);
+        }
+      }
     } catch (err) {
       console.error("Adapted versions generation failed:", err);
       setAdaptedError(true);
     } finally {
       setAdaptedLoading(false);
     }
-  }, []);
+  }, [userId, classId, selectedSubjects, classe, activityType, confirmedTitle, materials]);
 
   // --- Confirm & assign ---
   async function handleConfirm() {
@@ -536,36 +574,25 @@ Return only the three versions with no commentary, separated exactly by ===BES==
 
     setSaving(true);
     try {
-      // Always save as material (student content only — no solutions)
+      // Always save as material — include solutions in same record with separator
+      const fullContent = aiSolutions
+        ? `${previewContent}\n\n===SOLUZIONI===\n\n${aiSolutions}`
+        : previewContent;
       const materialPayload = {
         teacher_id: userId,
         class_id: classId,
         title,
         subject: selectedSubjects.join(", ") || classe?.materia || null,
         type: activityType,
-        content: previewContent,
+        content: fullContent,
         status: destination === "pdf" ? "draft" : "assigned",
         assigned_at: destination !== "pdf" ? new Date().toISOString() : null,
       };
-      await supabase.from("teacher_materials").insert(materialPayload);
-
-      // Save solutions as a separate teacher-only material
-      if (aiSolutions) {
-        await supabase.from("teacher_materials").insert({
-          teacher_id: userId,
-          class_id: classId,
-          title: `${title} — Soluzioni`,
-          subject: selectedSubjects.join(", ") || classe?.materia || null,
-          type: activityType,
-          content: aiSolutions,
-          status: "draft", // Never assigned to students
-          target_profile: "docente",
-        });
-      }
+      const { data: insertedMat } = await supabase.from("teacher_materials").insert(materialPayload).select("id").single();
+      const parentMaterialId = insertedMat?.id;
 
       if (destination === "pdf") {
         exportToPdf(title, previewContent, activityType);
-        // Also export solutions PDF if available
         if (aiSolutions) {
           setTimeout(() => exportSolutionsPdf(title, aiSolutions), 600);
         }
@@ -586,7 +613,6 @@ Return only the three versions with no commentary, separated exactly by ===BES==
         if (uploadFile) metadata.attachment_name = uploadFile.name;
         if (mode === "ai") metadata.ai_generated = true;
 
-        // Student assignments get ONLY the student content (no solutions)
         const inserts = targetStudents.map(s => ({
           teacher_id: userId,
           class_id: classId,
@@ -613,8 +639,8 @@ Return only the three versions with no commentary, separated exactly by ===BES==
       onReload();
       toast.success("Materiale confermato! Scarica le versioni qui sotto.");
 
-      // Generate adapted versions in background
-      generateAdaptedVersions(previewContent);
+      // Generate adapted versions in background and persist to DB
+      generateAdaptedVersions(previewContent, parentMaterialId);
     } catch (err: any) {
       toast.error("Errore: " + (err.message || "Riprova"));
     }

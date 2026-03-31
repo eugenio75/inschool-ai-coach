@@ -224,6 +224,7 @@ export default function TeacherMaterialsArchive() {
   const { user } = useAuth();
 
   const [materials, setMaterials] = useState<any[]>([]);
+  const [adaptedMap, setAdaptedMap] = useState<Record<string, Record<string, any>>>({});
   const [classi, setClassi] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -260,6 +261,9 @@ export default function TeacherMaterialsArchive() {
   const [editForm, setEditForm] = useState({ title: "", subject: "", type: "", level: "", content: "" });
   const [saving, setSaving] = useState(false);
 
+  // Adapted generation state
+  const [generatingAdaptedFor, setGeneratingAdaptedFor] = useState<string | null>(null);
+
   useEffect(() => {
     if (!user) return;
     loadData();
@@ -271,7 +275,23 @@ export default function TeacherMaterialsArchive() {
       supabase.from("teacher_materials").select("*").eq("teacher_id", user!.id).order("created_at", { ascending: false }),
       supabase.from("classi").select("id, nome").order("nome"),
     ]);
-    setMaterials(matRes.data || []);
+    const allMats = matRes.data || [];
+
+    // Separate parent materials from adapted children
+    const parents: any[] = [];
+    const adaptedByParent: Record<string, Record<string, any>> = {};
+    allMats.forEach((m: any) => {
+      if (m.target_profile && ["bes", "dsa", "h"].includes(m.target_profile) && m.parent_material_id) {
+        if (!adaptedByParent[m.parent_material_id]) adaptedByParent[m.parent_material_id] = {};
+        adaptedByParent[m.parent_material_id][m.target_profile] = m;
+      } else if (m.target_profile !== "docente") {
+        // Exclude legacy "docente" target_profile records too
+        parents.push(m);
+      }
+    });
+
+    setMaterials(parents);
+    setAdaptedMap(adaptedByParent);
     setClassi(classRes.data || []);
     setLoading(false);
   }
@@ -314,7 +334,7 @@ export default function TeacherMaterialsArchive() {
     const hasSolutions = (m.content || "").includes("===SOLUZIONI===");
 
     if (hasSolutions && version !== "full") {
-      const { studentContent, teacherContent } = splitTeacherContent(m.content || "");
+      const { studentContent } = splitTeacherContent(m.content || "");
       const isTeacherVersion = version === "teacher";
       const content = isTeacherVersion ? (m.content || "") : studentContent;
 
@@ -336,6 +356,96 @@ export default function TeacherMaterialsArchive() {
         date: dateStr,
         isTeacherOnly,
       });
+    }
+  }
+
+  function handleDownloadAdaptedPdf(adaptedMat: any, version: "BES" | "DSA" | "H") {
+    const className = adaptedMat.class_id && classMap[adaptedMat.class_id] ? classMap[adaptedMat.class_id] : "";
+    const dateStr = new Date(adaptedMat.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+    renderAndPrintPdf(adaptedMat.content || "", {
+      title: adaptedMat.title,
+      type: adaptedMat.type || "esercizi",
+      subject: [adaptedMat.subject, adaptedMat.level ? "Livello: " + adaptedMat.level : ""].filter(Boolean).join(" · "),
+      className,
+      date: dateStr,
+      adaptedVersion: version,
+    });
+  }
+
+  async function generateAdaptedForMaterial(m: any) {
+    setGeneratingAdaptedFor(m.id);
+    try {
+      const { studentContent } = splitTeacherContent(m.content || "");
+      const systemPrompt = `You are an Italian special education specialist. Starting from the attached educational material, generate three separate adapted versions. Each version must cover the same topic and learning objectives as the original but adapted as follows:
+
+BES (Bisogni Educativi Speciali): Simplify language and instructions. Use shorter sentences. Break complex tasks into smaller steps.
+
+DSA (Disturbi Specifici dell'Apprendimento): Further simplify written instructions. Use numbered lists. Avoid copying tasks. Suggest compensatory tools. Use clear visual spacing.
+
+H (Disabilità certificata — obiettivi minimi): Reduce to core essential concepts. Very simple language. Maximum 3-4 tasks. Include visual support suggestions.
+
+Return only the three versions separated exactly by ===BES===, ===DSA===, ===H=== on their own lines. Write in Italian.`;
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            stream: false,
+            maxTokens: 6000,
+            systemPrompt,
+            messages: [{ role: "user", content: `MATERIALE ORIGINALE:\n---\n${studentContent}\n---` }],
+          }),
+        }
+      );
+      const data = await res.json();
+      const output = data.choices?.[0]?.message?.content?.trim() || "";
+      if (!output) throw new Error("Empty response");
+
+      const besMatch = output.split(/===\s*BES\s*===/i);
+      const afterBes = besMatch.length > 1 ? besMatch.slice(1).join("===BES===") : "";
+      const dsaParts = afterBes.split(/===\s*DSA\s*===/i);
+      const besContent = dsaParts[0]?.trim() || null;
+      const afterDsa = dsaParts.length > 1 ? dsaParts.slice(1).join("===DSA===") : "";
+      const hParts = afterDsa.split(/===\s*H\s*===/i);
+      const dsaContent = hParts[0]?.trim() || null;
+      const hContent = hParts.length > 1 ? hParts.slice(1).join("===H===").trim() : null;
+
+      if (!besContent && !dsaContent && !hContent) throw new Error("Parse failed");
+
+      const versions: { key: string; content: string | null }[] = [
+        { key: "bes", content: besContent },
+        { key: "dsa", content: dsaContent },
+        { key: "h", content: hContent },
+      ];
+      const inserts = versions
+        .filter(v => v.content)
+        .map(v => ({
+          teacher_id: user!.id,
+          class_id: m.class_id,
+          title: `${m.title} — ${v.key.toUpperCase()}`,
+          subject: m.subject,
+          type: m.type,
+          content: v.content!,
+          target_profile: v.key,
+          parent_material_id: m.id,
+          is_sample: m.is_sample || false,
+          status: "draft",
+        }));
+      if (inserts.length > 0) {
+        await supabase.from("teacher_materials").insert(inserts);
+      }
+      toast.success("Versioni BES/DSA/H generate e salvate!");
+      loadData();
+    } catch (err) {
+      console.error("Adapted generation failed:", err);
+      toast.error("Errore nella generazione delle versioni adattate");
+    } finally {
+      setGeneratingAdaptedFor(null);
     }
   }
 
@@ -615,6 +725,11 @@ export default function TeacherMaterialsArchive() {
                         🔒 Docente
                       </span>
                     )}
+                    {adaptedMap[m.id] && Object.keys(adaptedMap[m.id]).length > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-1.5 py-0.5 rounded-full">
+                        BES/DSA/H
+                      </span>
+                    )}
                     <Badge variant="outline" className="text-[10px]">{typeLabel(m.type)}</Badge>
                     <Badge variant={statusVariant(m.status)} className="text-[10px]">{statusLabel(m.status)}</Badge>
                   </div>
@@ -640,27 +755,79 @@ export default function TeacherMaterialsArchive() {
                   >
                     <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
-                  {(m.content || "").includes("===SOLUZIONI===") ? (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
-                          <Download className="w-3.5 h-3.5 text-muted-foreground" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleDownloadPdf(m, "student")}>
-                          📄 Scarica — Versione studente
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDownloadPdf(m, "teacher")}>
-                          🔒 Scarica — Versione docente
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  ) : (
-                    <button onClick={() => handleDownloadPdf(m)} className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
-                      <Download className="w-3.5 h-3.5 text-muted-foreground" />
-                    </button>
-                  )}
+                  {(() => {
+                    const hasSolutions = (m.content || "").includes("===SOLUZIONI===");
+                    const adapted = adaptedMap[m.id];
+                    const hasAdapted = adapted && Object.keys(adapted).length > 0;
+                    const showDropdown = hasSolutions || hasAdapted;
+                    const isGenerating = generatingAdaptedFor === m.id;
+
+                    if (showDropdown) {
+                      return (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
+                              {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" /> : <Download className="w-3.5 h-3.5 text-muted-foreground" />}
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {hasSolutions ? (
+                              <>
+                                <DropdownMenuItem onClick={() => handleDownloadPdf(m, "student")}>
+                                  📄 Scarica — Versione studente
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDownloadPdf(m, "teacher")}>
+                                  🔒 Scarica — Versione docente
+                                </DropdownMenuItem>
+                              </>
+                            ) : (
+                              <DropdownMenuItem onClick={() => handleDownloadPdf(m)}>
+                                📄 Scarica PDF
+                              </DropdownMenuItem>
+                            )}
+                            {hasAdapted && adapted.bes && (
+                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.bes, "BES")}>
+                                🟡 Scarica — Versione BES
+                              </DropdownMenuItem>
+                            )}
+                            {hasAdapted && adapted.dsa && (
+                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.dsa, "DSA")}>
+                                🔵 Scarica — Versione DSA
+                              </DropdownMenuItem>
+                            )}
+                            {hasAdapted && adapted.h && (
+                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.h, "H")}>
+                                🟢 Scarica — Versione H
+                              </DropdownMenuItem>
+                            )}
+                            {!hasAdapted && (
+                              <DropdownMenuItem onClick={() => generateAdaptedForMaterial(m)} disabled={isGenerating}>
+                                {isGenerating ? "⏳ Generazione in corso..." : "✨ Genera versioni BES/DSA/H"}
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      );
+                    }
+
+                    return (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
+                            <Download className="w-3.5 h-3.5 text-muted-foreground" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleDownloadPdf(m)}>
+                            📄 Scarica PDF
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => generateAdaptedForMaterial(m)} disabled={isGenerating}>
+                            {isGenerating ? "⏳ Generazione in corso..." : "✨ Genera versioni BES/DSA/H"}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    );
+                  })()}
                   <button onClick={() => openEdit(m)} className="p-2 rounded-lg hover:bg-muted transition-colors" title="Modifica">
                     <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
@@ -758,27 +925,58 @@ export default function TeacherMaterialsArchive() {
                   <Button variant="outline" size="sm" onClick={() => openShare(previewMaterial)}>
                     <Share2 className="w-3.5 h-3.5 mr-1" /> Condividi
                   </Button>
-                  {hasSolutions ? (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <Download className="w-3.5 h-3.5 mr-1" /> Scarica PDF <ChevronDown className="w-3 h-3 ml-1" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial, "student")}>
-                          📄 Scarica — Versione studente
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Download className="w-3.5 h-3.5 mr-1" /> Scarica PDF <ChevronDown className="w-3 h-3 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {hasSolutions ? (
+                        <>
+                          <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial, "student")}>
+                            📄 Scarica — Versione studente
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial, "teacher")}>
+                            🔒 Scarica — Versione docente
+                          </DropdownMenuItem>
+                        </>
+                      ) : (
+                        <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial)}>
+                          📄 Scarica PDF
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial, "teacher")}>
-                          🔒 Scarica — Versione docente
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  ) : (
-                    <Button variant="outline" size="sm" onClick={() => handleDownloadPdf(previewMaterial)}>
-                      <Download className="w-3.5 h-3.5 mr-1" /> Scarica PDF
-                    </Button>
-                  )}
+                      )}
+                      {(() => {
+                        const adapted = adaptedMap[previewMaterial.id];
+                        const hasAdapted = adapted && Object.keys(adapted).length > 0;
+                        const isGenerating = generatingAdaptedFor === previewMaterial.id;
+                        return (
+                          <>
+                            {hasAdapted && adapted.bes && (
+                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.bes, "BES")}>
+                                🟡 Scarica — Versione BES
+                              </DropdownMenuItem>
+                            )}
+                            {hasAdapted && adapted.dsa && (
+                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.dsa, "DSA")}>
+                                🔵 Scarica — Versione DSA
+                              </DropdownMenuItem>
+                            )}
+                            {hasAdapted && adapted.h && (
+                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.h, "H")}>
+                                🟢 Scarica — Versione H
+                              </DropdownMenuItem>
+                            )}
+                            {!hasAdapted && (
+                              <DropdownMenuItem onClick={() => generateAdaptedForMaterial(previewMaterial)} disabled={isGenerating}>
+                                {isGenerating ? "⏳ Generazione in corso..." : "✨ Genera versioni BES/DSA/H"}
+                              </DropdownMenuItem>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <Button size="sm" onClick={() => setPreviewMaterial(null)}>Chiudi</Button>
                 </DialogFooter>
               </>

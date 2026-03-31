@@ -1109,5 +1109,12 @@
   "mat_download_student": "Scarica — Versione studente",
   "mat_download_teacher": "Scarica — Versione docente",
   "mat_badge_teacher": "Docente",
-  "mat_badge_teacher_tooltip": "Questo materiale contiene soluzioni e griglie riservate al docente"
+  "mat_badge_teacher_tooltip": "Questo materiale contiene soluzioni e griglie riservate al docente",
+  "mat_download_bes": "Scarica — Versione BES",
+  "mat_download_dsa": "Scarica — Versione DSA",
+  "mat_download_h": "Scarica — Versione H",
+  "mat_generate_adapted": "Genera versioni BES/DSA/H",
+  "mat_generating_adapted": "Generazione in corso...",
+  "mat_adapted_badge": "BES/DSA/H",
+  "mat_adapted_generated": "Versioni BES/DSA/H generate e salvate!"
 }

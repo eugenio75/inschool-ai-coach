@@ -1,0 +1,1 @@
+ALTER TABLE public.teacher_materials ADD COLUMN parent_material_id uuid REFERENCES public.teacher_materials(id) ON DELETE CASCADE;
