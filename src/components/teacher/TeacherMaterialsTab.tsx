@@ -592,7 +592,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
     } finally {
       setAdaptedLoading(false);
     }
-  }, [userId, classId, selectedSubjects, classe, activityType, confirmedTitle, materials]);
+  }, [userId, classId, selectedSubjects, classe, activityType, confirmedTitle, propMaterials]);
 
   // --- Confirm & assign ---
   async function handleConfirm() {
