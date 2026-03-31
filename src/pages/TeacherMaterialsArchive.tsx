@@ -584,7 +584,7 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
     toast.success("Materiale eliminato");
   }
 
-
+  function openEdit(m: any) {
     setEditMaterial(m);
     setEditForm({
       title: m.title || "",
