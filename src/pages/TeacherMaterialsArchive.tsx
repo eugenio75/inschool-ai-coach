@@ -725,6 +725,11 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
                         🔒 Docente
                       </span>
                     )}
+                    {adaptedMap[m.id] && Object.keys(adaptedMap[m.id]).length > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-1.5 py-0.5 rounded-full">
+                        BES/DSA/H
+                      </span>
+                    )}
                     <Badge variant="outline" className="text-[10px]">{typeLabel(m.type)}</Badge>
                     <Badge variant={statusVariant(m.status)} className="text-[10px]">{statusLabel(m.status)}</Badge>
                   </div>
