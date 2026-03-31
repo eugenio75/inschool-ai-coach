@@ -786,11 +786,8 @@ export default function TeacherMaterialsArchive() {
           })()}
         </DialogContent>
       </Dialog>
-              </DialogFooter>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+
+
 
       {/* ── Share dialog ── */}
       <Dialog open={!!shareMaterial} onOpenChange={open => !open && setShareMaterial(null)}>
