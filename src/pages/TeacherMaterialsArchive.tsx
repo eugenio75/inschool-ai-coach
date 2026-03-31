@@ -239,7 +239,17 @@ export default function TeacherMaterialsArchive() {
 
   // Preview dialog
   const [previewMaterial, setPreviewMaterial] = useState<any | null>(null);
-  const [previewVersion, setPreviewVersion] = useState<"student" | "teacher">("student");
+  type PreviewTab = "student" | "teacher" | "bes" | "dsa" | "h";
+  const [previewVersion, setPreviewVersion] = useState<PreviewTab>("student");
+
+  // Inline edit state for preview
+  const [previewEditing, setPreviewEditing] = useState(false);
+  const [previewEditContent, setPreviewEditContent] = useState("");
+  const [previewEditSaving, setPreviewEditSaving] = useState(false);
+
+  // Regeneration state
+  const [regeneratingVersion, setRegeneratingVersion] = useState<string | null>(null);
+  const [showRegenPrompt, setShowRegenPrompt] = useState(false);
 
   // Share dialog
   const [shareMaterial, setShareMaterial] = useState<any | null>(null);
