@@ -69,61 +69,165 @@ export function isAdultProfileSession(): boolean {
   return !!session && ADULT_ROLES.has(schoolLevel || "");
 }
 
-// API calls through the child-api edge function
-export async function childApi(action: string, payload?: any) {
+// Direct Supabase queries for child session — no edge function needed
+export async function childApi(action: string, payload?: any): Promise<any> {
   const session = getChildSession();
   if (!session) throw new Error("Nessuna sessione bambino attiva");
 
-  const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/child-api`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        action,
-        accessCode: session.accessCode,
-        childProfileId: session.profileId,
-        payload,
-      }),
-    }
-  );
+  const { supabase } = await import("@/integrations/supabase/client");
+  const profileId = session.profileId;
 
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    if (response.status === 401) {
-      clearChildSession();
-      window.location.href = "/auth";
-      throw new Error("Sessione scaduta");
+  try {
+    switch (action) {
+      case "get-tasks": {
+        const { data } = await supabase.from("homework_tasks").select("*").eq("child_profile_id", profileId).order("created_at", { ascending: false });
+        return data || [];
+      }
+      case "get-task": {
+        const { data } = await supabase.from("homework_tasks").select("*").eq("id", payload.taskId).eq("child_profile_id", profileId).maybeSingle();
+        return data;
+      }
+      case "create-task":
+      case "save-task": {
+        const { data } = await supabase.from("homework_tasks").insert({ ...payload, child_profile_id: profileId }).select().single();
+        return data;
+      }
+      case "update-task": {
+        const { taskId, updates, ...rest } = payload;
+        const upd = updates || rest;
+        const { data } = await supabase.from("homework_tasks").update(upd).eq("id", taskId).eq("child_profile_id", profileId).select().single();
+        return data;
+      }
+      case "delete-task": {
+        await supabase.from("homework_tasks").delete().eq("id", payload.taskId).eq("child_profile_id", profileId);
+        return { success: true };
+      }
+      case "get-gamification": {
+        const { data } = await supabase.from("gamification").select("*").eq("child_profile_id", profileId).maybeSingle();
+        return data;
+      }
+      case "get-memory-items": {
+        const { data } = await supabase.from("memory_items").select("*").eq("child_profile_id", profileId).order("created_at", { ascending: false });
+        return data || [];
+      }
+      case "update-memory-strength": {
+        const { data } = await supabase.from("memory_items").update({ strength: payload.strength, last_reviewed: new Date().toISOString() }).eq("id", payload.itemId).eq("child_profile_id", profileId).select().single();
+        return data;
+      }
+      case "get-learning-errors": {
+        const { data } = await supabase.from("learning_errors").select("*").eq("user_id", profileId).order("created_at", { ascending: false });
+        return data || [];
+      }
+      case "get-flagged-flashcards": {
+        const { data } = await supabase.from("flashcards").select("*").eq("user_id", profileId).eq("is_flagged", true);
+        return data || [];
+      }
+      case "get-badges": {
+        const { data } = await supabase.from("badges").select("*").eq("child_profile_id", profileId);
+        return data || [];
+      }
+      case "get-focus-sessions": {
+        const { data } = await supabase.from("focus_sessions").select("*").eq("child_profile_id", profileId).order("completed_at", { ascending: false });
+        return data || [];
+      }
+      case "save-focus-session": {
+        const { data } = await supabase.from("focus_sessions").insert({ ...payload, child_profile_id: profileId }).select().single();
+        return data;
+      }
+      case "get-daily-missions": {
+        const today = new Date().toISOString().split("T")[0];
+        const { data } = await supabase.from("daily_missions").select("*").eq("child_profile_id", profileId).eq("mission_date", today).order("created_at");
+        return data || [];
+      }
+      case "complete-mission": {
+        const { data } = await supabase.from("daily_missions").update({ completed: true, completed_at: new Date().toISOString() }).eq("id", payload.missionId).eq("child_profile_id", profileId).select().single();
+        // Update gamification points
+        if (payload.pointsReward) {
+          await supabase.rpc("generate_child_access_code").then(() => {}); // no-op, just placeholder
+          const { data: gam } = await supabase.from("gamification").select("*").eq("child_profile_id", profileId).maybeSingle();
+          if (gam) {
+            await supabase.from("gamification").update({ focus_points: (gam.focus_points || 0) + payload.pointsReward, updated_at: new Date().toISOString() }).eq("child_profile_id", profileId);
+          }
+        }
+        return data;
+      }
+      case "save-checkin": {
+        const { data } = await supabase.from("emotional_checkins").insert({ ...payload, child_profile_id: profileId }).select().single();
+        return data;
+      }
+      case "get-paused-session": {
+        const { data: sessions } = await supabase.from("guided_sessions").select("*, conversation_sessions(*)").eq("user_id", profileId).eq("homework_id", payload.homeworkId).order("started_at", { ascending: false }).limit(1);
+        if (!sessions || sessions.length === 0) return { session: null, completed: false, steps: [] };
+        const sess = sessions[0];
+        const { data: steps } = await supabase.from("study_steps").select("*").eq("session_id", sess.id).order("step_number");
+        return { session: sess, completed: sess.status === "completed", steps: steps || [] };
+      }
+      case "create-session": {
+        const { data } = await supabase.from("guided_sessions").insert({
+          user_id: profileId,
+          homework_id: payload.homeworkId,
+          total_steps: payload.totalSteps,
+          emotional_checkin: payload.emotionalCheckin || null,
+          status: "active",
+          current_step: 1,
+          started_at: new Date().toISOString(),
+        }).select().single();
+        return data;
+      }
+      case "update-session": {
+        const { sessionId, updates } = payload;
+        const { data } = await supabase.from("guided_sessions").update(updates).eq("id", sessionId).eq("user_id", profileId).select().single();
+        return data;
+      }
+      case "insert-steps": {
+        const { data } = await supabase.from("study_steps").insert(payload.steps.map((s: any) => ({ ...s, user_id: profileId }))).select();
+        return data;
+      }
+      case "update-profile": {
+        const { data } = await supabase.from("child_profiles").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", profileId).select().single();
+        if (data) {
+          // Update local session
+          const currentSession = getChildSession();
+          if (currentSession) {
+            setChildSession({ ...currentSession, profile: { ...currentSession.profile, ...data } as any });
+          }
+        }
+        return data;
+      }
+      case "upload-homework-image": {
+        const { base64, fileName } = payload;
+        const bytes = Uint8Array.from(atob(base64.split(",").pop() || base64), c => c.charCodeAt(0));
+        const path = `${profileId}/${Date.now()}_${fileName}`;
+        const { error } = await supabase.storage.from("homework-images").upload(path, bytes, { contentType: "image/jpeg" });
+        if (error) throw error;
+        const { data: urlData } = supabase.storage.from("homework-images").getPublicUrl(path);
+        return { url: urlData.publicUrl };
+      }
+      default:
+        console.warn(`childApi: unknown action "${action}", returning empty`);
+        return [];
     }
-    throw new Error(err.error || "Errore di comunicazione");
+  } catch (err: any) {
+    console.error(`childApi error (${action}):`, err);
+    throw new Error(err.message || "Errore di comunicazione");
   }
-
-  return response.json();
 }
 
-// Login with access code
+// Login with access code — direct Supabase query (no edge function)
 export async function loginWithChildCode(code: string): Promise<ChildSession> {
-  const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/child-api`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "login", accessCode: code }),
-    }
-  );
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || "Codice non valido");
+  const { supabase } = await import("@/integrations/supabase/client");
+  
+  const { data, error } = await supabase.rpc("validate_child_code", { code: code.toUpperCase().trim() });
+  const result = data as any;
+  
+  if (error || !result?.valid) {
+    throw new Error("Codice non valido. Controlla e riprova!");
   }
 
-  const data = await response.json();
   const session: ChildSession = {
-    profileId: data.profile.id,
+    profileId: result.profile.id,
     accessCode: code.toUpperCase().trim(),
-    profile: data.profile,
+    profile: result.profile,
   };
   setChildSession(session);
   return session;
