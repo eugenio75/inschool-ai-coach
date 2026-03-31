@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { MailCheck, ArrowLeft, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 

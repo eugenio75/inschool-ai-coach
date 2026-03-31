@@ -15,6 +15,7 @@ const Auth = () => {
       className="light min-h-screen bg-background text-foreground flex flex-col items-center justify-center py-10 px-4 font-sans"
       data-theme="light"
     >
+      <FloatingBackButton />
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
