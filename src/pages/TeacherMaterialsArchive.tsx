@@ -981,145 +981,203 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
       </div>
 
       {/* ── Preview dialog ── */}
-      <Dialog open={!!previewMaterial} onOpenChange={open => { if (!open) { setPreviewMaterial(null); setPreviewVersion("student"); } }}>
+      <Dialog open={!!previewMaterial} onOpenChange={open => {
+        if (!open) {
+          setPreviewMaterial(null);
+          setPreviewVersion("student");
+          setPreviewEditing(false);
+          setShowRegenPrompt(false);
+        }
+      }}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
           {previewMaterial && (() => {
             const hasSolutions = (previewMaterial.content || "").includes("===SOLUZIONI===");
             const { studentContent, teacherContent } = hasSolutions
               ? splitTeacherContent(previewMaterial.content || "")
               : { studentContent: previewMaterial.content || "", teacherContent: null };
-            const displayContent = hasSolutions
-              ? (previewVersion === "teacher" ? previewMaterial.content : studentContent)
-              : previewMaterial.content;
+
+            const adapted = adaptedMap[previewMaterial.id] || {};
+            const hasAdapted = Object.keys(adapted).length > 0;
+
+            // Determine content for current tab
+            let displayContent = "";
+            if (previewVersion === "student") displayContent = studentContent;
+            else if (previewVersion === "teacher") displayContent = teacherContent || studentContent;
+            else if (adapted[previewVersion]) displayContent = adapted[previewVersion].content || "";
+
+            const isAdaptedTab = ["bes", "dsa", "h"].includes(previewVersion);
+            const adaptedExists = isAdaptedTab && adapted[previewVersion];
+            const isRegenerating = regeneratingVersion === previewVersion;
+
+            // Tab definitions
+            const tabs: { key: PreviewTab; emoji: string; label: string; show: boolean }[] = [
+              { key: "student", emoji: "📄", label: "Studente", show: true },
+              { key: "teacher", emoji: "🔒", label: "Docente", show: hasSolutions },
+              { key: "bes", emoji: "🟡", label: "BES", show: true },
+              { key: "dsa", emoji: "🔵", label: "DSA", show: true },
+              { key: "h", emoji: "🟢", label: "H", show: true },
+            ];
 
             return (
               <>
+                {/* Header */}
                 <DialogHeader>
-                  <DialogTitle className="text-lg">{previewMaterial.title}</DialogTitle>
-                  <DialogDescription asChild>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <Badge variant="outline" className="text-[10px]">{typeLabel(previewMaterial.type)}</Badge>
-                      {previewMaterial.subject && (
-                        <Badge variant="secondary" className="text-[10px]">{previewMaterial.subject}</Badge>
-                      )}
-                      {previewMaterial.level && (
-                        <Badge variant="secondary" className="text-[10px]">Livello: {previewMaterial.level}</Badge>
-                      )}
-                      {previewMaterial.class_id && classMap[previewMaterial.class_id] && (
-                        <span className="text-[11px] text-muted-foreground">{classMap[previewMaterial.class_id]}</span>
-                      )}
-                      <span className="text-[11px] text-muted-foreground">
-                        {new Date(previewMaterial.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}
-                      </span>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <DialogTitle className="text-lg">{previewMaterial.title}</DialogTitle>
+                      <DialogDescription asChild>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <Badge variant="outline" className="text-[10px]">{typeLabel(previewMaterial.type)}</Badge>
+                          {previewMaterial.subject && <Badge variant="secondary" className="text-[10px]">{previewMaterial.subject}</Badge>}
+                          {previewMaterial.class_id && classMap[previewMaterial.class_id] && (
+                            <span className="text-[11px] text-muted-foreground">{classMap[previewMaterial.class_id]}</span>
+                          )}
+                          <span className="text-[11px] text-muted-foreground">
+                            {new Date(previewMaterial.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}
+                          </span>
+                        </div>
+                      </DialogDescription>
                     </div>
-                  </DialogDescription>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive h-8 px-2" onClick={() => handleDeleteMaterial(previewMaterial.id)}>
+                        <X className="w-3.5 h-3.5 mr-1" /> Elimina
+                      </Button>
+                    </div>
+                  </div>
                 </DialogHeader>
 
-                {/* Student/Teacher toggle */}
-                {hasSolutions && (
-                  <div className="flex items-center gap-1 mt-3 p-1 bg-muted rounded-lg w-fit">
+                {/* Version toggle bar */}
+                <div className="flex items-center gap-1 mt-3 p-1 bg-muted rounded-lg overflow-x-auto">
+                  {tabs.filter(t => t.show).map(tab => (
                     <button
-                      onClick={() => setPreviewVersion("student")}
+                      key={tab.key}
+                      onClick={() => { setPreviewVersion(tab.key); setPreviewEditing(false); }}
                       className={cn(
-                        "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                        previewVersion === "student"
+                        "px-2.5 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap",
+                        previewVersion === tab.key
                           ? "bg-background text-foreground shadow-sm"
                           : "text-muted-foreground hover:text-foreground"
                       )}
                     >
-                      📄 Versione studente
+                      {tab.emoji} {tab.label}
                     </button>
-                    <button
-                      onClick={() => setPreviewVersion("teacher")}
-                      className={cn(
-                        "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                        previewVersion === "teacher"
-                          ? "bg-background text-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      🔒 Versione docente
-                    </button>
-                  </div>
-                )}
+                  ))}
+                </div>
 
-                {/* Teacher-only header */}
-                {hasSolutions && previewVersion === "teacher" && (
+                {/* Per-version action bar */}
+                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                  {!previewEditing ? (
+                    <>
+                      <Button
+                        variant="outline" size="sm" className="h-7 text-xs rounded-lg"
+                        onClick={() => {
+                          setPreviewEditing(true);
+                          setPreviewEditContent(displayContent);
+                        }}
+                        disabled={isAdaptedTab && !adaptedExists}
+                      >
+                        <Pencil className="w-3 h-3 mr-1" /> Modifica
+                      </Button>
+                      <Button
+                        variant="outline" size="sm" className="h-7 text-xs rounded-lg"
+                        onClick={() => {
+                          if (previewVersion === "student") handleDownloadPdf(previewMaterial, hasSolutions ? "student" : "full");
+                          else if (previewVersion === "teacher") handleDownloadPdf(previewMaterial, "teacher");
+                          else if (adaptedExists) handleDownloadAdaptedPdf(adapted[previewVersion], previewVersion.toUpperCase() as "BES" | "DSA" | "H");
+                        }}
+                        disabled={isAdaptedTab && !adaptedExists}
+                      >
+                        <Download className="w-3 h-3 mr-1" /> Scarica PDF
+                      </Button>
+                      <Button
+                        variant="outline" size="sm" className="h-7 text-xs rounded-lg"
+                        onClick={() => openShare(previewMaterial)}
+                      >
+                        <Share2 className="w-3 h-3 mr-1" /> Condividi
+                      </Button>
+                      {isAdaptedTab && (
+                        <Button
+                          variant="outline" size="sm" className="h-7 text-xs rounded-lg"
+                          disabled={isRegenerating}
+                          onClick={() => regenerateSingleVersion(previewMaterial.id, previewVersion as "bes" | "dsa" | "h")}
+                        >
+                          {isRegenerating ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <RotateCcw className="w-3 h-3 mr-1" />}
+                          {adaptedExists ? "Rigenera" : "Genera"}
+                        </Button>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <Button size="sm" className="h-7 text-xs rounded-lg" disabled={previewEditSaving} onClick={handlePreviewEditSave}>
+                        {previewEditSaving ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                        Salva
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs rounded-lg" onClick={() => setPreviewEditing(false)}>
+                        Annulla
+                      </Button>
+                    </>
+                  )}
+                </div>
+
+                {/* Teacher-only banner */}
+                {previewVersion === "teacher" && hasSolutions && (
                   <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-xs font-semibold text-amber-700 dark:text-amber-300">
                     🔒 Contenuto riservato al docente
                   </div>
                 )}
 
-                <div className="mt-2 bg-muted/30 border border-border rounded-xl p-5">
-                  <div className="prose prose-sm max-w-none text-foreground text-sm leading-relaxed">
-                    {formatMaterialContent(displayContent)}
+                {/* Content area */}
+                {isAdaptedTab && !adaptedExists && !isRegenerating ? (
+                  <div className="mt-2 bg-muted/30 border border-border rounded-xl p-8 text-center">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Versione {previewVersion.toUpperCase()} non ancora generata
+                    </p>
+                    <Button size="sm" onClick={() => regenerateSingleVersion(previewMaterial.id, previewVersion as "bes" | "dsa" | "h")}>
+                      <Sparkles className="w-3.5 h-3.5 mr-1" /> Genera versione {previewVersion.toUpperCase()}
+                    </Button>
                   </div>
-                </div>
+                ) : isRegenerating ? (
+                  <div className="mt-2 bg-muted/30 border border-border rounded-xl p-8 flex flex-col items-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground">Generazione in corso...</p>
+                  </div>
+                ) : previewEditing ? (
+                  <div className="mt-2">
+                    <Textarea
+                      value={previewEditContent}
+                      onChange={e => setPreviewEditContent(e.target.value)}
+                      className="min-h-[300px] font-mono text-xs"
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-2 bg-muted/30 border border-border rounded-xl p-5">
+                    <div className="prose prose-sm max-w-none text-foreground text-sm leading-relaxed">
+                      {formatMaterialContent(displayContent)}
+                    </div>
+                  </div>
+                )}
 
-                <DialogFooter className="mt-4 flex-row gap-2">
-                  <Button variant="outline" size="sm" onClick={() => openShare(previewMaterial)}>
-                    <Share2 className="w-3.5 h-3.5 mr-1" /> Condividi
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Download className="w-3.5 h-3.5 mr-1" /> Scarica PDF <ChevronDown className="w-3 h-3 ml-1" />
+                {/* Regen prompt after student edit */}
+                {showRegenPrompt && (
+                  <div className="mt-3 p-3 bg-primary/5 border border-primary/20 rounded-xl space-y-2">
+                    <p className="text-xs font-medium text-foreground">
+                      Hai modificato il materiale base. Vuoi rigenerare le versioni BES, DSA e H?
+                    </p>
+                    <div className="flex gap-2">
+                      <Button size="sm" className="h-7 text-xs" onClick={() => regenerateAllAdapted(previewMaterial.id)}>
+                        Sì, rigenera
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {hasSolutions ? (
-                        <>
-                          <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial, "student")}>
-                            📄 Scarica — Versione studente
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial, "teacher")}>
-                            🔒 Scarica — Versione docente
-                          </DropdownMenuItem>
-                        </>
-                      ) : (
-                        <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial)}>
-                          📄 Scarica PDF
-                        </DropdownMenuItem>
-                      )}
-                      {(() => {
-                        const adapted = adaptedMap[previewMaterial.id];
-                        const hasAdapted = adapted && Object.keys(adapted).length > 0;
-                        const isGenerating = generatingAdaptedFor === previewMaterial.id;
-                        return (
-                          <>
-                            {hasAdapted && adapted.bes && (
-                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.bes, "BES")}>
-                                🟡 Scarica — Versione BES
-                              </DropdownMenuItem>
-                            )}
-                            {hasAdapted && adapted.dsa && (
-                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.dsa, "DSA")}>
-                                🔵 Scarica — Versione DSA
-                              </DropdownMenuItem>
-                            )}
-                            {hasAdapted && adapted.h && (
-                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.h, "H")}>
-                                🟢 Scarica — Versione H
-                              </DropdownMenuItem>
-                            )}
-                            {!hasAdapted && (
-                              <DropdownMenuItem onClick={() => generateAdaptedForMaterial(previewMaterial)} disabled={isGenerating}>
-                                {isGenerating ? "⏳ Generazione in corso..." : "✨ Genera versioni BES/DSA/H"}
-                              </DropdownMenuItem>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Button size="sm" onClick={() => setPreviewMaterial(null)}>Chiudi</Button>
-                </DialogFooter>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowRegenPrompt(false)}>
+                        No, mantieni le versioni esistenti
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </>
             );
           })()}
         </DialogContent>
       </Dialog>
-
 
 
       {/* ── Share dialog ── */}
