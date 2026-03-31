@@ -639,9 +639,27 @@ export default function TeacherMaterialsArchive() {
                   >
                     <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
-                  <button onClick={() => handleDownloadPdf(m)} className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
-                    <Download className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
+                  {(m.content || "").includes("===SOLUZIONI===") ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
+                          <Download className="w-3.5 h-3.5 text-muted-foreground" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleDownloadPdf(m, "student")}>
+                          📄 Scarica — Versione studente
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDownloadPdf(m, "teacher")}>
+                          🔒 Scarica — Versione docente
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <button onClick={() => handleDownloadPdf(m)} className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
+                      <Download className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                  )}
                   <button onClick={() => openEdit(m)} className="p-2 rounded-lg hover:bg-muted transition-colors" title="Modifica">
                     <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
