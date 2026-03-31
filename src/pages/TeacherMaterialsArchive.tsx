@@ -750,27 +750,79 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
                   >
                     <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
-                  {(m.content || "").includes("===SOLUZIONI===") ? (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
-                          <Download className="w-3.5 h-3.5 text-muted-foreground" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleDownloadPdf(m, "student")}>
-                          📄 Scarica — Versione studente
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDownloadPdf(m, "teacher")}>
-                          🔒 Scarica — Versione docente
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  ) : (
-                    <button onClick={() => handleDownloadPdf(m)} className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
-                      <Download className="w-3.5 h-3.5 text-muted-foreground" />
-                    </button>
-                  )}
+                  {(() => {
+                    const hasSolutions = (m.content || "").includes("===SOLUZIONI===");
+                    const adapted = adaptedMap[m.id];
+                    const hasAdapted = adapted && Object.keys(adapted).length > 0;
+                    const showDropdown = hasSolutions || hasAdapted;
+                    const isGenerating = generatingAdaptedFor === m.id;
+
+                    if (showDropdown) {
+                      return (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
+                              {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" /> : <Download className="w-3.5 h-3.5 text-muted-foreground" />}
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {hasSolutions ? (
+                              <>
+                                <DropdownMenuItem onClick={() => handleDownloadPdf(m, "student")}>
+                                  📄 Scarica — Versione studente
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDownloadPdf(m, "teacher")}>
+                                  🔒 Scarica — Versione docente
+                                </DropdownMenuItem>
+                              </>
+                            ) : (
+                              <DropdownMenuItem onClick={() => handleDownloadPdf(m)}>
+                                📄 Scarica PDF
+                              </DropdownMenuItem>
+                            )}
+                            {hasAdapted && adapted.bes && (
+                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.bes, "BES")}>
+                                🟡 Scarica — Versione BES
+                              </DropdownMenuItem>
+                            )}
+                            {hasAdapted && adapted.dsa && (
+                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.dsa, "DSA")}>
+                                🔵 Scarica — Versione DSA
+                              </DropdownMenuItem>
+                            )}
+                            {hasAdapted && adapted.h && (
+                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.h, "H")}>
+                                🟢 Scarica — Versione H
+                              </DropdownMenuItem>
+                            )}
+                            {!hasAdapted && (
+                              <DropdownMenuItem onClick={() => generateAdaptedForMaterial(m)} disabled={isGenerating}>
+                                {isGenerating ? "⏳ Generazione in corso..." : "✨ Genera versioni BES/DSA/H"}
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      );
+                    }
+
+                    return (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
+                            <Download className="w-3.5 h-3.5 text-muted-foreground" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleDownloadPdf(m)}>
+                            📄 Scarica PDF
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => generateAdaptedForMaterial(m)} disabled={isGenerating}>
+                            {isGenerating ? "⏳ Generazione in corso..." : "✨ Genera versioni BES/DSA/H"}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    );
+                  })()}
                   <button onClick={() => openEdit(m)} className="p-2 rounded-lg hover:bg-muted transition-colors" title="Modifica">
                     <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
