@@ -262,14 +262,14 @@ export async function getFocusSessions(childProfileId?: string) {
 
 // ============ GAMIFICATION ============
 
-export async function getGamification(childProfileId?: string) {
+export async function getGamification(childProfileId?: string): Promise<any> {
   const profileId = childProfileId || getActiveChildProfileId();
   if (!profileId) return null;
 
   // Use RPC (SECURITY DEFINER) — works for both authenticated and child sessions
   try {
     const { data, error } = await supabase.rpc("get_child_gamification", { p_profile_id: profileId });
-    if (!error && data) return data;
+    if (!error && data) return data as any;
   } catch (e) {
     console.warn("get_child_gamification RPC error:", e);
   }
