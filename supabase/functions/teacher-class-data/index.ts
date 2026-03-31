@@ -135,7 +135,7 @@ serve(async (req) => {
       if (resultsError) throw resultsError;
 
       const studentNameMap = Object.fromEntries(
-        profilesList.map((profile) => [profile.parent_id, profile.name]),
+        profilesList.map((profile) => [profile.id, profile.name]),
       );
 
       assignmentResults = (assignments || [])
