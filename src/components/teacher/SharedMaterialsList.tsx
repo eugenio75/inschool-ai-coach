@@ -8,6 +8,7 @@ import { splitTeacherContent, renderAndPrintPdf } from "@/lib/pdfExport";
 import { MathText } from "@/components/shared/MathText";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -308,14 +309,26 @@ export default function SharedMaterialsList({
                 <span>{new Date(m.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "short", year: "numeric" })}</span>
               </div>
             </div>
-            <div className="flex flex-col gap-1 shrink-0" onClick={e => e.stopPropagation()}>
-              <Button variant="outline" size="sm" className="h-7 px-2.5 text-[11px] gap-1 w-full justify-start" onClick={() => handleArchive(m.id, m.status)}>
-                {m.status === "archived" ? <><Undo2 className="w-3 h-3" /> Ripristina</> : <><Archive className="w-3 h-3" /> Archivia</>}
-              </Button>
-              <Button variant="outline" size="sm" className="h-7 px-2.5 text-[11px] gap-1 w-full justify-start text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
-                onClick={() => { setDeleteTarget(m); setDeleteStep(1); setDeleteConfirmText(""); }}>
-                <Trash2 className="w-3 h-3" /> Elimina
-              </Button>
+            <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors" onClick={() => handleArchive(m.id, m.status)}>
+                      {m.status === "archived" ? <Undo2 className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>{m.status === "archived" ? "Ripristina" : "Archivia"}</p></TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      onClick={() => { setDeleteTarget(m); setDeleteStep(1); setDeleteConfirmText(""); }}>
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>Elimina</p></TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </motion.div>
         ))}
