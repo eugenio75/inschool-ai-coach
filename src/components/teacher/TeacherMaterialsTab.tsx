@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   PenLine, Sparkles, Upload, ArrowLeft, Send, Download,
@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import SharedMaterialsList from "@/components/teacher/SharedMaterialsList";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -64,7 +65,38 @@ const MATERIE_OPTIONS = [
   "Informatica", "Latino", "Greco", "Diritto", "Economia",
 ];
 
-export default function TeacherMaterialsTab({ classId, classe, students, materials, userId, onReload, autoCreate }: Props) {
+export default function TeacherMaterialsTab({ classId, classe, students, materials: propMaterials, userId, onReload, autoCreate }: Props) {
+  // Local materials state + adapted map for SharedMaterialsList
+  const [localMaterials, setLocalMaterials] = useState<any[]>([]);
+  const [adaptedMap, setAdaptedMap] = useState<Record<string, Record<string, any>>>({});
+  const [classiList, setClassiList] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Separate parent materials from adapted children
+    const parents: any[] = [];
+    const adaptedByParent: Record<string, Record<string, any>> = {};
+    propMaterials.forEach((m: any) => {
+      if (m.target_profile && ["bes", "dsa", "h"].includes(m.target_profile) && m.parent_material_id) {
+        if (!adaptedByParent[m.parent_material_id]) adaptedByParent[m.parent_material_id] = {};
+        adaptedByParent[m.parent_material_id][m.target_profile] = m;
+      } else if (m.target_profile !== "docente") {
+        parents.push(m);
+      }
+    });
+    setLocalMaterials(parents);
+    setAdaptedMap(adaptedByParent);
+  }, [propMaterials]);
+
+  useEffect(() => {
+    supabase.from("classi").select("id, nome").order("nome").then(({ data }) => setClassiList(data || []));
+  }, []);
+
+  const classMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    classiList.forEach(c => { m[c.id] = c.nome; });
+    if (classe?.id && classe?.nome) m[classe.id] = classe.nome;
+    return m;
+  }, [classiList, classe]);
   const [mode, setMode] = useState<FormMode>(null);
   const [activityType, setActivityType] = useState<ActivityType>("compito");
   const [content, setContent] = useState("");
@@ -530,7 +562,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
 
       // Persist to DB if we have a parent material ID
       if (parentMaterialId) {
-        const parentMat = materials.find((m: any) => m.id === parentMaterialId);
+        const parentMat = propMaterials.find((m: any) => m.id === parentMaterialId);
         const versions: { key: "bes" | "dsa" | "h"; content: string | null }[] = [
           { key: "bes", content: besContent },
           { key: "dsa", content: dsaContent },
@@ -560,7 +592,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
     } finally {
       setAdaptedLoading(false);
     }
-  }, [userId, classId, selectedSubjects, classe, activityType, confirmedTitle, materials]);
+  }, [userId, classId, selectedSubjects, classe, activityType, confirmedTitle, propMaterials]);
 
   // --- Confirm & assign ---
   async function handleConfirm() {
@@ -647,12 +679,12 @@ Return only the three versions with no commentary, separated exactly by ===BES==
     setSaving(false);
   }
 
-  // --- Saved materials ---
+  // --- Saved materials filter ---
   const filteredMaterials = materialFilter === "tutti"
-    ? materials
+    ? localMaterials
     : materialFilter === "archiviato"
-      ? materials.filter(m => m.status === "archived")
-      : materials.filter(m => m.status === materialFilter);
+      ? localMaterials.filter(m => m.status === "archived")
+      : localMaterials.filter(m => m.status === materialFilter);
 
   // --- Download panel (after confirmation) ---
   if (showDownloadPanel) {
@@ -786,18 +818,42 @@ Return only the three versions with no commentary, separated exactly by ===BES==
         </div>
 
         {/* Saved materials */}
-        <SavedMaterialsList
-          materials={materials}
-          filteredMaterials={filteredMaterials}
-          materialFilter={materialFilter}
-          setMaterialFilter={setMaterialFilter}
-          exportToPdf={exportToPdf}
-          classe={classe}
-          userId={userId}
-          classId={classId}
-          students={students}
-          onReload={onReload}
-        />
+        {localMaterials.length === 0 ? (
+          <div className="bg-card border border-border rounded-xl p-6 text-center">
+            <BookOpen className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">
+              Nessun materiale salvato. Ogni materiale creato verrà salvato automaticamente qui.
+            </p>
+          </div>
+        ) : (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Materiali salvati ({localMaterials.length})
+              </p>
+              <div className="flex gap-1">
+                {["tutti", "assigned", "draft", "archiviato"].map(f => (
+                  <button key={f} onClick={() => setMaterialFilter(f)}
+                    className={cn("text-xs px-2.5 py-1 rounded-full transition-colors",
+                      materialFilter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    )}>
+                    {f === "tutti" ? "Tutti" : f === "draft" ? "Non assegnati" : f === "assigned" ? "Assegnati" : "Archiviati"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <SharedMaterialsList
+              materials={filteredMaterials}
+              setMaterials={setLocalMaterials}
+              adaptedMap={adaptedMap}
+              setAdaptedMap={setAdaptedMap}
+              classMap={classMap}
+              classi={classiList}
+              userId={userId}
+              onReload={onReload}
+            />
+          </div>
+        )}
       </div>
     );
   }
@@ -1201,236 +1257,5 @@ Return only the three versions with no commentary, separated exactly by ===BES==
         </Button>
       </div>
     </div>
-  );
-}
-
-// --- Saved Materials Sub-component ---
-function SavedMaterialsList({
-  materials, filteredMaterials, materialFilter, setMaterialFilter, exportToPdf, classe, userId, classId, students, onReload,
-}: {
-  materials: any[];
-  filteredMaterials: any[];
-  materialFilter: string;
-  setMaterialFilter: (f: string) => void;
-  exportToPdf: (title: string, content: string, type: string) => void;
-  classe: any;
-  userId: string;
-  classId: string;
-  students: any[];
-  onReload: () => void;
-}) {
-  const [editMaterial, setEditMaterial] = useState<any | null>(null);
-  const [editForm, setEditForm] = useState({ title: "", subject: "", type: "", level: "", content: "" });
-  const [saving, setSaving] = useState(false);
-
-  function openEdit(m: any) {
-    setEditMaterial(m);
-    setEditForm({
-      title: m.title || "",
-      subject: m.subject || "",
-      type: m.type || "",
-      level: m.level || "",
-      content: (m.content || "").replace(/\\n/g, "\n"),
-    });
-  }
-
-  async function handleSaveEdit() {
-    if (!editMaterial) return;
-    setSaving(true);
-    const { error } = await supabase.from("teacher_materials").update({
-      title: editForm.title,
-      subject: editForm.subject,
-      type: editForm.type,
-      level: editForm.level,
-      content: editForm.content,
-      updated_at: new Date().toISOString(),
-    }).eq("id", editMaterial.id);
-    setSaving(false);
-    if (error) { toast.error("Errore nel salvataggio"); return; }
-    toast.success("Materiale aggiornato");
-    setEditMaterial(null);
-    onReload();
-  }
-
-  async function archiveMaterial(id: string) {
-    await supabase.from("teacher_materials").update({ status: "archived" }).eq("id", id);
-    toast.success("Materiale archiviato");
-    onReload();
-  }
-
-  async function reassignMaterial(material: any) {
-    if (students.length === 0) {
-      toast.error("Nessuno studente nella classe");
-      return;
-    }
-    try {
-      const inserts = students.map(s => ({
-        teacher_id: userId,
-        class_id: classId,
-        student_id: s.student_id || s.id,
-        title: material.title,
-        type: material.type || "esercizi",
-        subject: material.subject || classe?.materia || null,
-        description: material.content,
-        metadata: { ai_generated: true, reassigned: true },
-      }));
-      const { error } = await supabase.from("teacher_assignments").insert(inserts);
-      if (error) throw error;
-      await supabase.from("teacher_materials").update({ status: "assigned", assigned_at: new Date().toISOString() }).eq("id", material.id);
-      toast.success(`Riassegnato a ${students.length} studenti`);
-      onReload();
-    } catch (err: any) {
-      toast.error("Errore: " + (err.message || "Riprova"));
-    }
-  }
-
-  const TYPE_EDIT_OPTIONS = [
-    { key: "compito", label: "Compito" },
-    { key: "verifica", label: "Verifica" },
-    { key: "esercizi", label: "Esercizi" },
-    { key: "recupero", label: "Recupero" },
-    { key: "potenziamento", label: "Potenziamento" },
-  ];
-
-  return (
-    <>
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          Materiali salvati ({materials.length})
-        </p>
-        <div className="flex gap-1">
-          {["tutti", "assigned", "draft", "archiviato"].map(f => (
-            <button
-              key={f}
-              onClick={() => setMaterialFilter(f)}
-              className={cn(
-                "text-xs px-2.5 py-1 rounded-full transition-colors",
-                materialFilter === f
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              )}
-            >
-              {f === "tutti" ? "Tutti" : f === "draft" ? "Non assegnati" : f === "assigned" ? "Assegnati" : "Archiviati"}
-            </button>
-          ))}
-        </div>
-      </div>
-      {filteredMaterials.length === 0 ? (
-        <div className="bg-card border border-border rounded-xl p-6 text-center">
-          <BookOpen className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">
-            {materials.length === 0
-              ? "Nessun materiale salvato. Ogni materiale creato verrà salvato automaticamente qui."
-              : "Nessun materiale per questo filtro."}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {filteredMaterials.map(m => (
-            <div key={m.id} className="flex items-center gap-3 p-4 bg-card border border-border rounded-xl hover:shadow-sm transition-shadow">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{m.title}</p>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  {m.type && <Badge variant="secondary" className="text-[10px]">{m.type}</Badge>}
-                  <Badge variant={m.status === "assigned" ? "default" : m.status === "archived" ? "outline" : "secondary"} className="text-[10px] capitalize">
-                    {m.status === "assigned" ? "Assegnato" : m.status === "archived" ? "Archiviato" : "Non assegnato"}
-                  </Badge>
-                  <span className="text-[10px] text-muted-foreground">
-                    {m.created_at ? format(new Date(m.created_at), "dd MMM yyyy", { locale: it }) : ""}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                {m.status !== "archived" && (
-                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg" title="Riassegna"
-                    onClick={() => reassignMaterial(m)}>
-                    <RotateCcw className="w-3.5 h-3.5" />
-                  </Button>
-                )}
-                {m.content && (
-                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg" title="Scarica PDF"
-                    onClick={() => exportToPdf(m.title, m.content, m.type || "esercizi")}>
-                    <Download className="w-3.5 h-3.5" />
-                  </Button>
-                )}
-                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg" title="Modifica"
-                  onClick={() => openEdit(m)}>
-                  <Pencil className="w-3.5 h-3.5" />
-                </Button>
-                {m.status !== "archived" && (
-                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg" title="Archivia"
-                    onClick={() => archiveMaterial(m.id)}>
-                    <Archive className="w-3.5 h-3.5" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-
-    {/* Edit dialog */}
-    <Dialog open={!!editMaterial} onOpenChange={open => !open && setEditMaterial(null)}>
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Modifica materiale</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs font-medium">Titolo</Label>
-              <Input value={editForm.title} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} className="mt-1" />
-            </div>
-            <div>
-              <Label className="text-xs font-medium">Materia</Label>
-              <Input value={editForm.subject} onChange={e => setEditForm(f => ({ ...f, subject: e.target.value }))} className="mt-1" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs font-medium">Tipo</Label>
-              <Select value={editForm.type} onValueChange={v => setEditForm(f => ({ ...f, type: v }))}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {TYPE_EDIT_OPTIONS.map(t => (
-                    <SelectItem key={t.key} value={t.key}>{t.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs font-medium">Livello</Label>
-              <Select value={editForm.level} onValueChange={v => setEditForm(f => ({ ...f, level: v }))}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="base">Base</SelectItem>
-                  <SelectItem value="intermedio">Intermedio</SelectItem>
-                  <SelectItem value="avanzato">Avanzato</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div>
-            <Label className="text-xs font-medium">Contenuto</Label>
-            <Textarea
-              value={editForm.content}
-              onChange={e => setEditForm(f => ({ ...f, content: e.target.value }))}
-              className="mt-1 min-h-[250px] font-mono text-xs"
-              placeholder="Contenuto del materiale (supporta markdown)..."
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setEditMaterial(null)}>Annulla</Button>
-          <Button disabled={saving || !editForm.title || !editForm.content} onClick={handleSaveEdit}>
-            <Pencil className="w-4 h-4 mr-1" />
-            {saving ? "Salvataggio..." : "Salva"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-    </>
   );
 }
