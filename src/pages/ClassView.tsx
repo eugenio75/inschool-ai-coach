@@ -182,9 +182,9 @@ export default function ClassView() {
           const { data: profiles } = await (supabase as any)
             .from("child_profiles")
             .select("id, name, parent_id, avatar_emoji, school_level")
-            .in("parent_id", studentIds);
+            .in("id", studentIds);
           const profileMap: Record<string, any> = {};
-          (profiles || []).forEach((p: any) => { profileMap[p.parent_id] = p; });
+          (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
           setStudents(enrollments.map((e: any) => ({ ...e, profile: profileMap[e.student_id] || null })));
         } else {
           setStudents([]);

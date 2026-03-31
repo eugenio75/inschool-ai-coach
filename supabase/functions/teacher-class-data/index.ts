@@ -99,14 +99,14 @@ serve(async (req) => {
       const { data: profiles, error: profilesError } = await admin
         .from("child_profiles")
         .select("id, parent_id, name, avatar_emoji, school_level")
-        .in("parent_id", studentIds);
+        .in("id", studentIds);
 
       if (profilesError) throw profilesError;
       profilesList = profiles || [];
     }
 
     const profileMap = Object.fromEntries(
-      profilesList.map((profile) => [profile.parent_id, profile]),
+      profilesList.map((profile) => [profile.id, profile]),
     );
 
     const students = (enrollments || []).map((enrollment) => ({
@@ -135,7 +135,7 @@ serve(async (req) => {
       if (resultsError) throw resultsError;
 
       const studentNameMap = Object.fromEntries(
-        profilesList.map((profile) => [profile.parent_id, profile.name]),
+        profilesList.map((profile) => [profile.id, profile.name]),
       );
 
       assignmentResults = (assignments || [])
