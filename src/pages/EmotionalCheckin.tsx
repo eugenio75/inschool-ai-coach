@@ -1,7 +1,8 @@
+// MODIFICA: Feature 5 — Modern icons instead of emojis, skip for parent profiles
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { X, Loader2, ArrowRight, PenLine, MessageSquare, Star } from "lucide-react";
+import { X, Loader2, ArrowRight, PenLine, MessageSquare, Star, Smile, ThumbsUp, Meh, Frown, Moon, Zap, Focus, CloudRain, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { saveEmotionalCheckin } from "@/lib/database";
 import { getChildSession } from "@/lib/childSession";
@@ -10,6 +11,10 @@ const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 const CHECKIN_DATE_KEY = "inschool-last-checkin-date";
 
 export function shouldShowCheckin(): boolean {
+  // MODIFICA: Feature 5 — Skip for parent profiles
+  const childSession = getChildSession();
+  const schoolLevel = childSession?.profile?.school_level;
+
   const lastDate = localStorage.getItem(CHECKIN_DATE_KEY);
   const today = new Date().toISOString().split("T")[0];
   return lastDate !== today;
@@ -25,28 +30,32 @@ interface MoodOption {
   id: string;
   label: string;
   emoji?: string;
+  icon?: React.ComponentType<any>;
 }
 
 interface ProfileCheckinConfig {
   moodQuestion: string;
   moodOptions: MoodOption[];
   useEmoji: boolean;
+  useIcons: boolean;
   contextualQuestion: (moodStreak: number) => string | null;
   freeTextPrompt: string;
   skipLabel: string;
 }
 
+// MODIFICA: Feature 5 — Modern icons for junior config instead of emojis
 function getJuniorConfig(): ProfileCheckinConfig {
   return {
     moodQuestion: "Com'è la tua energia oggi?",
     moodOptions: [
-      { id: "great", label: "Benissimo", emoji: "😄" },
-      { id: "good", label: "Bene", emoji: "🙂" },
-      { id: "ok", label: "Così così", emoji: "😐" },
-      { id: "sad", label: "Un po' triste", emoji: "😔" },
-      { id: "tired", label: "Stanco", emoji: "😴" },
+      { id: "great", label: "Benissimo", icon: Zap },
+      { id: "good", label: "Bene", icon: ThumbsUp },
+      { id: "ok", label: "Così così", icon: Meh },
+      { id: "sad", label: "Un po' triste", icon: CloudRain },
+      { id: "tired", label: "Stanco", icon: Moon },
     ],
-    useEmoji: true,
+    useEmoji: false,
+    useIcons: true,
     contextualQuestion: (moodStreak) =>
       moodStreak >= 1
         ? "Ieri sembrava una giornata pesante. Oggi come stai?"
@@ -60,12 +69,13 @@ function getSuperioriConfig(): ProfileCheckinConfig {
   return {
     moodQuestion: "Come stai oggi?",
     moodOptions: [
-      { id: "focused", label: "Concentrato" },
-      { id: "tired", label: "Stanco" },
-      { id: "pressured", label: "Sotto pressione" },
-      { id: "notgreat", label: "Non benissimo" },
+      { id: "focused", label: "Concentrato", icon: Focus },
+      { id: "tired", label: "Stanco", icon: Moon },
+      { id: "pressured", label: "Sotto pressione", icon: Brain },
+      { id: "notgreat", label: "Non benissimo", icon: Frown },
     ],
     useEmoji: false,
+    useIcons: true,
     contextualQuestion: (moodStreak) =>
       moodStreak >= 1
         ? "Ieri sembrava una giornata pesante. Come stai adesso?"
@@ -79,12 +89,13 @@ function getUniversityConfig(): ProfileCheckinConfig {
   return {
     moodQuestion: "Come stai?",
     moodOptions: [
-      { id: "good", label: "Bene" },
-      { id: "tired", label: "Stanco" },
-      { id: "distracted", label: "Distratto" },
-      { id: "notgreat", label: "Non benissimo" },
+      { id: "good", label: "Bene", icon: ThumbsUp },
+      { id: "tired", label: "Stanco", icon: Moon },
+      { id: "distracted", label: "Distratto", icon: Meh },
+      { id: "notgreat", label: "Non benissimo", icon: Frown },
     ],
     useEmoji: false,
+    useIcons: true,
     contextualQuestion: (moodStreak) =>
       moodStreak >= 3
         ? "Nelle ultime settimane sembra esserci qualcosa che pesa. Tutto ok?"
@@ -151,6 +162,29 @@ const EmotionalCheckin = () => {
   const schoolLevel = (childSession?.profile?.school_level || savedProfile?.school_level) as string | undefined;
   const profileId = childSession?.profileId || savedProfile?.id;
 
+  // MODIFICA: Feature 5 — Skip for parent profiles
+  const isParent = schoolLevel === "genitore" || schoolLevel === "alunno"; // parent-created profiles are "alunno" but accessed by parents
+  const userType = localStorage.getItem("inschool-signup-meta");
+  const isParentUser = useMemo(() => {
+    try {
+      if (userType) {
+        const meta = JSON.parse(userType);
+        return meta.school_level === "alunno"; // Parent role maps to "alunno" in the system
+      }
+    } catch {}
+    // Check if this is a parent context (no child session active)
+    return !childSession?.profile && !savedProfile;
+  }, [userType, childSession, savedProfile]);
+
+  useEffect(() => {
+    // MODIFICA: Feature 5 — Skip for parent user type
+    if (isParentUser) {
+      markCheckinDone();
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+  }, [isParentUser, navigate]);
+
   const config = useMemo(() => getConfigForLevel(schoolLevel), [schoolLevel]);
 
   // Load mood_streak
@@ -171,7 +205,6 @@ const EmotionalCheckin = () => {
   // Steps: 0 = mood, 1 = contextual (optional, auto-skipped), 2 = free text
   const contextualQ = useMemo(() => config.contextualQuestion(moodStreak), [config, moodStreak]);
   const hasContextual = !!contextualQ;
-  // Determine actual step count: mood → (contextual?) → free text
   const totalSteps = hasContextual ? 3 : 2;
 
   const handleMoodSelect = (opt: MoodOption) => {
@@ -226,8 +259,10 @@ const EmotionalCheckin = () => {
     }
   };
 
-  // Determine which visual step we're on for progress dots
   const progressStep = step === 0 ? 0 : step >= 2 ? (totalSteps - 1) : 1;
+
+  // MODIFICA: Feature 5 — If parent, don't render (will redirect)
+  if (isParentUser) return null;
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center px-6">
@@ -258,6 +293,7 @@ const EmotionalCheckin = () => {
                 {config.moodQuestion}
               </p>
 
+              {/* MODIFICA: Feature 5 — Modern icons instead of emojis */}
               <div className="flex flex-col gap-3">
                 {config.moodOptions.map((opt) => (
                   <button
@@ -265,6 +301,11 @@ const EmotionalCheckin = () => {
                     onClick={() => handleMoodSelect(opt)}
                     className="flex items-center gap-3 p-4 rounded-lg border border-border hover:border-primary/30 hover:bg-muted transition-all text-left"
                   >
+                    {config.useIcons && opt.icon && (
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <opt.icon className="w-5 h-5 text-primary" />
+                      </div>
+                    )}
                     {config.useEmoji && opt.emoji && (
                       <span className="text-2xl">{opt.emoji}</span>
                     )}
@@ -277,7 +318,9 @@ const EmotionalCheckin = () => {
                     showCustom ? "border-primary bg-primary/5" : "border-border hover:bg-muted hover:border-primary/30"
                   }`}
                 >
-                  <PenLine className="w-5 h-5 text-primary" />
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                    <PenLine className="w-5 h-5 text-primary" />
+                  </div>
                   <span className="text-sm font-medium text-foreground">Altro...</span>
                 </button>
               </div>
