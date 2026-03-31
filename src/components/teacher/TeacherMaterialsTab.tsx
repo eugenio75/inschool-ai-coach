@@ -818,18 +818,42 @@ Return only the three versions with no commentary, separated exactly by ===BES==
         </div>
 
         {/* Saved materials */}
-        <SavedMaterialsList
-          materials={materials}
-          filteredMaterials={filteredMaterials}
-          materialFilter={materialFilter}
-          setMaterialFilter={setMaterialFilter}
-          exportToPdf={exportToPdf}
-          classe={classe}
-          userId={userId}
-          classId={classId}
-          students={students}
-          onReload={onReload}
-        />
+        {localMaterials.length === 0 ? (
+          <div className="bg-card border border-border rounded-xl p-6 text-center">
+            <BookOpen className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">
+              Nessun materiale salvato. Ogni materiale creato verrà salvato automaticamente qui.
+            </p>
+          </div>
+        ) : (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Materiali salvati ({localMaterials.length})
+              </p>
+              <div className="flex gap-1">
+                {["tutti", "assigned", "draft", "archiviato"].map(f => (
+                  <button key={f} onClick={() => setMaterialFilter(f)}
+                    className={cn("text-xs px-2.5 py-1 rounded-full transition-colors",
+                      materialFilter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    )}>
+                    {f === "tutti" ? "Tutti" : f === "draft" ? "Non assegnati" : f === "assigned" ? "Assegnati" : "Archiviati"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <SharedMaterialsList
+              materials={filteredMaterials}
+              setMaterials={setLocalMaterials}
+              adaptedMap={adaptedMap}
+              setAdaptedMap={setAdaptedMap}
+              classMap={classMap}
+              classi={classiList}
+              userId={userId}
+              onReload={onReload}
+            />
+          </div>
+        )}
       </div>
     );
   }
