@@ -8,6 +8,7 @@ import { splitTeacherContent, renderAndPrintPdf } from "@/lib/pdfExport";
 import { MathText } from "@/components/shared/MathText";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
