@@ -389,7 +389,8 @@ export async function getDailyMissions(childProfileId?: string): Promise<any[]> 
   // Use RPC (SECURITY DEFINER) — works for both authenticated and child sessions
   try {
     const { data, error } = await supabase.rpc("get_child_daily_missions", { p_profile_id: profileId, p_date: today });
-    if (!error && data && data.length > 0) return data;
+    const missions = data as any;
+    if (!error && missions && Array.isArray(missions) && missions.length > 0) return missions;
   } catch (e) {
     console.warn("get_child_daily_missions RPC error:", e);
   }
