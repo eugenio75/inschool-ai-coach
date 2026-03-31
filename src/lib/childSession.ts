@@ -103,23 +103,16 @@ export async function childApi(action: string, payload?: any) {
   return response.json();
 }
 
-// Login with access code
+// Login with access code — direct Supabase query (no edge function)
 export async function loginWithChildCode(code: string): Promise<ChildSession> {
-  const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/child-api`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "login", accessCode: code }),
-    }
-  );
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || "Codice non valido");
+  const { supabase } = await import("@/integrations/supabase/client");
+  
+  const { data, error } = await supabase.rpc("validate_child_code", { code: code.toUpperCase().trim() });
+  
+  if (error || !data?.valid) {
+    throw new Error("Codice non valido. Controlla e riprova!");
   }
 
-  const data = await response.json();
   const session: ChildSession = {
     profileId: data.profile.id,
     accessCode: code.toUpperCase().trim(),
