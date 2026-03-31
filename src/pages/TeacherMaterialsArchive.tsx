@@ -458,8 +458,133 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
       setGeneratingAdaptedFor(null);
     }
   }
+  /** Save inline edit for a specific version */
+  async function handlePreviewEditSave() {
+    if (!previewMaterial) return;
+    setPreviewEditSaving(true);
+    try {
+      if (previewVersion === "student" || previewVersion === "teacher") {
+        // Editing the parent material
+        const hasSolutions = (previewMaterial.content || "").includes("===SOLUZIONI===");
+        let newContent: string;
+        if (previewVersion === "student" && hasSolutions) {
+          const { teacherContent } = splitTeacherContent(previewMaterial.content || "");
+          newContent = teacherContent
+            ? `${previewEditContent}\n\n===SOLUZIONI===\n\n${teacherContent}`
+            : previewEditContent;
+        } else if (previewVersion === "teacher" && hasSolutions) {
+          const { studentContent } = splitTeacherContent(previewMaterial.content || "");
+          newContent = `${studentContent}\n\n===SOLUZIONI===\n\n${previewEditContent}`;
+        } else {
+          newContent = previewEditContent;
+        }
+        await supabase.from("teacher_materials").update({ content: newContent, updated_at: new Date().toISOString() }).eq("id", previewMaterial.id);
+        setPreviewMaterial({ ...previewMaterial, content: newContent });
+        setMaterials(prev => prev.map(m => m.id === previewMaterial.id ? { ...m, content: newContent } : m));
+        toast.success("Contenuto aggiornato");
 
-  function openEdit(m: any) {
+        // If student version was edited, prompt to regenerate adapted versions
+        if (previewVersion === "student") {
+          const adapted = adaptedMap[previewMaterial.id];
+          if (adapted && Object.keys(adapted).length > 0) {
+            setShowRegenPrompt(true);
+          }
+        }
+      } else {
+        // Editing an adapted version (bes/dsa/h)
+        const adapted = adaptedMap[previewMaterial.id];
+        const adaptedMat = adapted?.[previewVersion];
+        if (adaptedMat) {
+          await supabase.from("teacher_materials").update({ content: previewEditContent, updated_at: new Date().toISOString() }).eq("id", adaptedMat.id);
+          setAdaptedMap(prev => ({
+            ...prev,
+            [previewMaterial.id]: {
+              ...prev[previewMaterial.id],
+              [previewVersion]: { ...adaptedMat, content: previewEditContent },
+            },
+          }));
+          toast.success("Versione adattata aggiornata");
+        }
+      }
+    } catch (err) {
+      toast.error("Errore nel salvataggio");
+    }
+    setPreviewEditSaving(false);
+    setPreviewEditing(false);
+  }
+
+  /** Regenerate a single adapted version */
+  async function regenerateSingleVersion(materialId: string, version: "bes" | "dsa" | "h") {
+    const mat = materials.find(m => m.id === materialId);
+    if (!mat) return;
+    setRegeneratingVersion(version);
+    try {
+      const { studentContent } = splitTeacherContent(mat.content || "");
+      const versionLabels: Record<string, string> = {
+        bes: "BES (Bisogni Educativi Speciali): Simplify language and instructions. Use shorter sentences. Break complex tasks into smaller steps.",
+        dsa: "DSA (Disturbi Specifici dell'Apprendimento): Further simplify written instructions. Use numbered lists. Avoid copying tasks. Suggest compensatory tools. Use clear visual spacing.",
+        h: "H (Disabilità certificata — obiettivi minimi): Reduce to core essential concepts. Very simple language. Maximum 3-4 tasks. Include visual support suggestions.",
+      };
+      const systemPrompt = `You are an Italian special education specialist. Adapt the following educational material for ${version.toUpperCase()} students:\n\n${versionLabels[version]}\n\nReturn only the adapted version in Italian, no commentary.`;
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+        body: JSON.stringify({ stream: false, maxTokens: 3000, systemPrompt, messages: [{ role: "user", content: `MATERIALE ORIGINALE:\n---\n${studentContent}\n---` }] }),
+      });
+      const data = await res.json();
+      const output = data.choices?.[0]?.message?.content?.trim() || "";
+      if (!output) throw new Error("Empty response");
+
+      // Update or insert in DB
+      const adapted = adaptedMap[materialId];
+      const existing = adapted?.[version];
+      if (existing) {
+        await supabase.from("teacher_materials").update({ content: output, updated_at: new Date().toISOString() }).eq("id", existing.id);
+        setAdaptedMap(prev => ({
+          ...prev,
+          [materialId]: { ...prev[materialId], [version]: { ...existing, content: output } },
+        }));
+      } else {
+        const { data: inserted } = await supabase.from("teacher_materials").insert({
+          teacher_id: user!.id, class_id: mat.class_id, title: `${mat.title} — ${version.toUpperCase()}`,
+          subject: mat.subject, type: mat.type, content: output, target_profile: version,
+          parent_material_id: materialId, is_sample: mat.is_sample || false, status: "draft",
+        }).select("*").single();
+        if (inserted) {
+          setAdaptedMap(prev => ({
+            ...prev,
+            [materialId]: { ...(prev[materialId] || {}), [version]: inserted },
+          }));
+        }
+      }
+      toast.success(`Versione ${version.toUpperCase()} rigenerata`);
+    } catch (err) {
+      toast.error("Errore nella rigenerazione");
+    } finally {
+      setRegeneratingVersion(null);
+    }
+  }
+
+  /** Regenerate all adapted versions after student content edit */
+  async function regenerateAllAdapted(materialId: string) {
+    setShowRegenPrompt(false);
+    for (const v of ["bes", "dsa", "h"] as const) {
+      await regenerateSingleVersion(materialId, v);
+    }
+  }
+
+  /** Delete a material and its adapted versions */
+  async function handleDeleteMaterial(id: string) {
+    if (!confirm("Sei sicuro di voler eliminare questo materiale e tutte le sue versioni?")) return;
+    await supabase.from("teacher_materials").delete().eq("parent_material_id", id);
+    await supabase.from("teacher_materials").delete().eq("id", id);
+    setMaterials(prev => prev.filter(m => m.id !== id));
+    setAdaptedMap(prev => { const copy = { ...prev }; delete copy[id]; return copy; });
+    setPreviewMaterial(null);
+    toast.success("Materiale eliminato");
+  }
+
+
     setEditMaterial(m);
     setEditForm({
       title: m.title || "",
