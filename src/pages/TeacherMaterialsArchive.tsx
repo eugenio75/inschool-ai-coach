@@ -1361,6 +1361,53 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Delete confirmation dialog (double step) ── */}
+      <Dialog open={!!deleteTarget} onOpenChange={open => { if (!open) { setDeleteTarget(null); setDeleteStep(1); setDeleteConfirmText(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          {deleteStep === 1 ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Eliminare materiale?</DialogTitle>
+                <DialogDescription>
+                  Vuoi eliminare "{deleteTarget?.title}"? Verranno eliminate anche tutte le versioni BES, DSA e H associate.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteStep(1); }}>Annulla</Button>
+                <Button variant="destructive" onClick={() => setDeleteStep(2)}>Continua</Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>Conferma eliminazione</DialogTitle>
+                <DialogDescription>
+                  Questa azione è irreversibile. Digita il titolo del materiale per confermare.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-3">
+                <Input
+                  value={deleteConfirmText}
+                  onChange={e => setDeleteConfirmText(e.target.value)}
+                  placeholder={deleteTarget?.title || ""}
+                  className="text-sm"
+                />
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteStep(1); setDeleteConfirmText(""); }}>Annulla</Button>
+                <Button
+                  variant="destructive"
+                  disabled={deleteConfirmText !== (deleteTarget?.title || "")}
+                  onClick={() => deleteTarget && executeDelete(deleteTarget.id)}
+                >
+                  Elimina definitivamente
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
