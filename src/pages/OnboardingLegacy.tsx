@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createChildProfile, setActiveChildProfileId } from "@/lib/database";
 import { useAuth } from "@/hooks/useAuth";
-import { getChildSession, clearChildSession } from "@/lib/childSession";
+import { getChildSession, clearChildSession, setChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
 import { coachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
 import { useToast } from "@/hooks/use-toast";
