@@ -264,7 +264,12 @@ export async function getFocusSessions(childProfileId?: string) {
 
 export async function getGamification(childProfileId?: string) {
   if (isChildSession()) {
-    return childApi("get-gamification");
+    try {
+      const result = await childApi("get-gamification");
+      if (result) return result;
+    } catch (e) {
+      console.warn("childApi get-gamification fallback:", e);
+    }
   }
 
   const profileId = childProfileId || getActiveChildProfileId();
@@ -377,13 +382,28 @@ export async function updateMemoryStrength(itemId: string, strength: number) {
 
 export async function getDailyMissions(childProfileId?: string): Promise<any[]> {
   if (isChildSession()) {
-    return childApi("get-daily-missions");
+    try {
+      const result = await childApi("get-daily-missions");
+      if (result && result.length > 0) return result;
+    } catch (e) {
+      console.warn("childApi get-daily-missions fallback:", e);
+    }
   }
 
   const profileId = childProfileId || getActiveChildProfileId();
   if (!profileId) return [];
 
-  // Call the generate-missions edge function which returns existing or creates new
+  // First try direct query for today's missions
+  const today = new Date().toISOString().split("T")[0];
+  const { data: existing } = await supabase
+    .from("daily_missions")
+    .select("*")
+    .eq("child_profile_id", profileId)
+    .eq("mission_date", today)
+    .order("created_at");
+  if (existing && existing.length > 0) return existing;
+
+  // Fallback: call generate-missions edge function
   try {
     const { data: { session } } = await supabase.auth.getSession();
     const response = await fetch(
