@@ -65,7 +65,38 @@ const MATERIE_OPTIONS = [
   "Informatica", "Latino", "Greco", "Diritto", "Economia",
 ];
 
-export default function TeacherMaterialsTab({ classId, classe, students, materials, userId, onReload, autoCreate }: Props) {
+export default function TeacherMaterialsTab({ classId, classe, students, materials: propMaterials, userId, onReload, autoCreate }: Props) {
+  // Local materials state + adapted map for SharedMaterialsList
+  const [localMaterials, setLocalMaterials] = useState<any[]>([]);
+  const [adaptedMap, setAdaptedMap] = useState<Record<string, Record<string, any>>>({});
+  const [classiList, setClassiList] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Separate parent materials from adapted children
+    const parents: any[] = [];
+    const adaptedByParent: Record<string, Record<string, any>> = {};
+    propMaterials.forEach((m: any) => {
+      if (m.target_profile && ["bes", "dsa", "h"].includes(m.target_profile) && m.parent_material_id) {
+        if (!adaptedByParent[m.parent_material_id]) adaptedByParent[m.parent_material_id] = {};
+        adaptedByParent[m.parent_material_id][m.target_profile] = m;
+      } else if (m.target_profile !== "docente") {
+        parents.push(m);
+      }
+    });
+    setLocalMaterials(parents);
+    setAdaptedMap(adaptedByParent);
+  }, [propMaterials]);
+
+  useEffect(() => {
+    supabase.from("classi").select("id, nome").order("nome").then(({ data }) => setClassiList(data || []));
+  }, []);
+
+  const classMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    classiList.forEach(c => { m[c.id] = c.nome; });
+    if (classe?.id && classe?.nome) m[classe.id] = classe.nome;
+    return m;
+  }, [classiList, classe]);
   const [mode, setMode] = useState<FormMode>(null);
   const [activityType, setActivityType] = useState<ActivityType>("compito");
   const [content, setContent] = useState("");
