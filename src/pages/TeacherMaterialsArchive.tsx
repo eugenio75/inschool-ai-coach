@@ -859,6 +859,7 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-semibold text-sm text-foreground truncate">{m.title}</h3>
+                    <Badge variant="outline" className="text-[10px]">{typeLabel(m.type)}</Badge>
                     {(m.content || "").includes("===SOLUZIONI===") && (
                       <span
                         className="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 px-1.5 py-0.5 rounded-full cursor-help"
@@ -867,13 +868,6 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
                         🔒 Docente
                       </span>
                     )}
-                    {adaptedMap[m.id] && Object.keys(adaptedMap[m.id]).length > 0 && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-1.5 py-0.5 rounded-full">
-                        BES/DSA/H
-                      </span>
-                    )}
-                    <Badge variant="outline" className="text-[10px]">{typeLabel(m.type)}</Badge>
-                    <Badge variant={statusVariant(m.status)} className="text-[10px]">{statusLabel(m.status)}</Badge>
                   </div>
                   <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
                     {m.class_id && classMap[m.class_id] && <span>{classMap[m.class_id]}</span>}
