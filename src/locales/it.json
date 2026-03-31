@@ -1130,5 +1130,14 @@
   "mat_regen_no": "No, mantieni le versioni esistenti",
   "mat_content_updated": "Contenuto aggiornato",
   "mat_adapted_updated": "Versione adattata aggiornata",
-  "mat_version_regenerated": "Versione rigenerata"
+  "mat_version_regenerated": "Versione rigenerata",
+  "mat_archive": "Archivia",
+  "mat_restore": "Ripristina",
+  "mat_delete": "Elimina",
+  "mat_delete_title": "Eliminare materiale?",
+  "mat_delete_step1": "Vuoi eliminare \"{title}\"? Verranno eliminate anche tutte le versioni BES, DSA e H associate.",
+  "mat_delete_step2_title": "Conferma eliminazione",
+  "mat_delete_step2_desc": "Questa azione è irreversibile. Digita il titolo del materiale per confermare.",
+  "mat_delete_permanent": "Elimina definitivamente",
+  "nav_materials": "Materiali"
 }
