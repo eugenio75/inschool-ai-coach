@@ -883,103 +883,26 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
                 </div>
 
                 <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
-                  <button
-                    onClick={() => openReassign(m)}
-                    className="p-2 rounded-lg hover:bg-muted transition-colors"
-                    title="Riassegna"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
-                  <button
-                    onClick={() => openShare(m)}
-                    className="p-2 rounded-lg hover:bg-muted transition-colors"
-                    title="Condividi con altre classi"
-                  >
-                    <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
-                  {(() => {
-                    const hasSolutions = (m.content || "").includes("===SOLUZIONI===");
-                    const adapted = adaptedMap[m.id];
-                    const hasAdapted = adapted && Object.keys(adapted).length > 0;
-                    const showDropdown = hasSolutions || hasAdapted;
-                    const isGenerating = generatingAdaptedFor === m.id;
-
-                    if (showDropdown) {
-                      return (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
-                              {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" /> : <Download className="w-3.5 h-3.5 text-muted-foreground" />}
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {hasSolutions ? (
-                              <>
-                                <DropdownMenuItem onClick={() => handleDownloadPdf(m, "student")}>
-                                  📄 Scarica — Versione studente
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDownloadPdf(m, "teacher")}>
-                                  🔒 Scarica — Versione docente
-                                </DropdownMenuItem>
-                              </>
-                            ) : (
-                              <DropdownMenuItem onClick={() => handleDownloadPdf(m)}>
-                                📄 Scarica PDF
-                              </DropdownMenuItem>
-                            )}
-                            {hasAdapted && adapted.bes && (
-                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.bes, "BES")}>
-                                🟡 Scarica — Versione BES
-                              </DropdownMenuItem>
-                            )}
-                            {hasAdapted && adapted.dsa && (
-                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.dsa, "DSA")}>
-                                🔵 Scarica — Versione DSA
-                              </DropdownMenuItem>
-                            )}
-                            {hasAdapted && adapted.h && (
-                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.h, "H")}>
-                                🟢 Scarica — Versione H
-                              </DropdownMenuItem>
-                            )}
-                            {!hasAdapted && (
-                              <DropdownMenuItem onClick={() => generateAdaptedForMaterial(m)} disabled={isGenerating}>
-                                {isGenerating ? "⏳ Generazione in corso..." : "✨ Genera versioni BES/DSA/H"}
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      );
-                    }
-
-                    return (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
-                            <Download className="w-3.5 h-3.5 text-muted-foreground" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleDownloadPdf(m)}>
-                            📄 Scarica PDF
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => generateAdaptedForMaterial(m)} disabled={isGenerating}>
-                            {isGenerating ? "⏳ Generazione in corso..." : "✨ Genera versioni BES/DSA/H"}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    );
-                  })()}
-                  <button onClick={() => openEdit(m)} className="p-2 rounded-lg hover:bg-muted transition-colors" title="Modifica">
-                    <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2.5 text-xs gap-1.5"
                     onClick={() => handleArchive(m.id, m.status)}
-                    className="p-2 rounded-lg hover:bg-muted transition-colors"
-                    title={m.status === "archived" ? "Ripristina" : "Archivia"}
                   >
-                    <Archive className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
+                    {m.status === "archived" ? (
+                      <><Undo2 className="w-3.5 h-3.5" /> Ripristina</>
+                    ) : (
+                      <><Archive className="w-3.5 h-3.5" /> Archivia</>
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2.5 text-xs gap-1.5 text-destructive hover:text-destructive"
+                    onClick={() => { setDeleteTarget(m); setDeleteStep(1); setDeleteConfirmText(""); }}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Elimina
+                  </Button>
                 </div>
               </motion.div>
             ))}
