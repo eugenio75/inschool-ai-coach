@@ -876,11 +876,11 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="h-8 px-2.5 text-xs gap-1.5"
+                    className="h-8 px-3 text-xs gap-1.5"
                     onClick={() => handleArchive(m.id, m.status)}
                   >
                     {m.status === "archived" ? (
@@ -890,9 +890,9 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
                     )}
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="h-8 px-2.5 text-xs gap-1.5 text-destructive hover:text-destructive"
+                    className="h-8 px-3 text-xs gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
                     onClick={() => { setDeleteTarget(m); setDeleteStep(1); setDeleteConfirmText(""); }}
                   >
                     <Trash2 className="w-3.5 h-3.5" /> Elimina
