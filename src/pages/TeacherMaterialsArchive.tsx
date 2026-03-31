@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Search, FolderOpen, FileText, Download, Pencil, Archive, Share2, Loader2, X, Eye, RotateCcw, CalendarIcon, ChevronDown } from "lucide-react";
+import { Plus, Search, FolderOpen, FileText, Download, Pencil, Archive, Share2, Loader2, X, Eye, RotateCcw, CalendarIcon, ChevronDown, Sparkles } from "lucide-react";
 import { splitTeacherContent } from "@/lib/pdfExport";
 import { MathText } from "@/components/shared/MathText";
 import { format } from "date-fns";
