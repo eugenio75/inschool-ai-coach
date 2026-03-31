@@ -298,14 +298,9 @@ export default function SharedMaterialsList({
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-semibold text-sm text-foreground truncate">{m.title}</h3>
                 <Badge variant="outline" className="text-[10px]">{typeLabel(m.type)}</Badge>
-                {(m.content || "").includes("===SOLUZIONI===") && (
-                  <span
-                    className="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 px-1.5 py-0.5 rounded-full cursor-help"
-                    title="Questo materiale contiene soluzioni e griglie riservate al docente"
-                  >
-                    🔒 Docente
-                  </span>
-                )}
+                <Badge variant={m.status === "assigned" ? "default" : "secondary"} className={cn("text-[10px]", m.status === "assigned" ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700 hover:bg-green-100" : "")}>
+                  {m.status === "assigned" ? "Assegnato" : "Non assegnato"}
+                </Badge>
               </div>
               <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
                 {m.class_id && classMap[m.class_id] && <span>{classMap[m.class_id]}</span>}
