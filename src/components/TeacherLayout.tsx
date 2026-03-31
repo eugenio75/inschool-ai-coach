@@ -47,7 +47,9 @@ function TeacherNavbar() {
             title={label}
             className={cn(
               "relative w-9 h-9 rounded-lg flex items-center justify-center transition-colors",
-              location.pathname === route
+              location.pathname + location.search === route
+                ? "bg-primary/10 text-primary"
+                : location.pathname === route.split("?")[0] && !route.includes("?") && location.search === ""
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )}
