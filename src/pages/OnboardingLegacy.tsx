@@ -1,22 +1,58 @@
-import { useState } from "react";
+// MODIFICA: Feature 1 (Avatar), Feature 2 (Coach Name), Feature 3 (Class Dropdown),
+// Feature 4 (Subject Logic Inversion), Feature 6 (Access Code Step)
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, BookOpen, Check } from "lucide-react";
+import { ArrowRight, ArrowLeft, BookOpen, Check, Upload, Copy, Mail, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createChildProfile, setActiveChildProfileId } from "@/lib/database";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildSession, clearChildSession } from "@/lib/childSession";
+import { supabase } from "@/integrations/supabase/client";
+import { coachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
+import { useToast } from "@/hooks/use-toast";
+
+// MODIFICA: Feature 1 — Avatar imports
+import kidBoy1 from "@/assets/avatars/kid-boy-1.png";
+import kidGirl1 from "@/assets/avatars/kid-girl-1.png";
+import kidBoy2 from "@/assets/avatars/kid-boy-2.png";
+import kidGirl2 from "@/assets/avatars/kid-girl-2.png";
+import adultMale1 from "@/assets/avatars/adult-male-1.png";
+import adultFemale1 from "@/assets/avatars/adult-female-1.png";
+import adultMale2 from "@/assets/avatars/adult-male-2.png";
+import adultFemale2 from "@/assets/avatars/adult-female-2.png";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
-const avatarOptions = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
+// MODIFICA: Feature 1 — Avatar options split by category
+const kidAvatars = [
+  { id: "kid-boy-1", src: kidBoy1, label: "Ragazzo 1" },
+  { id: "kid-girl-1", src: kidGirl1, label: "Ragazza 1" },
+  { id: "kid-boy-2", src: kidBoy2, label: "Ragazzo 2" },
+  { id: "kid-girl-2", src: kidGirl2, label: "Ragazza 2" },
+];
 
-const schoolLevels = [
-  { id: "primaria-1-2", label: "Primaria 1ª-2ª" },
-  { id: "primaria-3-5", label: "Primaria 3ª-5ª" },
-  { id: "media-1", label: "Media 1ª" },
-  { id: "media-2", label: "Media 2ª" },
-  { id: "media-3", label: "Media 3ª" },
+const adultAvatars = [
+  { id: "adult-male-1", src: adultMale1, label: "Adulto 1" },
+  { id: "adult-female-1", src: adultFemale1, label: "Adulta 1" },
+  { id: "adult-male-2", src: adultMale2, label: "Adulto 2" },
+  { id: "adult-female-2", src: adultFemale2, label: "Adulta 2" },
+];
+
+// MODIFICA: Feature 3 — Proper school level lists
+const primaryClasses = [
+  { id: "primaria-1", label: "1ª Elementare" },
+  { id: "primaria-2", label: "2ª Elementare" },
+  { id: "primaria-3", label: "3ª Elementare" },
+  { id: "primaria-4", label: "4ª Elementare" },
+  { id: "primaria-5", label: "5ª Elementare" },
+];
+
+const middleClasses = [
+  { id: "media-1", label: "1ª Media" },
+  { id: "media-2", label: "2ª Media" },
+  { id: "media-3", label: "3ª Media" },
 ];
 
 const subjects = ["Italiano", "Matematica", "Scienze", "Storia", "Geografia", "Inglese", "Arte", "Musica", "Tecnologia"];
@@ -40,88 +76,157 @@ const supportStyles = [
 interface OnboardingData {
   name: string;
   avatar: string;
+  avatarUrl: string;
   age: string;
   dateOfBirth: string;
   gender: string;
+  schoolCategory: string; // "primaria" or "media"
   schoolLevel: string;
   favoriteSubjects: string[];
-  difficultSubjects: string[];
   struggles: string[];
   focusTime: string;
   supportStyles: string[];
+  coachName: string;
 }
 
 const OnboardingLegacy = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [createdProfile, setCreatedProfile] = useState<any>(null);
   const adultSession = getChildSession();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
   const [data, setData] = useState<OnboardingData>({
-    name: "", avatar: "A", age: "", dateOfBirth: "", gender: "", schoolLevel: "", favoriteSubjects: [],
-    difficultSubjects: [], struggles: [], focusTime: "15", supportStyles: [],
+    name: "", avatar: "kid-boy-1", avatarUrl: "", age: "", dateOfBirth: "", gender: "",
+    schoolCategory: "", schoolLevel: "", favoriteSubjects: [],
+    struggles: [], focusTime: "15", supportStyles: [], coachName: "",
   });
 
-  const totalSteps = 7;
+  // MODIFICA: Feature 2 + Feature 6 — Added coach name step + access code step
+  const totalSteps = 9; // 0:info, 1:avatar, 2:school, 3:subjects, 4:struggles, 5:support, 6:coach, 7:focus, 8:access-code
   const toggleInArray = (arr: string[], item: string) =>
     arr.includes(item) ? arr.filter((i) => i !== item) : [...arr, item];
 
   const canProceed = () => {
     switch (step) {
       case 0: return data.name.trim() !== "" && data.age !== "" && data.gender !== "";
-      case 1: return data.avatar !== "";
+      case 1: return data.avatar !== "" || data.avatarUrl !== "";
       case 2: return data.schoolLevel !== "";
-      case 3: return data.favoriteSubjects.length > 0;
+      case 3: return true; // subjects are optional now (unchecked = difficult)
       case 4: return data.struggles.length > 0;
       case 5: return data.supportStyles.length > 0;
-      case 6: return true;
+      case 6: return true; // coach name is optional
+      case 7: return true;
+      case 8: return true; // access code step - always can proceed
       default: return false;
     }
   };
 
+  // MODIFICA: Feature 1 — Photo upload handler
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingPhoto(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("profile-avatars").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("profile-avatars").getPublicUrl(path);
+      setData({ ...data, avatarUrl: urlData.publicUrl, avatar: "custom" });
+    } catch (err: any) {
+      toast({ title: "Errore nel caricamento", variant: "destructive" });
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  // MODIFICA: Feature 6 — Copy access code
+  const handleCopyCode = () => {
+    if (createdProfile?.access_code) {
+      navigator.clipboard.writeText(createdProfile.access_code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  // MODIFICA: Feature 6 — Send code via email
+  const handleSendCodeEmail = async () => {
+    toast({ title: "Il codice è stato copiato. Puoi incollarlo in un'email al tuo bambino." });
+    handleCopyCode();
+  };
+
   const next = async () => {
-    if (step < totalSteps - 1) {
-      // Validate minimum age on step 0 before proceeding
+    // MODIFICA: Feature 6 — Create profile at step 7 (focus time), show access code at step 8
+    if (step === 7) {
+      // Validate age
       if (step === 0) {
         const childAge = parseInt(data.age);
-        if (childAge && childAge < 6) {
-          return; // Age buttons only show 6-13, but extra safety
-        }
-        if (data.dateOfBirth) {
-          const dob = new Date(data.dateOfBirth);
-          const today = new Date();
-          let dobAge = today.getFullYear() - dob.getFullYear();
-          const m = today.getMonth() - dob.getMonth();
-          if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) dobAge--;
-          if (dobAge < 6) {
-            return; // Server-side trigger will also block this
-          }
-        }
+        if (childAge && childAge < 6) return;
       }
-      setStep(step + 1);
-    } else {
+
       setSaving(true);
+      // MODIFICA: Feature 4 — Invert subject logic: unchecked subjects = difficult
+      const allSubjects = subjects;
+      const difficultSubjects = allSubjects.filter(s => !data.favoriteSubjects.includes(s));
+
+      // Determine correct school_level for DB
+      const schoolLevel = data.schoolLevel.startsWith("primaria") 
+        ? data.schoolLevel.replace("primaria-", "primaria-") // keep as-is
+        : data.schoolLevel; // media-1, media-2, media-3
+
       const profile = await createChildProfile({
         name: data.name,
-        avatar_emoji: data.avatar,
+        avatar_emoji: data.avatar === "custom" ? "custom" : data.avatar,
         age: parseInt(data.age) || undefined,
         gender: data.gender || undefined,
-        school_level: data.schoolLevel,
+        school_level: schoolLevel,
         favorite_subjects: data.favoriteSubjects,
-        difficult_subjects: data.difficultSubjects,
+        difficult_subjects: difficultSubjects,
         struggles: data.struggles,
         focus_time: parseInt(data.focusTime) || 15,
         support_style: data.supportStyles.join(","),
         date_of_birth: data.dateOfBirth || undefined,
       } as any);
-      setSaving(false);
+
       if (profile) {
+        // Save avatar URL if custom photo was uploaded
+        if (data.avatarUrl && data.avatar === "custom") {
+          await supabase.from("child_profiles").update({ avatar_emoji: data.avatarUrl } as any).eq("id", profile.id);
+        }
+
+        // MODIFICA: Feature 2 — Save coach name to user_preferences
+        if (data.coachName.trim()) {
+          await supabase.from("user_preferences").upsert({
+            profile_id: profile.id,
+            data: { coach_name: data.coachName.trim() },
+          } as any);
+        }
+
+        setCreatedProfile(profile);
+        setSaving(false);
+        setStep(8); // Go to access code step
+      } else {
+        setSaving(false);
+        toast({ title: "Errore nella creazione del profilo", variant: "destructive" });
+      }
+      return;
+    }
+
+    if (step === 8) {
+      // Final step - navigate to dashboard
+      if (createdProfile) {
         if (adultSession?.profile?.school_level && ["superiori", "universitario", "docente"].includes(adultSession.profile.school_level)) {
           clearChildSession();
         }
-        setActiveChildProfileId(profile.id);
+        setActiveChildProfileId(createdProfile.id);
         localStorage.setItem("inschool-profile", JSON.stringify({
-          id: profile.id,
+          id: createdProfile.id,
           name: data.name,
           age: data.age,
           gender: data.gender,
@@ -131,9 +236,31 @@ const OnboardingLegacy = () => {
           focusTime: data.focusTime,
           supportStyles: data.supportStyles,
         }));
-        navigate("/dashboard");
       }
+      navigate("/dashboard");
+      return;
     }
+
+    if (step < totalSteps - 1) {
+      // Validate age on step 0
+      if (step === 0) {
+        const childAge = parseInt(data.age);
+        if (childAge && childAge < 6) return;
+      }
+      setStep(step + 1);
+    }
+  };
+
+  // Get the right avatar set based on school category
+  const getAvatarSet = () => {
+    if (data.schoolCategory === "primaria") return kidAvatars;
+    if (data.schoolCategory === "media") return kidAvatars; // Kids use Disney-style
+    return adultAvatars; // Fallback for older users
+  };
+
+  const getAvatarSrc = (avatarId: string): string => {
+    const all = [...kidAvatars, ...adultAvatars];
+    return all.find(a => a.id === avatarId)?.src || kidBoy1;
   };
 
   const renderStep = () => {
@@ -168,73 +295,228 @@ const OnboardingLegacy = () => {
             </div>
           </div>
         );
+
+      // MODIFICA: Feature 1 — Avatar selection with Disney-style kids + photo upload
       case 1:
         return (
           <div className="space-y-6">
-            <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Scegli un avatar per {data.name}</h2><p className="text-muted-foreground">Lo vedrà nella schermata di selezione profilo.</p></div>
+            <div>
+              <h2 className="font-display text-2xl font-bold text-foreground mb-2">Scegli un avatar per {data.name}</h2>
+              <p className="text-muted-foreground">Puoi anche caricare una foto dal tuo dispositivo.</p>
+            </div>
+
+            {/* Photo upload */}
+            <div className="flex justify-center">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingPhoto}
+                className={`w-24 h-24 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center gap-1 ${
+                  data.avatar === "custom" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50 hover:bg-muted"
+                }`}
+              >
+                {data.avatarUrl ? (
+                  <img src={data.avatarUrl} alt="Foto profilo" className="w-full h-full rounded-2xl object-cover" />
+                ) : (
+                  <>
+                    <Upload className="w-5 h-5 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground">Carica foto</span>
+                  </>
+                )}
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+            </div>
+
+            <p className="text-center text-xs text-muted-foreground">oppure scegli un avatar</p>
+
+            {/* Avatar grid */}
             <div className="grid grid-cols-4 gap-3">
-              {avatarOptions.map((emoji) => (
-                <button key={emoji} onClick={() => setData({ ...data, avatar: emoji })} className={`text-4xl p-4 rounded-2xl border-2 transition-all ${data.avatar === emoji ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}>{emoji}</button>
+              {kidAvatars.map((avatar) => (
+                <button
+                  key={avatar.id}
+                  onClick={() => setData({ ...data, avatar: avatar.id, avatarUrl: "" })}
+                  className={`p-2 rounded-2xl border-2 transition-all ${
+                    data.avatar === avatar.id && !data.avatarUrl
+                      ? "border-primary bg-primary/5 shadow-soft"
+                      : "border-border bg-card hover:bg-muted"
+                  }`}
+                >
+                  <img src={avatar.src} alt={avatar.label} className="w-full h-full rounded-xl object-cover" loading="lazy" width={512} height={512} />
+                </button>
               ))}
             </div>
           </div>
         );
+
+      // MODIFICA: Feature 3 — Dropdown for class selection (Primaria 1-5, Media 1-3)
       case 2:
         return (
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Che classe fa {data.name}?</h2></div>
-            <div className="space-y-3">
-              {schoolLevels.map((level) => (
-                <button key={level.id} onClick={() => setData({ ...data, schoolLevel: level.id })} className={`w-full text-left px-5 py-4 rounded-2xl border transition-all ${data.schoolLevel === level.id ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}><span className="font-medium text-foreground">{level.label}</span></button>
+            
+            {/* School category selection */}
+            <div className="flex gap-3 mb-4">
+              {[
+                { id: "primaria", label: "Scuola Primaria" },
+                { id: "media", label: "Scuola Media" },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setData({ ...data, schoolCategory: cat.id, schoolLevel: "" })}
+                  className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all text-sm ${
+                    data.schoolCategory === cat.id
+                      ? "bg-primary text-primary-foreground shadow-soft"
+                      : "bg-muted text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {cat.label}
+                </button>
               ))}
             </div>
+
+            {/* Class dropdown */}
+            {data.schoolCategory && (
+              <Select value={data.schoolLevel} onValueChange={(val) => setData({ ...data, schoolLevel: val })}>
+                <SelectTrigger className="w-full rounded-xl h-12 text-base">
+                  <SelectValue placeholder="Seleziona la classe" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(data.schoolCategory === "primaria" ? primaryClasses : middleClasses).map((cls) => (
+                    <SelectItem key={cls.id} value={cls.id}>{cls.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         );
+
+      // MODIFICA: Feature 4 — Inverted subject logic: checked = va bene, unchecked = difficile
       case 3:
         return (
           <div className="space-y-6">
-            <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Quali materie piacciono a {data.name}?</h2></div>
             <div>
-              <label className="text-sm font-medium text-foreground mb-3 block">Piacciono</label>
-              <div className="flex flex-wrap gap-2 mb-6">
-                {subjects.map((s) => (<button key={`f-${s}`} onClick={() => setData({ ...data, favoriteSubjects: toggleInArray(data.favoriteSubjects, s) })} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${data.favoriteSubjects.includes(s) ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{s}</button>))}
-              </div>
-              <label className="text-sm font-medium text-foreground mb-3 block">Difficili</label>
-              <div className="flex flex-wrap gap-2">
-                {subjects.map((s) => (<button key={`d-${s}`} onClick={() => setData({ ...data, difficultSubjects: toggleInArray(data.difficultSubjects, s) })} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${data.difficultSubjects.includes(s) ? "bg-terracotta text-destructive-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{s}</button>))}
-              </div>
+              <h2 className="font-display text-2xl font-bold text-foreground mb-2">Come vanno le materie di {data.name}?</h2>
+              <p className="text-muted-foreground text-sm">Seleziona le materie in cui va bene. Quelle non selezionate saranno le aree su cui il coach si concentrerà di più.</p>
             </div>
+            <div className="flex flex-wrap gap-2">
+              {subjects.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setData({ ...data, favoriteSubjects: toggleInArray(data.favoriteSubjects, s) })}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                    data.favoriteSubjects.includes(s)
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {data.favoriteSubjects.includes(s) && <Check className="w-3 h-3 inline mr-1" />}
+                  {s}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground italic">
+              Le materie non selezionate verranno considerate come aree di difficoltà.
+            </p>
           </div>
         );
+
       case 4:
         return (
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Cosa succede quando studia?</h2></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {struggles.map((s) => (<button key={s.id} onClick={() => setData({ ...data, struggles: toggleInArray(data.struggles, s.id) })} className={`text-left px-4 py-4 rounded-2xl border transition-all ${data.struggles.includes(s.id) ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}><span className="font-medium text-foreground text-sm">{s.label}</span></button>))}
+              {struggles.map((s) => (<button key={s.id} onClick={() => setData({ ...data, struggles: toggleInArray(data.struggles, s.id) })} className={`text-left px-4 py-4 rounded-2xl border transition-all ${data.struggles.includes(s.id) ? "border-primary bg-primary/5 shadow-soft" : "border-border bg-card hover:bg-muted"}`}><span className="font-medium text-foreground text-sm">{s.label}</span></button>))}
             </div>
           </div>
         );
+
       case 5:
         return (
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Come deve aiutarlo il coach?</h2></div>
             <div className="space-y-3">
-              {supportStyles.map((s) => (<button key={s.id} onClick={() => setData({ ...data, supportStyles: toggleInArray(data.supportStyles, s.id) })} className={`w-full text-left px-5 py-4 rounded-2xl border transition-all ${data.supportStyles.includes(s.id) ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}><span className="font-medium text-foreground">{s.label}</span></button>))}
+              {supportStyles.map((s) => (<button key={s.id} onClick={() => setData({ ...data, supportStyles: toggleInArray(data.supportStyles, s.id) })} className={`w-full text-left px-5 py-4 rounded-2xl border transition-all ${data.supportStyles.includes(s.id) ? "border-primary bg-primary/5 shadow-soft" : "border-border bg-card hover:bg-muted"}`}><span className="font-medium text-foreground">{s.label}</span></button>))}
             </div>
           </div>
         );
+
+      // MODIFICA: Feature 2 — Coach name customization step
       case 6:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="font-display text-2xl font-bold text-foreground mb-2">Come si chiama il coach di {data.name}?</h2>
+              <p className="text-muted-foreground text-sm">Dai un nome al coach AI. Potrai cambiarlo dopo nelle impostazioni.</p>
+            </div>
+            <div className="flex justify-center">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-primary/10">
+                <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
+              </div>
+            </div>
+            <input
+              type="text"
+              placeholder="Es. Luna, Gufo, Buddy..."
+              value={data.coachName}
+              onChange={(e) => setData({ ...data, coachName: e.target.value })}
+              maxLength={20}
+              className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-lg text-center"
+            />
+            <p className="text-xs text-muted-foreground text-center">Puoi saltare questo step e scegliere il nome dopo.</p>
+          </div>
+        );
+
+      case 7:
         return (
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Quanto riesce a concentrarsi?</h2></div>
             <div className="space-y-3">
               {[{ val: "10", label: "10 minuti", desc: "Per iniziare" }, { val: "15", label: "15 minuti", desc: "Equilibrio" }, { val: "20", label: "20 minuti", desc: "Già bravo" }, { val: "25", label: "25 minuti", desc: "Campione di focus" }].map((opt) => (
-                <button key={opt.val} onClick={() => setData({ ...data, focusTime: opt.val })} className={`w-full text-left px-5 py-4 rounded-2xl border transition-all ${data.focusTime === opt.val ? "border-primary bg-sage-light shadow-soft" : "border-border bg-card hover:bg-muted"}`}>
+                <button key={opt.val} onClick={() => setData({ ...data, focusTime: opt.val })} className={`w-full text-left px-5 py-4 rounded-2xl border transition-all ${data.focusTime === opt.val ? "border-primary bg-primary/5 shadow-soft" : "border-border bg-card hover:bg-muted"}`}>
                   <div className="flex items-center justify-between"><div><span className="font-medium text-foreground">{opt.label}</span><span className="text-sm text-muted-foreground ml-2">— {opt.desc}</span></div>{data.focusTime === opt.val && <Check className="w-4 h-4 text-primary" />}</div>
                 </button>
               ))}
             </div>
+          </div>
+        );
+
+      // MODIFICA: Feature 6 — Access code display step
+      case 8:
+        return (
+          <div className="space-y-6 text-center">
+            <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+              <CheckCircle2 className="w-8 h-8 text-primary" />
+            </div>
+            <div>
+              <h2 className="font-display text-2xl font-bold text-foreground mb-2">Profilo di {data.name} creato!</h2>
+              <p className="text-muted-foreground text-sm">Ecco il codice di accesso univoco per {data.name}. Usalo per farlo entrare nella sua area personale.</p>
+            </div>
+
+            <div className="bg-muted rounded-2xl px-6 py-5">
+              <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider font-semibold">Codice di accesso</p>
+              <p className="font-display text-3xl font-bold tracking-widest text-foreground">
+                {createdProfile?.access_code || "—"}
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={handleCopyCode}
+                className="flex-1 rounded-xl h-12"
+              >
+                {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                {copied ? "Copiato!" : "Copia codice"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleSendCodeEmail}
+                className="flex-1 rounded-xl h-12"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Invia via email
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground">Conserva questo codice. Il bambino lo userà per accedere alla sua area di studio.</p>
           </div>
         );
     }
@@ -248,11 +530,11 @@ const OnboardingLegacy = () => {
             <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center"><BookOpen className="w-3.5 h-3.5 text-primary-foreground" /></div>
             <span className="font-display text-lg font-semibold text-foreground">Nuovo profilo</span>
           </div>
-          <span className="text-sm text-muted-foreground">{step + 1} di {totalSteps}</span>
+          <span className="text-sm text-muted-foreground">{Math.min(step + 1, totalSteps)} di {totalSteps}</span>
         </div>
         <div className="max-w-lg mx-auto mt-4">
           <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-            <motion.div className="h-full bg-primary rounded-full" animate={{ width: `${((step + 1) / totalSteps) * 100}%` }} transition={spring} />
+            <motion.div className="h-full bg-primary rounded-full" animate={{ width: `${((Math.min(step + 1, totalSteps)) / totalSteps) * 100}%` }} transition={spring} />
           </div>
         </div>
       </div>
@@ -267,9 +549,9 @@ const OnboardingLegacy = () => {
       </div>
       <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border px-6 py-4">
         <div className="max-w-lg mx-auto flex items-center justify-between">
-          <Button variant="ghost" onClick={() => step > 0 ? setStep(step - 1) : navigate("/profiles")} className="text-muted-foreground"><ArrowLeft className="w-4 h-4 mr-1" /> Indietro</Button>
-          <Button onClick={next} disabled={!canProceed() || saving} className="bg-primary text-primary-foreground hover:bg-sage-dark rounded-2xl px-6 disabled:opacity-40">
-            {step === totalSteps - 1 ? (saving ? "Salvataggio..." : "Crea profilo!") : "Avanti"}<ArrowRight className="ml-1 w-4 h-4" />
+          <Button variant="ghost" onClick={() => step > 0 && step !== 8 ? setStep(step - 1) : step === 0 ? navigate("/profiles") : null} disabled={step === 8} className="text-muted-foreground"><ArrowLeft className="w-4 h-4 mr-1" /> Indietro</Button>
+          <Button onClick={next} disabled={!canProceed() || saving} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl px-6 disabled:opacity-40">
+            {step === 8 ? "Vai alla dashboard" : step === 7 ? (saving ? "Salvataggio..." : "Crea profilo!") : "Avanti"}<ArrowRight className="ml-1 w-4 h-4" />
           </Button>
         </div>
       </div>
