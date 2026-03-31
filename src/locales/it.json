@@ -1102,5 +1102,12 @@
   "auth_report_sent": "Segnalazione inviata",
   "auth_report_error": "Errore nell'invio della segnalazione",
   "auth_first_name": "Nome",
-  "auth_last_name": "Cognome"
+  "auth_last_name": "Cognome",
+  "mat_version_student": "Versione studente",
+  "mat_version_teacher": "Versione docente",
+  "mat_teacher_only_content": "Contenuto riservato al docente",
+  "mat_download_student": "Scarica — Versione studente",
+  "mat_download_teacher": "Scarica — Versione docente",
+  "mat_badge_teacher": "Docente",
+  "mat_badge_teacher_tooltip": "Questo materiale contiene soluzioni e griglie riservate al docente"
 }

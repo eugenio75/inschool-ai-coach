@@ -1102,5 +1102,12 @@
   "auth_report_sent": "Report sent",
   "auth_report_error": "Error sending the report",
   "auth_first_name": "First name",
-  "auth_last_name": "Last name"
+  "auth_last_name": "Last name",
+  "mat_version_student": "Student version",
+  "mat_version_teacher": "Teacher version",
+  "mat_teacher_only_content": "Teacher-only content",
+  "mat_download_student": "Download — Student version",
+  "mat_download_teacher": "Download — Teacher version",
+  "mat_badge_teacher": "Teacher",
+  "mat_badge_teacher_tooltip": "This material contains solutions and grading rubrics reserved for the teacher"
 }
