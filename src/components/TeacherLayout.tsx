@@ -24,7 +24,6 @@ function TeacherNavbar() {
 
   const navItems = [
     { icon: FileText, route: "/materiali-docente", label: "Materiali", badge: 0 },
-    { icon: Archive, route: "/materiali-docente?status=archived", label: "Archivio", badge: 0 },
     { icon: Bell, route: "/notifications", label: "Notifiche", badge: unreadCount },
     { icon: Calendar, route: "/agenda-docente", label: "Agenda", badge: 0 },
     { icon: Settings, route: "/settings", label: "Impostazioni", badge: 0 },
