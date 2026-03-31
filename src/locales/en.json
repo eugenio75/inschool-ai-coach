@@ -1130,5 +1130,14 @@
   "mat_regen_no": "No, keep existing versions",
   "mat_content_updated": "Content updated",
   "mat_adapted_updated": "Adapted version updated",
-  "mat_version_regenerated": "Version regenerated"
+  "mat_version_regenerated": "Version regenerated",
+  "mat_archive": "Archive",
+  "mat_restore": "Restore",
+  "mat_delete": "Delete",
+  "mat_delete_title": "Delete material?",
+  "mat_delete_step1": "Do you want to delete \"{title}\"? All associated BES, DSA, and H versions will also be deleted.",
+  "mat_delete_step2_title": "Confirm deletion",
+  "mat_delete_step2_desc": "This action is irreversible. Type the material title to confirm.",
+  "mat_delete_permanent": "Delete permanently",
+  "nav_materials": "Materials"
 }
