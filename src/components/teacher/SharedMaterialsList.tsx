@@ -288,35 +288,33 @@ export default function SharedMaterialsList({
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.02 }}
-            className="bg-card border border-border rounded-xl p-4 cursor-pointer hover:shadow-sm transition-shadow"
+            className="bg-card border border-border rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:shadow-sm transition-shadow"
             onClick={() => setPreviewMaterial(m)}
           >
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
-                <FileText className="w-4 h-4 text-muted-foreground" />
+            <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+              <FileText className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-semibold text-sm text-foreground truncate max-w-[200px]">{m.title}</h3>
+                <Badge variant="outline" className="text-[10px] shrink-0">{typeLabel(m.type)}</Badge>
+                <Badge variant={m.status === "assigned" ? "default" : "secondary"} className={cn("text-[10px] shrink-0", m.status === "assigned" ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700 hover:bg-green-100" : "")}>
+                  {m.status === "assigned" ? "Assegnato" : "Non assegnato"}
+                </Badge>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-semibold text-sm text-foreground truncate">{m.title}</h3>
-                  <Badge variant="outline" className="text-[10px]">{typeLabel(m.type)}</Badge>
-                  <Badge variant={m.status === "assigned" ? "default" : "secondary"} className={cn("text-[10px]", m.status === "assigned" ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700 hover:bg-green-100" : "")}>
-                    {m.status === "assigned" ? "Assegnato" : "Non assegnato"}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
-                  {m.class_id && classMap[m.class_id] && <span>{classMap[m.class_id]}</span>}
-                  {m.subject && <span>{m.subject}</span>}
-                  <span>{new Date(m.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "short", year: "numeric" })}</span>
-                </div>
+              <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground truncate">
+                {m.class_id && classMap[m.class_id] && <span>{classMap[m.class_id]}</span>}
+                {m.subject && <span>{m.subject}</span>}
+                <span>{new Date(m.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "short", year: "numeric" })}</span>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 mt-3 pl-12" onClick={e => e.stopPropagation()}>
-              <Button variant="outline" size="sm" className="h-8 px-3 text-xs gap-1.5" onClick={() => handleArchive(m.id, m.status)}>
-                {m.status === "archived" ? <><Undo2 className="w-3.5 h-3.5" /> Ripristina</> : <><Archive className="w-3.5 h-3.5" /> Archivia</>}
+            <div className="flex flex-col gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+              <Button variant="outline" size="sm" className="h-7 px-2.5 text-[11px] gap-1 w-full justify-start" onClick={() => handleArchive(m.id, m.status)}>
+                {m.status === "archived" ? <><Undo2 className="w-3 h-3" /> Ripristina</> : <><Archive className="w-3 h-3" /> Archivia</>}
               </Button>
-              <Button variant="outline" size="sm" className="h-8 px-3 text-xs gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+              <Button variant="outline" size="sm" className="h-7 px-2.5 text-[11px] gap-1 w-full justify-start text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
                 onClick={() => { setDeleteTarget(m); setDeleteStep(1); setDeleteConfirmText(""); }}>
-                <Trash2 className="w-3.5 h-3.5" /> Elimina
+                <Trash2 className="w-3 h-3" /> Elimina
               </Button>
             </div>
           </motion.div>
