@@ -1259,14 +1259,6 @@ Return only the three versions with no commentary, separated exactly by ===BES==
     </div>
   );
 }
-  setMaterialFilter: (f: string) => void;
-  exportToPdf: (title: string, content: string, type: string) => void;
-  classe: any;
-  userId: string;
-  classId: string;
-  students: any[];
-  onReload: () => void;
-}) {
   const [editMaterial, setEditMaterial] = useState<any | null>(null);
   const [editForm, setEditForm] = useState({ title: "", subject: "", type: "", level: "", content: "" });
   const [saving, setSaving] = useState(false);
