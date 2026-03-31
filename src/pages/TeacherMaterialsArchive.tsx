@@ -573,14 +573,21 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
     }
   }
 
-  /** Delete a material and its adapted versions */
-  async function handleDeleteMaterial(id: string) {
-    if (!confirm("Sei sicuro di voler eliminare questo materiale e tutte le sue versioni?")) return;
+  // Delete confirmation state
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+  const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
+  /** Delete a material and its adapted versions (with double confirmation) */
+  async function executeDelete(id: string) {
     await supabase.from("teacher_materials").delete().eq("parent_material_id", id);
     await supabase.from("teacher_materials").delete().eq("id", id);
     setMaterials(prev => prev.filter(m => m.id !== id));
     setAdaptedMap(prev => { const copy = { ...prev }; delete copy[id]; return copy; });
     setPreviewMaterial(null);
+    setDeleteTarget(null);
+    setDeleteStep(1);
+    setDeleteConfirmText("");
     toast.success("Materiale eliminato");
   }
 
