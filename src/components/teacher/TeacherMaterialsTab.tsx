@@ -562,7 +562,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
 
       // Persist to DB if we have a parent material ID
       if (parentMaterialId) {
-        const parentMat = materials.find((m: any) => m.id === parentMaterialId);
+        const parentMat = propMaterials.find((m: any) => m.id === parentMaterialId);
         const versions: { key: "bes" | "dsa" | "h"; content: string | null }[] = [
           { key: "bes", content: besContent },
           { key: "dsa", content: dsaContent },
