@@ -679,12 +679,12 @@ Return only the three versions with no commentary, separated exactly by ===BES==
     setSaving(false);
   }
 
-  // --- Saved materials ---
+  // --- Saved materials filter ---
   const filteredMaterials = materialFilter === "tutti"
-    ? materials
+    ? localMaterials
     : materialFilter === "archiviato"
-      ? materials.filter(m => m.status === "archived")
-      : materials.filter(m => m.status === materialFilter);
+      ? localMaterials.filter(m => m.status === "archived")
+      : localMaterials.filter(m => m.status === materialFilter);
 
   // --- Download panel (after confirmation) ---
   if (showDownloadPanel) {
