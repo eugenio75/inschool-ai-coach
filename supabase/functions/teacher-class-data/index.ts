@@ -99,7 +99,7 @@ serve(async (req) => {
       const { data: profiles, error: profilesError } = await admin
         .from("child_profiles")
         .select("id, parent_id, name, avatar_emoji, school_level")
-        .in("parent_id", studentIds);
+        .in("id", studentIds);
 
       if (profilesError) throw profilesError;
       profilesList = profiles || [];
