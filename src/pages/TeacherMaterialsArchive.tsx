@@ -334,7 +334,7 @@ export default function TeacherMaterialsArchive() {
     const hasSolutions = (m.content || "").includes("===SOLUZIONI===");
 
     if (hasSolutions && version !== "full") {
-      const { studentContent, teacherContent } = splitTeacherContent(m.content || "");
+      const { studentContent } = splitTeacherContent(m.content || "");
       const isTeacherVersion = version === "teacher";
       const content = isTeacherVersion ? (m.content || "") : studentContent;
 
@@ -356,6 +356,96 @@ export default function TeacherMaterialsArchive() {
         date: dateStr,
         isTeacherOnly,
       });
+    }
+  }
+
+  function handleDownloadAdaptedPdf(adaptedMat: any, version: "BES" | "DSA" | "H") {
+    const className = adaptedMat.class_id && classMap[adaptedMat.class_id] ? classMap[adaptedMat.class_id] : "";
+    const dateStr = new Date(adaptedMat.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+    renderAndPrintPdf(adaptedMat.content || "", {
+      title: adaptedMat.title,
+      type: adaptedMat.type || "esercizi",
+      subject: [adaptedMat.subject, adaptedMat.level ? "Livello: " + adaptedMat.level : ""].filter(Boolean).join(" · "),
+      className,
+      date: dateStr,
+      adaptedVersion: version,
+    });
+  }
+
+  async function generateAdaptedForMaterial(m: any) {
+    setGeneratingAdaptedFor(m.id);
+    try {
+      const { studentContent } = splitTeacherContent(m.content || "");
+      const systemPrompt = `You are an Italian special education specialist. Starting from the attached educational material, generate three separate adapted versions. Each version must cover the same topic and learning objectives as the original but adapted as follows:
+
+BES (Bisogni Educativi Speciali): Simplify language and instructions. Use shorter sentences. Break complex tasks into smaller steps.
+
+DSA (Disturbi Specifici dell'Apprendimento): Further simplify written instructions. Use numbered lists. Avoid copying tasks. Suggest compensatory tools. Use clear visual spacing.
+
+H (Disabilità certificata — obiettivi minimi): Reduce to core essential concepts. Very simple language. Maximum 3-4 tasks. Include visual support suggestions.
+
+Return only the three versions separated exactly by ===BES===, ===DSA===, ===H=== on their own lines. Write in Italian.`;
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            stream: false,
+            maxTokens: 6000,
+            systemPrompt,
+            messages: [{ role: "user", content: `MATERIALE ORIGINALE:\n---\n${studentContent}\n---` }],
+          }),
+        }
+      );
+      const data = await res.json();
+      const output = data.choices?.[0]?.message?.content?.trim() || "";
+      if (!output) throw new Error("Empty response");
+
+      const besMatch = output.split(/===\s*BES\s*===/i);
+      const afterBes = besMatch.length > 1 ? besMatch.slice(1).join("===BES===") : "";
+      const dsaParts = afterBes.split(/===\s*DSA\s*===/i);
+      const besContent = dsaParts[0]?.trim() || null;
+      const afterDsa = dsaParts.length > 1 ? dsaParts.slice(1).join("===DSA===") : "";
+      const hParts = afterDsa.split(/===\s*H\s*===/i);
+      const dsaContent = hParts[0]?.trim() || null;
+      const hContent = hParts.length > 1 ? hParts.slice(1).join("===H===").trim() : null;
+
+      if (!besContent && !dsaContent && !hContent) throw new Error("Parse failed");
+
+      const versions: { key: string; content: string | null }[] = [
+        { key: "bes", content: besContent },
+        { key: "dsa", content: dsaContent },
+        { key: "h", content: hContent },
+      ];
+      const inserts = versions
+        .filter(v => v.content)
+        .map(v => ({
+          teacher_id: user!.id,
+          class_id: m.class_id,
+          title: `${m.title} — ${v.key.toUpperCase()}`,
+          subject: m.subject,
+          type: m.type,
+          content: v.content!,
+          target_profile: v.key,
+          parent_material_id: m.id,
+          is_sample: m.is_sample || false,
+          status: "draft",
+        }));
+      if (inserts.length > 0) {
+        await supabase.from("teacher_materials").insert(inserts);
+      }
+      toast.success("Versioni BES/DSA/H generate e salvate!");
+      loadData();
+    } catch (err) {
+      console.error("Adapted generation failed:", err);
+      toast.error("Errore nella generazione delle versioni adattate");
+    } finally {
+      setGeneratingAdaptedFor(null);
     }
   }
 
