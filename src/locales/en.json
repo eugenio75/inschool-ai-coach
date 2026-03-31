@@ -1116,5 +1116,19 @@
   "mat_generate_adapted": "Generate BES/DSA/H versions",
   "mat_generating_adapted": "Generating...",
   "mat_adapted_badge": "BES/DSA/H",
-  "mat_adapted_generated": "BES/DSA/H versions generated and saved!"
+  "mat_adapted_generated": "BES/DSA/H versions generated and saved!",
+  "mat_delete_confirm": "Are you sure you want to delete this material and all its versions?",
+  "mat_delete_success": "Material deleted",
+  "mat_edit_save": "Save",
+  "mat_edit_cancel": "Cancel",
+  "mat_regenerate": "Regenerate",
+  "mat_generate": "Generate",
+  "mat_version_not_generated": "Version not yet generated",
+  "mat_generate_version": "Generate version",
+  "mat_regen_prompt": "You modified the base material. Do you want to regenerate the BES, DSA and H versions?",
+  "mat_regen_yes": "Yes, regenerate",
+  "mat_regen_no": "No, keep existing versions",
+  "mat_content_updated": "Content updated",
+  "mat_adapted_updated": "Adapted version updated",
+  "mat_version_regenerated": "Version regenerated"
 }
