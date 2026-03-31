@@ -264,7 +264,12 @@ export async function getFocusSessions(childProfileId?: string) {
 
 export async function getGamification(childProfileId?: string) {
   if (isChildSession()) {
-    return childApi("get-gamification");
+    try {
+      const result = await childApi("get-gamification");
+      if (result) return result;
+    } catch (e) {
+      console.warn("childApi get-gamification fallback:", e);
+    }
   }
 
   const profileId = childProfileId || getActiveChildProfileId();
