@@ -106,7 +106,7 @@ serve(async (req) => {
     }
 
     const profileMap = Object.fromEntries(
-      profilesList.map((profile) => [profile.parent_id, profile]),
+      profilesList.map((profile) => [profile.id, profile]),
     );
 
     const students = (enrollments || []).map((enrollment) => ({
