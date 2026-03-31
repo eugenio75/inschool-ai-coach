@@ -306,19 +306,36 @@ export default function TeacherMaterialsArchive() {
     toast.success(newStatus === "archived" ? "Archiviato" : "Ripristinato");
   }
 
-  function handleDownloadPdf(m: any) {
+  function handleDownloadPdf(m: any, version: "student" | "teacher" | "full" = "full") {
     const className = m.class_id && classMap[m.class_id] ? classMap[m.class_id] : "";
     const dateStr = new Date(m.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
-    const isTeacherOnly = m.target_profile === "docente";
 
-    renderAndPrintPdf(m.content || "", {
-      title: m.title,
-      type: m.type || "esercizi",
-      subject: [m.subject, m.level ? "Livello: " + m.level : ""].filter(Boolean).join(" · "),
-      className,
-      date: dateStr,
-      isTeacherOnly,
-    });
+    const hasSolutions = (m.content || "").includes("===SOLUZIONI===");
+
+    if (hasSolutions && version !== "full") {
+      const { studentContent, teacherContent } = splitTeacherContent(m.content || "");
+      const isTeacherVersion = version === "teacher";
+      const content = isTeacherVersion ? (m.content || "") : studentContent;
+
+      renderAndPrintPdf(content, {
+        title: m.title,
+        type: m.type || "esercizi",
+        subject: [m.subject, m.level ? "Livello: " + m.level : ""].filter(Boolean).join(" · "),
+        className,
+        date: dateStr,
+        isTeacherOnly: isTeacherVersion,
+      });
+    } else {
+      const isTeacherOnly = m.target_profile === "docente";
+      renderAndPrintPdf(m.content || "", {
+        title: m.title,
+        type: m.type || "esercizi",
+        subject: [m.subject, m.level ? "Livello: " + m.level : ""].filter(Boolean).join(" · "),
+        className,
+        date: dateStr,
+        isTeacherOnly,
+      });
+    }
   }
 
   function openEdit(m: any) {
