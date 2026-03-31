@@ -1259,9 +1259,6 @@ Return only the three versions with no commentary, separated exactly by ===BES==
     </div>
   );
 }
-
-
-  materials: any[];
   filteredMaterials: any[];
   materialFilter: string;
   setMaterialFilter: (f: string) => void;
