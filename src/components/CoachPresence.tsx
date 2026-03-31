@@ -109,7 +109,7 @@ function buildLocalCoachMessage(profileName: string, ctx: CoachContext) {
     }
   }
 
-  // Default fallback per profilo
+  // FIX 2: Default fallback — coach must NOT lie about homework
   switch (level) {
     case "elementari":
       return { message: `Ciao ${firstName}! Sono qui con te. Da dove vuoi iniziare oggi?`, action: { text: "Parla col coach", route: "/us?type=study" } };
@@ -118,7 +118,7 @@ function buildLocalCoachMessage(profileName: string, ctx: CoachContext) {
     case "universitario":
       return { message: `Bentornato ${firstName}. Cosa vuoi affrontare oggi?`, action: { text: "Inizia sessione", route: "/us?type=study" } };
     default:
-      return { message: `Ciao ${firstName}. Hai compiti in scadenza oggi — vuoi che partiamo da quello più urgente?`, action: { text: "Parla col coach", route: "/us?type=study" } };
+      return { message: `Ciao ${firstName}! Non hai compiti per oggi. Vuoi fare una sessione di studio libero o ripassare qualcosa?`, action: { text: "Studio libero", route: "/us?type=study" } };
   }
 }
 
