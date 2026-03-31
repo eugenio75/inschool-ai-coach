@@ -218,15 +218,16 @@ export async function loginWithChildCode(code: string): Promise<ChildSession> {
   const { supabase } = await import("@/integrations/supabase/client");
   
   const { data, error } = await supabase.rpc("validate_child_code", { code: code.toUpperCase().trim() });
+  const result = data as any;
   
-  if (error || !data?.valid) {
+  if (error || !result?.valid) {
     throw new Error("Codice non valido. Controlla e riprova!");
   }
 
   const session: ChildSession = {
-    profileId: data.profile.id,
+    profileId: result.profile.id,
     accessCode: code.toUpperCase().trim(),
-    profile: data.profile,
+    profile: result.profile,
   };
   setChildSession(session);
   return session;
