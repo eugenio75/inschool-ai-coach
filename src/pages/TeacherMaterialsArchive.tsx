@@ -679,45 +679,113 @@ export default function TeacherMaterialsArchive() {
       </div>
 
       {/* ── Preview dialog ── */}
-      <Dialog open={!!previewMaterial} onOpenChange={open => !open && setPreviewMaterial(null)}>
+      <Dialog open={!!previewMaterial} onOpenChange={open => { if (!open) { setPreviewMaterial(null); setPreviewVersion("student"); } }}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-          {previewMaterial && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-lg">{previewMaterial.title}</DialogTitle>
-                <DialogDescription asChild>
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    <Badge variant="outline" className="text-[10px]">{typeLabel(previewMaterial.type)}</Badge>
-                    {previewMaterial.subject && (
-                      <Badge variant="secondary" className="text-[10px]">{previewMaterial.subject}</Badge>
-                    )}
-                    {previewMaterial.level && (
-                      <Badge variant="secondary" className="text-[10px]">Livello: {previewMaterial.level}</Badge>
-                    )}
-                    {previewMaterial.class_id && classMap[previewMaterial.class_id] && (
-                      <span className="text-[11px] text-muted-foreground">{classMap[previewMaterial.class_id]}</span>
-                    )}
-                    <span className="text-[11px] text-muted-foreground">
-                      {new Date(previewMaterial.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}
-                    </span>
+          {previewMaterial && (() => {
+            const hasSolutions = (previewMaterial.content || "").includes("===SOLUZIONI===");
+            const { studentContent, teacherContent } = hasSolutions
+              ? splitTeacherContent(previewMaterial.content || "")
+              : { studentContent: previewMaterial.content || "", teacherContent: null };
+            const displayContent = hasSolutions
+              ? (previewVersion === "teacher" ? previewMaterial.content : studentContent)
+              : previewMaterial.content;
+
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-lg">{previewMaterial.title}</DialogTitle>
+                  <DialogDescription asChild>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <Badge variant="outline" className="text-[10px]">{typeLabel(previewMaterial.type)}</Badge>
+                      {previewMaterial.subject && (
+                        <Badge variant="secondary" className="text-[10px]">{previewMaterial.subject}</Badge>
+                      )}
+                      {previewMaterial.level && (
+                        <Badge variant="secondary" className="text-[10px]">Livello: {previewMaterial.level}</Badge>
+                      )}
+                      {previewMaterial.class_id && classMap[previewMaterial.class_id] && (
+                        <span className="text-[11px] text-muted-foreground">{classMap[previewMaterial.class_id]}</span>
+                      )}
+                      <span className="text-[11px] text-muted-foreground">
+                        {new Date(previewMaterial.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}
+                      </span>
+                    </div>
+                  </DialogDescription>
+                </DialogHeader>
+
+                {/* Student/Teacher toggle */}
+                {hasSolutions && (
+                  <div className="flex items-center gap-1 mt-3 p-1 bg-muted rounded-lg w-fit">
+                    <button
+                      onClick={() => setPreviewVersion("student")}
+                      className={cn(
+                        "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                        previewVersion === "student"
+                          ? "bg-background text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      📄 Versione studente
+                    </button>
+                    <button
+                      onClick={() => setPreviewVersion("teacher")}
+                      className={cn(
+                        "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                        previewVersion === "teacher"
+                          ? "bg-background text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      🔒 Versione docente
+                    </button>
                   </div>
-                </DialogDescription>
-              </DialogHeader>
+                )}
 
-              <div className="mt-4 bg-muted/30 border border-border rounded-xl p-5">
-                <div className="prose prose-sm max-w-none text-foreground text-sm leading-relaxed">
-                  {formatMaterialContent(previewMaterial.content)}
+                {/* Teacher-only header */}
+                {hasSolutions && previewVersion === "teacher" && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-xs font-semibold text-amber-700 dark:text-amber-300">
+                    🔒 Contenuto riservato al docente
+                  </div>
+                )}
+
+                <div className="mt-2 bg-muted/30 border border-border rounded-xl p-5">
+                  <div className="prose prose-sm max-w-none text-foreground text-sm leading-relaxed">
+                    {formatMaterialContent(displayContent)}
+                  </div>
                 </div>
-              </div>
 
-              <DialogFooter className="mt-4 flex-row gap-2">
-                <Button variant="outline" size="sm" onClick={() => openShare(previewMaterial)}>
-                  <Share2 className="w-3.5 h-3.5 mr-1" /> Condividi
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => handleDownloadPdf(previewMaterial)}>
-                  <Download className="w-3.5 h-3.5 mr-1" /> Scarica PDF
-                </Button>
-                <Button size="sm" onClick={() => setPreviewMaterial(null)}>Chiudi</Button>
+                <DialogFooter className="mt-4 flex-row gap-2">
+                  <Button variant="outline" size="sm" onClick={() => openShare(previewMaterial)}>
+                    <Share2 className="w-3.5 h-3.5 mr-1" /> Condividi
+                  </Button>
+                  {hasSolutions ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Download className="w-3.5 h-3.5 mr-1" /> Scarica PDF <ChevronDown className="w-3 h-3 ml-1" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial, "student")}>
+                          📄 Scarica — Versione studente
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial, "teacher")}>
+                          🔒 Scarica — Versione docente
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={() => handleDownloadPdf(previewMaterial)}>
+                      <Download className="w-3.5 h-3.5 mr-1" /> Scarica PDF
+                    </Button>
+                  )}
+                  <Button size="sm" onClick={() => setPreviewMaterial(null)}>Chiudi</Button>
+                </DialogFooter>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
               </DialogFooter>
             </>
           )}
