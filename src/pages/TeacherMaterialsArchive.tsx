@@ -920,27 +920,58 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
                   <Button variant="outline" size="sm" onClick={() => openShare(previewMaterial)}>
                     <Share2 className="w-3.5 h-3.5 mr-1" /> Condividi
                   </Button>
-                  {hasSolutions ? (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <Download className="w-3.5 h-3.5 mr-1" /> Scarica PDF <ChevronDown className="w-3 h-3 ml-1" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial, "student")}>
-                          📄 Scarica — Versione studente
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Download className="w-3.5 h-3.5 mr-1" /> Scarica PDF <ChevronDown className="w-3 h-3 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {hasSolutions ? (
+                        <>
+                          <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial, "student")}>
+                            📄 Scarica — Versione studente
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial, "teacher")}>
+                            🔒 Scarica — Versione docente
+                          </DropdownMenuItem>
+                        </>
+                      ) : (
+                        <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial)}>
+                          📄 Scarica PDF
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDownloadPdf(previewMaterial, "teacher")}>
-                          🔒 Scarica — Versione docente
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  ) : (
-                    <Button variant="outline" size="sm" onClick={() => handleDownloadPdf(previewMaterial)}>
-                      <Download className="w-3.5 h-3.5 mr-1" /> Scarica PDF
-                    </Button>
-                  )}
+                      )}
+                      {(() => {
+                        const adapted = adaptedMap[previewMaterial.id];
+                        const hasAdapted = adapted && Object.keys(adapted).length > 0;
+                        const isGenerating = generatingAdaptedFor === previewMaterial.id;
+                        return (
+                          <>
+                            {hasAdapted && adapted.bes && (
+                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.bes, "BES")}>
+                                🟡 Scarica — Versione BES
+                              </DropdownMenuItem>
+                            )}
+                            {hasAdapted && adapted.dsa && (
+                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.dsa, "DSA")}>
+                                🔵 Scarica — Versione DSA
+                              </DropdownMenuItem>
+                            )}
+                            {hasAdapted && adapted.h && (
+                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.h, "H")}>
+                                🟢 Scarica — Versione H
+                              </DropdownMenuItem>
+                            )}
+                            {!hasAdapted && (
+                              <DropdownMenuItem onClick={() => generateAdaptedForMaterial(previewMaterial)} disabled={isGenerating}>
+                                {isGenerating ? "⏳ Generazione in corso..." : "✨ Genera versioni BES/DSA/H"}
+                              </DropdownMenuItem>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <Button size="sm" onClick={() => setPreviewMaterial(null)}>Chiudi</Button>
                 </DialogFooter>
               </>
