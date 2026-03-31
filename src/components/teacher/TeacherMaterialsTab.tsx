@@ -1260,10 +1260,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
   );
 }
 
-// --- Saved Materials Sub-component ---
-function SavedMaterialsList({
-  materials, filteredMaterials, materialFilter, setMaterialFilter, exportToPdf, classe, userId, classId, students, onReload,
-}: {
+
   materials: any[];
   filteredMaterials: any[];
   materialFilter: string;
