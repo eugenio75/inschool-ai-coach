@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Search, FolderOpen, FileText, Download, Pencil, Archive, Share2, Loader2, X, Eye, RotateCcw, CalendarIcon, ChevronDown, Sparkles } from "lucide-react";
+import { Plus, Search, FolderOpen, FileText, Download, Pencil, Archive, Share2, Loader2, X, Eye, RotateCcw, CalendarIcon, ChevronDown, Sparkles, Trash2, Undo2 } from "lucide-react";
 import { splitTeacherContent } from "@/lib/pdfExport";
 import { MathText } from "@/components/shared/MathText";
 import { format } from "date-fns";
@@ -573,14 +573,21 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
     }
   }
 
-  /** Delete a material and its adapted versions */
-  async function handleDeleteMaterial(id: string) {
-    if (!confirm("Sei sicuro di voler eliminare questo materiale e tutte le sue versioni?")) return;
+  // Delete confirmation state
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+  const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
+  /** Delete a material and its adapted versions (with double confirmation) */
+  async function executeDelete(id: string) {
     await supabase.from("teacher_materials").delete().eq("parent_material_id", id);
     await supabase.from("teacher_materials").delete().eq("id", id);
     setMaterials(prev => prev.filter(m => m.id !== id));
     setAdaptedMap(prev => { const copy = { ...prev }; delete copy[id]; return copy; });
     setPreviewMaterial(null);
+    setDeleteTarget(null);
+    setDeleteStep(1);
+    setDeleteConfirmText("");
     toast.success("Materiale eliminato");
   }
 
@@ -876,103 +883,26 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
                 </div>
 
                 <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
-                  <button
-                    onClick={() => openReassign(m)}
-                    className="p-2 rounded-lg hover:bg-muted transition-colors"
-                    title="Riassegna"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
-                  <button
-                    onClick={() => openShare(m)}
-                    className="p-2 rounded-lg hover:bg-muted transition-colors"
-                    title="Condividi con altre classi"
-                  >
-                    <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
-                  {(() => {
-                    const hasSolutions = (m.content || "").includes("===SOLUZIONI===");
-                    const adapted = adaptedMap[m.id];
-                    const hasAdapted = adapted && Object.keys(adapted).length > 0;
-                    const showDropdown = hasSolutions || hasAdapted;
-                    const isGenerating = generatingAdaptedFor === m.id;
-
-                    if (showDropdown) {
-                      return (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
-                              {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" /> : <Download className="w-3.5 h-3.5 text-muted-foreground" />}
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {hasSolutions ? (
-                              <>
-                                <DropdownMenuItem onClick={() => handleDownloadPdf(m, "student")}>
-                                  📄 Scarica — Versione studente
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDownloadPdf(m, "teacher")}>
-                                  🔒 Scarica — Versione docente
-                                </DropdownMenuItem>
-                              </>
-                            ) : (
-                              <DropdownMenuItem onClick={() => handleDownloadPdf(m)}>
-                                📄 Scarica PDF
-                              </DropdownMenuItem>
-                            )}
-                            {hasAdapted && adapted.bes && (
-                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.bes, "BES")}>
-                                🟡 Scarica — Versione BES
-                              </DropdownMenuItem>
-                            )}
-                            {hasAdapted && adapted.dsa && (
-                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.dsa, "DSA")}>
-                                🔵 Scarica — Versione DSA
-                              </DropdownMenuItem>
-                            )}
-                            {hasAdapted && adapted.h && (
-                              <DropdownMenuItem onClick={() => handleDownloadAdaptedPdf(adapted.h, "H")}>
-                                🟢 Scarica — Versione H
-                              </DropdownMenuItem>
-                            )}
-                            {!hasAdapted && (
-                              <DropdownMenuItem onClick={() => generateAdaptedForMaterial(m)} disabled={isGenerating}>
-                                {isGenerating ? "⏳ Generazione in corso..." : "✨ Genera versioni BES/DSA/H"}
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      );
-                    }
-
-                    return (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-2 rounded-lg hover:bg-muted transition-colors" title="Scarica PDF">
-                            <Download className="w-3.5 h-3.5 text-muted-foreground" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleDownloadPdf(m)}>
-                            📄 Scarica PDF
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => generateAdaptedForMaterial(m)} disabled={isGenerating}>
-                            {isGenerating ? "⏳ Generazione in corso..." : "✨ Genera versioni BES/DSA/H"}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    );
-                  })()}
-                  <button onClick={() => openEdit(m)} className="p-2 rounded-lg hover:bg-muted transition-colors" title="Modifica">
-                    <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2.5 text-xs gap-1.5"
                     onClick={() => handleArchive(m.id, m.status)}
-                    className="p-2 rounded-lg hover:bg-muted transition-colors"
-                    title={m.status === "archived" ? "Ripristina" : "Archivia"}
                   >
-                    <Archive className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
+                    {m.status === "archived" ? (
+                      <><Undo2 className="w-3.5 h-3.5" /> Ripristina</>
+                    ) : (
+                      <><Archive className="w-3.5 h-3.5" /> Archivia</>
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2.5 text-xs gap-1.5 text-destructive hover:text-destructive"
+                    onClick={() => { setDeleteTarget(m); setDeleteStep(1); setDeleteConfirmText(""); }}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Elimina
+                  </Button>
                 </div>
               </motion.div>
             ))}
@@ -1039,8 +969,8 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
                       </DialogDescription>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive h-8 px-2" onClick={() => handleDeleteMaterial(previewMaterial.id)}>
-                        <X className="w-3.5 h-3.5 mr-1" /> Elimina
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive h-8 px-2" onClick={() => { setDeleteTarget(previewMaterial); setDeleteStep(1); setDeleteConfirmText(""); }}>
+                        <Trash2 className="w-3.5 h-3.5 mr-1" /> Elimina
                       </Button>
                     </div>
                   </div>
@@ -1429,6 +1359,53 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
               {reassignDest === "pdf" ? "Scarica PDF" : "Assegna"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Delete confirmation dialog (double step) ── */}
+      <Dialog open={!!deleteTarget} onOpenChange={open => { if (!open) { setDeleteTarget(null); setDeleteStep(1); setDeleteConfirmText(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          {deleteStep === 1 ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Eliminare materiale?</DialogTitle>
+                <DialogDescription>
+                  Vuoi eliminare "{deleteTarget?.title}"? Verranno eliminate anche tutte le versioni BES, DSA e H associate.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteStep(1); }}>Annulla</Button>
+                <Button variant="destructive" onClick={() => setDeleteStep(2)}>Continua</Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>Conferma eliminazione</DialogTitle>
+                <DialogDescription>
+                  Questa azione è irreversibile. Digita il titolo del materiale per confermare.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-3">
+                <Input
+                  value={deleteConfirmText}
+                  onChange={e => setDeleteConfirmText(e.target.value)}
+                  placeholder={deleteTarget?.title || ""}
+                  className="text-sm"
+                />
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setDeleteTarget(null); setDeleteStep(1); setDeleteConfirmText(""); }}>Annulla</Button>
+                <Button
+                  variant="destructive"
+                  disabled={deleteConfirmText !== (deleteTarget?.title || "")}
+                  onClick={() => deleteTarget && executeDelete(deleteTarget.id)}
+                >
+                  Elimina definitivamente
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

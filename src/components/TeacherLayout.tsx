@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Bell, Calendar, Settings } from "lucide-react";
+import { Bell, Calendar, Settings, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,6 +23,7 @@ function TeacherNavbar() {
   }, [user, location.pathname]);
 
   const navItems = [
+    { icon: FileText, route: "/materiali-docente", label: "Materiali", badge: 0 },
     { icon: Bell, route: "/notifications", label: "Notifiche", badge: unreadCount },
     { icon: Calendar, route: "/agenda-docente", label: "Agenda", badge: 0 },
     { icon: Settings, route: "/settings", label: "Impostazioni", badge: 0 },
