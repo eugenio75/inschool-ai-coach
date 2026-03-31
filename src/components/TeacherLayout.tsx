@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Bell, Calendar, Settings, FileText } from "lucide-react";
+import { Bell, Calendar, Settings, FileText, Archive } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +24,7 @@ function TeacherNavbar() {
 
   const navItems = [
     { icon: FileText, route: "/materiali-docente", label: "Materiali", badge: 0 },
+    { icon: Archive, route: "/materiali-docente?status=archived", label: "Archivio", badge: 0 },
     { icon: Bell, route: "/notifications", label: "Notifiche", badge: unreadCount },
     { icon: Calendar, route: "/agenda-docente", label: "Agenda", badge: 0 },
     { icon: Settings, route: "/settings", label: "Impostazioni", badge: 0 },
@@ -46,7 +47,9 @@ function TeacherNavbar() {
             title={label}
             className={cn(
               "relative w-9 h-9 rounded-lg flex items-center justify-center transition-colors",
-              location.pathname === route
+              location.pathname + location.search === route
+                ? "bg-primary/10 text-primary"
+                : location.pathname === route.split("?")[0] && !route.includes("?") && location.search === ""
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )}
