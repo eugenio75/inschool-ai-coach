@@ -103,7 +103,7 @@ export async function childApi(action: string, payload?: any): Promise<any> {
         return { success: true };
       }
       case "get-gamification": {
-        const { data } = await supabase.from("gamification").select("*").eq("child_profile_id", profileId).maybeSingle();
+        const { data } = await supabase.rpc("get_child_gamification", { p_profile_id: profileId });
         return data;
       }
       case "get-memory-items": {
