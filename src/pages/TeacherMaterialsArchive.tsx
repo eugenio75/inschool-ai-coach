@@ -962,11 +962,7 @@ Return only the three versions separated exactly by ===BES===, ===DSA===, ===H==
                         </div>
                       </DialogDescription>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive h-8 px-2" onClick={() => { setDeleteTarget(previewMaterial); setDeleteStep(1); setDeleteConfirmText(""); }}>
-                        <Trash2 className="w-3.5 h-3.5 mr-1" /> Elimina
-                      </Button>
-                    </div>
+                    
                   </div>
                 </DialogHeader>
 
