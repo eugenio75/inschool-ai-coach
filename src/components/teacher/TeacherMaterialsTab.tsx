@@ -574,36 +574,25 @@ Return only the three versions with no commentary, separated exactly by ===BES==
 
     setSaving(true);
     try {
-      // Always save as material (student content only — no solutions)
+      // Always save as material — include solutions in same record with separator
+      const fullContent = aiSolutions
+        ? `${previewContent}\n\n===SOLUZIONI===\n\n${aiSolutions}`
+        : previewContent;
       const materialPayload = {
         teacher_id: userId,
         class_id: classId,
         title,
         subject: selectedSubjects.join(", ") || classe?.materia || null,
         type: activityType,
-        content: previewContent,
+        content: fullContent,
         status: destination === "pdf" ? "draft" : "assigned",
         assigned_at: destination !== "pdf" ? new Date().toISOString() : null,
       };
-      await supabase.from("teacher_materials").insert(materialPayload);
-
-      // Save solutions as a separate teacher-only material
-      if (aiSolutions) {
-        await supabase.from("teacher_materials").insert({
-          teacher_id: userId,
-          class_id: classId,
-          title: `${title} — Soluzioni`,
-          subject: selectedSubjects.join(", ") || classe?.materia || null,
-          type: activityType,
-          content: aiSolutions,
-          status: "draft", // Never assigned to students
-          target_profile: "docente",
-        });
-      }
+      const { data: insertedMat } = await supabase.from("teacher_materials").insert(materialPayload).select("id").single();
+      const parentMaterialId = insertedMat?.id;
 
       if (destination === "pdf") {
         exportToPdf(title, previewContent, activityType);
-        // Also export solutions PDF if available
         if (aiSolutions) {
           setTimeout(() => exportSolutionsPdf(title, aiSolutions), 600);
         }
@@ -624,7 +613,6 @@ Return only the three versions with no commentary, separated exactly by ===BES==
         if (uploadFile) metadata.attachment_name = uploadFile.name;
         if (mode === "ai") metadata.ai_generated = true;
 
-        // Student assignments get ONLY the student content (no solutions)
         const inserts = targetStudents.map(s => ({
           teacher_id: userId,
           class_id: classId,
@@ -651,8 +639,8 @@ Return only the three versions with no commentary, separated exactly by ===BES==
       onReload();
       toast.success("Materiale confermato! Scarica le versioni qui sotto.");
 
-      // Generate adapted versions in background
-      generateAdaptedVersions(previewContent);
+      // Generate adapted versions in background and persist to DB
+      generateAdaptedVersions(previewContent, parentMaterialId);
     } catch (err: any) {
       toast.error("Errore: " + (err.message || "Riprova"));
     }
