@@ -213,12 +213,31 @@ const OnboardingLegacy = () => {
     }
 
     if (step === 8) {
-      // Final step - navigate to dashboard
+      // Final step - navigate to dashboard with the NEW profile active
       if (createdProfile) {
         if (adultSession?.profile?.school_level && ["superiori", "universitario", "docente"].includes(adultSession.profile.school_level)) {
           clearChildSession();
         }
         setActiveChildProfileId(createdProfile.id);
+        // Set child session so Dashboard picks up the correct profile
+        setChildSession({
+          profileId: createdProfile.id,
+          accessCode: createdProfile.access_code || "",
+          profile: {
+            id: createdProfile.id,
+            name: createdProfile.name || data.name,
+            age: createdProfile.age ?? (parseInt(data.age) || null),
+            avatar_emoji: createdProfile.avatar_emoji || data.avatar,
+            gender: createdProfile.gender || data.gender,
+            school_level: createdProfile.school_level || data.schoolLevel,
+            favorite_subjects: createdProfile.favorite_subjects || data.favoriteSubjects,
+            difficult_subjects: createdProfile.difficult_subjects || null,
+            struggles: createdProfile.struggles || data.struggles,
+            focus_time: createdProfile.focus_time ?? (parseInt(data.focusTime) || 15),
+            support_style: createdProfile.support_style || data.supportStyles.join(","),
+            interests: createdProfile.interests || null,
+          },
+        });
         localStorage.setItem("inschool-profile", JSON.stringify({
           id: createdProfile.id,
           name: data.name,

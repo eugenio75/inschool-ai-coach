@@ -27,43 +27,56 @@ export default function Dashboard() {
   async function load() {
     setLoading(true);
 
-    // 1. Sessione bambino (codice magico)
-    if (isChildSession()) {
-      const s = getChildSession();
-      if (s?.profile) { setRole(s.profile.school_level); setLoading(false); return; }
-    }
+    // Safety timeout — never show spinner forever
+    const timeout = setTimeout(() => {
+      console.warn("Dashboard: load timeout, showing default dashboard");
+      setLoading(false);
+    }, 5000);
 
-    // 2. Adulto con sessione attiva in localStorage
-    const profileId = getActiveChildProfileId();
-    if (profileId) {
-      const p = await getChildProfile(profileId);
-      if (p) { setRole(p.school_level); setLoading(false); return; }
-    }
-
-    // 3. Bug #5 fix — adulto dopo refresh senza sessione localStorage:
-    //    ricostruisce la sessione leggendo child_profiles da Supabase
-    if (user) {
-      const { data: adultProfile } = await supabase
-        .from("child_profiles")
-        .select("*")
-        .eq("parent_id", user.id)
-        .in("school_level", ADULT_ROLES)
-        .maybeSingle();
-
-      if (adultProfile) {
-        setChildSession({
-          profileId: adultProfile.id,
-          accessCode: adultProfile.access_code || "",
-          profile: adultProfile as any,
-        });
-        setRole(adultProfile.school_level);
-        setLoading(false);
-        return;
+    try {
+      // 1. Sessione bambino (codice magico)
+      if (isChildSession()) {
+        const s = getChildSession();
+        if (s?.profile) { setRole(s.profile.school_level); clearTimeout(timeout); setLoading(false); return; }
       }
-    }
 
-    // 4. Nessun profilo trovato → ProfileSelector
-    navigate("/profiles");
+      // 2. Adulto con sessione attiva in localStorage
+      const profileId = getActiveChildProfileId();
+      if (profileId) {
+        const p = await getChildProfile(profileId);
+        if (p) { setRole(p.school_level); clearTimeout(timeout); setLoading(false); return; }
+      }
+
+      // 3. Adulto dopo refresh senza sessione localStorage
+      if (user) {
+        const { data: adultProfile } = await supabase
+          .from("child_profiles")
+          .select("*")
+          .eq("parent_id", user.id)
+          .in("school_level", ADULT_ROLES)
+          .maybeSingle();
+
+        if (adultProfile) {
+          setChildSession({
+            profileId: adultProfile.id,
+            accessCode: adultProfile.access_code || "",
+            profile: adultProfile as any,
+          });
+          setRole(adultProfile.school_level);
+          clearTimeout(timeout);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 4. Nessun profilo trovato → ProfileSelector
+      clearTimeout(timeout);
+      navigate("/profiles");
+    } catch (err) {
+      console.error("Dashboard load error:", err);
+      clearTimeout(timeout);
+      setLoading(false);
+    }
   }
 
   if (loading) {
