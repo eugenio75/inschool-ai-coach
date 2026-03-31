@@ -224,6 +224,7 @@ export default function TeacherMaterialsArchive() {
   const { user } = useAuth();
 
   const [materials, setMaterials] = useState<any[]>([]);
+  const [adaptedMap, setAdaptedMap] = useState<Record<string, Record<string, any>>>({});
   const [classi, setClassi] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -260,6 +261,9 @@ export default function TeacherMaterialsArchive() {
   const [editForm, setEditForm] = useState({ title: "", subject: "", type: "", level: "", content: "" });
   const [saving, setSaving] = useState(false);
 
+  // Adapted generation state
+  const [generatingAdaptedFor, setGeneratingAdaptedFor] = useState<string | null>(null);
+
   useEffect(() => {
     if (!user) return;
     loadData();
@@ -271,7 +275,23 @@ export default function TeacherMaterialsArchive() {
       supabase.from("teacher_materials").select("*").eq("teacher_id", user!.id).order("created_at", { ascending: false }),
       supabase.from("classi").select("id, nome").order("nome"),
     ]);
-    setMaterials(matRes.data || []);
+    const allMats = matRes.data || [];
+
+    // Separate parent materials from adapted children
+    const parents: any[] = [];
+    const adaptedByParent: Record<string, Record<string, any>> = {};
+    allMats.forEach((m: any) => {
+      if (m.target_profile && ["bes", "dsa", "h"].includes(m.target_profile) && m.parent_material_id) {
+        if (!adaptedByParent[m.parent_material_id]) adaptedByParent[m.parent_material_id] = {};
+        adaptedByParent[m.parent_material_id][m.target_profile] = m;
+      } else if (m.target_profile !== "docente") {
+        // Exclude legacy "docente" target_profile records too
+        parents.push(m);
+      }
+    });
+
+    setMaterials(parents);
+    setAdaptedMap(adaptedByParent);
     setClassi(classRes.data || []);
     setLoading(false);
   }
