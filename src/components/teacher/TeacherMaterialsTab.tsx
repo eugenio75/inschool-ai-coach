@@ -1259,8 +1259,6 @@ Return only the three versions with no commentary, separated exactly by ===BES==
     </div>
   );
 }
-  filteredMaterials: any[];
-  materialFilter: string;
   setMaterialFilter: (f: string) => void;
   exportToPdf: (title: string, content: string, type: string) => void;
   classe: any;
