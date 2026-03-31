@@ -238,6 +238,7 @@ export default function TeacherMaterialsArchive() {
 
   // Preview dialog
   const [previewMaterial, setPreviewMaterial] = useState<any | null>(null);
+  const [previewVersion, setPreviewVersion] = useState<"student" | "teacher">("student");
 
   // Share dialog
   const [shareMaterial, setShareMaterial] = useState<any | null>(null);
