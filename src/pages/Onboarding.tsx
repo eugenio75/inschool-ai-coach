@@ -785,6 +785,8 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 </div>
               );
             case 7:
+              return renderInterestsStep("universitario");
+            case 8:
               return (
                 <div className="text-left w-full space-y-6">
                     <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_all_set')}</h2>
@@ -795,6 +797,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                         <div><span className={summaryLabelClass}>{t('onb_uni_summary_skills')}</span><p className={summaryValueClass}>{(answers.serve_ai || []).join(", ")}</p></div>
                         <div><span className={summaryLabelClass}>{t('onb_uni_summary_exams')}</span><p className={summaryValueClass}>{(answers.uni_esami || []).length} {t('onb_uni_summary_exams_count')}</p></div>
                         {answers.coach_name && <div><span className={summaryLabelClass}>{t('onb_summary_coach')}</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
+                        {(answers.interests || []).length > 0 && <div><span className={summaryLabelClass}>{t('onb_summary_interests')}</span><p className={summaryValueClass}>{(answers.interests || []).join(", ")}</p></div>}
                     </div>
                 </div>
               );
