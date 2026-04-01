@@ -58,10 +58,14 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
       try {
-        const { data, error } = await supabase.rpc("search_schools", {
+        const rpcArgs: any = {
           query: val,
           limit_n: 10,
-        });
+        };
+        if (cityFilter) {
+          rpcArgs.city_filter = cityFilter;
+        }
+        const { data, error } = await supabase.rpc("search_schools", rpcArgs);
         if (!error && data) {
           setResults(data as SchoolResult[]);
           setShowDropdown(true);
