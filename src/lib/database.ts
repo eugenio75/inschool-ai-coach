@@ -250,7 +250,7 @@ export async function saveFocusSession(session: {
 }
 
 export async function getFocusSessions(childProfileId?: string) {
-  if (isChildSession()) {
+  if (shouldUseChildSession(childProfileId)) {
     return childApi("get-focus-sessions");
   }
 
