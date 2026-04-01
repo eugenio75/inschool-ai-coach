@@ -391,8 +391,8 @@ export default function DashboardDocente() {
         {/* ━━━ BLOCK 2 — COACH (compact — single message) ━━━ */}
         <div className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-start gap-3 mb-4">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center shrink-0 mt-0.5">
-              <Brain className="w-4 h-4 text-primary-foreground" />
+            <div className="shrink-0 mt-0.5">
+              <CoachAvatar mood="default" size={32} />
             </div>
             <div className="flex-1">
               {isLoadingCoachMsg ? (

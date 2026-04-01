@@ -597,8 +597,8 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
                 return (
                   <div key={msg.id || i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
                     {msg.role === "assistant" && (
-                      <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center shrink-0 mt-0.5 mr-2">
-                        <Brain className="w-3.5 h-3.5 text-primary-foreground" />
+                      <div className="shrink-0 mt-0.5 mr-2">
+                        <CoachAvatar mood="default" size={28} />
                       </div>
                     )}
                     <div className="max-w-[80%] space-y-1">
