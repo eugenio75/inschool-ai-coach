@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { JoinClassModal } from "./JoinClassModal";
 import { useTranslation } from "react-i18next";
+import { formatTeacherDisplay } from "@/lib/teacherTitle";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
