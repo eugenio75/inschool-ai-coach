@@ -255,21 +255,29 @@ const ParentDashboard = () => {
           </div>
 
           {/* Child selector */}
-          {children.length > 1 && (
+          {children.length > 0 && (
             <div className="flex gap-2 mb-4 flex-wrap">
               {children.map((child) => (
-                <button
-                  key={child.id}
-                  onClick={() => setSelectedChild(child.id)}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
-                    selectedChild === child.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
-                  }`}
-                >
-                  <span className="w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">
-                    {child.name?.charAt(0)?.toUpperCase() || "S"}
-                  </span>
-                  {child.last_name ? `${child.name} ${child.last_name}` : child.name}
-                </button>
+                <div key={child.id} className="relative group">
+                  <button
+                    onClick={() => setSelectedChild(child.id)}
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                      selectedChild === child.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
+                    }`}
+                  >
+                    <span className="w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">
+                      {child.name?.charAt(0)?.toUpperCase() || "S"}
+                    </span>
+                    {child.last_name ? `${child.name} ${child.last_name}` : child.name}
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); openDeleteChild(child); }}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive/10 text-destructive text-[10px] items-center justify-center hidden group-hover:flex hover:bg-destructive/20 transition-colors"
+                    title={t("delete_child_title")}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
               ))}
             </div>
           )}
