@@ -17,6 +17,8 @@ interface EnrolledClass {
   class_name: string;
   subject: string | null;
   teacher_name: string;
+  teacher_last_name?: string;
+  teacher_gender?: string;
   enrolled_at: string;
 }
 
