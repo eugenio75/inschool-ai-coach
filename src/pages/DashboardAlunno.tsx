@@ -140,7 +140,7 @@ const DashboardAlunno = () => {
       <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.16 }}>
           <h3 className="font-display font-semibold text-foreground text-sm mb-3">Cosa vuoi fare?</h3>
-          <StudentActionCards hasTasks={tasks.length > 0} schoolLevel={profile?.school_level || "alunno"} />
+          <StudentActionCards hasTasks={tasks.length > 0} schoolLevel={profile?.school_level || "alunno"} coachName={coachName} />
         </motion.div>
       </div></div>
 
