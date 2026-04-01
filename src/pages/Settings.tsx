@@ -22,7 +22,7 @@ import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { LogoutButton } from "@/components/shared/LogoutButton";
 import { getChildSession, setChildSession } from "@/lib/childSession";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { coachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
+import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { BlockchainTab } from "@/components/BlockchainTab";
 import { MyClassesSection } from "@/components/MyClassesSection";
 
