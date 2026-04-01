@@ -119,7 +119,7 @@ const OnboardingLegacy = () => {
   });
 
   // MODIFICA: Feature 2 + Feature 6 — Added coach name step + access code step
-  const totalSteps = 9; // 0:info, 1:avatar, 2:school, 3:subjects, 4:struggles, 5:support, 6:coach, 7:focus, 8:access-code
+  const totalSteps = 10; // 0:info, 1:avatar, 2:school, 3:subjects, 4:struggles, 5:support, 6:coach, 7:interests, 8:focus, 9:access-code
   const toggleInArray = (arr: string[], item: string) =>
     arr.includes(item) ? arr.filter((i) => i !== item) : [...arr, item];
 
@@ -128,12 +128,13 @@ const OnboardingLegacy = () => {
       case 0: return data.name.trim() !== "" && data.age !== "" && data.gender !== "";
       case 1: return data.avatar !== "" || data.avatarUrl !== "";
       case 2: return data.schoolLevel !== "";
-      case 3: return true; // subjects are optional now (unchecked = difficult)
+      case 3: return true;
       case 4: return data.struggles.length > 0;
       case 5: return data.supportStyles.length > 0;
-      case 6: return true; // coach name is optional
-      case 7: return true;
-      case 8: return true; // access code step - always can proceed
+      case 6: return true; // coach name optional
+      case 7: return true; // interests optional
+      case 8: return true; // focus time
+      case 9: return true; // access code
       default: return false;
     }
   };
