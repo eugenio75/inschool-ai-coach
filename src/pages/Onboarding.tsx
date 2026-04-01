@@ -606,7 +606,18 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                       <option value="" disabled>{t('onb_select_track')}</option>
                       {tracks.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
                    </select>
-                   <input ref={locationInputRef} type="text" placeholder={t('onb_school_name_optional')} className={inputClass} defaultValue={answers.superiori_scuola || ""} />
+                   <SchoolAutocomplete
+                     value={answers.superiori_scuola || ""}
+                     onChange={(name, code, city) => setAnswers((prev: any) => ({
+                       ...prev,
+                       superiori_scuola: name,
+                       school_name: name,
+                       school_code: code,
+                       ...(city ? { superiori_citta: city } : {}),
+                     }))}
+                     placeholder={t('onb_school_name_optional')}
+                     className={inputClass}
+                   />
                 </div>
             </div>
           );
