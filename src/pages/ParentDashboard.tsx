@@ -54,6 +54,7 @@ const ParentDashboard = () => {
       const kids = await getChildProfiles();
       setChildren(kids);
       if (kids.length > 0) {
+        console.log("Selected child ID:", kids[0].id);
         setSelectedChild(kids[0].id);
         setActiveChildProfileId(kids[0].id);
       }
