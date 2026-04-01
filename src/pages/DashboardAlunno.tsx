@@ -25,6 +25,7 @@ const DashboardAlunno = () => {
   const [loading, setLoading] = useState(true);
   const isChild = isChildSession();
   const [showLibrary, setShowLibrary] = useState(false);
+  const [coachName, setCoachName] = useState("");
 
   useEffect(() => {
     if (isChild && shouldShowCheckin()) {
