@@ -259,26 +259,18 @@ const ParentDashboard = () => {
           {children.length > 0 && (
             <div className="flex gap-2 mb-4 flex-wrap">
               {children.map((child) => (
-                <div key={child.id} className="relative group">
-                  <button
-                    onClick={() => setSelectedChild(child.id)}
-                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
-                      selectedChild === child.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
-                    }`}
-                  >
-                    <span className="w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">
-                      {child.name?.charAt(0)?.toUpperCase() || "S"}
-                    </span>
-                    {child.last_name ? `${child.name} ${child.last_name}` : child.name}
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); openDeleteChild(child); }}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive/10 text-destructive text-[10px] items-center justify-center hidden group-hover:flex hover:bg-destructive/20 transition-colors"
-                    title={t("delete_child_title")}
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                </div>
+                <button
+                  key={child.id}
+                  onClick={() => setSelectedChild(child.id)}
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                    selectedChild === child.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  <span className="w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">
+                    {child.name?.charAt(0)?.toUpperCase() || "S"}
+                  </span>
+                  {child.last_name ? `${child.name} ${child.last_name}` : child.name}
+                </button>
               ))}
             </div>
           )}
@@ -385,6 +377,29 @@ const ParentDashboard = () => {
                 setChildren(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
               }}
             />
+          )}
+
+          {/* Danger zone — delete child profile */}
+          {selectedProfile && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...spring, delay: 0.3 }}
+              className="mt-8 rounded-2xl border border-destructive/30 bg-destructive/5 p-5"
+            >
+              <h3 className="font-display font-semibold text-destructive text-sm mb-1">
+                {t("delete_child_zone_title").replace("{name}", selectedProfile.name)}
+              </h3>
+              <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                {t("delete_child_zone_desc")}
+              </p>
+              <button
+                onClick={() => openDeleteChild(selectedProfile)}
+                className="px-4 py-2 rounded-xl bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors"
+              >
+                {t("delete_child_zone_button")}
+              </button>
+            </motion.div>
           )}
         </div>
       </div>
