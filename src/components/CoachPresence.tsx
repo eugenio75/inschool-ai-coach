@@ -191,6 +191,15 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
     loadCoachPrefs();
   }, []);
 
+  // Map internal CoachMood to CoachAvatarMood
+  const avatarMood: CoachAvatarMood = loading ? "default" : (
+    coachMood === "celebrating" ? "correct" :
+    coachMood === "concerned" ? "encouraging" :
+    coachMood === "encouraging" ? "encouraging" :
+    coachMood === "thinking" ? "thinking" :
+    "default"
+  );
+
   async function fetchCoachMessage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
