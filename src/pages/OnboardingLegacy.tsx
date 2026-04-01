@@ -136,6 +136,7 @@ const OnboardingLegacy = () => {
 
       const profile = await createChildProfile({
         name: data.name,
+        last_name: data.lastName,
         avatar_emoji: null,
         age: parseInt(data.age) || undefined,
         gender: data.gender || undefined,
