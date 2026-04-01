@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, Loader2, CheckCircle2 } from "lucide-react";
+import { Search, Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 
@@ -54,6 +54,7 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
   const [showDropdown, setShowDropdown] = useState(false);
   const [searching, setSearching] = useState(false);
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
+  const [manualMode, setManualMode] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -97,7 +98,6 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
 
         const responses = await Promise.all(searches);
 
-        // Merge and deduplicate by codice_meccanografico
         const seen = new Set<string>();
         const merged: SchoolResult[] = [];
         for (const { data, error } of responses) {
@@ -120,6 +120,12 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
     }, 300);
   };
 
+  const handleManualInput = (val: string) => {
+    setQuery(val);
+    setSelectedCode(null);
+    onChange(val, null, "");
+  };
+
   const selectSchool = (school: SchoolResult) => {
     setQuery(school.denominazione);
     setSelectedCode(school.codice_meccanografico);
@@ -127,7 +133,51 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
     onChange(school.denominazione, school.codice_meccanografico, school.comune || "");
   };
 
+  const switchToManual = () => {
+    setManualMode(true);
+    setShowDropdown(false);
+    setResults([]);
+    setSelectedCode(null);
+    // Keep current query text
+    onChange(query, null, "");
+  };
+
+  const switchToSearch = () => {
+    setManualMode(false);
+    setQuery("");
+    setSelectedCode(null);
+    onChange("", null, "");
+  };
+
   const inputClass = className || "w-full p-4 rounded-xl border border-border bg-muted/50 outline-none focus:border-primary text-foreground";
+
+  if (manualMode) {
+    return (
+      <div className="space-y-1.5">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => handleManualInput(e.target.value)}
+          placeholder={t("school_manual_placeholder")}
+          className={inputClass}
+        />
+        <button
+          type="button"
+          onClick={switchToSearch}
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="w-3 h-3" />
+          {t("school_back_to_search")}
+        </button>
+        {query.length >= 2 && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs">⚪</span>
+            <span className="text-xs text-muted-foreground">{t("school_not_verified")}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className="relative">
@@ -174,14 +224,15 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
           <span className="text-xs text-amber-600 font-medium">{t("school_recognized")}</span>
         </div>
       )}
-      {query.length >= 2 && !selectedCode && !searching && results.length === 0 && showDropdown && (
-        <p className="text-xs text-muted-foreground mt-1.5 px-1">{t("school_not_found_hint")}</p>
-      )}
-      {query.length >= 2 && !selectedCode && !searching && (
-        <div className="flex items-center gap-1.5 mt-1.5">
-          <span className="text-xs">⚪</span>
-          <span className="text-xs text-muted-foreground">{t("school_not_verified")}</span>
-        </div>
+
+      {!selectedCode && (
+        <button
+          type="button"
+          onClick={switchToManual}
+          className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors mt-1.5 block"
+        >
+          {t("school_manual_link")}
+        </button>
       )}
     </div>
   );
