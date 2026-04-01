@@ -236,7 +236,7 @@ RITMO CALMO:
 - Lascia spazio al silenzio e alla riflessione
 - Niente emoji in eccesso (max 1-2 per messaggio)`;
 
-const SYSTEM_PROMPT_EN = `You are InSchool's AI Coach, an educational coach for children and teenagers in primary and secondary school.
+const SYSTEM_PROMPT_EN = `You are InSchool's educational coach for children and teenagers in primary and secondary school.
 
 FUNDAMENTAL RULES:
 - NEVER do the homework for the student

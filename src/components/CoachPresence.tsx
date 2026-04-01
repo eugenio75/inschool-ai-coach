@@ -306,6 +306,7 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
             urgentCount,
             gamification: gamData,
             lang: getCurrentLang(),
+            coachName: coachName || undefined,
           }),
         });
 
