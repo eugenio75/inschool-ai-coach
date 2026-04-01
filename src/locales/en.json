@@ -1142,6 +1142,8 @@
   "nav_materials": "Materials",
   "action_my_tasks": "My homework",
   "action_my_tasks_desc": "View and study your tasks",
+  "action_add_task": "Add a task",
+  "action_no_tasks_desc": "No homework for today",
   "action_study_coach": "Study with the coach",
   "action_study_coach_desc": "The coach guides you step by step",
   "action_free_study": "Free study",
