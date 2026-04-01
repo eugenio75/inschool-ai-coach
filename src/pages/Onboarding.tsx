@@ -269,7 +269,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
       const suggestions = INTERESTS_BY_LEVEL[level] || INTERESTS_BY_LEVEL.medie;
       const selected: string[] = answers.interests || [];
       const hasEmoji = suggestions.some(s => s.emoji);
-      const [customVal, setCustomVal] = useState("");
+      const customVal = answers._interestCustom || "";
 
       return (
         <div className="w-full space-y-6">
@@ -299,11 +299,10 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             <input
               type="text"
               value={customVal}
-              onChange={e => setCustomVal(e.target.value)}
+              onChange={e => setAnswers((prev: any) => ({ ...prev, _interestCustom: e.target.value }))}
               onKeyDown={e => {
                 if (e.key === "Enter" && customVal.trim() && selected.length < 10 && !selected.includes(customVal.trim())) {
-                  setAnswers({ ...answers, interests: [...selected, customVal.trim()] });
-                  setCustomVal("");
+                  setAnswers((prev: any) => ({ ...prev, interests: [...selected, customVal.trim()], _interestCustom: "" }));
                 }
               }}
               placeholder={t('onb_interests_add')}
