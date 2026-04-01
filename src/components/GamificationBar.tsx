@@ -75,6 +75,24 @@ export const GamificationKPI = () => {
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* Punti totali — FIRST, with colored border */}
+      <div className="bg-card border-2 border-yellow-400 dark:border-yellow-500 rounded-xl p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Punti</span>
+          <div className="flex items-center gap-1">
+            <InfoTooltip text={tooltips.points} />
+            <div className="w-7 h-7 bg-yellow-100 dark:bg-yellow-500/20 rounded-lg flex items-center justify-center">
+              <Star className="w-3.5 h-3.5 text-yellow-500" />
+            </div>
+          </div>
+        </div>
+        <p className="font-display text-2xl font-bold text-foreground">{total}</p>
+        {shields > 0 && <StreakShieldBadge shields={shields} />}
+        {shields === 0 && streak > 0 && daysToShield <= 3 && (
+          <p className="text-[10px] text-muted-foreground mt-0.5">Scudo tra {daysToShield}g</p>
+        )}
+      </div>
+
       {/* Costanza (Streak) */}
       <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
@@ -88,24 +106,6 @@ export const GamificationKPI = () => {
         </div>
         <p className="font-display text-2xl font-bold text-foreground">{streak}</p>
         <p className="text-[10px] text-muted-foreground">giorni</p>
-      </div>
-
-      {/* Punti totali */}
-      <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Punti</span>
-          <div className="flex items-center gap-1">
-            <InfoTooltip text={tooltips.points} />
-            <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
-              <Star className="w-3.5 h-3.5 text-primary" />
-            </div>
-          </div>
-        </div>
-        <p className="font-display text-2xl font-bold text-foreground">{total}</p>
-        {shields > 0 && <StreakShieldBadge shields={shields} />}
-        {shields === 0 && streak > 0 && daysToShield <= 3 && (
-          <p className="text-[10px] text-muted-foreground mt-0.5">Scudo tra {daysToShield}g</p>
-        )}
       </div>
 
       {/* Concentrazione (focus_points) */}

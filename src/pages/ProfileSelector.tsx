@@ -138,6 +138,15 @@ const ProfileSelector = () => {
                 <p className="text-sm font-medium text-muted-foreground flex items-center gap-1.5 whitespace-nowrap overflow-hidden text-ellipsis">
                     {profile.school_level === "docente" ? <><BookOpen className="w-4 h-4 shrink-0"/> Area Docente</> : <><GraduationCap className="w-4 h-4 shrink-0"/> {profile.school_level === "classe" ? "Nuova Classe" : "Studente"} {profile.age ? `· ${profile.age} anni` : ""}</>}
                 </p>
+                {profile.access_code && profile.school_level !== "docente" && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleCopyCode(profile.access_code, profile.id); }}
+                    className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <span className="font-mono font-semibold tracking-wider">{profile.access_code}</span>
+                    {copiedId === profile.id ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                )}
               </div>
             </motion.button>
           ))}

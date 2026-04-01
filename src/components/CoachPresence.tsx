@@ -387,11 +387,11 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
               <button
                 onClick={() => setShowMood(!showMood)}
                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors shrink-0 ${
-                  showMood ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
+                  showMood ? "bg-red-50 dark:bg-red-500/10" : "bg-muted/50 hover:bg-red-50 dark:hover:bg-red-500/10"
+                } ${!showMood ? "animate-pulse" : ""}`}
                 title="Come ti senti?"
               >
-                <Heart className="w-4 h-4" />
+                <Heart className={`w-6 h-6 ${showMood ? "text-red-500 fill-red-500" : "text-red-500 hover:text-red-600"}`} />
               </button>
 
               <AnimatePresence>
