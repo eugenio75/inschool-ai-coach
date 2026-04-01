@@ -238,6 +238,7 @@ const ParentDashboard = () => {
   const childNotifications = parentNotifications.filter(n => n.child_profile_id === selectedChild);
 
   return (
+    <>
     <div className="min-h-screen bg-background pb-12">
       {/* Header */}
       <div className="bg-card border-b border-border px-6 pt-6 pb-6">
