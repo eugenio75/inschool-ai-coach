@@ -98,7 +98,7 @@ Reply ONLY with a JSON array of objects, each with:
 Extract 1 to 4 concepts. If the conversation is too short or doesn't contain significant learning, reply with an empty array [].
 
 Reply ONLY with JSON, no markdown or other text.`
-      : `Analizza questa conversazione di studio tra un coach AI e ${studentName}.
+      : `Analizza questa conversazione di studio tra un coach e ${studentName}.
 Estrai i CONCETTI CHIAVE che ${studentName} ha imparato o su cui ha lavorato durante la sessione.
 
 Materia: ${taskSubject || "non specificata"}

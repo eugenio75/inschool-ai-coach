@@ -534,7 +534,7 @@ serve(async (req) => {
                 .map((m: any) => `${m.role === "coach" || m.role === "assistant" ? "Coach" : "Studente"}: ${m.text}`)
                 .join("\n");
 
-              const extractPrompt = `Analizza questa conversazione di studio tra un coach AI e ${studentName}.
+              const extractPrompt = `Analizza questa conversazione di studio tra un coach e ${studentName}.
 Estrai i CONCETTI CHIAVE che ${studentName} ha imparato o su cui ha lavorato durante la sessione.
 
 Materia: ${hwInfo.subject || "non specificata"}

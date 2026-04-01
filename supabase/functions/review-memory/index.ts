@@ -274,7 +274,7 @@ RULES:
 IMPORTANT: In the LAST message (after 2-3 exchanges), conclude with:
 [STRENGTH_UPDATE: XX]
 where XX is the new strength value (0-100) based on the answers.`
-        : `Sei il Coach AI di Inschool. Stai facendo un RIPASSO con ${studentName} su un concetto che ha già studiato.
+        : `Sei il coach di Inschool. Stai facendo un RIPASSO con ${studentName} su un concetto che ha già studiato.
 Rivolgiti SEMPRE a ${studentName} usando il suo nome.
 
 CONCETTO: ${concept}
