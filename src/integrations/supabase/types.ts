@@ -127,6 +127,7 @@ export type Database = {
           gender: string | null
           id: string
           interests: string[] | null
+          last_name: string | null
           name: string
           onboarding_completed: boolean | null
           parent_id: string
@@ -151,6 +152,7 @@ export type Database = {
           gender?: string | null
           id?: string
           interests?: string[] | null
+          last_name?: string | null
           name: string
           onboarding_completed?: boolean | null
           parent_id: string
@@ -175,6 +177,7 @@ export type Database = {
           gender?: string | null
           id?: string
           interests?: string[] | null
+          last_name?: string | null
           name?: string
           onboarding_completed?: boolean | null
           parent_id?: string
