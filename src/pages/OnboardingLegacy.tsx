@@ -111,6 +111,7 @@ const OnboardingLegacy = () => {
   const adultSession = getChildSession();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [customInterest, setCustomInterest] = useState("");
 
   const [data, setData] = useState<OnboardingData & { interests: string[] }>({
     name: "", avatar: "kid-boy-1", avatarUrl: "", age: "", dateOfBirth: "", gender: "",
@@ -492,7 +493,6 @@ const OnboardingLegacy = () => {
       // Interests step
       case 7: {
         const selected = data.interests;
-        const [customVal, setCustomVal] = useState("");
         return (
           <div className="space-y-6">
             <div>
@@ -513,11 +513,11 @@ const OnboardingLegacy = () => {
               })}
             </div>
             <div className="flex gap-2">
-              <input type="text" value={customVal} onChange={e => setCustomVal(e.target.value)}
+              <input type="text" value={customInterest} onChange={e => setCustomInterest(e.target.value)}
                 onKeyDown={e => {
-                  if (e.key === "Enter" && customVal.trim() && selected.length < 10 && !selected.includes(customVal.trim())) {
-                    setData({ ...data, interests: [...selected, customVal.trim()] });
-                    setCustomVal("");
+                  if (e.key === "Enter" && customInterest.trim() && selected.length < 10 && !selected.includes(customInterest.trim())) {
+                    setData({ ...data, interests: [...selected, customInterest.trim()] });
+                    setCustomInterest("");
                   }
                 }}
                 placeholder="Aggiungi altri interessi..."
