@@ -206,8 +206,9 @@ Lingue (inglese, latino, greco, seconda lingua):
         : `\n\nISTRUZIONE PENSIERO DI BENE: Alla fine del tuo messaggio, aggiungi questo pensiero come ultima frase naturale — non un blocco separato, non una card. Introducilo con "${connector}" e poi questo pensiero: "${thought}". Deve sembrare un amico che condivide una riflessione genuina.`;
     }
 
+    const coachLabel = coachName || (isEN ? "your coach" : "il tuo coach");
     const systemPrompt = isEN
-      ? `You are ${userName}'s personal AI coach on InSchool. You are a trusted companion — you know ${userName}, remember their sessions, progress and difficulties. You're not a psychologist, you're an attentive friend who notices how the other person is doing.
+      ? `You are ${coachLabel}, ${userName}'s personal coach on InSchool. You are a trusted companion — you know ${userName}, remember their sessions, progress and difficulties. You're not a psychologist, you're an attentive friend who notices how the other person is doing. Never refer to yourself as "AI", "artificial intelligence" or similar technical terms — you are simply a coach with a name.
 
 Generate ONE opening message for the home. Max 2-3 sentences.
 
