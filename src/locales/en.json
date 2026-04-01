@@ -1163,5 +1163,16 @@
   "onb_interests_skip_now": "Skip for now",
   "onb_summary_interests": "Interests",
   "profile_access_code_title": "Your access code",
-  "profile_access_code_desc": "Use this code to access InSchool without email and password."
+  "profile_access_code_desc": "Use this code to access InSchool without email and password.",
+  "school_search_placeholder": "Search for your school...",
+  "school_recognized": "Recognized School",
+  "school_not_verified": "Not verified",
+  "settings_discoverable_title": "Student Visibility",
+  "settings_discoverable_label": "Make my profile visible to students at my school",
+  "settings_discoverable_desc": "Students at your school will be able to find you during registration",
+  "settings_discoverable_on": "Profile visible to students",
+  "settings_discoverable_off": "Profile hidden",
+  "badge_verified": "Verified Teacher",
+  "badge_school_recognized": "Recognized School",
+  "badge_unverified": "Not verified"
 }

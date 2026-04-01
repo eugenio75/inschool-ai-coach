@@ -1,7 +1,5 @@
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from '@supabase/supabase-js/cors'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -18,31 +16,32 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Query MIUR open data API for schools
-    const encodedQuery = encodeURIComponent(query);
-    const miurUrl = `https://dati.istruzione.it/opendata/opendata/catalogo/elements1/?q=${encodedQuery}`;
-    
-    let miurResults: any[] = [];
-    try {
-      const response = await fetch(miurUrl, {
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(5000),
-      });
-      if (response.ok) {
-        const data = await response.json();
-        miurResults = Array.isArray(data) ? data.slice(0, 10) : [];
-      }
-    } catch {
-      // MIUR API may not be available, use fallback
-      console.log('MIUR API not reachable, using fallback matching');
+    // Query the local schools table via search_schools function
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data, error } = await supabase.rpc('search_schools', {
+      query: query,
+      limit_n: 10,
+    });
+
+    if (error) {
+      console.error('search_schools error:', error);
+      // Fallback: return query as unverified
+      return new Response(
+        JSON.stringify({ results: [{ name: query, city: city || '', code: '', verified: false }] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // If MIUR returned results, format them
-    if (miurResults.length > 0) {
-      const formatted = miurResults.map((s: any) => ({
-        name: s.DENOMINAZIONESCUOLA || s.nome || s.denominazione || query,
-        city: s.DESCRIZIONECOMUNE || s.comune || city || '',
-        code: s.CODICESCUOLA || s.codice || '',
+    if (data && data.length > 0) {
+      const formatted = data.map((s: any) => ({
+        name: s.denominazione,
+        city: s.comune || city || '',
+        code: s.codice_meccanografico || '',
+        provincia: s.provincia || '',
+        tipo_scuola: s.tipo_scuola || '',
         verified: true,
       }));
       return new Response(
@@ -51,7 +50,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fallback: return the query as unverified
+    // No results: return the query as unverified
     return new Response(
       JSON.stringify({ results: [{ name: query, city: city || '', code: '', verified: false }] }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

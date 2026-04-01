@@ -98,6 +98,11 @@ const Settings = () => {
   const [newMateria, setNewMateria] = useState("");
   const [savingMaterie, setSavingMaterie] = useState(false);
 
+  // Docente discoverability
+  const [discoverable, setDiscoverable] = useState(false);
+  const [teacherBadge, setTeacherBadge] = useState<string>("unverified");
+  const [savingDiscoverable, setSavingDiscoverable] = useState(false);
+
   // Check if adult role
   const session = getChildSession();
   const isAdult = ["superiori", "universitario", "docente"].includes(session?.profile?.school_level || "");
@@ -147,6 +152,24 @@ const Settings = () => {
       // Load docente materie from profile
       if (session?.profile?.school_level === "docente") {
         setDocenteMaterie(session.profile.favorite_subjects || []);
+        // Load discoverability
+        if (profileId) {
+          const { data: prefData2 } = await supabase
+            .from("user_preferences")
+            .select("data")
+            .eq("profile_id", profileId)
+            .maybeSingle();
+          const prefs2 = (prefData2?.data as any) || {};
+          setDiscoverable(!!prefs2.discoverable);
+          // Determine badge
+          if (prefs2.email_istituzionale_verified) {
+            setTeacherBadge("verified");
+          } else if (prefs2.teacher_declaration?.school_code) {
+            setTeacherBadge("school_recognized");
+          } else {
+            setTeacherBadge("unverified");
+          }
+        }
       }
 
       setLoading(false);
@@ -459,6 +482,55 @@ const Settings = () => {
                   {savingMaterie ? <Loader2 className="w-4 h-4 animate-spin" /> : "Aggiungi"}
                 </Button>
               </div>
+            </div>
+          )}
+
+          {/* Teacher Discoverability */}
+          {session?.profile?.school_level === "docente" && (
+            <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
+              <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Users2 className="w-4 h-4 text-primary" /> Visibilità studenti
+              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">Rendi il mio profilo visibile agli studenti della mia scuola</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Gli studenti della tua scuola potranno trovarti durante la registrazione</p>
+                </div>
+                <Switch
+                  checked={discoverable}
+                  disabled={savingDiscoverable}
+                  onCheckedChange={async (checked) => {
+                    setSavingDiscoverable(true);
+                    setDiscoverable(checked);
+                    const pid = session?.profileId;
+                    if (pid) {
+                      const { data: existing } = await supabase
+                        .from("user_preferences")
+                        .select("id, data")
+                        .eq("profile_id", pid)
+                        .maybeSingle();
+                      const newData = { ...((existing?.data as any) || {}), discoverable: checked };
+                      if (existing) {
+                        await supabase.from("user_preferences").update({ data: newData } as any).eq("id", existing.id);
+                      } else {
+                        await supabase.from("user_preferences").insert({ profile_id: pid, data: newData } as any);
+                      }
+                    }
+                    setSavingDiscoverable(false);
+                    toast.success(checked ? "Profilo visibile agli studenti" : "Profilo nascosto");
+                  }}
+                />
+              </div>
+              {discoverable && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50">
+                  <span className="text-sm">
+                    {teacherBadge === "verified" ? "🔵" : teacherBadge === "school_recognized" ? "🟡" : "⚪"}
+                  </span>
+                  <span className="text-xs font-medium text-foreground">
+                    {teacherBadge === "verified" ? "Docente Verificato" : teacherBadge === "school_recognized" ? "Istituto Riconosciuto" : "Non verificato"}
+                  </span>
+                </div>
+              )}
             </div>
           )}
 

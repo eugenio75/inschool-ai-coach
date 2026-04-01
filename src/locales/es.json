@@ -1036,5 +1036,8 @@
   "onb_class_code_title": "Si tu profesor usa InSchool, ingresa el código para conectarte a su clase. También puedes hacerlo después desde tu perfil.",
   "onb_class_code_description": "Saltar por ahora",
   "onb_class_code_skip": "Clase",
-  "onb_summary_class_enrolled": "Classe"
+  "onb_summary_class_enrolled": "Clase",
+  "school_search_placeholder": "Busca tu escuela...",
+  "school_recognized": "Escuela reconocida",
+  "school_not_verified": "No verificado"
 }

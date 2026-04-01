@@ -8,6 +8,7 @@ import {
   Search, Network, Mic, PenLine, FileText, FolderOpen, Home, 
   Users2, Building, FilePlus, CheckSquare, BarChart2, BookMarked, Mail, Users
 } from "lucide-react";
+import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildSession, setChildSession } from "@/lib/childSession";
@@ -433,7 +434,18 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                       <option value="" disabled>{t('onb_school_type')}</option>
                       {schoolTypes.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
                    </select>
-                   <input ref={locationInputRef} type="text" placeholder={t('onb_school_name_optional')} className={inputClass} defaultValue={answers.medie_scuola || ""} />
+                   <SchoolAutocomplete
+                     value={answers.medie_scuola || ""}
+                     onChange={(name, code, city) => setAnswers((prev: any) => ({
+                       ...prev,
+                       medie_scuola: name,
+                       school_name: name,
+                       school_code: code,
+                       ...(city ? { medie_citta: city } : {}),
+                     }))}
+                     placeholder={t('onb_school_name_optional')}
+                     className={inputClass}
+                   />
                 </div>
             </div>
           );
@@ -594,7 +606,18 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                       <option value="" disabled>{t('onb_select_track')}</option>
                       {tracks.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
                    </select>
-                   <input ref={locationInputRef} type="text" placeholder={t('onb_school_name_optional')} className={inputClass} defaultValue={answers.superiori_scuola || ""} />
+                   <SchoolAutocomplete
+                     value={answers.superiori_scuola || ""}
+                     onChange={(name, code, city) => setAnswers((prev: any) => ({
+                       ...prev,
+                       superiori_scuola: name,
+                       school_name: name,
+                       school_code: code,
+                       ...(city ? { superiori_citta: city } : {}),
+                     }))}
+                     placeholder={t('onb_school_name_optional')}
+                     className={inputClass}
+                   />
                 </div>
             </div>
           );
@@ -748,7 +771,17 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 <div className="w-full space-y-6">
                     <h2 className="text-2xl font-bold text-foreground">{t('onb_uni_path')}</h2>
                     <div className="space-y-4">
-                       <input ref={locationInputRef} type="text" placeholder={t('onb_uni_name')} className={inputClass} defaultValue={answers.uni_nome || ""} />
+                       <SchoolAutocomplete
+                         value={answers.uni_nome || ""}
+                         onChange={(name, code, city) => setAnswers((prev: any) => ({
+                           ...prev,
+                           uni_nome: name,
+                           school_name: name,
+                           school_code: code,
+                         }))}
+                         placeholder={t('onb_uni_name')}
+                         className={inputClass}
+                       />
                        <select value={answers.uni_facolta || ""} onChange={e => setAnswers({...answers, uni_facolta: e.target.value})} className={inputClass}>
                           <option value="" disabled>{t('onb_uni_select_faculty')}</option>
                           {faculties.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}

@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Loader2, CheckCircle2, Search } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StepIndicator } from "../StepIndicator";
 import { LegalDisclaimer } from "../LegalDisclaimer";
-import { supabase } from "@/integrations/supabase/client";
+import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
 
 interface StepTeacherDeclarationProps {
   onComplete: (declaration: TeacherDeclaration) => void;
@@ -34,40 +34,14 @@ export function StepTeacherDeclaration({ onComplete, onBack }: StepTeacherDeclar
   const [mainSubject, setMainSubject] = useState("");
   const [schoolVerified, setSchoolVerified] = useState(false);
   const [miurCode, setMiurCode] = useState("");
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [searching, setSearching] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const canSubmit = schoolName.trim() && schoolCity.trim() && schoolOrder && mainSubject.trim();
 
-  useEffect(() => {
-    if (schoolName.length < 3) {
-      setSuggestions([]);
-      return;
-    }
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
-      setSearching(true);
-      try {
-        const { data } = await supabase.functions.invoke("miur-schools", {
-          body: { query: schoolName, city: schoolCity },
-        });
-        setSuggestions(data?.results || []);
-        setShowSuggestions(true);
-      } catch {
-        setSuggestions([]);
-      }
-      setSearching(false);
-    }, 400);
-  }, [schoolName, schoolCity]);
-
-  const selectSchool = (s: any) => {
-    setSchoolName(s.name);
-    if (s.city) setSchoolCity(s.city);
-    setSchoolVerified(s.verified);
-    setMiurCode(s.code || "");
-    setShowSuggestions(false);
+  const handleSchoolChange = (name: string, code: string | null, city: string) => {
+    setSchoolName(name);
+    setSchoolVerified(!!code);
+    setMiurCode(code || "");
+    if (city) setSchoolCity(city);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -107,58 +81,13 @@ export function StepTeacherDeclaration({ onComplete, onBack }: StepTeacherDeclar
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* School name with MIUR autocomplete */}
-        <div className="relative">
-          <div className="relative">
-            <input
-              type="text"
-              required
-              value={schoolName}
-              onChange={(e) => {
-                setSchoolName(e.target.value);
-                setSchoolVerified(false);
-                setMiurCode("");
-              }}
-              placeholder="Nome istituto"
-              className={`${inputClass} pr-10`}
-            />
-            {searching ? (
-              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
-            ) : (
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            )}
-          </div>
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-xl shadow-md max-h-48 overflow-y-auto">
-              {suggestions.map((s, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => selectSchool(s)}
-                  className="w-full text-left px-4 py-2.5 hover:bg-muted/50 transition-colors text-sm flex items-center gap-2"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate">{s.name}</p>
-                    {s.city && <p className="text-xs text-muted-foreground">{s.city}</p>}
-                  </div>
-                  {s.verified && <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0" />}
-                </button>
-              ))}
-            </div>
-          )}
-          {schoolVerified && (
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <span className="text-xs">🟡</span>
-              <span className="text-xs text-amber-600 font-medium">Istituto Riconosciuto</span>
-            </div>
-          )}
-          {schoolName.length >= 3 && !schoolVerified && !searching && (
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <span className="text-xs">⚪</span>
-              <span className="text-xs text-muted-foreground">Non verificato</span>
-            </div>
-          )}
-        </div>
+        {/* School name with autocomplete */}
+        <SchoolAutocomplete
+          value={schoolName}
+          onChange={handleSchoolChange}
+          placeholder="Nome istituto"
+          className={inputClass}
+        />
 
         <input
           type="text"
