@@ -22,6 +22,7 @@ export default function DashboardMedie() {
   const [profile, setProfile] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [coachName, setCoachName] = useState("");
 
   const isChild = isChildSession();
 
