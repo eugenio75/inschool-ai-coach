@@ -173,6 +173,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             const interestsToSave = Array.isArray(answers.interests) ? answers.interests.filter((i: unknown) => typeof i === "string" && i.trim()) : [];
             console.log("[Onboarding] Saving interests:", interestsToSave);
             if (interestsToSave.length > 0) profileUpdates.interests = interestsToSave;
+            if (role === "docente" && answers.docente_gender) profileUpdates.gender = answers.docente_gender;
             await supabase.from("child_profiles").update(profileUpdates as any).eq("id", profileId);
             const currentSession = getChildSession();
             if (currentSession?.profile) {
