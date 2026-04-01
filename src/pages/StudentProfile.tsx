@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Sparkles, X, Plus, Loader2, School, MapPin, User, GraduationCap } from "lucide-react";
+import { ArrowLeft, Sparkles, X, Plus, Loader2, School, MapPin, User, GraduationCap, Copy, Check, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isChildSession, getChildSession, setChildSession } from "@/lib/childSession";
 import { getActiveChildProfileId, getChildProfile, updateChildProfile } from "@/lib/database";
