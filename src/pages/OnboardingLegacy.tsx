@@ -70,6 +70,9 @@ interface OnboardingData {
   gender: string;
   schoolCategory: string;
   schoolLevel: string;
+  schoolName: string;
+  schoolCode: string | null;
+  city: string;
   favoriteSubjects: string[];
   struggles: string[];
   focusTime: string;
