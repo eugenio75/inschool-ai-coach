@@ -29,6 +29,23 @@ const INTEREST_SUGGESTIONS = [
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
+function AccessCodeDisplay({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <div className="flex items-center gap-3 bg-muted rounded-xl px-4 py-3">
+      <span className="font-mono text-lg font-bold text-foreground tracking-widest flex-1">{code}</span>
+      <button onClick={handleCopy} className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors">
+        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+      </button>
+    </div>
+  );
+}
+
 const StudentProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
