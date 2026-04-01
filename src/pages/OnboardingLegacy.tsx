@@ -99,7 +99,7 @@ const OnboardingLegacy = () => {
 
   const canProceed = () => {
     switch (step) {
-      case 0: return data.name.trim() !== "" && data.age !== "" && data.gender !== "";
+      case 0: return data.name.trim() !== "" && data.lastName.trim() !== "" && data.age !== "" && data.gender !== "";
       case 1: return data.schoolLevel !== "";
       case 2: return true;
       case 3: return data.struggles.length > 0;
