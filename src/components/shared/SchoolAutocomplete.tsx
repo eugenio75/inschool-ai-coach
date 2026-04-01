@@ -19,42 +19,28 @@ interface SchoolAutocompleteProps {
   cityFilter?: string;
 }
 
-// Abbreviation mapping for Italian school types
-const ABBREVIATION_MAP: Record<string, string[]> = {
-  "istituto comprensivo": ["IC"],
-  "ic": ["istituto comprensivo"],
-  "liceo scientifico": ["LS"],
-  "ls": ["liceo scientifico"],
-  "istituto tecnico": ["ITIS", "ITS", "ITI"],
-  "itis": ["istituto tecnico"],
-  "its": ["istituto tecnico"],
-  "iti": ["istituto tecnico"],
-  "istituto professionale": ["IPSIA", "IPSS", "IP"],
-  "ipsia": ["istituto professionale"],
-  "ipss": ["istituto professionale"],
-  "liceo classico": ["LC"],
-  "lc": ["liceo classico"],
-  "scuola primaria": ["SP", "elementare"],
-  "sp": ["scuola primaria", "elementare"],
-  "elementare": ["scuola primaria", "SP"],
-  "scuola media": ["SM", "secondaria di primo grado", "secondaria I grado"],
-  "sm": ["scuola media"],
-  "secondaria": ["scuola media", "SM"],
-  "liceo linguistico": ["LL"],
-  "ll": ["liceo linguistico"],
-  "liceo artistico": ["LA"],
-  "la": ["liceo artistico"],
-};
+// Only expand full words → abbreviations, never the reverse
+const CONTRACTION_MAP: [RegExp, string][] = [
+  [/istituto comprensivo/i, "IC"],
+  [/liceo scientifico/i, "LS"],
+  [/istituto tecnico/i, "ITIS"],
+  [/istituto professionale/i, "IPSIA"],
+  [/liceo classico/i, "LC"],
+  [/liceo linguistico/i, "LL"],
+  [/liceo artistico/i, "LA"],
+  [/scuola primaria/i, "SP"],
+  [/elementare/i, "SP"],
+  [/scuola media/i, "SM"],
+  [/secondaria/i, "SM"],
+];
 
 function getExpandedQueries(query: string): string[] {
-  const normalized = query.toLowerCase().trim();
-  const queries = new Set<string>([normalized]);
+  const trimmed = query.trim();
+  const queries = new Set<string>([trimmed]);
 
-  for (const [key, synonyms] of Object.entries(ABBREVIATION_MAP)) {
-    if (normalized.includes(key)) {
-      for (const syn of synonyms) {
-        queries.add(normalized.replace(key, syn.toLowerCase()));
-      }
+  for (const [pattern, abbr] of CONTRACTION_MAP) {
+    if (pattern.test(trimmed)) {
+      queries.add(trimmed.replace(pattern, abbr));
     }
   }
 
