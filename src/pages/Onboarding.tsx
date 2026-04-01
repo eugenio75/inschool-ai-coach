@@ -110,13 +110,26 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const hasClassCodeStep = role === "medie" || role === "superiori";
-    const hasInterestsStep = role !== "docente";
     const totalSteps = role === "docente" ? 4 : (hasClassCodeStep ? 10 : 9);
-    const [step, setStep] = useState(Math.min(initialStep, totalSteps - 1));
+    const normalizedInitialStep = Number.isFinite(Number(initialStep)) ? Number(initialStep) : 0;
+    const [step, setStep] = useState(() => Math.min(Math.max(normalizedInitialStep, 0), totalSteps - 1));
     const [answers, setAnswers] = useState<any>(initialData || {});
     const [direction, setDirection] = useState(1);
     const [saving, setSaving] = useState(false);
     const locationInputRef = useRef<HTMLInputElement>(null);
+    const currentStep = Number.isFinite(step) ? step : 0;
+    console.log("currentStep:", currentStep);
+
+    useEffect(() => {
+      if (!Number.isFinite(step)) {
+        setStep(0);
+        return;
+      }
+
+      if (step < 0 || step > totalSteps - 1) {
+        setStep(Math.min(Math.max(step, 0), totalSteps - 1));
+      }
+    }, [step, totalSteps]);
 
     useEffect(() => {
         let autocomplete: any = null;
@@ -131,11 +144,11 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             });
         }
         return () => { if (autocomplete) (window as any).google.maps.event.clearInstanceListeners(autocomplete); }
-    }, [step, role]);
+    }, [currentStep, role]);
 
     const handleNext = async () => {
-        if (step < totalSteps - 1) {
-            const nextStep = step + 1;
+        if (currentStep < totalSteps - 1) {
+            const nextStep = currentStep + 1;
             setSaving(true);
             const { data: existingPref } = await supabase
               .from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
@@ -154,7 +167,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             const existingData = (existingPref?.data as any) || {};
             const mergedData = { ...existingData, ...answers };
             await (supabase as any).from("user_preferences").upsert({
-               profile_id: profileId, role: role, current_step: step, data: mergedData
+               profile_id: profileId, role: role, current_step: currentStep, data: mergedData
             });
             const profileUpdates: any = { onboarding_completed: true };
             if (answers.interests?.length > 0) profileUpdates.interests = answers.interests;
@@ -172,9 +185,9 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
     };
 
     const handleBack = () => {
-        if (step > 0) {
+        if (currentStep > 0) {
             setDirection(-1);
-            setStep(step - 1);
+            setStep(currentStep - 1);
         }
     };
 
@@ -197,24 +210,24 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
 
     const canProceed = () => {
         if (role === "medie") {
-            if (step === 1) return answers.medie_anno && answers.medie_scuola_tipo;
-            if (step === 2) return (answers.materie_critiche || []).length > 0;
-            if (step === 3) return answers.metodo_studio;
-            if (step === 4) return answers.obiettivo;
+            if (currentStep === 1) return answers.medie_anno && answers.medie_scuola_tipo;
+            if (currentStep === 2) return (answers.materie_critiche || []).length > 0;
+            if (currentStep === 3) return answers.metodo_studio;
+            if (currentStep === 4) return answers.obiettivo;
         } else if (role === "superiori") {
-            if (step === 1) return answers.superiori_anno && answers.superiori_indirizzo;
-            if (step === 2) return (answers.materie_critiche || []).length > 0;
-            if (step === 3) return answers.metodo_studio;
-            if (step === 4) return answers.obiettivo;
+            if (currentStep === 1) return answers.superiori_anno && answers.superiori_indirizzo;
+            if (currentStep === 2) return (answers.materie_critiche || []).length > 0;
+            if (currentStep === 3) return answers.metodo_studio;
+            if (currentStep === 4) return answers.obiettivo;
         } else if (role === "universitario") {
-            if (step === 1) return answers.uni_facolta && answers.uni_anno;
-            if (step === 3) return answers.metodo_studio;
-            if (step === 4) return (answers.serve_ai || []).length > 0;
+            if (currentStep === 1) return answers.uni_facolta && answers.uni_anno;
+            if (currentStep === 3) return answers.metodo_studio;
+            if (currentStep === 4) return (answers.serve_ai || []).length > 0;
         } else if (role === "docente") {
-            if (step === 1) return answers.docente_ordine && (answers.docente_materie || []).length > 0;
+            if (currentStep === 1) return answers.docente_ordine && (answers.docente_materie || []).length > 0;
             return true;
         }
-        return true; 
+        return true;
     };
 
     // Subject keys map — internal value -> i18n key
@@ -968,39 +981,56 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         }
     }
 
+    const renderedStepContent =
+      role === "medie"
+        ? renderMedie(currentStep)
+        : role === "superiori"
+          ? renderSuperiori(currentStep)
+          : role === "universitario"
+            ? renderUniversitario(currentStep)
+            : role === "docente"
+              ? renderDocente(currentStep)
+              : null;
+
+    const safeStepContent = renderedStepContent ?? (
+      <div className="w-full space-y-6 text-center">
+        <p className="text-sm text-muted-foreground">{t('onb_interests_skip_now')}</p>
+        <Button type="button" onClick={handleNext} className="rounded-xl">
+          {t('onb_next')}
+        </Button>
+      </div>
+    );
+
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center relative overflow-x-hidden font-sans">
         <div className="absolute top-0 w-full p-6 z-20">
             <div className="max-w-2xl mx-auto flex items-center justify-between">
                 <span className="font-display font-bold text-foreground text-lg">InSchool Onboarding</span>
-                <span className="text-sm font-medium text-muted-foreground">Step {step + 1} {t('onb_step_of')} {totalSteps}</span>
+                <span className="text-sm font-medium text-muted-foreground">Step {currentStep + 1} {t('onb_step_of')} {totalSteps}</span>
             </div>
             <div className="max-w-2xl mx-auto mt-4 h-1.5 bg-muted rounded-full overflow-hidden">
-                <motion.div className="h-full bg-primary rounded-full" animate={{ width: `${((step + 1) / totalSteps) * 100}%` }} transition={{ duration: 0.3 }} />
+                <motion.div className="h-full bg-primary rounded-full" animate={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }} transition={{ duration: 0.3 }} />
             </div>
         </div>
 
         <div className="flex-1 w-full relative flex items-center justify-center px-4 pt-24 pb-32">
             <AnimatePresence initial={false} custom={direction} mode="wait">
                 <motion.div
-                    key={step} custom={direction} variants={variants} initial="enter" animate="center" exit="exit"
+                    key={currentStep} custom={direction} variants={variants} initial="enter" animate="center" exit="exit"
                     className="w-full max-w-2xl absolute flex flex-col items-center justify-center p-8 bg-card rounded-[2rem] shadow-sm border border-border"
                 >
-                    {role === "medie" && renderMedie(step)}
-                    {role === "superiori" && renderSuperiori(step)}
-                    {role === "universitario" && renderUniversitario(step)}
-                    {role === "docente" && renderDocente(step)}
+                    {safeStepContent}
                 </motion.div>
             </AnimatePresence>
         </div>
 
         <div className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-md border-t border-border p-6 z-20">
             <div className="max-w-2xl mx-auto flex items-center justify-between">
-                <Button variant="ghost" onClick={handleBack} disabled={step === 0 || saving} className="text-muted-foreground font-medium hover:bg-muted hover:text-foreground rounded-xl">
+                <Button variant="ghost" onClick={handleBack} disabled={currentStep === 0 || saving} className="text-muted-foreground font-medium hover:bg-muted hover:text-foreground rounded-xl">
                     <ArrowLeft className="w-4 h-4 mr-2" /> {t('onb_back')}
                 </Button>
                 <Button onClick={handleNext} disabled={!canProceed() || saving} className="rounded-xl px-8 font-bold shadow-sm transition-all h-12">
-                    {step === totalSteps - 1 ? (saving ? t('onb_saving') : (role === "docente" ? t('onb_doc_enter_dashboard') : t('onb_start'))) : (step === 0 && role === "docente" ? t('onb_doc_start') : t('onb_next'))} <ArrowRight className="ml-2 w-4 h-4" />
+                    {currentStep === totalSteps - 1 ? (saving ? t('onb_saving') : (role === "docente" ? t('onb_doc_enter_dashboard') : t('onb_start'))) : (currentStep === 0 && role === "docente" ? t('onb_doc_start') : t('onb_next'))} <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
             </div>
         </div>
