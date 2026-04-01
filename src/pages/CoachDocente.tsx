@@ -588,9 +588,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
             </div>
           ) : !activeChatId || messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center gap-4">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                <Brain className="w-8 h-8 text-primary" />
-              </div>
+              <CoachAvatar mood="default" size={64} />
               <p className="text-lg font-medium text-foreground">{t("coach_how_help")}</p>
             </div>
           ) : (
