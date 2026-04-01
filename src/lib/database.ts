@@ -46,6 +46,7 @@ export async function getChildProfile(profileId: string) {
 
 export async function createChildProfile(profile: {
   name: string;
+  last_name?: string;
   avatar_emoji?: string;
   age?: number;
   gender?: string;
