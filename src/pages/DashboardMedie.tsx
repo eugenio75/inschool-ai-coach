@@ -44,6 +44,12 @@ export default function DashboardMedie() {
           if (p) setProfile(p);
         }
       }
+      const pid = getActiveChildProfileId() || session?.profile?.id;
+      if (pid) {
+        const { data: prefData } = await supabase.from("user_preferences").select("data").eq("profile_id", pid).maybeSingle();
+        const prefs = (prefData?.data as any) || {};
+        if (prefs.coach_name) setCoachName(prefs.coach_name);
+      }
       const dbTasks = await getTasks();
       setTasks(dbTasks);
       setLoading(false);
