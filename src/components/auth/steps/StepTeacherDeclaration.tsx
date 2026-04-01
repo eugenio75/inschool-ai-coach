@@ -81,58 +81,13 @@ export function StepTeacherDeclaration({ onComplete, onBack }: StepTeacherDeclar
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* School name with MIUR autocomplete */}
-        <div className="relative">
-          <div className="relative">
-            <input
-              type="text"
-              required
-              value={schoolName}
-              onChange={(e) => {
-                setSchoolName(e.target.value);
-                setSchoolVerified(false);
-                setMiurCode("");
-              }}
-              placeholder="Nome istituto"
-              className={`${inputClass} pr-10`}
-            />
-            {searching ? (
-              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
-            ) : (
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            )}
-          </div>
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-xl shadow-md max-h-48 overflow-y-auto">
-              {suggestions.map((s, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => selectSchool(s)}
-                  className="w-full text-left px-4 py-2.5 hover:bg-muted/50 transition-colors text-sm flex items-center gap-2"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate">{s.name}</p>
-                    {s.city && <p className="text-xs text-muted-foreground">{s.city}</p>}
-                  </div>
-                  {s.verified && <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0" />}
-                </button>
-              ))}
-            </div>
-          )}
-          {schoolVerified && (
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <span className="text-xs">🟡</span>
-              <span className="text-xs text-amber-600 font-medium">Istituto Riconosciuto</span>
-            </div>
-          )}
-          {schoolName.length >= 3 && !schoolVerified && !searching && (
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <span className="text-xs">⚪</span>
-              <span className="text-xs text-muted-foreground">Non verificato</span>
-            </div>
-          )}
-        </div>
+        {/* School name with autocomplete */}
+        <SchoolAutocomplete
+          value={schoolName}
+          onChange={handleSchoolChange}
+          placeholder="Nome istituto"
+          className={inputClass}
+        />
 
         <input
           type="text"
