@@ -111,7 +111,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const hasClassCodeStep = role === "medie" || role === "superiori";
-    const totalSteps = role === "docente" ? 4 : (hasClassCodeStep ? 10 : 9);
+    const totalSteps = role === "docente" ? 5 : (hasClassCodeStep ? 10 : 9);
     const normalizedInitialStep = Number.isFinite(Number(initialStep)) ? Number(initialStep) : 0;
     const [step, setStep] = useState(() => Math.min(Math.max(normalizedInitialStep, 0), totalSteps - 1));
     const [answers, setAnswers] = useState<any>(initialData || {});
