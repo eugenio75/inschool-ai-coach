@@ -1,44 +1,20 @@
-// MODIFICA: Feature 1 (Avatar), Feature 2 (Coach Name), Feature 3 (Class Dropdown),
+// MODIFICA: Feature 2 (Coach Name), Feature 3 (Class Dropdown),
 // Feature 4 (Subject Logic Inversion), Feature 6 (Access Code Step)
+// Avatar selection removed — coach is always CoachAvatar component
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, BookOpen, Check, Upload, Copy, Mail, CheckCircle2 } from "lucide-react";
+import { ArrowRight, ArrowLeft, BookOpen, Check, Copy, Mail, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createChildProfile, setActiveChildProfileId } from "@/lib/database";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildSession, clearChildSession, setChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
-import { coachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
+import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { useToast } from "@/hooks/use-toast";
 
-// MODIFICA: Feature 1 — Avatar imports
-import kidBoy1 from "@/assets/avatars/kid-boy-1.png";
-import kidGirl1 from "@/assets/avatars/kid-girl-1.png";
-import kidBoy2 from "@/assets/avatars/kid-boy-2.png";
-import kidGirl2 from "@/assets/avatars/kid-girl-2.png";
-import adultMale1 from "@/assets/avatars/adult-male-1.png";
-import adultFemale1 from "@/assets/avatars/adult-female-1.png";
-import adultMale2 from "@/assets/avatars/adult-male-2.png";
-import adultFemale2 from "@/assets/avatars/adult-female-2.png";
-
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
-
-// MODIFICA: Feature 1 — Avatar options split by category
-const kidAvatars = [
-  { id: "kid-boy-1", src: kidBoy1, label: "Ragazzo 1" },
-  { id: "kid-girl-1", src: kidGirl1, label: "Ragazza 1" },
-  { id: "kid-boy-2", src: kidBoy2, label: "Ragazzo 2" },
-  { id: "kid-girl-2", src: kidGirl2, label: "Ragazza 2" },
-];
-
-const adultAvatars = [
-  { id: "adult-male-1", src: adultMale1, label: "Adulto 1" },
-  { id: "adult-female-1", src: adultFemale1, label: "Adulta 1" },
-  { id: "adult-male-2", src: adultMale2, label: "Adulto 2" },
-  { id: "adult-female-2", src: adultFemale2, label: "Adulta 2" },
-];
 
 // MODIFICA: Feature 3 — Proper school level lists
 const primaryClasses = [
@@ -86,12 +62,10 @@ const supportStyles = [
 
 interface OnboardingData {
   name: string;
-  avatar: string;
-  avatarUrl: string;
   age: string;
   dateOfBirth: string;
   gender: string;
-  schoolCategory: string; // "primaria" or "media"
+  schoolCategory: string;
   schoolLevel: string;
   favoriteSubjects: string[];
   struggles: string[];
@@ -109,57 +83,34 @@ const OnboardingLegacy = () => {
   const [copied, setCopied] = useState(false);
   const [createdProfile, setCreatedProfile] = useState<any>(null);
   const adultSession = getChildSession();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [customInterest, setCustomInterest] = useState("");
 
   const [data, setData] = useState<OnboardingData & { interests: string[] }>({
-    name: "", avatar: "kid-boy-1", avatarUrl: "", age: "", dateOfBirth: "", gender: "",
+    name: "", age: "", dateOfBirth: "", gender: "",
     schoolCategory: "", schoolLevel: "", favoriteSubjects: [],
     struggles: [], focusTime: "15", supportStyles: [], coachName: "", interests: [],
   });
 
-  // MODIFICA: Feature 2 + Feature 6 — Added coach name step + access code step
-  const totalSteps = 10; // 0:info, 1:avatar, 2:school, 3:subjects, 4:struggles, 5:support, 6:coach, 7:interests, 8:focus, 9:access-code
+  // Steps: 0:info, 1:school, 2:subjects, 3:struggles, 4:support, 5:coach, 6:interests, 7:focus, 8:access-code
+  const totalSteps = 9;
   const toggleInArray = (arr: string[], item: string) =>
     arr.includes(item) ? arr.filter((i) => i !== item) : [...arr, item];
 
   const canProceed = () => {
     switch (step) {
       case 0: return data.name.trim() !== "" && data.age !== "" && data.gender !== "";
-      case 1: return data.avatar !== "" || data.avatarUrl !== "";
-      case 2: return data.schoolLevel !== "";
-      case 3: return true;
-      case 4: return data.struggles.length > 0;
-      case 5: return data.supportStyles.length > 0;
-      case 6: return true; // coach name optional
-      case 7: return true; // interests optional
-      case 8: return true; // focus time
-      case 9: return true; // access code
+      case 1: return data.schoolLevel !== "";
+      case 2: return true;
+      case 3: return data.struggles.length > 0;
+      case 4: return data.supportStyles.length > 0;
+      case 5: return true; // coach name optional
+      case 6: return true; // interests optional
+      case 7: return true; // focus time
+      case 8: return true; // access code
       default: return false;
     }
   };
 
-  // MODIFICA: Feature 1 — Photo upload handler
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    setUploadingPhoto(true);
-    try {
-      const ext = file.name.split('.').pop();
-      const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("profile-avatars").upload(path, file, { upsert: true });
-      if (error) throw error;
-      const { data: urlData } = supabase.storage.from("profile-avatars").getPublicUrl(path);
-      setData({ ...data, avatarUrl: urlData.publicUrl, avatar: "custom" });
-    } catch (err: any) {
-      toast({ title: "Errore nel caricamento", variant: "destructive" });
-    } finally {
-      setUploadingPhoto(false);
-    }
-  };
-
-  // MODIFICA: Feature 6 — Copy access code
   const handleCopyCode = () => {
     if (createdProfile?.access_code) {
       navigator.clipboard.writeText(createdProfile.access_code);
@@ -168,26 +119,23 @@ const OnboardingLegacy = () => {
     }
   };
 
-  // MODIFICA: Feature 6 — Send code via email
   const handleSendCodeEmail = async () => {
     toast({ title: "Il codice è stato copiato. Puoi incollarlo in un'email al tuo bambino." });
     handleCopyCode();
   };
 
   const next = async () => {
-    // Create profile at step 8 (focus time), show access code at step 9
-    if (step === 8) {
+    // Create profile at step 7 (focus time), show access code at step 8
+    if (step === 7) {
       setSaving(true);
       const allSubjects = subjects;
       const difficultSubjects = allSubjects.filter(s => !data.favoriteSubjects.includes(s));
 
-      const schoolLevel = data.schoolLevel.startsWith("primaria") 
-        ? data.schoolLevel.replace("primaria-", "primaria-")
-        : data.schoolLevel;
+      const schoolLevel = data.schoolLevel;
 
       const profile = await createChildProfile({
         name: data.name,
-        avatar_emoji: data.avatar === "custom" ? "custom" : data.avatar,
+        avatar_emoji: null,
         age: parseInt(data.age) || undefined,
         gender: data.gender || undefined,
         school_level: schoolLevel,
@@ -201,10 +149,6 @@ const OnboardingLegacy = () => {
       } as any);
 
       if (profile) {
-        if (data.avatarUrl && data.avatar === "custom") {
-          await supabase.from("child_profiles").update({ avatar_emoji: data.avatarUrl } as any).eq("id", profile.id);
-        }
-
         if (data.coachName.trim()) {
           await supabase.from("user_preferences").upsert({
             profile_id: profile.id,
@@ -226,7 +170,7 @@ const OnboardingLegacy = () => {
 
         setCreatedProfile(profile);
         setSaving(false);
-        setStep(9);
+        setStep(8);
       } else {
         setSaving(false);
         toast({ title: "Errore nella creazione del profilo", variant: "destructive" });
@@ -234,7 +178,7 @@ const OnboardingLegacy = () => {
       return;
     }
 
-    if (step === 9) {
+    if (step === 8) {
       if (createdProfile) {
         if (adultSession?.profile?.school_level && ["superiori", "universitario", "docente"].includes(adultSession.profile.school_level)) {
           clearChildSession();
@@ -247,7 +191,7 @@ const OnboardingLegacy = () => {
             id: createdProfile.id,
             name: createdProfile.name || data.name,
             age: createdProfile.age ?? (parseInt(data.age) || null),
-            avatar_emoji: createdProfile.avatar_emoji || data.avatar,
+            avatar_emoji: null,
             gender: createdProfile.gender || data.gender,
             school_level: createdProfile.school_level || data.schoolLevel,
             favorite_subjects: createdProfile.favorite_subjects || data.favoriteSubjects,
@@ -260,7 +204,7 @@ const OnboardingLegacy = () => {
         });
         localStorage.setItem("inschool-profile", JSON.stringify({
           id: createdProfile.id, name: data.name, age: data.age, gender: data.gender,
-          avatarEmoji: data.avatar, schoolLevel: data.schoolLevel,
+          schoolLevel: data.schoolLevel,
           favoriteSubjects: data.favoriteSubjects, focusTime: data.focusTime, supportStyles: data.supportStyles,
         }));
       }
@@ -275,18 +219,6 @@ const OnboardingLegacy = () => {
       }
       setStep(step + 1);
     }
-  };
-
-  // Get the right avatar set based on school category
-  const getAvatarSet = () => {
-    if (data.schoolCategory === "primaria") return kidAvatars;
-    if (data.schoolCategory === "media") return kidAvatars; // Kids use Disney-style
-    return adultAvatars; // Fallback for older users
-  };
-
-  const getAvatarSrc = (avatarId: string): string => {
-    const all = [...kidAvatars, ...adultAvatars];
-    return all.find(a => a.id === avatarId)?.src || kidBoy1;
   };
 
   const renderStep = () => {
@@ -322,64 +254,10 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      // MODIFICA: Feature 1 — Avatar selection with Disney-style kids + photo upload
       case 1:
         return (
           <div className="space-y-6">
-            <div>
-              <h2 className="font-display text-2xl font-bold text-foreground mb-2">Scegli un avatar per {data.name}</h2>
-              <p className="text-muted-foreground">Puoi anche caricare una foto dal tuo dispositivo.</p>
-            </div>
-
-            {/* Photo upload */}
-            <div className="flex justify-center">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingPhoto}
-                className={`w-24 h-24 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center gap-1 ${
-                  data.avatar === "custom" ? "border-primary bg-primary/10" : "border-border hover:border-primary/50 hover:bg-muted"
-                }`}
-              >
-                {data.avatarUrl ? (
-                  <img src={data.avatarUrl} alt="Foto profilo" className="w-full h-full rounded-2xl object-cover" />
-                ) : (
-                  <>
-                    <Upload className="w-5 h-5 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground">Carica foto</span>
-                  </>
-                )}
-              </button>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-            </div>
-
-            <p className="text-center text-xs text-muted-foreground">oppure scegli un avatar</p>
-
-            {/* Avatar grid */}
-            <div className="grid grid-cols-4 gap-3">
-              {kidAvatars.map((avatar) => (
-                <button
-                  key={avatar.id}
-                  onClick={() => setData({ ...data, avatar: avatar.id, avatarUrl: "" })}
-                  className={`p-2 rounded-2xl border-2 transition-all ${
-                    data.avatar === avatar.id && !data.avatarUrl
-                      ? "border-primary bg-primary/5 shadow-soft"
-                      : "border-border bg-card hover:bg-muted"
-                  }`}
-                >
-                  <img src={avatar.src} alt={avatar.label} className="w-full h-full rounded-xl object-cover" loading="lazy" width={512} height={512} />
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-
-      // MODIFICA: Feature 3 — Dropdown for class selection (Primaria 1-5, Media 1-3)
-      case 2:
-        return (
-          <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Che classe fa {data.name}?</h2></div>
-            
-            {/* School category selection */}
             <div className="flex gap-3 mb-4">
               {[
                 { id: "primaria", label: "Scuola Primaria" },
@@ -398,8 +276,6 @@ const OnboardingLegacy = () => {
                 </button>
               ))}
             </div>
-
-            {/* Class dropdown */}
             {data.schoolCategory && (
               <Select value={data.schoolLevel} onValueChange={(val) => setData({ ...data, schoolLevel: val })}>
                 <SelectTrigger className="w-full rounded-xl h-12 text-base">
@@ -415,8 +291,7 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      // MODIFICA: Feature 4 — Inverted subject logic: checked = va bene, unchecked = difficile
-      case 3:
+      case 2:
         return (
           <div className="space-y-6">
             <div>
@@ -445,7 +320,7 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      case 4:
+      case 3:
         return (
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Cosa succede quando studia?</h2></div>
@@ -455,7 +330,7 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      case 5:
+      case 4:
         return (
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Come deve aiutarlo il coach?</h2></div>
@@ -465,8 +340,7 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      // MODIFICA: Feature 2 — Coach name customization step
-      case 6:
+      case 5:
         return (
           <div className="space-y-6">
             <div>
@@ -474,13 +348,11 @@ const OnboardingLegacy = () => {
               <p className="text-muted-foreground text-sm">Dai un nome al coach AI. Potrai cambiarlo dopo nelle impostazioni.</p>
             </div>
             <div className="flex justify-center">
-              <div className="w-20 h-20 rounded-full overflow-hidden bg-primary/10">
-                <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
-              </div>
+              <CoachAvatar mood="default" size={80} />
             </div>
             <input
               type="text"
-              placeholder="Es. Luna, Gufo, Buddy..."
+              placeholder="Es. Luna, Buddy, Stella..."
               value={data.coachName}
               onChange={(e) => setData({ ...data, coachName: e.target.value })}
               maxLength={20}
@@ -490,8 +362,7 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      // Interests step
-      case 7: {
+      case 6: {
         const selected = data.interests;
         return (
           <div className="space-y-6">
@@ -531,7 +402,7 @@ const OnboardingLegacy = () => {
         );
       }
 
-      case 8:
+      case 7:
         return (
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Quanto riesce a concentrarsi?</h2></div>
@@ -545,7 +416,7 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      case 9:
+      case 8:
         return (
           <div className="space-y-6 text-center">
             <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
@@ -607,9 +478,9 @@ const OnboardingLegacy = () => {
       </div>
       <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border px-6 py-4">
         <div className="max-w-lg mx-auto flex items-center justify-between">
-          <Button variant="ghost" onClick={() => step > 0 && step !== 9 ? setStep(step - 1) : step === 0 ? navigate("/profiles") : null} disabled={step === 9} className="text-muted-foreground"><ArrowLeft className="w-4 h-4 mr-1" /> Indietro</Button>
+          <Button variant="ghost" onClick={() => step > 0 && step !== 8 ? setStep(step - 1) : step === 0 ? navigate("/profiles") : null} disabled={step === 8} className="text-muted-foreground"><ArrowLeft className="w-4 h-4 mr-1" /> Indietro</Button>
           <Button onClick={next} disabled={!canProceed() || saving} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl px-6 disabled:opacity-40">
-            {step === 9 ? "Vai alla dashboard" : step === 8 ? (saving ? "Salvataggio..." : "Crea profilo!") : "Avanti"}<ArrowRight className="ml-1 w-4 h-4" />
+            {step === 8 ? "Vai alla dashboard" : step === 7 ? (saving ? "Salvataggio..." : "Crea profilo!") : "Avanti"}<ArrowRight className="ml-1 w-4 h-4" />
           </Button>
         </div>
       </div>
