@@ -981,39 +981,56 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         }
     }
 
+    const renderedStepContent =
+      role === "medie"
+        ? renderMedie(currentStep)
+        : role === "superiori"
+          ? renderSuperiori(currentStep)
+          : role === "universitario"
+            ? renderUniversitario(currentStep)
+            : role === "docente"
+              ? renderDocente(currentStep)
+              : null;
+
+    const safeStepContent = renderedStepContent ?? (
+      <div className="w-full space-y-6 text-center">
+        <p className="text-sm text-muted-foreground">{t('onb_interests_skip_now')}</p>
+        <Button type="button" onClick={handleNext} className="rounded-xl">
+          {t('onb_next')}
+        </Button>
+      </div>
+    );
+
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center relative overflow-x-hidden font-sans">
         <div className="absolute top-0 w-full p-6 z-20">
             <div className="max-w-2xl mx-auto flex items-center justify-between">
                 <span className="font-display font-bold text-foreground text-lg">InSchool Onboarding</span>
-                <span className="text-sm font-medium text-muted-foreground">Step {step + 1} {t('onb_step_of')} {totalSteps}</span>
+                <span className="text-sm font-medium text-muted-foreground">Step {currentStep + 1} {t('onb_step_of')} {totalSteps}</span>
             </div>
             <div className="max-w-2xl mx-auto mt-4 h-1.5 bg-muted rounded-full overflow-hidden">
-                <motion.div className="h-full bg-primary rounded-full" animate={{ width: `${((step + 1) / totalSteps) * 100}%` }} transition={{ duration: 0.3 }} />
+                <motion.div className="h-full bg-primary rounded-full" animate={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }} transition={{ duration: 0.3 }} />
             </div>
         </div>
 
         <div className="flex-1 w-full relative flex items-center justify-center px-4 pt-24 pb-32">
             <AnimatePresence initial={false} custom={direction} mode="wait">
                 <motion.div
-                    key={step} custom={direction} variants={variants} initial="enter" animate="center" exit="exit"
+                    key={currentStep} custom={direction} variants={variants} initial="enter" animate="center" exit="exit"
                     className="w-full max-w-2xl absolute flex flex-col items-center justify-center p-8 bg-card rounded-[2rem] shadow-sm border border-border"
                 >
-                    {role === "medie" && renderMedie(step)}
-                    {role === "superiori" && renderSuperiori(step)}
-                    {role === "universitario" && renderUniversitario(step)}
-                    {role === "docente" && renderDocente(step)}
+                    {safeStepContent}
                 </motion.div>
             </AnimatePresence>
         </div>
 
         <div className="fixed bottom-0 left-0 right-0 bg-card/80 backdrop-blur-md border-t border-border p-6 z-20">
             <div className="max-w-2xl mx-auto flex items-center justify-between">
-                <Button variant="ghost" onClick={handleBack} disabled={step === 0 || saving} className="text-muted-foreground font-medium hover:bg-muted hover:text-foreground rounded-xl">
+                <Button variant="ghost" onClick={handleBack} disabled={currentStep === 0 || saving} className="text-muted-foreground font-medium hover:bg-muted hover:text-foreground rounded-xl">
                     <ArrowLeft className="w-4 h-4 mr-2" /> {t('onb_back')}
                 </Button>
                 <Button onClick={handleNext} disabled={!canProceed() || saving} className="rounded-xl px-8 font-bold shadow-sm transition-all h-12">
-                    {step === totalSteps - 1 ? (saving ? t('onb_saving') : (role === "docente" ? t('onb_doc_enter_dashboard') : t('onb_start'))) : (step === 0 && role === "docente" ? t('onb_doc_start') : t('onb_next'))} <ArrowRight className="ml-2 w-4 h-4" />
+                    {currentStep === totalSteps - 1 ? (saving ? t('onb_saving') : (role === "docente" ? t('onb_doc_enter_dashboard') : t('onb_start'))) : (currentStep === 0 && role === "docente" ? t('onb_doc_start') : t('onb_next'))} <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
             </div>
         </div>
