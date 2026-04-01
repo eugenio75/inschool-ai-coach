@@ -434,7 +434,18 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                       <option value="" disabled>{t('onb_school_type')}</option>
                       {schoolTypes.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
                    </select>
-                   <input ref={locationInputRef} type="text" placeholder={t('onb_school_name_optional')} className={inputClass} defaultValue={answers.medie_scuola || ""} />
+                   <SchoolAutocomplete
+                     value={answers.medie_scuola || ""}
+                     onChange={(name, code, city) => setAnswers((prev: any) => ({
+                       ...prev,
+                       medie_scuola: name,
+                       school_name: name,
+                       school_code: code,
+                       ...(city ? { medie_citta: city } : {}),
+                     }))}
+                     placeholder={t('onb_school_name_optional')}
+                     className={inputClass}
+                   />
                 </div>
             </div>
           );
