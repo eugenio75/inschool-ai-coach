@@ -8,6 +8,7 @@ import { DailyMissions } from "@/components/GamificationBar";
 import { CoachPresence } from "@/components/CoachPresence";
 import { BadgeDisplay } from "@/components/BadgeDisplay";
 import { StudentActionCards } from "@/components/StudentActionCards";
+import { shouldShowCheckin } from "@/pages/EmotionalCheckin";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 import { getTasks, getActiveChildProfileId, getChildProfile } from "@/lib/database";
 import { supabase } from "@/integrations/supabase/client";
