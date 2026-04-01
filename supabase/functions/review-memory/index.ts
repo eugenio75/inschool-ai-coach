@@ -128,7 +128,7 @@ INSTRUCTIONS:
 - Use emojis sparingly to make the text more readable
 - Length: about 150-300 words
 - ALWAYS respond in English`
-        : `Sei il Coach AI di Inschool. Devi generare una SINTESI CHIARA E COMPLETA di un argomento studiato da ${studentName}.
+        : `Sei il coach di Inschool. Devi generare una SINTESI CHIARA E COMPLETA di un argomento studiato da ${studentName}.
 
 ARGOMENTO: ${concept}
 MATERIA: ${subject || "non specificata"}
