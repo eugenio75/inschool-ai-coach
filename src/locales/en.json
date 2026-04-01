@@ -1151,6 +1151,7 @@
   "onb_interests_add": "Add other interests...",
   "onb_interests_selected": "selected",
   "onb_interests_skip": "Skip →",
+  "onb_interests_skip_now": "Skip for now",
   "onb_summary_interests": "Interests",
   "profile_access_code_title": "Your access code",
   "profile_access_code_desc": "Use this code to access InSchool without email and password."

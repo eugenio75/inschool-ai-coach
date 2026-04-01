@@ -266,58 +266,112 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
     };
 
     function renderInterestsStep(level: string) {
-      const suggestions = INTERESTS_BY_LEVEL[level] || INTERESTS_BY_LEVEL.medie;
-      const selected: string[] = answers.interests || [];
-      const hasEmoji = suggestions.some(s => s.emoji);
-      const customVal = answers._interestCustom || "";
+      try {
+        const levelSuggestions = INTERESTS_BY_LEVEL[level];
+        const suggestions = Array.isArray(levelSuggestions)
+          ? levelSuggestions
+          : (Array.isArray(INTERESTS_BY_LEVEL.medie) ? INTERESTS_BY_LEVEL.medie : []);
 
-      return (
-        <div className="w-full space-y-6">
-          <h2 className="text-2xl font-bold text-foreground">{t('onb_interests_title')}</h2>
-          <p className="text-muted-foreground text-sm">{t('onb_interests_sub')}</p>
-          <div className="flex flex-wrap gap-2">
-            {suggestions.map(s => {
-              const isSel = selected.includes(s.label);
-              return (
-                <button
-                  key={s.label}
-                  onClick={() => {
-                    if (isSel) {
-                      setAnswers({ ...answers, interests: selected.filter(i => i !== s.label) });
-                    } else if (selected.length < 10) {
-                      setAnswers({ ...answers, interests: [...selected, s.label] });
-                    }
-                  }}
-                  className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${isSel ? chipSelClass : chipUnselClass}`}
-                >
-                  {hasEmoji && s.emoji ? `${s.emoji} ${s.label}` : s.label}
-                </button>
-              );
-            })}
+        const selected: string[] = Array.isArray(answers?.interests)
+          ? answers.interests.filter((item: unknown): item is string => typeof item === "string")
+          : [];
+
+        const customVal = typeof answers?._interestCustom === "string" ? answers._interestCustom : "";
+        const hasEmoji = suggestions.some((s) => Boolean(s?.emoji));
+
+        const toggleInterest = (label: string) => {
+          setAnswers((prev: any) => {
+            const prevSelected: string[] = Array.isArray(prev?.interests)
+              ? prev.interests.filter((item: unknown): item is string => typeof item === "string")
+              : [];
+
+            if (prevSelected.includes(label)) {
+              return { ...prev, interests: prevSelected.filter((i: string) => i !== label) };
+            }
+
+            if (prevSelected.length >= 10) return prev;
+            return { ...prev, interests: [...prevSelected, label] };
+          });
+        };
+
+        const addCustomInterest = () => {
+          const trimmed = customVal.trim();
+          if (!trimmed) return;
+
+          setAnswers((prev: any) => {
+            const prevSelected: string[] = Array.isArray(prev?.interests)
+              ? prev.interests.filter((item: unknown): item is string => typeof item === "string")
+              : [];
+
+            if (prevSelected.length >= 10 || prevSelected.includes(trimmed)) {
+              return { ...prev, _interestCustom: "" };
+            }
+
+            return { ...prev, interests: [...prevSelected, trimmed], _interestCustom: "" };
+          });
+        };
+
+        return (
+          <div className="w-full space-y-6">
+            <h2 className="text-2xl font-bold text-foreground">{t('onb_interests_title')}</h2>
+            <p className="text-muted-foreground text-sm">{t('onb_interests_sub')}</p>
+            <div className="flex flex-wrap gap-2">
+              {suggestions.map((s) => {
+                const isSel = selected.includes(s.label);
+                return (
+                  <button
+                    key={s.label}
+                    type="button"
+                    onClick={() => toggleInterest(s.label)}
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${isSel ? chipSelClass : chipUnselClass}`}
+                  >
+                    {hasEmoji && s.emoji ? `${s.emoji} ${s.label}` : s.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customVal}
+                onChange={(e) => setAnswers((prev: any) => ({ ...prev, _interestCustom: e.target.value }))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addCustomInterest();
+                  }
+                }}
+                placeholder={t('onb_interests_add')}
+                maxLength={30}
+                className={inputClass}
+              />
+            </div>
+            {selected.length > 0 && (
+              <p className="text-xs text-muted-foreground">{selected.length}/10 {t('onb_interests_selected')}</p>
+            )}
+            <button
+              type="button"
+              onClick={handleNext}
+              className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors"
+            >
+              {t('onb_interests_skip')}
+            </button>
           </div>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={customVal}
-              onChange={e => setAnswers((prev: any) => ({ ...prev, _interestCustom: e.target.value }))}
-              onKeyDown={e => {
-                if (e.key === "Enter" && customVal.trim() && selected.length < 10 && !selected.includes(customVal.trim())) {
-                  setAnswers((prev: any) => ({ ...prev, interests: [...selected, customVal.trim()], _interestCustom: "" }));
-                }
-              }}
-              placeholder={t('onb_interests_add')}
-              maxLength={30}
-              className={inputClass}
-            />
+        );
+      } catch (error) {
+        console.error("[Onboarding] Interests step render crash", error);
+        return (
+          <div className="w-full space-y-6">
+            <button
+              type="button"
+              onClick={handleNext}
+              className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors"
+            >
+              {t('onb_interests_skip_now')}
+            </button>
           </div>
-          {selected.length > 0 && (
-            <p className="text-xs text-muted-foreground">{selected.length}/10 {t('onb_interests_selected')}</p>
-          )}
-          <button onClick={handleNext} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">
-            {t('onb_interests_skip')}
-          </button>
-        </div>
-      );
+        );
+      }
     }
 
     function renderMedie(step: number) {
