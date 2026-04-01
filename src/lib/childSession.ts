@@ -6,6 +6,7 @@ interface ChildSession {
   profile: {
     id: string;
     name: string;
+    last_name?: string | null;
     age: number | null;
     avatar_emoji: string | null;
     gender: string | null;
