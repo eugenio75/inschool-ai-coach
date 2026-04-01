@@ -435,6 +435,17 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                       <option value="" disabled>{t('onb_school_type')}</option>
                       {schoolTypes.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
                    </select>
+                   <CityAutocomplete
+                     value={answers.medie_citta || ""}
+                     onChange={(city) => setAnswers((prev: any) => ({
+                       ...prev,
+                       medie_citta: city,
+                       medie_scuola: "",
+                       school_name: "",
+                       school_code: null,
+                     }))}
+                     className={inputClass}
+                   />
                    <SchoolAutocomplete
                      value={answers.medie_scuola || ""}
                      onChange={(name, code, city) => setAnswers((prev: any) => ({
@@ -446,6 +457,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                      }))}
                      placeholder={t('onb_school_name_optional')}
                      className={inputClass}
+                     cityFilter={answers.medie_citta || undefined}
                    />
                 </div>
             </div>
