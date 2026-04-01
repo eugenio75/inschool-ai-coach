@@ -230,6 +230,95 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
       return map[s] || s;
     };
 
+    const INTERESTS_BY_LEVEL: Record<string, { label: string; emoji?: string }[]> = {
+      medie: [
+        { label: "Minecraft", emoji: "⛏️" }, { label: "Roblox", emoji: "🎮" }, { label: "Fortnite", emoji: "🎯" },
+        { label: "Anime/Manga", emoji: "🐉" }, { label: "Marvel/DC", emoji: "🦸" }, { label: "Calcio", emoji: "⚽" },
+        { label: "Basket", emoji: "🏀" }, { label: "Danza", emoji: "💃" }, { label: "Musica", emoji: "🎵" },
+        { label: "Disegno", emoji: "✏️" }, { label: "Fotografia", emoji: "📷" }, { label: "YouTube/TikTok", emoji: "📱" },
+        { label: "Gaming", emoji: "🎮" }, { label: "Cucina", emoji: "🍕" }, { label: "Animali", emoji: "🐾" },
+        { label: "Lettura", emoji: "📚" }, { label: "Serie TV", emoji: "🎬" }, { label: "Karate/Arti marziali", emoji: "🥋" },
+        { label: "Tecnologia", emoji: "💻" }, { label: "Natura", emoji: "🌿" },
+      ],
+      alunno: [
+        { label: "Minecraft", emoji: "⛏️" }, { label: "Roblox", emoji: "🎮" }, { label: "LEGO", emoji: "🧱" },
+        { label: "Pokémon", emoji: "⚡" }, { label: "Fortnite", emoji: "🎯" }, { label: "Dragon Ball", emoji: "🐉" },
+        { label: "Harry Potter", emoji: "⚡" }, { label: "Marvel", emoji: "🦸" }, { label: "Calcio", emoji: "⚽" },
+        { label: "Nuoto", emoji: "🏊" }, { label: "Danza", emoji: "💃" }, { label: "Karate", emoji: "🥋" },
+        { label: "Disegno", emoji: "✏️" }, { label: "Musica", emoji: "🎵" }, { label: "Cucina", emoji: "🍕" },
+        { label: "Dinosauri", emoji: "🦕" }, { label: "Cani", emoji: "🐶" }, { label: "Gatti", emoji: "🐱" },
+        { label: "Cavalli", emoji: "🐴" }, { label: "Manga", emoji: "📚" }, { label: "Fumetti", emoji: "📖" },
+        { label: "Lego Technic", emoji: "⚙️" }, { label: "Magia", emoji: "🪄" }, { label: "Natura", emoji: "🌿" },
+      ],
+      superiori: [
+        { label: "Sport" }, { label: "Musica" }, { label: "Arte" }, { label: "Tecnologia" },
+        { label: "Viaggi" }, { label: "Cinema" }, { label: "Fotografia" }, { label: "Videogiochi" },
+        { label: "Lettura" }, { label: "Moda" }, { label: "Scienza" }, { label: "Social media" },
+        { label: "Cucina" }, { label: "Animali" }, { label: "Ambiente" }, { label: "Serie TV" },
+      ],
+      universitario: [
+        { label: "Tecnologia" }, { label: "Viaggi" }, { label: "Arte" }, { label: "Musica" },
+        { label: "Sport" }, { label: "Letteratura" }, { label: "Scienza" }, { label: "Economia" },
+        { label: "Cinema" }, { label: "Fotografia" }, { label: "Sostenibilità" }, { label: "Startup" },
+      ],
+    };
+
+    function renderInterestsStep(level: string) {
+      const suggestions = INTERESTS_BY_LEVEL[level] || INTERESTS_BY_LEVEL.medie;
+      const selected: string[] = answers.interests || [];
+      const hasEmoji = suggestions.some(s => s.emoji);
+      const [customVal, setCustomVal] = useState("");
+
+      return (
+        <div className="w-full space-y-6">
+          <h2 className="text-2xl font-bold text-foreground">{t('onb_interests_title')}</h2>
+          <p className="text-muted-foreground text-sm">{t('onb_interests_sub')}</p>
+          <div className="flex flex-wrap gap-2">
+            {suggestions.map(s => {
+              const isSel = selected.includes(s.label);
+              return (
+                <button
+                  key={s.label}
+                  onClick={() => {
+                    if (isSel) {
+                      setAnswers({ ...answers, interests: selected.filter(i => i !== s.label) });
+                    } else if (selected.length < 10) {
+                      setAnswers({ ...answers, interests: [...selected, s.label] });
+                    }
+                  }}
+                  className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${isSel ? chipSelClass : chipUnselClass}`}
+                >
+                  {hasEmoji && s.emoji ? `${s.emoji} ${s.label}` : s.label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={customVal}
+              onChange={e => setCustomVal(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === "Enter" && customVal.trim() && selected.length < 10 && !selected.includes(customVal.trim())) {
+                  setAnswers({ ...answers, interests: [...selected, customVal.trim()] });
+                  setCustomVal("");
+                }
+              }}
+              placeholder={t('onb_interests_add')}
+              maxLength={30}
+              className={inputClass}
+            />
+          </div>
+          {selected.length > 0 && (
+            <p className="text-xs text-muted-foreground">{selected.length}/10 {t('onb_interests_selected')}</p>
+          )}
+          <button onClick={handleNext} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">
+            {t('onb_interests_skip')}
+          </button>
+        </div>
+      );
+    }
+
     function renderMedie(step: number) {
       const medieAnni = [
         { value: "1ª Media", key: "onb_medie_1" },
