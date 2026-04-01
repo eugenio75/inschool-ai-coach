@@ -23,6 +23,7 @@ const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
 const ParentDashboard = () => {
   const navigate = useNavigate();
+  const { t } = useLang();
   const [unlocked, setUnlocked] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState(false);
@@ -39,6 +40,12 @@ const ParentDashboard = () => {
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [emotionalAlerts, setEmotionalAlerts] = useState<any[]>([]);
   const [parentNotifications, setParentNotifications] = useState<any[]>([]);
+
+  // Delete child profile state
+  const [deleteChildTarget, setDeleteChildTarget] = useState<any>(null);
+  const [deleteChildStep, setDeleteChildStep] = useState<1 | 2>(1);
+  const [deleteChildConfirmName, setDeleteChildConfirmName] = useState("");
+  const [deletingChild, setDeletingChild] = useState(false);
 
   useEffect(() => {
     const load = async () => {
