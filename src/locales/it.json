@@ -1172,6 +1172,8 @@
   "school_recognized": "Istituto Riconosciuto",
   "school_not_verified": "Non verificato",
   "school_not_found_hint": "Scuola non trovata? Scrivi il nome per esteso (es. 'Liceo Scientifico Galilei - Catanzaro')",
+  "child_school_label": "Nome della scuola",
+  "child_city_label": "Città",
   "settings_discoverable_title": "Visibilità studenti",
   "settings_discoverable_label": "Rendi il mio profilo visibile agli studenti della mia scuola",
   "settings_discoverable_desc": "Gli studenti della tua scuola potranno trovarti durante la registrazione",

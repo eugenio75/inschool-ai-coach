@@ -3,6 +3,7 @@
 // Avatar selection removed — coach is always CoachAvatar component
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, BookOpen, Check, Copy, Mail, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getChildSession, clearChildSession, setChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
 import { CoachAvatar } from "@/components/shared/CoachAvatar";
+import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
 import { useToast } from "@/hooks/use-toast";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
@@ -68,6 +70,9 @@ interface OnboardingData {
   gender: string;
   schoolCategory: string;
   schoolLevel: string;
+  schoolName: string;
+  schoolCode: string | null;
+  city: string;
   favoriteSubjects: string[];
   struggles: string[];
   focusTime: string;
@@ -78,6 +83,7 @@ interface OnboardingData {
 const OnboardingLegacy = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -88,7 +94,8 @@ const OnboardingLegacy = () => {
 
   const [data, setData] = useState<OnboardingData & { interests: string[] }>({
     name: "", lastName: "", age: "", dateOfBirth: "", gender: "",
-    schoolCategory: "", schoolLevel: "", favoriteSubjects: [],
+    schoolCategory: "", schoolLevel: "", schoolName: "", schoolCode: null, city: "",
+    favoriteSubjects: [],
     struggles: [], focusTime: "15", supportStyles: [], coachName: "", interests: [],
   });
 
@@ -148,6 +155,9 @@ const OnboardingLegacy = () => {
         support_style: data.supportStyles.join(","),
         date_of_birth: data.dateOfBirth || undefined,
         interests: data.interests.length > 0 ? data.interests : undefined,
+        school_name: data.schoolName || undefined,
+        school_code: data.schoolCode || undefined,
+        city: data.city || undefined,
       } as any);
 
       if (profile) {
@@ -291,6 +301,29 @@ const OnboardingLegacy = () => {
                 </SelectContent>
               </Select>
             )}
+
+            <div className="pt-2 space-y-3">
+              <label className="text-sm text-muted-foreground block">{t("child_school_label")}</label>
+              <SchoolAutocomplete
+                value={data.schoolName}
+                onChange={(name, code, city) => setData(prev => ({
+                  ...prev,
+                  schoolName: name,
+                  schoolCode: code,
+                  city: city || prev.city,
+                }))}
+                placeholder={t("school_search_placeholder")}
+              />
+
+              <label className="text-sm text-muted-foreground block">{t("child_city_label")}</label>
+              <input
+                type="text"
+                value={data.city}
+                onChange={(e) => setData({ ...data, city: e.target.value })}
+                placeholder={t("child_city_label")}
+                className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-base"
+              />
+            </div>
           </div>
         );
 
