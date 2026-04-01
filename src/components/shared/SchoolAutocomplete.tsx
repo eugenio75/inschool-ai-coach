@@ -19,7 +19,7 @@ interface SchoolAutocompleteProps {
   cityFilter?: string;
 }
 
-export function SchoolAutocomplete({ value, onChange, placeholder, className }: SchoolAutocompleteProps) {
+export function SchoolAutocomplete({ value, onChange, placeholder, className, cityFilter }: SchoolAutocompleteProps) {
   const { t } = useTranslation();
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<SchoolResult[]>([]);
