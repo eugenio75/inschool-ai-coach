@@ -1036,5 +1036,8 @@
   "onb_class_code_title": "إذا كان معلمك يستخدم InSchool، أدخل الرمز للانضمام إلى فصله. يمكنك أيضًا القيام بذلك لاحقًا من ملفك الشخصي.",
   "onb_class_code_description": "تخطى الآن",
   "onb_class_code_skip": "فصل",
-  "onb_summary_class_enrolled": "Classe"
+  "onb_summary_class_enrolled": "فصل",
+  "school_search_placeholder": "ابحث عن مدرستك...",
+  "school_recognized": "مدرسة معترف بها",
+  "school_not_verified": "غير موثق"
 }

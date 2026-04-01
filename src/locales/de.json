@@ -1036,5 +1036,8 @@
   "onb_class_code_title": "Hast du einen Klassen-Code?",
   "onb_class_code_description": "Wenn dein Lehrer InSchool verwendet, gib den Code ein, um dich mit seiner Klasse zu verbinden. Du kannst das auch später in deinem Profil tun.",
   "onb_class_code_skip": "Für jetzt überspringen",
-  "onb_summary_class_enrolled": "Klasse"
+  "onb_summary_class_enrolled": "Klasse",
+  "school_search_placeholder": "Suche deine Schule...",
+  "school_recognized": "Anerkannte Schule",
+  "school_not_verified": "Nicht verifiziert"
 }
