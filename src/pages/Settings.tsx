@@ -485,6 +485,55 @@ const Settings = () => {
             </div>
           )}
 
+          {/* Teacher Discoverability */}
+          {session?.profile?.school_level === "docente" && (
+            <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
+              <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Users2 className="w-4 h-4 text-primary" /> Visibilità studenti
+              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">Rendi il mio profilo visibile agli studenti della mia scuola</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Gli studenti della tua scuola potranno trovarti durante la registrazione</p>
+                </div>
+                <Switch
+                  checked={discoverable}
+                  disabled={savingDiscoverable}
+                  onCheckedChange={async (checked) => {
+                    setSavingDiscoverable(true);
+                    setDiscoverable(checked);
+                    const pid = session?.profileId;
+                    if (pid) {
+                      const { data: existing } = await supabase
+                        .from("user_preferences")
+                        .select("id, data")
+                        .eq("profile_id", pid)
+                        .maybeSingle();
+                      const newData = { ...((existing?.data as any) || {}), discoverable: checked };
+                      if (existing) {
+                        await supabase.from("user_preferences").update({ data: newData } as any).eq("id", existing.id);
+                      } else {
+                        await supabase.from("user_preferences").insert({ profile_id: pid, data: newData } as any);
+                      }
+                    }
+                    setSavingDiscoverable(false);
+                    toast.success(checked ? "Profilo visibile agli studenti" : "Profilo nascosto");
+                  }}
+                />
+              </div>
+              {discoverable && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50">
+                  <span className="text-sm">
+                    {teacherBadge === "verified" ? "🔵" : teacherBadge === "school_recognized" ? "🟡" : "⚪"}
+                  </span>
+                  <span className="text-xs font-medium text-foreground">
+                    {teacherBadge === "verified" ? "Docente Verificato" : teacherBadge === "school_recognized" ? "Istituto Riconosciuto" : "Non verificato"}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* My Classes (for non-docente students) */}
           {isAdult && session?.profile?.school_level !== "docente" && session?.profileId && (
             <MyClassesSection profileId={session.profileId} />
