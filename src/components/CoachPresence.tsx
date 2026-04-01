@@ -181,10 +181,11 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
       ]);
       const prefs = (prefsRes.data?.data as any) || {};
       if (prefs.coach_name) setCoachName(prefs.coach_name);
-      // Use student's avatar if it's a URL (uploaded image)
+      // Resolve student avatar: check avatar_emoji from child_profiles
       const avatarVal = profileRes.data?.avatar_emoji;
-      if (avatarVal && (avatarVal.startsWith("http") || avatarVal.startsWith("/"))) {
-        setStudentAvatarUrl(avatarVal);
+      const resolved = getStudentAvatarSrc(avatarVal);
+      if (resolved) {
+        setStudentAvatarUrl(resolved);
       }
     };
     loadCoachPrefs();
