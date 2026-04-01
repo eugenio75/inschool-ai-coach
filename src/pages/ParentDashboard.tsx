@@ -81,15 +81,29 @@ const ParentDashboard = () => {
 
   useEffect(() => {
     if (!selectedChild) return;
+
+    let cancelled = false;
+    setGamification(null);
+    setSessions([]);
+    setMemoryItems([]);
+    setTasks([]);
+    setMissions([]);
+    setEmotionalAlerts([]);
+    setAiInsights([]);
+
     const loadChild = async () => {
+      const childId = selectedChild;
       const [g, s, m, t, dm, alerts] = await Promise.all([
-        getGamification(selectedChild),
-        getFocusSessions(selectedChild),
-        getMemoryItems(selectedChild),
-        getTasks(selectedChild),
-        getDailyMissions(selectedChild),
-        getEmotionalAlerts(selectedChild),
+        getGamification(childId),
+        getFocusSessions(childId),
+        getMemoryItems(childId),
+        getTasks(childId),
+        getDailyMissions(childId),
+        getEmotionalAlerts(childId),
       ]);
+
+      if (cancelled) return;
+
       setGamification(g);
       setSessions(s);
       setMemoryItems(m);
@@ -97,7 +111,12 @@ const ParentDashboard = () => {
       setMissions(dm);
       setEmotionalAlerts(alerts);
     };
+
     loadChild();
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedChild]);
 
   // Fetch AI insights
@@ -105,6 +124,8 @@ const ParentDashboard = () => {
     if (!selectedChild || !unlocked) return;
     const selectedProfile = children.find(c => c.id === selectedChild);
     if (!selectedProfile) return;
+
+    let cancelled = false;
 
     const fetchInsights = async () => {
       setInsightsLoading(true);
@@ -140,15 +161,20 @@ const ParentDashboard = () => {
           body: { childProfile: selectedProfile, gamification, sessionsCount: sessions.length, totalMinutes, recentSessions, allConcepts, subjectStats, missionsData, emotionPatterns: emotionCounts, extendedSessionsCount: extendedSessions },
         });
         if (error) throw error;
-        if (data?.insights) setAiInsights(data.insights);
+        if (!cancelled && data?.insights) setAiInsights(data.insights);
       } catch (e) {
-        console.error("Failed to fetch AI insights:", e);
+        if (!cancelled) console.error("Failed to fetch AI insights:", e);
       } finally {
-        setInsightsLoading(false);
+        if (!cancelled) setInsightsLoading(false);
       }
     };
+
     fetchInsights();
-  }, [selectedChild, unlocked, sessions, gamification, memoryItems, tasks, missions]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedChild, unlocked, children, sessions, gamification, memoryItems, tasks, missions]);
 
   const checkPin = () => {
     if (pinInput === correctPin) { setUnlocked(true); setPinError(false); }
