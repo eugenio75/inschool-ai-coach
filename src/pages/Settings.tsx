@@ -4,6 +4,7 @@ import {
   ArrowLeft, Lock, Loader2, Users, Shield, Pencil, Bell,
   Eye, EyeOff, Trash2, RotateCcw, Moon, Brain, BookOpen, Link2, Users2,
 } from "lucide-react";
+import { useLang } from "@/contexts/LangContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,6 +65,7 @@ function PasswordStrength({ password }: { password: string }) {
 const Settings = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLang();
   const [profiles, setProfiles] = useState<any[]>([]);
   const [parentPin, setParentPin] = useState("");
   const [newPin, setNewPin] = useState("");
@@ -289,17 +291,23 @@ const Settings = () => {
   };
 
   const handleDeleteAccount = async () => {
-    if (deleteConfirmText !== "DELETE") return;
+    if (!user?.email || deleteConfirmText !== user.email) return;
     setDeleting(true);
-    if (user) {
-      await supabase.from("child_profiles").delete().eq("parent_id", user.id);
+    try {
+      const { error } = await supabase.functions.invoke("delete-account", {
+        body: { action: "delete_account" },
+      });
+      if (error) throw error;
+      localStorage.removeItem("inschool-child-session");
+      localStorage.removeItem("inschool-active-child-id");
+      localStorage.removeItem("inschool-profile");
+      await supabase.auth.signOut();
+      navigate("/");
+    } catch (e: any) {
+      toast.error(t("delete_account_error"));
+    } finally {
+      setDeleting(false);
     }
-    localStorage.removeItem("inschool-child-session");
-    localStorage.removeItem("inschool-active-child-id");
-    localStorage.removeItem("inschool-profile");
-    await supabase.auth.signOut();
-    setDeleting(false);
-    navigate("/");
   };
 
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
@@ -593,14 +601,16 @@ const Settings = () => {
             </div>
           )}
 
-          {/* Privacy e dati */}
-          <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
-            <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2"><Shield className="w-4 h-4 text-primary" /> Privacy e dati</h3>
+          {/* Delete account — danger zone */}
+          <div className="bg-card rounded-2xl border border-destructive/30 p-6 shadow-soft">
+            <h3 className="font-display font-semibold text-destructive mb-3 flex items-center gap-2">
+              <Trash2 className="w-4 h-4" /> {t("delete_account_title")}
+            </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Puoi eliminare il tuo account e tutti i dati associati in qualsiasi momento. L'operazione è irreversibile.
+              {t("delete_account_desc")}
             </p>
             <Button variant="outline" className="rounded-xl border-destructive text-destructive hover:bg-destructive/5" onClick={() => setShowDelete1(true)}>
-              <Trash2 className="w-4 h-4 mr-2" /> Elimina il mio account
+              <Trash2 className="w-4 h-4 mr-2" /> {t("delete_account_button")}
             </Button>
           </div>
         </div>
@@ -610,46 +620,47 @@ const Settings = () => {
       <AlertDialog open={showDelete1} onOpenChange={setShowDelete1}>
         <AlertDialogContent className="rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Sei sicuro di voler eliminare il tuo account?</AlertDialogTitle>
+            <AlertDialogTitle>{t("delete_account_step1_title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Questa azione è irreversibile. Tutti i tuoi dati verranno cancellati entro 30 giorni.
+              {t("delete_account_step1_desc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl">Annulla</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl">{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => { setShowDelete1(false); setShowDelete2(true); }}
             >
-              Continua
+              {t("continue")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete step 2 */}
+      {/* Delete step 2 — type email to confirm */}
       <AlertDialog open={showDelete2} onOpenChange={setShowDelete2}>
         <AlertDialogContent className="rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Conferma eliminazione</AlertDialogTitle>
+            <AlertDialogTitle>{t("delete_account_step2_title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Per confermare scrivi DELETE nel campo sottostante.
+              {t("delete_account_step2_desc").replace("{email}", user?.email || "")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <Input
             value={deleteConfirmText}
             onChange={e => setDeleteConfirmText(e.target.value)}
-            placeholder="Scrivi DELETE"
-            className="rounded-xl font-mono text-center"
+            placeholder={user?.email || ""}
+            className="rounded-xl text-center"
           />
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl" onClick={() => setDeleteConfirmText("")}>Annulla</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl" onClick={() => setDeleteConfirmText("")}>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleteConfirmText !== "DELETE" || deleting}
+              disabled={deleteConfirmText !== user?.email || deleting}
               onClick={handleDeleteAccount}
             >
-              {deleting ? "Eliminazione..." : "Elimina definitivamente"}
+              {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {t("delete_permanently")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

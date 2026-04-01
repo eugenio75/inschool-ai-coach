@@ -1217,5 +1217,22 @@
   "profile_my_profile": "Il mio profilo",
   "profile_save": "Salva modifiche",
   "profile_saved": "Profilo aggiornato!",
-  "profile_save_error": "Errore nel salvataggio"
+  "profile_save_error": "Errore nel salvataggio",
+  "cancel": "Annulla",
+  "continue": "Continua",
+  "delete_permanently": "Elimina definitivamente",
+  "delete_child_title": "Elimina profilo figlio",
+  "delete_child_step1_desc": "Vuoi eliminare il profilo di {name}? Tutti i dati di studio, sessioni e progressi verranno eliminati definitivamente.",
+  "delete_child_step2_title": "Conferma eliminazione",
+  "delete_child_step2_desc": "Questa azione è irreversibile. Digita il nome \"{name}\" per confermare.",
+  "delete_child_success": "Profilo eliminato con successo",
+  "delete_child_error": "Errore nell'eliminazione del profilo",
+  "delete_account_title": "Elimina account genitore",
+  "delete_account_desc": "Elimina il tuo account e tutti i profili dei tuoi figli. Questa azione è irreversibile.",
+  "delete_account_button": "Elimina il mio account",
+  "delete_account_step1_title": "Sei sicuro di voler eliminare il tuo account?",
+  "delete_account_step1_desc": "Questa azione è irreversibile. Tutti i tuoi dati, i profili dei tuoi figli e i relativi progressi verranno eliminati definitivamente.",
+  "delete_account_step2_title": "Conferma eliminazione account",
+  "delete_account_step2_desc": "Per confermare, digita il tuo indirizzo email ({email}) nel campo sottostante.",
+  "delete_account_error": "Errore nell'eliminazione dell'account"
 }

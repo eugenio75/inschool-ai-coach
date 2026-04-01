@@ -1217,5 +1217,22 @@
   "profile_my_profile": "My profile",
   "profile_save": "Save changes",
   "profile_saved": "Profile updated!",
-  "profile_save_error": "Error saving profile"
+  "profile_save_error": "Error saving profile",
+  "cancel": "Cancel",
+  "continue": "Continue",
+  "delete_permanently": "Delete permanently",
+  "delete_child_title": "Delete child profile",
+  "delete_child_step1_desc": "Do you want to delete {name}'s profile? All study data, sessions and progress will be permanently deleted.",
+  "delete_child_step2_title": "Confirm deletion",
+  "delete_child_step2_desc": "This action is irreversible. Type the name \"{name}\" to confirm.",
+  "delete_child_success": "Profile deleted successfully",
+  "delete_child_error": "Error deleting profile",
+  "delete_account_title": "Delete parent account",
+  "delete_account_desc": "Delete your account and all your children's profiles. This action is irreversible.",
+  "delete_account_button": "Delete my account",
+  "delete_account_step1_title": "Are you sure you want to delete your account?",
+  "delete_account_step1_desc": "This action is irreversible. All your data, your children's profiles and their progress will be permanently deleted.",
+  "delete_account_step2_title": "Confirm account deletion",
+  "delete_account_step2_desc": "To confirm, type your email address ({email}) in the field below.",
+  "delete_account_error": "Error deleting account"
 }

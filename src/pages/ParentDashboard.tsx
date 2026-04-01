@@ -1,9 +1,17 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Loader2, Lock, Bell } from "lucide-react";
+import { ArrowLeft, BookOpen, Loader2, Lock, Bell, Trash2 } from "lucide-react";
 import { getChildProfiles, getFocusSessions, getGamification, getParentSettings, getMemoryItems, getTasks, getDailyMissions, getEmotionalAlerts } from "@/lib/database";
 import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { useLang } from "@/contexts/LangContext";
 
 import { DailySummaryCard } from "@/components/parent/DailySummaryCard";
 import { ProgressCard } from "@/components/parent/ProgressCard";
@@ -15,6 +23,7 @@ const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
 const ParentDashboard = () => {
   const navigate = useNavigate();
+  const { t } = useLang();
   const [unlocked, setUnlocked] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState(false);
@@ -31,6 +40,12 @@ const ParentDashboard = () => {
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [emotionalAlerts, setEmotionalAlerts] = useState<any[]>([]);
   const [parentNotifications, setParentNotifications] = useState<any[]>([]);
+
+  // Delete child profile state
+  const [deleteChildTarget, setDeleteChildTarget] = useState<any>(null);
+  const [deleteChildStep, setDeleteChildStep] = useState<1 | 2>(1);
+  const [deleteChildConfirmName, setDeleteChildConfirmName] = useState("");
+  const [deletingChild, setDeletingChild] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -142,6 +157,34 @@ const ParentDashboard = () => {
     setParentNotifications(prev => prev.filter(n => n.id !== notifId));
   };
 
+  const openDeleteChild = (child: any) => {
+    setDeleteChildTarget(child);
+    setDeleteChildStep(1);
+    setDeleteChildConfirmName("");
+  };
+
+  const handleDeleteChild = async () => {
+    if (!deleteChildTarget || deleteChildConfirmName !== deleteChildTarget.name) return;
+    setDeletingChild(true);
+    try {
+      const { error } = await supabase.functions.invoke("delete-account", {
+        body: { action: "delete_child_profile", child_profile_id: deleteChildTarget.id },
+      });
+      if (error) throw error;
+      setChildren(prev => prev.filter(c => c.id !== deleteChildTarget.id));
+      if (selectedChild === deleteChildTarget.id) {
+        const remaining = children.filter(c => c.id !== deleteChildTarget.id);
+        setSelectedChild(remaining.length > 0 ? remaining[0].id : null);
+      }
+      toast.success(t("delete_child_success"));
+      setDeleteChildTarget(null);
+    } catch (e: any) {
+      toast.error(t("delete_child_error"));
+    } finally {
+      setDeletingChild(false);
+    }
+  };
+
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
 
   // PIN lock screen
@@ -195,6 +238,7 @@ const ParentDashboard = () => {
   const childNotifications = parentNotifications.filter(n => n.child_profile_id === selectedChild);
 
   return (
+    <>
     <div className="min-h-screen bg-background pb-12">
       {/* Header */}
       <div className="bg-card border-b border-border px-6 pt-6 pb-6">
@@ -212,21 +256,29 @@ const ParentDashboard = () => {
           </div>
 
           {/* Child selector */}
-          {children.length > 1 && (
+          {children.length > 0 && (
             <div className="flex gap-2 mb-4 flex-wrap">
               {children.map((child) => (
-                <button
-                  key={child.id}
-                  onClick={() => setSelectedChild(child.id)}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
-                    selectedChild === child.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
-                  }`}
-                >
-                  <span className="w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">
-                    {child.name?.charAt(0)?.toUpperCase() || "S"}
-                  </span>
-                  {child.last_name ? `${child.name} ${child.last_name}` : child.name}
-                </button>
+                <div key={child.id} className="relative group">
+                  <button
+                    onClick={() => setSelectedChild(child.id)}
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                      selectedChild === child.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
+                    }`}
+                  >
+                    <span className="w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">
+                      {child.name?.charAt(0)?.toUpperCase() || "S"}
+                    </span>
+                    {child.last_name ? `${child.name} ${child.last_name}` : child.name}
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); openDeleteChild(child); }}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive/10 text-destructive text-[10px] items-center justify-center hidden group-hover:flex hover:bg-destructive/20 transition-colors"
+                    title={t("delete_child_title")}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
               ))}
             </div>
           )}
@@ -337,6 +389,57 @@ const ParentDashboard = () => {
         </div>
       </div>
     </div>
+
+      {/* Delete child — Step 1 */}
+      <AlertDialog open={!!deleteChildTarget && deleteChildStep === 1} onOpenChange={(open) => { if (!open) setDeleteChildTarget(null); }}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("delete_child_title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("delete_child_step1_desc").replace("{name}", deleteChildTarget?.name || "")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl" onClick={() => setDeleteChildTarget(null)}>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => setDeleteChildStep(2)}
+            >
+              {t("continue")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete child — Step 2 */}
+      <AlertDialog open={!!deleteChildTarget && deleteChildStep === 2} onOpenChange={(open) => { if (!open) { setDeleteChildTarget(null); setDeleteChildConfirmName(""); } }}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("delete_child_step2_title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("delete_child_step2_desc").replace("{name}", deleteChildTarget?.name || "")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={deleteChildConfirmName}
+            onChange={(e) => setDeleteChildConfirmName(e.target.value)}
+            placeholder={deleteChildTarget?.name || ""}
+            className="rounded-xl text-center"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl" onClick={() => { setDeleteChildTarget(null); setDeleteChildConfirmName(""); }}>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteChildConfirmName !== deleteChildTarget?.name || deletingChild}
+              onClick={handleDeleteChild}
+            >
+              {deletingChild ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {t("delete_permanently")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
