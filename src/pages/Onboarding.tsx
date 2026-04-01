@@ -9,6 +9,7 @@ import {
   Users2, Building, FilePlus, CheckSquare, BarChart2, BookMarked, Mail, Users
 } from "lucide-react";
 import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
+import { CityAutocomplete } from "@/components/shared/CityAutocomplete";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildSession, setChildSession } from "@/lib/childSession";
