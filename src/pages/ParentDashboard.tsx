@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Loader2, Lock, Bell, Trash2 } from "lucide-react";
-import { getChildProfiles, getFocusSessions, getGamification, getParentSettings, getMemoryItems, getTasks, getDailyMissions, getEmotionalAlerts } from "@/lib/database";
+import { getChildProfiles, getFocusSessions, getGamification, getParentSettings, getMemoryItems, getTasks, getDailyMissions, getEmotionalAlerts, setActiveChildProfileId } from "@/lib/database";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import {
@@ -53,7 +53,10 @@ const ParentDashboard = () => {
       if (settings) setCorrectPin(settings.parent_pin || "0000");
       const kids = await getChildProfiles();
       setChildren(kids);
-      if (kids.length > 0) setSelectedChild(kids[0].id);
+      if (kids.length > 0) {
+        setSelectedChild(kids[0].id);
+        setActiveChildProfileId(kids[0].id);
+      }
       setLoading(false);
     };
     load();
@@ -174,7 +177,9 @@ const ParentDashboard = () => {
       setChildren(prev => prev.filter(c => c.id !== deleteChildTarget.id));
       if (selectedChild === deleteChildTarget.id) {
         const remaining = children.filter(c => c.id !== deleteChildTarget.id);
-        setSelectedChild(remaining.length > 0 ? remaining[0].id : null);
+        const newId = remaining.length > 0 ? remaining[0].id : null;
+        setSelectedChild(newId);
+        if (newId) setActiveChildProfileId(newId);
       }
       toast.success(t("delete_child_success"));
       setDeleteChildTarget(null);
@@ -261,7 +266,7 @@ const ParentDashboard = () => {
               {children.map((child) => (
                 <button
                   key={child.id}
-                  onClick={() => setSelectedChild(child.id)}
+                  onClick={() => { setSelectedChild(child.id); setActiveChildProfileId(child.id); }}
                   className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
                     selectedChild === child.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
                   }`}
