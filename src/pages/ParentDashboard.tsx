@@ -1,9 +1,17 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Loader2, Lock, Bell } from "lucide-react";
+import { ArrowLeft, BookOpen, Loader2, Lock, Bell, Trash2 } from "lucide-react";
 import { getChildProfiles, getFocusSessions, getGamification, getParentSettings, getMemoryItems, getTasks, getDailyMissions, getEmotionalAlerts } from "@/lib/database";
 import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { useLang } from "@/contexts/LangContext";
 
 import { DailySummaryCard } from "@/components/parent/DailySummaryCard";
 import { ProgressCard } from "@/components/parent/ProgressCard";
