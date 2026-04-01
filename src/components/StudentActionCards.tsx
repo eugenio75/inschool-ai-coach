@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, MessageSquare, Brain, Target } from "lucide-react";
+import { BookOpen, MessageSquare, Brain, Target, Plus } from "lucide-react";
 import { useLang } from "@/contexts/LangContext";
 import { getPrepLabelKey } from "@/lib/schoolTerms";
 
@@ -23,13 +23,13 @@ export function StudentActionCards({ hasTasks, schoolLevel = "medie", coachName 
   const cards = [
     {
       id: "tasks",
-      emoji: "📚",
-      icon: BookOpen,
-      label: t("action_my_tasks"),
-      desc: t("action_my_tasks_desc"),
+      emoji: hasTasks ? "📚" : "➕",
+      icon: hasTasks ? BookOpen : Plus,
+      label: hasTasks ? t("action_my_tasks") : t("action_add_task"),
+      desc: hasTasks ? t("action_my_tasks_desc") : t("action_no_tasks_desc"),
       action: () => navigate(hasTasks ? "/study-tasks" : "/add-homework"),
-      color: "bg-primary/10",
-      iconColor: "text-primary",
+      color: hasTasks ? "bg-primary/10" : "bg-muted",
+      iconColor: hasTasks ? "text-primary" : "text-muted-foreground",
     },
     {
       id: "coach",
@@ -72,13 +72,13 @@ export function StudentActionCards({ hasTasks, schoolLevel = "medie", coachName 
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...spring, delay: 0.08 + i * 0.04 }}
           onClick={card.action}
-          className="flex flex-col items-start p-3.5 rounded-2xl border border-border/60 bg-card hover:shadow-soft transition-all text-left group"
+          className="flex flex-col items-start p-4 min-h-[100px] rounded-2xl border border-border bg-card shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 text-left group"
         >
-          <div className={`w-9 h-9 rounded-xl ${card.color} flex items-center justify-center mb-2`}>
-            <card.icon className={`w-4 h-4 ${card.iconColor}`} />
+          <div className={`w-10 h-10 rounded-xl ${card.color} flex items-center justify-center mb-2.5`}>
+            <card.icon className={`w-5 h-5 ${card.iconColor}`} />
           </div>
-          <p className="text-[13px] font-semibold text-foreground leading-tight mb-0.5">{card.label}</p>
-          <p className="text-[11px] text-muted-foreground leading-snug">{card.desc}</p>
+          <p className="text-base font-semibold text-foreground leading-tight mb-0.5">{card.label}</p>
+          <p className="text-sm text-muted-foreground leading-snug">{card.desc}</p>
         </motion.button>
       ))}
     </div>
