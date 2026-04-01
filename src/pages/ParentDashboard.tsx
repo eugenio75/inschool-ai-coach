@@ -225,7 +225,7 @@ const ParentDashboard = () => {
                   <span className="w-5 h-5 rounded-md bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">
                     {child.name?.charAt(0)?.toUpperCase() || "S"}
                   </span>
-                  {child.name}
+                  {child.last_name ? `${child.name} ${child.last_name}` : child.name}
                 </button>
               ))}
             </div>

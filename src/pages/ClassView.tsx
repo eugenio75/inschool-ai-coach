@@ -378,7 +378,9 @@ export default function ClassView() {
                 </p>
                 <div className="space-y-2">
                   {students.map((s: any) => {
-                    const name = s.profile?.name || s.student_name || "Studente";
+                    const firstName = s.profile?.name || s.student_name || "Studente";
+                    const lastName = s.profile?.last_name || "";
+                    const name = lastName ? `${firstName} ${lastName}` : firstName;
                     const sid = s.student_id || s.id;
                     const badge = getStudentBadge(sid, stats.studentScores as any, assignmentResults);
                     const belowThreshold = isStudentBelowThreshold(sid, stats.studentScores as any);
@@ -581,7 +583,7 @@ function ClassCoachChat({ classe, students, materials, assignmentResults, stats,
 
   function buildClassContext() {
     const studentsSummary = students.map(s => {
-      const name = s.profile?.name || s.student_name || "Studente";
+      const name = s.profile?.last_name ? `${s.profile?.name || "Studente"} ${s.profile.last_name}` : (s.profile?.name || s.student_name || "Studente");
       const sid = s.student_id || s.id;
       const badge = getStudentBadge(sid, stats.studentScores, assignmentResults);
       return `- ${name}: ${badge ? badge.label : "Regolare"}`;

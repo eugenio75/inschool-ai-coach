@@ -62,6 +62,7 @@ const supportStyles = [
 
 interface OnboardingData {
   name: string;
+  lastName: string;
   age: string;
   dateOfBirth: string;
   gender: string;
@@ -86,7 +87,7 @@ const OnboardingLegacy = () => {
   const [customInterest, setCustomInterest] = useState("");
 
   const [data, setData] = useState<OnboardingData & { interests: string[] }>({
-    name: "", age: "", dateOfBirth: "", gender: "",
+    name: "", lastName: "", age: "", dateOfBirth: "", gender: "",
     schoolCategory: "", schoolLevel: "", favoriteSubjects: [],
     struggles: [], focusTime: "15", supportStyles: [], coachName: "", interests: [],
   });
@@ -98,7 +99,7 @@ const OnboardingLegacy = () => {
 
   const canProceed = () => {
     switch (step) {
-      case 0: return data.name.trim() !== "" && data.age !== "" && data.gender !== "";
+      case 0: return data.name.trim() !== "" && data.lastName.trim() !== "" && data.age !== "" && data.gender !== "";
       case 1: return data.schoolLevel !== "";
       case 2: return true;
       case 3: return data.struggles.length > 0;
@@ -135,6 +136,7 @@ const OnboardingLegacy = () => {
 
       const profile = await createChildProfile({
         name: data.name,
+        last_name: data.lastName,
         avatar_emoji: null,
         age: parseInt(data.age) || undefined,
         gender: data.gender || undefined,
@@ -228,7 +230,8 @@ const OnboardingLegacy = () => {
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Come si chiama il bambino?</h2><p className="text-muted-foreground">Il coach lo chiamerà per nome.</p></div>
             <div className="space-y-4">
-              <input type="text" placeholder="Nome del bambino" value={data.name} onChange={(e) => setData({ ...data, name: e.target.value })} className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-lg" />
+              <input type="text" placeholder="Nome" value={data.name} onChange={(e) => setData({ ...data, name: e.target.value })} className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-lg" />
+              <input type="text" placeholder="Cognome" value={data.lastName} onChange={(e) => setData({ ...data, lastName: e.target.value })} className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-lg" />
               <div>
                 <label className="text-sm text-muted-foreground mb-2 block">Genere</label>
                 <div className="flex gap-3">
