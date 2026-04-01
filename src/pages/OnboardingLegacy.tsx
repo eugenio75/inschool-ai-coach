@@ -112,10 +112,10 @@ const OnboardingLegacy = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
-  const [data, setData] = useState<OnboardingData>({
+  const [data, setData] = useState<OnboardingData & { interests: string[] }>({
     name: "", avatar: "kid-boy-1", avatarUrl: "", age: "", dateOfBirth: "", gender: "",
     schoolCategory: "", schoolLevel: "", favoriteSubjects: [],
-    struggles: [], focusTime: "15", supportStyles: [], coachName: "",
+    struggles: [], focusTime: "15", supportStyles: [], coachName: "", interests: [],
   });
 
   // MODIFICA: Feature 2 + Feature 6 — Added coach name step + access code step
