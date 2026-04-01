@@ -88,7 +88,9 @@ export default function DashboardDocente() {
   const od = onboarding;
   const materie: string[] = od?.docente_materie || [];
   const ordine: string = od?.docente_ordine || "";
-  const cognome = profile?.name?.split(" ").slice(-1)[0] || profile?.name || "";
+  const teacherGender = od?.docente_gender || profile?.gender || null;
+  const teacherLastName = profile?.last_name || null;
+  const cognome = teacherLastName || profile?.name?.split(" ").slice(-1)[0] || profile?.name || "";
   const studentiCount = classi.reduce((s, c) => s + (c.num_studenti || 0), 0);
 
   // Subject lists by school level

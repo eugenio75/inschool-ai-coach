@@ -18,7 +18,7 @@ export function JoinClassModal({ open, onOpenChange, profileId, onJoined }: Join
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState<{ class_name: string; subject: string; teacher_name: string } | null>(null);
+  const [success, setSuccess] = useState<{ class_name: string; subject: string; teacher_name: string; teacher_last_name?: string; teacher_gender?: string } | null>(null);
 
   const handleJoin = async () => {
     if (!code.trim() || code.trim().length < 4) return;

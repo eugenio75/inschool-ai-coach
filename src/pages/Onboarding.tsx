@@ -941,6 +941,22 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     <h2 className="text-2xl font-bold text-foreground">{t('onb_doc_essentials')}</h2>
                     <div className="space-y-4">
                        <div>
+                         <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t('onb_doc_gender_label')}</label>
+                         <div className="flex gap-3">
+                           {[
+                             { value: "m", label: t('onb_doc_gender_m') },
+                             { value: "f", label: t('onb_doc_gender_f') },
+                           ].map(opt => {
+                             const isSel = answers.docente_gender === opt.value;
+                             return (
+                               <button key={opt.value} onClick={() => setAnswers({...answers, docente_gender: opt.value})} className={`flex-1 p-4 rounded-2xl border transition-all text-center font-medium ${isSel ? selBtnClass : unselBtnClass}`}>
+                                 {opt.label}
+                               </button>
+                             );
+                           })}
+                         </div>
+                       </div>
+                       <div>
                          <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t('onb_doc_school_order')}</label>
                          <select value={answers.docente_ordine || ""} onChange={e => setAnswers({...answers, docente_ordine: e.target.value})} className={inputClass}>
                             <option value="" disabled>{t('onb_doc_select')}</option>
