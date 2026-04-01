@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Plus, Settings, LogOut, BookOpen, Loader2, Users, GraduationCap, ChevronRight, UserCog } from "lucide-react";
+import { Plus, Settings, LogOut, BookOpen, Loader2, Users, GraduationCap, ChevronRight, UserCog, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildProfiles, setActiveChildProfileId } from "@/lib/database";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { getChildSession, setChildSession } from "@/lib/childSession";
+import { toast } from "sonner";
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
@@ -15,6 +16,14 @@ const ProfileSelector = () => {
   const { signOut } = useAuth();
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopyCode = (code: string, profileId: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedId(profileId);
+    toast.success("Copiato!");
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -129,6 +138,15 @@ const ProfileSelector = () => {
                 <p className="text-sm font-medium text-muted-foreground flex items-center gap-1.5 whitespace-nowrap overflow-hidden text-ellipsis">
                     {profile.school_level === "docente" ? <><BookOpen className="w-4 h-4 shrink-0"/> Area Docente</> : <><GraduationCap className="w-4 h-4 shrink-0"/> {profile.school_level === "classe" ? "Nuova Classe" : "Studente"} {profile.age ? `· ${profile.age} anni` : ""}</>}
                 </p>
+                {profile.access_code && profile.school_level !== "docente" && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleCopyCode(profile.access_code, profile.id); }}
+                    className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <span className="font-mono font-semibold tracking-wider">{profile.access_code}</span>
+                    {copiedId === profile.id ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                )}
               </div>
             </motion.button>
           ))}
