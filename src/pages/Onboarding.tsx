@@ -771,7 +771,17 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 <div className="w-full space-y-6">
                     <h2 className="text-2xl font-bold text-foreground">{t('onb_uni_path')}</h2>
                     <div className="space-y-4">
-                       <input ref={locationInputRef} type="text" placeholder={t('onb_uni_name')} className={inputClass} defaultValue={answers.uni_nome || ""} />
+                       <SchoolAutocomplete
+                         value={answers.uni_nome || ""}
+                         onChange={(name, code, city) => setAnswers((prev: any) => ({
+                           ...prev,
+                           uni_nome: name,
+                           school_name: name,
+                           school_code: code,
+                         }))}
+                         placeholder={t('onb_uni_name')}
+                         className={inputClass}
+                       />
                        <select value={answers.uni_facolta || ""} onChange={e => setAnswers({...answers, uni_facolta: e.target.value})} className={inputClass}>
                           <option value="" disabled>{t('onb_uni_select_faculty')}</option>
                           {faculties.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
