@@ -74,66 +74,51 @@ export const GamificationKPI = () => {
       };
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      {/* Punti totali — FIRST, with colored border */}
-      <div className="bg-card border-2 border-yellow-400 dark:border-yellow-500 rounded-xl p-4 shadow-sm">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Punti</span>
-          <div className="flex items-center gap-1">
-            <InfoTooltip text={tooltips.points} />
-            <div className="w-7 h-7 bg-yellow-100 dark:bg-yellow-500/20 rounded-lg flex items-center justify-center">
-              <Star className="w-3.5 h-3.5 text-yellow-500" />
-            </div>
+    <div className="grid grid-cols-4 gap-2">
+      {/* Punti totali */}
+      <div className="bg-card border-2 border-yellow-400 dark:border-yellow-500 rounded-xl py-2 px-3 shadow-sm">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[9px] uppercase tracking-wide font-semibold text-muted-foreground leading-tight">Punti</span>
+          <div className="w-4 h-4 bg-yellow-100 dark:bg-yellow-500/20 rounded flex items-center justify-center">
+            <Star className="w-3 h-3 text-yellow-500" />
           </div>
         </div>
-        <p className="font-display text-2xl font-bold text-foreground">{total}</p>
+        <p className="font-display text-xl font-bold text-foreground leading-tight">{total}</p>
         {shields > 0 && <StreakShieldBadge shields={shields} />}
-        {shields === 0 && streak > 0 && daysToShield <= 3 && (
-          <p className="text-[10px] text-muted-foreground mt-0.5">Scudo tra {daysToShield}g</p>
-        )}
       </div>
 
-      {/* Costanza (Streak) */}
-      <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Costanza</span>
-          <div className="flex items-center gap-1">
-            <InfoTooltip text={tooltips.streak} />
-            <div className="w-7 h-7 bg-terracotta-light rounded-lg flex items-center justify-center">
-              <Flame className="w-3.5 h-3.5 text-terracotta" />
-            </div>
+      {/* Costanza */}
+      <div className="bg-card border border-border rounded-xl py-2 px-3 shadow-sm">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[9px] uppercase tracking-wide font-semibold text-muted-foreground leading-tight">Costanza</span>
+          <div className="w-4 h-4 bg-terracotta-light rounded flex items-center justify-center">
+            <Flame className="w-3 h-3 text-terracotta" />
           </div>
         </div>
-        <p className="font-display text-2xl font-bold text-foreground">{streak}</p>
-        <p className="text-[10px] text-muted-foreground">giorni</p>
+        <p className="font-display text-xl font-bold text-foreground leading-tight">{streak}</p>
+        <p className="text-[9px] text-muted-foreground leading-tight">giorni</p>
       </div>
 
-      {/* Concentrazione (focus_points) */}
-      <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Concentrazione</span>
-          <div className="flex items-center gap-1">
-            <InfoTooltip text={tooltips.focus} />
-            <div className="w-7 h-7 bg-sage-light rounded-lg flex items-center justify-center">
-              <Target className="w-3.5 h-3.5 text-sage-dark" />
-            </div>
+      {/* Concentrazione */}
+      <div className="bg-card border border-border rounded-xl py-2 px-3 shadow-sm">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[9px] uppercase tracking-wide font-semibold text-muted-foreground leading-tight">Focus</span>
+          <div className="w-4 h-4 bg-sage-light rounded flex items-center justify-center">
+            <Target className="w-3 h-3 text-sage-dark" />
           </div>
         </div>
-        <p className="font-display text-2xl font-bold text-foreground">{g.focus_points || 0}</p>
+        <p className="font-display text-xl font-bold text-foreground leading-tight">{g.focus_points || 0}</p>
       </div>
 
-      {/* Autonomia (autonomy_points) */}
-      <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Autonomia</span>
-          <div className="flex items-center gap-1">
-            <InfoTooltip text={tooltips.autonomy} />
-            <div className="w-7 h-7 bg-clay-light rounded-lg flex items-center justify-center">
-              <Brain className="w-3.5 h-3.5 text-clay-dark" />
-            </div>
+      {/* Autonomia */}
+      <div className="bg-card border border-border rounded-xl py-2 px-3 shadow-sm">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[9px] uppercase tracking-wide font-semibold text-muted-foreground leading-tight">Autonomia</span>
+          <div className="w-4 h-4 bg-clay-light rounded flex items-center justify-center">
+            <Brain className="w-3 h-3 text-clay-dark" />
           </div>
         </div>
-        <p className="font-display text-2xl font-bold text-foreground">{g.autonomy_points || 0}</p>
+        <p className="font-display text-xl font-bold text-foreground leading-tight">{g.autonomy_points || 0}</p>
       </div>
     </div>
   );

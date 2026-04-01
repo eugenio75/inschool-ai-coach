@@ -148,6 +148,7 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
   const moodRef = useRef<HTMLDivElement>(null);
   const [coachName, setCoachName] = useState<string | null>(null);
   const [coachMood, setCoachMood] = useState<CoachMood>("happy");
+  const [studentAvatarUrl, setStudentAvatarUrl] = useState<string | null>(null);
   const [ctx, setCtx] = useState<CoachContext>({
     streak: 0, pendingHomework: [], teacherAssignments: [],
     urgentCount: 0, recentEmotions: [], recentErrors: [], recentSessions: [],
@@ -170,13 +171,21 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
 
   useEffect(() => {
     fetchCoachMessage();
-    // Load coach preferences
+    // Load coach preferences and student avatar
     const loadCoachPrefs = async () => {
       const profileId = getChildSession()?.profileId || profile?.id;
       if (!profileId) return;
-      const { data } = await supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
-      const prefs = (data?.data as any) || {};
+      const [prefsRes, profileRes] = await Promise.all([
+        supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle(),
+        supabase.from("child_profiles").select("avatar_emoji").eq("id", profileId).maybeSingle(),
+      ]);
+      const prefs = (prefsRes.data?.data as any) || {};
       if (prefs.coach_name) setCoachName(prefs.coach_name);
+      // Use student's avatar if it's a URL (uploaded image)
+      const avatarVal = profileRes.data?.avatar_emoji;
+      if (avatarVal && (avatarVal.startsWith("http") || avatarVal.startsWith("/"))) {
+        setStudentAvatarUrl(avatarVal);
+      }
     };
     loadCoachPrefs();
   }, []);
@@ -338,8 +347,8 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
         <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex-shrink-0 mt-0.5 overflow-hidden bg-primary/5">
           <AnimatePresence mode="wait">
             <motion.img
-              key={loading ? "loading" : coachMood}
-              src={getCoachMoodSrc(loading ? "happy" : coachMood)}
+              key={loading ? "loading" : (studentAvatarUrl ? "student-avatar" : coachMood)}
+              src={studentAvatarUrl || getCoachMoodSrc(loading ? "happy" : coachMood)}
               alt={coachName || "Coach"}
               className="w-full h-full object-cover"
               width={64}
