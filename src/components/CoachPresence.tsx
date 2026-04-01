@@ -171,13 +171,21 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
 
   useEffect(() => {
     fetchCoachMessage();
-    // Load coach preferences
+    // Load coach preferences and student avatar
     const loadCoachPrefs = async () => {
       const profileId = getChildSession()?.profileId || profile?.id;
       if (!profileId) return;
-      const { data } = await supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
-      const prefs = (data?.data as any) || {};
+      const [prefsRes, profileRes] = await Promise.all([
+        supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle(),
+        supabase.from("child_profiles").select("avatar_emoji").eq("id", profileId).maybeSingle(),
+      ]);
+      const prefs = (prefsRes.data?.data as any) || {};
       if (prefs.coach_name) setCoachName(prefs.coach_name);
+      // Use student's avatar if it's a URL (uploaded image)
+      const avatarVal = profileRes.data?.avatar_emoji;
+      if (avatarVal && (avatarVal.startsWith("http") || avatarVal.startsWith("/"))) {
+        setStudentAvatarUrl(avatarVal);
+      }
     };
     loadCoachPrefs();
   }, []);
