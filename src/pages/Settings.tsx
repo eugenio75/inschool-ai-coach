@@ -65,6 +65,7 @@ function PasswordStrength({ password }: { password: string }) {
 const Settings = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLang();
   const [profiles, setProfiles] = useState<any[]>([]);
   const [parentPin, setParentPin] = useState("");
   const [newPin, setNewPin] = useState("");
