@@ -65,13 +65,13 @@ export function CoachAvatar({ mood = "default", size = 120 }: CoachAvatarProps) 
           sparkleExtra: false, eyeCrescent: false,
           pupilDriftUp: false,
         };
-      default: // "default"
+      default: // "default" — happy face
         return {
-          browAngleL: -5, browAngleR: 5, browOpacity: 1, browLiftY: 0,
-          eyeW: 23, eyeH: 23, irisGradient: ["#64B5F6", "#0D47A1"],
+          browAngleL: -10, browAngleR: 10, browOpacity: 1, browLiftY: -4,
+          eyeW: 24, eyeH: 24, irisGradient: ["#64B5F6", "#0D47A1"],
           mouthType: "arc" as const,
-          mouthW: 30, mouthH: 12, mouthBorder: 2, mouthGlow: 0.6,
-          glowDuration: 5, glowDimmer: 0.85, floatDuration: 6, floatPx: 4,
+          mouthW: 38, mouthH: 16, mouthBorder: 2.5, mouthGlow: 0.8,
+          glowDuration: 5, glowDimmer: 0.9, floatDuration: 6, floatPx: 4,
           orbitA: 14, orbitB: 20, blinkInterval: 9, eyeMoveInterval: 11,
           sparkleExtra: false, eyeCrescent: false,
           pupilDriftUp: false,
