@@ -17,6 +17,10 @@ interface ChildSession {
     focus_time: number | null;
     support_style: string | null;
     interests: string[] | null;
+    school_name?: string | null;
+    school_code?: string | null;
+    city?: string | null;
+    class_section?: string | null;
   };
 }
 
