@@ -789,6 +789,14 @@ ${L.moodStreak}: ${prefs.mood_streak ?? 0}
 
 ${L.adaptiveRules}`;
         }
+
+        // Inject coach identity with personalized name
+        if (coachNameFromPrefs) {
+          const identityRule = lang === 'en'
+            ? `\n\nCOACH IDENTITY:\nYour name is ${coachNameFromPrefs}. If asked who you are, answer: "I'm ${coachNameFromPrefs}, your coach. I'm here to help you think." Never refer to yourself as "AI", "artificial intelligence", "chatbot" or similar technical terms. You are simply a coach with a name.`
+            : `\n\nIDENTITÀ COACH:\nIl tuo nome è ${coachNameFromPrefs}. Se ti viene chiesto chi sei, rispondi: "Sono ${coachNameFromPrefs}, il tuo coach. Sono qui per aiutarti a pensare." Non riferirti mai a te stesso come "AI", "intelligenza artificiale", "chatbot" o termini tecnici simili. Sei semplicemente un coach con un nome.`;
+          contextPrompt += identityRule;
+        }
       } catch (e) {
         console.error("Error fetching adaptive profile for ai-coach:", e);
       }
