@@ -388,6 +388,57 @@ const ParentDashboard = () => {
         </div>
       </div>
     </div>
+
+      {/* Delete child — Step 1 */}
+      <AlertDialog open={!!deleteChildTarget && deleteChildStep === 1} onOpenChange={(open) => { if (!open) setDeleteChildTarget(null); }}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("delete_child_title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("delete_child_step1_desc").replace("{name}", deleteChildTarget?.name || "")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl" onClick={() => setDeleteChildTarget(null)}>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => setDeleteChildStep(2)}
+            >
+              {t("continue")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete child — Step 2 */}
+      <AlertDialog open={!!deleteChildTarget && deleteChildStep === 2} onOpenChange={(open) => { if (!open) { setDeleteChildTarget(null); setDeleteChildConfirmName(""); } }}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("delete_child_step2_title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("delete_child_step2_desc").replace("{name}", deleteChildTarget?.name || "")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={deleteChildConfirmName}
+            onChange={(e) => setDeleteChildConfirmName(e.target.value)}
+            placeholder={deleteChildTarget?.name || ""}
+            className="rounded-xl text-center"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl" onClick={() => { setDeleteChildTarget(null); setDeleteChildConfirmName(""); }}>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteChildConfirmName !== deleteChildTarget?.name || deletingChild}
+              onClick={handleDeleteChild}
+            >
+              {deletingChild ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {t("delete_permanently")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 };
 
