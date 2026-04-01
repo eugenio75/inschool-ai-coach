@@ -13,7 +13,7 @@ serve(async (req) => {
     const {
       userName, schoolLevel, gender, lastSession, pendingHomework,
       recentEmotions, recentErrors, recentSessions,
-      streak, teacherAssignments, urgentCount, gamification, lang,
+      streak, teacherAssignments, urgentCount, gamification, lang, coachName,
     } = await req.json();
 
     const effectiveLang = lang || "it";
