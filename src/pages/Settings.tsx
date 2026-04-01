@@ -407,9 +407,7 @@ const Settings = () => {
             <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2"><Brain className="w-4 h-4 text-primary" /> Il tuo Coach AI</h3>
             <div className="space-y-4">
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-primary/10 shrink-0">
-                  <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={48} height={48} />
-                </div>
+                <CoachAvatar mood="default" size={48} />
                 <div>
                   <p className="font-medium text-foreground">{coachNameSetting || "Coach AI"}</p>
                   <p className="text-xs text-muted-foreground">Il tuo assistente personale</p>
