@@ -4,6 +4,7 @@ import {
   ArrowLeft, Lock, Loader2, Users, Shield, Pencil, Bell,
   Eye, EyeOff, Trash2, RotateCcw, Moon, Brain, BookOpen, Link2, Users2,
 } from "lucide-react";
+import { useLang } from "@/contexts/LangContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
