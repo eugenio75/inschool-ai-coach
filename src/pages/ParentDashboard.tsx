@@ -378,6 +378,29 @@ const ParentDashboard = () => {
               }}
             />
           )}
+
+          {/* Danger zone — delete child profile */}
+          {selectedProfile && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...spring, delay: 0.3 }}
+              className="mt-8 rounded-2xl border border-destructive/30 bg-destructive/5 p-5"
+            >
+              <h3 className="font-display font-semibold text-destructive text-sm mb-1">
+                {t("delete_child_zone_title").replace("{name}", selectedProfile.name)}
+              </h3>
+              <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                {t("delete_child_zone_desc")}
+              </p>
+              <button
+                onClick={() => openDeleteChild(selectedProfile)}
+                className="px-4 py-2 rounded-xl bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors"
+              >
+                {t("delete_child_zone_button")}
+              </button>
+            </motion.div>
+          )}
         </div>
       </div>
     </div>
