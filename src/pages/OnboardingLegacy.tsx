@@ -1,11 +1,12 @@
 // MODIFICA: Feature 2 (Coach Name), Feature 3 (Class Dropdown),
-// Feature 4 (Subject Logic Inversion), Feature 6 (Access Code Step)
+// Feature 4 (Subject Logic Inversion), Feature 6 (Access Code Step),
+// Feature 7 (Teacher Matching)
 // Avatar selection removed — coach is always CoachAvatar component
-import { useState, useRef } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, BookOpen, Check, Copy, Mail, CheckCircle2 } from "lucide-react";
+import { ArrowRight, ArrowLeft, BookOpen, Check, Copy, Mail, CheckCircle2, Users2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createChildProfile, setActiveChildProfileId } from "@/lib/database";
@@ -14,6 +15,7 @@ import { getChildSession, clearChildSession, setChildSession } from "@/lib/child
 import { supabase } from "@/integrations/supabase/client";
 import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
+import { formatTeacherDisplay } from "@/lib/teacherTitle";
 import { useToast } from "@/hooks/use-toast";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
@@ -80,6 +82,19 @@ interface OnboardingData {
   coachName: string;
 }
 
+interface DiscoveredTeacher {
+  teacher_id: string;
+  name: string;
+  last_name: string | null;
+  gender: string | null;
+  badge: string;
+  classes: { class_id: string; class_name: string; subject: string | null; invite_code: string }[];
+}
+
+type StepType = "info" | "school" | "teachers" | "subjects" | "struggles" | "support" | "coach" | "interests" | "focus" | "access-code";
+
+const BADGE_EMOJI: Record<string, string> = { verified: "🔵", school_recognized: "🟡", unverified: "⚪" };
+
 const OnboardingLegacy = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -92,6 +107,13 @@ const OnboardingLegacy = () => {
   const adultSession = getChildSession();
   const [customInterest, setCustomInterest] = useState("");
 
+  // Teacher matching state
+  const [discoveredTeachers, setDiscoveredTeachers] = useState<DiscoveredTeacher[]>([]);
+  const [showTeacherStep, setShowTeacherStep] = useState(false);
+  const [loadingTeachers, setLoadingTeachers] = useState(false);
+  const [selectedInviteCodes, setSelectedInviteCodes] = useState<string[]>([]);
+  const [joinedCodes, setJoinedCodes] = useState<Set<string>>(new Set());
+
   const [data, setData] = useState<OnboardingData & { interests: string[] }>({
     name: "", lastName: "", age: "", dateOfBirth: "", gender: "",
     schoolCategory: "", schoolLevel: "", schoolName: "", schoolCode: null, city: "",
@@ -99,22 +121,34 @@ const OnboardingLegacy = () => {
     struggles: [], focusTime: "15", supportStyles: [], coachName: "", interests: [],
   });
 
-  // Steps: 0:info, 1:school, 2:subjects, 3:struggles, 4:support, 5:coach, 6:interests, 7:focus, 8:access-code
-  const totalSteps = 9;
+  // Dynamic step sequence — teacher step inserted only when teachers are found
+  const steps: StepType[] = useMemo(() => {
+    const base: StepType[] = ["info", "school", "subjects", "struggles", "support", "coach", "interests", "focus", "access-code"];
+    if (showTeacherStep) {
+      // Insert "teachers" after "school"
+      return ["info", "school", "teachers", "subjects", "struggles", "support", "coach", "interests", "focus", "access-code"];
+    }
+    return base;
+  }, [showTeacherStep]);
+
+  const totalSteps = steps.length;
+  const currentStepType = steps[step];
+
   const toggleInArray = (arr: string[], item: string) =>
     arr.includes(item) ? arr.filter((i) => i !== item) : [...arr, item];
 
   const canProceed = () => {
-    switch (step) {
-      case 0: return data.name.trim() !== "" && data.lastName.trim() !== "" && data.age !== "" && data.gender !== "";
-      case 1: return data.schoolLevel !== "";
-      case 2: return true;
-      case 3: return data.struggles.length > 0;
-      case 4: return data.supportStyles.length > 0;
-      case 5: return true; // coach name optional
-      case 6: return true; // interests optional
-      case 7: return true; // focus time
-      case 8: return true; // access code
+    switch (currentStepType) {
+      case "info": return data.name.trim() !== "" && data.lastName.trim() !== "" && data.age !== "" && data.gender !== "";
+      case "school": return data.schoolLevel !== "";
+      case "teachers": return true;
+      case "subjects": return true;
+      case "struggles": return data.struggles.length > 0;
+      case "support": return data.supportStyles.length > 0;
+      case "coach": return true;
+      case "interests": return true;
+      case "focus": return true;
+      case "access-code": return true;
       default: return false;
     }
   };
@@ -132,9 +166,69 @@ const OnboardingLegacy = () => {
     handleCopyCode();
   };
 
+  const toggleInviteCode = (code: string) => {
+    setSelectedInviteCodes(prev =>
+      prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
+    );
+  };
+
+  const fetchTeachers = async (schoolCode: string) => {
+    setLoadingTeachers(true);
+    try {
+      const { data: result } = await supabase.rpc("get_discoverable_teachers_with_classes" as any, {
+        school_code_param: schoolCode,
+      });
+      const teachers = (result as DiscoveredTeacher[] | null) || [];
+      // Only show teachers that have at least one class
+      const withClasses = teachers.filter(t => t.classes && t.classes.length > 0);
+      if (withClasses.length > 0) {
+        setDiscoveredTeachers(withClasses);
+        setShowTeacherStep(true);
+        setLoadingTeachers(false);
+        return true;
+      }
+    } catch (err) {
+      console.error("fetchTeachers error:", err);
+    }
+    setShowTeacherStep(false);
+    setDiscoveredTeachers([]);
+    setLoadingTeachers(false);
+    return false;
+  };
+
+  const joinSelectedClasses = async (profileId: string) => {
+    for (const code of selectedInviteCodes) {
+      try {
+        await supabase.rpc("join_class_by_code", {
+          code,
+          student_profile_id: profileId,
+        });
+        setJoinedCodes(prev => new Set(prev).add(code));
+      } catch (err) {
+        console.error("join_class_by_code error:", err);
+      }
+    }
+  };
+
   const next = async () => {
-    // Create profile at step 7 (focus time), show access code at step 8
-    if (step === 7) {
+    // When leaving school step, check for teachers
+    if (currentStepType === "school") {
+      if (data.schoolCode) {
+        setLoadingTeachers(true);
+        const found = await fetchTeachers(data.schoolCode);
+        if (found) {
+          setStep(step + 1); // go to teachers step
+          return;
+        }
+      }
+      // No school_code or no teachers — skip teacher step
+      setShowTeacherStep(false);
+      setStep(step + 1);
+      return;
+    }
+
+    // Create profile at focus step
+    if (currentStepType === "focus") {
       setSaving(true);
       const allSubjects = subjects;
       const difficultSubjects = allSubjects.filter(s => !data.favoriteSubjects.includes(s));
@@ -180,9 +274,14 @@ const OnboardingLegacy = () => {
           { child_profile_id: profile.id, mission_date: today, title: "Aggiungi un compito", description: "Inserisci un compito da fare", points_reward: 5, completed: false, mission_type: "complete_task" },
         ]);
 
+        // Join selected classes
+        if (selectedInviteCodes.length > 0) {
+          await joinSelectedClasses(profile.id);
+        }
+
         setCreatedProfile(profile);
         setSaving(false);
-        setStep(8);
+        setStep(step + 1); // go to access-code step
       } else {
         setSaving(false);
         toast({ title: "Errore nella creazione del profilo", variant: "destructive" });
@@ -190,7 +289,7 @@ const OnboardingLegacy = () => {
       return;
     }
 
-    if (step === 8) {
+    if (currentStepType === "access-code") {
       if (createdProfile) {
         if (adultSession?.profile?.school_level && ["superiori", "universitario", "docente"].includes(adultSession.profile.school_level)) {
           clearChildSession();
@@ -225,7 +324,7 @@ const OnboardingLegacy = () => {
     }
 
     if (step < totalSteps - 1) {
-      if (step === 0) {
+      if (currentStepType === "info") {
         const childAge = parseInt(data.age);
         if (childAge && childAge < 6) return;
       }
@@ -234,8 +333,8 @@ const OnboardingLegacy = () => {
   };
 
   const renderStep = () => {
-    switch (step) {
-      case 0:
+    switch (currentStepType) {
+      case "info":
         return (
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Come si chiama il bambino?</h2><p className="text-muted-foreground">Il coach lo chiamerà per nome.</p></div>
@@ -267,7 +366,7 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      case 1:
+      case "school":
         return (
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Che classe fa {data.name}?</h2></div>
@@ -327,7 +426,71 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      case 2:
+      case "teachers":
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                <Users2 className="w-7 h-7 text-primary" />
+              </div>
+              <h2 className="font-display text-2xl font-bold text-foreground mb-2">
+                {t("onb_teachers_found_title", { name: data.name })}
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                {t("onb_teachers_found_subtitle")}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {discoveredTeachers.map((teacher) => (
+                <div key={teacher.teacher_id}>
+                  {teacher.classes.map((cls) => {
+                    const isSelected = selectedInviteCodes.includes(cls.invite_code);
+                    return (
+                      <button
+                        key={cls.class_id}
+                        type="button"
+                        onClick={() => toggleInviteCode(cls.invite_code)}
+                        className={`w-full text-left px-5 py-4 rounded-2xl border transition-all mb-2 ${
+                          isSelected
+                            ? "border-primary bg-primary/5 shadow-soft"
+                            : "border-border bg-card hover:bg-muted"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">{BADGE_EMOJI[teacher.badge] || "⚪"}</span>
+                              <span className="font-medium text-foreground">
+                                {formatTeacherDisplay(teacher.name, teacher.last_name, teacher.gender?.toLowerCase())}
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-0.5">
+                              {cls.class_name}{cls.subject ? ` · ${cls.subject}` : ""}
+                            </p>
+                          </div>
+                          {isSelected && <Check className="w-5 h-5 text-primary shrink-0" />}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+
+            {selectedInviteCodes.length > 0 && (
+              <p className="text-xs text-muted-foreground text-center">
+                {t("onb_teachers_selected", { count: selectedInviteCodes.length })}
+              </p>
+            )}
+
+            <button onClick={() => { setSelectedInviteCodes([]); setStep(step + 1); }} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors block mx-auto">
+              {t("skip")}
+            </button>
+          </div>
+        );
+
+      case "subjects":
         return (
           <div className="space-y-6">
             <div>
@@ -356,7 +519,7 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      case 3:
+      case "struggles":
         return (
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Cosa succede quando studia?</h2></div>
@@ -366,7 +529,7 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      case 4:
+      case "support":
         return (
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Come deve aiutarlo il coach?</h2></div>
@@ -376,7 +539,7 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      case 5:
+      case "coach":
         return (
           <div className="space-y-6">
             <div>
@@ -398,7 +561,7 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      case 6: {
+      case "interests": {
         const selected = data.interests;
         return (
           <div className="space-y-6">
@@ -453,7 +616,7 @@ const OnboardingLegacy = () => {
         );
       }
 
-      case 7:
+      case "focus":
         return (
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Quanto riesce a concentrarsi?</h2></div>
@@ -467,7 +630,7 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      case 8:
+      case "access-code":
         return (
           <div className="space-y-6 text-center">
             <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
@@ -477,6 +640,14 @@ const OnboardingLegacy = () => {
               <h2 className="font-display text-2xl font-bold text-foreground mb-2">Profilo di {data.name} creato!</h2>
               <p className="text-muted-foreground text-sm">Ecco il codice di accesso univoco per {data.name}. Usalo per farlo entrare nella sua area personale.</p>
             </div>
+
+            {joinedCodes.size > 0 && (
+              <div className="bg-primary/5 border border-primary/20 rounded-2xl px-4 py-3">
+                <p className="text-sm text-foreground font-medium">
+                  ✅ {t("onb_teachers_joined", { count: joinedCodes.size })}
+                </p>
+              </div>
+            )}
 
             <div className="bg-muted rounded-2xl px-6 py-5">
               <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider font-semibold">Codice di accesso</p>
@@ -502,6 +673,9 @@ const OnboardingLegacy = () => {
     }
   };
 
+  const isLastContentStep = currentStepType === "access-code";
+  const isSaveStep = currentStepType === "focus";
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="px-6 pt-6 pb-4">
@@ -522,16 +696,23 @@ const OnboardingLegacy = () => {
         <div className="max-w-lg w-full">
           <AnimatePresence mode="wait">
             <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={spring}>
-              {renderStep()}
+              {loadingTeachers ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                  <p className="text-sm text-muted-foreground">{t("onb_teachers_loading")}</p>
+                </div>
+              ) : (
+                renderStep()
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
       <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border px-6 py-4">
         <div className="max-w-lg mx-auto flex items-center justify-between">
-          <Button variant="ghost" onClick={() => step > 0 && step !== 8 ? setStep(step - 1) : step === 0 ? navigate("/profiles") : null} disabled={step === 8} className="text-muted-foreground"><ArrowLeft className="w-4 h-4 mr-1" /> Indietro</Button>
-          <Button onClick={next} disabled={!canProceed() || saving} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl px-6 disabled:opacity-40">
-            {step === 8 ? "Vai alla dashboard" : step === 7 ? (saving ? "Salvataggio..." : "Crea profilo!") : "Avanti"}<ArrowRight className="ml-1 w-4 h-4" />
+          <Button variant="ghost" onClick={() => step > 0 && !isLastContentStep ? setStep(step - 1) : step === 0 ? navigate("/profiles") : null} disabled={isLastContentStep} className="text-muted-foreground"><ArrowLeft className="w-4 h-4 mr-1" /> Indietro</Button>
+          <Button onClick={next} disabled={!canProceed() || saving || loadingTeachers} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl px-6 disabled:opacity-40">
+            {isLastContentStep ? "Vai alla dashboard" : isSaveStep ? (saving ? "Salvataggio..." : "Crea profilo!") : currentStepType === "teachers" && selectedInviteCodes.length > 0 ? t("onb_teachers_join_btn") : "Avanti"}<ArrowRight className="ml-1 w-4 h-4" />
           </Button>
         </div>
       </div>
