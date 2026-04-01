@@ -338,7 +338,7 @@ async function updateGamificationPoints(profileId: string, focus: number, autono
 // ============ MEMORY ITEMS ============
 
 export async function getMemoryItems(childProfileId?: string) {
-  if (isChildSession()) {
+  if (shouldUseChildSession(childProfileId)) {
     return childApi("get-memory-items");
   }
 
