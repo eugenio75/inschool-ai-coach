@@ -1139,5 +1139,19 @@
   "mat_delete_step2_title": "Conferma eliminazione",
   "mat_delete_step2_desc": "Questa azione è irreversibile. Digita il titolo del materiale per confermare.",
   "mat_delete_permanent": "Elimina definitivamente",
-  "nav_materials": "Materiali"
+  "nav_materials": "Materiali",
+  "action_my_tasks": "I miei compiti",
+  "action_my_tasks_desc": "Vedi e studia i tuoi compiti",
+  "action_study_coach": "Studia con il coach",
+  "action_study_coach_desc": "Il coach ti guida passo passo",
+  "action_review_desc": "Rivedi e rafforza la memoria",
+  "action_prep_desc": "Preparati per la prossima prova",
+  "onb_interests_title": "I tuoi interessi",
+  "onb_interests_sub": "Seleziona le cose che ti piacciono — il coach le userà per rendere lo studio più divertente! (facoltativo)",
+  "onb_interests_add": "Aggiungi altri interessi...",
+  "onb_interests_selected": "selezionati",
+  "onb_interests_skip": "Salta →",
+  "onb_summary_interests": "Interessi",
+  "profile_access_code_title": "Il tuo codice di accesso",
+  "profile_access_code_desc": "Usa questo codice per accedere a InSchool senza email e password."
 }

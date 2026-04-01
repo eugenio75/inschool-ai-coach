@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Sparkles, X, Plus, Loader2, School, MapPin, User, GraduationCap } from "lucide-react";
+import { ArrowLeft, Sparkles, X, Plus, Loader2, School, MapPin, User, GraduationCap, Copy, Check, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isChildSession, getChildSession, setChildSession } from "@/lib/childSession";
 import { getActiveChildProfileId, getChildProfile, updateChildProfile } from "@/lib/database";
@@ -28,6 +28,23 @@ const INTEREST_SUGGESTIONS = [
 ];
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
+
+function AccessCodeDisplay({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <div className="flex items-center gap-3 bg-muted rounded-xl px-4 py-3">
+      <span className="font-mono text-lg font-bold text-foreground tracking-widest flex-1">{code}</span>
+      <button onClick={handleCopy} className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors">
+        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+      </button>
+    </div>
+  );
+}
 
 const StudentProfile = () => {
   const navigate = useNavigate();
@@ -124,6 +141,8 @@ const StudentProfile = () => {
     || schoolName !== (profile.school_name || "")
     || city !== (profile.city || "");
 
+  const accessCode = profile?.access_code;
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
@@ -151,6 +170,17 @@ const StudentProfile = () => {
 
       <div className="px-6 py-6">
         <div className="max-w-lg mx-auto space-y-6">
+          {/* Access Code — visible only for child sessions */}
+          {isChild && accessCode && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.05 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
+              <div className="flex items-center gap-2 mb-1">
+                <Key className="w-4 h-4 text-primary" />
+                <h3 className="font-display font-semibold text-foreground text-sm">{t("profile_access_code_title")}</h3>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">{t("profile_access_code_desc")}</p>
+              <AccessCodeDisplay code={accessCode} />
+            </motion.div>
+          )}
           {/* Gender */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.1 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
             <h3 className="font-display font-semibold text-foreground mb-3 text-sm">Genere</h3>

@@ -110,7 +110,8 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const hasClassCodeStep = role === "medie" || role === "superiori";
-    const totalSteps = role === "docente" ? 4 : (hasClassCodeStep ? 9 : 8);
+    const hasInterestsStep = role !== "docente";
+    const totalSteps = role === "docente" ? 4 : (hasClassCodeStep ? 10 : 9);
     const [step, setStep] = useState(Math.min(initialStep, totalSteps - 1));
     const [answers, setAnswers] = useState<any>(initialData || {});
     const [direction, setDirection] = useState(1);
@@ -155,7 +156,9 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             await (supabase as any).from("user_preferences").upsert({
                profile_id: profileId, role: role, current_step: step, data: mergedData
             });
-            await supabase.from("child_profiles").update({ onboarding_completed: true } as any).eq("id", profileId);
+            const profileUpdates: any = { onboarding_completed: true };
+            if (answers.interests?.length > 0) profileUpdates.interests = answers.interests;
+            await supabase.from("child_profiles").update(profileUpdates as any).eq("id", profileId);
             const currentSession = getChildSession();
             if (currentSession?.profile) {
               setChildSession({
@@ -228,6 +231,95 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
       };
       return map[s] || s;
     };
+
+    const INTERESTS_BY_LEVEL: Record<string, { label: string; emoji?: string }[]> = {
+      medie: [
+        { label: "Minecraft", emoji: "⛏️" }, { label: "Roblox", emoji: "🎮" }, { label: "Fortnite", emoji: "🎯" },
+        { label: "Anime/Manga", emoji: "🐉" }, { label: "Marvel/DC", emoji: "🦸" }, { label: "Calcio", emoji: "⚽" },
+        { label: "Basket", emoji: "🏀" }, { label: "Danza", emoji: "💃" }, { label: "Musica", emoji: "🎵" },
+        { label: "Disegno", emoji: "✏️" }, { label: "Fotografia", emoji: "📷" }, { label: "YouTube/TikTok", emoji: "📱" },
+        { label: "Gaming", emoji: "🎮" }, { label: "Cucina", emoji: "🍕" }, { label: "Animali", emoji: "🐾" },
+        { label: "Lettura", emoji: "📚" }, { label: "Serie TV", emoji: "🎬" }, { label: "Karate/Arti marziali", emoji: "🥋" },
+        { label: "Tecnologia", emoji: "💻" }, { label: "Natura", emoji: "🌿" },
+      ],
+      alunno: [
+        { label: "Minecraft", emoji: "⛏️" }, { label: "Roblox", emoji: "🎮" }, { label: "LEGO", emoji: "🧱" },
+        { label: "Pokémon", emoji: "⚡" }, { label: "Fortnite", emoji: "🎯" }, { label: "Dragon Ball", emoji: "🐉" },
+        { label: "Harry Potter", emoji: "⚡" }, { label: "Marvel", emoji: "🦸" }, { label: "Calcio", emoji: "⚽" },
+        { label: "Nuoto", emoji: "🏊" }, { label: "Danza", emoji: "💃" }, { label: "Karate", emoji: "🥋" },
+        { label: "Disegno", emoji: "✏️" }, { label: "Musica", emoji: "🎵" }, { label: "Cucina", emoji: "🍕" },
+        { label: "Dinosauri", emoji: "🦕" }, { label: "Cani", emoji: "🐶" }, { label: "Gatti", emoji: "🐱" },
+        { label: "Cavalli", emoji: "🐴" }, { label: "Manga", emoji: "📚" }, { label: "Fumetti", emoji: "📖" },
+        { label: "Lego Technic", emoji: "⚙️" }, { label: "Magia", emoji: "🪄" }, { label: "Natura", emoji: "🌿" },
+      ],
+      superiori: [
+        { label: "Sport" }, { label: "Musica" }, { label: "Arte" }, { label: "Tecnologia" },
+        { label: "Viaggi" }, { label: "Cinema" }, { label: "Fotografia" }, { label: "Videogiochi" },
+        { label: "Lettura" }, { label: "Moda" }, { label: "Scienza" }, { label: "Social media" },
+        { label: "Cucina" }, { label: "Animali" }, { label: "Ambiente" }, { label: "Serie TV" },
+      ],
+      universitario: [
+        { label: "Tecnologia" }, { label: "Viaggi" }, { label: "Arte" }, { label: "Musica" },
+        { label: "Sport" }, { label: "Letteratura" }, { label: "Scienza" }, { label: "Economia" },
+        { label: "Cinema" }, { label: "Fotografia" }, { label: "Sostenibilità" }, { label: "Startup" },
+      ],
+    };
+
+    function renderInterestsStep(level: string) {
+      const suggestions = INTERESTS_BY_LEVEL[level] || INTERESTS_BY_LEVEL.medie;
+      const selected: string[] = answers.interests || [];
+      const hasEmoji = suggestions.some(s => s.emoji);
+      const [customVal, setCustomVal] = useState("");
+
+      return (
+        <div className="w-full space-y-6">
+          <h2 className="text-2xl font-bold text-foreground">{t('onb_interests_title')}</h2>
+          <p className="text-muted-foreground text-sm">{t('onb_interests_sub')}</p>
+          <div className="flex flex-wrap gap-2">
+            {suggestions.map(s => {
+              const isSel = selected.includes(s.label);
+              return (
+                <button
+                  key={s.label}
+                  onClick={() => {
+                    if (isSel) {
+                      setAnswers({ ...answers, interests: selected.filter(i => i !== s.label) });
+                    } else if (selected.length < 10) {
+                      setAnswers({ ...answers, interests: [...selected, s.label] });
+                    }
+                  }}
+                  className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${isSel ? chipSelClass : chipUnselClass}`}
+                >
+                  {hasEmoji && s.emoji ? `${s.emoji} ${s.label}` : s.label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={customVal}
+              onChange={e => setCustomVal(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === "Enter" && customVal.trim() && selected.length < 10 && !selected.includes(customVal.trim())) {
+                  setAnswers({ ...answers, interests: [...selected, customVal.trim()] });
+                  setCustomVal("");
+                }
+              }}
+              placeholder={t('onb_interests_add')}
+              maxLength={30}
+              className={inputClass}
+            />
+          </div>
+          {selected.length > 0 && (
+            <p className="text-xs text-muted-foreground">{selected.length}/10 {t('onb_interests_selected')}</p>
+          )}
+          <button onClick={handleNext} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">
+            {t('onb_interests_skip')}
+          </button>
+        </div>
+      );
+    }
 
     function renderMedie(step: number) {
       const medieAnni = [
@@ -351,6 +443,8 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             </div>
           );
         case 7:
+          return renderInterestsStep("medie");
+        case 8:
           return (
             <div className="w-full space-y-6">
                 <h2 className="text-2xl font-bold text-foreground">{t('onb_class_code_title')}</h2>
@@ -363,7 +457,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 )}
             </div>
           );
-        case 8:
+        case 9:
           return (
             <div className="text-left w-full space-y-6">
                 <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_all_set')}</h2>
@@ -373,6 +467,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     <div><span className={summaryLabelClass}>{t('onb_summary_hard')}</span><p className={summaryValueClass}>{(answers.materie_critiche || []).join(", ")}</p></div>
                     <div><span className={summaryLabelClass}>{t('onb_summary_method')}</span><p className={summaryValueClass}>{answers.metodo_studio === "poco_spesso" ? t('onb_summary_method_short') : answers.metodo_studio === "lungo" ? t('onb_summary_method_long') : t('onb_summary_method_discover')}</p></div>
                     {answers.coach_name && <div><span className={summaryLabelClass}>{t('onb_summary_coach')}</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
+                    {(answers.interests || []).length > 0 && <div><span className={summaryLabelClass}>{t('onb_summary_interests')}</span><p className={summaryValueClass}>{(answers.interests || []).join(", ")}</p></div>}
                     {answers.joined_class && <div><span className={summaryLabelClass}>{t('onb_summary_class_enrolled')}</span><p className={summaryValueClass}>{answers.joined_class.class_name}</p></div>}
                 </div>
             </div>
@@ -511,6 +606,8 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             </div>
           );
         case 7:
+          return renderInterestsStep("superiori");
+        case 8:
           return (
             <div className="w-full space-y-6">
                 <h2 className="text-2xl font-bold text-foreground">{t('onb_class_code_title')}</h2>
@@ -523,7 +620,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 )}
             </div>
           );
-        case 8:
+        case 9:
           return (
             <div className="text-left w-full space-y-6">
                 <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_all_set')}</h2>
@@ -533,6 +630,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     <div><span className={summaryLabelClass}>{t('onb_summary_focus_subjects')}</span><p className={summaryValueClass}>{(answers.materie_critiche || []).join(", ")}</p></div>
                     <div><span className={summaryLabelClass}>{t('onb_summary_method')}</span><p className={summaryValueClass}>{answers.metodo_studio === "pomodoro" ? t('onb_summary_method_pomodoro') : answers.metodo_studio === "deep" ? t('onb_summary_method_deep') : t('onb_summary_method_flex')}</p></div>
                     {answers.coach_name && <div><span className={summaryLabelClass}>{t('onb_summary_coach')}</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
+                    {(answers.interests || []).length > 0 && <div><span className={summaryLabelClass}>{t('onb_summary_interests')}</span><p className={summaryValueClass}>{(answers.interests || []).join(", ")}</p></div>}
                     {answers.joined_class && <div><span className={summaryLabelClass}>{t('onb_summary_class_enrolled')}</span><p className={summaryValueClass}>{answers.joined_class.class_name}</p></div>}
                 </div>
             </div>
@@ -689,6 +787,8 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 </div>
               );
             case 7:
+              return renderInterestsStep("universitario");
+            case 8:
               return (
                 <div className="text-left w-full space-y-6">
                     <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_all_set')}</h2>
@@ -699,6 +799,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                         <div><span className={summaryLabelClass}>{t('onb_uni_summary_skills')}</span><p className={summaryValueClass}>{(answers.serve_ai || []).join(", ")}</p></div>
                         <div><span className={summaryLabelClass}>{t('onb_uni_summary_exams')}</span><p className={summaryValueClass}>{(answers.uni_esami || []).length} {t('onb_uni_summary_exams_count')}</p></div>
                         {answers.coach_name && <div><span className={summaryLabelClass}>{t('onb_summary_coach')}</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
+                        {(answers.interests || []).length > 0 && <div><span className={summaryLabelClass}>{t('onb_summary_interests')}</span><p className={summaryValueClass}>{(answers.interests || []).join(", ")}</p></div>}
                     </div>
                 </div>
               );

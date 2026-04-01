@@ -1139,5 +1139,19 @@
   "mat_delete_step2_title": "Confirm deletion",
   "mat_delete_step2_desc": "This action is irreversible. Type the material title to confirm.",
   "mat_delete_permanent": "Delete permanently",
-  "nav_materials": "Materials"
+  "nav_materials": "Materials",
+  "action_my_tasks": "My homework",
+  "action_my_tasks_desc": "View and study your tasks",
+  "action_study_coach": "Study with the coach",
+  "action_study_coach_desc": "The coach guides you step by step",
+  "action_review_desc": "Review and strengthen your memory",
+  "action_prep_desc": "Prepare for your next test",
+  "onb_interests_title": "Your interests",
+  "onb_interests_sub": "Select things you like — the coach will use them to make studying more fun! (optional)",
+  "onb_interests_add": "Add other interests...",
+  "onb_interests_selected": "selected",
+  "onb_interests_skip": "Skip →",
+  "onb_summary_interests": "Interests",
+  "profile_access_code_title": "Your access code",
+  "profile_access_code_desc": "Use this code to access InSchool without email and password."
 }

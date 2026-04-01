@@ -7,63 +7,14 @@ import { GamificationKPI } from "@/components/GamificationBar";
 import { DailyMissions } from "@/components/GamificationBar";
 import { CoachPresence } from "@/components/CoachPresence";
 import { BadgeDisplay } from "@/components/BadgeDisplay";
+import { StudentActionCards } from "@/components/StudentActionCards";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 import { getTasks, getActiveChildProfileId, getChildProfile } from "@/lib/database";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
-import { getPrepLabelKey } from "@/lib/schoolTerms";
 import { JoinClassPrompt } from "@/components/JoinClassPrompt";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
-
-function SessionEntryCardsMedie({ hasTasks }: { hasTasks: boolean }) {
-  const navigate = useNavigate();
-  const { t } = useLang();
-  const sessions = [
-    {
-      id: "guided",
-      label: "Studia un compito",
-      desc: hasTasks ? "Il coach ti guida passo passo" : "Aggiungi un compito per iniziare",
-      color: "bg-primary/10",
-      iconColor: "text-primary",
-      action: () => navigate(hasTasks ? "/study-tasks" : "/add-homework"),
-    },
-    {
-      id: "review",
-      label: t("nav_review"),
-      desc: "Rivedi quello che hai studiato",
-      color: "bg-clay-light",
-      iconColor: "text-clay-dark",
-      action: () => navigate("/memory"),
-    },
-    {
-      id: "prep",
-      label: t(getPrepLabelKey("medie")),
-      desc: t("prep_desc"),
-      color: "bg-amber-50 dark:bg-amber-900/20",
-      iconColor: "text-amber-600 dark:text-amber-400",
-      action: () => navigate("/prep"),
-    },
-  ];
-
-  return (
-    <div className="grid grid-cols-3 gap-2.5">
-      {sessions.map((s, i) => (
-        <motion.button
-          key={s.id}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...spring, delay: 0.1 + i * 0.05 }}
-          onClick={s.action}
-          className="flex flex-col items-start p-3.5 rounded-2xl border border-border/60 bg-card hover:shadow-soft transition-all text-left"
-        >
-          <p className="text-sm font-semibold text-foreground leading-tight mb-0.5">{s.label}</p>
-          <p className="text-[11px] text-muted-foreground leading-snug">{s.desc}</p>
-        </motion.button>
-      ))}
-    </div>
-  );
-}
 
 export default function DashboardMedie() {
   const navigate = useNavigate();
@@ -105,11 +56,11 @@ export default function DashboardMedie() {
               </div>
               <span className="font-display text-lg sm:text-xl font-semibold text-foreground">Inschool</span>
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => navigate("/report")} className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors" title="Il tuo andamento"><BarChart3 className="w-4 h-4" /></button>
-              <button onClick={() => navigate("/libreria")} className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors" title="Libreria materiali"><FolderOpen className="w-4 h-4" /></button>
+            <div className="flex items-center gap-1.5">
+              <button onClick={() => navigate("/report")} className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors" title="Il tuo andamento"><BarChart3 className="w-4 h-4" /></button>
+              <button onClick={() => navigate("/libreria")} className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors" title="Libreria materiali"><FolderOpen className="w-4 h-4" /></button>
               
-              <button onClick={() => navigate("/student-profile")} className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-accent transition-colors text-xs font-bold text-primary" title="Il mio profilo">
+              <button onClick={() => navigate("/student-profile")} className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center hover:bg-accent transition-colors text-xs font-bold text-primary" title="Il mio profilo">
                 {avatarInitial}
               </button>
             </div>
@@ -144,16 +95,16 @@ export default function DashboardMedie() {
         )}
       </div></div>
 
-      <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
-        <BadgeDisplay variant="medie" />
+      {/* 4 Action Cards */}
+      <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.16 }}>
+          <h3 className="font-display font-semibold text-foreground text-sm mb-3">Cosa vuoi fare?</h3>
+          <StudentActionCards hasTasks={tasks.length > 0} schoolLevel="medie" />
+        </motion.div>
       </div></div>
 
-      {/* Session entry cards */}
-      <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.18 }}>
-          <h3 className="font-display font-semibold text-foreground text-sm mb-3">Cosa vuoi fare?</h3>
-          <SessionEntryCardsMedie hasTasks={tasks.length > 0} />
-        </motion.div>
+      <div className="px-4 sm:px-6 mt-3"><div className="max-w-3xl mx-auto">
+        <BadgeDisplay variant="medie" />
       </div></div>
 
       {/* Teacher Assignments */}
