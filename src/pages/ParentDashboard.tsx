@@ -387,7 +387,6 @@ const ParentDashboard = () => {
           )}
         </div>
       </div>
-    </div>
 
       {/* Delete child — Step 1 */}
       <AlertDialog open={!!deleteChildTarget && deleteChildStep === 1} onOpenChange={(open) => { if (!open) setDeleteChildTarget(null); }}>
