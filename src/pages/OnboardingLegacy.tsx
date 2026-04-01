@@ -155,6 +155,9 @@ const OnboardingLegacy = () => {
         support_style: data.supportStyles.join(","),
         date_of_birth: data.dateOfBirth || undefined,
         interests: data.interests.length > 0 ? data.interests : undefined,
+        school_name: data.schoolName || undefined,
+        school_code: data.schoolCode || undefined,
+        city: data.city || undefined,
       } as any);
 
       if (profile) {

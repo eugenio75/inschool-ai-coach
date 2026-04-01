@@ -1172,6 +1172,8 @@
   "school_recognized": "Recognized School",
   "school_not_verified": "Not verified",
   "school_not_found_hint": "School not found? Type the full name (e.g. 'Liceo Scientifico Galilei - Catanzaro')",
+  "child_school_label": "School name",
+  "child_city_label": "City",
   "settings_discoverable_title": "Student Visibility",
   "settings_discoverable_label": "Make my profile visible to students at my school",
   "settings_discoverable_desc": "Students at your school will be able to find you during registration",
