@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Loader2, CheckCircle2, Search } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StepIndicator } from "../StepIndicator";
 import { LegalDisclaimer } from "../LegalDisclaimer";
-import { supabase } from "@/integrations/supabase/client";
+import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
 
 interface StepTeacherDeclarationProps {
   onComplete: (declaration: TeacherDeclaration) => void;
