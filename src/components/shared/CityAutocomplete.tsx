@@ -37,7 +37,8 @@ export function CityAutocomplete({ value, onChange, placeholder, className }: Ci
     setQuery(val);
     onChange(val);
 
-    if (val.length < 2) {
+    const trimmed = val.trim();
+    if (trimmed.length < 2) {
       setResults([]);
       setShowDropdown(false);
       return;
