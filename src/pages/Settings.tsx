@@ -293,15 +293,21 @@ const Settings = () => {
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== "DELETE") return;
     setDeleting(true);
-    if (user) {
-      await supabase.from("child_profiles").delete().eq("parent_id", user.id);
+    try {
+      const { error } = await supabase.functions.invoke("delete-account", {
+        body: { action: "delete_account" },
+      });
+      if (error) throw error;
+      localStorage.removeItem("inschool-child-session");
+      localStorage.removeItem("inschool-active-child-id");
+      localStorage.removeItem("inschool-profile");
+      await supabase.auth.signOut();
+      navigate("/");
+    } catch (e: any) {
+      toast.error(t("delete_account_error"));
+    } finally {
+      setDeleting(false);
     }
-    localStorage.removeItem("inschool-child-session");
-    localStorage.removeItem("inschool-active-child-id");
-    localStorage.removeItem("inschool-profile");
-    await supabase.auth.signOut();
-    setDeleting(false);
-    navigate("/");
   };
 
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
