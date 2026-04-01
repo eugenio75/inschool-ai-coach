@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
+import { formatTeacherDisplay } from "@/lib/teacherTitle";
 
 interface JoinClassModalProps {
   open: boolean;
@@ -18,7 +19,7 @@ export function JoinClassModal({ open, onOpenChange, profileId, onJoined }: Join
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState<{ class_name: string; subject: string; teacher_name: string } | null>(null);
+  const [success, setSuccess] = useState<{ class_name: string; subject: string; teacher_name: string; teacher_last_name?: string; teacher_gender?: string } | null>(null);
 
   const handleJoin = async () => {
     if (!code.trim() || code.trim().length < 4) return;
@@ -50,6 +51,8 @@ export function JoinClassModal({ open, onOpenChange, profileId, onJoined }: Join
       class_name: result.class_name,
       subject: result.subject || "",
       teacher_name: result.teacher_name || "",
+      teacher_last_name: result.teacher_last_name || "",
+      teacher_gender: result.teacher_gender || "",
     });
     onJoined?.();
   };
@@ -85,7 +88,7 @@ export function JoinClassModal({ open, onOpenChange, profileId, onJoined }: Join
             )}
             {success.teacher_name && (
               <p className="text-sm text-muted-foreground">
-                Prof. {success.teacher_name}
+                {formatTeacherDisplay(success.teacher_name, success.teacher_last_name, success.teacher_gender)}
               </p>
             )}
             <Button onClick={handleClose} className="rounded-xl mt-2">
@@ -162,7 +165,7 @@ export function JoinClassInline({ profileId, onJoined }: { profileId: string; on
             {t("class_join_success", { name: success.class_name })}
           </p>
           {success.teacher_name && (
-            <p className="text-xs text-muted-foreground">Prof. {success.teacher_name}</p>
+            <p className="text-xs text-muted-foreground">{formatTeacherDisplay(success.teacher_name, success.teacher_last_name, success.teacher_gender)}</p>
           )}
         </div>
       </div>

@@ -173,6 +173,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             const interestsToSave = Array.isArray(answers.interests) ? answers.interests.filter((i: unknown) => typeof i === "string" && i.trim()) : [];
             console.log("[Onboarding] Saving interests:", interestsToSave);
             if (interestsToSave.length > 0) profileUpdates.interests = interestsToSave;
+            if (role === "docente" && answers.docente_gender) profileUpdates.gender = answers.docente_gender;
             await supabase.from("child_profiles").update(profileUpdates as any).eq("id", profileId);
             const currentSession = getChildSession();
             if (currentSession?.profile) {
@@ -226,7 +227,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             if (currentStep === 3) return answers.metodo_studio;
             if (currentStep === 4) return (answers.serve_ai || []).length > 0;
         } else if (role === "docente") {
-            if (currentStep === 1) return answers.docente_ordine && (answers.docente_materie || []).length > 0;
+            if (currentStep === 1) return answers.docente_gender && answers.docente_ordine && (answers.docente_materie || []).length > 0;
             return true;
         }
         return true;
@@ -940,6 +941,22 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 <div className="w-full space-y-6">
                     <h2 className="text-2xl font-bold text-foreground">{t('onb_doc_essentials')}</h2>
                     <div className="space-y-4">
+                       <div>
+                         <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t('onb_doc_gender_label')}</label>
+                         <div className="flex gap-3">
+                           {[
+                             { value: "m", label: t('onb_doc_gender_m') },
+                             { value: "f", label: t('onb_doc_gender_f') },
+                           ].map(opt => {
+                             const isSel = answers.docente_gender === opt.value;
+                             return (
+                               <button key={opt.value} onClick={() => setAnswers({...answers, docente_gender: opt.value})} className={`flex-1 p-4 rounded-2xl border transition-all text-center font-medium ${isSel ? selBtnClass : unselBtnClass}`}>
+                                 {opt.label}
+                               </button>
+                             );
+                           })}
+                         </div>
+                       </div>
                        <div>
                          <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{t('onb_doc_school_order')}</label>
                          <select value={answers.docente_ordine || ""} onChange={e => setAnswers({...answers, docente_ordine: e.target.value})} className={inputClass}>

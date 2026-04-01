@@ -3,6 +3,7 @@ import { Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { JoinClassModal } from "./JoinClassModal";
 import { useTranslation } from "react-i18next";
+import { formatTeacherDisplay } from "@/lib/teacherTitle";
 
 /** Shows a subtle join-class prompt when the student has no enrollments */
 export function JoinClassPrompt({ profileId }: { profileId: string }) {
@@ -26,7 +27,7 @@ export function JoinClassPrompt({ profileId }: { profileId: string }) {
       <div className="text-xs text-muted-foreground">
         {t("class_enrolled_line", {
           className: enrolledInfo.class_name,
-          teacher: enrolledInfo.teacher_name,
+          teacher: formatTeacherDisplay(enrolledInfo.teacher_name, enrolledInfo.teacher_last_name, enrolledInfo.teacher_gender),
         })}
       </div>
     );

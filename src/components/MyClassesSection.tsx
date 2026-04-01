@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { JoinClassModal } from "./JoinClassModal";
 import { useTranslation } from "react-i18next";
+import { formatTeacherDisplay } from "@/lib/teacherTitle";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -16,6 +17,8 @@ interface EnrolledClass {
   class_name: string;
   subject: string | null;
   teacher_name: string;
+  teacher_last_name?: string;
+  teacher_gender?: string;
   enrolled_at: string;
 }
 
@@ -72,7 +75,7 @@ export function MyClassesSection({ profileId }: { profileId: string }) {
                       {c.subject}
                     </span>
                   )}
-                  <span className="text-xs text-muted-foreground">Prof. {c.teacher_name}</span>
+                  <span className="text-xs text-muted-foreground">{formatTeacherDisplay(c.teacher_name, c.teacher_last_name, c.teacher_gender)}</span>
                 </div>
               </div>
               <button

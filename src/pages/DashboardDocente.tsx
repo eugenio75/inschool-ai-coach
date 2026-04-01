@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { getTeacherTitle } from "@/lib/teacherTitle";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -88,7 +89,9 @@ export default function DashboardDocente() {
   const od = onboarding;
   const materie: string[] = od?.docente_materie || [];
   const ordine: string = od?.docente_ordine || "";
-  const cognome = profile?.name?.split(" ").slice(-1)[0] || profile?.name || "";
+  const teacherGender = od?.docente_gender || profile?.gender || null;
+  const teacherLastName = (profile as any)?.last_name || null;
+  const cognome = teacherLastName || profile?.name?.split(" ").slice(-1)[0] || profile?.name || "";
   const studentiCount = classi.reduce((s, c) => s + (c.num_studenti || 0), 0);
 
   // Subject lists by school level
@@ -376,7 +379,7 @@ export default function DashboardDocente() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-display text-2xl font-bold text-foreground">
-              {getGreeting()}, Prof. {cognome}
+              {getGreeting()}, {getTeacherTitle(teacherGender)} {cognome}
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
               {new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
