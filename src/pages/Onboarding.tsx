@@ -308,10 +308,10 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
         };
 
         const addCustomInterest = () => {
-          const trimmed = customVal.trim();
-          if (!trimmed) return;
-
           setAnswers((prev: any) => {
+            const trimmed = (typeof prev?._interestCustom === "string" ? prev._interestCustom : "").trim();
+            if (!trimmed) return prev;
+
             const prevSelected: string[] = Array.isArray(prev?.interests)
               ? prev.interests.filter((item: unknown): item is string => typeof item === "string")
               : [];

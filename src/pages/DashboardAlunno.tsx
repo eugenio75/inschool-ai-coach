@@ -105,7 +105,7 @@ const DashboardAlunno = () => {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-1">Ciao {name}!</h1>
+                <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-1">Ciao {name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()}!</h1>
                 <p className="text-sm sm:text-base text-muted-foreground">{tasks.length > 0 ? "" : "Non ci sono compiti per oggi."}</p>
               </div>
             </div>

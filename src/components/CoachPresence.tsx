@@ -347,8 +347,8 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
         <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex-shrink-0 mt-0.5 overflow-hidden bg-primary/5">
           <AnimatePresence mode="wait">
             <motion.img
-              key={loading ? "loading" : coachMood}
-              src={getCoachMoodSrc(loading ? "happy" : coachMood)}
+              key={loading ? "loading" : (studentAvatarUrl ? "student-avatar" : coachMood)}
+              src={studentAvatarUrl || getCoachMoodSrc(loading ? "happy" : coachMood)}
               alt={coachName || "Coach"}
               className="w-full h-full object-cover"
               width={64}
