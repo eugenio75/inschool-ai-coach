@@ -117,6 +117,17 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
     const [direction, setDirection] = useState(1);
     const [saving, setSaving] = useState(false);
     const locationInputRef = useRef<HTMLInputElement>(null);
+    const currentStep = Number.isFinite(step) ? step : 0;
+
+    useEffect(() => {
+      if (!Number.isFinite(step)) {
+        setStep(0);
+      }
+    }, [step]);
+
+    useEffect(() => {
+      console.log("currentStep:", currentStep);
+    }, [currentStep]);
 
     useEffect(() => {
         let autocomplete: any = null;
@@ -131,11 +142,11 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             });
         }
         return () => { if (autocomplete) (window as any).google.maps.event.clearInstanceListeners(autocomplete); }
-    }, [step, role]);
+    }, [currentStep, role]);
 
     const handleNext = async () => {
-        if (step < totalSteps - 1) {
-            const nextStep = step + 1;
+        if (currentStep < totalSteps - 1) {
+            const nextStep = currentStep + 1;
             setSaving(true);
             const { data: existingPref } = await supabase
               .from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
@@ -154,7 +165,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             const existingData = (existingPref?.data as any) || {};
             const mergedData = { ...existingData, ...answers };
             await (supabase as any).from("user_preferences").upsert({
-               profile_id: profileId, role: role, current_step: step, data: mergedData
+               profile_id: profileId, role: role, current_step: currentStep, data: mergedData
             });
             const profileUpdates: any = { onboarding_completed: true };
             if (answers.interests?.length > 0) profileUpdates.interests = answers.interests;
@@ -172,9 +183,9 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
     };
 
     const handleBack = () => {
-        if (step > 0) {
+        if (currentStep > 0) {
             setDirection(-1);
-            setStep(step - 1);
+            setStep(currentStep - 1);
         }
     };
 
@@ -197,24 +208,24 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
 
     const canProceed = () => {
         if (role === "medie") {
-            if (step === 1) return answers.medie_anno && answers.medie_scuola_tipo;
-            if (step === 2) return (answers.materie_critiche || []).length > 0;
-            if (step === 3) return answers.metodo_studio;
-            if (step === 4) return answers.obiettivo;
+            if (currentStep === 1) return answers.medie_anno && answers.medie_scuola_tipo;
+            if (currentStep === 2) return (answers.materie_critiche || []).length > 0;
+            if (currentStep === 3) return answers.metodo_studio;
+            if (currentStep === 4) return answers.obiettivo;
         } else if (role === "superiori") {
-            if (step === 1) return answers.superiori_anno && answers.superiori_indirizzo;
-            if (step === 2) return (answers.materie_critiche || []).length > 0;
-            if (step === 3) return answers.metodo_studio;
-            if (step === 4) return answers.obiettivo;
+            if (currentStep === 1) return answers.superiori_anno && answers.superiori_indirizzo;
+            if (currentStep === 2) return (answers.materie_critiche || []).length > 0;
+            if (currentStep === 3) return answers.metodo_studio;
+            if (currentStep === 4) return answers.obiettivo;
         } else if (role === "universitario") {
-            if (step === 1) return answers.uni_facolta && answers.uni_anno;
-            if (step === 3) return answers.metodo_studio;
-            if (step === 4) return (answers.serve_ai || []).length > 0;
+            if (currentStep === 1) return answers.uni_facolta && answers.uni_anno;
+            if (currentStep === 3) return answers.metodo_studio;
+            if (currentStep === 4) return (answers.serve_ai || []).length > 0;
         } else if (role === "docente") {
-            if (step === 1) return answers.docente_ordine && (answers.docente_materie || []).length > 0;
+            if (currentStep === 1) return answers.docente_ordine && (answers.docente_materie || []).length > 0;
             return true;
         }
-        return true; 
+        return true;
     };
 
     // Subject keys map — internal value -> i18n key
