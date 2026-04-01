@@ -51,6 +51,8 @@ export function JoinClassModal({ open, onOpenChange, profileId, onJoined }: Join
       class_name: result.class_name,
       subject: result.subject || "",
       teacher_name: result.teacher_name || "",
+      teacher_last_name: result.teacher_last_name || "",
+      teacher_gender: result.teacher_gender || "",
     });
     onJoined?.();
   };
