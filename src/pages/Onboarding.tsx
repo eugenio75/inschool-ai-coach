@@ -619,6 +619,17 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                       <option value="" disabled>{t('onb_select_track')}</option>
                       {tracks.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
                    </select>
+                   <CityAutocomplete
+                     value={answers.superiori_citta || ""}
+                     onChange={(city) => setAnswers((prev: any) => ({
+                       ...prev,
+                       superiori_citta: city,
+                       superiori_scuola: "",
+                       school_name: "",
+                       school_code: null,
+                     }))}
+                     className={inputClass}
+                   />
                    <SchoolAutocomplete
                      value={answers.superiori_scuola || ""}
                      onChange={(name, code, city) => setAnswers((prev: any) => ({
@@ -630,6 +641,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                      }))}
                      placeholder={t('onb_school_name_optional')}
                      className={inputClass}
+                     cityFilter={answers.superiori_citta || undefined}
                    />
                 </div>
             </div>
