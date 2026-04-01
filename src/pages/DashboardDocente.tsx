@@ -379,7 +379,7 @@ export default function DashboardDocente() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-display text-2xl font-bold text-foreground">
-              {getGreeting()}, Prof. {cognome}
+              {getGreeting()}, {getTeacherTitle(teacherGender)} {cognome}
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
               {new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}

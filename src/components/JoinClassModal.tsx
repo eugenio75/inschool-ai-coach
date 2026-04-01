@@ -165,7 +165,7 @@ export function JoinClassInline({ profileId, onJoined }: { profileId: string; on
             {t("class_join_success", { name: success.class_name })}
           </p>
           {success.teacher_name && (
-            <p className="text-xs text-muted-foreground">Prof. {success.teacher_name}</p>
+            <p className="text-xs text-muted-foreground">{formatTeacherDisplay(success.teacher_name, success.teacher_last_name, success.teacher_gender)}</p>
           )}
         </div>
       </div>
