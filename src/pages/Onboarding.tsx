@@ -156,7 +156,9 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             await (supabase as any).from("user_preferences").upsert({
                profile_id: profileId, role: role, current_step: step, data: mergedData
             });
-            await supabase.from("child_profiles").update({ onboarding_completed: true } as any).eq("id", profileId);
+            const profileUpdates: any = { onboarding_completed: true };
+            if (answers.interests?.length > 0) profileUpdates.interests = answers.interests;
+            await supabase.from("child_profiles").update(profileUpdates as any).eq("id", profileId);
             const currentSession = getChildSession();
             if (currentSession?.profile) {
               setChildSession({
