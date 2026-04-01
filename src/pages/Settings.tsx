@@ -98,6 +98,11 @@ const Settings = () => {
   const [newMateria, setNewMateria] = useState("");
   const [savingMaterie, setSavingMaterie] = useState(false);
 
+  // Docente discoverability
+  const [discoverable, setDiscoverable] = useState(false);
+  const [teacherBadge, setTeacherBadge] = useState<string>("unverified");
+  const [savingDiscoverable, setSavingDiscoverable] = useState(false);
+
   // Check if adult role
   const session = getChildSession();
   const isAdult = ["superiori", "universitario", "docente"].includes(session?.profile?.school_level || "");
