@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { getTeacherTitle } from "@/lib/teacherTitle";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
