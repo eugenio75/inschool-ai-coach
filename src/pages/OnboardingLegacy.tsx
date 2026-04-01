@@ -57,6 +57,17 @@ const middleClasses = [
 
 const subjects = ["Italiano", "Matematica", "Scienze", "Storia", "Geografia", "Inglese", "Arte", "Musica", "Tecnologia"];
 
+const PRIMARIA_INTERESTS = [
+  { label: "Minecraft", emoji: "⛏️" }, { label: "Roblox", emoji: "🎮" }, { label: "LEGO", emoji: "🧱" },
+  { label: "Pokémon", emoji: "⚡" }, { label: "Fortnite", emoji: "🎯" }, { label: "Dragon Ball", emoji: "🐉" },
+  { label: "Harry Potter", emoji: "⚡" }, { label: "Marvel", emoji: "🦸" }, { label: "Calcio", emoji: "⚽" },
+  { label: "Nuoto", emoji: "🏊" }, { label: "Danza", emoji: "💃" }, { label: "Karate", emoji: "🥋" },
+  { label: "Disegno", emoji: "✏️" }, { label: "Musica", emoji: "🎵" }, { label: "Cucina", emoji: "🍕" },
+  { label: "Dinosauri", emoji: "🦕" }, { label: "Cani", emoji: "🐶" }, { label: "Gatti", emoji: "🐱" },
+  { label: "Cavalli", emoji: "🐴" }, { label: "Manga", emoji: "📚" }, { label: "Fumetti", emoji: "📖" },
+  { label: "Lego Technic", emoji: "⚙️" }, { label: "Magia", emoji: "🪄" }, { label: "Natura", emoji: "🌿" },
+];
+
 const struggles = [
   { id: "distraction", label: "Si distrae facilmente" },
   { id: "refusal", label: "Rifiuta di iniziare" },
