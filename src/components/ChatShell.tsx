@@ -6,7 +6,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChatMsg } from "@/lib/streamChat";
 import { PomodoroTimer } from "@/components/PomodoroTimer";
-import { getCoachMoodSrc, detectMoodFromText, getStudentAvatarSrc, coachAvatarSrc, type CoachMood } from "@/components/shared/CoachAvatarPicker";
+import { CoachAvatar, type CoachAvatarMood } from "@/components/shared/CoachAvatar";
 import { MathText } from "@/components/shared/MathText";
 import { useTranslation } from "react-i18next";
 
@@ -35,6 +35,19 @@ interface ChatShellProps {
   disabled?: boolean;
 }
 
+function detectMoodFromText(text: string): CoachAvatarMood {
+  const lower = text.toLowerCase();
+  if (/bravo|bravissim[ao]|ottimo|perfetto|eccellente|fantastico|complimenti|ben fatto|hai completato|🎉|✅|💪|🌟/i.test(lower))
+    return "correct";
+  if (/difficolt[àa]|errore|sbagliato|attenzione|non è corrett|riprova|non proprio|purtroppo|hmm/i.test(lower))
+    return "encouraging";
+  if (/forza|dai che|ci sei quasi|continua|non mollare|stai andando|bene così|quasi giusto|buon lavoro|ci siamo/i.test(lower))
+    return "proud";
+  if (/\?|pensa|rifletti|secondo te|prova a|cosa ne pensi|come faresti|perché|qual è/i.test(lower))
+    return "thinking";
+  return "default";
+}
+
 export function ChatShell({
   title, subtitle, badgeText, coachName,
   messages, streamingText, sending,
@@ -52,24 +65,6 @@ export function ChatShell({
   const [showExplainOptions, setShowExplainOptions] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [studentAvatarUrl, setStudentAvatarUrl] = useState<string | null>(null);
-
-  // Load student avatar
-  useEffect(() => {
-    const loadAvatar = async () => {
-      try {
-        const { isChildSession, getChildSession } = await import("@/lib/childSession");
-        const session = getChildSession();
-        const profileId = session?.profileId;
-        if (!profileId) return;
-        const { supabase } = await import("@/integrations/supabase/client");
-        const { data } = await supabase.from("child_profiles").select("avatar_emoji").eq("id", profileId).maybeSingle();
-        const resolved = getStudentAvatarSrc(data?.avatar_emoji);
-        if (resolved) setStudentAvatarUrl(resolved);
-      } catch {}
-    };
-    loadAvatar();
-  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -88,11 +83,10 @@ export function ChatShell({
   async function handleAttachFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !onSend) return;
-    e.target.value = ""; // reset input
+    e.target.value = "";
 
     setAttachProcessing(true);
     try {
-      // Convert file to base64 data URL
       const reader = new FileReader();
       const dataUrl: string = await new Promise((resolve, reject) => {
         reader.onload = () => resolve(reader.result as string);
@@ -100,7 +94,6 @@ export function ChatShell({
         reader.readAsDataURL(file);
       });
 
-      // Call OCR edge function
       const { data: { session } } = await (await import("@/integrations/supabase/client")).supabase.auth.getSession();
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ocr-homework`,
@@ -125,7 +118,6 @@ export function ChatShell({
 
       const result = await res.json();
       if (result.tasks && result.tasks.length > 0) {
-        // Extract text content from OCR results
         const extractedText = result.tasks.map((t: any) => {
           const parts = [t.title];
           if (t.description) parts.push(t.description);
@@ -167,7 +159,7 @@ export function ChatShell({
         if (e.error === "not-allowed") {
           alert(t("chat_mic_denied"));
         } else if (e.error === "no-speech") {
-          // silenzio, nessun feedback necessario
+          // silence
         } else {
           console.warn("Errore riconoscimento vocale:", e.error);
         }
@@ -191,9 +183,7 @@ export function ChatShell({
           <ArrowLeft className="w-5 h-5 text-muted-foreground" />
         </button>
         {coachName && (
-          <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden bg-primary/5">
-            <img src={studentAvatarUrl || coachAvatarSrc} alt={coachName} className="w-full h-full object-cover" width={32} height={32} />
-          </div>
+          <CoachAvatar mood="default" size={32} />
         )}
         <div className="flex-1 min-w-0">
           {coachName && <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">{coachName}</p>}
@@ -220,25 +210,13 @@ export function ChatShell({
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => {
-            const mood: CoachMood = msg.role === "assistant" ? detectMoodFromText(msg.content || "") : "happy";
+            const msgMood: CoachAvatarMood = msg.role === "assistant" ? detectMoodFromText(msg.content || "") : "default";
             return (
             <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               {msg.role === "assistant" && (
-                <div className="w-8 h-8 rounded-full flex-shrink-0 mr-2 mt-1 overflow-hidden bg-primary/5">
-                  <AnimatePresence mode="wait">
-                    <motion.img
-                      key={mood}
-                      src={studentAvatarUrl || coachAvatarSrc}
-                      alt="Coach"
-                      className="w-full h-full object-cover"
-                      width={32} height={32}
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.8, opacity: 0 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    />
-                  </AnimatePresence>
+                <div className="flex-shrink-0 mr-2 mt-1">
+                  <CoachAvatar mood={msgMood} size={32} />
                 </div>
               )}
               <div className="max-w-[80%]">
@@ -249,7 +227,6 @@ export function ChatShell({
                 }`}>
                   <MathText>{msg.content}</MathText>
                 </div>
-                {/* Inline action buttons */}
                 {msg.actions && msg.actions.length > 0 && i === messages.length - 1 && (
                   <div className="flex flex-col gap-2 mt-3">
                     {msg.actions.map((action, ai) => (
@@ -277,15 +254,8 @@ export function ChatShell({
 
         {streamingText && (
           <div className="flex justify-start">
-            <div className="w-8 h-8 rounded-full flex-shrink-0 mr-2 mt-1 overflow-hidden bg-primary/5">
-              <motion.img
-                src={studentAvatarUrl || coachAvatarSrc}
-                alt="Coach"
-                className="w-full h-full object-cover"
-                width={32} height={32}
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-              />
+            <div className="flex-shrink-0 mr-2 mt-1">
+              <CoachAvatar mood="thinking" size={32} />
             </div>
             <div className="max-w-[80%] rounded-xl rounded-bl-sm bg-muted px-4 py-3 text-[15px] leading-[1.7] whitespace-pre-wrap text-foreground">
               <MathText>{streamingText}</MathText>
@@ -296,15 +266,8 @@ export function ChatShell({
 
         {sending && !streamingText && (
           <div className="flex justify-start">
-            <div className="w-8 h-8 rounded-full flex-shrink-0 mr-2 overflow-hidden bg-primary/5">
-              <motion.img
-                src={studentAvatarUrl || coachAvatarSrc}
-                alt="Coach"
-                className="w-full h-full object-cover"
-                width={32} height={32}
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ repeat: Infinity, duration: 1.5 }}
-              />
+            <div className="flex-shrink-0 mr-2">
+              <CoachAvatar mood="thinking" size={32} />
             </div>
             <div className="bg-muted rounded-xl rounded-bl-sm px-4 py-3">
               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
@@ -316,7 +279,7 @@ export function ChatShell({
       {/* Extra footer */}
       {extraFooter}
 
-      {/* Input toolbar - hide when actions are showing or disabled (read-only) */}
+      {/* Input toolbar */}
       {!hasActions && !disabled && onSend && (
         <div className="border-t border-border bg-card p-3 shrink-0">
           <div className="flex items-center gap-2 mb-2 flex-wrap">

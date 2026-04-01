@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getChildSession, setChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
 import OnboardingLegacy from "./OnboardingLegacy";
-import { coachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
+import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { JoinClassInline } from "@/components/JoinClassModal";
 
 const variants = {
@@ -513,8 +513,8 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             <div className="w-full space-y-6">
                 <h2 className="text-2xl font-bold text-foreground">{t('onb_coach_name')}</h2>
                 <p className="text-muted-foreground text-sm">{t('onb_coach_name_sub')}</p>
-                <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
-                  <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
+                <div className="flex justify-center mb-2">
+                  <CoachAvatar mood="default" size={80} />
                 </div>
                 <input type="text" placeholder={t('onb_coach_placeholder')} value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
                 <p className="text-xs text-muted-foreground text-center">{t('onb_coach_change')}</p>
@@ -676,8 +676,8 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             <div className="w-full space-y-6">
                 <h2 className="text-2xl font-bold text-foreground">{t('onb_coach_name')}</h2>
                 <p className="text-muted-foreground text-sm">{t('onb_coach_name_sup_sub')}</p>
-                <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
-                  <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
+                <div className="flex justify-center mb-2">
+                  <CoachAvatar mood="default" size={80} />
                 </div>
                 <input type="text" placeholder={t('onb_coach_name_sup_placeholder')} value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
                 <p className="text-xs text-muted-foreground text-center">{t('onb_coach_name_sup_change')}</p>
@@ -858,8 +858,8 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 <div className="w-full space-y-6">
                     <h2 className="text-2xl font-bold text-foreground">{t('onb_coach_name')}</h2>
                     <p className="text-muted-foreground text-sm">{t('onb_uni_coach_sub')}</p>
-                    <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
-                      <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
+                    <div className="flex justify-center mb-2">
+                      <CoachAvatar mood="default" size={80} />
                     </div>
                     <input type="text" placeholder={t('onb_coach_placeholder')} value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
                 </div>
@@ -914,8 +914,8 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             case 0:
               return (
                 <div className="text-center w-full space-y-6">
-                    <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
-                      <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
+                    <div className="flex justify-center mb-2">
+                      <CoachAvatar mood="default" size={80} />
                     </div>
                     <h2 className="text-2xl font-bold text-foreground">{t('onb_doc_welcome')}</h2>
                     <p className="text-muted-foreground text-sm max-w-md mx-auto">{t('onb_doc_welcome_sub')}</p>
@@ -971,8 +971,8 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 <div className="w-full space-y-6">
                     <h2 className="text-2xl font-bold text-foreground">{t('onb_doc_customize')}</h2>
                     <p className="text-muted-foreground text-sm">{t('onb_doc_customize_sub')}</p>
-                    <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
-                      <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
+                    <div className="flex justify-center mb-2">
+                      <CoachAvatar mood="default" size={80} />
                     </div>
                     <input type="text" placeholder={t('onb_doc_name_placeholder')} value={answers.coach_name || ""} onChange={e => setAnswers({...answers, coach_name: e.target.value})} className={inputClass} maxLength={20} />
                     <p className="text-xs text-muted-foreground text-center">{t('onb_doc_name_change')}</p>
