@@ -181,7 +181,7 @@ const StudentProfile = () => {
       <div className="px-6 py-6">
         <div className="max-w-lg mx-auto space-y-6">
           {/* Access Code — always visible for primaria/medie */}
-          {showAccessCode && <AccessCodeCard code={accessCode} />}
+          {showAccessCode && accessCode && <AccessCodeCard code={accessCode} />}
 
           {/* Gender */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.1 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
