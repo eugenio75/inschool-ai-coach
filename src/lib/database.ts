@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { isChildSession, childApi } from "@/lib/childSession";
+import { isChildSession, childApi, getChildSession } from "@/lib/childSession";
 import { getCurrentLang } from "@/lib/langUtils";
 
 // ============ CHILD PROFILE CONTEXT ============
@@ -16,6 +16,11 @@ export function clearActiveChildProfileId() {
   localStorage.removeItem("inschool-active-child-id");
 }
 
+function shouldUseChildSession(profileId?: string | null) {
+  const sessionProfileId = getChildSession()?.profileId;
+  return isChildSession() && (!profileId || profileId === sessionProfileId);
+}
+
 // ============ CHILD PROFILES ============
 
 export async function getChildProfiles() {
@@ -28,7 +33,7 @@ export async function getChildProfiles() {
 }
 
 export async function getChildProfile(profileId: string) {
-  if (isChildSession()) {
+  if (shouldUseChildSession(profileId)) {
     // In child session, profile is already in localStorage
     const saved = localStorage.getItem("inschool-profile");
     if (saved) try { return JSON.parse(saved); } catch {}
@@ -114,7 +119,7 @@ export async function updateParentPin(pin: string) {
 // ============ HOMEWORK TASKS ============
 
 export async function getTasks(childProfileId?: string) {
-  if (isChildSession()) {
+  if (shouldUseChildSession(childProfileId)) {
     return childApi("get-tasks");
   }
 
@@ -245,7 +250,7 @@ export async function saveFocusSession(session: {
 }
 
 export async function getFocusSessions(childProfileId?: string) {
-  if (isChildSession()) {
+  if (shouldUseChildSession(childProfileId)) {
     return childApi("get-focus-sessions");
   }
 
@@ -333,7 +338,7 @@ async function updateGamificationPoints(profileId: string, focus: number, autono
 // ============ MEMORY ITEMS ============
 
 export async function getMemoryItems(childProfileId?: string) {
-  if (isChildSession()) {
+  if (shouldUseChildSession(childProfileId)) {
     return childApi("get-memory-items");
   }
 
