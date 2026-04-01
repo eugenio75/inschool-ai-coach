@@ -796,6 +796,17 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 <div className="w-full space-y-6">
                     <h2 className="text-2xl font-bold text-foreground">{t('onb_uni_path')}</h2>
                     <div className="space-y-4">
+                       <CityAutocomplete
+                         value={answers.uni_citta || ""}
+                         onChange={(city) => setAnswers((prev: any) => ({
+                           ...prev,
+                           uni_citta: city,
+                           uni_nome: "",
+                           school_name: "",
+                           school_code: null,
+                         }))}
+                         className={inputClass}
+                       />
                        <SchoolAutocomplete
                          value={answers.uni_nome || ""}
                          onChange={(name, code, city) => setAnswers((prev: any) => ({
@@ -803,9 +814,11 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                            uni_nome: name,
                            school_name: name,
                            school_code: code,
+                           ...(city ? { uni_citta: city } : {}),
                          }))}
                          placeholder={t('onb_uni_name')}
                          className={inputClass}
+                         cityFilter={answers.uni_citta || undefined}
                        />
                        <select value={answers.uni_facolta || ""} onChange={e => setAnswers({...answers, uni_facolta: e.target.value})} className={inputClass}>
                           <option value="" disabled>{t('onb_uni_select_faculty')}</option>
