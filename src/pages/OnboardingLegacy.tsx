@@ -15,6 +15,7 @@ import { getChildSession, clearChildSession, setChildSession } from "@/lib/child
 import { supabase } from "@/integrations/supabase/client";
 import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
+import { CityAutocomplete } from "@/components/shared/CityAutocomplete";
 import { formatTeacherDisplay } from "@/lib/teacherTitle";
 import { useToast } from "@/hooks/use-toast";
 
@@ -402,6 +403,19 @@ const OnboardingLegacy = () => {
             )}
 
             <div className="pt-2 space-y-3">
+              <label className="text-sm text-muted-foreground block">{t("city_school_label")}</label>
+              <CityAutocomplete
+                value={data.city}
+                onChange={(city) => {
+                  setData(prev => ({
+                    ...prev,
+                    city,
+                    schoolName: "",
+                    schoolCode: null,
+                  }));
+                }}
+              />
+
               <label className="text-sm text-muted-foreground block">{t("child_school_label")}</label>
               <SchoolAutocomplete
                 value={data.schoolName}
@@ -412,15 +426,7 @@ const OnboardingLegacy = () => {
                   city: city || prev.city,
                 }))}
                 placeholder={t("school_search_placeholder")}
-              />
-
-              <label className="text-sm text-muted-foreground block">{t("child_city_label")}</label>
-              <input
-                type="text"
-                value={data.city}
-                onChange={(e) => setData({ ...data, city: e.target.value })}
-                placeholder={t("child_city_label")}
-                className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-base"
+                cityFilter={data.city || undefined}
               />
             </div>
           </div>

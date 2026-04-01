@@ -16,9 +16,10 @@ interface SchoolAutocompleteProps {
   onChange: (name: string, code: string | null, city: string) => void;
   placeholder?: string;
   className?: string;
+  cityFilter?: string;
 }
 
-export function SchoolAutocomplete({ value, onChange, placeholder, className }: SchoolAutocompleteProps) {
+export function SchoolAutocomplete({ value, onChange, placeholder, className, cityFilter }: SchoolAutocompleteProps) {
   const { t } = useTranslation();
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<SchoolResult[]>([]);
@@ -57,10 +58,14 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className }: 
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
       try {
-        const { data, error } = await supabase.rpc("search_schools", {
+        const rpcArgs: any = {
           query: val,
           limit_n: 10,
-        });
+        };
+        if (cityFilter) {
+          rpcArgs.city_filter = cityFilter;
+        }
+        const { data, error } = await supabase.rpc("search_schools", rpcArgs);
         if (!error && data) {
           setResults(data as SchoolResult[]);
           setShowDropdown(true);

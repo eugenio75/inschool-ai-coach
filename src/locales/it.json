@@ -1190,5 +1190,7 @@
   "settings_discoverable_off": "Profilo nascosto",
   "badge_verified": "Docente Verificato",
   "badge_school_recognized": "Istituto Riconosciuto",
-  "badge_unverified": "Non verificato"
+  "badge_unverified": "Non verificato",
+  "city_school_label": "In che città si trova la scuola?",
+  "city_search_placeholder": "Cerca una città..."
 }

@@ -9,6 +9,7 @@ import {
   Users2, Building, FilePlus, CheckSquare, BarChart2, BookMarked, Mail, Users
 } from "lucide-react";
 import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
+import { CityAutocomplete } from "@/components/shared/CityAutocomplete";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildSession, setChildSession } from "@/lib/childSession";
@@ -434,6 +435,17 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                       <option value="" disabled>{t('onb_school_type')}</option>
                       {schoolTypes.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
                    </select>
+                   <CityAutocomplete
+                     value={answers.medie_citta || ""}
+                     onChange={(city) => setAnswers((prev: any) => ({
+                       ...prev,
+                       medie_citta: city,
+                       medie_scuola: "",
+                       school_name: "",
+                       school_code: null,
+                     }))}
+                     className={inputClass}
+                   />
                    <SchoolAutocomplete
                      value={answers.medie_scuola || ""}
                      onChange={(name, code, city) => setAnswers((prev: any) => ({
@@ -445,6 +457,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                      }))}
                      placeholder={t('onb_school_name_optional')}
                      className={inputClass}
+                     cityFilter={answers.medie_citta || undefined}
                    />
                 </div>
             </div>
@@ -606,6 +619,17 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                       <option value="" disabled>{t('onb_select_track')}</option>
                       {tracks.map(a => <option key={a.value} value={a.value}>{t(a.key)}</option>)}
                    </select>
+                   <CityAutocomplete
+                     value={answers.superiori_citta || ""}
+                     onChange={(city) => setAnswers((prev: any) => ({
+                       ...prev,
+                       superiori_citta: city,
+                       superiori_scuola: "",
+                       school_name: "",
+                       school_code: null,
+                     }))}
+                     className={inputClass}
+                   />
                    <SchoolAutocomplete
                      value={answers.superiori_scuola || ""}
                      onChange={(name, code, city) => setAnswers((prev: any) => ({
@@ -617,6 +641,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                      }))}
                      placeholder={t('onb_school_name_optional')}
                      className={inputClass}
+                     cityFilter={answers.superiori_citta || undefined}
                    />
                 </div>
             </div>
@@ -771,6 +796,17 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 <div className="w-full space-y-6">
                     <h2 className="text-2xl font-bold text-foreground">{t('onb_uni_path')}</h2>
                     <div className="space-y-4">
+                       <CityAutocomplete
+                         value={answers.uni_citta || ""}
+                         onChange={(city) => setAnswers((prev: any) => ({
+                           ...prev,
+                           uni_citta: city,
+                           uni_nome: "",
+                           school_name: "",
+                           school_code: null,
+                         }))}
+                         className={inputClass}
+                       />
                        <SchoolAutocomplete
                          value={answers.uni_nome || ""}
                          onChange={(name, code, city) => setAnswers((prev: any) => ({
@@ -778,9 +814,11 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                            uni_nome: name,
                            school_name: name,
                            school_code: code,
+                           ...(city ? { uni_citta: city } : {}),
                          }))}
                          placeholder={t('onb_uni_name')}
                          className={inputClass}
+                         cityFilter={answers.uni_citta || undefined}
                        />
                        <select value={answers.uni_facolta || ""} onChange={e => setAnswers({...answers, uni_facolta: e.target.value})} className={inputClass}>
                           <option value="" disabled>{t('onb_uni_select_faculty')}</option>
@@ -1021,6 +1059,21 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 <div className="w-full space-y-6">
                     <h2 className="text-2xl font-bold text-foreground">{t('onb_doc_school_title')}</h2>
                     <p className="text-muted-foreground text-sm">{t('onb_doc_school_sub')}</p>
+                    <CityAutocomplete
+                      value={answers.docente_citta || ""}
+                      onChange={(city) => setAnswers((prev: any) => ({
+                        ...prev,
+                        docente_citta: city,
+                        school_name: "",
+                        school_code: null,
+                        teacher_declaration: {
+                          ...(prev.teacher_declaration || {}),
+                          school_name: "",
+                          school_code: null,
+                        },
+                      }))}
+                      className={inputClass}
+                    />
                     <SchoolAutocomplete
                       value={answers.school_name || ""}
                       onChange={(name, code, city) => setAnswers((prev: any) => ({
@@ -1036,8 +1089,9 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                       }))}
                       placeholder={t('onb_school_name_optional')}
                       className={inputClass}
+                      cityFilter={answers.docente_citta || undefined}
                     />
-                    <input type="text" placeholder={t('onb_doc_city_placeholder')} value={answers.docente_citta || ""} onChange={e => setAnswers({...answers, docente_citta: e.target.value})} className={inputClass} />
+                    
                     <button type="button" onClick={handleNext} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">
                       {t('onb_interests_skip')}
                     </button>
