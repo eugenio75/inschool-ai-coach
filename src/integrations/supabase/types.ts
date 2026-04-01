@@ -1050,6 +1050,7 @@ export type Database = {
           indirizzo: string | null
           provincia: string | null
           regione: string | null
+          tipo_gestione: string | null
           tipo_scuola: string | null
         }
         Insert: {
@@ -1061,6 +1062,7 @@ export type Database = {
           indirizzo?: string | null
           provincia?: string | null
           regione?: string | null
+          tipo_gestione?: string | null
           tipo_scuola?: string | null
         }
         Update: {
@@ -1072,6 +1074,7 @@ export type Database = {
           indirizzo?: string | null
           provincia?: string | null
           regione?: string | null
+          tipo_gestione?: string | null
           tipo_scuola?: string | null
         }
         Relationships: []
