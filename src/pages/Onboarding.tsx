@@ -1059,6 +1059,21 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 <div className="w-full space-y-6">
                     <h2 className="text-2xl font-bold text-foreground">{t('onb_doc_school_title')}</h2>
                     <p className="text-muted-foreground text-sm">{t('onb_doc_school_sub')}</p>
+                    <CityAutocomplete
+                      value={answers.docente_citta || ""}
+                      onChange={(city) => setAnswers((prev: any) => ({
+                        ...prev,
+                        docente_citta: city,
+                        school_name: "",
+                        school_code: null,
+                        teacher_declaration: {
+                          ...(prev.teacher_declaration || {}),
+                          school_name: "",
+                          school_code: null,
+                        },
+                      }))}
+                      className={inputClass}
+                    />
                     <SchoolAutocomplete
                       value={answers.school_name || ""}
                       onChange={(name, code, city) => setAnswers((prev: any) => ({
@@ -1074,6 +1089,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                       }))}
                       placeholder={t('onb_school_name_optional')}
                       className={inputClass}
+                      cityFilter={answers.docente_citta || undefined}
                     />
                     <input type="text" placeholder={t('onb_doc_city_placeholder')} value={answers.docente_citta || ""} onChange={e => setAnswers({...answers, docente_citta: e.target.value})} className={inputClass} />
                     <button type="button" onClick={handleNext} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">
