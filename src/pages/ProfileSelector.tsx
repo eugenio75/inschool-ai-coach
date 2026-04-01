@@ -16,6 +16,14 @@ const ProfileSelector = () => {
   const { signOut } = useAuth();
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopyCode = (code: string, profileId: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedId(profileId);
+    toast.success("Copiato!");
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   useEffect(() => {
     const load = async () => {
