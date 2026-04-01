@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getChildProfiles, setActiveChildProfileId } from "@/lib/database";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { getChildSession, setChildSession } from "@/lib/childSession";
+import { toast } from "sonner";
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
