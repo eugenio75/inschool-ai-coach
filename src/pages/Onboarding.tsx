@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getChildSession, setChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
 import OnboardingLegacy from "./OnboardingLegacy";
-import { coachAvatarSrc } from "@/components/shared/CoachAvatarPicker";
+import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { JoinClassInline } from "@/components/JoinClassModal";
 
 const variants = {
