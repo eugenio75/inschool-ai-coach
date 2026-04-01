@@ -764,7 +764,8 @@ serve(async (req) => {
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
         const sb = createClient(supabaseUrl, serviceRoleKey);
-        const { data: prefs } = await sb.from("user_preferences").select("adaptive_profile, cognitive_dynamic_profile, emotional_cognitive_correlation, mood_streak, bloom_level_current").eq("profile_id", profileId).maybeSingle();
+        const { data: prefs } = await sb.from("user_preferences").select("adaptive_profile, cognitive_dynamic_profile, emotional_cognitive_correlation, mood_streak, bloom_level_current, data").eq("profile_id", profileId).maybeSingle();
+        const coachNameFromPrefs = (prefs?.data as any)?.coach_name || null;
         const { data: todayCheckin } = await sb.from("emotional_checkins").select("emotional_tone, energy_level").eq("child_profile_id", profileId).eq("checkin_date", new Date().toISOString().split("T")[0]).maybeSingle();
         
         if (prefs) {
