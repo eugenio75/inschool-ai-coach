@@ -3,9 +3,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Users, Plus, FileText, LayoutDashboard, AlertCircle,
-  Send, Brain, Copy, CheckSquare, ChevronRight,
+  Send, Copy, CheckSquare, ChevronRight,
   Calendar, Clock, FolderOpen, MoreVertical, Pencil, Trash2, X,
 } from "lucide-react";
+import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
