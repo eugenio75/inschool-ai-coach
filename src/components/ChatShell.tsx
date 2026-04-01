@@ -229,7 +229,7 @@ export function ChatShell({
                   <AnimatePresence mode="wait">
                     <motion.img
                       key={mood}
-                      src={getCoachMoodSrc(mood)}
+                      src={studentAvatarUrl || coachAvatarSrc}
                       alt="Coach"
                       className="w-full h-full object-cover"
                       width={32} height={32}
