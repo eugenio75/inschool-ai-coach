@@ -1723,6 +1723,10 @@ export type Database = {
           teacher_id: string
         }[]
       }
+      get_discoverable_teachers_with_classes: {
+        Args: { school_code_param: string }
+        Returns: Json
+      }
       get_student_classes: {
         Args: { student_profile_id: string }
         Returns: Json
