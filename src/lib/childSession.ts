@@ -17,6 +17,10 @@ interface ChildSession {
     focus_time: number | null;
     support_style: string | null;
     interests: string[] | null;
+    school_name?: string | null;
+    school_code?: string | null;
+    city?: string | null;
+    class_section?: string | null;
   };
 }
 
@@ -49,6 +53,10 @@ export function setChildSession(session: ChildSession) {
     focusTime: session.profile.focus_time?.toString() || "15",
     supportStyle: session.profile.support_style,
     interests: session.profile.interests,
+    school_name: session.profile.school_name,
+    school_code: session.profile.school_code,
+    city: session.profile.city,
+    class_section: session.profile.class_section,
   }));
 }
 
