@@ -34,40 +34,14 @@ export function StepTeacherDeclaration({ onComplete, onBack }: StepTeacherDeclar
   const [mainSubject, setMainSubject] = useState("");
   const [schoolVerified, setSchoolVerified] = useState(false);
   const [miurCode, setMiurCode] = useState("");
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [searching, setSearching] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const canSubmit = schoolName.trim() && schoolCity.trim() && schoolOrder && mainSubject.trim();
 
-  useEffect(() => {
-    if (schoolName.length < 3) {
-      setSuggestions([]);
-      return;
-    }
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
-      setSearching(true);
-      try {
-        const { data } = await supabase.functions.invoke("miur-schools", {
-          body: { query: schoolName, city: schoolCity },
-        });
-        setSuggestions(data?.results || []);
-        setShowSuggestions(true);
-      } catch {
-        setSuggestions([]);
-      }
-      setSearching(false);
-    }, 400);
-  }, [schoolName, schoolCity]);
-
-  const selectSchool = (s: any) => {
-    setSchoolName(s.name);
-    if (s.city) setSchoolCity(s.city);
-    setSchoolVerified(s.verified);
-    setMiurCode(s.code || "");
-    setShowSuggestions(false);
+  const handleSchoolChange = (name: string, code: string | null, city: string) => {
+    setSchoolName(name);
+    setSchoolVerified(!!code);
+    setMiurCode(code || "");
+    if (city) setSchoolCity(city);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
