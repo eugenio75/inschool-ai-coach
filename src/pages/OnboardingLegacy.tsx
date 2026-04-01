@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getChildSession, clearChildSession, setChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
 import { CoachAvatar } from "@/components/shared/CoachAvatar";
+import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
 import { useToast } from "@/hooks/use-toast";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
