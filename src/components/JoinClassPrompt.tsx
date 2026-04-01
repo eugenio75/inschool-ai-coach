@@ -3,6 +3,7 @@ import { Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { JoinClassModal } from "./JoinClassModal";
 import { useTranslation } from "react-i18next";
+import { formatTeacherDisplay } from "@/lib/teacherTitle";
 
 /** Shows a subtle join-class prompt when the student has no enrollments */
 export function JoinClassPrompt({ profileId }: { profileId: string }) {
