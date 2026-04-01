@@ -23,8 +23,15 @@ export default function DashboardMedie() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const isChild = isChildSession();
+
   useEffect(() => {
-    const load = async () => {
+    if (isChild && shouldShowCheckin()) {
+      navigate("/checkin", { replace: true });
+    }
+  }, [isChild, navigate]);
+
+  useEffect(() => {
       const session = getChildSession();
       if (session?.profile) {
         setProfile(session.profile);
