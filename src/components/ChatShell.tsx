@@ -52,6 +52,24 @@ export function ChatShell({
   const [showExplainOptions, setShowExplainOptions] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [studentAvatarUrl, setStudentAvatarUrl] = useState<string | null>(null);
+
+  // Load student avatar
+  useEffect(() => {
+    const loadAvatar = async () => {
+      try {
+        const { isChildSession, getChildSession } = await import("@/lib/childSession");
+        const session = getChildSession();
+        const profileId = session?.profileId;
+        if (!profileId) return;
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data } = await supabase.from("child_profiles").select("avatar_emoji").eq("id", profileId).maybeSingle();
+        const resolved = getStudentAvatarSrc(data?.avatar_emoji);
+        if (resolved) setStudentAvatarUrl(resolved);
+      } catch {}
+    };
+    loadAvatar();
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
