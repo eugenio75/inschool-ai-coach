@@ -6,7 +6,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChatMsg } from "@/lib/streamChat";
 import { PomodoroTimer } from "@/components/PomodoroTimer";
-import { getCoachMoodSrc, detectMoodFromText, type CoachMood } from "@/components/shared/CoachAvatarPicker";
+import { getCoachMoodSrc, detectMoodFromText, getStudentAvatarSrc, coachAvatarSrc, type CoachMood } from "@/components/shared/CoachAvatarPicker";
 import { MathText } from "@/components/shared/MathText";
 import { useTranslation } from "react-i18next";
 
@@ -52,6 +52,24 @@ export function ChatShell({
   const [showExplainOptions, setShowExplainOptions] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [studentAvatarUrl, setStudentAvatarUrl] = useState<string | null>(null);
+
+  // Load student avatar
+  useEffect(() => {
+    const loadAvatar = async () => {
+      try {
+        const { isChildSession, getChildSession } = await import("@/lib/childSession");
+        const session = getChildSession();
+        const profileId = session?.profileId;
+        if (!profileId) return;
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data } = await supabase.from("child_profiles").select("avatar_emoji").eq("id", profileId).maybeSingle();
+        const resolved = getStudentAvatarSrc(data?.avatar_emoji);
+        if (resolved) setStudentAvatarUrl(resolved);
+      } catch {}
+    };
+    loadAvatar();
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -174,7 +192,7 @@ export function ChatShell({
         </button>
         {coachName && (
           <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden bg-primary/5">
-            <img src={getCoachMoodSrc("happy")} alt={coachName} className="w-full h-full object-cover" width={32} height={32} />
+            <img src={studentAvatarUrl || coachAvatarSrc} alt={coachName} className="w-full h-full object-cover" width={32} height={32} />
           </div>
         )}
         <div className="flex-1 min-w-0">
@@ -211,7 +229,7 @@ export function ChatShell({
                   <AnimatePresence mode="wait">
                     <motion.img
                       key={mood}
-                      src={getCoachMoodSrc(mood)}
+                      src={studentAvatarUrl || coachAvatarSrc}
                       alt="Coach"
                       className="w-full h-full object-cover"
                       width={32} height={32}
@@ -261,7 +279,7 @@ export function ChatShell({
           <div className="flex justify-start">
             <div className="w-8 h-8 rounded-full flex-shrink-0 mr-2 mt-1 overflow-hidden bg-primary/5">
               <motion.img
-                src={getCoachMoodSrc("thinking")}
+                src={studentAvatarUrl || coachAvatarSrc}
                 alt="Coach"
                 className="w-full h-full object-cover"
                 width={32} height={32}
@@ -280,7 +298,7 @@ export function ChatShell({
           <div className="flex justify-start">
             <div className="w-8 h-8 rounded-full flex-shrink-0 mr-2 overflow-hidden bg-primary/5">
               <motion.img
-                src={getCoachMoodSrc("thinking")}
+                src={studentAvatarUrl || coachAvatarSrc}
                 alt="Coach"
                 className="w-full h-full object-cover"
                 width={32} height={32}

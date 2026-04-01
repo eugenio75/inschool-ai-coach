@@ -1152,6 +1152,7 @@
   "onb_interests_title": "Your interests",
   "onb_interests_sub": "Select things you like — the coach will use them to make studying more fun! (optional)",
   "onb_interests_add": "Add other interests...",
+  "onb_interests_add_btn": "Add",
   "onb_interests_selected": "selected",
   "onb_interests_skip": "Skip →",
   "onb_interests_skip_now": "Skip for now",

@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
 import { getCurrentLang } from "@/lib/langUtils";
-import { getCoachMoodSrc, detectCoachMood, type CoachMood } from "@/components/shared/CoachAvatarPicker";
+import { getCoachMoodSrc, detectCoachMood, getStudentAvatarSrc, coachAvatarSrc, type CoachMood } from "@/components/shared/CoachAvatarPicker";
 
 function getProfile() {
   try {
@@ -181,10 +181,11 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
       ]);
       const prefs = (prefsRes.data?.data as any) || {};
       if (prefs.coach_name) setCoachName(prefs.coach_name);
-      // Use student's avatar if it's a URL (uploaded image)
+      // Resolve student avatar: check avatar_emoji from child_profiles
       const avatarVal = profileRes.data?.avatar_emoji;
-      if (avatarVal && (avatarVal.startsWith("http") || avatarVal.startsWith("/"))) {
-        setStudentAvatarUrl(avatarVal);
+      const resolved = getStudentAvatarSrc(avatarVal);
+      if (resolved) {
+        setStudentAvatarUrl(resolved);
       }
     };
     loadCoachPrefs();
@@ -348,7 +349,7 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
           <AnimatePresence mode="wait">
             <motion.img
               key={loading ? "loading" : (studentAvatarUrl ? "student-avatar" : coachMood)}
-              src={studentAvatarUrl || getCoachMoodSrc(loading ? "happy" : coachMood)}
+              src={studentAvatarUrl || coachAvatarSrc}
               alt={coachName || "Coach"}
               className="w-full h-full object-cover"
               width={64}

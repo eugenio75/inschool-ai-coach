@@ -170,7 +170,9 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                profile_id: profileId, role: role, current_step: currentStep, data: mergedData
             });
             const profileUpdates: any = { onboarding_completed: true };
-            if (answers.interests?.length > 0) profileUpdates.interests = answers.interests;
+            const interestsToSave = Array.isArray(answers.interests) ? answers.interests.filter((i: unknown) => typeof i === "string" && i.trim()) : [];
+            console.log("[Onboarding] Saving interests:", interestsToSave);
+            if (interestsToSave.length > 0) profileUpdates.interests = interestsToSave;
             await supabase.from("child_profiles").update(profileUpdates as any).eq("id", profileId);
             const currentSession = getChildSession();
             if (currentSession?.profile) {
@@ -358,6 +360,16 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                 maxLength={30}
                 className={inputClass}
               />
+              <button
+                type="button"
+                onClick={addCustomInterest}
+                disabled={!customVal.trim()}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors shrink-0 ${
+                  customVal.trim() ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"
+                }`}
+              >
+                {t('onb_interests_add_btn')}
+              </button>
             </div>
             {selected.length > 0 && (
               <p className="text-xs text-muted-foreground">{selected.length}/10 {t('onb_interests_selected')}</p>
