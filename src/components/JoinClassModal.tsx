@@ -88,7 +88,7 @@ export function JoinClassModal({ open, onOpenChange, profileId, onJoined }: Join
             )}
             {success.teacher_name && (
               <p className="text-sm text-muted-foreground">
-                Prof. {success.teacher_name}
+                {formatTeacherDisplay(success.teacher_name, success.teacher_last_name, success.teacher_gender)}
               </p>
             )}
             <Button onClick={handleClose} className="rounded-xl mt-2">
