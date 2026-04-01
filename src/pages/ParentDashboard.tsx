@@ -53,7 +53,10 @@ const ParentDashboard = () => {
       if (settings) setCorrectPin(settings.parent_pin || "0000");
       const kids = await getChildProfiles();
       setChildren(kids);
-      if (kids.length > 0) setSelectedChild(kids[0].id);
+      if (kids.length > 0) {
+        setSelectedChild(kids[0].id);
+        setActiveChildProfileId(kids[0].id);
+      }
       setLoading(false);
     };
     load();
