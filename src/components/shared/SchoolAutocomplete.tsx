@@ -19,6 +19,48 @@ interface SchoolAutocompleteProps {
   cityFilter?: string;
 }
 
+// Abbreviation mapping for Italian school types
+const ABBREVIATION_MAP: Record<string, string[]> = {
+  "istituto comprensivo": ["IC"],
+  "ic": ["istituto comprensivo"],
+  "liceo scientifico": ["LS"],
+  "ls": ["liceo scientifico"],
+  "istituto tecnico": ["ITIS", "ITS", "ITI"],
+  "itis": ["istituto tecnico"],
+  "its": ["istituto tecnico"],
+  "iti": ["istituto tecnico"],
+  "istituto professionale": ["IPSIA", "IPSS", "IP"],
+  "ipsia": ["istituto professionale"],
+  "ipss": ["istituto professionale"],
+  "liceo classico": ["LC"],
+  "lc": ["liceo classico"],
+  "scuola primaria": ["SP", "elementare"],
+  "sp": ["scuola primaria", "elementare"],
+  "elementare": ["scuola primaria", "SP"],
+  "scuola media": ["SM", "secondaria di primo grado", "secondaria I grado"],
+  "sm": ["scuola media"],
+  "secondaria": ["scuola media", "SM"],
+  "liceo linguistico": ["LL"],
+  "ll": ["liceo linguistico"],
+  "liceo artistico": ["LA"],
+  "la": ["liceo artistico"],
+};
+
+function getExpandedQueries(query: string): string[] {
+  const normalized = query.toLowerCase().trim();
+  const queries = new Set<string>([normalized]);
+
+  for (const [key, synonyms] of Object.entries(ABBREVIATION_MAP)) {
+    if (normalized.includes(key)) {
+      for (const syn of synonyms) {
+        queries.add(normalized.replace(key, syn.toLowerCase()));
+      }
+    }
+  }
+
+  return Array.from(queries);
+}
+
 export function SchoolAutocomplete({ value, onChange, placeholder, className, cityFilter }: SchoolAutocompleteProps) {
   const { t } = useTranslation();
   const [query, setQuery] = useState(value);
@@ -48,7 +90,8 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
     setSelectedCode(null);
     onChange(val, null, "");
 
-    if (val.length < 3) {
+    const trimmed = val.trim();
+    if (trimmed.length < 3) {
       setResults([]);
       setShowDropdown(false);
       return;
@@ -58,18 +101,32 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
       try {
-        const rpcArgs: any = {
-          query: val,
-          limit_n: 10,
-        };
-        if (cityFilter) {
-          rpcArgs.city_filter = cityFilter;
+        const expandedQueries = getExpandedQueries(trimmed);
+
+        const searches = expandedQueries.map((q) => {
+          const rpcArgs: any = { query: q, limit_n: 10 };
+          if (cityFilter) rpcArgs.city_filter = cityFilter;
+          return supabase.rpc("search_schools", rpcArgs);
+        });
+
+        const responses = await Promise.all(searches);
+
+        // Merge and deduplicate by codice_meccanografico
+        const seen = new Set<string>();
+        const merged: SchoolResult[] = [];
+        for (const { data, error } of responses) {
+          if (!error && data) {
+            for (const s of data as SchoolResult[]) {
+              if (!seen.has(s.codice_meccanografico)) {
+                seen.add(s.codice_meccanografico);
+                merged.push(s);
+              }
+            }
+          }
         }
-        const { data, error } = await supabase.rpc("search_schools", rpcArgs);
-        if (!error && data) {
-          setResults(data as SchoolResult[]);
-          setShowDropdown(true);
-        }
+
+        setResults(merged.slice(0, 15));
+        setShowDropdown(true);
       } catch {
         setResults([]);
       }
