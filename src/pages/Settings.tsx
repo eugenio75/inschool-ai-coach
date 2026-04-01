@@ -152,6 +152,24 @@ const Settings = () => {
       // Load docente materie from profile
       if (session?.profile?.school_level === "docente") {
         setDocenteMaterie(session.profile.favorite_subjects || []);
+        // Load discoverability
+        if (profileId) {
+          const { data: prefData2 } = await supabase
+            .from("user_preferences")
+            .select("data")
+            .eq("profile_id", profileId)
+            .maybeSingle();
+          const prefs2 = (prefData2?.data as any) || {};
+          setDiscoverable(!!prefs2.discoverable);
+          // Determine badge
+          if (prefs2.email_istituzionale_verified) {
+            setTeacherBadge("verified");
+          } else if (prefs2.teacher_declaration?.school_code) {
+            setTeacherBadge("school_recognized");
+          } else {
+            setTeacherBadge("unverified");
+          }
+        }
       }
 
       setLoading(false);
