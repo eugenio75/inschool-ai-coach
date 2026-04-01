@@ -62,6 +62,7 @@ const supportStyles = [
 
 interface OnboardingData {
   name: string;
+  lastName: string;
   age: string;
   dateOfBirth: string;
   gender: string;
