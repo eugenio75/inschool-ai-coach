@@ -8,6 +8,7 @@ import {
   Search, Network, Mic, PenLine, FileText, FolderOpen, Home, 
   Users2, Building, FilePlus, CheckSquare, BarChart2, BookMarked, Mail, Users
 } from "lucide-react";
+import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildSession, setChildSession } from "@/lib/childSession";
