@@ -607,9 +607,9 @@ const OnboardingLegacy = () => {
       </div>
       <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border px-6 py-4">
         <div className="max-w-lg mx-auto flex items-center justify-between">
-          <Button variant="ghost" onClick={() => step > 0 && step !== 8 ? setStep(step - 1) : step === 0 ? navigate("/profiles") : null} disabled={step === 8} className="text-muted-foreground"><ArrowLeft className="w-4 h-4 mr-1" /> Indietro</Button>
+          <Button variant="ghost" onClick={() => step > 0 && step !== 9 ? setStep(step - 1) : step === 0 ? navigate("/profiles") : null} disabled={step === 9} className="text-muted-foreground"><ArrowLeft className="w-4 h-4 mr-1" /> Indietro</Button>
           <Button onClick={next} disabled={!canProceed() || saving} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl px-6 disabled:opacity-40">
-            {step === 8 ? "Vai alla dashboard" : step === 7 ? (saving ? "Salvataggio..." : "Crea profilo!") : "Avanti"}<ArrowRight className="ml-1 w-4 h-4" />
+            {step === 9 ? "Vai alla dashboard" : step === 8 ? (saving ? "Salvataggio..." : "Crea profilo!") : "Avanti"}<ArrowRight className="ml-1 w-4 h-4" />
           </Button>
         </div>
       </div>
