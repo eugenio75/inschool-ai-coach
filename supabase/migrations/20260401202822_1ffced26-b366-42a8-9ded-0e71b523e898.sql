@@ -1,0 +1,1 @@
+ALTER TABLE public.child_profiles ADD COLUMN IF NOT EXISTS school_code text;

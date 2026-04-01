@@ -131,6 +131,7 @@ export type Database = {
           name: string
           onboarding_completed: boolean | null
           parent_id: string
+          school_code: string | null
           school_level: string | null
           school_name: string | null
           struggles: string[] | null
@@ -156,6 +157,7 @@ export type Database = {
           name: string
           onboarding_completed?: boolean | null
           parent_id: string
+          school_code?: string | null
           school_level?: string | null
           school_name?: string | null
           struggles?: string[] | null
@@ -181,6 +183,7 @@ export type Database = {
           name?: string
           onboarding_completed?: boolean | null
           parent_id?: string
+          school_code?: string | null
           school_level?: string | null
           school_name?: string | null
           struggles?: string[] | null
