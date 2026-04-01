@@ -6,7 +6,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChatMsg } from "@/lib/streamChat";
 import { PomodoroTimer } from "@/components/PomodoroTimer";
-import { getCoachMoodSrc, detectMoodFromText, type CoachMood } from "@/components/shared/CoachAvatarPicker";
+import { getCoachMoodSrc, detectMoodFromText, getStudentAvatarSrc, coachAvatarSrc, type CoachMood } from "@/components/shared/CoachAvatarPicker";
 import { MathText } from "@/components/shared/MathText";
 import { useTranslation } from "react-i18next";
 
