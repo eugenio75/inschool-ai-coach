@@ -149,7 +149,6 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
   const moodRef = useRef<HTMLDivElement>(null);
   const [coachName, setCoachName] = useState<string | null>(null);
   const [coachMood, setCoachMood] = useState<CoachMood>("happy");
-  const [studentAvatarUrl, setStudentAvatarUrl] = useState<string | null>(null);
   const [ctx, setCtx] = useState<CoachContext>({
     streak: 0, pendingHomework: [], teacherAssignments: [],
     urgentCount: 0, recentEmotions: [], recentErrors: [], recentSessions: [],
