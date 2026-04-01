@@ -394,10 +394,25 @@ const OnboardingLegacy = () => {
                     setCustomInterest("");
                   }
                 }}
-                placeholder="Aggiungi altri interessi..."
+                placeholder={t('onb_interests_add')}
                 maxLength={30}
                 className="flex-1 px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
               />
+              <button
+                type="button"
+                onClick={() => {
+                  if (customInterest.trim() && selected.length < 10 && !selected.includes(customInterest.trim())) {
+                    setData({ ...data, interests: [...selected, customInterest.trim()] });
+                    setCustomInterest("");
+                  }
+                }}
+                disabled={!customInterest.trim()}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors shrink-0 ${
+                  customInterest.trim() ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"
+                }`}
+              >
+                {t('onb_interests_add_btn')}
+              </button>
             </div>
             {selected.length > 0 && <p className="text-xs text-muted-foreground">{selected.length}/10 selezionati</p>}
             <button onClick={next} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">Salta</button>
