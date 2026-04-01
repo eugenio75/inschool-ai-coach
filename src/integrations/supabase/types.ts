@@ -1740,16 +1740,33 @@ export type Database = {
         Returns: Json
       }
       owns_child_profile: { Args: { profile_id: string }; Returns: boolean }
-      search_schools: {
+      search_cities: {
         Args: { limit_n?: number; query: string }
         Returns: {
-          codice_meccanografico: string
           comune: string
-          denominazione: string
-          provincia: string
-          tipo_scuola: string
         }[]
       }
+      search_schools:
+        | {
+            Args: { city_filter?: string; limit_n?: number; query: string }
+            Returns: {
+              codice_meccanografico: string
+              comune: string
+              denominazione: string
+              provincia: string
+              tipo_scuola: string
+            }[]
+          }
+        | {
+            Args: { limit_n?: number; query: string }
+            Returns: {
+              codice_meccanografico: string
+              comune: string
+              denominazione: string
+              provincia: string
+              tipo_scuola: string
+            }[]
+          }
       validate_child_code: { Args: { code: string }; Returns: Json }
     }
     Enums: {
