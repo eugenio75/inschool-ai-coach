@@ -217,7 +217,6 @@ const OnboardingLegacy = () => {
         await supabase.from("daily_missions").insert([
           { child_profile_id: profile.id, mission_date: today, title: "Studia 15 minuti", description: "Completa una sessione di studio", points_reward: 10, completed: false, mission_type: "study_session" },
           { child_profile_id: profile.id, mission_date: today, title: "Aggiungi un compito", description: "Inserisci un compito da fare", points_reward: 5, completed: false, mission_type: "complete_task" },
-          { child_profile_id: profile.id, mission_date: today, title: "Fai il check-in", description: "Dicci come stai oggi", points_reward: 5, completed: false, mission_type: "study_minutes" },
         ]);
 
         setCreatedProfile(profile);
