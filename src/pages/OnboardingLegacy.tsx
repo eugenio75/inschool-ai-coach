@@ -489,7 +489,49 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      case 7:
+      // Interests step
+      case 7: {
+        const selected = data.interests;
+        const [customVal, setCustomVal] = useState("");
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="font-display text-2xl font-bold text-foreground mb-2">Cosa piace a {data.name}?</h2>
+              <p className="text-muted-foreground text-sm">Il coach userà questi interessi per rendere lo studio più divertente! (facoltativo)</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {PRIMARIA_INTERESTS.map(s => {
+                const isSel = selected.includes(s.label);
+                return (
+                  <button key={s.label} onClick={() => {
+                    if (isSel) setData({ ...data, interests: selected.filter(i => i !== s.label) });
+                    else if (selected.length < 10) setData({ ...data, interests: [...selected, s.label] });
+                  }} className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${isSel ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>
+                    {s.emoji} {s.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex gap-2">
+              <input type="text" value={customVal} onChange={e => setCustomVal(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === "Enter" && customVal.trim() && selected.length < 10 && !selected.includes(customVal.trim())) {
+                    setData({ ...data, interests: [...selected, customVal.trim()] });
+                    setCustomVal("");
+                  }
+                }}
+                placeholder="Aggiungi altri interessi..."
+                maxLength={30}
+                className="flex-1 px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+              />
+            </div>
+            {selected.length > 0 && <p className="text-xs text-muted-foreground">{selected.length}/10 selezionati</p>}
+            <button onClick={next} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">Salta</button>
+          </div>
+        );
+      }
+
+      case 8:
         return (
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Quanto riesce a concentrarsi?</h2></div>
@@ -503,8 +545,7 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      // MODIFICA: Feature 6 — Access code display step
-      case 8:
+      case 9:
         return (
           <div className="space-y-6 text-center">
             <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
@@ -523,19 +564,11 @@ const OnboardingLegacy = () => {
             </div>
 
             <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={handleCopyCode}
-                className="flex-1 rounded-xl h-12"
-              >
+              <Button variant="outline" onClick={handleCopyCode} className="flex-1 rounded-xl h-12">
                 {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
                 {copied ? "Copiato!" : "Copia codice"}
               </Button>
-              <Button
-                variant="outline"
-                onClick={handleSendCodeEmail}
-                className="flex-1 rounded-xl h-12"
-              >
+              <Button variant="outline" onClick={handleSendCodeEmail} className="flex-1 rounded-xl h-12">
                 <Mail className="w-4 h-4 mr-2" />
                 Invia via email
               </Button>
