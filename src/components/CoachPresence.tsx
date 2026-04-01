@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
 import { getCurrentLang } from "@/lib/langUtils";
-import { getCoachMoodSrc, detectCoachMood, getStudentAvatarSrc, coachAvatarSrc, type CoachMood } from "@/components/shared/CoachAvatarPicker";
+import { detectCoachMood, type CoachMood } from "@/components/shared/CoachAvatarPicker";
+import { CoachAvatar, type CoachAvatarMood } from "@/components/shared/CoachAvatar";
 
 function getProfile() {
   try {
