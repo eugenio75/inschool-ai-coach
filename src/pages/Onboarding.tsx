@@ -227,7 +227,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             if (currentStep === 3) return answers.metodo_studio;
             if (currentStep === 4) return (answers.serve_ai || []).length > 0;
         } else if (role === "docente") {
-            if (currentStep === 1) return answers.docente_ordine && (answers.docente_materie || []).length > 0;
+            if (currentStep === 1) return answers.docente_gender && answers.docente_ordine && (answers.docente_materie || []).length > 0;
             return true;
         }
         return true;
