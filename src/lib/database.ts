@@ -119,7 +119,7 @@ export async function updateParentPin(pin: string) {
 // ============ HOMEWORK TASKS ============
 
 export async function getTasks(childProfileId?: string) {
-  if (isChildSession()) {
+  if (shouldUseChildSession(childProfileId)) {
     return childApi("get-tasks");
   }
 
