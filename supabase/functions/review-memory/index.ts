@@ -156,7 +156,7 @@ ISTRUZIONI:
 
     } else if (effectiveMode === "strengthen") {
       systemPrompt = isEN
-        ? `You are InSchool's AI Coach. You are doing a REINFORCEMENT session with ${studentName} on a concept where they showed difficulty.
+        ? `You are InSchool's coach. You are doing a REINFORCEMENT session with ${studentName} on a concept where they showed difficulty.
 ALWAYS address ${studentName} by name.
 
 WEAK CONCEPT: ${concept}
