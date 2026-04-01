@@ -175,18 +175,9 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
     const loadCoachPrefs = async () => {
       const profileId = getChildSession()?.profileId || profile?.id;
       if (!profileId) return;
-      const [prefsRes, profileRes] = await Promise.all([
-        supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle(),
-        supabase.from("child_profiles").select("avatar_emoji").eq("id", profileId).maybeSingle(),
-      ]);
+      const prefsRes = await supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
       const prefs = (prefsRes.data?.data as any) || {};
       if (prefs.coach_name) setCoachName(prefs.coach_name);
-      // Resolve student avatar: check avatar_emoji from child_profiles
-      const avatarVal = profileRes.data?.avatar_emoji;
-      const resolved = getStudentAvatarSrc(avatarVal);
-      if (resolved) {
-        setStudentAvatarUrl(resolved);
-      }
     };
     loadCoachPrefs();
   }, []);
