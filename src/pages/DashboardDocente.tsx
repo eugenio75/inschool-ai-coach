@@ -3,9 +3,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Users, Plus, FileText, LayoutDashboard, AlertCircle,
-  Send, Brain, Copy, CheckSquare, ChevronRight,
+  Send, Copy, CheckSquare, ChevronRight,
   Calendar, Clock, FolderOpen, MoreVertical, Pencil, Trash2, X,
 } from "lucide-react";
+import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
@@ -390,8 +391,8 @@ export default function DashboardDocente() {
         {/* ━━━ BLOCK 2 — COACH (compact — single message) ━━━ */}
         <div className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-start gap-3 mb-4">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center shrink-0 mt-0.5">
-              <Brain className="w-4 h-4 text-primary-foreground" />
+            <div className="shrink-0 mt-0.5">
+              <CoachAvatar mood="default" size={32} />
             </div>
             <div className="flex-1">
               {isLoadingCoachMsg ? (

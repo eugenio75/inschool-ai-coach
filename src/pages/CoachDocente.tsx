@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  ArrowLeft, Brain, Send, Trash2, Plus, Pencil, Menu, X,
+  ArrowLeft, Send, Trash2, Plus, Pencil, Menu, X,
 } from "lucide-react";
+import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
@@ -587,9 +588,7 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
             </div>
           ) : !activeChatId || messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center gap-4">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                <Brain className="w-8 h-8 text-primary" />
-              </div>
+              <CoachAvatar mood="default" size={64} />
               <p className="text-lg font-medium text-foreground">{t("coach_how_help")}</p>
             </div>
           ) : (
@@ -598,8 +597,8 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
                 return (
                   <div key={msg.id || i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
                     {msg.role === "assistant" && (
-                      <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center shrink-0 mt-0.5 mr-2">
-                        <Brain className="w-3.5 h-3.5 text-primary-foreground" />
+                      <div className="shrink-0 mt-0.5 mr-2">
+                        <CoachAvatar mood="default" size={28} />
                       </div>
                     )}
                     <div className="max-w-[80%] space-y-1">
