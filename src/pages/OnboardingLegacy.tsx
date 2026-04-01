@@ -15,6 +15,7 @@ import { getChildSession, clearChildSession, setChildSession } from "@/lib/child
 import { supabase } from "@/integrations/supabase/client";
 import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
+import { CityAutocomplete } from "@/components/shared/CityAutocomplete";
 import { formatTeacherDisplay } from "@/lib/teacherTitle";
 import { useToast } from "@/hooks/use-toast";
 
