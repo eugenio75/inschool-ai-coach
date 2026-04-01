@@ -32,6 +32,7 @@ export default function DashboardMedie() {
   }, [isChild, navigate]);
 
   useEffect(() => {
+    const load = async () => {
       const session = getChildSession();
       if (session?.profile) {
         setProfile(session.profile);
