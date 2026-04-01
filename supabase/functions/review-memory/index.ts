@@ -102,7 +102,7 @@ serve(async (req) => {
 
     if (effectiveMode === "deep-summary") {
       systemPrompt = isEN
-        ? `You are InSchool's AI Coach. You must generate a CLEAR AND COMPLETE SUMMARY of a topic studied by ${studentName}.
+        ? `You are InSchool's coach. You must generate a CLEAR AND COMPLETE SUMMARY of a topic studied by ${studentName}.
 
 TOPIC: ${concept}
 SUBJECT: ${subject || "not specified"}
@@ -128,7 +128,7 @@ INSTRUCTIONS:
 - Use emojis sparingly to make the text more readable
 - Length: about 150-300 words
 - ALWAYS respond in English`
-        : `Sei il Coach AI di Inschool. Devi generare una SINTESI CHIARA E COMPLETA di un argomento studiato da ${studentName}.
+        : `Sei il coach di Inschool. Devi generare una SINTESI CHIARA E COMPLETA di un argomento studiato da ${studentName}.
 
 ARGOMENTO: ${concept}
 MATERIA: ${subject || "non specificata"}
@@ -156,7 +156,7 @@ ISTRUZIONI:
 
     } else if (effectiveMode === "strengthen") {
       systemPrompt = isEN
-        ? `You are InSchool's AI Coach. You are doing a REINFORCEMENT session with ${studentName} on a concept where they showed difficulty.
+        ? `You are InSchool's coach. You are doing a REINFORCEMENT session with ${studentName} on a concept where they showed difficulty.
 ALWAYS address ${studentName} by name.
 
 WEAK CONCEPT: ${concept}
@@ -194,7 +194,7 @@ RULES:
 IMPORTANT: In the LAST message (after 2-3 exchanges), conclude with:
 [STRENGTH_UPDATE: XX]
 where XX is the new strength value (0-100) based on the answers.`
-        : `Sei il Coach AI di Inschool. Stai facendo una sessione di RINFORZO con ${studentName} su un concetto dove ha mostrato difficoltà.
+        : `Sei il coach di Inschool. Stai facendo una sessione di RINFORZO con ${studentName} su un concetto dove ha mostrato difficoltà.
 Rivolgiti SEMPRE a ${studentName} usando il suo nome.
 
 CONCETTO DEBOLE: ${concept}
@@ -234,7 +234,7 @@ dove XX è il nuovo valore di forza (0-100) basato sulle risposte.`;
 
     } else {
       systemPrompt = isEN
-        ? `You are InSchool's AI Coach. You are doing a REVIEW with ${studentName} on a concept they have already studied.
+        ? `You are InSchool's coach. You are doing a REVIEW with ${studentName} on a concept they have already studied.
 ALWAYS address ${studentName} by name.
 
 CONCEPT: ${concept}
@@ -274,7 +274,7 @@ RULES:
 IMPORTANT: In the LAST message (after 2-3 exchanges), conclude with:
 [STRENGTH_UPDATE: XX]
 where XX is the new strength value (0-100) based on the answers.`
-        : `Sei il Coach AI di Inschool. Stai facendo un RIPASSO con ${studentName} su un concetto che ha già studiato.
+        : `Sei il coach di Inschool. Stai facendo un RIPASSO con ${studentName} su un concetto che ha già studiato.
 Rivolgiti SEMPRE a ${studentName} usando il suo nome.
 
 CONCETTO: ${concept}

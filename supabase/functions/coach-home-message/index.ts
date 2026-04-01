@@ -13,7 +13,7 @@ serve(async (req) => {
     const {
       userName, schoolLevel, gender, lastSession, pendingHomework,
       recentEmotions, recentErrors, recentSessions,
-      streak, teacherAssignments, urgentCount, gamification, lang,
+      streak, teacherAssignments, urgentCount, gamification, lang, coachName,
     } = await req.json();
 
     const effectiveLang = lang || "it";
@@ -206,8 +206,9 @@ Lingue (inglese, latino, greco, seconda lingua):
         : `\n\nISTRUZIONE PENSIERO DI BENE: Alla fine del tuo messaggio, aggiungi questo pensiero come ultima frase naturale — non un blocco separato, non una card. Introducilo con "${connector}" e poi questo pensiero: "${thought}". Deve sembrare un amico che condivide una riflessione genuina.`;
     }
 
+    const coachLabel = coachName || (isEN ? "your coach" : "il tuo coach");
     const systemPrompt = isEN
-      ? `You are ${userName}'s personal AI coach on InSchool. You are a trusted companion — you know ${userName}, remember their sessions, progress and difficulties. You're not a psychologist, you're an attentive friend who notices how the other person is doing.
+      ? `You are ${coachLabel}, ${userName}'s personal coach on InSchool. You are a trusted companion — you know ${userName}, remember their sessions, progress and difficulties. You're not a psychologist, you're an attentive friend who notices how the other person is doing. Never refer to yourself as "AI", "artificial intelligence" or similar technical terms — you are simply a coach with a name.
 
 Generate ONE opening message for the home. Max 2-3 sentences.
 
@@ -248,7 +249,7 @@ Available routes (VERY IMPORTANT — use subject parameter when specifying a sub
 - /flashcards?subject=Mathematics (flashcards on specific subject)
 
 ROUTE RULE: when suggesting an action on a specific subject, ALWAYS include &subject=SubjectName in the route.`
-      : `Sei il coach AI personale di ${userName} su InSchool. Sei un compagno fidato — conosci ${userName}, ricordi le sue sessioni, i suoi progressi e le sue difficoltà. Non sei uno psicologo, sei un amico attento che si accorge di come sta l'altro.
+      : `Sei ${coachLabel}, il coach personale di ${userName} su InSchool. Sei un compagno fidato — conosci ${userName}, ricordi le sue sessioni, i suoi progressi e le sue difficoltà. Non sei uno psicologo, sei un amico attento che si accorge di come sta l'altro. Non riferirti mai a te stesso come "AI", "intelligenza artificiale" o termini tecnici simili — sei semplicemente un coach con un nome.
 
 Genera UN messaggio di apertura per la home. Max 2-3 frasi.
 

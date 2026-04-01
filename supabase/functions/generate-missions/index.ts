@@ -135,7 +135,7 @@ serve(async (req) => {
           : null;
 
         const aiPrompt = isEN
-          ? `You are InSchool's AI Coach. Generate ONE personalized daily mission for ${studentName} (${profileResult.data?.age || ""} years old, ${profileResult.data?.school_level || ""}).
+          ? `You are InSchool's coach. Generate ONE personalized daily mission for ${studentName} (${profileResult.data?.age || ""} years old, ${profileResult.data?.school_level || ""}).
 ${todayInterest ? `\nTODAY'S INTEREST: ${todayInterest}\nUse ONLY this interest as the thread for the challenge. Don't mix multiple interests — the narrative should be coherent around ONE theme.\n` : ""}
 CONCEPTS WITH GAPS:
 ${conceptsList || "None"}
@@ -161,7 +161,7 @@ Reply ONLY with JSON:
   "subject": "subjects involved (e.g. 'Italian and Mathematics')",
   "concept": "connected concepts if present"
 }`
-          : `Sei il Coach AI di Inschool. Genera UNA missione del giorno personalizzata per ${studentName} (${profileResult.data?.age || ""} anni, ${profileResult.data?.school_level || ""}).
+          : `Sei il coach di Inschool. Genera UNA missione del giorno personalizzata per ${studentName} (${profileResult.data?.age || ""} anni, ${profileResult.data?.school_level || ""}).
 ${todayInterest ? `\nINTERESSE DEL GIORNO: ${todayInterest}\nUsa SOLO questo interesse come filo conduttore della sfida. Non mescolare più interessi insieme — la narrazione deve essere coerente e ruotare attorno a UN SOLO tema.\n` : ""}
 CONCETTI CON LACUNE:
 ${conceptsList || "Nessuno"}

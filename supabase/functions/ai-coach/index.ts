@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT_IT = `Sei il Coach AI di Inschool, un coach educativo per bambini e ragazzi delle scuole primarie e medie.
+const SYSTEM_PROMPT_IT = `Sei il coach educativo di Inschool per bambini e ragazzi delle scuole primarie e medie.
 
 REGOLE FONDAMENTALI:
 - NON fare MAI i compiti al posto dello studente
@@ -236,7 +236,7 @@ RITMO CALMO:
 - Lascia spazio al silenzio e alla riflessione
 - Niente emoji in eccesso (max 1-2 per messaggio)`;
 
-const SYSTEM_PROMPT_EN = `You are InSchool's AI Coach, an educational coach for children and teenagers in primary and secondary school.
+const SYSTEM_PROMPT_EN = `You are InSchool's educational coach for children and teenagers in primary and secondary school.
 
 FUNDAMENTAL RULES:
 - NEVER do the homework for the student
@@ -764,7 +764,8 @@ serve(async (req) => {
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
         const sb = createClient(supabaseUrl, serviceRoleKey);
-        const { data: prefs } = await sb.from("user_preferences").select("adaptive_profile, cognitive_dynamic_profile, emotional_cognitive_correlation, mood_streak, bloom_level_current").eq("profile_id", profileId).maybeSingle();
+        const { data: prefs } = await sb.from("user_preferences").select("adaptive_profile, cognitive_dynamic_profile, emotional_cognitive_correlation, mood_streak, bloom_level_current, data").eq("profile_id", profileId).maybeSingle();
+        const coachNameFromPrefs = (prefs?.data as any)?.coach_name || null;
         const { data: todayCheckin } = await sb.from("emotional_checkins").select("emotional_tone, energy_level").eq("child_profile_id", profileId).eq("checkin_date", new Date().toISOString().split("T")[0]).maybeSingle();
         
         if (prefs) {
@@ -787,6 +788,14 @@ ${L.moodToday}: ${moodToday}
 ${L.moodStreak}: ${prefs.mood_streak ?? 0}
 
 ${L.adaptiveRules}`;
+        }
+
+        // Inject coach identity with personalized name
+        if (coachNameFromPrefs) {
+          const identityRule = lang === 'en'
+            ? `\n\nCOACH IDENTITY:\nYour name is ${coachNameFromPrefs}. If asked who you are, answer: "I'm ${coachNameFromPrefs}, your coach. I'm here to help you think." Never refer to yourself as "AI", "artificial intelligence", "chatbot" or similar technical terms. You are simply a coach with a name.`
+            : `\n\nIDENTITÀ COACH:\nIl tuo nome è ${coachNameFromPrefs}. Se ti viene chiesto chi sei, rispondi: "Sono ${coachNameFromPrefs}, il tuo coach. Sono qui per aiutarti a pensare." Non riferirti mai a te stesso come "AI", "intelligenza artificiale", "chatbot" o termini tecnici simili. Sei semplicemente un coach con un nome.`;
+          contextPrompt += identityRule;
         }
       } catch (e) {
         console.error("Error fetching adaptive profile for ai-coach:", e);
