@@ -50,10 +50,11 @@ const DashboardAlunno = () => {
           if (saved) try { currentProfile = JSON.parse(saved); setProfile(currentProfile); } catch {}
         }
       }
-      if (currentProfile?.school_level === "alunno" && profileId) {
+      if (profileId) {
         const { data } = await supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
         const prefs = (data?.data as any) || {};
-        setShowLibrary(!!prefs.show_library);
+        if (currentProfile?.school_level === "alunno") setShowLibrary(!!prefs.show_library);
+        if (prefs.coach_name) setCoachName(prefs.coach_name);
       }
       const dbTasks = await getTasks();
       setTasks(dbTasks);
