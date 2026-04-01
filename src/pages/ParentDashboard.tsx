@@ -264,7 +264,7 @@ const ParentDashboard = () => {
               {children.map((child) => (
                 <button
                   key={child.id}
-                  onClick={() => setSelectedChild(child.id)}
+                  onClick={() => { setSelectedChild(child.id); setActiveChildProfileId(child.id); }}
                   className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
                     selectedChild === child.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
                   }`}
