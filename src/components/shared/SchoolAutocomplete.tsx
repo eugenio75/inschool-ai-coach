@@ -174,7 +174,7 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
           <span className="text-xs text-amber-600 font-medium">{t("school_recognized")}</span>
         </div>
       )}
-      {query.length >= 3 && !selectedCode && !searching && results.length === 0 && showDropdown && (
+      {query.length >= 2 && !selectedCode && !searching && results.length === 0 && showDropdown && (
         <p className="text-xs text-muted-foreground mt-1.5 px-1">{t("school_not_found_hint")}</p>
       )}
       {query.length >= 3 && !selectedCode && !searching && (
