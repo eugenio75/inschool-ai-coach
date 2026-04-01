@@ -77,7 +77,7 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
     onChange(val, null, "");
 
     const trimmed = val.trim();
-    if (trimmed.length < 3) {
+    if (trimmed.length < 2) {
       setResults([]);
       setShowDropdown(false);
       return;
