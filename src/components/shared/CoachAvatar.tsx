@@ -255,7 +255,7 @@ export function CoachAvatar({ mood = "default", size = 120 }: CoachAvatarProps) 
                     width: px(cfg.eyeW * 0.65), height: px(cfg.eyeH * 0.65),
                     borderRadius: "50%",
                     background: `radial-gradient(circle, ${cfg.irisGradient[0]}, ${cfg.irisGradient[1]})`,
-                    top: "50%", left: "50%",
+                    top: "45%", left: "50%",
                     transform: "translate(-50%, -50%)",
                     animation: `ca-look ${cfg.eyeMoveInterval}s ease-in-out infinite`,
                   }}>
