@@ -174,17 +174,15 @@ const OnboardingLegacy = () => {
   };
 
   const next = async () => {
-    // MODIFICA: Feature 6 — Create profile at step 7 (focus time), show access code at step 8
-    if (step === 7) {
+    // Create profile at step 8 (focus time), show access code at step 9
+    if (step === 8) {
       setSaving(true);
-      // MODIFICA: Feature 4 — Invert subject logic: unchecked subjects = difficult
       const allSubjects = subjects;
       const difficultSubjects = allSubjects.filter(s => !data.favoriteSubjects.includes(s));
 
-      // Determine correct school_level for DB
       const schoolLevel = data.schoolLevel.startsWith("primaria") 
-        ? data.schoolLevel.replace("primaria-", "primaria-") // keep as-is
-        : data.schoolLevel; // media-1, media-2, media-3
+        ? data.schoolLevel.replace("primaria-", "primaria-")
+        : data.schoolLevel;
 
       const profile = await createChildProfile({
         name: data.name,
@@ -198,15 +196,14 @@ const OnboardingLegacy = () => {
         focus_time: parseInt(data.focusTime) || 15,
         support_style: data.supportStyles.join(","),
         date_of_birth: data.dateOfBirth || undefined,
+        interests: data.interests.length > 0 ? data.interests : undefined,
       } as any);
 
       if (profile) {
-        // Save avatar URL if custom photo was uploaded
         if (data.avatarUrl && data.avatar === "custom") {
           await supabase.from("child_profiles").update({ avatar_emoji: data.avatarUrl } as any).eq("id", profile.id);
         }
 
-        // MODIFICA: Feature 2 — Save coach name to user_preferences
         if (data.coachName.trim()) {
           await supabase.from("user_preferences").upsert({
             profile_id: profile.id,
@@ -214,15 +211,10 @@ const OnboardingLegacy = () => {
           } as any);
         }
 
-        // FIX 1: Auto-create gamification + daily missions for new profile
         await supabase.from("gamification").upsert({
           child_profile_id: profile.id,
-          focus_points: 0,
-          consistency_points: 0,
-          autonomy_points: 0,
-          streak: 0,
-          streak_shields: 0,
-          next_shield_at: 7,
+          focus_points: 0, consistency_points: 0, autonomy_points: 0,
+          streak: 0, streak_shields: 0, next_shield_at: 7,
         }, { onConflict: "child_profile_id" });
 
         const today = new Date().toISOString().split("T")[0];
@@ -233,7 +225,7 @@ const OnboardingLegacy = () => {
 
         setCreatedProfile(profile);
         setSaving(false);
-        setStep(8); // Go to access code step
+        setStep(9);
       } else {
         setSaving(false);
         toast({ title: "Errore nella creazione del profilo", variant: "destructive" });
@@ -241,14 +233,12 @@ const OnboardingLegacy = () => {
       return;
     }
 
-    if (step === 8) {
-      // Final step - navigate to dashboard with the NEW profile active
+    if (step === 9) {
       if (createdProfile) {
         if (adultSession?.profile?.school_level && ["superiori", "universitario", "docente"].includes(adultSession.profile.school_level)) {
           clearChildSession();
         }
         setActiveChildProfileId(createdProfile.id);
-        // Set child session so Dashboard picks up the correct profile
         setChildSession({
           profileId: createdProfile.id,
           accessCode: createdProfile.access_code || "",
@@ -264,19 +254,13 @@ const OnboardingLegacy = () => {
             struggles: createdProfile.struggles || data.struggles,
             focus_time: createdProfile.focus_time ?? (parseInt(data.focusTime) || 15),
             support_style: createdProfile.support_style || data.supportStyles.join(","),
-            interests: createdProfile.interests || null,
+            interests: createdProfile.interests || data.interests || null,
           },
         });
         localStorage.setItem("inschool-profile", JSON.stringify({
-          id: createdProfile.id,
-          name: data.name,
-          age: data.age,
-          gender: data.gender,
-          avatarEmoji: data.avatar,
-          schoolLevel: data.schoolLevel,
-          favoriteSubjects: data.favoriteSubjects,
-          focusTime: data.focusTime,
-          supportStyles: data.supportStyles,
+          id: createdProfile.id, name: data.name, age: data.age, gender: data.gender,
+          avatarEmoji: data.avatar, schoolLevel: data.schoolLevel,
+          favoriteSubjects: data.favoriteSubjects, focusTime: data.focusTime, supportStyles: data.supportStyles,
         }));
       }
       navigate("/dashboard");
@@ -284,7 +268,6 @@ const OnboardingLegacy = () => {
     }
 
     if (step < totalSteps - 1) {
-      // Validate age on step 0
       if (step === 0) {
         const childAge = parseInt(data.age);
         if (childAge && childAge < 6) return;
