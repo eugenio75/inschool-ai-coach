@@ -152,7 +152,7 @@ const StudentProfile = () => {
     || schoolData.city !== (profile.city || "");
 
   const accessCode = profile?.access_code;
-  const showAccessCode = accessCode && (isChild || isChildLevel(profile.school_level));
+  const showAccessCode = !!accessCode || isChild || isChildLevel(profile.school_level);
 
   return (
     <div className="min-h-screen bg-background pb-24">
