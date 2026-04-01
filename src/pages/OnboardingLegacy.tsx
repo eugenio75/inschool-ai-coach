@@ -3,6 +3,7 @@
 // Avatar selection removed — coach is always CoachAvatar component
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, BookOpen, Check, Copy, Mail, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
