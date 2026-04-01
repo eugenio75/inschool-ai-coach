@@ -1040,6 +1040,42 @@ export type Database = {
           },
         ]
       }
+      schools: {
+        Row: {
+          codice_meccanografico: string
+          comune: string | null
+          created_at: string | null
+          denominazione: string
+          id: string
+          indirizzo: string | null
+          provincia: string | null
+          regione: string | null
+          tipo_scuola: string | null
+        }
+        Insert: {
+          codice_meccanografico: string
+          comune?: string | null
+          created_at?: string | null
+          denominazione: string
+          id?: string
+          indirizzo?: string | null
+          provincia?: string | null
+          regione?: string | null
+          tipo_scuola?: string | null
+        }
+        Update: {
+          codice_meccanografico?: string
+          comune?: string | null
+          created_at?: string | null
+          denominazione?: string
+          id?: string
+          indirizzo?: string | null
+          provincia?: string | null
+          regione?: string | null
+          tipo_scuola?: string | null
+        }
+        Relationships: []
+      }
       sessioni_studio: {
         Row: {
           created_at: string | null
@@ -1672,6 +1708,15 @@ export type Database = {
         Returns: Json
       }
       get_child_gamification: { Args: { p_profile_id: string }; Returns: Json }
+      get_discoverable_teachers: {
+        Args: { school_code_param: string }
+        Returns: {
+          badge: string
+          last_name: string
+          name: string
+          teacher_id: string
+        }[]
+      }
       get_student_classes: {
         Args: { student_profile_id: string }
         Returns: Json
@@ -1685,6 +1730,16 @@ export type Database = {
         Returns: Json
       }
       owns_child_profile: { Args: { profile_id: string }; Returns: boolean }
+      search_schools: {
+        Args: { limit_n?: number; query: string }
+        Returns: {
+          codice_meccanografico: string
+          comune: string
+          denominazione: string
+          provincia: string
+          tipo_scuola: string
+        }[]
+      }
       validate_child_code: { Args: { code: string }; Returns: Json }
     }
     Enums: {
