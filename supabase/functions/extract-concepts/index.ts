@@ -80,7 +80,7 @@ serve(async (req) => {
       .join("\n");
 
     const extractPrompt = isEN
-      ? `Analyze this study conversation between an AI coach and ${studentName}.
+      ? `Analyze this study conversation between a coach and ${studentName}.
 Extract the KEY CONCEPTS that ${studentName} learned or worked on during the session.
 
 Subject: ${taskSubject || "not specified"}

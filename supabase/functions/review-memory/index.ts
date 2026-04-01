@@ -234,7 +234,7 @@ dove XX è il nuovo valore di forza (0-100) basato sulle risposte.`;
 
     } else {
       systemPrompt = isEN
-        ? `You are InSchool's AI Coach. You are doing a REVIEW with ${studentName} on a concept they have already studied.
+        ? `You are InSchool's coach. You are doing a REVIEW with ${studentName} on a concept they have already studied.
 ALWAYS address ${studentName} by name.
 
 CONCEPT: ${concept}
