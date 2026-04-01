@@ -291,7 +291,7 @@ const Settings = () => {
   };
 
   const handleDeleteAccount = async () => {
-    if (deleteConfirmText !== "DELETE") return;
+    if (!user?.email || deleteConfirmText !== user.email) return;
     setDeleting(true);
     try {
       const { error } = await supabase.functions.invoke("delete-account", {
