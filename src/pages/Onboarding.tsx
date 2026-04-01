@@ -111,7 +111,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const hasClassCodeStep = role === "medie" || role === "superiori";
-    const totalSteps = role === "docente" ? 4 : (hasClassCodeStep ? 10 : 9);
+    const totalSteps = role === "docente" ? 5 : (hasClassCodeStep ? 10 : 9);
     const normalizedInitialStep = Number.isFinite(Number(initialStep)) ? Number(initialStep) : 0;
     const [step, setStep] = useState(() => Math.min(Math.max(normalizedInitialStep, 0), totalSteps - 1));
     const [answers, setAnswers] = useState<any>(initialData || {});
@@ -1019,6 +1019,33 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             case 2:
               return (
                 <div className="w-full space-y-6">
+                    <h2 className="text-2xl font-bold text-foreground">{t('onb_doc_school_title')}</h2>
+                    <p className="text-muted-foreground text-sm">{t('onb_doc_school_sub')}</p>
+                    <SchoolAutocomplete
+                      value={answers.school_name || ""}
+                      onChange={(name, code, city) => setAnswers((prev: any) => ({
+                        ...prev,
+                        school_name: name,
+                        school_code: code,
+                        ...(city ? { docente_citta: city } : {}),
+                        teacher_declaration: {
+                          ...(prev.teacher_declaration || {}),
+                          school_name: name,
+                          school_code: code,
+                        },
+                      }))}
+                      placeholder={t('onb_school_name_optional')}
+                      className={inputClass}
+                    />
+                    <input type="text" placeholder={t('onb_doc_city_placeholder')} value={answers.docente_citta || ""} onChange={e => setAnswers({...answers, docente_citta: e.target.value})} className={inputClass} />
+                    <button type="button" onClick={handleNext} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">
+                      {t('onb_interests_skip')}
+                    </button>
+                </div>
+              );
+            case 3:
+              return (
+                <div className="w-full space-y-6">
                     <h2 className="text-2xl font-bold text-foreground">{t('onb_doc_customize')}</h2>
                     <p className="text-muted-foreground text-sm">{t('onb_doc_customize_sub')}</p>
                     <div className="flex justify-center mb-2">
@@ -1028,7 +1055,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     <p className="text-xs text-muted-foreground text-center">{t('onb_doc_name_change')}</p>
                 </div>
               );
-            case 3:
+            case 4:
               return (
                 <div className="text-left w-full space-y-6">
                     <h2 className="text-3xl font-bold text-foreground mb-2">{t('onb_all_set')}</h2>
@@ -1036,6 +1063,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     <div className={summaryBoxClass}>
                         <div><span className={summaryLabelClass}>{t('onb_doc_summary_order')}</span><p className={summaryValueClass}>{answers.docente_ordine}</p></div>
                         <div><span className={summaryLabelClass}>{t('onb_doc_summary_subjects')}</span><p className={summaryValueClass}>{(answers.docente_materie || []).join(", ")}</p></div>
+                        {answers.school_name && <div><span className={summaryLabelClass}>{t('onb_doc_summary_school')}</span><p className={summaryValueClass}>{answers.school_name}{answers.docente_citta ? ` — ${answers.docente_citta}` : ''}</p></div>}
                         {answers.coach_name && <div><span className={summaryLabelClass}>{t('onb_doc_summary_ai')}</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
                     </div>
                 </div>
