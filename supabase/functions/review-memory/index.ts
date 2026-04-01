@@ -102,7 +102,7 @@ serve(async (req) => {
 
     if (effectiveMode === "deep-summary") {
       systemPrompt = isEN
-        ? `You are InSchool's AI Coach. You must generate a CLEAR AND COMPLETE SUMMARY of a topic studied by ${studentName}.
+        ? `You are InSchool's coach. You must generate a CLEAR AND COMPLETE SUMMARY of a topic studied by ${studentName}.
 
 TOPIC: ${concept}
 SUBJECT: ${subject || "not specified"}
