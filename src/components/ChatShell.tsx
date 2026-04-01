@@ -192,7 +192,7 @@ export function ChatShell({
         </button>
         {coachName && (
           <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden bg-primary/5">
-            <img src={getCoachMoodSrc("happy")} alt={coachName} className="w-full h-full object-cover" width={32} height={32} />
+            <img src={studentAvatarUrl || coachAvatarSrc} alt={coachName} className="w-full h-full object-cover" width={32} height={32} />
           </div>
         )}
         <div className="flex-1 min-w-0">
