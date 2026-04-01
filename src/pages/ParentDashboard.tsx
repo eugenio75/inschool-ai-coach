@@ -177,7 +177,9 @@ const ParentDashboard = () => {
       setChildren(prev => prev.filter(c => c.id !== deleteChildTarget.id));
       if (selectedChild === deleteChildTarget.id) {
         const remaining = children.filter(c => c.id !== deleteChildTarget.id);
-        setSelectedChild(remaining.length > 0 ? remaining[0].id : null);
+        const newId = remaining.length > 0 ? remaining[0].id : null;
+        setSelectedChild(newId);
+        if (newId) setActiveChildProfileId(newId);
       }
       toast.success(t("delete_child_success"));
       setDeleteChildTarget(null);
