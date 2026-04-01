@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Bot, Brain, Target } from "lucide-react";
+import { BookOpen, MessageSquare, Brain, Target } from "lucide-react";
 import { useLang } from "@/contexts/LangContext";
 import { getPrepLabelKey } from "@/lib/schoolTerms";
 
@@ -9,11 +9,16 @@ const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 interface StudentActionCardsProps {
   hasTasks: boolean;
   schoolLevel?: string;
+  coachName?: string;
 }
 
-export function StudentActionCards({ hasTasks, schoolLevel = "medie" }: StudentActionCardsProps) {
+export function StudentActionCards({ hasTasks, schoolLevel = "medie", coachName }: StudentActionCardsProps) {
   const navigate = useNavigate();
   const { t } = useLang();
+
+  const coachLabel = coachName
+    ? `${t("action_study_with")} ${coachName}`
+    : t("action_free_study");
 
   const cards = [
     {
@@ -28,11 +33,11 @@ export function StudentActionCards({ hasTasks, schoolLevel = "medie" }: StudentA
     },
     {
       id: "coach",
-      emoji: "🤖",
-      icon: Bot,
-      label: t("action_study_coach"),
-      desc: t("action_study_coach_desc"),
-      action: () => navigate(hasTasks ? "/study-tasks" : "/add-homework"),
+      emoji: "💬",
+      icon: MessageSquare,
+      label: coachLabel,
+      desc: t("action_free_study_desc"),
+      action: () => navigate("/us?type=study"),
       color: "bg-sage-light",
       iconColor: "text-sage-dark",
     },

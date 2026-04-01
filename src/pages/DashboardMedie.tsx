@@ -22,6 +22,7 @@ export default function DashboardMedie() {
   const [profile, setProfile] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [coachName, setCoachName] = useState("");
 
   const isChild = isChildSession();
 
@@ -42,6 +43,12 @@ export default function DashboardMedie() {
           const p = await getChildProfile(profileId);
           if (p) setProfile(p);
         }
+      }
+      const pid = getActiveChildProfileId() || session?.profile?.id;
+      if (pid) {
+        const { data: prefData } = await supabase.from("user_preferences").select("data").eq("profile_id", pid).maybeSingle();
+        const prefs = (prefData?.data as any) || {};
+        if (prefs.coach_name) setCoachName(prefs.coach_name);
       }
       const dbTasks = await getTasks();
       setTasks(dbTasks);
@@ -108,7 +115,7 @@ export default function DashboardMedie() {
       <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.16 }}>
           <h3 className="font-display font-semibold text-foreground text-sm mb-3">Cosa vuoi fare?</h3>
-          <StudentActionCards hasTasks={tasks.length > 0} schoolLevel="medie" />
+          <StudentActionCards hasTasks={tasks.length > 0} schoolLevel="medie" coachName={coachName} />
         </motion.div>
       </div></div>
 

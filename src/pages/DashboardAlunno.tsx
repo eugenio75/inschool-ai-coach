@@ -25,6 +25,7 @@ const DashboardAlunno = () => {
   const [loading, setLoading] = useState(true);
   const isChild = isChildSession();
   const [showLibrary, setShowLibrary] = useState(false);
+  const [coachName, setCoachName] = useState("");
 
   useEffect(() => {
     if (isChild && shouldShowCheckin()) {
@@ -49,10 +50,11 @@ const DashboardAlunno = () => {
           if (saved) try { currentProfile = JSON.parse(saved); setProfile(currentProfile); } catch {}
         }
       }
-      if (currentProfile?.school_level === "alunno" && profileId) {
+      if (profileId) {
         const { data } = await supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
         const prefs = (data?.data as any) || {};
-        setShowLibrary(!!prefs.show_library);
+        if (currentProfile?.school_level === "alunno") setShowLibrary(!!prefs.show_library);
+        if (prefs.coach_name) setCoachName(prefs.coach_name);
       }
       const dbTasks = await getTasks();
       setTasks(dbTasks);
@@ -138,7 +140,7 @@ const DashboardAlunno = () => {
       <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.16 }}>
           <h3 className="font-display font-semibold text-foreground text-sm mb-3">Cosa vuoi fare?</h3>
-          <StudentActionCards hasTasks={tasks.length > 0} schoolLevel={profile?.school_level || "alunno"} />
+          <StudentActionCards hasTasks={tasks.length > 0} schoolLevel={profile?.school_level || "alunno"} coachName={coachName} />
         </motion.div>
       </div></div>
 
