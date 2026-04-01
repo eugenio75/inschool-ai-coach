@@ -914,8 +914,8 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             case 0:
               return (
                 <div className="text-center w-full space-y-6">
-                    <div className="w-20 h-20 mx-auto rounded-full overflow-hidden bg-primary/10 mb-2">
-                      <img src={coachAvatarSrc} alt="Coach" className="w-full h-full object-cover" width={80} height={80} />
+                    <div className="flex justify-center mb-2">
+                      <CoachAvatar mood="default" size={80} />
                     </div>
                     <h2 className="text-2xl font-bold text-foreground">{t('onb_doc_welcome')}</h2>
                     <p className="text-muted-foreground text-sm max-w-md mx-auto">{t('onb_doc_welcome_sub')}</p>
