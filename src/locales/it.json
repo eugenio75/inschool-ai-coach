@@ -1142,6 +1142,8 @@
   "nav_materials": "Materiali",
   "action_my_tasks": "I miei compiti",
   "action_my_tasks_desc": "Vedi e studia i tuoi compiti",
+  "action_add_task": "Aggiungi un compito",
+  "action_no_tasks_desc": "Nessun compito per oggi",
   "action_study_coach": "Studia con il coach",
   "action_study_coach_desc": "Il coach ti guida passo passo",
   "action_free_study": "Studio libero",
