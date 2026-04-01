@@ -1091,7 +1091,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                       className={inputClass}
                       cityFilter={answers.docente_citta || undefined}
                     />
-                    <input type="text" placeholder={t('onb_doc_city_placeholder')} value={answers.docente_citta || ""} onChange={e => setAnswers({...answers, docente_citta: e.target.value})} className={inputClass} />
+                    
                     <button type="button" onClick={handleNext} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">
                       {t('onb_interests_skip')}
                     </button>
