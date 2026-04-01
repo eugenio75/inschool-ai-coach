@@ -75,7 +75,7 @@ export function MyClassesSection({ profileId }: { profileId: string }) {
                       {c.subject}
                     </span>
                   )}
-                  <span className="text-xs text-muted-foreground">Prof. {c.teacher_name}</span>
+                  <span className="text-xs text-muted-foreground">{formatTeacherDisplay(c.teacher_name, c.teacher_last_name, c.teacher_gender)}</span>
                 </div>
               </div>
               <button

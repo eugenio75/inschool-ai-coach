@@ -27,7 +27,7 @@ export function JoinClassPrompt({ profileId }: { profileId: string }) {
       <div className="text-xs text-muted-foreground">
         {t("class_enrolled_line", {
           className: enrolledInfo.class_name,
-          teacher: enrolledInfo.teacher_name,
+          teacher: formatTeacherDisplay(enrolledInfo.teacher_name, enrolledInfo.teacher_last_name, enrolledInfo.teacher_gender),
         })}
       </div>
     );
