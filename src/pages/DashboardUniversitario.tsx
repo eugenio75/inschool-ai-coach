@@ -246,7 +246,7 @@ export default function DashboardUniversitario() {
           className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-              {getGreeting()}, {profile?.name?.split(" ")[0] || ""}
+              {getGreeting()}, {(() => { const n = profile?.name?.split(" ")[0] || ""; return n.charAt(0).toUpperCase() + n.slice(1).toLowerCase(); })()}
             </h1>
             {(od?.uni_corso || od?.uni_nome || od?.uni_anno) && (
               <p className="text-muted-foreground mt-1 text-sm">

@@ -298,7 +298,7 @@ export function ChatShell({
           <div className="flex justify-start">
             <div className="w-8 h-8 rounded-full flex-shrink-0 mr-2 overflow-hidden bg-primary/5">
               <motion.img
-                src={getCoachMoodSrc("thinking")}
+                src={studentAvatarUrl || coachAvatarSrc}
                 alt="Coach"
                 className="w-full h-full object-cover"
                 width={32} height={32}

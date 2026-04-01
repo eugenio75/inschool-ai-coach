@@ -349,7 +349,7 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
           <AnimatePresence mode="wait">
             <motion.img
               key={loading ? "loading" : (studentAvatarUrl ? "student-avatar" : coachMood)}
-              src={studentAvatarUrl || getCoachMoodSrc(loading ? "happy" : coachMood)}
+              src={studentAvatarUrl || coachAvatarSrc}
               alt={coachName || "Coach"}
               className="w-full h-full object-cover"
               width={64}
