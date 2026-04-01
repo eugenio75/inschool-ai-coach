@@ -8,6 +8,7 @@ import { DailyMissions } from "@/components/GamificationBar";
 import { CoachPresence } from "@/components/CoachPresence";
 import { BadgeDisplay } from "@/components/BadgeDisplay";
 import { StudentActionCards } from "@/components/StudentActionCards";
+import { shouldShowCheckin } from "@/pages/EmotionalCheckin";
 import { isChildSession, clearChildSession, getChildSession } from "@/lib/childSession";
 import { getTasks, getActiveChildProfileId, getChildProfile } from "@/lib/database";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +22,14 @@ export default function DashboardMedie() {
   const [profile, setProfile] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const isChild = isChildSession();
+
+  useEffect(() => {
+    if (isChild && shouldShowCheckin()) {
+      navigate("/checkin", { replace: true });
+    }
+  }, [isChild, navigate]);
 
   useEffect(() => {
     const load = async () => {

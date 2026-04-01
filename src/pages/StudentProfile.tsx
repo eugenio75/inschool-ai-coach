@@ -170,8 +170,8 @@ const StudentProfile = () => {
 
       <div className="px-6 py-6">
         <div className="max-w-lg mx-auto space-y-6">
-          {/* Access Code — visible only for child sessions */}
-          {isChild && accessCode && (
+          {/* Access Code — visible for child sessions or if code exists */}
+          {accessCode && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.05 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
               <div className="flex items-center gap-2 mb-1">
                 <Key className="w-4 h-4 text-primary" />

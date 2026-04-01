@@ -57,6 +57,17 @@ const middleClasses = [
 
 const subjects = ["Italiano", "Matematica", "Scienze", "Storia", "Geografia", "Inglese", "Arte", "Musica", "Tecnologia"];
 
+const PRIMARIA_INTERESTS = [
+  { label: "Minecraft", emoji: "⛏️" }, { label: "Roblox", emoji: "🎮" }, { label: "LEGO", emoji: "🧱" },
+  { label: "Pokémon", emoji: "⚡" }, { label: "Fortnite", emoji: "🎯" }, { label: "Dragon Ball", emoji: "🐉" },
+  { label: "Harry Potter", emoji: "⚡" }, { label: "Marvel", emoji: "🦸" }, { label: "Calcio", emoji: "⚽" },
+  { label: "Nuoto", emoji: "🏊" }, { label: "Danza", emoji: "💃" }, { label: "Karate", emoji: "🥋" },
+  { label: "Disegno", emoji: "✏️" }, { label: "Musica", emoji: "🎵" }, { label: "Cucina", emoji: "🍕" },
+  { label: "Dinosauri", emoji: "🦕" }, { label: "Cani", emoji: "🐶" }, { label: "Gatti", emoji: "🐱" },
+  { label: "Cavalli", emoji: "🐴" }, { label: "Manga", emoji: "📚" }, { label: "Fumetti", emoji: "📖" },
+  { label: "Lego Technic", emoji: "⚙️" }, { label: "Magia", emoji: "🪄" }, { label: "Natura", emoji: "🌿" },
+];
+
 const struggles = [
   { id: "distraction", label: "Si distrae facilmente" },
   { id: "refusal", label: "Rifiuta di iniziare" },
@@ -101,14 +112,14 @@ const OnboardingLegacy = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
-  const [data, setData] = useState<OnboardingData>({
+  const [data, setData] = useState<OnboardingData & { interests: string[] }>({
     name: "", avatar: "kid-boy-1", avatarUrl: "", age: "", dateOfBirth: "", gender: "",
     schoolCategory: "", schoolLevel: "", favoriteSubjects: [],
-    struggles: [], focusTime: "15", supportStyles: [], coachName: "",
+    struggles: [], focusTime: "15", supportStyles: [], coachName: "", interests: [],
   });
 
   // MODIFICA: Feature 2 + Feature 6 — Added coach name step + access code step
-  const totalSteps = 9; // 0:info, 1:avatar, 2:school, 3:subjects, 4:struggles, 5:support, 6:coach, 7:focus, 8:access-code
+  const totalSteps = 10; // 0:info, 1:avatar, 2:school, 3:subjects, 4:struggles, 5:support, 6:coach, 7:interests, 8:focus, 9:access-code
   const toggleInArray = (arr: string[], item: string) =>
     arr.includes(item) ? arr.filter((i) => i !== item) : [...arr, item];
 
@@ -117,12 +128,13 @@ const OnboardingLegacy = () => {
       case 0: return data.name.trim() !== "" && data.age !== "" && data.gender !== "";
       case 1: return data.avatar !== "" || data.avatarUrl !== "";
       case 2: return data.schoolLevel !== "";
-      case 3: return true; // subjects are optional now (unchecked = difficult)
+      case 3: return true;
       case 4: return data.struggles.length > 0;
       case 5: return data.supportStyles.length > 0;
-      case 6: return true; // coach name is optional
-      case 7: return true;
-      case 8: return true; // access code step - always can proceed
+      case 6: return true; // coach name optional
+      case 7: return true; // interests optional
+      case 8: return true; // focus time
+      case 9: return true; // access code
       default: return false;
     }
   };
@@ -162,17 +174,15 @@ const OnboardingLegacy = () => {
   };
 
   const next = async () => {
-    // MODIFICA: Feature 6 — Create profile at step 7 (focus time), show access code at step 8
-    if (step === 7) {
+    // Create profile at step 8 (focus time), show access code at step 9
+    if (step === 8) {
       setSaving(true);
-      // MODIFICA: Feature 4 — Invert subject logic: unchecked subjects = difficult
       const allSubjects = subjects;
       const difficultSubjects = allSubjects.filter(s => !data.favoriteSubjects.includes(s));
 
-      // Determine correct school_level for DB
       const schoolLevel = data.schoolLevel.startsWith("primaria") 
-        ? data.schoolLevel.replace("primaria-", "primaria-") // keep as-is
-        : data.schoolLevel; // media-1, media-2, media-3
+        ? data.schoolLevel.replace("primaria-", "primaria-")
+        : data.schoolLevel;
 
       const profile = await createChildProfile({
         name: data.name,
@@ -186,15 +196,14 @@ const OnboardingLegacy = () => {
         focus_time: parseInt(data.focusTime) || 15,
         support_style: data.supportStyles.join(","),
         date_of_birth: data.dateOfBirth || undefined,
+        interests: data.interests.length > 0 ? data.interests : undefined,
       } as any);
 
       if (profile) {
-        // Save avatar URL if custom photo was uploaded
         if (data.avatarUrl && data.avatar === "custom") {
           await supabase.from("child_profiles").update({ avatar_emoji: data.avatarUrl } as any).eq("id", profile.id);
         }
 
-        // MODIFICA: Feature 2 — Save coach name to user_preferences
         if (data.coachName.trim()) {
           await supabase.from("user_preferences").upsert({
             profile_id: profile.id,
@@ -202,27 +211,21 @@ const OnboardingLegacy = () => {
           } as any);
         }
 
-        // FIX 1: Auto-create gamification + daily missions for new profile
         await supabase.from("gamification").upsert({
           child_profile_id: profile.id,
-          focus_points: 0,
-          consistency_points: 0,
-          autonomy_points: 0,
-          streak: 0,
-          streak_shields: 0,
-          next_shield_at: 7,
+          focus_points: 0, consistency_points: 0, autonomy_points: 0,
+          streak: 0, streak_shields: 0, next_shield_at: 7,
         }, { onConflict: "child_profile_id" });
 
         const today = new Date().toISOString().split("T")[0];
         await supabase.from("daily_missions").insert([
           { child_profile_id: profile.id, mission_date: today, title: "Studia 15 minuti", description: "Completa una sessione di studio", points_reward: 10, completed: false, mission_type: "study_session" },
           { child_profile_id: profile.id, mission_date: today, title: "Aggiungi un compito", description: "Inserisci un compito da fare", points_reward: 5, completed: false, mission_type: "complete_task" },
-          { child_profile_id: profile.id, mission_date: today, title: "Fai il check-in", description: "Dicci come stai oggi", points_reward: 5, completed: false, mission_type: "study_minutes" },
         ]);
 
         setCreatedProfile(profile);
         setSaving(false);
-        setStep(8); // Go to access code step
+        setStep(9);
       } else {
         setSaving(false);
         toast({ title: "Errore nella creazione del profilo", variant: "destructive" });
@@ -230,14 +233,12 @@ const OnboardingLegacy = () => {
       return;
     }
 
-    if (step === 8) {
-      // Final step - navigate to dashboard with the NEW profile active
+    if (step === 9) {
       if (createdProfile) {
         if (adultSession?.profile?.school_level && ["superiori", "universitario", "docente"].includes(adultSession.profile.school_level)) {
           clearChildSession();
         }
         setActiveChildProfileId(createdProfile.id);
-        // Set child session so Dashboard picks up the correct profile
         setChildSession({
           profileId: createdProfile.id,
           accessCode: createdProfile.access_code || "",
@@ -253,19 +254,13 @@ const OnboardingLegacy = () => {
             struggles: createdProfile.struggles || data.struggles,
             focus_time: createdProfile.focus_time ?? (parseInt(data.focusTime) || 15),
             support_style: createdProfile.support_style || data.supportStyles.join(","),
-            interests: createdProfile.interests || null,
+            interests: createdProfile.interests || data.interests || null,
           },
         });
         localStorage.setItem("inschool-profile", JSON.stringify({
-          id: createdProfile.id,
-          name: data.name,
-          age: data.age,
-          gender: data.gender,
-          avatarEmoji: data.avatar,
-          schoolLevel: data.schoolLevel,
-          favoriteSubjects: data.favoriteSubjects,
-          focusTime: data.focusTime,
-          supportStyles: data.supportStyles,
+          id: createdProfile.id, name: data.name, age: data.age, gender: data.gender,
+          avatarEmoji: data.avatar, schoolLevel: data.schoolLevel,
+          favoriteSubjects: data.favoriteSubjects, focusTime: data.focusTime, supportStyles: data.supportStyles,
         }));
       }
       navigate("/dashboard");
@@ -273,7 +268,6 @@ const OnboardingLegacy = () => {
     }
 
     if (step < totalSteps - 1) {
-      // Validate age on step 0
       if (step === 0) {
         const childAge = parseInt(data.age);
         if (childAge && childAge < 6) return;
@@ -495,7 +489,49 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      case 7:
+      // Interests step
+      case 7: {
+        const selected = data.interests;
+        const [customVal, setCustomVal] = useState("");
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="font-display text-2xl font-bold text-foreground mb-2">Cosa piace a {data.name}?</h2>
+              <p className="text-muted-foreground text-sm">Il coach userà questi interessi per rendere lo studio più divertente! (facoltativo)</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {PRIMARIA_INTERESTS.map(s => {
+                const isSel = selected.includes(s.label);
+                return (
+                  <button key={s.label} onClick={() => {
+                    if (isSel) setData({ ...data, interests: selected.filter(i => i !== s.label) });
+                    else if (selected.length < 10) setData({ ...data, interests: [...selected, s.label] });
+                  }} className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${isSel ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>
+                    {s.emoji} {s.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex gap-2">
+              <input type="text" value={customVal} onChange={e => setCustomVal(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === "Enter" && customVal.trim() && selected.length < 10 && !selected.includes(customVal.trim())) {
+                    setData({ ...data, interests: [...selected, customVal.trim()] });
+                    setCustomVal("");
+                  }
+                }}
+                placeholder="Aggiungi altri interessi..."
+                maxLength={30}
+                className="flex-1 px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+              />
+            </div>
+            {selected.length > 0 && <p className="text-xs text-muted-foreground">{selected.length}/10 selezionati</p>}
+            <button onClick={next} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">Salta</button>
+          </div>
+        );
+      }
+
+      case 8:
         return (
           <div className="space-y-6">
             <div><h2 className="font-display text-2xl font-bold text-foreground mb-2">Quanto riesce a concentrarsi?</h2></div>
@@ -509,8 +545,7 @@ const OnboardingLegacy = () => {
           </div>
         );
 
-      // MODIFICA: Feature 6 — Access code display step
-      case 8:
+      case 9:
         return (
           <div className="space-y-6 text-center">
             <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
@@ -529,19 +564,11 @@ const OnboardingLegacy = () => {
             </div>
 
             <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={handleCopyCode}
-                className="flex-1 rounded-xl h-12"
-              >
+              <Button variant="outline" onClick={handleCopyCode} className="flex-1 rounded-xl h-12">
                 {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
                 {copied ? "Copiato!" : "Copia codice"}
               </Button>
-              <Button
-                variant="outline"
-                onClick={handleSendCodeEmail}
-                className="flex-1 rounded-xl h-12"
-              >
+              <Button variant="outline" onClick={handleSendCodeEmail} className="flex-1 rounded-xl h-12">
                 <Mail className="w-4 h-4 mr-2" />
                 Invia via email
               </Button>
@@ -580,9 +607,9 @@ const OnboardingLegacy = () => {
       </div>
       <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border px-6 py-4">
         <div className="max-w-lg mx-auto flex items-center justify-between">
-          <Button variant="ghost" onClick={() => step > 0 && step !== 8 ? setStep(step - 1) : step === 0 ? navigate("/profiles") : null} disabled={step === 8} className="text-muted-foreground"><ArrowLeft className="w-4 h-4 mr-1" /> Indietro</Button>
+          <Button variant="ghost" onClick={() => step > 0 && step !== 9 ? setStep(step - 1) : step === 0 ? navigate("/profiles") : null} disabled={step === 9} className="text-muted-foreground"><ArrowLeft className="w-4 h-4 mr-1" /> Indietro</Button>
           <Button onClick={next} disabled={!canProceed() || saving} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl px-6 disabled:opacity-40">
-            {step === 8 ? "Vai alla dashboard" : step === 7 ? (saving ? "Salvataggio..." : "Crea profilo!") : "Avanti"}<ArrowRight className="ml-1 w-4 h-4" />
+            {step === 9 ? "Vai alla dashboard" : step === 8 ? (saving ? "Salvataggio..." : "Crea profilo!") : "Avanti"}<ArrowRight className="ml-1 w-4 h-4" />
           </Button>
         </div>
       </div>
