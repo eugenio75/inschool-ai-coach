@@ -23,7 +23,11 @@ const INTEREST_SUGGESTIONS = [
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
-const CHILD_LEVELS = ["primaria-1-2", "primaria-3-5", "media-1", "media-2", "media-3"];
+const CHILD_LEVELS = [
+  "primaria", "primaria-1", "primaria-2", "primaria-3", "primaria-4", "primaria-5",
+  "primaria-1-2", "primaria-3-5",
+  "medie", "media-1", "media-2", "media-3",
+];
 
 function isChildLevel(level?: string | null): boolean {
   return !!level && CHILD_LEVELS.includes(level);
