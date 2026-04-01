@@ -110,7 +110,8 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const hasClassCodeStep = role === "medie" || role === "superiori";
-    const totalSteps = role === "docente" ? 4 : (hasClassCodeStep ? 9 : 8);
+    const hasInterestsStep = role !== "docente";
+    const totalSteps = role === "docente" ? 4 : (hasClassCodeStep ? 10 : 9);
     const [step, setStep] = useState(Math.min(initialStep, totalSteps - 1));
     const [answers, setAnswers] = useState<any>(initialData || {});
     const [direction, setDirection] = useState(1);
