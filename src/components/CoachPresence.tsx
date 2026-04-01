@@ -345,21 +345,8 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border rounded-2xl p-4 sm:p-5">
       <div className="flex items-start gap-3 mb-3">
-        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex-shrink-0 mt-0.5 overflow-hidden bg-primary/5">
-          <AnimatePresence mode="wait">
-            <motion.img
-              key={loading ? "loading" : (studentAvatarUrl ? "student-avatar" : coachMood)}
-              src={studentAvatarUrl || coachAvatarSrc}
-              alt={coachName || "Coach"}
-              className="w-full h-full object-cover"
-              width={64}
-              height={64}
-              initial={loading ? false : { scale: 0.85, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.85, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            />
-          </AnimatePresence>
+        <div className="flex-shrink-0 mt-0.5">
+          <CoachAvatar mood={avatarMood} size={64} />
         </div>
         <div className="flex-1 min-w-0">
           {coachName && !loading && (
