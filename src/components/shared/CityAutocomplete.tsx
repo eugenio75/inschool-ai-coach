@@ -37,7 +37,8 @@ export function CityAutocomplete({ value, onChange, placeholder, className }: Ci
     setQuery(val);
     onChange(val);
 
-    if (val.length < 2) {
+    const trimmed = val.trim();
+    if (trimmed.length < 2) {
       setResults([]);
       setShowDropdown(false);
       return;
@@ -48,7 +49,7 @@ export function CityAutocomplete({ value, onChange, placeholder, className }: Ci
       setSearching(true);
       try {
         const { data, error } = await supabase.rpc("search_cities" as any, {
-          query: val,
+          query: trimmed.toLowerCase(),
           limit_n: 10,
         });
         if (!error && data) {
