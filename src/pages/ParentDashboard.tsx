@@ -157,6 +157,34 @@ const ParentDashboard = () => {
     setParentNotifications(prev => prev.filter(n => n.id !== notifId));
   };
 
+  const openDeleteChild = (child: any) => {
+    setDeleteChildTarget(child);
+    setDeleteChildStep(1);
+    setDeleteChildConfirmName("");
+  };
+
+  const handleDeleteChild = async () => {
+    if (!deleteChildTarget || deleteChildConfirmName !== deleteChildTarget.name) return;
+    setDeletingChild(true);
+    try {
+      const { error } = await supabase.functions.invoke("delete-account", {
+        body: { action: "delete_child_profile", child_profile_id: deleteChildTarget.id },
+      });
+      if (error) throw error;
+      setChildren(prev => prev.filter(c => c.id !== deleteChildTarget.id));
+      if (selectedChild === deleteChildTarget.id) {
+        const remaining = children.filter(c => c.id !== deleteChildTarget.id);
+        setSelectedChild(remaining.length > 0 ? remaining[0].id : null);
+      }
+      toast.success(t("delete_child_success"));
+      setDeleteChildTarget(null);
+    } catch (e: any) {
+      toast.error(t("delete_child_error"));
+    } finally {
+      setDeletingChild(false);
+    }
+  };
+
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
 
   // PIN lock screen
