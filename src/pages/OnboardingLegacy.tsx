@@ -394,7 +394,7 @@ const OnboardingLegacy = () => {
                     setCustomInterest("");
                   }
                 }}
-                placeholder={t('onb_interests_add')}
+                placeholder="Scrivi un interesse e premi +"
                 maxLength={30}
                 className="flex-1 px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
               />
@@ -411,7 +411,7 @@ const OnboardingLegacy = () => {
                   customInterest.trim() ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-muted text-muted-foreground cursor-not-allowed"
                 }`}
               >
-                {t('onb_interests_add_btn')}
+                +
               </button>
             </div>
             {selected.length > 0 && <p className="text-xs text-muted-foreground">{selected.length}/10 selezionati</p>}
