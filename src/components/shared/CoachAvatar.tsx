@@ -112,9 +112,9 @@ export function CoachAvatar({ mood = "default", size = 120 }: CoachAvatarProps) 
           ${100 - (100 / cfg.blinkInterval) * 0.1}% { transform: scaleY(0.05); }
         }
         @keyframes ca-look {
-          0%, 85%, 100% { transform: translate(0, 0); }
-          90% { transform: translate(${px(2)}px, ${cfg.pupilDriftUp ? `-${px(2)}px` : `${px(1)}px`}); }
-          95% { transform: translate(-${px(1.5)}px, 0); }
+          0%, 85%, 100% { transform: translate(-50%, -50%); }
+          90% { transform: translate(calc(-50% + ${px(2)}px), ${cfg.pupilDriftUp ? `calc(-50% - ${px(2)}px)` : '-50%'}); }
+          95% { transform: translate(calc(-50% - ${px(1.5)}px), -50%); }
         }
         @keyframes ca-sparkle {
           0%, 100% { opacity: 0; transform: scale(0.5); }
