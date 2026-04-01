@@ -124,6 +124,8 @@ const StudentProfile = () => {
     || schoolName !== (profile.school_name || "")
     || city !== (profile.city || "");
 
+  const accessCode = profile?.access_code;
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
