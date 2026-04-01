@@ -49,7 +49,7 @@ export function CityAutocomplete({ value, onChange, placeholder, className }: Ci
       setSearching(true);
       try {
         const { data, error } = await supabase.rpc("search_cities" as any, {
-          query: val,
+          query: trimmed.toLowerCase(),
           limit_n: 10,
         });
         if (!error && data) {
