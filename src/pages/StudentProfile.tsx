@@ -23,7 +23,11 @@ const INTEREST_SUGGESTIONS = [
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
-const CHILD_LEVELS = ["primaria-1-2", "primaria-3-5", "media-1", "media-2", "media-3"];
+const CHILD_LEVELS = [
+  "primaria", "primaria-1", "primaria-2", "primaria-3", "primaria-4", "primaria-5",
+  "primaria-1-2", "primaria-3-5",
+  "medie", "media-1", "media-2", "media-3",
+];
 
 function isChildLevel(level?: string | null): boolean {
   return !!level && CHILD_LEVELS.includes(level);
@@ -148,7 +152,7 @@ const StudentProfile = () => {
     || schoolData.city !== (profile.city || "");
 
   const accessCode = profile?.access_code;
-  const showAccessCode = accessCode && (isChild || isChildLevel(profile.school_level));
+  const showAccessCode = !!accessCode || isChild || isChildLevel(profile.school_level);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -177,7 +181,7 @@ const StudentProfile = () => {
       <div className="px-6 py-6">
         <div className="max-w-lg mx-auto space-y-6">
           {/* Access Code — always visible for primaria/medie */}
-          {showAccessCode && <AccessCodeCard code={accessCode} />}
+          {showAccessCode && accessCode && <AccessCodeCard code={accessCode} />}
 
           {/* Gender */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.1 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
