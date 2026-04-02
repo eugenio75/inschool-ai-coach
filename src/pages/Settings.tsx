@@ -555,7 +555,64 @@ const Settings = () => {
             </div>
           )}
 
-          {/* Teacher Discoverability */}
+          {/* Teacher Schools */}
+          {session?.profile?.school_level === "docente" && (
+            <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
+              <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2"><Building className="w-4 h-4 text-primary" /> {t("settings_schools_title")}</h3>
+              {teacherSchools.length > 0 ? (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {teacherSchools.map((s, i) => (
+                    <span key={i} className="inline-flex items-center gap-1.5 text-xs font-medium bg-primary/10 text-primary px-3 py-1.5 rounded-full">
+                      🏫 {s.school_name}{s.city ? ` — ${s.city}` : ""}
+                      {s.school_code && <span className="text-[10px] opacity-60">🟡</span>}
+                      <button onClick={() => handleRemoveSchool(i)} className="hover:text-destructive transition-colors ml-0.5" disabled={savingSchools}>✕</button>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground mb-4">{t("settings_schools_empty")}</p>
+              )}
+              {addingSchool ? (
+                <div className="space-y-3">
+                  <CityAutocomplete
+                    value={tempSchoolCity}
+                    onChange={setTempSchoolCity}
+                    className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <SchoolAutocomplete
+                    value={tempSchoolName}
+                    onChange={(name, code, city) => {
+                      if (code) {
+                        handleAddSchool(name, code, city || tempSchoolCity);
+                      } else {
+                        setTempSchoolName(name);
+                        if (city) setTempSchoolCity(city);
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    cityFilter={tempSchoolCity || undefined}
+                  />
+                  <div className="flex gap-2">
+                    {tempSchoolName.trim() && (
+                      <Button size="sm" className="rounded-xl" onClick={() => handleAddSchool(tempSchoolName, null, tempSchoolCity)} disabled={savingSchools}>
+                        {savingSchools ? <Loader2 className="w-4 h-4 animate-spin" /> : t("onb_doc_add_school_btn")}
+                      </Button>
+                    )}
+                    <Button size="sm" variant="outline" className="rounded-xl" onClick={() => { setAddingSchool(false); setTempSchoolName(""); setTempSchoolCity(""); }}>
+                      {t("cancel")}
+                    </Button>
+                  </div>
+                </div>
+              ) : teacherSchools.length < 5 ? (
+                <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setAddingSchool(true)}>
+                  <Plus className="w-3.5 h-3.5 mr-1" /> {t("settings_schools_add")}
+                </Button>
+              ) : (
+                <p className="text-xs text-muted-foreground">{t("settings_schools_max")}</p>
+              )}
+            </div>
+          )}
+
           {session?.profile?.school_level === "docente" && (
             <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
               <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2">
