@@ -54,9 +54,13 @@ const ParentDashboard = () => {
       const kids = await getChildProfiles();
       setChildren(kids);
       if (kids.length > 0) {
-        console.log("Selected child ID:", kids[0].id);
-        setSelectedChild(kids[0].id);
-        setActiveChildProfileId(kids[0].id);
+        // Restore previously selected child, or default to first
+        const savedChildId = localStorage.getItem("inschool-parent-selected-child");
+        const validSaved = savedChildId && kids.some((k: any) => k.id === savedChildId);
+        const childId = validSaved ? savedChildId! : kids[0].id;
+        console.log("Selected child ID:", childId);
+        setSelectedChild(childId);
+        setActiveChildProfileId(childId);
       }
       setLoading(false);
     };
