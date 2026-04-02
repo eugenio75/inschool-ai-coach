@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Lock, Loader2, Users, Shield, Pencil, Bell,
-  Eye, EyeOff, Trash2, RotateCcw, Moon, Brain, BookOpen, Link2, Users2,
+  Eye, EyeOff, Trash2, RotateCcw, Moon, Brain, BookOpen, Link2, Users2, Building, Plus,
 } from "lucide-react";
 import { useLang } from "@/contexts/LangContext";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { BlockchainTab } from "@/components/BlockchainTab";
 import { MyClassesSection } from "@/components/MyClassesSection";
+import { CityAutocomplete } from "@/components/shared/CityAutocomplete";
+import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
 
 // Avatar colors for profile customization
 const AVATAR_COLORS = [
@@ -105,6 +107,13 @@ const Settings = () => {
   const [teacherBadge, setTeacherBadge] = useState<string>("unverified");
   const [savingDiscoverable, setSavingDiscoverable] = useState(false);
 
+  // Docente schools editing
+  const [teacherSchools, setTeacherSchools] = useState<{ school_name: string; school_code: string | null; city: string }[]>([]);
+  const [addingSchool, setAddingSchool] = useState(false);
+  const [tempSchoolCity, setTempSchoolCity] = useState("");
+  const [tempSchoolName, setTempSchoolName] = useState("");
+  const [savingSchools, setSavingSchools] = useState(false);
+
   // Check if adult role
   const session = getChildSession();
   const isAdult = ["superiori", "universitario", "docente"].includes(session?.profile?.school_level || "");
@@ -163,10 +172,21 @@ const Settings = () => {
             .maybeSingle();
           const prefs2 = (prefData2?.data as any) || {};
           setDiscoverable(!!prefs2.discoverable);
+          // Load schools array (with backward compat)
+          const schools = prefs2.teacher_declaration?.schools || [];
+          if (schools.length === 0 && prefs2.teacher_declaration?.school_code) {
+            setTeacherSchools([{
+              school_name: prefs2.teacher_declaration.school_name || "",
+              school_code: prefs2.teacher_declaration.school_code,
+              city: prefs2.teacher_declaration.city || "",
+            }]);
+          } else {
+            setTeacherSchools(schools);
+          }
           // Determine badge
           if (prefs2.email_istituzionale_verified) {
             setTeacherBadge("verified");
-          } else if (prefs2.teacher_declaration?.school_code) {
+          } else if (prefs2.teacher_declaration?.school_code || schools.some((s: any) => s.school_code)) {
             setTeacherBadge("school_recognized");
           } else {
             setTeacherBadge("unverified");
@@ -269,6 +289,48 @@ const Settings = () => {
 
   const handleRemoveMateria = (m: string) => {
     handleSaveMaterie(docenteMaterie.filter(x => x !== m));
+  };
+
+  const handleSaveSchools = async (schools: typeof teacherSchools) => {
+    if (!session?.profileId) return;
+    setSavingSchools(true);
+    const { data: existing } = await supabase
+      .from("user_preferences")
+      .select("id, data")
+      .eq("profile_id", session.profileId)
+      .maybeSingle();
+    const prevData = (existing?.data as any) || {};
+    const lastSchool = schools[schools.length - 1];
+    const newData = {
+      ...prevData,
+      teacher_declaration: {
+        ...(prevData.teacher_declaration || {}),
+        schools,
+        school_name: lastSchool?.school_name || "",
+        school_code: lastSchool?.school_code || null,
+      },
+    };
+    if (existing) {
+      await supabase.from("user_preferences").update({ data: newData } as any).eq("id", existing.id);
+    } else {
+      await supabase.from("user_preferences").insert({ profile_id: session.profileId, data: newData } as any);
+    }
+    setTeacherSchools(schools);
+    setSavingSchools(false);
+    toast.success(t("settings_schools_title") + " ✓");
+  };
+
+  const handleAddSchool = (name: string, code: string | null, city: string) => {
+    if (!name.trim()) return;
+    const newSchool = { school_name: name.trim(), school_code: code, city };
+    handleSaveSchools([...teacherSchools, newSchool]);
+    setAddingSchool(false);
+    setTempSchoolName("");
+    setTempSchoolCity("");
+  };
+
+  const handleRemoveSchool = (idx: number) => {
+    handleSaveSchools(teacherSchools.filter((_, i) => i !== idx));
   };
 
   const handleToggleLibrary = async (profileId: string, checked: boolean) => {
@@ -493,7 +555,64 @@ const Settings = () => {
             </div>
           )}
 
-          {/* Teacher Discoverability */}
+          {/* Teacher Schools */}
+          {session?.profile?.school_level === "docente" && (
+            <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
+              <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2"><Building className="w-4 h-4 text-primary" /> {t("settings_schools_title")}</h3>
+              {teacherSchools.length > 0 ? (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {teacherSchools.map((s, i) => (
+                    <span key={i} className="inline-flex items-center gap-1.5 text-xs font-medium bg-primary/10 text-primary px-3 py-1.5 rounded-full">
+                      🏫 {s.school_name}{s.city ? ` — ${s.city}` : ""}
+                      {s.school_code && <span className="text-[10px] opacity-60">🟡</span>}
+                      <button onClick={() => handleRemoveSchool(i)} className="hover:text-destructive transition-colors ml-0.5" disabled={savingSchools}>✕</button>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground mb-4">{t("settings_schools_empty")}</p>
+              )}
+              {addingSchool ? (
+                <div className="space-y-3">
+                  <CityAutocomplete
+                    value={tempSchoolCity}
+                    onChange={setTempSchoolCity}
+                    className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <SchoolAutocomplete
+                    value={tempSchoolName}
+                    onChange={(name, code, city) => {
+                      if (code) {
+                        handleAddSchool(name, code, city || tempSchoolCity);
+                      } else {
+                        setTempSchoolName(name);
+                        if (city) setTempSchoolCity(city);
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    cityFilter={tempSchoolCity || undefined}
+                  />
+                  <div className="flex gap-2">
+                    {tempSchoolName.trim() && (
+                      <Button size="sm" className="rounded-xl" onClick={() => handleAddSchool(tempSchoolName, null, tempSchoolCity)} disabled={savingSchools}>
+                        {savingSchools ? <Loader2 className="w-4 h-4 animate-spin" /> : t("onb_doc_add_school_btn")}
+                      </Button>
+                    )}
+                    <Button size="sm" variant="outline" className="rounded-xl" onClick={() => { setAddingSchool(false); setTempSchoolName(""); setTempSchoolCity(""); }}>
+                      {t("cancel")}
+                    </Button>
+                  </div>
+                </div>
+              ) : teacherSchools.length < 5 ? (
+                <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setAddingSchool(true)}>
+                  <Plus className="w-3.5 h-3.5 mr-1" /> {t("settings_schools_add")}
+                </Button>
+              ) : (
+                <p className="text-xs text-muted-foreground">{t("settings_schools_max")}</p>
+              )}
+            </div>
+          )}
+
           {session?.profile?.school_level === "docente" && (
             <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
               <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2">

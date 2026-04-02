@@ -1237,5 +1237,15 @@
   "delete_account_error": "Error deleting account",
   "delete_child_zone_title": "Delete {name}'s profile",
   "delete_child_zone_desc": "All study data, sessions and progress will be permanently deleted.",
-  "delete_child_zone_button": "Delete profile"
+  "delete_child_zone_button": "Delete profile",
+  "onb_doc_add_school_btn": "Add this school",
+  "onb_doc_add_another_school": "Add another school",
+  "onb_doc_max_schools": "Maximum 5 schools reached",
+  "onb_doc_summary_schools": "Schools",
+  "settings_schools_title": "Your schools",
+  "settings_schools_empty": "No schools configured.",
+  "settings_schools_add": "Add school",
+  "settings_schools_max": "Maximum 5 schools",
+  "class_school_label": "School",
+  "class_school_placeholder": "Select school..."
 }
