@@ -1746,27 +1746,17 @@ export type Database = {
           comune: string
         }[]
       }
-      search_schools:
-        | {
-            Args: { city_filter?: string; limit_n?: number; query: string }
-            Returns: {
-              codice_meccanografico: string
-              comune: string
-              denominazione: string
-              provincia: string
-              tipo_scuola: string
-            }[]
-          }
-        | {
-            Args: { limit_n?: number; query: string }
-            Returns: {
-              codice_meccanografico: string
-              comune: string
-              denominazione: string
-              provincia: string
-              tipo_scuola: string
-            }[]
-          }
+      search_schools: {
+        Args: { city_filter?: string; limit_n?: number; query: string }
+        Returns: {
+          codice_meccanografico: string
+          comune: string
+          denominazione: string
+          indirizzo: string
+          provincia: string
+          tipo_scuola: string
+        }[]
+      }
       validate_child_code: { Args: { code: string }; Returns: Json }
     }
     Enums: {
