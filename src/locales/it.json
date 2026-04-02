@@ -1237,5 +1237,15 @@
   "delete_account_error": "Errore nell'eliminazione dell'account",
   "delete_child_zone_title": "Elimina profilo di {name}",
   "delete_child_zone_desc": "Tutti i dati di studio, sessioni e progressi verranno eliminati definitivamente.",
-  "delete_child_zone_button": "Elimina profilo"
+  "delete_child_zone_button": "Elimina profilo",
+  "onb_doc_add_school_btn": "Aggiungi questa scuola",
+  "onb_doc_add_another_school": "Aggiungi un'altra scuola",
+  "onb_doc_max_schools": "Massimo 5 scuole raggiunto",
+  "onb_doc_summary_schools": "Istituti",
+  "settings_schools_title": "I tuoi istituti",
+  "settings_schools_empty": "Nessun istituto configurato.",
+  "settings_schools_add": "Aggiungi istituto",
+  "settings_schools_max": "Massimo 5 istituti",
+  "class_school_label": "Istituto",
+  "class_school_placeholder": "Seleziona istituto..."
 }
