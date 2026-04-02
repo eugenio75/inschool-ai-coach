@@ -1216,7 +1216,16 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     <div className={summaryBoxClass}>
                         <div><span className={summaryLabelClass}>{t('onb_doc_summary_order')}</span><p className={summaryValueClass}>{answers.docente_ordine}</p></div>
                         <div><span className={summaryLabelClass}>{t('onb_doc_summary_subjects')}</span><p className={summaryValueClass}>{(answers.docente_materie || []).join(", ")}</p></div>
-                        {answers.school_name && <div><span className={summaryLabelClass}>{t('onb_doc_summary_school')}</span><p className={summaryValueClass}>{answers.school_name}{answers.docente_citta ? ` — ${answers.docente_citta}` : ''}</p></div>}
+                        {(answers.teacher_declaration?.schools?.length > 0) ? (
+                          <div>
+                            <span className={summaryLabelClass}>{t('onb_doc_summary_schools')}</span>
+                            {answers.teacher_declaration.schools.map((s: any, i: number) => (
+                              <p key={i} className={summaryValueClass}>{s.school_name}{s.city ? ` — ${s.city}` : ''} {s.school_code ? '🟡' : '⚪'}</p>
+                            ))}
+                          </div>
+                        ) : answers.school_name ? (
+                          <div><span className={summaryLabelClass}>{t('onb_doc_summary_school')}</span><p className={summaryValueClass}>{answers.school_name}{answers.docente_citta ? ` — ${answers.docente_citta}` : ''}</p></div>
+                        ) : null}
                         {answers.coach_name && <div><span className={summaryLabelClass}>{t('onb_doc_summary_ai')}</span><p className={summaryValueClass}>{answers.coach_name}</p></div>}
                     </div>
                 </div>
