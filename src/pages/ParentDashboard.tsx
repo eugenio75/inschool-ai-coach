@@ -210,7 +210,8 @@ const ParentDashboard = () => {
         const remaining = children.filter(c => c.id !== deleteChildTarget.id);
         const newId = remaining.length > 0 ? remaining[0].id : null;
         setSelectedChild(newId);
-        if (newId) setActiveChildProfileId(newId);
+        if (newId) { setActiveChildProfileId(newId); localStorage.setItem("inschool-parent-selected-child", newId); }
+        else { localStorage.removeItem("inschool-parent-selected-child"); }
       }
       toast.success(t("delete_child_success"));
       setDeleteChildTarget(null);
