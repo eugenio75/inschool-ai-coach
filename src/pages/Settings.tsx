@@ -107,6 +107,13 @@ const Settings = () => {
   const [teacherBadge, setTeacherBadge] = useState<string>("unverified");
   const [savingDiscoverable, setSavingDiscoverable] = useState(false);
 
+  // Docente schools editing
+  const [teacherSchools, setTeacherSchools] = useState<{ school_name: string; school_code: string | null; city: string }[]>([]);
+  const [addingSchool, setAddingSchool] = useState(false);
+  const [tempSchoolCity, setTempSchoolCity] = useState("");
+  const [tempSchoolName, setTempSchoolName] = useState("");
+  const [savingSchools, setSavingSchools] = useState(false);
+
   // Check if adult role
   const session = getChildSession();
   const isAdult = ["superiori", "universitario", "docente"].includes(session?.profile?.school_level || "");
