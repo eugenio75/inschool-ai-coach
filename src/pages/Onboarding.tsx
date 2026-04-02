@@ -1054,49 +1054,148 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                     </div>
                 </div>
               );
-            case 2:
+            case 2: {
+              const savedSchools: { school_name: string; school_code: string | null; city: string }[] = answers.teacher_declaration?.schools || [];
+              // Backward compat: if legacy single school exists and no schools array, show it
+              if (savedSchools.length === 0 && answers.teacher_declaration?.school_code) {
+                savedSchools.push({
+                  school_name: answers.teacher_declaration.school_name || answers.school_name || "",
+                  school_code: answers.teacher_declaration.school_code,
+                  city: answers.docente_citta || "",
+                });
+              }
+              const canAddMore = savedSchools.length < 5;
+              const [addingSchool, setAddingSchoolState] = [
+                !answers._docente_school_added && savedSchools.length === 0,
+                (val: boolean) => setAnswers((prev: any) => ({ ...prev, _docente_school_added: !val })),
+              ];
+              const showForm = addingSchool || answers._docente_adding_another;
+
+              const handleSchoolAdded = (name: string, code: string | null, city: string) => {
+                if (!name.trim()) return;
+                const newSchool = { school_name: name.trim(), school_code: code, city: city || answers.docente_citta || "" };
+                const updated = [...savedSchools, newSchool];
+                setAnswers((prev: any) => ({
+                  ...prev,
+                  school_name: name,
+                  school_code: code,
+                  teacher_declaration: {
+                    ...(prev.teacher_declaration || {}),
+                    school_name: name,
+                    school_code: code,
+                    schools: updated,
+                  },
+                  _docente_adding_another: false,
+                  _docente_temp_school: "",
+                  _docente_temp_city: "",
+                }));
+              };
+
+              const removeSchool = (idx: number) => {
+                const updated = savedSchools.filter((_, i) => i !== idx);
+                const last = updated[updated.length - 1];
+                setAnswers((prev: any) => ({
+                  ...prev,
+                  school_name: last?.school_name || "",
+                  school_code: last?.school_code || null,
+                  teacher_declaration: {
+                    ...(prev.teacher_declaration || {}),
+                    school_name: last?.school_name || "",
+                    school_code: last?.school_code || null,
+                    schools: updated,
+                  },
+                }));
+              };
+
               return (
                 <div className="w-full space-y-6">
                     <h2 className="text-2xl font-bold text-foreground">{t('onb_doc_school_title')}</h2>
                     <p className="text-muted-foreground text-sm">{t('onb_doc_school_sub')}</p>
-                    <CityAutocomplete
-                      value={answers.docente_citta || ""}
-                      onChange={(city) => setAnswers((prev: any) => ({
-                        ...prev,
-                        docente_citta: city,
-                        school_name: "",
-                        school_code: null,
-                        teacher_declaration: {
-                          ...(prev.teacher_declaration || {}),
-                          school_name: "",
-                          school_code: null,
-                        },
-                      }))}
-                      className={inputClass}
-                    />
-                    <SchoolAutocomplete
-                      value={answers.school_name || ""}
-                      onChange={(name, code, city) => setAnswers((prev: any) => ({
-                        ...prev,
-                        school_name: name,
-                        school_code: code,
-                        ...(city ? { docente_citta: city } : {}),
-                        teacher_declaration: {
-                          ...(prev.teacher_declaration || {}),
-                          school_name: name,
-                          school_code: code,
-                        },
-                      }))}
-                      placeholder={t('onb_school_name_optional')}
-                      className={inputClass}
-                      cityFilter={answers.docente_citta || undefined}
-                    />
-                    
+
+                    {/* Saved schools as chips */}
+                    {savedSchools.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {savedSchools.map((s, i) => (
+                          <span key={i} className="inline-flex items-center gap-1.5 text-xs font-medium bg-primary/10 text-primary px-3 py-1.5 rounded-full">
+                            🏫 {s.school_name}{s.city ? ` — ${s.city}` : ""}
+                            {s.school_code && <span className="text-[10px] opacity-60">🟡</span>}
+                            <button onClick={() => removeSchool(i)} className="hover:text-destructive transition-colors ml-0.5">✕</button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* School entry form */}
+                    {(showForm || savedSchools.length === 0) && (
+                      <>
+                        <CityAutocomplete
+                          value={answers._docente_temp_city || answers.docente_citta || ""}
+                          onChange={(city) => setAnswers((prev: any) => ({
+                            ...prev,
+                            _docente_temp_city: city,
+                            docente_citta: city,
+                            _docente_temp_school: "",
+                          }))}
+                          className={inputClass}
+                        />
+                        <SchoolAutocomplete
+                          value={answers._docente_temp_school || ""}
+                          onChange={(name, code, city) => {
+                            if (code) {
+                              // Auto-add when verified school selected
+                              handleSchoolAdded(name, code, city || answers._docente_temp_city || answers.docente_citta || "");
+                            } else {
+                              setAnswers((prev: any) => ({
+                                ...prev,
+                                _docente_temp_school: name,
+                                ...(city ? { _docente_temp_city: city, docente_citta: city } : {}),
+                              }));
+                            }
+                          }}
+                          placeholder={t('onb_school_name_optional')}
+                          className={inputClass}
+                          cityFilter={answers._docente_temp_city || answers.docente_citta || undefined}
+                        />
+                        {/* Manual add button for non-verified schools */}
+                        {answers._docente_temp_school?.trim() && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="rounded-xl"
+                            onClick={() => handleSchoolAdded(
+                              answers._docente_temp_school,
+                              null,
+                              answers._docente_temp_city || answers.docente_citta || ""
+                            )}
+                          >
+                            {t('onb_doc_add_school_btn')}
+                          </Button>
+                        )}
+                      </>
+                    )}
+
+                    {/* Add another school link */}
+                    {savedSchools.length > 0 && canAddMore && !answers._docente_adding_another && (
+                      <button
+                        type="button"
+                        onClick={() => setAnswers((prev: any) => ({ ...prev, _docente_adding_another: true, _docente_temp_school: "", _docente_temp_city: "" }))}
+                        className="text-sm text-primary hover:text-primary/80 font-medium transition-colors"
+                      >
+                        + {t('onb_doc_add_another_school')}
+                      </button>
+                    )}
+
+                    {savedSchools.length >= 5 && (
+                      <p className="text-xs text-muted-foreground">{t('onb_doc_max_schools')}</p>
+                    )}
+
                     <button type="button" onClick={handleNext} className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 transition-colors">
                       {t('onb_interests_skip')}
                     </button>
                 </div>
               );
+            }
             case 3:
               return (
                 <div className="w-full space-y-6">
