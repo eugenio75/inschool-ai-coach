@@ -386,13 +386,16 @@ export async function updateMemoryStrength(itemId: string, strength: number) {
 
 // ============ DAILY MISSIONS ============
 
+// Guard to prevent concurrent generate-missions calls per profile
+const _missionGenerationInFlight = new Map<string, Promise<any[]>>();
+
 export async function getDailyMissions(childProfileId?: string): Promise<any[]> {
   const profileId = childProfileId || getActiveChildProfileId();
   if (!profileId) return [];
 
   const today = new Date().toISOString().split("T")[0];
 
-  // Use RPC (SECURITY DEFINER) — works for both authenticated and child sessions
+  // 1. Use RPC (SECURITY DEFINER) — works for both authenticated and child sessions
   try {
     const { data, error } = await supabase.rpc("get_child_daily_missions", { p_profile_id: profileId, p_date: today });
     const missions = data as any;
@@ -401,7 +404,7 @@ export async function getDailyMissions(childProfileId?: string): Promise<any[]> 
     console.warn("get_child_daily_missions RPC error:", e);
   }
 
-  // Fallback: direct query (authenticated parents only)
+  // 2. Fallback: direct query (authenticated parents only)
   const { data: existing } = await supabase
     .from("daily_missions")
     .select("*")
@@ -410,28 +413,40 @@ export async function getDailyMissions(childProfileId?: string): Promise<any[]> 
     .order("created_at");
   if (existing && existing.length > 0) return existing;
 
-  // Fallback: call generate-missions edge function
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-missions`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        },
-        body: JSON.stringify({ childProfileId: profileId, lang: getCurrentLang() }),
-      }
-    );
-    if (!response.ok) return [];
-    const result = await response.json();
-    return result.missions || [];
-  } catch (err) {
-    console.error("getDailyMissions error:", err);
-    return [];
+  // 3. Generate missions — deduplicate concurrent calls for same profile
+  const cacheKey = `${profileId}:${today}`;
+  if (_missionGenerationInFlight.has(cacheKey)) {
+    return _missionGenerationInFlight.get(cacheKey)!;
   }
+
+  const generatePromise = (async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-missions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ childProfileId: profileId, lang: getCurrentLang() }),
+        }
+      );
+      if (!response.ok) return [];
+      const result = await response.json();
+      return result.missions || [];
+    } catch (err) {
+      console.error("getDailyMissions generate error:", err);
+      return [];
+    } finally {
+      _missionGenerationInFlight.delete(cacheKey);
+    }
+  })();
+
+  _missionGenerationInFlight.set(cacheKey, generatePromise);
+  return generatePromise;
 }
 
 export async function completeMission(missionId: string, pointsReward: number) {

@@ -54,9 +54,13 @@ const ParentDashboard = () => {
       const kids = await getChildProfiles();
       setChildren(kids);
       if (kids.length > 0) {
-        console.log("Selected child ID:", kids[0].id);
-        setSelectedChild(kids[0].id);
-        setActiveChildProfileId(kids[0].id);
+        // Restore previously selected child, or default to first
+        const savedChildId = localStorage.getItem("inschool-parent-selected-child");
+        const validSaved = savedChildId && kids.some((k: any) => k.id === savedChildId);
+        const childId = validSaved ? savedChildId! : kids[0].id;
+        console.log("Selected child ID:", childId);
+        setSelectedChild(childId);
+        setActiveChildProfileId(childId);
       }
       setLoading(false);
     };
@@ -206,7 +210,8 @@ const ParentDashboard = () => {
         const remaining = children.filter(c => c.id !== deleteChildTarget.id);
         const newId = remaining.length > 0 ? remaining[0].id : null;
         setSelectedChild(newId);
-        if (newId) setActiveChildProfileId(newId);
+        if (newId) { setActiveChildProfileId(newId); localStorage.setItem("inschool-parent-selected-child", newId); }
+        else { localStorage.removeItem("inschool-parent-selected-child"); }
       }
       toast.success(t("delete_child_success"));
       setDeleteChildTarget(null);
@@ -293,7 +298,7 @@ const ParentDashboard = () => {
               {children.map((child) => (
                 <button
                   key={child.id}
-                  onClick={() => { console.log("Selected child ID:", child.id); setSelectedChild(child.id); setActiveChildProfileId(child.id); }}
+                  onClick={() => { console.log("Selected child ID:", child.id); setSelectedChild(child.id); setActiveChildProfileId(child.id); localStorage.setItem("inschool-parent-selected-child", child.id); }}
                   className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm font-medium transition-all ${
                     selectedChild === child.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
                   }`}
