@@ -291,6 +291,48 @@ const Settings = () => {
     handleSaveMaterie(docenteMaterie.filter(x => x !== m));
   };
 
+  const handleSaveSchools = async (schools: typeof teacherSchools) => {
+    if (!session?.profileId) return;
+    setSavingSchools(true);
+    const { data: existing } = await supabase
+      .from("user_preferences")
+      .select("id, data")
+      .eq("profile_id", session.profileId)
+      .maybeSingle();
+    const prevData = (existing?.data as any) || {};
+    const lastSchool = schools[schools.length - 1];
+    const newData = {
+      ...prevData,
+      teacher_declaration: {
+        ...(prevData.teacher_declaration || {}),
+        schools,
+        school_name: lastSchool?.school_name || "",
+        school_code: lastSchool?.school_code || null,
+      },
+    };
+    if (existing) {
+      await supabase.from("user_preferences").update({ data: newData } as any).eq("id", existing.id);
+    } else {
+      await supabase.from("user_preferences").insert({ profile_id: session.profileId, data: newData } as any);
+    }
+    setTeacherSchools(schools);
+    setSavingSchools(false);
+    toast.success(t("settings_schools_title") + " ✓");
+  };
+
+  const handleAddSchool = (name: string, code: string | null, city: string) => {
+    if (!name.trim()) return;
+    const newSchool = { school_name: name.trim(), school_code: code, city };
+    handleSaveSchools([...teacherSchools, newSchool]);
+    setAddingSchool(false);
+    setTempSchoolName("");
+    setTempSchoolCity("");
+  };
+
+  const handleRemoveSchool = (idx: number) => {
+    handleSaveSchools(teacherSchools.filter((_, i) => i !== idx));
+  };
+
   const handleToggleLibrary = async (profileId: string, checked: boolean) => {
     setLibraryFlags(prev => ({ ...prev, [profileId]: checked }));
     // Upsert user_preferences.data.show_library
