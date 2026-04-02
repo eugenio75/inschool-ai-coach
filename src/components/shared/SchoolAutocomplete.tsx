@@ -31,8 +31,12 @@ const CONTRACTION_MAP: [RegExp, string][] = [
   [/liceo artistico/i, "LA"],
   [/scuola primaria/i, "SP"],
   [/elementare/i, "SP"],
-  [/scuola media/i, "SM"],
-  [/secondaria/i, "SM"],
+  [/scuola media/i, "PRIMO GRADO"],
+  [/secondaria primo grado/i, "PRIMO GRADO"],
+  [/secondaria secondo grado/i, "SECONDO GRADO"],
+  [/scuola superiore/i, "SECONDO GRADO"],
+  [/secondaria/i, "PRIMO GRADO"],
+  [/\bmedia\b/i, "PRIMO GRADO"],
 ];
 
 function getExpandedQueries(query: string): string[] {
@@ -92,7 +96,7 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
         const expandedQueries = getExpandedQueries(trimmed);
 
         const searches = expandedQueries.map((q) => {
-          const rpcArgs: any = { query: q, limit_n: 10 };
+          const rpcArgs: any = { query: q, limit_n: cityFilter ? 20 : 10 };
           if (cityFilter) rpcArgs.city_filter = cityFilter;
           return supabase.rpc("search_schools", rpcArgs);
         });
