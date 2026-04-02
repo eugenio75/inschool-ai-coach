@@ -4,8 +4,6 @@ import { StepDob } from "./steps/StepDob";
 import { StepUnderAge } from "./steps/StepUnderAge";
 import { StepRoleSelect } from "./steps/StepRoleSelect";
 import { StepCredentials } from "./steps/StepCredentials";
-import { StepTeacherDeclaration } from "./steps/StepTeacherDeclaration";
-import type { TeacherDeclaration } from "./steps/StepTeacherDeclaration";
 
 export type RegistrationRole = "studente" | "docente" | "genitore";
 
@@ -20,11 +18,10 @@ const slideVariants = {
 };
 
 export function RegistrationFlow({ onSwitchToLogin }: RegistrationFlowProps) {
-  const [step, setStep] = useState<"dob" | "underage" | "role" | "teacher_declaration" | "credentials">("dob");
+  const [step, setStep] = useState<"dob" | "underage" | "role" | "credentials">("dob");
   const [dob, setDob] = useState("");
   const [age, setAge] = useState<number | null>(null);
   const [selectedRole, setSelectedRole] = useState<RegistrationRole | null>(null);
-  const [teacherDeclaration, setTeacherDeclaration] = useState<TeacherDeclaration | null>(null);
 
   const handleDobContinue = (dobValue: string, ageValue: number) => {
     setDob(dobValue);
@@ -38,17 +35,6 @@ export function RegistrationFlow({ onSwitchToLogin }: RegistrationFlowProps) {
 
   const handleRoleSelect = (role: RegistrationRole) => {
     setSelectedRole(role);
-    if (role === "docente") {
-      setStep("teacher_declaration");
-    } else {
-      setStep("credentials");
-    }
-  };
-
-  const handleTeacherDeclarationComplete = (declaration: TeacherDeclaration) => {
-    setTeacherDeclaration(declaration);
-    // Store for later persistence
-    localStorage.setItem("inschool-teacher-declaration", JSON.stringify(declaration));
     setStep("credentials");
   };
 
@@ -89,18 +75,12 @@ export function RegistrationFlow({ onSwitchToLogin }: RegistrationFlowProps) {
               onSwitchToLogin={onSwitchToLogin}
             />
           )}
-          {step === "teacher_declaration" && (
-            <StepTeacherDeclaration
-              onComplete={handleTeacherDeclarationComplete}
-              onBack={() => setStep("role")}
-            />
-          )}
           {step === "credentials" && selectedRole && (
             <StepCredentials
               role={selectedRole}
               dob={dob}
               age={age!}
-              onBack={() => selectedRole === "docente" ? setStep("teacher_declaration") : setStep("role")}
+              onBack={() => setStep("role")}
               onSwitchToLogin={onSwitchToLogin}
             />
           )}

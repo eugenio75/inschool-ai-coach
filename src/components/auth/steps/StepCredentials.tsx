@@ -37,6 +37,7 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
   const [parentalConsent, setParentalConsent] = useState(false);
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [gender, setGender] = useState<"m" | "f" | null>(null);
 
   const needsParentalConsent = role === "studente" && age >= 14 && age < 18;
   const schoolLevel = roleToSchoolLevel[role];
@@ -47,7 +48,8 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
     email.trim() &&
     password.length >= 6 &&
     acceptTerms &&
-    (!needsParentalConsent || parentalConsent);
+    (!needsParentalConsent || parentalConsent) &&
+    (role !== "docente" || gender !== null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +82,7 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
           school_level: schoolLevel,
           date_of_birth: dob,
           age,
+          ...(role === "docente" && gender ? { gender } : {}),
         })
       );
 
@@ -115,7 +118,7 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
 
   return (
     <div>
-      <StepIndicator currentStep={role === "docente" ? 4 : 3} totalSteps={role === "docente" ? 4 : 3} />
+      <StepIndicator currentStep={3} totalSteps={3} />
 
       <button
         onClick={onBack}
@@ -179,6 +182,32 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
+
+        {/* Gender selection for teachers */}
+        {role === "docente" && (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground">Come preferisci essere chiamato/a?</p>
+            <div className="flex gap-3">
+              {([
+                { value: "m" as const, label: "Professore" },
+                { value: "f" as const, label: "Professoressa" },
+              ]).map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setGender(opt.value)}
+                  className={`flex-1 p-3 rounded-xl border text-sm font-medium transition-all text-center ${
+                    gender === opt.value
+                      ? "border-primary bg-primary/10 shadow-sm text-foreground"
+                      : "border-border hover:bg-muted/50 text-muted-foreground"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* GDPR Consents */}
         <div className="space-y-3 pt-2">

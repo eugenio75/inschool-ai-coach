@@ -71,6 +71,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
                   avatar_emoji: null,
                   age: meta.age || null,
                   date_of_birth: meta.date_of_birth || null,
+                  ...(meta.gender ? { gender: meta.gender } : {}),
                 } as any)
                 .select()
                 .single();
