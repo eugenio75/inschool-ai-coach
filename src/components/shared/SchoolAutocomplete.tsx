@@ -9,6 +9,7 @@ interface SchoolResult {
   comune: string;
   provincia: string;
   tipo_scuola: string;
+  indirizzo: string;
 }
 
 interface SchoolAutocompleteProps {
