@@ -116,7 +116,7 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
           }
         }
 
-        setResults(merged.slice(0, 15));
+        setResults(merged.slice(0, 50));
         setShowDropdown(true);
       } catch {
         setResults([]);
