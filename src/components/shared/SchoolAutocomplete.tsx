@@ -96,7 +96,7 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
         const expandedQueries = getExpandedQueries(trimmed);
 
         const searches = expandedQueries.map((q) => {
-          const rpcArgs: any = { query: q, limit_n: cityFilter ? 20 : 10 };
+          const rpcArgs: any = { query: q, limit_n: cityFilter ? 50 : 10 };
           if (cityFilter) rpcArgs.city_filter = cityFilter;
           return supabase.rpc("search_schools", rpcArgs);
         });
@@ -116,7 +116,7 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
           }
         }
 
-        setResults(merged.slice(0, 15));
+        setResults(merged.slice(0, 50));
         setShowDropdown(true);
       } catch {
         setResults([]);
@@ -202,26 +202,48 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
       </div>
 
       {showDropdown && results.length > 0 && (
-        <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-xl shadow-md max-h-48 overflow-y-auto">
-          {results.map((s, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => selectSchool(s)}
-              className="w-full text-left px-4 py-2.5 hover:bg-muted/50 transition-colors text-sm flex items-center gap-2"
-            >
-              <div className="flex-1 min-w-0">
-                {s.tipo_scuola && (
-                  <p className="font-semibold text-foreground text-xs uppercase tracking-wide truncate">{s.tipo_scuola}</p>
-                )}
-                <p className="font-medium text-foreground truncate">{s.denominazione}</p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {s.indirizzo ? `${s.indirizzo} — ` : ""}{s.comune}{s.provincia ? ` (${s.provincia})` : ""}
-                </p>
-              </div>
-              <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0" />
-            </button>
-          ))}
+        <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-xl shadow-md max-h-64 overflow-y-auto">
+          {(() => {
+            const showGroups = results.length > 15;
+            let lastType = "";
+            return results.map((s, i) => {
+              const typeKey = (s.tipo_scuola || "").toUpperCase();
+              const showSeparator = showGroups && typeKey !== lastType;
+              lastType = typeKey;
+              const labelKey = typeKey.includes("INFANZIA") ? "school_type_infanzia"
+                : typeKey.includes("PRIMARIA") ? "school_type_primaria"
+                : typeKey.includes("PRIMO") ? "school_type_primo_grado"
+                : typeKey.includes("SECONDO") ? "school_type_secondo_grado"
+                : "school_type_altro";
+              return (
+                <div key={s.codice_meccanografico || i}>
+                  {showSeparator && (
+                    <div className="sticky top-0 px-4 py-1.5 bg-muted/80 backdrop-blur-sm border-b border-border">
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        {t(labelKey)}
+                      </span>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => selectSchool(s)}
+                    className="w-full text-left px-4 py-2.5 hover:bg-muted/50 transition-colors text-sm flex items-center gap-2"
+                  >
+                    <div className="flex-1 min-w-0">
+                      {!showGroups && s.tipo_scuola && (
+                        <p className="font-semibold text-foreground text-xs uppercase tracking-wide truncate">{s.tipo_scuola}</p>
+                      )}
+                      <p className="font-medium text-foreground truncate">{s.denominazione}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {s.indirizzo ? `${s.indirizzo} — ` : ""}{s.comune}{s.provincia ? ` (${s.provincia})` : ""}
+                      </p>
+                    </div>
+                    <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0" />
+                  </button>
+                </div>
+              );
+            });
+          })()}
         </div>
       )}
 
