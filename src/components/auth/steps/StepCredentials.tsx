@@ -48,7 +48,8 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
     email.trim() &&
     password.length >= 6 &&
     acceptTerms &&
-    (!needsParentalConsent || parentalConsent);
+    (!needsParentalConsent || parentalConsent) &&
+    (role !== "docente" || gender !== null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
