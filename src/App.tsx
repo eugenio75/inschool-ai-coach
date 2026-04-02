@@ -117,11 +117,20 @@ function RoleGuard({ children }: { children: React.ReactNode }) {
       const childSession = getChildSession();
       let profile = childSession?.profile;
 
+      // Only auto-resolve profile if NO session exists yet.
+      // Never overwrite an existing session — the parent's child selection must be preserved.
       if (!profile && user) {
-        const { data } = await supabase.from("child_profiles").select("*").eq("parent_id", user.id).limit(1);
+        // Only look for ADULT profiles (superiori/universitario/docente).
+        // Do NOT auto-select child ("alunno") profiles here — that would
+        // override the parent's manual selection in ParentDashboard.
+        const { data } = await supabase
+          .from("child_profiles")
+          .select("*")
+          .eq("parent_id", user.id)
+          .in("school_level", ["superiori", "universitario", "docente"])
+          .limit(1);
         if (data && data.length > 0) {
           profile = data[0];
-          // Persist session so we don't re-fetch on every navigation
           setChildSession({
             profileId: profile.id,
             accessCode: (profile as any).access_code || "",
