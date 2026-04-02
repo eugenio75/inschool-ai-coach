@@ -231,16 +231,20 @@ Rispondi SOLO con un JSON:
     if (aiMission) {
       missions.push(aiMission);
     } else {
-      missions.push({
-        child_profile_id: resolvedChildId,
-        mission_date: today,
-        mission_type: "study_session",
-        title: isEN ? "Complete a study session" : "Completa una sessione di studio",
-        description: isEN
-          ? `${studentName}, complete a session with the Coach!`
-          : `${studentName}, porta a termine una sessione con il Coach!`,
-        points_reward: 15,
-      });
+      // Only add fallback study_session if we haven't already added one
+      const alreadyHasStudySession = missions.some(m => m.mission_type === "study_session");
+      if (!alreadyHasStudySession) {
+        missions.push({
+          child_profile_id: resolvedChildId,
+          mission_date: today,
+          mission_type: "study_session",
+          title: isEN ? "Complete a study session" : "Completa una sessione di studio",
+          description: isEN
+            ? `${studentName}, complete a session with the Coach!`
+            : `${studentName}, porta a termine una sessione con il Coach!`,
+          points_reward: 15,
+        });
+      }
     }
 
     const { data: inserted, error } = await supabase
