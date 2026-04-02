@@ -172,10 +172,21 @@ const Settings = () => {
             .maybeSingle();
           const prefs2 = (prefData2?.data as any) || {};
           setDiscoverable(!!prefs2.discoverable);
+          // Load schools array (with backward compat)
+          const schools = prefs2.teacher_declaration?.schools || [];
+          if (schools.length === 0 && prefs2.teacher_declaration?.school_code) {
+            setTeacherSchools([{
+              school_name: prefs2.teacher_declaration.school_name || "",
+              school_code: prefs2.teacher_declaration.school_code,
+              city: prefs2.teacher_declaration.city || "",
+            }]);
+          } else {
+            setTeacherSchools(schools);
+          }
           // Determine badge
           if (prefs2.email_istituzionale_verified) {
             setTeacherBadge("verified");
-          } else if (prefs2.teacher_declaration?.school_code) {
+          } else if (prefs2.teacher_declaration?.school_code || schools.some((s: any) => s.school_code)) {
             setTeacherBadge("school_recognized");
           } else {
             setTeacherBadge("unverified");
