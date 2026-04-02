@@ -297,11 +297,13 @@ export default function DashboardDocente() {
         materia: newClasse.materie.join(", "),
         ordine_scolastico: newClasse.ordine_scolastico || ordine || null,
         num_studenti: newClasse.num_studenti ? parseInt(newClasse.num_studenti) : 0,
+        school_code: newClasse.school_code || null,
+        school_name: newClasse.school_name || null,
       }).select().single();
     setSavingClasse(false);
     if (!error && data) {
       setClasseCreata(data);
-      setNewClasse({ nome: "", materie: [], ordine_scolastico: "", num_studenti: "" });
+      setNewClasse({ nome: "", materie: [], ordine_scolastico: "", num_studenti: "", school_code: "", school_name: "" });
       loadAll();
     } else {
       toast.error("Errore nella creazione della classe.");
