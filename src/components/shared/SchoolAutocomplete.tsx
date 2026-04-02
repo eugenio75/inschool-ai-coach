@@ -31,8 +31,12 @@ const CONTRACTION_MAP: [RegExp, string][] = [
   [/liceo artistico/i, "LA"],
   [/scuola primaria/i, "SP"],
   [/elementare/i, "SP"],
-  [/scuola media/i, "SM"],
-  [/secondaria/i, "SM"],
+  [/scuola media/i, "PRIMO GRADO"],
+  [/secondaria primo grado/i, "PRIMO GRADO"],
+  [/secondaria secondo grado/i, "SECONDO GRADO"],
+  [/scuola superiore/i, "SECONDO GRADO"],
+  [/secondaria/i, "PRIMO GRADO"],
+  [/\bmedia\b/i, "PRIMO GRADO"],
 ];
 
 function getExpandedQueries(query: string): string[] {
