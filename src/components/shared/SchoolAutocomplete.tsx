@@ -96,7 +96,7 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
         const expandedQueries = getExpandedQueries(trimmed);
 
         const searches = expandedQueries.map((q) => {
-          const rpcArgs: any = { query: q, limit_n: 10 };
+          const rpcArgs: any = { query: q, limit_n: cityFilter ? 20 : 10 };
           if (cityFilter) rpcArgs.city_filter = cityFilter;
           return supabase.rpc("search_schools", rpcArgs);
         });
