@@ -82,6 +82,7 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
           school_level: schoolLevel,
           date_of_birth: dob,
           age,
+          ...(role === "docente" && gender ? { gender } : {}),
         })
       );
 
