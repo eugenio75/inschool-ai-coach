@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
@@ -9,6 +9,11 @@ type AuthView = "login" | "register";
 
 const Auth = () => {
   const [view, setView] = useState<AuthView>("login");
+  const [confirmed, setConfirmed] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("confirmed") === "true") setConfirmed(true);
+  }, []);
 
   return (
     <div
@@ -16,6 +21,9 @@ const Auth = () => {
       data-theme="light"
     >
       <FloatingBackButton />
+      {confirmed && (
+        <div className="mb-4 p-3 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm text-center font-medium">✅ Email confermata! Ora accedi con le tue credenziali.</div>
+      )}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
