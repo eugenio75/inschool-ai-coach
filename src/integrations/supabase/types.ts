@@ -236,6 +236,8 @@ export type Database = {
           nome: string
           num_studenti: number | null
           ordine_scolastico: string | null
+          school_code: string | null
+          school_name: string | null
         }
         Insert: {
           codice_invito?: string | null
@@ -247,6 +249,8 @@ export type Database = {
           nome: string
           num_studenti?: number | null
           ordine_scolastico?: string | null
+          school_code?: string | null
+          school_name?: string | null
         }
         Update: {
           codice_invito?: string | null
@@ -258,6 +262,8 @@ export type Database = {
           nome?: string
           num_studenti?: number | null
           ordine_scolastico?: string | null
+          school_code?: string | null
+          school_name?: string | null
         }
         Relationships: [
           {
