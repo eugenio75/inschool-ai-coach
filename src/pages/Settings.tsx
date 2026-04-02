@@ -26,6 +26,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { BlockchainTab } from "@/components/BlockchainTab";
 import { MyClassesSection } from "@/components/MyClassesSection";
+import { CityAutocomplete } from "@/components/shared/CityAutocomplete";
+import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
 
 // Avatar colors for profile customization
 const AVATAR_COLORS = [
