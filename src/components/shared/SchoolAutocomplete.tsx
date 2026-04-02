@@ -207,10 +207,12 @@ export function SchoolAutocomplete({ value, onChange, placeholder, className, ci
               className="w-full text-left px-4 py-2.5 hover:bg-muted/50 transition-colors text-sm flex items-center gap-2"
             >
               <div className="flex-1 min-w-0">
+                {s.tipo_scuola && (
+                  <p className="font-semibold text-foreground text-xs uppercase tracking-wide truncate">{s.tipo_scuola}</p>
+                )}
                 <p className="font-medium text-foreground truncate">{s.denominazione}</p>
-                <p className="text-xs text-muted-foreground">
-                  {s.comune}{s.provincia ? ` (${s.provincia})` : ""}
-                  {s.tipo_scuola ? ` · ${s.tipo_scuola}` : ""}
+                <p className="text-xs text-muted-foreground truncate">
+                  {s.indirizzo ? `${s.indirizzo} — ` : ""}{s.comune}{s.provincia ? ` (${s.provincia})` : ""}
                 </p>
               </div>
               <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0" />
