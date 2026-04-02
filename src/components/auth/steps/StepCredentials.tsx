@@ -37,6 +37,7 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
   const [parentalConsent, setParentalConsent] = useState(false);
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [gender, setGender] = useState<"m" | "f" | null>(null);
 
   const needsParentalConsent = role === "studente" && age >= 14 && age < 18;
   const schoolLevel = roleToSchoolLevel[role];
