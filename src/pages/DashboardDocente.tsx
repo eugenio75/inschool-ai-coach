@@ -788,6 +788,33 @@ export default function DashboardDocente() {
                 )}
               </div>
             </div>
+            {/* School selection */}
+            <div>
+              <Label>Istituto</Label>
+              {(() => {
+                const teacherSchools: { school_name: string; school_code: string | null; city: string }[] = od?.teacher_declaration?.schools || [];
+                if (od?.teacher_declaration?.school_code && teacherSchools.length === 0) {
+                  teacherSchools.push({ school_name: od.teacher_declaration.school_name || "", school_code: od.teacher_declaration.school_code, city: od.teacher_declaration.city || "" });
+                }
+                if (teacherSchools.length > 0) {
+                  return (
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {teacherSchools.map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setNewClasse(p => ({ ...p, school_code: s.school_code || "", school_name: s.school_name }))}
+                          className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${newClasse.school_code === (s.school_code || "") && newClasse.school_name === s.school_name ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}
+                        >
+                          🏫 {s.school_name}{s.city ? ` — ${s.city}` : ""}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                }
+                return <p className="text-xs text-muted-foreground mt-1">Nessun istituto salvato. Puoi aggiungerlo dalle Impostazioni.</p>;
+              })()}
+            </div>
             <div>
               <Label>Numero studenti</Label>
               <Input type="number" min="0" placeholder="es. 25" value={newClasse.num_studenti}
