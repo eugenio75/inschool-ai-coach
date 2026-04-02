@@ -183,6 +183,32 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
           </button>
         </div>
 
+        {/* Gender selection for teachers */}
+        {role === "docente" && (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground">Come preferisci essere chiamato/a?</p>
+            <div className="flex gap-3">
+              {([
+                { value: "m" as const, label: "Professore" },
+                { value: "f" as const, label: "Professoressa" },
+              ]).map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setGender(opt.value)}
+                  className={`flex-1 p-3 rounded-xl border text-sm font-medium transition-all text-center ${
+                    gender === opt.value
+                      ? "border-primary bg-primary/10 shadow-sm text-foreground"
+                      : "border-border hover:bg-muted/50 text-muted-foreground"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* GDPR Consents */}
         <div className="space-y-3 pt-2">
           <label className="flex items-start gap-2.5 cursor-pointer">
