@@ -57,7 +57,7 @@ export default function FreeStudySession() {
   const [outputContent, setOutputContent] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Subject is now free-text only for Studio libero
+  
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
