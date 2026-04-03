@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Plus, Settings, LogOut, BookOpen, Loader2, Users, GraduationCap, ChevronRight, UserCog, Copy, Check } from "lucide-react";
+import { Plus, Settings, LogOut, BookOpen, Loader2, Users, GraduationCap, ChevronRight, UserCog, Copy, Check, ArrowLeft } from "lucide-react";
+import { useLang } from "@/contexts/LangContext";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildProfiles, setActiveChildProfileId } from "@/lib/database";
@@ -13,6 +14,7 @@ const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 const ProfileSelector = () => {
   const navigate = useNavigate();
+  const { t } = useLang();
   const { signOut } = useAuth();
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,6 +88,14 @@ const ProfileSelector = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 relative font-sans overflow-hidden">
+      <button
+        onClick={() => navigate(profiles.length > 0 ? "/dashboard" : "/")}
+        className="fixed top-4 left-4 z-50 inline-flex items-center gap-2 rounded-xl border border-border bg-card/90 px-3 py-2 text-sm font-semibold text-foreground shadow-soft backdrop-blur-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+        type="button"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        <span>{t("back_button")}</span>
+      </button>
       {/* Sfondo geometrico minimale */}
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
       <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10" />
