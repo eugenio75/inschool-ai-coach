@@ -451,6 +451,286 @@ export default function PrepSession() {
   // University exams available for quick select
   const availableUniExams = studyPlan.filter(e => e.stato !== "superato");
 
+  // Format timer
+  const formatTimer = (secs: number) => {
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` : `${m}:${String(s).padStart(2, "0")}`;
+  };
+
+  // Maturità: analyze topics
+  async function analyzeMaturitaTopics() {
+    setMaturitaLoading(true);
+    setMaturitaTopics([]);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const provaLabel = maturitaProva === "prima" ? "Prima prova (Italiano)" : maturitaProva === "seconda" ? `Seconda prova (${secondaProvaMateria})` : "Colloquio orale";
+      const body = {
+        messages: [{ role: "user", content: `Analizza gli argomenti più probabili per la ${provaLabel} della maturità 2026, indirizzo ${indirizzo}. Rispondi SOLO con un JSON array: [{"argomento":"...","probabilita":"alta|media|bassa","motivazione":"...","ultimo_anno_uscito":"..."}]. Fornisci 3-5 argomenti.` }],
+        systemPrompt: `You are an expert Italian maturità exam coach. The student's indirizzo is "${indirizzo}". The proof type is "${provaLabel}". Based on ministerial programs and historical exam patterns, return 3-5 probable topics as a JSON array. Weak subjects: ${weaknessContext || "none identified"}.`,
+      };
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify(body),
+      });
+      const text = await res.text();
+      // Extract JSON array from response
+      const jsonMatch = text.match(/\[[\s\S]*?\]/);
+      if (jsonMatch) {
+        const topics = JSON.parse(jsonMatch[0]) as MaturitaTopic[];
+        setMaturitaTopics(topics);
+      }
+    } catch (err) {
+      console.error("Maturità analysis error:", err);
+    }
+    setMaturitaLoading(false);
+  }
+
+  // Start maturità simulation on a specific topic
+  function startMaturitaSim(topicOverride?: string) {
+    const provaLabel = maturitaProva === "prima" ? "Prima prova (Italiano)" : maturitaProva === "seconda" ? `Seconda prova (${secondaProvaMateria})` : "Colloquio orale";
+    const timerDuration = maturitaProva === "colloquio" ? 30 * 60 : 6 * 60 * 60; // 30min or 6h
+    setMaturitaTimerSeconds(timerDuration);
+    setMaturitaTimerActive(true);
+    setStep("maturita-sim");
+    setMessages([{ role: "assistant", content: "" }]);
+
+    const topicNote = topicOverride ? ` sull'argomento: ${topicOverride}` : "";
+    const systemPrompt = `You are an expert Italian maturità exam coach with deep knowledge of the Italian school system, ministerial programs, and exam history.
+
+MATURITÀ 2026 KEY FACTS:
+- Prima prova: June 18, 2026 (same for all indirizzi, 6 hours)
+  - 7 tracce in 3 tipologie: A (analisi testo: 2), B (testo argomentativo: 3), C (tema attualità: 2)
+- Seconda prova: June 19, 2026 (specific to each indirizzo)
+- Colloquio orale 2026: only 4 specific disciplines chosen by MIM
+
+SECOND PROOF SUBJECT FOR THIS STUDENT: ${secondaProvaMateria} (indirizzo: ${indirizzo})
+
+YOUR ROLE: Generate a REALISTIC traccia matching exact MIM format for ${provaLabel}${topicNote}.
+${maturitaProva === "colloquio" ? "Simula una commissione con domande che partono dall'elaborato e si collegano a tutte le discipline." : ""}
+
+At the end of the simulation (after the student responds), write [SIMULAZIONE_COMPLETATA] and generate a report JSON:
+{"score":"<voto>/20","strengths":["..."],"weaknesses":["..."],"priorities":["..."]}
+${maturitaProva === "prima" ? "Griglia: padronanza linguistica(4)+capacità testuale(4)+conoscenze(4)+pensiero critico(4)+originalità(4)" : maturitaProva === "seconda" ? "Griglia: conoscenze(6)+applicazione(6)+argomentazione(4)+forma(4)" : "Griglia: 5pt per disciplina×4+collegamento bonus"}
+
+${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
+
+    sendToAI([], `Inizia la simulazione della ${provaLabel} della maturità${topicNote}. Genera la traccia.`, systemPrompt, true);
+  }
+
+  /* ══════════════ MATURITÀ SCREEN 1: Indirizzo e prova ══════════════ */
+  if (step === "maturita-setup" && examType === "maturita") {
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <FloatingBackButton />
+        <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
+          <button onClick={() => { setStep("type"); setExamType(null); }} className="text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <span className="text-xl">🎓</span>
+          <h1 className="text-lg font-bold text-foreground">{t("exam_type_maturita")}</h1>
+        </div>
+        <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+              {t("exam_field_indirizzo")}
+            </label>
+            <Input value={indirizzo} onChange={e => {
+              setIndirizzo(e.target.value);
+              const track = findMaturitaTrack(e.target.value);
+              if (track) { setDetectedTrack(track); setIndirizzo(track.label); }
+            }} placeholder={t("exam_field_indirizzo_placeholder")} />
+            {indirizzo && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("exam_maturita_seconda")}: <strong>{secondaProvaMateria}</strong>
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+              {t("exam_maturita_choose_prova")}
+            </label>
+            <div className="space-y-2">
+              <button onClick={() => setMaturitaProva("prima")}
+                className={`w-full text-left px-4 py-3 rounded-xl border text-sm font-medium transition-all ${maturitaProva === "prima" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
+                📝 {t("exam_maturita_prima")}
+              </button>
+              <button onClick={() => setMaturitaProva("seconda")}
+                className={`w-full text-left px-4 py-3 rounded-xl border text-sm font-medium transition-all ${maturitaProva === "seconda" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
+                📐 {t("exam_maturita_seconda_btn")} ({secondaProvaMateria})
+              </button>
+              <button onClick={() => setMaturitaProva("colloquio")}
+                className={`w-full text-left px-4 py-3 rounded-xl border text-sm font-medium transition-all ${maturitaProva === "colloquio" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
+                🎤 {t("exam_maturita_colloquio_btn")}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+              {t("exam_field_date")}
+            </label>
+            <input type="date" value={examDate} onChange={e => setExamDate(e.target.value)}
+              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary text-foreground" />
+          </div>
+
+          <Button onClick={() => { setStep("maturita-analysis"); analyzeMaturitaTopics(); }}
+            disabled={!indirizzo || !maturitaProva} className="w-full">
+            {t("exam_maturita_analyze")} →
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════ MATURITÀ SCREEN 2: AI Analysis ══════════════ */
+  if (step === "maturita-analysis" && examType === "maturita") {
+    const probColor: Record<string, string> = {
+      alta: "bg-destructive/10 text-destructive border-destructive/20",
+      media: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800",
+      bassa: "bg-muted text-muted-foreground border-border",
+    };
+
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
+          <button onClick={() => setStep("maturita-setup")} className="text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <span className="text-xl">🔍</span>
+          <h1 className="text-lg font-bold text-foreground">{t("exam_maturita_analysis_title")}</h1>
+        </div>
+        <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
+          {maturitaLoading ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+              <p className="text-sm text-muted-foreground">{t("exam_maturita_analyzing")}</p>
+            </div>
+          ) : (
+            <>
+              {maturitaTopics.length > 0 ? (
+                <div className="space-y-3">
+                  {maturitaTopics.map((topic, i) => (
+                    <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+                      className="border border-border rounded-xl p-4 bg-card space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-foreground text-sm">{topic.argomento}</h3>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold uppercase ${probColor[topic.probabilita] || probColor.bassa}`}>
+                          {topic.probabilita}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{topic.motivazione}</p>
+                      {topic.ultimo_anno_uscito && (
+                        <p className="text-[10px] text-muted-foreground">Ultimo anno uscito: {topic.ultimo_anno_uscito}</p>
+                      )}
+                      <Button size="sm" variant="outline" className="w-full mt-1" onClick={() => startMaturitaSim(topic.argomento)}>
+                        {t("exam_maturita_simulate_topic")}
+                      </Button>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-8">{t("exam_maturita_no_topics")}</p>
+              )}
+
+              <div className="border-t border-border pt-4 space-y-2">
+                <label className="text-xs font-semibold uppercase text-muted-foreground">{t("exam_maturita_custom_topic")}</label>
+                <div className="flex gap-2">
+                  <Input value={maturitaCustomTopic} onChange={e => setMaturitaCustomTopic(e.target.value)}
+                    placeholder={t("exam_maturita_custom_placeholder")} />
+                  <Button onClick={() => startMaturitaSim(maturitaCustomTopic)} disabled={!maturitaCustomTopic.trim()}>
+                    {t("exam_start")}
+                  </Button>
+                </div>
+              </div>
+
+              <Button variant="outline" className="w-full" onClick={() => startMaturitaSim()}>
+                {t("exam_maturita_start_generic")}
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════ MATURITÀ SCREEN 3: Simulation ══════════════ */
+  if (step === "maturita-sim" && examType === "maturita") {
+    const provaLabel = maturitaProva === "prima" ? "Prima prova" : maturitaProva === "seconda" ? `Seconda prova` : "Colloquio";
+    return (
+      <div className="h-screen flex flex-col bg-card">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+          <button onClick={() => { setMaturitaTimerActive(false); setStep("maturita-analysis"); }} className="p-1.5 rounded-lg hover:bg-muted">
+            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+          </button>
+          <div className="flex-1">
+            <h1 className="text-sm font-semibold text-foreground">🎓 {provaLabel}</h1>
+            <span className="text-xs text-muted-foreground">{indirizzo}</span>
+          </div>
+          {maturitaTimerActive && (
+            <div className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1 rounded-full">
+              <Clock className="w-3.5 h-3.5" />
+              <span className="text-xs font-mono font-bold">{formatTimer(maturitaTimerSeconds)}</span>
+            </div>
+          )}
+        </div>
+
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+          {messages.map((msg, i) => (
+            <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              {msg.role === "assistant" && (
+                <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center mr-2 mt-1 flex-shrink-0">
+                  <span className="text-primary-foreground text-xs font-bold">C</span>
+                </div>
+              )}
+              <div className={`max-w-[80%] rounded-xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                msg.role === "user" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted text-foreground rounded-bl-sm"
+              }`}>
+                {msg.content ? <MathText>{msg.content}</MathText> : (sending && i === messages.length - 1 ? <Loader2 className="w-4 h-4 animate-spin" /> : null)}
+              </div>
+            </motion.div>
+          ))}
+          {streamingText && (
+            <div className="flex justify-start">
+              <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center mr-2 mt-1 flex-shrink-0">
+                <span className="text-primary-foreground text-xs font-bold">C</span>
+              </div>
+              <div className="max-w-[80%] rounded-xl rounded-bl-sm bg-muted px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap text-foreground">
+                <MathText>{streamingText}</MathText><span className="inline-block w-1.5 h-4 bg-primary ml-0.5 animate-pulse" />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-border bg-card p-3">
+          <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex items-center gap-2">
+            {maturitaProva === "colloquio" && (
+              <button type="button" onClick={toggleVoice}
+                className={`p-2.5 rounded-xl border transition-colors ${isListening ? "bg-destructive/10 border-destructive/30 text-destructive" : "border-border text-muted-foreground"}`}>
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </button>
+            )}
+            <input type="text" value={input} onChange={e => setInput(e.target.value)}
+              placeholder={maturitaProva === "colloquio" ? t("exam_input_oral") : t("exam_input_written")}
+              className="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary text-foreground"
+              disabled={sending} />
+            <Button type="submit" size="icon" disabled={!input.trim() || sending} className="rounded-xl h-10 w-10">
+              <Send className="w-4 h-4" />
+            </Button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   /* ══════════════ STEP: Type selector ══════════════ */
   if (step === "type") {
     return (
