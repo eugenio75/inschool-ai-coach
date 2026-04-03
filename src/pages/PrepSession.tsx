@@ -215,7 +215,7 @@ export default function PrepSession() {
     ...(profile?.favorite_subjects || []),
     ...(profile?.difficult_subjects || []).filter((s: string) => !(profile?.favorite_subjects || []).includes(s)),
   ];
-  const subjects = profileSubjects.length > 0 ? profileSubjects : (SUBJECTS_BY_LEVEL_PREP[schoolLevel] || SUBJECTS_BY_LEVEL_PREP.superiori);
+  const subjects = profileSubjects.length > 0 ? profileSubjects : getSubjectsByLevel(schoolLevel, userPrefsData?.superiori_indirizzo);
   const daysToExam = examDate ? daysUntil(examDate) : null;
 
   // Filter exam types by school level
