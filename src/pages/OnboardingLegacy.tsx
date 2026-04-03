@@ -430,6 +430,16 @@ const OnboardingLegacy = () => {
                 placeholder={t("school_search_placeholder")}
                 cityFilter={data.city || undefined}
               />
+
+              <label className="text-sm text-muted-foreground block">{t("onb_section_label")}</label>
+              <input
+                type="text"
+                placeholder={t("onb_section_placeholder")}
+                value={data.section}
+                onChange={(e) => setData({ ...data, section: e.target.value.toUpperCase().slice(0, 2) })}
+                maxLength={2}
+                className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-lg"
+              />
             </div>
           </div>
         );
