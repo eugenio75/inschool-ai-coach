@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { X, Loader2, ArrowRight, PenLine, MessageSquare, Star, Smile, ThumbsUp, Meh, Frown, Moon, Zap, Focus, CloudRain, Brain } from "lucide-react";
+import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 import { Button } from "@/components/ui/button";
 import { saveEmotionalCheckin } from "@/lib/database";
 import { getChildSession } from "@/lib/childSession";
