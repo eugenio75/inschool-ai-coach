@@ -320,6 +320,7 @@ const OnboardingLegacy = () => {
         const prefsData: any = {};
         if (data.coachName.trim()) prefsData.coach_name = data.coachName.trim();
         if (data.section.trim()) prefsData.school_section = data.section.trim();
+        if ((data as any).classe?.trim()) prefsData.classe = (data as any).classe.trim();
         if (Object.keys(prefsData).length > 0) {
           await supabase.from("user_preferences").upsert({
             profile_id: profile.id,
