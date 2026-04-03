@@ -320,6 +320,7 @@ const OnboardingLegacy = () => {
         const prefsData: any = {};
         if (data.coachName.trim()) prefsData.coach_name = data.coachName.trim();
         if (data.section.trim()) prefsData.school_section = data.section.trim();
+        if ((data as any).classe?.trim()) prefsData.classe = (data as any).classe.trim();
         if (Object.keys(prefsData).length > 0) {
           await supabase.from("user_preferences").upsert({
             profile_id: profile.id,
@@ -500,6 +501,16 @@ const OnboardingLegacy = () => {
                 value={data.section}
                 onChange={(e) => setData({ ...data, section: e.target.value.toUpperCase().slice(0, 2) })}
                 maxLength={2}
+                className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-lg"
+              />
+
+              <label className="text-sm text-muted-foreground block">{t("onb_classe_label")}</label>
+              <input
+                type="text"
+                placeholder={t("onb_classe_placeholder")}
+                value={(data as any).classe || ""}
+                onChange={(e) => setData({ ...data, classe: e.target.value.slice(0, 6) } as any)}
+                maxLength={6}
                 className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-lg"
               />
             </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, AlertTriangle, Clock, FileText, Heart, CheckCircle2, ChevronRight } from "lucide-react";
+import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildSession } from "@/lib/childSession";
@@ -74,6 +75,7 @@ export default function TeacherNotifications() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-24">
+      <FloatingBackButton />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Notifiche</h1>

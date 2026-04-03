@@ -4,6 +4,7 @@ import { School, MapPin, Pencil, Check, X } from "lucide-react";
 import { useLang } from "@/contexts/LangContext";
 import { CityAutocomplete } from "@/components/shared/CityAutocomplete";
 import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
+import { normalizeClass } from "@/lib/normalizeClass";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -65,9 +66,9 @@ export function EditableSchoolCard({ data, onChange, delay = 0.15 }: EditableSch
     if (city) setTempCity(city);
   };
 
-  const renderValue = (value: string, placeholder: string) => (
+  const renderValue = (value: string, placeholder: string, isClass = false) => (
     <span className={value ? "text-foreground text-sm" : "text-muted-foreground text-sm italic"}>
-      {value || placeholder}
+      {value ? (isClass ? normalizeClass(value) : value) : placeholder}
     </span>
   );
 
@@ -177,7 +178,7 @@ export function EditableSchoolCard({ data, onChange, delay = 0.15 }: EditableSch
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <div className="flex-1">{renderValue(data.classSection, t("profile_school_class_placeholder"))}</div>
+              <div className="flex-1">{renderValue(data.classSection, t("profile_school_class_placeholder"), true)}</div>
               {renderEditButton("class")}
             </div>
           )}

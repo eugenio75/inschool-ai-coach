@@ -1255,5 +1255,9 @@
   "class_school_label": "School",
   "class_school_placeholder": "Select school...",
   "profile_school_info_title": "My school",
-  "profile_not_specified": "Not specified"
+  "profile_not_specified": "Not specified",
+  "onb_section_label": "Section (optional)",
+  "onb_section_placeholder": "e.g. A",
+  "onb_classe_label": "Class (optional)",
+  "onb_classe_placeholder": "E.g. 3rd A"
 }

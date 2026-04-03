@@ -13,6 +13,7 @@ import { loadStudyPlan, saveStudyPlan } from "@/lib/studyPlanService";
 import { AccessCodeCard } from "@/components/profile/AccessCodeCard";
 import { EditableSchoolCard } from "@/components/profile/EditableSchoolCard";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeClass } from "@/lib/normalizeClass";
 
 const INTEREST_SUGGESTIONS = [
   "Calcio", "Basket", "Nuoto", "Danza", "Musica", "Chitarra", "Pianoforte",
@@ -81,7 +82,7 @@ const StudentProfile = () => {
               if (!city) city = d.city || d.medie_citta || d.superiori_citta || d.uni_nome || "";
               if (!schoolName) schoolName = d.school_name || "";
               if (!schoolCode) schoolCode = d.school_code || null;
-              if (!classSection) classSection = d.medie_anno || d.superiori_anno || d.uni_anno || "";
+              if (!classSection) classSection = d.classe || d.medie_anno || d.superiori_anno || d.uni_anno || "";
             }
           } catch {}
         }
@@ -172,7 +173,7 @@ const StudentProfile = () => {
             </div>
             <h2 className="font-display text-xl font-bold text-foreground">{profile.name}</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              {[profile.age ? `${profile.age} anni` : "", schoolData.classSection, schoolData.schoolName, schoolData.city].filter(Boolean).join(" · ") || profile.school_level || ""}
+              {[profile.age ? `${profile.age} anni` : "", schoolData.classSection ? normalizeClass(schoolData.classSection) : "", schoolData.schoolName, schoolData.city].filter(Boolean).join(" · ") || profile.school_level || ""}
             </p>
           </motion.div>
         </div>
@@ -290,25 +291,6 @@ const StudentProfile = () => {
               />
             </motion.div>
           )}
-
-          {/* School info display */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.3 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
-            <h3 className="font-display font-semibold text-foreground mb-3 text-sm">{t("profile_school_info_title")}</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t("profile_school_name_label")}</span>
-                <span className="text-foreground font-medium">{schoolData.schoolName || t("profile_not_specified")}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t("profile_school_class_label")}</span>
-                <span className="text-foreground font-medium">{schoolData.classSection || t("profile_not_specified")}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t("profile_school_city_label")}</span>
-                <span className="text-foreground font-medium">{schoolData.city || t("profile_not_specified")}</span>
-              </div>
-            </div>
-          </motion.div>
 
           {/* Save */}
           {hasChanges && (
