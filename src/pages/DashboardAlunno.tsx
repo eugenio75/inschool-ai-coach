@@ -21,10 +21,13 @@ const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
 const DashboardAlunno = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const isChild = isChildSession();
+  // Show ESC button when an authenticated parent is viewing (not a child code session)
+  const showParentEsc = !!user && !isChild;
   const [showLibrary, setShowLibrary] = useState(false);
   const [coachName, setCoachName] = useState("");
 
