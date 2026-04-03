@@ -66,9 +66,9 @@ export function EditableSchoolCard({ data, onChange, delay = 0.15 }: EditableSch
     if (city) setTempCity(city);
   };
 
-  const renderValue = (value: string, placeholder: string) => (
+  const renderValue = (value: string, placeholder: string, isClass = false) => (
     <span className={value ? "text-foreground text-sm" : "text-muted-foreground text-sm italic"}>
-      {value || placeholder}
+      {value ? (isClass ? normalizeClass(value) : value) : placeholder}
     </span>
   );
 
