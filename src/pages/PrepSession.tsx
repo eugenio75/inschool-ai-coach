@@ -243,6 +243,23 @@ export default function PrepSession() {
     return true;
   });
 
+  // Maturità timer
+  useEffect(() => {
+    if (maturitaTimerActive && step === "maturita-sim") {
+      maturitaTimerRef.current = setInterval(() => {
+        setMaturitaTimerSeconds(prev => {
+          if (prev <= 1) {
+            clearInterval(maturitaTimerRef.current!);
+            setMaturitaTimerActive(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => { if (maturitaTimerRef.current) clearInterval(maturitaTimerRef.current); };
+  }, [maturitaTimerActive, step]);
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, streamingText]);
