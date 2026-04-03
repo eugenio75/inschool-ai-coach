@@ -173,7 +173,7 @@ const StudentProfile = () => {
             </div>
             <h2 className="font-display text-xl font-bold text-foreground">{profile.name}</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              {[profile.age ? `${profile.age} anni` : "", schoolData.classSection, schoolData.schoolName, schoolData.city].filter(Boolean).join(" · ") || profile.school_level || ""}
+              {[profile.age ? `${profile.age} anni` : "", schoolData.classSection ? normalizeClass(schoolData.classSection) : "", schoolData.schoolName, schoolData.city].filter(Boolean).join(" · ") || profile.school_level || ""}
             </p>
           </motion.div>
         </div>
