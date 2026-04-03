@@ -314,7 +314,7 @@ const OnboardingLegacy = () => {
         school_name: data.schoolName || undefined,
         school_code: data.schoolCode || undefined,
         city: data.city || undefined,
-        class_section: data.section || undefined,
+        class_section: (data as any).classe?.trim() || undefined,
       } as any);
 
       if (profile) {
