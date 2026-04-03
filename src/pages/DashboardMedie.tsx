@@ -83,7 +83,7 @@ export default function DashboardMedie() {
               <button onClick={() => navigate("/student-profile")} className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center hover:bg-accent transition-colors text-xs font-bold text-primary" title="Il mio profilo">
                 {avatarInitial}
               </button>
-              {!isChild && (
+              {showParentEsc && (
                 <button onClick={() => navigate("/parent-dashboard")} className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center hover:bg-destructive/20 transition-colors" title="Torna all'area genitori">
                   <X className="w-4 h-4 text-destructive" />
                 </button>
