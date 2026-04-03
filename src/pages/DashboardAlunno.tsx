@@ -14,6 +14,7 @@ import { CoachPresence } from "@/components/CoachPresence";
 import { BadgeDisplay } from "@/components/BadgeDisplay";
 import { supabase } from "@/integrations/supabase/client";
 import { JoinClassPrompt } from "@/components/JoinClassPrompt";
+import { useAuth } from "@/hooks/useAuth";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
