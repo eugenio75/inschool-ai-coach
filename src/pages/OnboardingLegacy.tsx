@@ -17,6 +17,7 @@ import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
 import { CityAutocomplete } from "@/components/shared/CityAutocomplete";
 import { formatTeacherDisplay } from "@/lib/teacherTitle";
+import { normalizeClass } from "@/lib/normalizeClass";
 import { useToast } from "@/hooks/use-toast";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
