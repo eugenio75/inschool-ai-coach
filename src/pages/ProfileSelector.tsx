@@ -61,11 +61,18 @@ const ProfileSelector = () => {
         gender: profile.gender,
         avatarEmoji: profile.avatar_emoji,
         schoolLevel: profile.school_level,
+        school_level: profile.school_level,
         favoriteSubjects: profile.favorite_subjects,
+        favorite_subjects: profile.favorite_subjects,
         difficultSubjects: profile.difficult_subjects,
+        difficult_subjects: profile.difficult_subjects,
         struggles: profile.struggles,
         focusTime: profile.focus_time?.toString() || "15",
         supportStyle: profile.support_style,
+        school_name: profile.school_name,
+        school_code: profile.school_code,
+        city: profile.city,
+        class_section: profile.class_section,
       }));
     }
     navigate("/dashboard");
