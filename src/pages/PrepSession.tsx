@@ -746,7 +746,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
           <p className="text-sm text-muted-foreground mb-4">{t("exam_select_type")}</p>
           {filteredExamTypes.map((et) => (
             <motion.button key={et.id} whileTap={{ scale: 0.98 }}
-              onClick={() => { setExamType(et.id); setStep("setup"); }}
+              onClick={() => { setExamType(et.id); setStep(et.id === "maturita" ? "maturita-setup" : "setup"); }}
               className="w-full flex items-start gap-4 p-4 rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-sm transition-all text-left">
               <span className="text-2xl mt-0.5">{et.emoji}</span>
               <div className="flex-1 min-w-0">
