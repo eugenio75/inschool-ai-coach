@@ -213,9 +213,11 @@ export default function PrepSession() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Dynamic subjects based on school level
+  const favSubjects = profile?.favorite_subjects || profile?.favoriteSubjects || [];
+  const diffSubjects = profile?.difficult_subjects || profile?.difficultSubjects || [];
   const profileSubjects = [
-    ...(profile?.favorite_subjects || []),
-    ...(profile?.difficult_subjects || []).filter((s: string) => !(profile?.favorite_subjects || []).includes(s)),
+    ...favSubjects,
+    ...diffSubjects.filter((s: string) => !favSubjects.includes(s)),
   ];
   const subjects = profileSubjects.length > 0 ? profileSubjects : getSubjectsByLevel(schoolLevel, userPrefsData?.superiori_indirizzo);
   const daysToExam = examDate ? daysUntil(examDate) : null;
