@@ -207,6 +207,8 @@ export default function PrepSession() {
   // Voice
   const [isListening, setIsListening] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState("");
+  const [customSubjects, setCustomSubjects] = useState<string[]>([]);
+  const [customSubjectInput, setCustomSubjectInput] = useState("");
   const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
