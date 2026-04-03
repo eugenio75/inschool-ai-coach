@@ -117,6 +117,7 @@ Inizia presentando il primo blocco dell'argomento.`;
           body: JSON.stringify({
             messages: history.map(m => ({ role: m.role, content: m.content })),
             schoolLevel,
+            coachName: coachName || undefined,
           }),
         }
       );
