@@ -14,6 +14,7 @@ const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 const ProfileSelector = () => {
   const navigate = useNavigate();
+  const { t } = useLang();
   const { signOut } = useAuth();
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
