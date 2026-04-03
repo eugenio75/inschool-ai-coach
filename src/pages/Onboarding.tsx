@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import OnboardingLegacy from "./OnboardingLegacy";
 import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { JoinClassInline } from "@/components/JoinClassModal";
+import { getSubjectsByLevel } from "@/lib/subjectsByLevel";
 
 const variants = {
   enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0 }),
@@ -484,7 +485,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             </div>
           );
         case 2: {
-          const materie = ["Matematica", "Italiano", "Inglese", "Storia", "Geografia", "Scienze", "Tecnologia", "Francese", "Spagnolo", "Musica", "Arte"];
+          const materie = getSubjectsByLevel("medie");
           return (
             <div className="w-full space-y-6">
                 <h2 className="text-2xl font-bold text-foreground">{t('onb_hard_subjects')}</h2>
@@ -684,9 +685,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             </div>
           );
         case 2: {
-          const materie = answers.superiori_indirizzo === "Scientifico" ? ["Matematica", "Fisica", "Chimica", "Latino", "Inglese", "Storia", "Filosofia", "Informatica", "Scienze", "Arte"] : 
-                          answers.superiori_indirizzo === "Classico" ? ["Greco", "Latino", "Italiano", "Matematica", "Fisica", "Storia", "Filosofia", "Arte", "Inglese"] :
-                          ["Matematica", "Italiano", "Storia", "Inglese", "Scienze", "Fisica", "Chimica", "Economia", "Informatica", "Diritto", "Lingue"];
+          const materie = getSubjectsByLevel("superiori", answers.superiori_indirizzo || null);
           return (
             <div className="w-full space-y-6">
                 <h2 className="text-2xl font-bold text-foreground">{t('onb_critical_subjects')}</h2>
