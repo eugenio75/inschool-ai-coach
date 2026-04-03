@@ -76,6 +76,7 @@ interface OnboardingData {
   schoolName: string;
   schoolCode: string | null;
   city: string;
+  section: string;
   favoriteSubjects: string[];
   struggles: string[];
   focusTime: string;
@@ -118,6 +119,7 @@ const OnboardingLegacy = () => {
   const [data, setData] = useState<OnboardingData & { interests: string[] }>({
     name: "", lastName: "", age: "", dateOfBirth: "", gender: "",
     schoolCategory: "", schoolLevel: "", schoolName: "", schoolCode: null, city: "",
+    section: "",
     favoriteSubjects: [],
     struggles: [], focusTime: "15", supportStyles: [], coachName: "", interests: [],
   });
@@ -211,6 +213,56 @@ const OnboardingLegacy = () => {
     }
   };
 
+  const fetchTeachersBySchoolName = async (schoolName: string) => {
+    setLoadingTeachers(true);
+    try {
+      const { data: teachers } = await supabase
+        .from("child_profiles")
+        .select("id, name, last_name, gender")
+        .eq("school_level", "docente")
+        .ilike("school_name", `%${schoolName}%`)
+        .limit(5);
+      if (teachers && teachers.length > 0) {
+        // Build a format compatible with discoveredTeachers
+        const mapped: DiscoveredTeacher[] = [];
+        for (const t of teachers) {
+          const { data: classi } = await supabase
+            .from("classi")
+            .select("id, nome, materia, codice_invito")
+            .eq("docente_profile_id", t.id)
+            .eq("is_sample", false);
+          if (classi && classi.length > 0) {
+            mapped.push({
+              teacher_id: t.id,
+              name: t.name,
+              last_name: t.last_name,
+              gender: t.gender,
+              badge: "school_recognized",
+              classes: classi.map(c => ({
+                class_id: c.id,
+                class_name: c.nome,
+                subject: c.materia,
+                invite_code: c.codice_invito || "",
+              })),
+            });
+          }
+        }
+        if (mapped.length > 0) {
+          setDiscoveredTeachers(mapped);
+          setShowTeacherStep(true);
+          setLoadingTeachers(false);
+          return true;
+        }
+      }
+    } catch (err) {
+      console.error("fetchTeachersBySchoolName error:", err);
+    }
+    setShowTeacherStep(false);
+    setDiscoveredTeachers([]);
+    setLoadingTeachers(false);
+    return false;
+  };
+
   const next = async () => {
     // When leaving school step, check for teachers
     if (currentStepType === "school") {
@@ -219,6 +271,14 @@ const OnboardingLegacy = () => {
         const found = await fetchTeachers(data.schoolCode);
         if (found) {
           setStep(step + 1); // go to teachers step
+          return;
+        }
+      }
+      // Fallback: search by school name
+      if (data.schoolName && data.schoolName.trim().length > 3) {
+        const found = await fetchTeachersBySchoolName(data.schoolName);
+        if (found) {
+          setStep(step + 1);
           return;
         }
       }
@@ -253,13 +313,17 @@ const OnboardingLegacy = () => {
         school_name: data.schoolName || undefined,
         school_code: data.schoolCode || undefined,
         city: data.city || undefined,
+        class_section: data.section || undefined,
       } as any);
 
       if (profile) {
-        if (data.coachName.trim()) {
+        const prefsData: any = {};
+        if (data.coachName.trim()) prefsData.coach_name = data.coachName.trim();
+        if (data.section.trim()) prefsData.school_section = data.section.trim();
+        if (Object.keys(prefsData).length > 0) {
           await supabase.from("user_preferences").upsert({
             profile_id: profile.id,
-            data: { coach_name: data.coachName.trim() },
+            data: prefsData,
           } as any);
         }
 
@@ -427,6 +491,16 @@ const OnboardingLegacy = () => {
                 }))}
                 placeholder={t("school_search_placeholder")}
                 cityFilter={data.city || undefined}
+              />
+
+              <label className="text-sm text-muted-foreground block">{t("onb_section_label")}</label>
+              <input
+                type="text"
+                placeholder={t("onb_section_placeholder")}
+                value={data.section}
+                onChange={(e) => setData({ ...data, section: e.target.value.toUpperCase().slice(0, 2) })}
+                maxLength={2}
+                className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-lg"
               />
             </div>
           </div>
