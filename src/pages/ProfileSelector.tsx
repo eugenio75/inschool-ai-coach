@@ -94,7 +94,7 @@ const ProfileSelector = () => {
         type="button"
       >
         <ArrowLeft className="h-4 w-4" />
-        <span>{(() => { try { return useLang().t("back_button"); } catch { return "Indietro"; } })()}</span>
+        <span>{t("back_button")}</span>
       </button>
       {/* Sfondo geometrico minimale */}
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
