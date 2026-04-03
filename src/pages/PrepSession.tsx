@@ -15,6 +15,7 @@ import { getPrepLabelKey } from "@/lib/schoolTerms";
 import { findMaturitaTrack, type MaturitaTrack } from "@/lib/maturitaMapping";
 import UniversityStudyPlan, { type StudyPlanExam } from "@/components/UniversityStudyPlan";
 import { loadStudyPlan, saveStudyPlan as saveStudyPlanService } from "@/lib/studyPlanService";
+import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 
 /* ── Types ── */
 interface ChatMessage { role: "user" | "assistant"; content: string; }
