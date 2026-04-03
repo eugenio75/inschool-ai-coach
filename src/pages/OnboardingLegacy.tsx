@@ -502,6 +502,16 @@ const OnboardingLegacy = () => {
                 maxLength={2}
                 className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-lg"
               />
+
+              <label className="text-sm text-muted-foreground block">{t("onb_classe_label")}</label>
+              <input
+                type="text"
+                placeholder={t("onb_classe_placeholder")}
+                value={(data as any).classe || ""}
+                onChange={(e) => setData({ ...data, classe: e.target.value.slice(0, 6) } as any)}
+                maxLength={6}
+                className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-lg"
+              />
             </div>
           </div>
         );
