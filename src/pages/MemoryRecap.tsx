@@ -1236,6 +1236,7 @@ const MemoryRecap = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <FloatingBackButton />
       {/* Header */}
       <div className="bg-card border-b border-border px-6 pt-6 pb-0">
         <div className="max-w-2xl mx-auto">
