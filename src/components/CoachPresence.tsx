@@ -111,13 +111,15 @@ function buildLocalCoachMessage(profileName: string, ctx: CoachContext) {
   }
 
   // FIX 2: Default fallback — coach must NOT lie about homework
+  const profile2 = getProfile();
+  const genderSuffix = profile2?.gender === "F" ? "a" : "o";
   switch (level) {
     case "elementari":
       return { message: `Ciao ${firstName}! Sono qui con te. Da dove vuoi iniziare oggi?`, action: { text: "Parla col coach", route: "/us?type=study" } };
     case "medie":
       return { message: `Ciao ${firstName}! Cosa hai da fare oggi? Partiamo insieme.`, action: { text: "Parla col coach", route: "/us?type=study" } };
     case "universitario":
-      return { message: `Bentornato ${firstName}. Cosa vuoi affrontare oggi?`, action: { text: "Inizia sessione", route: "/us?type=study" } };
+      return { message: `Bentornat${genderSuffix} ${firstName}. Cosa vuoi affrontare oggi?`, action: { text: "Inizia sessione", route: "/us?type=study" } };
     default:
       return { message: `Ciao ${firstName}! Non hai compiti per oggi. Vuoi fare una sessione di studio libero o ripassare qualcosa?`, action: { text: "Studio libero", route: "/us?type=study" } };
   }

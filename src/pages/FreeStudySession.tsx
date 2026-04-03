@@ -46,7 +46,22 @@ export default function FreeStudySession() {
   const [outputContent, setOutputContent] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const subjects = profile?.favorite_subjects || profile?.difficult_subjects || ["Matematica", "Italiano", "Inglese", "Storia", "Scienze"];
+  const SUBJECTS_BY_LEVEL: Record<string, string[]> = {
+    alunno: ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia"],
+    "primaria-1-2": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze"],
+    "primaria-3-5": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia"],
+    medie: ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia", "Tecnologia", "Arte"],
+    "media-1": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia", "Tecnologia"],
+    "media-2": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia", "Tecnologia"],
+    "media-3": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia", "Tecnologia"],
+    superiori: ["Italiano", "Matematica", "Fisica", "Chimica", "Storia", "Filosofia", "Inglese", "Scienze"],
+    universitario: ["Materia principale", "Materia secondaria"],
+  };
+  const profileSubjects = [
+    ...(profile?.favorite_subjects || []),
+    ...(profile?.difficult_subjects || []).filter((s: string) => !(profile?.favorite_subjects || []).includes(s)),
+  ];
+  const subjects = profileSubjects.length > 0 ? profileSubjects : (SUBJECTS_BY_LEVEL[schoolLevel] || SUBJECTS_BY_LEVEL.superiori);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -158,15 +173,15 @@ Inizia presentando il primo blocco dell'argomento.`;
   // SETUP
   if (step === "setup") {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] pb-24">
-        <div className="bg-white border-b px-4 py-4 flex items-center gap-3">
-          <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5 text-slate-600" /></button>
-          <BookOpen className="w-5 h-5 text-slate-600" />
-          <h1 className="font-display text-lg font-bold text-slate-900">Studio libero</h1>
+      <div className="min-h-screen bg-background pb-24">
+        <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
+          <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
+          <BookOpen className="w-5 h-5 text-muted-foreground" />
+          <h1 className="font-display text-lg font-bold text-foreground">Studio libero</h1>
         </div>
         <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-2 block">Cosa vuoi studiare?</label>
+            <label className="text-sm font-medium text-foreground mb-2 block">Cosa vuoi studiare?</label>
             <Input
               value={topic}
               onChange={e => setTopic(e.target.value)}
@@ -176,13 +191,13 @@ Inizia presentando il primo blocco dell'argomento.`;
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-2 block">Materia (opzionale)</label>
+            <label className="text-sm font-medium text-foreground mb-2 block">Materia</label>
             <div className="flex flex-wrap gap-2">
               {subjects.map((s: string) => (
                 <button
                   key={s}
                   onClick={() => setSubject(subject === s ? "" : s)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${subject === s ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"}`}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${subject === s ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:border-primary/40"}`}
                 >
                   {s}
                 </button>
@@ -200,23 +215,23 @@ Inizia presentando il primo blocco dell'argomento.`;
   // OUTPUT
   if (step === "output") {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] pb-24">
-        <div className="bg-white border-b px-4 py-4 flex items-center gap-3">
-          <button onClick={() => setStep("study")}><ArrowLeft className="w-5 h-5 text-slate-600" /></button>
-          <h1 className="font-display text-lg font-bold text-slate-900">Output — {topic}</h1>
+      <div className="min-h-screen bg-background pb-24">
+        <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
+          <button onClick={() => setStep("study")}><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
+          <h1 className="font-display text-lg font-bold text-foreground">Output — {topic}</h1>
         </div>
         <div className="max-w-3xl mx-auto px-4 py-6">
           {generatingOutput ? (
             <div className="flex flex-col items-center justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-slate-400 mb-3" />
-              <p className="text-sm text-slate-500">Generazione in corso...</p>
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mb-3" />
+              <p className="text-sm text-muted-foreground">Generazione in corso...</p>
             </div>
           ) : (
-            <div className="bg-white border rounded-xl p-6 shadow-sm">
-              <div className="prose prose-sm max-w-none text-slate-700 whitespace-pre-wrap">
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+              <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap">
                 {outputContent}
               </div>
-              <div className="mt-6 pt-4 border-t flex gap-2">
+              <div className="mt-6 pt-4 border-t border-border flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => setStep("study")}>Torna alla chat</Button>
                 <Button variant="outline" size="sm" onClick={() => {
                   navigator.clipboard.writeText(outputContent || "");
@@ -232,13 +247,13 @@ Inizia presentando il primo blocco dell'argomento.`;
 
   // STUDY (chat)
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-card flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b px-4 py-3 flex items-center gap-3 shrink-0">
-        <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5 text-slate-600" /></button>
+      <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3 shrink-0">
+        <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-slate-900 truncate">{topic}</p>
-          {subject && <p className="text-xs text-slate-400">{subject}</p>}
+          <p className="text-sm font-semibold text-foreground truncate">{topic}</p>
+          {subject && <p className="text-xs text-muted-foreground">{subject}</p>}
         </div>
       </div>
 
@@ -253,8 +268,8 @@ Inizia presentando il primo blocco dell'argomento.`;
           >
             <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${
               msg.role === "user"
-                ? "bg-[#0070C0] text-white"
-                : "bg-slate-100 text-slate-800"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-foreground"
             }`}>
               {msg.content || (sending && i === messages.length - 1 ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -266,14 +281,14 @@ Inizia presentando il primo blocco dell'argomento.`;
 
       {/* Output buttons (shown after some conversation) */}
       {messages.length >= 4 && (
-        <div className="px-4 py-2 border-t bg-slate-50">
-          <p className="text-xs text-slate-400 mb-2">Genera un output dalla sessione:</p>
+        <div className="px-4 py-2 border-t border-border bg-muted/50">
+          <p className="text-xs text-muted-foreground mb-2">Genera un output dalla sessione:</p>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {OUTPUT_TYPES.map(ot => (
               <button
                 key={ot.id}
                 onClick={() => generateOutput(ot.id)}
-                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-600 hover:border-slate-400 whitespace-nowrap"
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border bg-card text-muted-foreground hover:border-primary/40 whitespace-nowrap"
               >
                 <ot.icon className="w-3 h-3" />
                 {ot.label}
@@ -284,20 +299,20 @@ Inizia presentando il primo blocco dell'argomento.`;
       )}
 
       {/* Input */}
-      <div className="border-t bg-white p-3 flex gap-2 shrink-0">
+      <div className="border-t border-border bg-card p-3 flex gap-2 shrink-0">
         <input
           type="text"
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === "Enter" && sendMessage()}
           placeholder="Scrivi..."
-          className="flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0070C0] focus:ring-2 focus:ring-[#0070C0]/20"
+          className="flex-1 text-sm border border-border rounded-lg px-3 py-2.5 bg-background text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20"
           disabled={sending}
         />
         <button
           onClick={sendMessage}
           disabled={!input.trim() || sending}
-          className="bg-[#0070C0] hover:bg-[#005fa3] disabled:opacity-40 text-white px-4 py-2.5 rounded-lg transition-colors"
+          className="bg-primary hover:bg-primary/90 disabled:opacity-40 text-primary-foreground px-4 py-2.5 rounded-lg transition-colors"
         >
           <Send className="w-4 h-4" />
         </button>
