@@ -215,23 +215,23 @@ Inizia presentando il primo blocco dell'argomento.`;
   // OUTPUT
   if (step === "output") {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] pb-24">
-        <div className="bg-white border-b px-4 py-4 flex items-center gap-3">
-          <button onClick={() => setStep("study")}><ArrowLeft className="w-5 h-5 text-slate-600" /></button>
-          <h1 className="font-display text-lg font-bold text-slate-900">Output — {topic}</h1>
+      <div className="min-h-screen bg-background pb-24">
+        <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
+          <button onClick={() => setStep("study")}><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
+          <h1 className="font-display text-lg font-bold text-foreground">Output — {topic}</h1>
         </div>
         <div className="max-w-3xl mx-auto px-4 py-6">
           {generatingOutput ? (
             <div className="flex flex-col items-center justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-slate-400 mb-3" />
-              <p className="text-sm text-slate-500">Generazione in corso...</p>
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mb-3" />
+              <p className="text-sm text-muted-foreground">Generazione in corso...</p>
             </div>
           ) : (
-            <div className="bg-white border rounded-xl p-6 shadow-sm">
-              <div className="prose prose-sm max-w-none text-slate-700 whitespace-pre-wrap">
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+              <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap">
                 {outputContent}
               </div>
-              <div className="mt-6 pt-4 border-t flex gap-2">
+              <div className="mt-6 pt-4 border-t border-border flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => setStep("study")}>Torna alla chat</Button>
                 <Button variant="outline" size="sm" onClick={() => {
                   navigator.clipboard.writeText(outputContent || "");
