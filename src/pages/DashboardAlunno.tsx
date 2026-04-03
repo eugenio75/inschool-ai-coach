@@ -101,6 +101,11 @@ const DashboardAlunno = () => {
                   <LogOut className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
               )}
+              {!isChild && (
+                <button onClick={() => navigate("/parent-dashboard")} className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center hover:bg-destructive/20 transition-colors" title="Torna all'area genitori">
+                  <X className="w-4 h-4 text-destructive" />
+                </button>
+              )}
             </div>
           </div>
 
