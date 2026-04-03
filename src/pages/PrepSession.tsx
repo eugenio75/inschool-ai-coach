@@ -15,6 +15,7 @@ import { getPrepLabelKey } from "@/lib/schoolTerms";
 import { findMaturitaTrack, type MaturitaTrack } from "@/lib/maturitaMapping";
 import UniversityStudyPlan, { type StudyPlanExam } from "@/components/UniversityStudyPlan";
 import { loadStudyPlan, saveStudyPlan as saveStudyPlanService } from "@/lib/studyPlanService";
+import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 
 /* ── Types ── */
 interface ChatMessage { role: "user" | "assistant"; content: string; }
@@ -116,6 +117,22 @@ const EXAM_TYPES: { id: ExamType; emoji: string; labelKey: string; descKey: stri
   { id: "universitario", emoji: "🎓", labelKey: "exam_type_universitario", descKey: "exam_type_universitario_desc" },
 ];
 
+const SUBJECTS_BY_LEVEL_PREP: Record<string, string[]> = {
+  "primaria-1": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Arte", "Musica", "Ed. Fisica"],
+  "primaria-2": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Arte", "Musica", "Ed. Fisica"],
+  "primaria-3": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Arte", "Musica", "Ed. Fisica"],
+  "primaria-4": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Arte", "Musica", "Ed. Fisica"],
+  "primaria-5": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Arte", "Musica", "Ed. Fisica"],
+  "primaria-1-2": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Arte", "Musica", "Ed. Fisica"],
+  "primaria-3-5": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Arte", "Musica", "Ed. Fisica"],
+  "media-1": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia", "Tecnologia", "Arte", "Musica"],
+  "media-2": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia", "Tecnologia", "Arte", "Musica"],
+  "media-3": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia", "Tecnologia", "Arte", "Musica"],
+  medie: ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia", "Tecnologia", "Arte", "Musica"],
+  superiori: ["Italiano", "Matematica", "Fisica", "Chimica", "Storia", "Filosofia", "Inglese", "Scienze", "Arte", "Latino", "Greco"],
+  alunno: ["Italiano", "Matematica", "Inglese", "Storia", "Scienze"],
+};
+
 const TERZA_MEDIA_PROVE = ["Italiano scritto", "Matematica scritta", "Lingua straniera scritta", "Colloquio orale interdisciplinare"];
 const MATURITA_PROVE = ["Prima prova (italiano)", "Seconda prova", "Colloquio orale"];
 
@@ -132,6 +149,7 @@ export default function PrepSession() {
   /* State */
   const [step, setStep] = useState<"type" | "setup" | "plan" | "simulation" | "report">("type");
   const [examType, setExamType] = useState<ExamType | null>(null);
+  const [userPrefsData, setUserPrefsData] = useState<any>(null);
 
   // Setup fields
   const [subject, setSubject] = useState(paramSubject || "");
@@ -164,8 +182,25 @@ export default function PrepSession() {
   const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const subjects = profile?.favorite_subjects || profile?.difficult_subjects || ["Matematica", "Italiano", "Inglese", "Storia", "Scienze"];
+  // Dynamic subjects based on school level
+  const profileSubjects = [
+    ...(profile?.favorite_subjects || []),
+    ...(profile?.difficult_subjects || []).filter((s: string) => !(profile?.favorite_subjects || []).includes(s)),
+  ];
+  const subjects = profileSubjects.length > 0 ? profileSubjects : (SUBJECTS_BY_LEVEL_PREP[schoolLevel] || SUBJECTS_BY_LEVEL_PREP.superiori);
   const daysToExam = examDate ? daysUntil(examDate) : null;
+
+  // Filter exam types by school level
+  const isFifthYear = schoolLevel === "superiori" && (
+    userPrefsData?.superiori_anno === "5" || userPrefsData?.superiori_anno === 5
+  );
+  const filteredExamTypes = EXAM_TYPES.filter(et => {
+    if (et.id === "terza_media") return schoolLevel?.startsWith("media") || schoolLevel === "medie";
+    if (et.id === "maturita") return schoolLevel === "superiori" && isFifthYear;
+    if (et.id === "universitario") return schoolLevel === "universitario";
+    if (et.id === "verifica" || et.id === "orale") return true;
+    return true;
+  });
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -188,6 +223,7 @@ export default function PrepSession() {
       const { data } = await supabase.from("user_preferences")
         .select("data").eq("profile_id", profileId).maybeSingle();
       const prefData = data?.data as any;
+      if (prefData) setUserPrefsData(prefData);
       if (prefData?.indirizzo_scolastico) {
         const track = findMaturitaTrack(prefData.indirizzo_scolastico);
         if (track) {
@@ -361,6 +397,7 @@ export default function PrepSession() {
   if (step === "type") {
     return (
       <div className="min-h-screen bg-background pb-24">
+        <FloatingBackButton />
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-5 h-5" />
@@ -369,7 +406,7 @@ export default function PrepSession() {
         </div>
         <div className="max-w-lg mx-auto px-4 py-6 space-y-3">
           <p className="text-sm text-muted-foreground mb-4">{t("exam_select_type")}</p>
-          {EXAM_TYPES.map((et) => (
+          {filteredExamTypes.map((et) => (
             <motion.button key={et.id} whileTap={{ scale: 0.98 }}
               onClick={() => { setExamType(et.id); setStep("setup"); }}
               className="w-full flex items-start gap-4 p-4 rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-sm transition-all text-left">

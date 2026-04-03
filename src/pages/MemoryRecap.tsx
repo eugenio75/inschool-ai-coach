@@ -18,6 +18,7 @@ import { getMemoryItems, updateMemoryStrength, getDailyMissions, completeMission
 import { subjectColors } from "@/lib/mockData";
 import { isChildSession, getChildSession, childApi } from "@/lib/childSession";
 import { getCurrentLang } from "@/lib/langUtils";
+import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -1167,7 +1168,7 @@ const MemoryRecap = () => {
   const getSubtitle = (): string => {
     if (wizard.step === "home") {
       return activeTab === "ripasso"
-        ? "Rivedi ciò che hai studiato in modo semplice e guidato"
+        ? "Rafforza la memoria con ripetizione attiva e spaziata"
         : "Lavora meglio su ciò che ti risulta più difficile";
     }
     if (wizard.step === "subject-pick") {
@@ -1235,6 +1236,7 @@ const MemoryRecap = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <FloatingBackButton />
       {/* Header */}
       <div className="bg-card border-b border-border px-6 pt-6 pb-0">
         <div className="max-w-2xl mx-auto">

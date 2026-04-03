@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession, isChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
+import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 
 interface ChatMessage { role: "user" | "assistant"; content: string; }
 
@@ -34,6 +35,17 @@ export default function FreeStudySession() {
   const { user } = useAuth();
   const profile = getProfile();
   const schoolLevel = profile?.school_level || "superiori";
+  const [coachName, setCoachName] = useState("");
+
+  useEffect(() => {
+    const profileId = profile?.id;
+    if (!profileId) return;
+    supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle()
+      .then(({ data }) => {
+        const prefs = (data?.data as any) || {};
+        if (prefs.coach_name) setCoachName(prefs.coach_name);
+      });
+  }, [profile?.id]);
 
   const [step, setStep] = useState<"setup" | "study" | "output">("setup");
   const [topic, setTopic] = useState("");
@@ -71,8 +83,10 @@ export default function FreeStudySession() {
     if (!topic.trim()) return;
     setStep("study");
 
-    const systemPrompt = `Sei un coach di studio per uno studente di livello ${schoolLevel}. 
+    const coachLabel = coachName || "il Coach";
+    const systemPrompt = `Sei ${coachLabel}, il coach personale dello studente su InSchool. Livello: ${schoolLevel}. 
 L'argomento è: "${topic}" (${subject || "materia non specificata"}).
+Quando ti presenti dì sempre "Sono ${coachLabel}, il tuo coach."
 Dividi l'argomento in blocchi logici. Per ogni blocco:
 1. Presenta brevemente il concetto
 2. Fai una domanda di comprensione
@@ -103,6 +117,7 @@ Inizia presentando il primo blocco dell'argomento.`;
           body: JSON.stringify({
             messages: history.map(m => ({ role: m.role, content: m.content })),
             schoolLevel,
+            coachName: coachName || undefined,
           }),
         }
       );
@@ -157,7 +172,7 @@ Inizia presentando il primo blocco dell'argomento.`;
             "Content-Type": "application/json",
             Authorization: `Bearer ${authSession?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ messages: allMsgs.map(m => ({ role: m.role, content: m.content })), schoolLevel }),
+          body: JSON.stringify({ messages: allMsgs.map(m => ({ role: m.role, content: m.content })), schoolLevel, coachName: coachName || undefined }),
         }
       );
       const text = await res.text();
@@ -174,6 +189,7 @@ Inizia presentando il primo blocco dell'argomento.`;
   if (step === "setup") {
     return (
       <div className="min-h-screen bg-background pb-24">
+        <FloatingBackButton />
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
           <BookOpen className="w-5 h-5 text-muted-foreground" />

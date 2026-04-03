@@ -441,11 +441,10 @@ export async function getDailyMissions(childProfileId?: string): Promise<any[]> 
       throw new Error("No missions returned");
     } catch (err) {
       console.error("getDailyMissions generate error, creating defaults:", err);
-      // Create 3 default missions locally
+      // Create max 2 default missions locally
       const defaults = [
         { child_profile_id: profileId, mission_date: today, mission_type: "study_session", title: "Completa una sessione di studio", description: "Studia un argomento per almeno 10 minuti", points_reward: 10, completed: false },
         { child_profile_id: profileId, mission_date: today, mission_type: "complete_task", title: "Completa un compito", description: "Porta a termine un compito assegnato", points_reward: 15, completed: false },
-        { child_profile_id: profileId, mission_date: today, mission_type: "study_minutes", title: "Studia per 20 minuti", description: "Accumula almeno 20 minuti di studio oggi", points_reward: 20, completed: false },
       ];
       try {
         const { data: inserted } = await supabase.from("daily_missions").insert(defaults as any).select();

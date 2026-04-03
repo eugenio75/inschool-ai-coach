@@ -230,26 +230,14 @@ Rispondi SOLO con un JSON:
 
     if (aiMission) {
       missions.push(aiMission);
-    } else {
-      // Only add fallback study_session if we haven't already added one
-      const alreadyHasStudySession = missions.some(m => m.mission_type === "study_session");
-      if (!alreadyHasStudySession) {
-        missions.push({
-          child_profile_id: resolvedChildId,
-          mission_date: today,
-          mission_type: "study_session",
-          title: isEN ? "Complete a study session" : "Completa una sessione di studio",
-          description: isEN
-            ? `${studentName}, complete a session with the Coach!`
-            : `${studentName}, porta a termine una sessione con il Coach!`,
-          points_reward: 15,
-        });
-      }
     }
+
+    // Limit to max 2 missions per day
+    const finalMissions = missions.slice(0, 2);
 
     const { data: inserted, error } = await supabase
       .from("daily_missions")
-      .insert(missions)
+      .insert(finalMissions)
       .select();
 
     if (error) {

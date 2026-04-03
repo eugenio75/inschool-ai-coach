@@ -1253,5 +1253,7 @@
   "settings_schools_add": "Aggiungi istituto",
   "settings_schools_max": "Massimo 5 istituti",
   "class_school_label": "Istituto",
-  "class_school_placeholder": "Seleziona istituto..."
+  "class_school_placeholder": "Seleziona istituto...",
+  "profile_school_info_title": "La mia scuola",
+  "profile_not_specified": "Non specificata"
 }

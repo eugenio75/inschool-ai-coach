@@ -1253,5 +1253,7 @@
   "settings_schools_add": "Add school",
   "settings_schools_max": "Maximum 5 schools",
   "class_school_label": "School",
-  "class_school_placeholder": "Select school..."
+  "class_school_placeholder": "Select school...",
+  "profile_school_info_title": "My school",
+  "profile_not_specified": "Not specified"
 }
