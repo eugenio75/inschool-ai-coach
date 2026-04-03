@@ -223,6 +223,7 @@ export default function PrepSession() {
       const { data } = await supabase.from("user_preferences")
         .select("data").eq("profile_id", profileId).maybeSingle();
       const prefData = data?.data as any;
+      if (prefData) setUserPrefsData(prefData);
       if (prefData?.indirizzo_scolastico) {
         const track = findMaturitaTrack(prefData.indirizzo_scolastico);
         if (track) {
