@@ -173,15 +173,15 @@ Inizia presentando il primo blocco dell'argomento.`;
   // SETUP
   if (step === "setup") {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] pb-24">
-        <div className="bg-white border-b px-4 py-4 flex items-center gap-3">
-          <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5 text-slate-600" /></button>
-          <BookOpen className="w-5 h-5 text-slate-600" />
-          <h1 className="font-display text-lg font-bold text-slate-900">Studio libero</h1>
+      <div className="min-h-screen bg-background pb-24">
+        <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
+          <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
+          <BookOpen className="w-5 h-5 text-muted-foreground" />
+          <h1 className="font-display text-lg font-bold text-foreground">Studio libero</h1>
         </div>
         <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-2 block">Cosa vuoi studiare?</label>
+            <label className="text-sm font-medium text-foreground mb-2 block">Cosa vuoi studiare?</label>
             <Input
               value={topic}
               onChange={e => setTopic(e.target.value)}
@@ -191,13 +191,13 @@ Inizia presentando il primo blocco dell'argomento.`;
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-2 block">Materia (opzionale)</label>
+            <label className="text-sm font-medium text-foreground mb-2 block">Materia</label>
             <div className="flex flex-wrap gap-2">
               {subjects.map((s: string) => (
                 <button
                   key={s}
                   onClick={() => setSubject(subject === s ? "" : s)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${subject === s ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"}`}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${subject === s ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:border-primary/40"}`}
                 >
                   {s}
                 </button>
