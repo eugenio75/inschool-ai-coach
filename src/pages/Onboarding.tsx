@@ -472,6 +472,14 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                      maxLength={2}
                      className={inputClass}
                    />
+                   <input
+                     type="text"
+                     placeholder={t('onb_classe_placeholder')}
+                     value={answers.classe || ""}
+                     onChange={e => setAnswers({...answers, classe: e.target.value.slice(0, 6)})}
+                     maxLength={6}
+                     className={inputClass}
+                   />
                 </div>
             </div>
           );
