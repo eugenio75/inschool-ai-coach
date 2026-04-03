@@ -406,7 +406,7 @@ export default function PrepSession() {
         </div>
         <div className="max-w-lg mx-auto px-4 py-6 space-y-3">
           <p className="text-sm text-muted-foreground mb-4">{t("exam_select_type")}</p>
-          {EXAM_TYPES.map((et) => (
+          {filteredExamTypes.map((et) => (
             <motion.button key={et.id} whileTap={{ scale: 0.98 }}
               onClick={() => { setExamType(et.id); setStep("setup"); }}
               className="w-full flex items-start gap-4 p-4 rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-sm transition-all text-left">

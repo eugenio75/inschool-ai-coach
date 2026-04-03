@@ -1168,7 +1168,7 @@ const MemoryRecap = () => {
   const getSubtitle = (): string => {
     if (wizard.step === "home") {
       return activeTab === "ripasso"
-        ? "Rivedi ciò che hai studiato in modo semplice e guidato"
+        ? "Rafforza la memoria con ripetizione attiva e spaziata"
         : "Lavora meglio su ciò che ti risulta più difficile";
     }
     if (wizard.step === "subject-pick") {
