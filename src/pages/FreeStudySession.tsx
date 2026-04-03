@@ -49,7 +49,6 @@ export default function FreeStudySession() {
 
   const [step, setStep] = useState<"setup" | "study" | "output">("setup");
   const [topic, setTopic] = useState("");
-  const [subject, setSubject] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
