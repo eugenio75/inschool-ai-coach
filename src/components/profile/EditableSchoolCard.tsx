@@ -178,7 +178,7 @@ export function EditableSchoolCard({ data, onChange, delay = 0.15 }: EditableSch
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <div className="flex-1">{renderValue(data.classSection, t("profile_school_class_placeholder"))}</div>
+              <div className="flex-1">{renderValue(data.classSection, t("profile_school_class_placeholder"), true)}</div>
               {renderEditButton("class")}
             </div>
           )}
