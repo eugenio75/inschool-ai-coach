@@ -34,7 +34,7 @@ export default function FreeStudySession() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const profile = getProfile();
-  const schoolLevel = profile?.school_level || "superiori";
+  const schoolLevel = profile?.school_level || profile?.schoolLevel || "superiori";
   const [coachName, setCoachName] = useState("");
 
   useEffect(() => {

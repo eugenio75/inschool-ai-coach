@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Plus, Loader2, LogOut, FolderOpen, BarChart3 } from "lucide-react";
+import { BookOpen, Plus, Loader2, LogOut, FolderOpen, BarChart3, X } from "lucide-react";
 import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { Button } from "@/components/ui/button";
 import { GamificationKPI } from "@/components/GamificationBar";
@@ -99,6 +99,11 @@ const DashboardAlunno = () => {
               {isChild && (
                 <button onClick={handleChildLogout} className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center hover:bg-accent transition-colors" title="Esci">
                   <LogOut className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+              )}
+              {!isChild && (
+                <button onClick={() => navigate("/parent-dashboard")} className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center hover:bg-destructive/20 transition-colors" title="Torna all'area genitori">
+                  <X className="w-4 h-4 text-destructive" />
                 </button>
               )}
             </div>

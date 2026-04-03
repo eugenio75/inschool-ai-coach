@@ -18,6 +18,7 @@ import OnboardingLegacy from "./OnboardingLegacy";
 import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { JoinClassInline } from "@/components/JoinClassModal";
 import { getSubjectsByLevel } from "@/lib/subjectsByLevel";
+import { normalizeClass } from "@/lib/normalizeClass";
 
 const variants = {
   enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0 }),
@@ -467,17 +468,9 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                    />
                    <input
                      type="text"
-                     placeholder={t('onb_section_placeholder')}
+                     placeholder="Es. 3ª A"
                      value={answers.school_section || ""}
-                     onChange={e => setAnswers({...answers, school_section: e.target.value.toUpperCase().slice(0, 2)})}
-                     maxLength={2}
-                     className={inputClass}
-                   />
-                   <input
-                     type="text"
-                     placeholder={t('onb_classe_placeholder')}
-                     value={answers.classe || ""}
-                     onChange={e => setAnswers({...answers, classe: e.target.value.slice(0, 6)})}
+                     onChange={e => setAnswers({...answers, school_section: normalizeClass(e.target.value)})}
                      maxLength={6}
                      className={inputClass}
                    />
@@ -667,17 +660,9 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                    />
                    <input
                      type="text"
-                     placeholder={t('onb_section_placeholder')}
+                     placeholder="Es. 3ª A"
                      value={answers.school_section || ""}
-                     onChange={e => setAnswers({...answers, school_section: e.target.value.toUpperCase().slice(0, 2)})}
-                     maxLength={2}
-                     className={inputClass}
-                   />
-                   <input
-                     type="text"
-                     placeholder={t('onb_classe_placeholder')}
-                     value={answers.classe || ""}
-                     onChange={e => setAnswers({...answers, classe: e.target.value.slice(0, 6)})}
+                     onChange={e => setAnswers({...answers, school_section: normalizeClass(e.target.value)})}
                      maxLength={6}
                      className={inputClass}
                    />
