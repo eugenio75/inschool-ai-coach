@@ -459,6 +459,14 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                      className={inputClass}
                      cityFilter={answers.medie_citta || undefined}
                    />
+                   <input
+                     type="text"
+                     placeholder={t('onb_section_placeholder')}
+                     value={answers.school_section || ""}
+                     onChange={e => setAnswers({...answers, school_section: e.target.value.toUpperCase().slice(0, 2)})}
+                     maxLength={2}
+                     className={inputClass}
+                   />
                 </div>
             </div>
           );
