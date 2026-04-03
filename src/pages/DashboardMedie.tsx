@@ -84,7 +84,6 @@ export default function DashboardMedie() {
                   <X className="w-4 h-4 text-destructive" />
                 </button>
               )}
-              </button>
             </div>
           </div>
 
