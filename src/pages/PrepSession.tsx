@@ -148,21 +148,8 @@ const EXAM_TYPES: { id: ExamType; emoji: string; labelKey: string; descKey: stri
   { id: "universitario", emoji: "🎓", labelKey: "exam_type_universitario", descKey: "exam_type_universitario_desc" },
 ];
 
-const SUBJECTS_BY_LEVEL_PREP: Record<string, string[]> = {
-  "primaria-1": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Arte", "Musica", "Ed. Fisica"],
-  "primaria-2": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Arte", "Musica", "Ed. Fisica"],
-  "primaria-3": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Arte", "Musica", "Ed. Fisica"],
-  "primaria-4": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Arte", "Musica", "Ed. Fisica"],
-  "primaria-5": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Arte", "Musica", "Ed. Fisica"],
-  "primaria-1-2": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Arte", "Musica", "Ed. Fisica"],
-  "primaria-3-5": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Arte", "Musica", "Ed. Fisica"],
-  "media-1": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia", "Tecnologia", "Arte", "Musica"],
-  "media-2": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia", "Tecnologia", "Arte", "Musica"],
-  "media-3": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia", "Tecnologia", "Arte", "Musica"],
-  medie: ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia", "Tecnologia", "Arte", "Musica"],
-  superiori: ["Italiano", "Matematica", "Fisica", "Chimica", "Storia", "Filosofia", "Inglese", "Scienze", "Arte", "Latino", "Greco"],
-  alunno: ["Italiano", "Matematica", "Inglese", "Storia", "Scienze"],
-};
+// Subject list now comes from shared utility
+import { getSubjectsByLevel } from "@/lib/subjectsByLevel";
 
 const TERZA_MEDIA_PROVE = ["Italiano scritto", "Matematica scritta", "Lingua straniera scritta", "Colloquio orale interdisciplinare"];
 const MATURITA_PROVE = ["Prima prova (italiano)", "Seconda prova", "Colloquio orale"];
