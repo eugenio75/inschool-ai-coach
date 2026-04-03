@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Plus, FolderOpen, BarChart3, LogOut } from "lucide-react";
+import { BookOpen, Plus, FolderOpen, BarChart3, LogOut, X } from "lucide-react";
 import { TeacherAssignments } from "@/components/TeacherAssignments";
 import { GamificationKPI } from "@/components/GamificationBar";
 import { DailyMissions } from "@/components/GamificationBar";
