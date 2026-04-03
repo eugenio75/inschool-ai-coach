@@ -14,6 +14,7 @@ import { getTasks, getActiveChildProfileId, getChildProfile } from "@/lib/databa
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { JoinClassPrompt } from "@/components/JoinClassPrompt";
+import { useAuth } from "@/hooks/useAuth";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
