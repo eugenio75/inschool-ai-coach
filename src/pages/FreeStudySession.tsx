@@ -172,7 +172,7 @@ Inizia presentando il primo blocco dell'argomento.`;
             "Content-Type": "application/json",
             Authorization: `Bearer ${authSession?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ messages: allMsgs.map(m => ({ role: m.role, content: m.content })), schoolLevel }),
+          body: JSON.stringify({ messages: allMsgs.map(m => ({ role: m.role, content: m.content })), schoolLevel, coachName: coachName || undefined }),
         }
       );
       const text = await res.text();
