@@ -494,22 +494,15 @@ const OnboardingLegacy = () => {
                 cityFilter={data.city || undefined}
               />
 
-              <label className="text-sm text-muted-foreground block">{t("onb_section_label")}</label>
-              <input
-                type="text"
-                placeholder={t("onb_section_placeholder")}
-                value={data.section}
-                onChange={(e) => setData({ ...data, section: e.target.value.toUpperCase().slice(0, 2) })}
-                maxLength={2}
-                className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-lg"
-              />
-
               <label className="text-sm text-muted-foreground block">{t("onb_classe_label")}</label>
               <input
                 type="text"
-                placeholder={t("onb_classe_placeholder")}
+                placeholder="Es. 3ª A"
                 value={(data as any).classe || ""}
-                onChange={(e) => setData({ ...data, classe: e.target.value.slice(0, 6) } as any)}
+                onChange={(e) => {
+                  const normalized = normalizeClass(e.target.value);
+                  setData({ ...data, classe: normalized } as any);
+                }}
                 maxLength={6}
                 className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-lg"
               />
