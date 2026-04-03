@@ -684,9 +684,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             </div>
           );
         case 2: {
-          const materie = answers.superiori_indirizzo === "Scientifico" ? ["Matematica", "Fisica", "Chimica", "Latino", "Inglese", "Storia", "Filosofia", "Informatica", "Scienze", "Arte"] : 
-                          answers.superiori_indirizzo === "Classico" ? ["Greco", "Latino", "Italiano", "Matematica", "Fisica", "Storia", "Filosofia", "Arte", "Inglese"] :
-                          ["Matematica", "Italiano", "Storia", "Inglese", "Scienze", "Fisica", "Chimica", "Economia", "Informatica", "Diritto", "Lingue"];
+          const materie = getSubjectsByLevel("superiori", answers.superiori_indirizzo || null);
           return (
             <div className="w-full space-y-6">
                 <h2 className="text-2xl font-bold text-foreground">{t('onb_critical_subjects')}</h2>
