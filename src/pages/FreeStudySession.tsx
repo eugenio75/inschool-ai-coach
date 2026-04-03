@@ -239,7 +239,6 @@ Inizia presentando il primo blocco dell'argomento.`;
         <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground truncate">{topic}</p>
-          {subject && <p className="text-xs text-muted-foreground">{subject}</p>}
         </div>
       </div>
 
