@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Plus, Settings, LogOut, BookOpen, Loader2, Users, GraduationCap, ChevronRight, UserCog, Copy, Check } from "lucide-react";
+import { Plus, Settings, LogOut, BookOpen, Loader2, Users, GraduationCap, ChevronRight, UserCog, Copy, Check, ArrowLeft } from "lucide-react";
+import { useLang } from "@/contexts/LangContext";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildProfiles, setActiveChildProfileId } from "@/lib/database";
