@@ -1255,5 +1255,19 @@
   "class_school_label": "Istituto",
   "class_school_placeholder": "Seleziona istituto...",
   "profile_school_info_title": "La mia scuola",
-  "profile_not_specified": "Non specificata"
+  "profile_not_specified": "Non specificata",
+  "onb_section_label": "Sezione (opzionale)",
+  "onb_section_placeholder": "es. A",
+  "exam_maturita_choose_prova": "Scegli la prova",
+  "exam_maturita_prima": "Prima prova (Italiano)",
+  "exam_maturita_seconda_btn": "Seconda prova",
+  "exam_maturita_colloquio_btn": "Colloquio orale",
+  "exam_maturita_analyze": "Analizza e simula",
+  "exam_maturita_analysis_title": "Analisi argomenti probabili",
+  "exam_maturita_analyzing": "Sto analizzando il programma ministeriale e le prove degli anni passati...",
+  "exam_maturita_simulate_topic": "Simula su questo argomento",
+  "exam_maturita_no_topics": "Nessun argomento trovato. Prova con la simulazione generica.",
+  "exam_maturita_custom_topic": "Scegli tu l'argomento",
+  "exam_maturita_custom_placeholder": "Scrivi un argomento...",
+  "exam_maturita_start_generic": "Simulazione generica senza argomento specifico"
 }
