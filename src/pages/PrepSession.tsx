@@ -149,6 +149,7 @@ export default function PrepSession() {
   /* State */
   const [step, setStep] = useState<"type" | "setup" | "plan" | "simulation" | "report">("type");
   const [examType, setExamType] = useState<ExamType | null>(null);
+  const [userPrefsData, setUserPrefsData] = useState<any>(null);
 
   // Setup fields
   const [subject, setSubject] = useState(paramSubject || "");
@@ -181,8 +182,25 @@ export default function PrepSession() {
   const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const subjects = profile?.favorite_subjects || profile?.difficult_subjects || ["Matematica", "Italiano", "Inglese", "Storia", "Scienze"];
+  // Dynamic subjects based on school level
+  const profileSubjects = [
+    ...(profile?.favorite_subjects || []),
+    ...(profile?.difficult_subjects || []).filter((s: string) => !(profile?.favorite_subjects || []).includes(s)),
+  ];
+  const subjects = profileSubjects.length > 0 ? profileSubjects : (SUBJECTS_BY_LEVEL_PREP[schoolLevel] || SUBJECTS_BY_LEVEL_PREP.superiori);
   const daysToExam = examDate ? daysUntil(examDate) : null;
+
+  // Filter exam types by school level
+  const isFifthYear = schoolLevel === "superiori" && (
+    userPrefsData?.superiori_anno === "5" || userPrefsData?.superiori_anno === 5
+  );
+  const filteredExamTypes = EXAM_TYPES.filter(et => {
+    if (et.id === "terza_media") return schoolLevel?.startsWith("media") || schoolLevel === "medie";
+    if (et.id === "maturita") return schoolLevel === "superiori" && isFifthYear;
+    if (et.id === "universitario") return schoolLevel === "universitario";
+    if (et.id === "verifica" || et.id === "orale") return true;
+    return true;
+  });
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
