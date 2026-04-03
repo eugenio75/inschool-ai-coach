@@ -2,14 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowLeft, Send, Loader2, BookOpen, FileText, Map, List, Key, Layers,
+  Send, Loader2, BookOpen, FileText, Map, List, Key, Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession, isChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
-import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
+import { PageBackButton } from "@/components/shared/PageBackButton";
 
 interface ChatMessage { role: "user" | "assistant"; content: string; }
 
