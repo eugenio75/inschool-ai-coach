@@ -76,6 +76,7 @@ interface OnboardingData {
   schoolName: string;
   schoolCode: string | null;
   city: string;
+  section: string;
   favoriteSubjects: string[];
   struggles: string[];
   focusTime: string;
