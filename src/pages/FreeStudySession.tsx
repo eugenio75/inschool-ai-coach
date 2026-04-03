@@ -173,9 +173,8 @@ Inizia presentando il primo blocco dell'argomento.`;
   if (step === "setup") {
     return (
       <div className="min-h-screen bg-background pb-24">
-        <FloatingBackButton />
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
-          <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
+          <PageBackButton to="/dashboard" />
           <BookOpen className="w-5 h-5 text-muted-foreground" />
           <h1 className="font-display text-lg font-bold text-foreground">Studio libero</h1>
         </div>
