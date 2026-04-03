@@ -178,7 +178,14 @@ export default function UnifiedSession() {
     }
   }, [urlMsg]);
 
-  const subjects = profile?.favorite_subjects || profile?.difficult_subjects || ["Matematica", "Italiano", "Inglese", "Storia", "Scienze"];
+  // Use profile subjects first, then fall back to school-level subjects
+  const favSubjects = profile?.favorite_subjects || profile?.favoriteSubjects || [];
+  const diffSubjects = profile?.difficult_subjects || profile?.difficultSubjects || [];
+  const profileSubjects = [
+    ...favSubjects,
+    ...diffSubjects.filter((s: string) => !favSubjects.includes(s)),
+  ];
+  const subjects = profileSubjects.length > 0 ? profileSubjects : getSubjectsByLevel(schoolLevel);
 
   function getSystemPrompt(): string {
     switch (type) {
