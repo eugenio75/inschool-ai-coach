@@ -81,7 +81,7 @@ const StudentProfile = () => {
               if (!city) city = d.city || d.medie_citta || d.superiori_citta || d.uni_nome || "";
               if (!schoolName) schoolName = d.school_name || "";
               if (!schoolCode) schoolCode = d.school_code || null;
-              if (!classSection) classSection = d.medie_anno || d.superiori_anno || d.uni_anno || "";
+              if (!classSection) classSection = d.classe || d.medie_anno || d.superiori_anno || d.uni_anno || "";
             }
           } catch {}
         }
