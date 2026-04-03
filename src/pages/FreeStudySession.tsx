@@ -191,20 +191,6 @@ Inizia presentando il primo blocco dell'argomento.`;
               onKeyDown={e => e.key === "Enter" && startStudy()}
             />
           </div>
-          <div>
-            <label className="text-sm font-medium text-foreground mb-2 block">Materia</label>
-            <div className="flex flex-wrap gap-2">
-              {subjects.map((s: string) => (
-                <button
-                  key={s}
-                  onClick={() => setSubject(subject === s ? "" : s)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${subject === s ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:border-primary/40"}`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
           <Button onClick={startStudy} disabled={!topic.trim()} className="w-full">
             Inizia a studiare
           </Button>
