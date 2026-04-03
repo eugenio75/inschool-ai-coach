@@ -484,7 +484,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             </div>
           );
         case 2: {
-          const materie = ["Matematica", "Italiano", "Inglese", "Storia", "Geografia", "Scienze", "Tecnologia", "Francese", "Spagnolo", "Musica", "Arte"];
+          const materie = getSubjectsByLevel("medie");
           return (
             <div className="w-full space-y-6">
                 <h2 className="text-2xl font-bold text-foreground">{t('onb_hard_subjects')}</h2>
