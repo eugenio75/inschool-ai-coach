@@ -213,6 +213,56 @@ const OnboardingLegacy = () => {
     }
   };
 
+  const fetchTeachersBySchoolName = async (schoolName: string) => {
+    setLoadingTeachers(true);
+    try {
+      const { data: teachers } = await supabase
+        .from("child_profiles")
+        .select("id, name, last_name, gender")
+        .eq("school_level", "docente")
+        .ilike("school_name", `%${schoolName}%`)
+        .limit(5);
+      if (teachers && teachers.length > 0) {
+        // Build a format compatible with discoveredTeachers
+        const mapped: DiscoveredTeacher[] = [];
+        for (const t of teachers) {
+          const { data: classi } = await supabase
+            .from("classi")
+            .select("id, nome, materia, codice_invito")
+            .eq("docente_profile_id", t.id)
+            .eq("is_sample", false);
+          if (classi && classi.length > 0) {
+            mapped.push({
+              teacher_id: t.id,
+              name: t.name,
+              last_name: t.last_name,
+              gender: t.gender,
+              badge: "school_recognized",
+              classes: classi.map(c => ({
+                class_id: c.id,
+                class_name: c.nome,
+                subject: c.materia,
+                invite_code: c.codice_invito || "",
+              })),
+            });
+          }
+        }
+        if (mapped.length > 0) {
+          setDiscoveredTeachers(mapped);
+          setShowTeacherStep(true);
+          setLoadingTeachers(false);
+          return true;
+        }
+      }
+    } catch (err) {
+      console.error("fetchTeachersBySchoolName error:", err);
+    }
+    setShowTeacherStep(false);
+    setDiscoveredTeachers([]);
+    setLoadingTeachers(false);
+    return false;
+  };
+
   const next = async () => {
     // When leaving school step, check for teachers
     if (currentStepType === "school") {
@@ -221,6 +271,14 @@ const OnboardingLegacy = () => {
         const found = await fetchTeachers(data.schoolCode);
         if (found) {
           setStep(step + 1); // go to teachers step
+          return;
+        }
+      }
+      // Fallback: search by school name
+      if (data.schoolName && data.schoolName.trim().length > 3) {
+        const found = await fetchTeachersBySchoolName(data.schoolName);
+        if (found) {
+          setStep(step + 1);
           return;
         }
       }
