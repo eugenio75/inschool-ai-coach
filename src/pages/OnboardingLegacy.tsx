@@ -119,6 +119,7 @@ const OnboardingLegacy = () => {
   const [data, setData] = useState<OnboardingData & { interests: string[] }>({
     name: "", lastName: "", age: "", dateOfBirth: "", gender: "",
     schoolCategory: "", schoolLevel: "", schoolName: "", schoolCode: null, city: "",
+    section: "",
     favoriteSubjects: [],
     struggles: [], focusTime: "15", supportStyles: [], coachName: "", interests: [],
   });
