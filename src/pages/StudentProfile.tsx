@@ -13,6 +13,7 @@ import { loadStudyPlan, saveStudyPlan } from "@/lib/studyPlanService";
 import { AccessCodeCard } from "@/components/profile/AccessCodeCard";
 import { EditableSchoolCard } from "@/components/profile/EditableSchoolCard";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeClass } from "@/lib/normalizeClass";
 
 const INTEREST_SUGGESTIONS = [
   "Calcio", "Basket", "Nuoto", "Danza", "Musica", "Chitarra", "Pianoforte",
