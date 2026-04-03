@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Plus, Search, FolderOpen, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
