@@ -1269,5 +1269,7 @@
   "exam_maturita_no_topics": "Nessun argomento trovato. Prova con la simulazione generica.",
   "exam_maturita_custom_topic": "Scegli tu l'argomento",
   "exam_maturita_custom_placeholder": "Scrivi un argomento...",
-  "exam_maturita_start_generic": "Simulazione generica senza argomento specifico"
+  "exam_maturita_start_generic": "Simulazione generica senza argomento specifico",
+  "onb_classe_label": "Classe (opzionale)",
+  "onb_classe_placeholder": "Es. 3ª A"
 }
