@@ -83,8 +83,10 @@ export default function FreeStudySession() {
     if (!topic.trim()) return;
     setStep("study");
 
-    const systemPrompt = `Sei un coach di studio per uno studente di livello ${schoolLevel}. 
+    const coachLabel = coachName || "il Coach";
+    const systemPrompt = `Sei ${coachLabel}, il coach personale dello studente su InSchool. Livello: ${schoolLevel}. 
 L'argomento è: "${topic}" (${subject || "materia non specificata"}).
+Quando ti presenti dì sempre "Sono ${coachLabel}, il tuo coach."
 Dividi l'argomento in blocchi logici. Per ogni blocco:
 1. Presenta brevemente il concetto
 2. Fai una domanda di comprensione
