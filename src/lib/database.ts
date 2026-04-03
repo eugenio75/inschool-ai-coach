@@ -434,11 +434,25 @@ export async function getDailyMissions(childProfileId?: string): Promise<any[]> 
           body: JSON.stringify({ childProfileId: profileId, lang: getCurrentLang() }),
         }
       );
-      if (!response.ok) return [];
+      if (!response.ok) throw new Error("generate-missions failed");
       const result = await response.json();
-      return result.missions || [];
+      const generated = result.missions || [];
+      if (generated.length > 0) return generated;
+      throw new Error("No missions returned");
     } catch (err) {
-      console.error("getDailyMissions generate error:", err);
+      console.error("getDailyMissions generate error, creating defaults:", err);
+      // Create 3 default missions locally
+      const defaults = [
+        { child_profile_id: profileId, mission_date: today, mission_type: "study_session", title: "Completa una sessione di studio", description: "Studia un argomento per almeno 10 minuti", points_reward: 10, completed: false },
+        { child_profile_id: profileId, mission_date: today, mission_type: "complete_task", title: "Completa un compito", description: "Porta a termine un compito assegnato", points_reward: 15, completed: false },
+        { child_profile_id: profileId, mission_date: today, mission_type: "study_minutes", title: "Studia per 20 minuti", description: "Accumula almeno 20 minuti di studio oggi", points_reward: 20, completed: false },
+      ];
+      try {
+        const { data: inserted } = await supabase.from("daily_missions").insert(defaults as any).select();
+        if (inserted && inserted.length > 0) return inserted;
+      } catch (insertErr) {
+        console.error("Failed to insert default missions:", insertErr);
+      }
       return [];
     } finally {
       _missionGenerationInFlight.delete(cacheKey);

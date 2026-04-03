@@ -83,7 +83,7 @@ export default function DashboardMedie() {
           </div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
-            <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-1">Ciao {name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()}!</h1>
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-1">{profile?.gender === "F" ? "Bentornata" : "Bentornato"} {name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()}!</h1>
             <p className="text-sm text-muted-foreground">
               {tasks.length > 0 ? `Hai ${tasks.filter(t => !t.completed).length} compiti da fare` : "Nessun compito per oggi."}
             </p>

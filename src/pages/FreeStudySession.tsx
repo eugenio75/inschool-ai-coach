@@ -46,7 +46,22 @@ export default function FreeStudySession() {
   const [outputContent, setOutputContent] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const subjects = profile?.favorite_subjects || profile?.difficult_subjects || ["Matematica", "Italiano", "Inglese", "Storia", "Scienze"];
+  const SUBJECTS_BY_LEVEL: Record<string, string[]> = {
+    alunno: ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia"],
+    "primaria-1-2": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze"],
+    "primaria-3-5": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia"],
+    medie: ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia", "Tecnologia", "Arte"],
+    "media-1": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia", "Tecnologia"],
+    "media-2": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia", "Tecnologia"],
+    "media-3": ["Italiano", "Matematica", "Inglese", "Storia", "Scienze", "Geografia", "Tecnologia"],
+    superiori: ["Italiano", "Matematica", "Fisica", "Chimica", "Storia", "Filosofia", "Inglese", "Scienze"],
+    universitario: ["Materia principale", "Materia secondaria"],
+  };
+  const profileSubjects = [
+    ...(profile?.favorite_subjects || []),
+    ...(profile?.difficult_subjects || []).filter((s: string) => !(profile?.favorite_subjects || []).includes(s)),
+  ];
+  const subjects = profileSubjects.length > 0 ? profileSubjects : (SUBJECTS_BY_LEVEL[schoolLevel] || SUBJECTS_BY_LEVEL.superiori);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
