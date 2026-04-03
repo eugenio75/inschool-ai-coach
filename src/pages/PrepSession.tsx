@@ -133,6 +133,9 @@ const SUBJECTS_BY_LEVEL_PREP: Record<string, string[]> = {
   alunno: ["Italiano", "Matematica", "Inglese", "Storia", "Scienze"],
 };
 
+const TERZA_MEDIA_PROVE = ["Italiano scritto", "Matematica scritta", "Lingua straniera scritta", "Colloquio orale interdisciplinare"];
+const MATURITA_PROVE = ["Prima prova (italiano)", "Seconda prova", "Colloquio orale"];
+
 /* ══════════════ Component ══════════════ */
 export default function PrepSession() {
   const navigate = useNavigate();
