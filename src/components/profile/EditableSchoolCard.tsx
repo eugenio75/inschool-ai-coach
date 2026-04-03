@@ -4,6 +4,7 @@ import { School, MapPin, Pencil, Check, X } from "lucide-react";
 import { useLang } from "@/contexts/LangContext";
 import { CityAutocomplete } from "@/components/shared/CityAutocomplete";
 import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
+import { normalizeClass } from "@/lib/normalizeClass";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
