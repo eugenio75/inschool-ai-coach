@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession, isChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
+import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 
 interface ChatMessage { role: "user" | "assistant"; content: string; }
 
