@@ -35,6 +35,17 @@ export default function FreeStudySession() {
   const { user } = useAuth();
   const profile = getProfile();
   const schoolLevel = profile?.school_level || "superiori";
+  const [coachName, setCoachName] = useState("");
+
+  useEffect(() => {
+    const profileId = profile?.id;
+    if (!profileId) return;
+    supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle()
+      .then(({ data }) => {
+        const prefs = (data?.data as any) || {};
+        if (prefs.coach_name) setCoachName(prefs.coach_name);
+      });
+  }, [profile?.id]);
 
   const [step, setStep] = useState<"setup" | "study" | "output">("setup");
   const [topic, setTopic] = useState("");
