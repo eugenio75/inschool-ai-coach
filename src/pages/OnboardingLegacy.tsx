@@ -17,6 +17,7 @@ import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { SchoolAutocomplete } from "@/components/shared/SchoolAutocomplete";
 import { CityAutocomplete } from "@/components/shared/CityAutocomplete";
 import { formatTeacherDisplay } from "@/lib/teacherTitle";
+import { normalizeClass } from "@/lib/normalizeClass";
 import { useToast } from "@/hooks/use-toast";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
@@ -313,13 +314,13 @@ const OnboardingLegacy = () => {
         school_name: data.schoolName || undefined,
         school_code: data.schoolCode || undefined,
         city: data.city || undefined,
-        class_section: data.section || undefined,
+        class_section: (data as any).classe?.trim() || undefined,
       } as any);
 
       if (profile) {
         const prefsData: any = {};
         if (data.coachName.trim()) prefsData.coach_name = data.coachName.trim();
-        if (data.section.trim()) prefsData.school_section = data.section.trim();
+        
         if ((data as any).classe?.trim()) prefsData.classe = (data as any).classe.trim();
         if (Object.keys(prefsData).length > 0) {
           await supabase.from("user_preferences").upsert({
@@ -494,22 +495,15 @@ const OnboardingLegacy = () => {
                 cityFilter={data.city || undefined}
               />
 
-              <label className="text-sm text-muted-foreground block">{t("onb_section_label")}</label>
-              <input
-                type="text"
-                placeholder={t("onb_section_placeholder")}
-                value={data.section}
-                onChange={(e) => setData({ ...data, section: e.target.value.toUpperCase().slice(0, 2) })}
-                maxLength={2}
-                className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-lg"
-              />
-
               <label className="text-sm text-muted-foreground block">{t("onb_classe_label")}</label>
               <input
                 type="text"
-                placeholder={t("onb_classe_placeholder")}
+                placeholder="Es. 3ª A"
                 value={(data as any).classe || ""}
-                onChange={(e) => setData({ ...data, classe: e.target.value.slice(0, 6) } as any)}
+                onChange={(e) => {
+                  const normalized = normalizeClass(e.target.value);
+                  setData({ ...data, classe: normalized } as any);
+                }}
                 maxLength={6}
                 className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-lg"
               />
