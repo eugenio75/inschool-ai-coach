@@ -202,7 +202,10 @@ Inizia presentando il primo blocco dell'argomento.`;
     return (
       <div className="min-h-screen bg-background pb-24">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
-          <PageBackButton label="Chat" to="" className="" />
+          <button onClick={() => setStep("study")} className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <Send className="w-4 h-4 rotate-180" />
+            <span>Chat</span>
+          </button>
           <h1 className="font-display text-lg font-bold text-foreground">Output — {topic}</h1>
         </div>
         <div className="max-w-3xl mx-auto px-4 py-6">
