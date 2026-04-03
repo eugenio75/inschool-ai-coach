@@ -32,6 +32,37 @@ interface ExamConfig {
   uniMode?: "orale" | "scritto";
 }
 
+/* ── Maturità mapping ── */
+const SECONDA_PROVA: Record<string, string> = {
+  "Liceo Classico": "Latino",
+  "Liceo Scientifico": "Matematica",
+  "Liceo Scientifico Scienze Applicate": "Matematica",
+  "Liceo Linguistico": "Lingua e cultura straniera 1",
+  "Liceo Scienze Umane": "Scienze Umane",
+  "Liceo Scienze Umane ES": "Diritto ed Economia politica",
+  "Liceo Artistico": "Discipline progettuali",
+  "Liceo Musicale": "Teoria, analisi e composizione",
+  "ITE AFM": "Economia Aziendale",
+  "ITE Turismo": "Discipline turistiche e aziendali",
+  "ITT CAT": "Progettazione, costruzioni e impianti",
+  "ITT Informatica": "Sistemi e reti",
+  "ITT Agrario": "Produzioni vegetali",
+  "Scientifico": "Matematica",
+  "Classico": "Latino",
+  "Linguistico": "Lingua e cultura straniera 1",
+  "Tecnico Economico": "Economia Aziendale",
+  "Tecnico Tecnologico": "Sistemi e reti",
+  "Professionale": "Materia di indirizzo",
+  "Artistico": "Discipline progettuali",
+};
+
+interface MaturitaTopic {
+  argomento: string;
+  probabilita: "alta" | "media" | "bassa";
+  motivazione: string;
+  ultimo_anno_uscito?: string;
+}
+
 /* ── Helpers ── */
 function getProfile() {
   try {
