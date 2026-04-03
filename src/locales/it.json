@@ -960,6 +960,7 @@
   "exam_type_universitario": "Esame universitario",
   "exam_type_universitario_desc": "Simulazione di esame orale con domande da docente o esame scritto con esercizi",
   "exam_field_subject": "Materia",
+  "add_custom_subject_placeholder": "Altra materia...",
   "exam_field_uni_subject": "Materia / Esame",
   "exam_field_uni_subject_placeholder": "es. Analisi Matematica I, Diritto Privato...",
   "exam_field_topic": "Argomento (opzionale)",

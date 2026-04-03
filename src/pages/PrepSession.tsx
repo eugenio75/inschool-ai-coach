@@ -207,6 +207,8 @@ export default function PrepSession() {
   // Voice
   const [isListening, setIsListening] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState("");
+  const [customSubjects, setCustomSubjects] = useState<string[]>([]);
+  const [customSubjectInput, setCustomSubjectInput] = useState("");
   const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -795,12 +797,47 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
                 {t("exam_field_subject")}
               </label>
               <div className="flex flex-wrap gap-2">
-                {subjects.map((s: string) => (
+                {[...subjects, ...customSubjects].map((s: string) => (
                   <button key={s} onClick={() => setSubject(subject === s ? "" : s)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all inline-flex items-center gap-1 ${
                       subject === s ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary"
-                    }`}>{s}</button>
+                    }`}>
+                    {s}
+                    {customSubjects.includes(s) && (
+                      <span onClick={(e) => { e.stopPropagation(); setCustomSubjects(prev => prev.filter(c => c !== s)); if (subject === s) setSubject(""); }}
+                        className="ml-1 text-muted-foreground hover:text-destructive cursor-pointer">✕</span>
+                    )}
+                  </button>
                 ))}
+              </div>
+              <div className="flex gap-2 mt-2">
+                <Input
+                  value={customSubjectInput}
+                  onChange={e => setCustomSubjectInput(e.target.value)}
+                  placeholder={t("add_custom_subject_placeholder")}
+                  className="flex-1 h-9 text-sm"
+                  onKeyDown={e => {
+                    if (e.key === "Enter" && customSubjectInput.trim()) {
+                      e.preventDefault();
+                      const val = customSubjectInput.trim();
+                      if (!subjects.includes(val) && !customSubjects.includes(val)) {
+                        setCustomSubjects(prev => [...prev, val]);
+                        setSubject(val);
+                      }
+                      setCustomSubjectInput("");
+                    }
+                  }}
+                />
+                <Button size="sm" variant="outline" className="h-9 px-3"
+                  disabled={!customSubjectInput.trim()}
+                  onClick={() => {
+                    const val = customSubjectInput.trim();
+                    if (val && !subjects.includes(val) && !customSubjects.includes(val)) {
+                      setCustomSubjects(prev => [...prev, val]);
+                      setSubject(val);
+                    }
+                    setCustomSubjectInput("");
+                  }}>+</Button>
               </div>
             </div>
           )}
