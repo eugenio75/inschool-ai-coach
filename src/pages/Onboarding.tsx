@@ -659,17 +659,9 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
                    />
                    <input
                      type="text"
-                     placeholder={t('onb_section_placeholder')}
+                     placeholder="Es. 3ª A"
                      value={answers.school_section || ""}
-                     onChange={e => setAnswers({...answers, school_section: e.target.value.toUpperCase().slice(0, 2)})}
-                     maxLength={2}
-                     className={inputClass}
-                   />
-                   <input
-                     type="text"
-                     placeholder={t('onb_classe_placeholder')}
-                     value={answers.classe || ""}
-                     onChange={e => setAnswers({...answers, classe: e.target.value.slice(0, 6)})}
+                     onChange={e => setAnswers({...answers, school_section: normalizeClass(e.target.value)})}
                      maxLength={6}
                      className={inputClass}
                    />
