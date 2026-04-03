@@ -49,7 +49,6 @@ export default function FreeStudySession() {
 
   const [step, setStep] = useState<"setup" | "study" | "output">("setup");
   const [topic, setTopic] = useState("");
-  const [subject, setSubject] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -58,7 +57,7 @@ export default function FreeStudySession() {
   const [outputContent, setOutputContent] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Subject is now free-text only for Studio libero
+  
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -70,7 +69,7 @@ export default function FreeStudySession() {
 
     const coachLabel = coachName || "il Coach";
     const systemPrompt = `Sei ${coachLabel}, il coach personale dello studente su InSchool. Livello: ${schoolLevel}. 
-L'argomento è: "${topic}" (${subject || "materia non specificata"}).
+L'argomento è: "${topic}".
 Quando ti presenti dì sempre "Sono ${coachLabel}, il tuo coach."
 Dividi l'argomento in blocchi logici. Per ogni blocco:
 1. Presenta brevemente il concetto
@@ -240,7 +239,6 @@ Inizia presentando il primo blocco dell'argomento.`;
         <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground truncate">{topic}</p>
-          {subject && <p className="text-xs text-muted-foreground">{subject}</p>}
         </div>
       </div>
 
