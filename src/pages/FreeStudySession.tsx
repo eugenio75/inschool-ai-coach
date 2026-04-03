@@ -247,13 +247,13 @@ Inizia presentando il primo blocco dell'argomento.`;
 
   // STUDY (chat)
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-card flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b px-4 py-3 flex items-center gap-3 shrink-0">
-        <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5 text-slate-600" /></button>
+      <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3 shrink-0">
+        <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5 text-muted-foreground" /></button>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-slate-900 truncate">{topic}</p>
-          {subject && <p className="text-xs text-slate-400">{subject}</p>}
+          <p className="text-sm font-semibold text-foreground truncate">{topic}</p>
+          {subject && <p className="text-xs text-muted-foreground">{subject}</p>}
         </div>
       </div>
 
@@ -268,8 +268,8 @@ Inizia presentando il primo blocco dell'argomento.`;
           >
             <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${
               msg.role === "user"
-                ? "bg-[#0070C0] text-white"
-                : "bg-slate-100 text-slate-800"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-foreground"
             }`}>
               {msg.content || (sending && i === messages.length - 1 ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -281,14 +281,14 @@ Inizia presentando il primo blocco dell'argomento.`;
 
       {/* Output buttons (shown after some conversation) */}
       {messages.length >= 4 && (
-        <div className="px-4 py-2 border-t bg-slate-50">
-          <p className="text-xs text-slate-400 mb-2">Genera un output dalla sessione:</p>
+        <div className="px-4 py-2 border-t border-border bg-muted/50">
+          <p className="text-xs text-muted-foreground mb-2">Genera un output dalla sessione:</p>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {OUTPUT_TYPES.map(ot => (
               <button
                 key={ot.id}
                 onClick={() => generateOutput(ot.id)}
-                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-600 hover:border-slate-400 whitespace-nowrap"
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border bg-card text-muted-foreground hover:border-primary/40 whitespace-nowrap"
               >
                 <ot.icon className="w-3 h-3" />
                 {ot.label}
@@ -299,20 +299,20 @@ Inizia presentando il primo blocco dell'argomento.`;
       )}
 
       {/* Input */}
-      <div className="border-t bg-white p-3 flex gap-2 shrink-0">
+      <div className="border-t border-border bg-card p-3 flex gap-2 shrink-0">
         <input
           type="text"
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === "Enter" && sendMessage()}
           placeholder="Scrivi..."
-          className="flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0070C0] focus:ring-2 focus:ring-[#0070C0]/20"
+          className="flex-1 text-sm border border-border rounded-lg px-3 py-2.5 bg-background text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20"
           disabled={sending}
         />
         <button
           onClick={sendMessage}
           disabled={!input.trim() || sending}
-          className="bg-[#0070C0] hover:bg-[#005fa3] disabled:opacity-40 text-white px-4 py-2.5 rounded-lg transition-colors"
+          className="bg-primary hover:bg-primary/90 disabled:opacity-40 text-primary-foreground px-4 py-2.5 rounded-lg transition-colors"
         >
           <Send className="w-4 h-4" />
         </button>
