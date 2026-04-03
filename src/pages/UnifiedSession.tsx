@@ -27,6 +27,8 @@ import { getPrepLabelKey } from "@/lib/schoolTerms";
 import { useGuidedSession } from "@/hooks/useGuidedSession";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { PageBackButton } from "@/components/shared/PageBackButton";
+import { getSubjectsByLevel } from "@/lib/subjectsByLevel";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -176,7 +178,14 @@ export default function UnifiedSession() {
     }
   }, [urlMsg]);
 
-  const subjects = profile?.favorite_subjects || profile?.difficult_subjects || ["Matematica", "Italiano", "Inglese", "Storia", "Scienze"];
+  // Use profile subjects first, then fall back to school-level subjects
+  const favSubjects = profile?.favorite_subjects || profile?.favoriteSubjects || [];
+  const diffSubjects = profile?.difficult_subjects || profile?.difficultSubjects || [];
+  const profileSubjects = [
+    ...favSubjects,
+    ...diffSubjects.filter((s: string) => !favSubjects.includes(s)),
+  ];
+  const subjects = profileSubjects.length > 0 ? profileSubjects : getSubjectsByLevel(schoolLevel);
 
   function getSystemPrompt(): string {
     switch (type) {
@@ -555,7 +564,8 @@ Inizia con la prima domanda.`;
     return (
       <div className="min-h-screen bg-background pb-24">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
-          <button onClick={() => navigate(-1)}><BookOpen className="w-5 h-5 text-muted-foreground" /></button>
+          <PageBackButton to="/dashboard" />
+          <BookOpen className="w-5 h-5 text-muted-foreground" />
           <h1 className="font-display text-lg font-bold text-foreground">{getTitle()}</h1>
         </div>
         <div className="max-w-lg mx-auto px-4 py-8 space-y-6">

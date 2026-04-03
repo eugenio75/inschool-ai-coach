@@ -14,17 +14,21 @@ import { getTasks, getActiveChildProfileId, getChildProfile } from "@/lib/databa
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
 import { JoinClassPrompt } from "@/components/JoinClassPrompt";
+import { useAuth } from "@/hooks/useAuth";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
 export default function DashboardMedie() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [coachName, setCoachName] = useState("");
 
   const isChild = isChildSession();
+  // Show ESC button when an authenticated parent is viewing (not a child code session)
+  const showParentEsc = !!user && !isChild;
 
   useEffect(() => {
     if (isChild && shouldShowCheckin()) {
@@ -79,7 +83,7 @@ export default function DashboardMedie() {
               <button onClick={() => navigate("/student-profile")} className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center hover:bg-accent transition-colors text-xs font-bold text-primary" title="Il mio profilo">
                 {avatarInitial}
               </button>
-              {!isChild && (
+              {showParentEsc && (
                 <button onClick={() => navigate("/parent-dashboard")} className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center hover:bg-destructive/20 transition-colors" title="Torna all'area genitori">
                   <X className="w-4 h-4 text-destructive" />
                 </button>
