@@ -161,7 +161,7 @@ export default function PrepSession() {
   const { user } = useAuth();
   const { t } = useLang();
   const profile = getProfile();
-  const schoolLevel = profile?.school_level || "superiori";
+  const schoolLevel = profile?.school_level || profile?.schoolLevel || "superiori";
   const prepLabel = t(getPrepLabelKey(schoolLevel));
 
   /* State */
