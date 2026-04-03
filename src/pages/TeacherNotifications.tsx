@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, AlertTriangle, Clock, FileText, Heart, CheckCircle2, ChevronRight } from "lucide-react";
+import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildSession } from "@/lib/childSession";
