@@ -18,6 +18,7 @@ import OnboardingLegacy from "./OnboardingLegacy";
 import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { JoinClassInline } from "@/components/JoinClassModal";
 import { getSubjectsByLevel } from "@/lib/subjectsByLevel";
+import { normalizeClass } from "@/lib/normalizeClass";
 
 const variants = {
   enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0 }),
