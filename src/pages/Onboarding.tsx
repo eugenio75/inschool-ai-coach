@@ -175,6 +175,11 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             const interestsToSave = Array.isArray(answers.interests) ? answers.interests.filter((i: unknown) => typeof i === "string" && i.trim()) : [];
             console.log("[Onboarding] Saving interests:", interestsToSave);
             if (interestsToSave.length > 0) profileUpdates.interests = interestsToSave;
+            if (answers.school_name) profileUpdates.school_name = answers.school_name;
+            if (answers.school_code) profileUpdates.school_code = answers.school_code;
+            if (answers.school_section) profileUpdates.class_section = answers.school_section;
+            const cityVal = answers.medie_citta || answers.superiori_citta || answers.uni_citta;
+            if (cityVal) profileUpdates.city = cityVal;
             // Gender is now set during registration for teachers
             await supabase.from("child_profiles").update(profileUpdates as any).eq("id", profileId);
             const currentSession = getChildSession();
