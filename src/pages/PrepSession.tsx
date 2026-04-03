@@ -195,6 +195,16 @@ export default function PrepSession() {
   const [detectedTrack, setDetectedTrack] = useState<MaturitaTrack | null>(null);
   const [trackConfirmed, setTrackConfirmed] = useState(false);
 
+  // Maturità 3-screen state
+  const [maturitaProva, setMaturitaProva] = useState<"prima" | "seconda" | "colloquio" | null>(null);
+  const [maturitaTopics, setMaturitaTopics] = useState<MaturitaTopic[]>([]);
+  const [maturitaLoading, setMaturitaLoading] = useState(false);
+  const [maturitaCustomTopic, setMaturitaCustomTopic] = useState("");
+  const [maturitaTimerSeconds, setMaturitaTimerSeconds] = useState(0);
+  const [maturitaTimerActive, setMaturitaTimerActive] = useState(false);
+  const maturitaTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const secondaProvaMateria = indirizzo ? (SECONDA_PROVA[indirizzo] || "Materia di indirizzo") : "Materia di indirizzo";
+
   // University study plan
   const [studyPlan, setStudyPlan] = useState<StudyPlanExam[]>([]);
   const [planLoaded, setPlanLoaded] = useState(false);
