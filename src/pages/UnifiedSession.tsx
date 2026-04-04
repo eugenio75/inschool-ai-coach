@@ -641,7 +641,7 @@ Inizia con la prima domanda.`;
                   <card.icon className="w-6 h-6 text-primary" />
                 </div>
                 <p className="text-sm font-bold text-foreground">
-                  {card.id === "coach" ? t(card.titleKey, { coachName: displayCoachName }) : t(card.titleKey)}
+                  {card.id === "coach" ? t(card.titleKey).replace("{{coachName}}", displayCoachName) : t(card.titleKey)}
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">{t(card.descKey)}</p>
               </motion.button>
