@@ -12,7 +12,7 @@ import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
 import { verifyCredential, type CredentialInfo } from "@/lib/blockchainService";
-import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
+
 
 type VerifyState = "idle" | "loading" | "found" | "not_found" | "unavailable";
 
