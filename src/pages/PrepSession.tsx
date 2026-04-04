@@ -733,15 +733,19 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
         </div>
         <div className="max-w-lg mx-auto px-4 py-6 space-y-3">
           <p className="text-sm text-muted-foreground mb-4">{t("exam_select_type")}</p>
-          {filteredExamTypes.map((et) => (
-            <motion.button key={et.id} whileTap={{ scale: 0.98 }}
+          {filteredExamTypes.map((et, i) => (
+            <motion.button key={et.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 260, damping: 30, delay: i * 0.05 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => { setExamType(et.id); setStep(et.id === "maturita" ? "maturita-setup" : "setup"); }}
-              className="w-full flex items-start gap-4 p-4 rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-sm transition-all text-left">
-              <span className="text-2xl mt-0.5">{et.emoji}</span>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-foreground text-sm">{t(et.labelKey)}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t(et.descKey)}</p>
+              className="w-full flex flex-col items-center gap-2 p-6 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all text-center group">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-1 group-hover:bg-primary/15 transition-colors">
+                <span className="text-2xl">{et.emoji}</span>
               </div>
+              <p className="font-bold text-foreground text-sm">{t(et.labelKey)}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{t(et.descKey)}</p>
             </motion.button>
           ))}
         </div>

@@ -1203,34 +1203,48 @@ const MemoryRecap = () => {
     const specificInput = isRipasso ? specificInputRipasso : specificInputRinforza;
     const setSpecificInput = isRipasso ? setSpecificInputRipasso : setSpecificInputRinforza;
 
+    const cards: { id: ContentType; icon: any; titleKey: string; subtitleKey: string }[] = [
+      { id: "today", icon: CalendarDays, titleKey: "memory_today_title", subtitleKey: "memory_today_subtitle" },
+      { id: "cumulative", icon: Brain, titleKey: "memory_cumulative_title", subtitleKey: "memory_cumulative_subtitle" },
+    ];
+
     return (
-      <div className="space-y-2.5">
-        <button onClick={() => pickOption(section, "today")}
-          className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
-          <CalendarDays className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-          <span className="text-sm font-medium text-foreground flex-1">Quello che hai studiato oggi</span>
-          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-        </button>
+      <div className="space-y-3">
+        {cards.map((card, i) => (
+          <motion.button
+            key={card.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: i * 0.05 }}
+            onClick={() => pickOption(section, card.id)}
+            className="w-full flex flex-col items-center gap-2 p-6 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all text-center group"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-1 group-hover:bg-primary/15 transition-colors">
+              <card.icon className="w-6 h-6 text-primary" />
+            </div>
+            <p className="text-sm font-bold text-foreground">{t(card.titleKey)}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{t(card.subtitleKey)}</p>
+          </motion.button>
+        ))}
 
-        <button onClick={() => pickOption(section, "cumulative")}
-          className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
-          <Brain className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-          <span className="text-sm font-medium text-foreground flex-1">Ripasso cumulativo</span>
-          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-        </button>
-
-        <div className="rounded-xl border border-border bg-card p-3.5">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium text-foreground">Argomento specifico</span>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...spring, delay: 0.1 }}
+          className="flex flex-col items-center gap-2 p-6 rounded-2xl border border-border bg-card text-center"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-1">
+            <Target className="w-6 h-6 text-primary" />
           </div>
-          <div className="mt-2.5 flex gap-2">
+          <p className="text-sm font-bold text-foreground">{t("memory_specific_title")}</p>
+          <p className="text-xs text-muted-foreground leading-relaxed mb-2">{t("memory_specific_subtitle")}</p>
+          <div className="flex gap-2 w-full max-w-sm">
             <Input value={specificInput} onChange={e => setSpecificInput(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") submitSpecific(section, specificInput); }}
-              placeholder="Es: frazioni, rivoluzione francese..." className="text-sm" />
-            <Button onClick={() => submitSpecific(section, specificInput)} disabled={!specificInput.trim()} size="sm" className="shrink-0 px-4">Vai</Button>
+              placeholder={t("memory_specific_placeholder")} className="text-sm" />
+            <Button onClick={() => submitSpecific(section, specificInput)} disabled={!specificInput.trim()} size="sm" className="shrink-0 px-4">{t("memory_specific_go")}</Button>
           </div>
-        </div>
+        </motion.div>
       </div>
     );
   };
@@ -1249,18 +1263,19 @@ const MemoryRecap = () => {
           <>
             <p className="text-sm text-muted-foreground ml-8 mb-2">{getSubtitle()}</p>
             {wizard.step === "home" && (
-              <div className="flex justify-center gap-1">
-                {(["ripasso", "rinforza"] as Section[]).map(tab => (
-                  <button key={tab} onClick={() => setActiveTab(tab)}
-                    className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg transition-colors relative ${
-                      activeTab === tab ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                    }`}>
-                    {tab === "ripasso" ? "Ripassa" : "Rafforza"}
-                    {activeTab === tab && (
-                      <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-                    )}
-                  </button>
-                ))}
+              <div className="flex justify-center gap-1 mb-2">
+                <div className="inline-flex rounded-full bg-muted p-1">
+                  {(["ripasso", "rinforza"] as Section[]).map(tab => (
+                    <button key={tab} onClick={() => setActiveTab(tab)}
+                      className={`px-5 py-2 text-sm font-semibold rounded-full transition-all ${
+                        activeTab === tab
+                          ? "bg-background text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}>
+                      {tab === "ripasso" ? t("tab_ripassa") : t("tab_rafforza")}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </>
