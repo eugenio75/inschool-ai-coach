@@ -97,6 +97,8 @@ export default function UnifiedSession() {
   }, [type, homeworkId]);
 
   const [setupDone, setSetupDone] = useState(false);
+  const [studyMode, setStudyMode] = useState<null | "coach" | "flashcard" | "games">(null);
+  const [showModeSelect, setShowModeSelect] = useState(false);
   const [topic, setTopic] = useState(urlSubject ? `Ripasso ${urlSubject}` : "");
   const [subject, setSubject] = useState(urlSubject || "");
   const [mode, setMode] = useState<"scritta" | "orale">("scritta");
