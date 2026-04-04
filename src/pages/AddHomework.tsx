@@ -227,7 +227,7 @@ const AddHomework = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background pb-12">
+    <div className="min-h-screen bg-muted/40 pb-12">
       <div className="bg-card border-b border-border px-6 pt-6 pb-6">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3 mb-4">
@@ -242,8 +242,9 @@ const AddHomework = () => {
         <div className="max-w-3xl mx-auto">
           <AnimatePresence mode="wait">
             {/* Choose mode */}
-            {mode === "choose" && (
-              <motion.div key="choose" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={spring} className="space-y-3">
+             {mode === "choose" && (
+              <motion.div key="choose" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={spring}>
+                <div className="bg-card rounded-2xl shadow-sm p-8 space-y-3">
                 {[
                   { id: "manual" as InputMode, icon: Type, title: "Scrivi a mano", subtitle: "Descrivi il compito con le tue parole", iconBg: "bg-primary/10", iconColor: "text-primary" },
                   { id: "photo-diary" as InputMode, icon: Camera, title: "Fotografa il diario", subtitle: "Scatta una o più foto dei compiti scritti sul diario", iconBg: "bg-primary/10", iconColor: "text-primary" },
@@ -264,6 +265,7 @@ const AddHomework = () => {
                     <p className="text-xs text-muted-foreground leading-relaxed">{card.subtitle}</p>
                   </motion.button>
                 ))}
+                </div>
               </motion.div>
             )}
 

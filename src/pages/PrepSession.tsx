@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Send, Mic, MicOff, Loader2, CheckCircle, AlertTriangle, Target, Clock, BookOpen,
-  MessageCircle, Brain, Gamepad2,
+  MessageCircle, Brain, Gamepad2, Plus, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -215,6 +215,7 @@ export default function PrepSession() {
   const [voiceTranscript, setVoiceTranscript] = useState("");
   const [customSubjects, setCustomSubjects] = useState<string[]>([]);
   const [customSubjectInput, setCustomSubjectInput] = useState("");
+  const [showCustomSubjectInput, setShowCustomSubjectInput] = useState(false);
   const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -719,14 +720,15 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
       }
     };
     return (
-      <div className="min-h-screen bg-background pb-24">
+      <div className="min-h-screen bg-muted/40 pb-24">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <button onClick={() => { setStudyMode(null); setStep("setup"); }} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="font-display text-lg font-bold text-foreground">{prepLabel}</h1>
         </div>
-        <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
+        <div className="max-w-lg mx-auto px-4 py-8">
+        <div className="bg-card rounded-2xl shadow-sm p-8 space-y-6">
           <div className="text-center space-y-2">
             <h2 className="text-xl font-bold text-foreground">{t("prep_mode_heading")}</h2>
             <p className="text-sm text-muted-foreground">{t("prep_mode_subtitle")}</p>
@@ -759,6 +761,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
             ← {t("exam_back_setup")}
           </Button>
         </div>
+        </div>
       </div>
     );
   }
@@ -788,7 +791,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
       }
     };
     return (
-      <div className="min-h-screen bg-background pb-24">
+      <div className="min-h-screen bg-muted/40 pb-24">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <button onClick={() => { setStudyMode(null); setStep("maturita-analysis"); }} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-5 h-5" />
@@ -796,7 +799,8 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
           <span className="text-xl">🎓</span>
           <h1 className="font-display text-lg font-bold text-foreground">{t("exam_type_maturita")}</h1>
         </div>
-        <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
+        <div className="max-w-lg mx-auto px-4 py-8">
+        <div className="bg-card rounded-2xl shadow-sm p-8 space-y-6">
           <div className="text-center space-y-2">
             <h2 className="text-xl font-bold text-foreground">{t("prep_mode_heading")}</h2>
             <p className="text-sm text-muted-foreground">{t("prep_mode_subtitle")}</p>
@@ -828,6 +832,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
           <Button variant="outline" onClick={() => { setStudyMode(null); setStep("maturita-analysis"); }} className="w-full">
             ← {t("exam_back_analysis")}
           </Button>
+        </div>
         </div>
       </div>
     );
@@ -962,8 +967,29 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
       ? selectedProve.length > 0
       : needsSubject ? !!subject : true;
 
+    const prepChipColors: Record<string, { base: string; selected: string }> = {
+      'Matematica': { base: 'bg-blue-50 text-blue-700 border-blue-200', selected: 'bg-blue-500 text-white border-blue-500' },
+      'Italiano': { base: 'bg-green-50 text-green-700 border-green-200', selected: 'bg-green-500 text-white border-green-500' },
+      'Storia': { base: 'bg-orange-50 text-orange-700 border-orange-200', selected: 'bg-orange-500 text-white border-orange-500' },
+      'Inglese': { base: 'bg-purple-50 text-purple-700 border-purple-200', selected: 'bg-purple-500 text-white border-purple-500' },
+      'Scienze': { base: 'bg-teal-50 text-teal-700 border-teal-200', selected: 'bg-teal-500 text-white border-teal-500' },
+      'Arte': { base: 'bg-pink-50 text-pink-700 border-pink-200', selected: 'bg-pink-500 text-white border-pink-500' },
+      'Musica': { base: 'bg-yellow-50 text-yellow-700 border-yellow-200', selected: 'bg-yellow-500 text-white border-yellow-500' },
+      'Geografia': { base: 'bg-indigo-50 text-indigo-700 border-indigo-200', selected: 'bg-indigo-500 text-white border-indigo-500' },
+      'Tecnologia': { base: 'bg-gray-50 text-gray-700 border-gray-200', selected: 'bg-gray-500 text-white border-gray-500' },
+      'Fisica': { base: 'bg-cyan-50 text-cyan-700 border-cyan-200', selected: 'bg-cyan-500 text-white border-cyan-500' },
+      'Filosofia': { base: 'bg-amber-50 text-amber-700 border-amber-200', selected: 'bg-amber-500 text-white border-amber-500' },
+      'Latino': { base: 'bg-rose-50 text-rose-700 border-rose-200', selected: 'bg-rose-500 text-white border-rose-500' },
+      'Greco': { base: 'bg-stone-100 text-stone-700 border-stone-200', selected: 'bg-stone-500 text-white border-stone-500' },
+    };
+    const defaultPrepChip = { base: 'bg-gray-50 text-gray-600 border-gray-200', selected: 'bg-gray-500 text-white border-gray-500' };
+    const getPrepChipColor = (s: string, isSelected: boolean) => {
+      const colors = prepChipColors[s] || defaultPrepChip;
+      return isSelected ? colors.selected : colors.base;
+    };
+
     return (
-      <div className="min-h-screen bg-background pb-24">
+      <div className="min-h-screen bg-muted/40 pb-24">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <button onClick={() => setStep("type")} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-5 h-5" />
@@ -972,7 +998,8 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
           <h1 className="text-lg font-bold text-foreground">{t(EXAM_TYPES.find(e => e.id === examType)?.labelKey || "")}</h1>
         </div>
 
-        <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
+        <div className="max-w-lg mx-auto px-4 py-8">
+        <div className="bg-card rounded-2xl shadow-sm p-8 space-y-5">
 
           {/* ── Subject for verifica, orale ── */}
           {(examType === "verifica" || examType === "orale") && (
@@ -980,48 +1007,53 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
                 {t("exam_field_subject")}
               </label>
-              <div className="flex flex-wrap gap-2">
-                {[...subjects, ...customSubjects].map((s: string) => (
-                  <button key={s} onClick={() => setSubject(subject === s ? "" : s)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all inline-flex items-center gap-1 ${
-                      subject === s ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary"
-                    }`}>
-                    {s}
-                    {customSubjects.includes(s) && (
-                      <span onClick={(e) => { e.stopPropagation(); setCustomSubjects(prev => prev.filter(c => c !== s)); if (subject === s) setSubject(""); }}
-                        className="ml-1 text-muted-foreground hover:text-destructive cursor-pointer">✕</span>
-                    )}
+              <div className="flex flex-wrap gap-2.5">
+                {[...subjects, ...customSubjects].map((s: string) => {
+                  const isSelected = subject === s;
+                  return (
+                    <button key={s} onClick={() => setSubject(isSelected ? "" : s)}
+                      className={`rounded-full px-4 py-1.5 text-sm font-medium border transition-all inline-flex items-center gap-1 cursor-pointer ${getPrepChipColor(s, isSelected)}`}>
+                      {s}
+                      {customSubjects.includes(s) && (
+                        <span onClick={(e) => { e.stopPropagation(); setCustomSubjects(prev => prev.filter(c => c !== s)); if (isSelected) setSubject(""); }}
+                          className="ml-1 hover:text-destructive cursor-pointer">✕</span>
+                      )}
+                    </button>
+                  );
+                })}
+                {showCustomSubjectInput ? (
+                  <div className="inline-flex items-center gap-1 rounded-full border-2 border-dashed border-muted-foreground/30 px-3 py-1">
+                    <input
+                      autoFocus
+                      value={customSubjectInput}
+                      onChange={e => setCustomSubjectInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter" && customSubjectInput.trim()) {
+                          const val = customSubjectInput.trim();
+                          if (!subjects.includes(val) && !customSubjects.includes(val)) {
+                            setCustomSubjects(prev => [...prev, val]);
+                            setSubject(val);
+                          }
+                          setCustomSubjectInput("");
+                          setShowCustomSubjectInput(false);
+                        }
+                        if (e.key === "Escape") setShowCustomSubjectInput(false);
+                      }}
+                      placeholder={t("add_custom_subject_placeholder")}
+                      className="bg-transparent outline-none text-sm w-24"
+                    />
+                    <button onClick={() => { if (customSubjectInput.trim()) { const val = customSubjectInput.trim(); if (!subjects.includes(val) && !customSubjects.includes(val)) { setCustomSubjects(prev => [...prev, val]); setSubject(val); } setCustomSubjectInput(""); } setShowCustomSubjectInput(false); }}
+                      className="text-muted-foreground hover:text-foreground">
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => setShowCustomSubjectInput(true)}
+                    className="rounded-full px-4 py-1.5 text-sm border-2 border-dashed border-muted-foreground/30 text-muted-foreground hover:border-muted-foreground/50 flex items-center gap-1 transition-colors">
+                    <Plus className="w-3.5 h-3.5" />
+                    {t("add_subject_chip")}
                   </button>
-                ))}
-              </div>
-              <div className="flex gap-2 mt-2">
-                <Input
-                  value={customSubjectInput}
-                  onChange={e => setCustomSubjectInput(e.target.value)}
-                  placeholder={t("add_custom_subject_placeholder")}
-                  className="flex-1 h-9 text-sm"
-                  onKeyDown={e => {
-                    if (e.key === "Enter" && customSubjectInput.trim()) {
-                      e.preventDefault();
-                      const val = customSubjectInput.trim();
-                      if (!subjects.includes(val) && !customSubjects.includes(val)) {
-                        setCustomSubjects(prev => [...prev, val]);
-                        setSubject(val);
-                      }
-                      setCustomSubjectInput("");
-                    }
-                  }}
-                />
-                <Button size="sm" variant="outline" className="h-9 px-3"
-                  disabled={!customSubjectInput.trim()}
-                  onClick={() => {
-                    const val = customSubjectInput.trim();
-                    if (val && !subjects.includes(val) && !customSubjects.includes(val)) {
-                      setCustomSubjects(prev => [...prev, val]);
-                      setSubject(val);
-                    }
-                    setCustomSubjectInput("");
-                  }}>+</Button>
+                )}
               </div>
             </div>
           )}
@@ -1216,9 +1248,10 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
             </div>
           )}
 
-          <Button onClick={() => setStep("mode-select")} disabled={!canStart} className="w-full">
+          <Button onClick={() => setStep("mode-select")} disabled={!canStart} className="w-full h-12 text-base font-semibold rounded-xl">
             {t("exam_start")} →
           </Button>
+        </div>
         </div>
       </div>
     );
