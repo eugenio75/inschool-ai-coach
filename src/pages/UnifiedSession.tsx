@@ -16,6 +16,8 @@ import {
   Sparkles,
   GraduationCap,
   Gamepad2,
+  Plus,
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { ChatShell } from "@/components/ChatShell";
