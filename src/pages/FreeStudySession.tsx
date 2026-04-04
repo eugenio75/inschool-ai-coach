@@ -76,7 +76,8 @@ export default function FreeStudySession() {
     setStep("study");
 
     const coachLabel = coachName || "il Coach";
-    const systemPrompt = `Sei ${coachLabel}, il coach personale dello studente su InSchool. Livello: ${schoolLevel}. 
+    const subjectCtx = selectedSubject ? ` Materia: ${selectedSubject}.` : "";
+    const systemPrompt = `Sei ${coachLabel}, il coach personale dello studente su InSchool. Livello: ${schoolLevel}.${subjectCtx} 
 L'argomento è: "${topic}".
 Quando ti presenti dì sempre "Sono ${coachLabel}, il tuo coach."
 Dividi l'argomento in blocchi logici. Per ogni blocco:
