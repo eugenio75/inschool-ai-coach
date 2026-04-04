@@ -1243,7 +1243,7 @@ const MemoryRecap = () => {
           <div className="flex items-center gap-3 mb-1">
             <PageBackButton to="/dashboard" />
             <h1 className="font-display text-lg font-bold text-foreground">
-              {wizard.step === "home" ? (activeTab === "ripasso" ? "Ripassa" : "Rafforza") : (currentSection === "ripasso" ? "Ripassa" : "Rafforza")}
+              Ripassa e Rafforza
             </h1>
           </div>
           {!activeStudy && (

@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowLeft, Send, Loader2, BookOpen, FileText, Map, List, Key, Layers,
+  Send, Loader2, BookOpen, FileText, Map, List, Key, Layers,
 } from "lucide-react";
+import { PageBackButton } from "@/components/shared/PageBackButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -174,7 +175,7 @@ Inizia presentando il primo blocco dell'argomento.`;
     return (
       <div className="min-h-screen bg-background pb-24">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
-          <BookOpen className="w-5 h-5 text-muted-foreground" />
+          <PageBackButton to="/dashboard" />
           <h1 className="font-display text-lg font-bold text-foreground">Studio libero</h1>
         </div>
         <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
@@ -201,10 +202,7 @@ Inizia presentando il primo blocco dell'argomento.`;
     return (
       <div className="min-h-screen bg-background pb-24">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
-          <button onClick={() => setStep("study")} className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            <span>Chat</span>
-          </button>
+          <PageBackButton to="/dashboard" />
           <h1 className="font-display text-lg font-bold text-foreground">Output — {topic}</h1>
         </div>
         <div className="max-w-3xl mx-auto px-4 py-6">
@@ -237,8 +235,9 @@ Inizia presentando il primo blocco dell'argomento.`;
     <div className="min-h-screen bg-card flex flex-col">
       {/* Header */}
       <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3 shrink-0">
+        <PageBackButton to="/dashboard" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground truncate">{topic}</p>
+          <p className="text-sm font-semibold text-foreground truncate">Studio libero — {topic}</p>
         </div>
       </div>
 
