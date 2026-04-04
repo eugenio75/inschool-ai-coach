@@ -265,6 +265,7 @@ const AddHomework = () => {
                     <p className="text-xs text-muted-foreground leading-relaxed">{card.subtitle}</p>
                   </motion.button>
                 ))}
+                </div>
               </motion.div>
             )}
 

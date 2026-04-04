@@ -1289,8 +1289,12 @@ const MemoryRecap = () => {
           {/* HOME */}
           {wizard.step === "home" && !activeStudy && (
             <motion.div key={`home-${activeTab}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-              className="space-y-2.5 pt-1">
-              {renderSectionBlock(activeTab)}
+              className="pt-1">
+              <div className="bg-card rounded-2xl shadow-sm p-8">
+                <div className="space-y-2.5">
+                  {renderSectionBlock(activeTab)}
+                </div>
+              </div>
             </motion.div>
           )}
 

@@ -660,6 +660,7 @@ Inizia con la prima domanda.`;
             ← {t("study_free_heading")}
           </Button>
         </div>
+        </div>
       </div>
     );
   }
