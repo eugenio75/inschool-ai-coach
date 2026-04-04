@@ -4,7 +4,7 @@
 
 const PRIMARIA = [
   "Italiano", "Matematica", "Scienze", "Storia", "Geografia",
-  "Inglese", "Arte", "Musica", "Ed. Fisica", "Tecnologia",
+  "Inglese", "Arte", "Musica", "Ed. Fisica", "Tecnologia", "Religione",
 ];
 
 const MEDIE = [
