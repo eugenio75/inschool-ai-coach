@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
+
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RegistrationFlow } from "@/components/auth/RegistrationFlow";
 
