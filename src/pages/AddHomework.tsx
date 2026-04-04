@@ -227,7 +227,7 @@ const AddHomework = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background pb-12">
+    <div className="min-h-screen bg-muted/40 pb-12">
       <div className="bg-card border-b border-border px-6 pt-6 pb-6">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3 mb-4">
