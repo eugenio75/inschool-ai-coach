@@ -16,6 +16,8 @@ import {
   Sparkles,
   GraduationCap,
   Gamepad2,
+  Plus,
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { ChatShell } from "@/components/ChatShell";
@@ -104,6 +106,7 @@ export default function UnifiedSession() {
   const [mode, setMode] = useState<"scritta" | "orale">("scritta");
    const [customSubjects, setCustomSubjects] = useState<string[]>([]);
    const [customSubjectInput, setCustomSubjectInput] = useState("");
+   const [showCustomSubjectInput, setShowCustomSubjectInput] = useState(false);
   const [learningGaps, setLearningGaps] = useState<string[]>([]);
   const missionsCompletedRef = useRef(false);
   const [reviewMode, setReviewMode] = useState<"chat" | "flashcard">("chat");
@@ -661,13 +664,47 @@ Inizia con la prima domanda.`;
   }
 
   if (!setupDone) {
+    const studyChipColors: Record<string, { base: string; selected: string }> = {
+      'Matematica': { base: 'bg-blue-50 text-blue-700 border-blue-200', selected: 'bg-blue-500 text-white border-blue-500' },
+      'Italiano': { base: 'bg-green-50 text-green-700 border-green-200', selected: 'bg-green-500 text-white border-green-500' },
+      'Storia': { base: 'bg-orange-50 text-orange-700 border-orange-200', selected: 'bg-orange-500 text-white border-orange-500' },
+      'Inglese': { base: 'bg-purple-50 text-purple-700 border-purple-200', selected: 'bg-purple-500 text-white border-purple-500' },
+      'Scienze': { base: 'bg-teal-50 text-teal-700 border-teal-200', selected: 'bg-teal-500 text-white border-teal-500' },
+      'Arte': { base: 'bg-pink-50 text-pink-700 border-pink-200', selected: 'bg-pink-500 text-white border-pink-500' },
+      'Musica': { base: 'bg-yellow-50 text-yellow-700 border-yellow-200', selected: 'bg-yellow-500 text-white border-yellow-500' },
+      'Geografia': { base: 'bg-indigo-50 text-indigo-700 border-indigo-200', selected: 'bg-indigo-500 text-white border-indigo-500' },
+      'Tecnologia': { base: 'bg-gray-100 text-gray-700 border-gray-200', selected: 'bg-gray-500 text-white border-gray-500' },
+      'Fisica': { base: 'bg-cyan-50 text-cyan-700 border-cyan-200', selected: 'bg-cyan-500 text-white border-cyan-500' },
+      'Filosofia': { base: 'bg-amber-50 text-amber-700 border-amber-200', selected: 'bg-amber-500 text-white border-amber-500' },
+      'Latino': { base: 'bg-rose-50 text-rose-700 border-rose-200', selected: 'bg-rose-500 text-white border-rose-500' },
+      'Greco': { base: 'bg-stone-100 text-stone-700 border-stone-200', selected: 'bg-stone-500 text-white border-stone-500' },
+    };
+    const defaultChipColor = { base: 'bg-gray-50 text-gray-600 border-gray-200', selected: 'bg-gray-500 text-white border-gray-500' };
+
+    const getChipColor = (s: string, isSelected: boolean) => {
+      const colors = studyChipColors[s] || defaultChipColor;
+      return isSelected ? colors.selected : colors.base;
+    };
+
+    const addCustomSubject = (val: string) => {
+      if (val && !subjects.includes(val) && !customSubjects.includes(val)) {
+        setCustomSubjects(prev => [...prev, val]);
+        setSubject(val);
+      }
+      setCustomSubjectInput("");
+      setShowCustomSubjectInput(false);
+    };
+
+    const isStudyType = type === "study";
+
     return (
-      <div className="min-h-screen bg-background pb-24">
+      <div className={`min-h-screen pb-24 ${isStudyType ? "bg-muted/40" : "bg-background"}`}>
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <PageBackButton to="/dashboard" />
           <h1 className="font-display text-lg font-bold text-foreground">{getTitle()}</h1>
         </div>
-        <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
+        <div className="max-w-lg mx-auto px-4 py-8">
+          <div className={isStudyType ? "bg-card rounded-2xl shadow-sm p-8 space-y-6" : "space-y-6"}>
           {type === "review" ? (
             <div className="space-y-3">
               <h2 className="text-xl font-bold text-foreground text-center">{t("review_choose_heading")}</h2>
@@ -735,48 +772,77 @@ Inizia con la prima domanda.`;
               {type === "prep" ? t("label_subject") : t("label_subject_optional")}
             </label>
             <div className="flex flex-wrap gap-2.5 justify-center">
-              {[...subjects, ...customSubjects].map((s: string) => (
-                <button key={s} onClick={() => setSubject(subject === s ? "" : s)}
-                  className={`px-3.5 py-2 rounded-lg text-sm font-medium border transition-all inline-flex items-center gap-1 ${
-                    subject === s ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary"
-                  }`}>
-                  {s}
-                  {customSubjects.includes(s) && (
-                    <span onClick={(e) => { e.stopPropagation(); setCustomSubjects(prev => prev.filter(c => c !== s)); if (subject === s) setSubject(""); }}
-                      className="ml-1 text-muted-foreground hover:text-destructive cursor-pointer">✕</span>
-                  )}
-                </button>
-              ))}
+              {[...subjects, ...customSubjects].map((s: string) => {
+                const isSelected = subject === s;
+                const isCustom = customSubjects.includes(s);
+                return (
+                  <button key={s} onClick={() => setSubject(isSelected ? "" : s)}
+                    className={`rounded-full px-4 py-1.5 text-sm font-medium border transition-all inline-flex items-center gap-1 cursor-pointer ${
+                      isStudyType ? getChipColor(s, isSelected) : (
+                        isSelected ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary"
+                      )
+                    }`}>
+                    {s}
+                    {isCustom && (
+                      <span onClick={(e) => { e.stopPropagation(); setCustomSubjects(prev => prev.filter(c => c !== s)); if (subject === s) setSubject(""); }}
+                        className="ml-1 hover:text-destructive cursor-pointer"><X className="w-3 h-3" /></span>
+                    )}
+                  </button>
+                );
+              })}
+              {isStudyType ? (
+                showCustomSubjectInput ? (
+                  <div className="inline-flex items-center gap-1 rounded-full border-2 border-dashed border-muted-foreground/30 px-2 py-0.5">
+                    <input
+                      autoFocus
+                      value={customSubjectInput}
+                      onChange={e => setCustomSubjectInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter" && customSubjectInput.trim()) {
+                          e.preventDefault();
+                          addCustomSubject(customSubjectInput.trim());
+                        }
+                        if (e.key === "Escape") setShowCustomSubjectInput(false);
+                      }}
+                      onBlur={() => { if (!customSubjectInput.trim()) setShowCustomSubjectInput(false); }}
+                      placeholder={t("add_custom_subject_placeholder")}
+                      className="bg-transparent border-none outline-none text-sm w-28 text-foreground placeholder:text-muted-foreground"
+                    />
+                    <button onClick={() => { if (customSubjectInput.trim()) addCustomSubject(customSubjectInput.trim()); else setShowCustomSubjectInput(false); }}
+                      className="text-muted-foreground hover:text-foreground">
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowCustomSubjectInput(true)}
+                    className="rounded-full px-4 py-1.5 text-sm border-2 border-dashed border-muted-foreground/30 text-muted-foreground hover:border-muted-foreground/50 flex items-center gap-1 transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    {t("add_subject_chip")}
+                  </button>
+                )
+              ) : null}
             </div>
-            <div className="flex gap-2 mt-3 max-w-sm mx-auto">
-              <Input
-                value={customSubjectInput}
-                onChange={e => setCustomSubjectInput(e.target.value)}
-                placeholder={t("add_custom_subject_placeholder")}
-                className="flex-1 h-9 text-sm"
-                onKeyDown={e => {
-                  if (e.key === "Enter" && customSubjectInput.trim()) {
-                    e.preventDefault();
-                    const val = customSubjectInput.trim();
-                    if (!subjects.includes(val) && !customSubjects.includes(val)) {
-                      setCustomSubjects(prev => [...prev, val]);
-                      setSubject(val);
+            {!isStudyType && (
+              <div className="flex gap-2 mt-3 max-w-sm mx-auto">
+                <Input
+                  value={customSubjectInput}
+                  onChange={e => setCustomSubjectInput(e.target.value)}
+                  placeholder={t("add_custom_subject_placeholder")}
+                  className="flex-1 h-9 text-sm"
+                  onKeyDown={e => {
+                    if (e.key === "Enter" && customSubjectInput.trim()) {
+                      e.preventDefault();
+                      addCustomSubject(customSubjectInput.trim());
                     }
-                    setCustomSubjectInput("");
-                  }
-                }}
-              />
-              <Button size="sm" variant="outline" className="h-9 px-3"
-                disabled={!customSubjectInput.trim()}
-                onClick={() => {
-                  const val = customSubjectInput.trim();
-                  if (val && !subjects.includes(val) && !customSubjects.includes(val)) {
-                    setCustomSubjects(prev => [...prev, val]);
-                    setSubject(val);
-                  }
-                  setCustomSubjectInput("");
-                }}>+</Button>
-            </div>
+                  }}
+                />
+                <Button size="sm" variant="outline" className="h-9 px-3"
+                  disabled={!customSubjectInput.trim()}
+                  onClick={() => addCustomSubject(customSubjectInput.trim())}>+</Button>
+              </div>
+            )}
           </div>
 
           {type === "review" && (
@@ -873,6 +939,7 @@ Inizia con la prima domanda.`;
           >
             {type === "prep" ? t("prep_start_btn") : type === "review" ? (reviewMode === "flashcard" ? t("review_start_flashcard") : t("review_start_deep")) : t("study_next_btn")}
           </Button>
+          </div>
         </div>
       </div>
     );
