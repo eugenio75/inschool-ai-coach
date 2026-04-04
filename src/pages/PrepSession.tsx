@@ -652,7 +652,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
                 <div className="flex gap-2">
                   <Input value={maturitaCustomTopic} onChange={e => setMaturitaCustomTopic(e.target.value)}
                     placeholder={t("exam_maturita_custom_placeholder")} />
-                  <Button onClick={() => startMaturitaSim(maturitaCustomTopic)} disabled={!maturitaCustomTopic.trim()}>
+                  <Button onClick={() => { setMaturitaSelectedTopic(maturitaCustomTopic); setStep("maturita-mode-select"); }} disabled={!maturitaCustomTopic.trim()}>
                     {t("exam_start")}
                   </Button>
                 </div>
