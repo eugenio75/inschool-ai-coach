@@ -37,7 +37,13 @@ export default function FreeStudySession() {
   const { user } = useAuth();
   const profile = getProfile();
   const schoolLevel = profile?.school_level || profile?.schoolLevel || "superiori";
+  const indirizzo = profile?.indirizzo || null;
   const [coachName, setCoachName] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [customSubject, setCustomSubject] = useState("");
+  const [showCustomInput, setShowCustomInput] = useState(false);
+
+  const subjects = getSubjectsByLevel(schoolLevel, indirizzo);
 
   useEffect(() => {
     const profileId = profile?.id;
