@@ -481,14 +481,15 @@ const ParentDashboard = () => {
           />
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-xl" onClick={() => { setDeleteChildTarget(null); setDeleteChildConfirmName(""); }}>{t("cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            <Button
+              variant="destructive"
+              className="rounded-xl"
               disabled={deleteChildConfirmName !== deleteChildTarget?.name || deletingChild}
-              onClick={handleDeleteChild}
+              onClick={(e) => { e.preventDefault(); handleDeleteChild(); }}
             >
               {deletingChild ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               {t("delete_permanently")}
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
