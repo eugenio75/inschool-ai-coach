@@ -1203,34 +1203,48 @@ const MemoryRecap = () => {
     const specificInput = isRipasso ? specificInputRipasso : specificInputRinforza;
     const setSpecificInput = isRipasso ? setSpecificInputRipasso : setSpecificInputRinforza;
 
+    const cards: { id: ContentType; icon: any; titleKey: string; subtitleKey: string }[] = [
+      { id: "today", icon: CalendarDays, titleKey: "memory_today_title", subtitleKey: "memory_today_subtitle" },
+      { id: "cumulative", icon: Brain, titleKey: "memory_cumulative_title", subtitleKey: "memory_cumulative_subtitle" },
+    ];
+
     return (
-      <div className="space-y-2.5">
-        <button onClick={() => pickOption(section, "today")}
-          className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
-          <CalendarDays className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-          <span className="text-sm font-medium text-foreground flex-1">Quello che hai studiato oggi</span>
-          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-        </button>
+      <div className="space-y-3">
+        {cards.map((card, i) => (
+          <motion.button
+            key={card.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: i * 0.05 }}
+            onClick={() => pickOption(section, card.id)}
+            className="w-full flex flex-col items-center gap-2 p-6 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all text-center group"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-1 group-hover:bg-primary/15 transition-colors">
+              <card.icon className="w-6 h-6 text-primary" />
+            </div>
+            <p className="text-sm font-bold text-foreground">{t(card.titleKey)}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{t(card.subtitleKey)}</p>
+          </motion.button>
+        ))}
 
-        <button onClick={() => pickOption(section, "cumulative")}
-          className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
-          <Brain className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-          <span className="text-sm font-medium text-foreground flex-1">Ripasso cumulativo</span>
-          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-        </button>
-
-        <div className="rounded-xl border border-border bg-card p-3.5">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium text-foreground">Argomento specifico</span>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...spring, delay: 0.1 }}
+          className="flex flex-col items-center gap-2 p-6 rounded-2xl border border-border bg-card text-center"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-1">
+            <Target className="w-6 h-6 text-primary" />
           </div>
-          <div className="mt-2.5 flex gap-2">
+          <p className="text-sm font-bold text-foreground">{t("memory_specific_title")}</p>
+          <p className="text-xs text-muted-foreground leading-relaxed mb-2">{t("memory_specific_subtitle")}</p>
+          <div className="flex gap-2 w-full max-w-sm">
             <Input value={specificInput} onChange={e => setSpecificInput(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") submitSpecific(section, specificInput); }}
-              placeholder="Es: frazioni, rivoluzione francese..." className="text-sm" />
-            <Button onClick={() => submitSpecific(section, specificInput)} disabled={!specificInput.trim()} size="sm" className="shrink-0 px-4">Vai</Button>
+              placeholder={t("memory_specific_placeholder")} className="text-sm" />
+            <Button onClick={() => submitSpecific(section, specificInput)} disabled={!specificInput.trim()} size="sm" className="shrink-0 px-4">{t("memory_specific_go")}</Button>
           </div>
-        </div>
+        </motion.div>
       </div>
     );
   };
