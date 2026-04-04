@@ -5,6 +5,7 @@ import { ArrowLeft, BookOpen, Loader2, Lock, Bell, Trash2 } from "lucide-react";
 import { getChildProfiles, getFocusSessions, getGamification, getParentSettings, getMemoryItems, getTasks, getDailyMissions, getEmotionalAlerts, setActiveChildProfileId } from "@/lib/database";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -198,16 +199,17 @@ const ParentDashboard = () => {
   };
 
   const handleDeleteChild = async () => {
-    if (!deleteChildTarget || deleteChildConfirmName !== deleteChildTarget.name) return;
+    const target = deleteChildTarget;
+    if (!target || deleteChildConfirmName !== target.name) return;
     setDeletingChild(true);
     try {
       const { error } = await supabase.functions.invoke("delete-account", {
-        body: { action: "delete_child_profile", child_profile_id: deleteChildTarget.id },
+        body: { action: "delete_child_profile", child_profile_id: target.id },
       });
       if (error) throw error;
-      setChildren(prev => prev.filter(c => c.id !== deleteChildTarget.id));
-      if (selectedChild === deleteChildTarget.id) {
-        const remaining = children.filter(c => c.id !== deleteChildTarget.id);
+      setChildren(prev => prev.filter(c => c.id !== target.id));
+      if (selectedChild === target.id) {
+        const remaining = children.filter(c => c.id !== target.id);
         const newId = remaining.length > 0 ? remaining[0].id : null;
         setSelectedChild(newId);
         if (newId) { setActiveChildProfileId(newId); localStorage.setItem("inschool-parent-selected-child", newId); }
@@ -480,14 +482,15 @@ const ParentDashboard = () => {
           />
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-xl" onClick={() => { setDeleteChildTarget(null); setDeleteChildConfirmName(""); }}>{t("cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            <Button
+              variant="destructive"
+              className="rounded-xl"
               disabled={deleteChildConfirmName !== deleteChildTarget?.name || deletingChild}
-              onClick={handleDeleteChild}
+              onClick={(e) => { e.preventDefault(); handleDeleteChild(); }}
             >
               {deletingChild ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               {t("delete_permanently")}
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
