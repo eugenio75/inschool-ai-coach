@@ -637,7 +637,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
                       {topic.ultimo_anno_uscito && (
                         <p className="text-[10px] text-muted-foreground">Ultimo anno uscito: {topic.ultimo_anno_uscito}</p>
                       )}
-                      <Button size="sm" variant="outline" className="w-full mt-1" onClick={() => startMaturitaSim(topic.argomento)}>
+                      <Button size="sm" variant="outline" className="w-full mt-1" onClick={() => { setMaturitaSelectedTopic(topic.argomento); setStep("maturita-mode-select"); }}>
                         {t("exam_maturita_simulate_topic")}
                       </Button>
                     </motion.div>
