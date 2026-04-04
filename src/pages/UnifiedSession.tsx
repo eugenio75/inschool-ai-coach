@@ -15,6 +15,7 @@ import {
   CalendarDays,
   Sparkles,
   GraduationCap,
+  Gamepad2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { ChatShell } from "@/components/ChatShell";
@@ -28,6 +29,8 @@ import { useGuidedSession } from "@/hooks/useGuidedSession";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PageBackButton } from "@/components/shared/PageBackButton";
+import { ChallengeSession } from "@/components/study/ChallengeSession";
+import { GameSession } from "@/components/study/GameSession";
 
 import { getSubjectsByLevel } from "@/lib/subjectsByLevel";
 import {
