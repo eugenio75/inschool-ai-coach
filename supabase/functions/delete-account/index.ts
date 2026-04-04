@@ -13,7 +13,7 @@ const jsonResponse = (body: Record<string, unknown>, status = 200) =>
   });
 
 async function selectIds(
-  adminClient: ReturnType<typeof createClient>,
+  adminClient: any,
   table: string,
   column: string,
   value: string | string[],
@@ -33,7 +33,7 @@ async function selectIds(
 }
 
 async function deleteWhere(
-  adminClient: ReturnType<typeof createClient>,
+  adminClient: any,
   table: string,
   column: string,
   value: string | string[],
@@ -51,7 +51,7 @@ async function deleteWhere(
 }
 
 async function cleanupChildProfile(
-  adminClient: ReturnType<typeof createClient>,
+  adminClient: any,
   childProfileId: string,
 ) {
   const classIds = await selectIds(adminClient, "classi", "docente_profile_id", childProfileId);
