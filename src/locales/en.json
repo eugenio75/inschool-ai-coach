@@ -1004,6 +1004,7 @@
   "exam_type_universitario_desc": "Oral exam simulation with professor-style questions or written exam with exercises",
   "exam_field_subject": "Subject",
   "add_custom_subject_placeholder": "Other subject...",
+  "add_subject_chip": "Add subject",
   "exam_field_uni_subject": "Subject / Exam",
   "exam_field_uni_subject_placeholder": "e.g. Calculus I, Private Law...",
   "exam_field_topic": "Topic (optional)",
