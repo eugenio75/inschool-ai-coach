@@ -267,7 +267,6 @@ const EmotionalCheckin = () => {
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center px-6">
-      <FloatingBackButton />
       {/* Skip button */}
       <button
         onClick={handleSkip}

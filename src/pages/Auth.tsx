@@ -20,7 +20,6 @@ const Auth = () => {
       className="light min-h-screen bg-background text-foreground flex flex-col items-center justify-center py-10 px-4 font-sans"
       data-theme="light"
     >
-      <FloatingBackButton />
       {confirmed && (
         <div className="mb-4 p-3 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm text-center font-medium">✅ Email confermata! Ora accedi con le tue credenziali.</div>
       )}

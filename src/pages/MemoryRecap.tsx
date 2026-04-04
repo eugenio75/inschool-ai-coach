@@ -1236,14 +1236,10 @@ const MemoryRecap = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <FloatingBackButton />
       {/* Header */}
       <div className="bg-card border-b border-border px-6 pt-6 pb-0">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-1">
-            <button onClick={goBack} className="text-muted-foreground hover:text-foreground transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-            </button>
             <h1 className="font-display text-lg font-bold text-foreground">
               {wizard.step === "home" ? (activeTab === "ripasso" ? "Ripassa" : "Rafforza") : (currentSection === "ripasso" ? "Ripassa" : "Rafforza")}
             </h1>

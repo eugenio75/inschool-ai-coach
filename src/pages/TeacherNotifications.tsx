@@ -75,7 +75,6 @@ export default function TeacherNotifications() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-24">
-      <FloatingBackButton />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Notifiche</h1>

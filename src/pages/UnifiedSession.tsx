@@ -564,7 +564,6 @@ Inizia con la prima domanda.`;
     return (
       <div className="min-h-screen bg-background pb-24">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
-          <PageBackButton to="/dashboard" />
           <BookOpen className="w-5 h-5 text-muted-foreground" />
           <h1 className="font-display text-lg font-bold text-foreground">{getTitle()}</h1>
         </div>
