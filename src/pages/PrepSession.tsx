@@ -11,6 +11,7 @@ import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
 import { MathText } from "@/components/shared/MathText";
 import { useLang } from "@/contexts/LangContext";
+import { PageBackButton } from "@/components/shared/PageBackButton";
 import { getPrepLabelKey } from "@/lib/schoolTerms";
 import { findMaturitaTrack, type MaturitaTrack } from "@/lib/maturitaMapping";
 import UniversityStudyPlan, { type StudyPlanExam } from "@/components/UniversityStudyPlan";
