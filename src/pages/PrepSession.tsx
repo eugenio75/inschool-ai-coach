@@ -266,6 +266,17 @@ export default function PrepSession() {
     loadWeaknessData(subject, profile.id);
   }, [subject, profile?.id]);
 
+  // Load coach name from preferences
+  useEffect(() => {
+    const pid = getChildSession()?.profileId || profile?.id;
+    if (!pid) return;
+    supabase.from("user_preferences").select("data").eq("profile_id", pid).maybeSingle()
+      .then(({ data }) => {
+        const prefs = (data?.data as any) || {};
+        if (prefs.coach_name) setCoachName(prefs.coach_name);
+      });
+  }, []);
+
   // Load user_preferences for maturità indirizzo + study plan
   useEffect(() => {
     if (!profile?.id) return;
