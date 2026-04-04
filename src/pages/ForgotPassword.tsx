@@ -4,7 +4,7 @@ import { Mail, ArrowLeft, MailCheck, Loader2, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/contexts/LangContext";
-import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
+
 
 export default function ForgotPassword() {
   const { t } = useLang();
