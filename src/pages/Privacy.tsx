@@ -1,14 +1,12 @@
 import { motion } from "framer-motion";
 import { Scale } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 
 const Privacy = () => {
   const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
-      <FloatingBackButton />
 
       <main className="pb-20 px-6 pt-24 max-w-4xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
