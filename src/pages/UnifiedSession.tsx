@@ -568,6 +568,98 @@ Inizia con la prima domanda.`;
     );
   }
 
+  // Study mode: show Challenge session
+  if (type === "study" && studyMode === "games") {
+    const syntheticConcepts = [{ concept: topic, summary: subject ? `Materia: ${subject}` : "" }];
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
+          <PageBackButton />
+          <h1 className="font-display text-lg font-bold text-foreground">{t("study_mode_games_title")}</h1>
+        </div>
+        <GameSession
+          subject={subject || topic}
+          topic={topic}
+          section="ripasso"
+          concepts={syntheticConcepts}
+          onClose={() => { setStudyMode(null); setShowModeSelect(true); }}
+        />
+      </div>
+    );
+  }
+
+  // Study mode selection step (between setup and session)
+  if (type === "study" && showModeSelect && !setupDone) {
+    const displayCoachName = coachName || "il Coach";
+    const modeCards = [
+      { id: "coach" as const, icon: MessageCircle, titleKey: "study_mode_coach_title", descKey: "study_mode_coach_desc" },
+      { id: "flashcard" as const, icon: Brain, titleKey: "study_mode_flashcard_title", descKey: "study_mode_flashcard_desc" },
+      { id: "games" as const, icon: Gamepad2, titleKey: "study_mode_games_title", descKey: "study_mode_games_desc" },
+    ];
+
+    const handleModeSelect = (modeId: "coach" | "flashcard" | "games") => {
+      setStudyMode(modeId);
+      if (modeId === "coach") {
+        startSession();
+      } else if (modeId === "flashcard") {
+        const params = new URLSearchParams();
+        params.set("mode", "topic");
+        if (topic) params.set("topic", topic);
+        if (subject) params.set("subject", subject);
+        navigate(`/flashcards?${params.toString()}`);
+      }
+      // games mode handled by studyMode === "games" block above
+    };
+
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
+          <PageBackButton />
+          <h1 className="font-display text-lg font-bold text-foreground">{getTitle()}</h1>
+        </div>
+        <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-bold text-foreground">{t("study_mode_heading")}</h2>
+            <p className="text-sm text-muted-foreground">{t("study_mode_subtitle")}</p>
+            <div className="flex items-center justify-center gap-2 pt-1">
+              <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">{topic}</span>
+              {subject && <span className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">{subject}</span>}
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            {modeCards.map((card, i) => (
+              <motion.button
+                key={card.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 260, damping: 30, delay: i * 0.06 }}
+                onClick={() => handleModeSelect(card.id)}
+                className="w-full flex flex-col items-center gap-2 p-6 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all text-center group"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-1 group-hover:bg-primary/15 transition-colors">
+                  <card.icon className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-sm font-bold text-foreground">
+                  {card.id === "coach" ? t(card.titleKey, { coachName: displayCoachName }) : t(card.titleKey)}
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{t(card.descKey)}</p>
+              </motion.button>
+            ))}
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={() => { setShowModeSelect(false); setStudyMode(null); }}
+            className="w-full"
+          >
+            ← {t("study_free_heading")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!setupDone) {
     return (
       <div className="min-h-screen bg-background pb-24">
@@ -629,7 +721,11 @@ Inizia con la prima domanda.`;
                 onChange={e => setTopic(e.target.value)}
                 placeholder={t("study_free_placeholder")}
                 className="text-base h-12"
-                onKeyDown={e => e.key === "Enter" && startSession()}
+                onKeyDown={e => {
+                  if (e.key === "Enter" && topic.trim() && type === "study") {
+                    setShowModeSelect(true);
+                  }
+                }}
               />
             </div>
           )}
@@ -762,6 +858,10 @@ Inizia con la prima domanda.`;
 
           <Button
             onClick={() => {
+              if (type === "study") {
+                setShowModeSelect(true);
+                return;
+              }
               if (type === "review" && reviewMode === "flashcard") {
                 navigate(`/flashcards${subject ? `?subject=${encodeURIComponent(subject)}` : ""}`);
                 return;
@@ -771,7 +871,7 @@ Inizia con la prima domanda.`;
             disabled={type === "prep" ? !subject : type === "review" && reviewMode === "flashcard" ? false : !topic.trim()}
             className="w-full h-12 text-base font-semibold"
           >
-            {type === "prep" ? t("prep_start_btn") : type === "review" ? (reviewMode === "flashcard" ? t("review_start_flashcard") : t("review_start_deep")) : t("study_start_btn")}
+            {type === "prep" ? t("prep_start_btn") : type === "review" ? (reviewMode === "flashcard" ? t("review_start_flashcard") : t("review_start_deep")) : t("study_next_btn")}
           </Button>
         </div>
       </div>
