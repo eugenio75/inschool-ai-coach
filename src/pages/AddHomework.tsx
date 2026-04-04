@@ -244,18 +244,26 @@ const AddHomework = () => {
             {/* Choose mode */}
             {mode === "choose" && (
               <motion.div key="choose" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} transition={spring} className="space-y-3">
-                <button onClick={() => setMode("manual")} className="w-full flex items-center gap-4 px-5 py-5 rounded-2xl border border-border bg-card hover:bg-muted transition-colors text-left shadow-soft">
-                  <div className="w-12 h-12 rounded-xl bg-sage-light flex items-center justify-center"><Type className="w-5 h-5 text-sage-dark" /></div>
-                  <div className="flex-1"><p className="font-display font-semibold text-foreground">Scrivi a mano</p><p className="text-sm text-muted-foreground">Descrivi il compito con le tue parole</p></div>
-                </button>
-                <button onClick={() => setMode("photo-diary")} className="w-full flex items-center gap-4 px-5 py-5 rounded-2xl border border-border bg-card hover:bg-muted transition-colors text-left shadow-soft">
-                  <div className="w-12 h-12 rounded-xl bg-clay-light flex items-center justify-center"><Camera className="w-5 h-5 text-clay-dark" /></div>
-                  <div className="flex-1"><p className="font-display font-semibold text-foreground">Fotografa il diario</p><p className="text-sm text-muted-foreground">Scatta una o più foto dei compiti scritti sul diario</p></div>
-                </button>
-                <button onClick={() => setMode("photo-book")} className="w-full flex items-center gap-4 px-5 py-5 rounded-2xl border border-border bg-card hover:bg-muted transition-colors text-left shadow-soft">
-                  <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center"><BookOpen className="w-5 h-5 text-muted-foreground" /></div>
-                  <div className="flex-1"><p className="font-display font-semibold text-foreground">Fotografa il libro</p><p className="text-sm text-muted-foreground">Scatta una o più foto delle pagine da studiare</p></div>
-                </button>
+                {[
+                  { id: "manual" as InputMode, icon: Type, title: "Scrivi a mano", subtitle: "Descrivi il compito con le tue parole", iconBg: "bg-primary/10", iconColor: "text-primary" },
+                  { id: "photo-diary" as InputMode, icon: Camera, title: "Fotografa il diario", subtitle: "Scatta una o più foto dei compiti scritti sul diario", iconBg: "bg-primary/10", iconColor: "text-primary" },
+                  { id: "photo-book" as InputMode, icon: BookOpen, title: "Fotografa il libro", subtitle: "Scatta una o più foto delle pagine da studiare", iconBg: "bg-primary/10", iconColor: "text-primary" },
+                ].map((card, i) => (
+                  <motion.button
+                    key={card.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ ...spring, delay: i * 0.06 }}
+                    onClick={() => setMode(card.id)}
+                    className="w-full flex flex-col items-center gap-2 p-6 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all text-center group"
+                  >
+                    <div className={`w-12 h-12 rounded-2xl ${card.iconBg} flex items-center justify-center mb-1 group-hover:bg-primary/15 transition-colors`}>
+                      <card.icon className={`w-6 h-6 ${card.iconColor}`} />
+                    </div>
+                    <p className="text-sm font-bold text-foreground">{card.title}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{card.subtitle}</p>
+                  </motion.button>
+                ))}
               </motion.div>
             )}
 
