@@ -658,7 +658,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
                 </div>
               </div>
 
-              <Button variant="outline" className="w-full" onClick={() => startMaturitaSim()}>
+              <Button variant="outline" className="w-full" onClick={() => { setMaturitaSelectedTopic(undefined); setStep("maturita-mode-select"); }}>
                 {t("exam_maturita_start_generic")}
               </Button>
             </>
