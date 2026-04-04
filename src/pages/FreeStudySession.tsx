@@ -196,6 +196,67 @@ Inizia presentando il primo blocco dell'argomento.`;
               onKeyDown={e => e.key === "Enter" && startStudy()}
             />
           </div>
+
+          {subjects.length > 0 && (
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">Materia (opzionale)</label>
+              <div className="flex flex-wrap gap-2">
+                {subjects.map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setSelectedSubject(selectedSubject === s ? null : s)}
+                    className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                      selectedSubject === s
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-card text-muted-foreground border-border hover:border-primary/40"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+                {!showCustomInput && (
+                  <button
+                    onClick={() => setShowCustomInput(true)}
+                    className="px-3 py-1.5 text-xs rounded-full border border-dashed border-border text-muted-foreground hover:border-primary/40 flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> Aggiungi materia
+                  </button>
+                )}
+              </div>
+              {showCustomInput && (
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    value={customSubject}
+                    onChange={e => setCustomSubject(e.target.value)}
+                    placeholder="Es: Elettronica, Diritto..."
+                    className="text-sm flex-1"
+                    onKeyDown={e => {
+                      if (e.key === "Enter" && customSubject.trim()) {
+                        setSelectedSubject(customSubject.trim());
+                        setShowCustomInput(false);
+                        setCustomSubject("");
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      if (customSubject.trim()) {
+                        setSelectedSubject(customSubject.trim());
+                        setShowCustomInput(false);
+                        setCustomSubject("");
+                      }
+                    }}
+                    disabled={!customSubject.trim()}
+                  >
+                    Aggiungi
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
           <Button onClick={startStudy} disabled={!topic.trim()} className="w-full">
             Inizia a studiare
           </Button>
