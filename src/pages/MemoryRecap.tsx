@@ -1263,18 +1263,19 @@ const MemoryRecap = () => {
           <>
             <p className="text-sm text-muted-foreground ml-8 mb-2">{getSubtitle()}</p>
             {wizard.step === "home" && (
-              <div className="flex justify-center gap-1">
-                {(["ripasso", "rinforza"] as Section[]).map(tab => (
-                  <button key={tab} onClick={() => setActiveTab(tab)}
-                    className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg transition-colors relative ${
-                      activeTab === tab ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                    }`}>
-                    {tab === "ripasso" ? "Ripassa" : "Rafforza"}
-                    {activeTab === tab && (
-                      <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-                    )}
-                  </button>
-                ))}
+              <div className="flex justify-center gap-1 mb-2">
+                <div className="inline-flex rounded-full bg-muted p-1">
+                  {(["ripasso", "rinforza"] as Section[]).map(tab => (
+                    <button key={tab} onClick={() => setActiveTab(tab)}
+                      className={`px-5 py-2 text-sm font-semibold rounded-full transition-all ${
+                        activeTab === tab
+                          ? "bg-background text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}>
+                      {tab === "ripasso" ? t("tab_ripassa") : t("tab_rafforza")}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </>

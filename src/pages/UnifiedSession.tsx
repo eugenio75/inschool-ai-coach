@@ -573,36 +573,38 @@ Inizia con la prima domanda.`;
         <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
           {type === "review" ? (
             <div className="space-y-3">
-              <label className="text-sm font-medium text-foreground mb-2 block">Scegli cosa ripassare</label>
-              <div className="grid grid-cols-1 gap-2">
+              <h2 className="text-xl font-bold text-foreground text-center">{t("review_choose_heading")}</h2>
+              <div className="space-y-3 pt-1">
                 {[
-                  { id: "today", label: t("review_today"), icon: CalendarDays },
-                  { id: "cumulative", label: t("review_cumulative"), icon: Brain },
-                  { id: "prep", label: t(getPrepLabelKey(schoolLevel)), icon: GraduationCap },
-                ].map((opt) => (
-                  <button
+                  { id: "today", label: t("review_today"), desc: t("review_today_desc"), icon: CalendarDays },
+                  { id: "cumulative", label: t("review_cumulative"), desc: t("review_cumulative_desc"), icon: Brain },
+                  { id: "prep", label: t(getPrepLabelKey(schoolLevel)), desc: t("review_prep_desc"), icon: GraduationCap },
+                ].map((opt, i) => (
+                  <motion.button
                     key={opt.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 260, damping: 30, delay: i * 0.05 }}
                     onClick={() => setTopic(opt.label)}
-                    className={`flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all ${
+                    className={`w-full flex flex-col items-center gap-2 p-6 rounded-2xl border text-center transition-all group ${
                       topic === opt.label
-                        ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-                        : "border-border bg-card hover:border-primary/40"
+                        ? "border-primary bg-primary/5 shadow-md"
+                        : "border-border bg-card hover:border-primary/40 hover:shadow-md"
                     }`}
                   >
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      topic === opt.label ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-1 transition-colors ${
+                      topic === opt.label ? "bg-primary/15 text-primary" : "bg-primary/10 text-primary group-hover:bg-primary/15"
                     }`}>
-                      <opt.icon className="w-4 h-4" />
+                      <opt.icon className="w-6 h-6" />
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">{opt.label}</p>
-                    </div>
-                  </button>
+                    <p className="text-sm font-bold text-foreground">{opt.label}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{opt.desc}</p>
+                  </motion.button>
                 ))}
               </div>
 
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2">
+              <div className="relative pt-1">
+                <div className="absolute left-3 top-1/2 -translate-y-[40%]">
                   <Sparkles className="w-4 h-4 text-muted-foreground" />
                 </div>
                 <Input
@@ -614,26 +616,27 @@ Inizia con la prima domanda.`;
               </div>
             </div>
           ) : type !== "prep" && (
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Cosa vuoi studiare?</label>
+            <div className="text-center space-y-4">
+              <h2 className="text-xl font-bold text-foreground">{t("study_free_heading")}</h2>
+              <p className="text-sm text-muted-foreground">{t("study_free_subtitle")}</p>
               <Input
                 value={topic}
                 onChange={e => setTopic(e.target.value)}
-                placeholder="es. La Rivoluzione Francese, Le equazioni di secondo grado..."
-                className="text-sm"
+                placeholder={t("study_free_placeholder")}
+                className="text-base h-12"
                 onKeyDown={e => e.key === "Enter" && startSession()}
               />
             </div>
           )}
 
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-              {type === "prep" ? "Materia" : "Materia (opzionale)"}
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 block text-center">
+              {type === "prep" ? t("label_subject") : t("label_subject_optional")}
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2.5 justify-center">
               {[...subjects, ...customSubjects].map((s: string) => (
                 <button key={s} onClick={() => setSubject(subject === s ? "" : s)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all inline-flex items-center gap-1 ${
+                  className={`px-3.5 py-2 rounded-lg text-sm font-medium border transition-all inline-flex items-center gap-1 ${
                     subject === s ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary"
                   }`}>
                   {s}
@@ -644,7 +647,7 @@ Inizia con la prima domanda.`;
                 </button>
               ))}
             </div>
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2 mt-3 max-w-sm mx-auto">
               <Input
                 value={customSubjectInput}
                 onChange={e => setCustomSubjectInput(e.target.value)}
@@ -677,50 +680,54 @@ Inizia con la prima domanda.`;
 
           {type === "review" && (
             <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Modalità di ripasso</label>
+              <label className="text-sm font-medium text-foreground mb-2 block text-center">{t("review_mode_label")}</label>
               <div className="flex gap-3">
                 <button
                   onClick={() => setReviewMode("chat")}
-                  className={`flex-1 flex flex-col items-center gap-2 py-4 rounded-xl border text-sm font-medium transition-colors ${
+                  className={`flex-1 flex flex-col items-center gap-2 p-5 rounded-2xl border text-sm font-medium transition-all ${
                     reviewMode === "chat"
-                      ? "bg-primary text-primary-foreground border-primary"
+                      ? "border-primary bg-primary/10 text-primary shadow-sm"
                       : "bg-card text-muted-foreground border-border hover:border-primary/40"
                   }`}
                 >
-                  <MessageCircle className="w-5 h-5" />
-                  Ripasso profondo
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${reviewMode === "chat" ? "bg-primary/15" : "bg-muted"}`}>
+                    <MessageCircle className="w-5 h-5" />
+                  </div>
+                  {t("review_mode_deep")}
                 </button>
                 <button
                   onClick={() => setReviewMode("flashcard")}
-                  className={`flex-1 flex flex-col items-center gap-2 py-4 rounded-xl border text-sm font-medium transition-colors ${
+                  className={`flex-1 flex flex-col items-center gap-2 p-5 rounded-2xl border text-sm font-medium transition-all ${
                     reviewMode === "flashcard"
-                      ? "bg-primary text-primary-foreground border-primary"
+                      ? "border-primary bg-primary/10 text-primary shadow-sm"
                       : "bg-card text-muted-foreground border-border hover:border-primary/40"
                   }`}
                 >
-                  <Brain className="w-5 h-5" />
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${reviewMode === "flashcard" ? "bg-primary/15" : "bg-muted"}`}>
+                    <Brain className="w-5 h-5" />
+                  </div>
                   Flashcard
                 </button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-xs text-muted-foreground mt-2 text-center">
                 {reviewMode === "chat"
-                  ? "Il coach fa domande aperte — ideale per concetti complessi"
-                  : "Carte rapide con autovalutazione — ideale per memorizzare"}
+                  ? t("review_mode_deep_desc")
+                  : t("review_mode_flashcard_desc")}
               </p>
             </div>
           )}
 
           {type === "prep" && (
             <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Tipo di simulazione</label>
+              <label className="text-sm font-medium text-foreground mb-2 block text-center">{t("prep_sim_type_label")}</label>
               <div className="flex gap-3">
-                {([ ["scritta", "Verifica scritta"], ["orale", "Interrogazione orale"] ] as const).map(([m, label]) => (
+                {([ ["scritta", t("prep_sim_written")], ["orale", t("prep_sim_oral")] ] as const).map(([m, label]) => (
                   <button
                     key={m}
-                    onClick={() => setMode(m)}
-                    className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-colors ${
+                    onClick={() => setMode(m as "scritta" | "orale")}
+                    className={`flex-1 py-3.5 rounded-2xl border text-sm font-medium transition-all ${
                       mode === m
-                        ? "bg-primary text-primary-foreground border-primary"
+                        ? "border-primary bg-primary/10 text-primary shadow-sm"
                         : "bg-card text-muted-foreground border-border hover:border-primary/40"
                     }`}
                   >
@@ -732,17 +739,17 @@ Inizia con la prima domanda.`;
           )}
 
           {type === "prep" && (
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">Argomento specifico (opzionale)</label>
+            <div className="text-center">
+              <label className="text-sm font-medium text-foreground mb-1 block">{t("prep_topic_label")}</label>
               <p className="text-xs text-muted-foreground mb-2">
                 {topic.trim()
-                  ? "Le domande saranno focalizzate su questo argomento, tenendo conto delle tue lacune"
-                  : "Senza argomento, la simulazione si concentra sugli argomenti dove hai più lacune"}
+                  ? t("prep_topic_hint_filled")
+                  : t("prep_topic_hint_empty")}
               </p>
               <Input
                 value={topic}
                 onChange={e => setTopic(e.target.value)}
-                placeholder="es. Capitolo 5, Termodinamica..."
+                placeholder={t("prep_topic_placeholder")}
                 className="text-sm"
               />
             </div>
@@ -757,9 +764,9 @@ Inizia con la prima domanda.`;
               startSession();
             }}
             disabled={type === "prep" ? !subject : type === "review" && reviewMode === "flashcard" ? false : !topic.trim()}
-            className="w-full"
+            className="w-full h-12 text-base font-semibold"
           >
-            {type === "prep" ? "Inizia la simulazione" : type === "review" ? (reviewMode === "flashcard" ? "Inizia le flashcard" : "Inizia il ripasso") : "Inizia a studiare"}
+            {type === "prep" ? t("prep_start_btn") : type === "review" ? (reviewMode === "flashcard" ? t("review_start_flashcard") : t("review_start_deep")) : t("study_start_btn")}
           </Button>
         </div>
       </div>
