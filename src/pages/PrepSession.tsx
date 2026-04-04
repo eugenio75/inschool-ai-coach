@@ -1051,8 +1051,8 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
             </div>
           )}
 
-          <Button onClick={startSimulation} disabled={!canStart} className="w-full">
-            {t("exam_start")}
+          <Button onClick={() => setStep("mode-select")} disabled={!canStart} className="w-full">
+            {t("exam_start")} →
           </Button>
         </div>
       </div>
