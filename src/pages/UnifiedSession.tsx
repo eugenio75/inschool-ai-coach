@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getDailyMissions, completeMission } from "@/lib/database";
 import {
-  BookOpen,
+  BookOpen, Plus,
   FileText,
   Map,
   List,
@@ -97,6 +97,8 @@ export default function UnifiedSession() {
   const [topic, setTopic] = useState(urlSubject ? `Ripasso ${urlSubject}` : "");
   const [subject, setSubject] = useState(urlSubject || "");
   const [mode, setMode] = useState<"scritta" | "orale">("scritta");
+  const [customSubject, setCustomSubject] = useState("");
+  const [showCustomInput, setShowCustomInput] = useState(false);
   const [learningGaps, setLearningGaps] = useState<string[]>([]);
   const missionsCompletedRef = useRef(false);
   const [reviewMode, setReviewMode] = useState<"chat" | "flashcard">("chat");
@@ -642,7 +644,46 @@ Inizia con la prima domanda.`;
                   {s}
                 </button>
               ))}
+              {!showCustomInput && (
+                <button
+                  onClick={() => setShowCustomInput(true)}
+                  className="px-3 py-1.5 text-xs rounded-full border border-dashed border-border text-muted-foreground hover:border-foreground/40 flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" /> Aggiungi materia
+                </button>
+              )}
             </div>
+            {showCustomInput && (
+              <div className="flex gap-2 mt-2">
+                <Input
+                  value={customSubject}
+                  onChange={e => setCustomSubject(e.target.value)}
+                  placeholder="Es: Elettronica, Diritto..."
+                  className="text-sm flex-1"
+                  onKeyDown={e => {
+                    if (e.key === "Enter" && customSubject.trim()) {
+                      setSubject(customSubject.trim());
+                      setShowCustomInput(false);
+                      setCustomSubject("");
+                    }
+                  }}
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    if (customSubject.trim()) {
+                      setSubject(customSubject.trim());
+                      setShowCustomInput(false);
+                      setCustomSubject("");
+                    }
+                  }}
+                  disabled={!customSubject.trim()}
+                >
+                  Aggiungi
+                </Button>
+              </div>
+            )}
           </div>
 
           {type === "review" && (
