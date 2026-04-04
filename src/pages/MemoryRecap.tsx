@@ -1240,8 +1240,8 @@ const MemoryRecap = () => {
       {/* Header */}
       <div className="bg-card border-b border-border px-6 pt-6 pb-0">
         <div className="max-w-2xl mx-auto">
-          <PageBackButton to="/dashboard" className="mb-2" />
           <div className="flex items-center gap-3 mb-1">
+            <PageBackButton to="/dashboard" />
             <h1 className="font-display text-lg font-bold text-foreground">
               {wizard.step === "home" ? (activeTab === "ripasso" ? "Ripassa" : "Rafforza") : (currentSection === "ripasso" ? "Ripassa" : "Rafforza")}
             </h1>

@@ -727,7 +727,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
     return (
       <div className="min-h-screen bg-background pb-24">
         
-        <div className="bg-card border-b border-border px-4 py-4 space-y-2">
+        <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <PageBackButton to="/dashboard" />
           <h1 className="text-lg font-bold text-foreground">{prepLabel}</h1>
         </div>
