@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Send, Mic, MicOff, Loader2, CheckCircle, AlertTriangle, Target, Clock, BookOpen,
+  MessageCircle, Brain, Gamepad2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { getPrepLabelKey } from "@/lib/schoolTerms";
 import { findMaturitaTrack, type MaturitaTrack } from "@/lib/maturitaMapping";
 import UniversityStudyPlan, { type StudyPlanExam } from "@/components/UniversityStudyPlan";
 import { loadStudyPlan, saveStudyPlan as saveStudyPlanService } from "@/lib/studyPlanService";
+import { GameSession } from "@/components/study/GameSession";
 
 
 /* ── Types ── */
