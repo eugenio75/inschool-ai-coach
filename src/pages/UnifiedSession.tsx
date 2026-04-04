@@ -683,7 +683,7 @@ Inizia con la prima domanda.`;
                   Aggiungi
                 </Button>
               </div>
-            )
+            )}
           </div>
 
           {type === "review" && (
