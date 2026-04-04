@@ -81,7 +81,7 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <FloatingBackButton />
+      
       <div className="w-full max-w-md bg-card rounded-2xl border border-border p-8 shadow-soft">
         <div className="text-center mb-6">
           <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">

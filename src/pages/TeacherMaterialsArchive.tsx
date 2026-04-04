@@ -111,7 +111,7 @@ export default function TeacherMaterialsArchive() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <FloatingBackButton />
+      
       {/* Header */}
       <div className="bg-card border-b border-border px-6 pt-6 pb-5">
         <div className="max-w-4xl mx-auto">

@@ -45,7 +45,7 @@ export default function LandingStudenti() {
   return (
     <div className="min-h-screen bg-white">
       <LandingNavbar />
-      <FloatingBackButton />
+      
 
       {/* ── HERO ── */}
       <section className="pt-24 pb-20 px-6 text-center">

@@ -725,7 +725,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
   if (step === "type") {
     return (
       <div className="min-h-screen bg-background pb-24">
-        <FloatingBackButton />
+        
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-5 h-5" />
