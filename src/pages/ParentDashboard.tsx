@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialog, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
@@ -193,6 +193,7 @@ const ParentDashboard = () => {
   };
 
   const openDeleteChild = (child: any) => {
+    console.log("Delete clicked");
     setDeleteChildTarget(child);
     setDeleteChildStep(1);
     setDeleteChildConfirmName("");
@@ -455,12 +456,14 @@ const ParentDashboard = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-xl" onClick={() => setDeleteChildTarget(null)}>{t("cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => setDeleteChildStep(2)}
+            <Button
+              variant="destructive"
+              className="rounded-xl"
+              type="button"
+              onClick={(e) => { e.preventDefault(); setDeleteChildStep(2); }}
             >
               {t("continue")}
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
