@@ -1246,7 +1246,7 @@ const MemoryRecap = () => {
           </h1>
         </div>
         {!activeStudy && (
-          <div className="flex items-center justify-between ml-8 mb-0">
+          <div className="max-w-2xl mx-auto flex items-center justify-between mb-0">
             <p className="text-sm text-muted-foreground">{getSubtitle()}</p>
             {wizard.step === "home" && (
               <div className="flex gap-1">
