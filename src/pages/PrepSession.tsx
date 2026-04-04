@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Send, Mic, MicOff, Loader2, CheckCircle, AlertTriangle, Target, Clock, BookOpen,
+  MessageCircle, Brain, Gamepad2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { getPrepLabelKey } from "@/lib/schoolTerms";
 import { findMaturitaTrack, type MaturitaTrack } from "@/lib/maturitaMapping";
 import UniversityStudyPlan, { type StudyPlanExam } from "@/components/UniversityStudyPlan";
 import { loadStudyPlan, saveStudyPlan as saveStudyPlanService } from "@/lib/studyPlanService";
+import { GameSession } from "@/components/study/GameSession";
 
 
 /* ── Types ── */
@@ -166,9 +168,11 @@ export default function PrepSession() {
   const prepLabel = t(getPrepLabelKey(schoolLevel));
 
   /* State */
-  const [step, setStep] = useState<"type" | "setup" | "plan" | "simulation" | "report" | "maturita-setup" | "maturita-analysis" | "maturita-sim">("type");
+  const [step, setStep] = useState<"type" | "setup" | "plan" | "mode-select" | "simulation" | "report" | "maturita-setup" | "maturita-analysis" | "maturita-mode-select" | "maturita-sim" | "games">("type");
   const [examType, setExamType] = useState<ExamType | null>(null);
+  const [studyMode, setStudyMode] = useState<null | "coach" | "flashcard" | "games">(null);
   const [userPrefsData, setUserPrefsData] = useState<any>(null);
+  const [coachName, setCoachName] = useState<string | undefined>(undefined);
 
   // Setup fields
   const [subject, setSubject] = useState(paramSubject || "");
@@ -188,6 +192,7 @@ export default function PrepSession() {
   const [maturitaTopics, setMaturitaTopics] = useState<MaturitaTopic[]>([]);
   const [maturitaLoading, setMaturitaLoading] = useState(false);
   const [maturitaCustomTopic, setMaturitaCustomTopic] = useState("");
+  const [maturitaSelectedTopic, setMaturitaSelectedTopic] = useState<string | undefined>(undefined);
   const [maturitaTimerSeconds, setMaturitaTimerSeconds] = useState(0);
   const [maturitaTimerActive, setMaturitaTimerActive] = useState(false);
   const maturitaTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -261,6 +266,17 @@ export default function PrepSession() {
     if (!subject || !profile?.id) { setWeaknessContext(""); return; }
     loadWeaknessData(subject, profile.id);
   }, [subject, profile?.id]);
+
+  // Load coach name from preferences
+  useEffect(() => {
+    const pid = getChildSession()?.profileId || profile?.id;
+    if (!pid) return;
+    supabase.from("user_preferences").select("data").eq("profile_id", pid).maybeSingle()
+      .then(({ data }) => {
+        const prefs = (data?.data as any) || {};
+        if (prefs.coach_name) setCoachName(prefs.coach_name);
+      });
+  }, []);
 
   // Load user_preferences for maturità indirizzo + study plan
   useEffect(() => {
@@ -621,7 +637,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
                       {topic.ultimo_anno_uscito && (
                         <p className="text-[10px] text-muted-foreground">Ultimo anno uscito: {topic.ultimo_anno_uscito}</p>
                       )}
-                      <Button size="sm" variant="outline" className="w-full mt-1" onClick={() => startMaturitaSim(topic.argomento)}>
+                      <Button size="sm" variant="outline" className="w-full mt-1" onClick={() => { setMaturitaSelectedTopic(topic.argomento); setStep("maturita-mode-select"); }}>
                         {t("exam_maturita_simulate_topic")}
                       </Button>
                     </motion.div>
@@ -636,13 +652,13 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
                 <div className="flex gap-2">
                   <Input value={maturitaCustomTopic} onChange={e => setMaturitaCustomTopic(e.target.value)}
                     placeholder={t("exam_maturita_custom_placeholder")} />
-                  <Button onClick={() => startMaturitaSim(maturitaCustomTopic)} disabled={!maturitaCustomTopic.trim()}>
+                  <Button onClick={() => { setMaturitaSelectedTopic(maturitaCustomTopic); setStep("maturita-mode-select"); }} disabled={!maturitaCustomTopic.trim()}>
                     {t("exam_start")}
                   </Button>
                 </div>
               </div>
 
-              <Button variant="outline" className="w-full" onClick={() => startMaturitaSim()}>
+              <Button variant="outline" className="w-full" onClick={() => { setMaturitaSelectedTopic(undefined); setStep("maturita-mode-select"); }}>
                 {t("exam_maturita_start_generic")}
               </Button>
             </>
@@ -652,13 +668,177 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
     );
   }
 
-  /* ══════════════ MATURITÀ SCREEN 3: Simulation ══════════════ */
+  /* ══════════════ GAMES SESSION (both regular + maturità) ══════════════ */
+  if (step === "games") {
+    const gameTopic = examType === "maturita"
+      ? (maturitaSelectedTopic || `${maturitaProva} — ${indirizzo}`)
+      : (topic || subject || "Preparazione");
+    const gameSubject = examType === "maturita"
+      ? (maturitaProva === "seconda" ? secondaProvaMateria : "Italiano")
+      : (subject || "");
+    const syntheticConcepts = [{ concept: gameTopic, summary: gameSubject ? `Materia: ${gameSubject}` : "" }];
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
+          <button onClick={() => { setStudyMode(null); setStep(examType === "maturita" ? "maturita-mode-select" : "mode-select"); }} className="text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="font-display text-lg font-bold text-foreground">{t("study_mode_games_title")}</h1>
+        </div>
+        <GameSession
+          subject={gameSubject}
+          topic={gameTopic}
+          section="ripasso"
+          concepts={syntheticConcepts}
+          onClose={() => { setStudyMode(null); setStep(examType === "maturita" ? "maturita-mode-select" : "mode-select"); }}
+        />
+      </div>
+    );
+  }
+
+  /* ══════════════ MODE SELECT — Regular exams ══════════════ */
+  if (step === "mode-select" && examType && examType !== "maturita") {
+    const displayCoachName = coachName || "il Coach";
+    const modeCards = [
+      { id: "coach" as const, icon: MessageCircle, titleKey: "prep_mode_coach_title", descKey: "prep_mode_coach_desc" },
+      { id: "flashcard" as const, icon: Brain, titleKey: "study_mode_flashcard_title", descKey: "prep_mode_flashcard_desc" },
+      { id: "games" as const, icon: Gamepad2, titleKey: "study_mode_games_title", descKey: "study_mode_games_desc" },
+    ];
+    const handleModeSelect = (modeId: "coach" | "flashcard" | "games") => {
+      setStudyMode(modeId);
+      if (modeId === "coach") {
+        startSimulation();
+      } else if (modeId === "flashcard") {
+        const params = new URLSearchParams();
+        params.set("mode", "topic");
+        if (topic) params.set("topic", topic);
+        if (subject) params.set("subject", subject);
+        navigate(`/flashcards?${params.toString()}`);
+      } else {
+        setStep("games");
+      }
+    };
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
+          <button onClick={() => { setStudyMode(null); setStep("setup"); }} className="text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="font-display text-lg font-bold text-foreground">{prepLabel}</h1>
+        </div>
+        <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-bold text-foreground">{t("prep_mode_heading")}</h2>
+            <p className="text-sm text-muted-foreground">{t("prep_mode_subtitle")}</p>
+            <div className="flex items-center justify-center gap-2 pt-1 flex-wrap">
+              {subject && <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">{subject}</span>}
+              {topic && <span className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">{topic}</span>}
+            </div>
+          </div>
+          <div className="space-y-3 pt-2">
+            {modeCards.map((card, i) => (
+              <motion.button
+                key={card.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 260, damping: 30, delay: i * 0.06 }}
+                onClick={() => handleModeSelect(card.id)}
+                className="w-full flex flex-col items-center gap-2 p-6 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all text-center group"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-1 group-hover:bg-primary/15 transition-colors">
+                  <card.icon className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-sm font-bold text-foreground">
+                  {card.id === "coach" ? t(card.titleKey).replace("{{coachName}}", displayCoachName) : t(card.titleKey)}
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{t(card.descKey)}</p>
+              </motion.button>
+            ))}
+          </div>
+          <Button variant="outline" onClick={() => { setStudyMode(null); setStep("setup"); }} className="w-full">
+            ← {t("exam_back_setup")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════ MODE SELECT — Maturità ══════════════ */
+  if (step === "maturita-mode-select" && examType === "maturita") {
+    const displayCoachName = coachName || "il Coach";
+    const topicLabel = maturitaSelectedTopic || t("exam_maturita_start_generic");
+    const modeCards = [
+      { id: "coach" as const, icon: MessageCircle, titleKey: "prep_mode_coach_title", descKey: "prep_mode_coach_desc" },
+      { id: "flashcard" as const, icon: Brain, titleKey: "study_mode_flashcard_title", descKey: "prep_mode_flashcard_desc" },
+      { id: "games" as const, icon: Gamepad2, titleKey: "study_mode_games_title", descKey: "study_mode_games_desc" },
+    ];
+    const handleModeSelect = (modeId: "coach" | "flashcard" | "games") => {
+      setStudyMode(modeId);
+      if (modeId === "coach") {
+        startMaturitaSim(maturitaSelectedTopic);
+      } else if (modeId === "flashcard") {
+        const params = new URLSearchParams();
+        params.set("mode", "topic");
+        const flashTopic = maturitaSelectedTopic || `Maturità ${maturitaProva}`;
+        params.set("topic", flashTopic);
+        params.set("subject", maturitaProva === "seconda" ? secondaProvaMateria : "Italiano");
+        navigate(`/flashcards?${params.toString()}`);
+      } else {
+        setStep("games");
+      }
+    };
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
+          <button onClick={() => { setStudyMode(null); setStep("maturita-analysis"); }} className="text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <span className="text-xl">🎓</span>
+          <h1 className="font-display text-lg font-bold text-foreground">{t("exam_type_maturita")}</h1>
+        </div>
+        <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-bold text-foreground">{t("prep_mode_heading")}</h2>
+            <p className="text-sm text-muted-foreground">{t("prep_mode_subtitle")}</p>
+            <div className="flex items-center justify-center gap-2 pt-1 flex-wrap">
+              <span className="text-xs font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">{topicLabel}</span>
+              <span className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">{indirizzo}</span>
+            </div>
+          </div>
+          <div className="space-y-3 pt-2">
+            {modeCards.map((card, i) => (
+              <motion.button
+                key={card.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 260, damping: 30, delay: i * 0.06 }}
+                onClick={() => handleModeSelect(card.id)}
+                className="w-full flex flex-col items-center gap-2 p-6 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all text-center group"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-1 group-hover:bg-primary/15 transition-colors">
+                  <card.icon className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-sm font-bold text-foreground">
+                  {card.id === "coach" ? t(card.titleKey).replace("{{coachName}}", displayCoachName) : t(card.titleKey)}
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{t(card.descKey)}</p>
+              </motion.button>
+            ))}
+          </div>
+          <Button variant="outline" onClick={() => { setStudyMode(null); setStep("maturita-analysis"); }} className="w-full">
+            ← {t("exam_back_analysis")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (step === "maturita-sim" && examType === "maturita") {
     const provaLabel = maturitaProva === "prima" ? "Prima prova" : maturitaProva === "seconda" ? `Seconda prova` : "Colloquio";
     return (
       <div className="h-screen flex flex-col bg-card">
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-          <button onClick={() => { setMaturitaTimerActive(false); setStep("maturita-analysis"); }} className="p-1.5 rounded-lg hover:bg-muted">
+          <button onClick={() => { setMaturitaTimerActive(false); setStep("maturita-mode-select"); }} className="p-1.5 rounded-lg hover:bg-muted">
             <ArrowLeft className="w-5 h-5 text-muted-foreground" />
           </button>
           <div className="flex-1">
@@ -1036,8 +1216,8 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
             </div>
           )}
 
-          <Button onClick={startSimulation} disabled={!canStart} className="w-full">
-            {t("exam_start")}
+          <Button onClick={() => setStep("mode-select")} disabled={!canStart} className="w-full">
+            {t("exam_start")} →
           </Button>
         </div>
       </div>
@@ -1108,7 +1288,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
   return (
     <div className="h-screen flex flex-col bg-card">
       <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-        <button onClick={() => navigate("/dashboard")} className="p-1.5 rounded-lg hover:bg-muted">
+        <button onClick={() => { setStudyMode(null); setStep("mode-select"); }} className="p-1.5 rounded-lg hover:bg-muted">
           <ArrowLeft className="w-5 h-5 text-muted-foreground" />
         </button>
         <div className="flex-1">
