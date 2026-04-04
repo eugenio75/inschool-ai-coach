@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Send, Mic, MicOff, Loader2, CheckCircle, AlertTriangle, Target, Clock, BookOpen,
-  MessageCircle, Brain, Gamepad2,
+  MessageCircle, Brain, Gamepad2, Plus, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
