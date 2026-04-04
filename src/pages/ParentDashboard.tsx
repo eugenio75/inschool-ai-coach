@@ -193,6 +193,7 @@ const ParentDashboard = () => {
   };
 
   const openDeleteChild = (child: any) => {
+    console.log("Delete clicked");
     setDeleteChildTarget(child);
     setDeleteChildStep(1);
     setDeleteChildConfirmName("");
