@@ -727,10 +727,8 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
     return (
       <div className="min-h-screen bg-background pb-24">
         
-        <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
-          <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+        <div className="bg-card border-b border-border px-4 py-4 space-y-2">
+          <PageBackButton to="/dashboard" />
           <h1 className="text-lg font-bold text-foreground">{prepLabel}</h1>
         </div>
         <div className="max-w-lg mx-auto px-4 py-6 space-y-3">
