@@ -10,7 +10,7 @@ const PRIMARIA = [
 const MEDIE = [
   "Italiano", "Matematica", "Scienze", "Storia", "Geografia",
   "Inglese", "Arte", "Musica", "Ed. Fisica", "Tecnologia",
-  "Ed. Civica", "Francese", "Spagnolo", "Tedesco",
+  "Ed. Civica", "Francese", "Spagnolo", "Tedesco", "Religione",
 ];
 
 const SUPERIORI_BY_INDIRIZZO: Record<string, string[]> = {
