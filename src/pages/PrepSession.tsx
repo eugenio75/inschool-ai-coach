@@ -192,6 +192,7 @@ export default function PrepSession() {
   const [maturitaTopics, setMaturitaTopics] = useState<MaturitaTopic[]>([]);
   const [maturitaLoading, setMaturitaLoading] = useState(false);
   const [maturitaCustomTopic, setMaturitaCustomTopic] = useState("");
+  const [maturitaSelectedTopic, setMaturitaSelectedTopic] = useState<string | undefined>(undefined);
   const [maturitaTimerSeconds, setMaturitaTimerSeconds] = useState(0);
   const [maturitaTimerActive, setMaturitaTimerActive] = useState(false);
   const maturitaTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
