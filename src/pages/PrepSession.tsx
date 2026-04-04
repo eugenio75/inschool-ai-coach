@@ -1003,48 +1003,53 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
                 {t("exam_field_subject")}
               </label>
-              <div className="flex flex-wrap gap-2">
-                {[...subjects, ...customSubjects].map((s: string) => (
-                  <button key={s} onClick={() => setSubject(subject === s ? "" : s)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all inline-flex items-center gap-1 ${
-                      subject === s ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary"
-                    }`}>
-                    {s}
-                    {customSubjects.includes(s) && (
-                      <span onClick={(e) => { e.stopPropagation(); setCustomSubjects(prev => prev.filter(c => c !== s)); if (subject === s) setSubject(""); }}
-                        className="ml-1 text-muted-foreground hover:text-destructive cursor-pointer">✕</span>
-                    )}
+              <div className="flex flex-wrap gap-2.5">
+                {[...subjects, ...customSubjects].map((s: string) => {
+                  const isSelected = subject === s;
+                  return (
+                    <button key={s} onClick={() => setSubject(isSelected ? "" : s)}
+                      className={`rounded-full px-4 py-1.5 text-sm font-medium border transition-all inline-flex items-center gap-1 cursor-pointer ${getPrepChipColor(s, isSelected)}`}>
+                      {s}
+                      {customSubjects.includes(s) && (
+                        <span onClick={(e) => { e.stopPropagation(); setCustomSubjects(prev => prev.filter(c => c !== s)); if (isSelected) setSubject(""); }}
+                          className="ml-1 hover:text-destructive cursor-pointer">✕</span>
+                      )}
+                    </button>
+                  );
+                })}
+                {showCustomSubjectInput ? (
+                  <div className="inline-flex items-center gap-1 rounded-full border-2 border-dashed border-muted-foreground/30 px-3 py-1">
+                    <input
+                      autoFocus
+                      value={customSubjectInput}
+                      onChange={e => setCustomSubjectInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter" && customSubjectInput.trim()) {
+                          const val = customSubjectInput.trim();
+                          if (!subjects.includes(val) && !customSubjects.includes(val)) {
+                            setCustomSubjects(prev => [...prev, val]);
+                            setSubject(val);
+                          }
+                          setCustomSubjectInput("");
+                          setShowCustomSubjectInput(false);
+                        }
+                        if (e.key === "Escape") setShowCustomSubjectInput(false);
+                      }}
+                      placeholder={t("add_custom_subject_placeholder")}
+                      className="bg-transparent outline-none text-sm w-24"
+                    />
+                    <button onClick={() => { if (customSubjectInput.trim()) { const val = customSubjectInput.trim(); if (!subjects.includes(val) && !customSubjects.includes(val)) { setCustomSubjects(prev => [...prev, val]); setSubject(val); } setCustomSubjectInput(""); } setShowCustomSubjectInput(false); }}
+                      className="text-muted-foreground hover:text-foreground">
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => setShowCustomSubjectInput(true)}
+                    className="rounded-full px-4 py-1.5 text-sm border-2 border-dashed border-muted-foreground/30 text-muted-foreground hover:border-muted-foreground/50 flex items-center gap-1 transition-colors">
+                    <Plus className="w-3.5 h-3.5" />
+                    {t("add_subject_chip")}
                   </button>
-                ))}
-              </div>
-              <div className="flex gap-2 mt-2">
-                <Input
-                  value={customSubjectInput}
-                  onChange={e => setCustomSubjectInput(e.target.value)}
-                  placeholder={t("add_custom_subject_placeholder")}
-                  className="flex-1 h-9 text-sm"
-                  onKeyDown={e => {
-                    if (e.key === "Enter" && customSubjectInput.trim()) {
-                      e.preventDefault();
-                      const val = customSubjectInput.trim();
-                      if (!subjects.includes(val) && !customSubjects.includes(val)) {
-                        setCustomSubjects(prev => [...prev, val]);
-                        setSubject(val);
-                      }
-                      setCustomSubjectInput("");
-                    }
-                  }}
-                />
-                <Button size="sm" variant="outline" className="h-9 px-3"
-                  disabled={!customSubjectInput.trim()}
-                  onClick={() => {
-                    const val = customSubjectInput.trim();
-                    if (val && !subjects.includes(val) && !customSubjects.includes(val)) {
-                      setCustomSubjects(prev => [...prev, val]);
-                      setSubject(val);
-                    }
-                    setCustomSubjectInput("");
-                  }}>+</Button>
+                )}
               </div>
             </div>
           )}
