@@ -720,14 +720,15 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
       }
     };
     return (
-      <div className="min-h-screen bg-background pb-24">
+      <div className="min-h-screen bg-muted/40 pb-24">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <button onClick={() => { setStudyMode(null); setStep("setup"); }} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="font-display text-lg font-bold text-foreground">{prepLabel}</h1>
         </div>
-        <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
+        <div className="max-w-lg mx-auto px-4 py-8">
+        <div className="bg-card rounded-2xl shadow-sm p-8 space-y-6">
           <div className="text-center space-y-2">
             <h2 className="text-xl font-bold text-foreground">{t("prep_mode_heading")}</h2>
             <p className="text-sm text-muted-foreground">{t("prep_mode_subtitle")}</p>
