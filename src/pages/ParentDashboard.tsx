@@ -198,7 +198,8 @@ const ParentDashboard = () => {
   };
 
   const handleDeleteChild = async () => {
-    if (!deleteChildTarget || deleteChildConfirmName !== deleteChildTarget.name) return;
+    const target = deleteChildTarget;
+    if (!target || deleteChildConfirmName !== target.name) return;
     setDeletingChild(true);
     try {
       const { error } = await supabase.functions.invoke("delete-account", {
