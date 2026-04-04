@@ -1246,21 +1246,23 @@ const MemoryRecap = () => {
           </h1>
         </div>
         {!activeStudy && (
-          <p className="text-sm text-muted-foreground ml-8 mb-3">{getSubtitle()}</p>
-        )}
-        {wizard.step === "home" && !activeStudy && (
-          <div className="flex ml-8 gap-1">
-            {(["ripasso", "rinforza"] as Section[]).map(tab => (
-              <button key={tab} onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg transition-colors relative ${
-                  activeTab === tab ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                }`}>
-                {tab === "ripasso" ? "Ripassa" : "Rafforza"}
-                {activeTab === tab && (
-                  <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-                )}
-              </button>
-            ))}
+          <div className="flex items-center justify-between ml-8 mb-0">
+            <p className="text-sm text-muted-foreground">{getSubtitle()}</p>
+            {wizard.step === "home" && (
+              <div className="flex gap-1">
+                {(["ripasso", "rinforza"] as Section[]).map(tab => (
+                  <button key={tab} onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg transition-colors relative ${
+                      activeTab === tab ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                    }`}>
+                    {tab === "ripasso" ? "Ripassa" : "Rafforza"}
+                    {activeTab === tab && (
+                      <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
