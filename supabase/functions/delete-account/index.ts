@@ -6,6 +6,121 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const jsonResponse = (body: Record<string, unknown>, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+async function selectIds(
+  adminClient: ReturnType<typeof createClient>,
+  table: string,
+  column: string,
+  value: string | string[],
+) {
+  if (Array.isArray(value) && value.length === 0) return [] as string[];
+
+  const query = adminClient.from(table).select("id");
+  const result = Array.isArray(value)
+    ? await query.in(column, value)
+    : await query.eq(column, value);
+
+  if (result.error) {
+    throw new Error(`Failed reading ${table}: ${result.error.message}`);
+  }
+
+  return [...new Set((result.data ?? []).map((row: { id: string }) => row.id).filter(Boolean))];
+}
+
+async function deleteWhere(
+  adminClient: ReturnType<typeof createClient>,
+  table: string,
+  column: string,
+  value: string | string[],
+) {
+  if (Array.isArray(value) && value.length === 0) return;
+
+  const query = adminClient.from(table).delete();
+  const result = Array.isArray(value)
+    ? await query.in(column, value)
+    : await query.eq(column, value);
+
+  if (result.error) {
+    throw new Error(`Failed deleting ${table}: ${result.error.message}`);
+  }
+}
+
+async function cleanupChildProfile(
+  adminClient: ReturnType<typeof createClient>,
+  childProfileId: string,
+) {
+  const classIds = await selectIds(adminClient, "classi", "docente_profile_id", childProfileId);
+  const conversationIds = await selectIds(adminClient, "conversation_sessions", "profile_id", childProfileId);
+  const homeworkIds = await selectIds(adminClient, "homework_tasks", "child_profile_id", childProfileId);
+
+  const guidedSessionIds = [...new Set([
+    ...(await selectIds(adminClient, "guided_sessions", "user_id", childProfileId)),
+    ...(await selectIds(adminClient, "guided_sessions", "conversation_id", conversationIds)),
+    ...(await selectIds(adminClient, "guided_sessions", "homework_id", homeworkIds)),
+  ])];
+
+  await deleteWhere(adminClient, "assignment_results", "session_id", guidedSessionIds);
+  await deleteWhere(adminClient, "assignment_results", "student_id", childProfileId);
+
+  await deleteWhere(adminClient, "study_steps", "session_id", guidedSessionIds);
+  await deleteWhere(adminClient, "study_steps", "homework_id", homeworkIds);
+  await deleteWhere(adminClient, "study_steps", "user_id", childProfileId);
+
+  await deleteWhere(adminClient, "flashcards", "source_session_id", guidedSessionIds);
+  await deleteWhere(adminClient, "flashcards", "user_id", childProfileId);
+
+  await deleteWhere(adminClient, "learning_errors", "session_id", guidedSessionIds);
+  await deleteWhere(adminClient, "learning_errors", "user_id", childProfileId);
+
+  await deleteWhere(adminClient, "guided_sessions", "id", guidedSessionIds);
+  await deleteWhere(adminClient, "guided_sessions", "user_id", childProfileId);
+
+  await deleteWhere(adminClient, "focus_sessions", "child_profile_id", childProfileId);
+  await deleteWhere(adminClient, "homework_tasks", "child_profile_id", childProfileId);
+  await deleteWhere(adminClient, "conversation_sessions", "profile_id", childProfileId);
+
+  const directSpecs = [
+    ["daily_missions", "child_profile_id"],
+    ["badges", "child_profile_id"],
+    ["emotional_checkins", "child_profile_id"],
+    ["emotional_alerts", "child_profile_id"],
+    ["parent_notifications", "child_profile_id"],
+    ["memory_items", "child_profile_id"],
+    ["gamification", "child_profile_id"],
+    ["user_preferences", "profile_id"],
+    ["class_enrollments", "student_id"],
+    ["esami_utente", "profile_id"],
+    ["student_materials", "profile_id"],
+    ["material_favorites", "profile_id"],
+    ["ricerche_bibliografiche", "profile_id"],
+    ["sessioni_studio", "profile_id"],
+    ["teacher_assignments", "student_id"],
+    ["parent_communications", "student_id"],
+    ["teacher_activity_feed", "student_id"],
+    ["verifiche", "docente_profile_id"],
+  ] as const;
+
+  for (const [table, column] of directSpecs) {
+    await deleteWhere(adminClient, table, column, childProfileId);
+  }
+
+  if (classIds.length > 0) {
+    await deleteWhere(adminClient, "class_enrollments", "class_id", classIds);
+    await deleteWhere(adminClient, "teacher_assignments", "class_id", classIds);
+    await deleteWhere(adminClient, "parent_communications", "class_id", classIds);
+    await deleteWhere(adminClient, "teacher_activity_feed", "class_id", classIds);
+    await deleteWhere(adminClient, "teacher_calendar_events", "class_id", classIds);
+    await deleteWhere(adminClient, "teacher_chats", "class_id", classIds);
+    await deleteWhere(adminClient, "teacher_materials", "class_id", classIds);
+    await deleteWhere(adminClient, "classi", "id", classIds);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -14,10 +129,7 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
     // Verify the calling user
@@ -31,10 +143,7 @@ Deno.serve(async (req) => {
 
     const { data: { user }, error: userError } = await userClient.auth.getUser();
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
     const userId = user.id;
@@ -44,7 +153,6 @@ Deno.serve(async (req) => {
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
     if (action === "delete_child_profile") {
-      // Verify the child belongs to this user
       const { data: profile, error: profileErr } = await adminClient
         .from("child_profiles")
         .select("id, parent_id")
@@ -52,58 +160,24 @@ Deno.serve(async (req) => {
         .single();
 
       if (profileErr || !profile || profile.parent_id !== userId) {
-        return new Response(JSON.stringify({ error: "Forbidden" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ error: "Forbidden" }, 403);
       }
 
-      // Delete related data in order (no cascade on some tables)
-      const tables = [
-        "daily_missions",
-        "badges",
-        "emotional_checkins",
-        "emotional_alerts",
-        "parent_notifications",
-        "focus_sessions",
-        "memory_items",
-        "flashcards",
-        "homework_tasks",
-        "guided_sessions",
-        "study_steps",
-        "conversation_sessions",
-        "sessioni_studio",
-        "gamification",
-        "user_preferences",
-        "class_enrollments",
-        "esami_utente",
-        "student_materials",
-        "material_favorites",
-        "ricerche_bibliografiche",
-      ];
+      await cleanupChildProfile(adminClient, child_profile_id);
 
-      for (const table of tables) {
-        const col = ["flashcards", "guided_sessions", "study_steps", "learning_errors"].includes(table)
-          ? "user_id"
-          : ["class_enrollments"].includes(table)
-          ? "student_id"
-          : ["focus_sessions", "daily_missions", "badges", "emotional_checkins", "emotional_alerts", "parent_notifications", "memory_items", "gamification", "homework_tasks"].includes(table)
-          ? "child_profile_id"
-          : "profile_id";
+      const { error: deleteProfileError } = await adminClient
+        .from("child_profiles")
+        .delete()
+        .eq("id", child_profile_id);
 
-        await adminClient.from(table).delete().eq(col, child_profile_id);
+      if (deleteProfileError) {
+        throw new Error(`Failed deleting child profile: ${deleteProfileError.message}`);
       }
 
-      // Delete the child profile itself
-      await adminClient.from("child_profiles").delete().eq("id", child_profile_id);
-
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ success: true });
     }
 
     if (action === "delete_account") {
-      // Delete all child profiles first (and their data)
       const { data: children } = await adminClient
         .from("child_profiles")
         .select("id")
@@ -111,76 +185,34 @@ Deno.serve(async (req) => {
 
       if (children) {
         for (const child of children) {
-          // Recursively clean child data
-          const tables = [
-            "daily_missions",
-            "badges",
-            "emotional_checkins",
-            "emotional_alerts",
-            "parent_notifications",
-            "focus_sessions",
-            "memory_items",
-            "flashcards",
-            "homework_tasks",
-            "guided_sessions",
-            "study_steps",
-            "conversation_sessions",
-            "sessioni_studio",
-            "gamification",
-            "user_preferences",
-            "class_enrollments",
-            "esami_utente",
-            "student_materials",
-            "material_favorites",
-            "ricerche_bibliografiche",
-          ];
-
-          for (const table of tables) {
-            const col = ["flashcards", "guided_sessions", "study_steps", "learning_errors"].includes(table)
-              ? "user_id"
-              : ["class_enrollments"].includes(table)
-              ? "student_id"
-              : ["focus_sessions", "daily_missions", "badges", "emotional_checkins", "emotional_alerts", "parent_notifications", "memory_items", "gamification", "homework_tasks"].includes(table)
-              ? "child_profile_id"
-              : "profile_id";
-
-            await adminClient.from(table).delete().eq(col, child.id);
-          }
+          await cleanupChildProfile(adminClient, child.id);
         }
       }
 
-      // Delete child profiles
-      await adminClient.from("child_profiles").delete().eq("parent_id", userId);
+      const { error: deleteChildrenError } = await adminClient
+        .from("child_profiles")
+        .delete()
+        .eq("parent_id", userId);
+      if (deleteChildrenError) {
+        throw new Error(`Failed deleting child profiles: ${deleteChildrenError.message}`);
+      }
 
-      // Delete parent settings
-      await adminClient.from("parent_settings").delete().eq("user_id", userId);
+      await deleteWhere(adminClient, "parent_settings", "user_id", userId);
+      await deleteWhere(adminClient, "user_consents", "user_id", userId);
 
-      // Delete user consents
-      await adminClient.from("user_consents").delete().eq("user_id", userId);
-
-      // Delete the auth user
       const { error: deleteError } = await adminClient.auth.admin.deleteUser(userId);
 
       if (deleteError) {
-        return new Response(JSON.stringify({ error: deleteError.message }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ error: deleteError.message }, 500);
       }
 
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ success: true });
     }
 
-    return new Response(JSON.stringify({ error: "Invalid action" }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "Invalid action" }, 400);
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("delete-account error:", message);
+    return jsonResponse({ error: message }, 500);
   }
 });
