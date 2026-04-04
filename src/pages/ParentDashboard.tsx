@@ -203,12 +203,12 @@ const ParentDashboard = () => {
     setDeletingChild(true);
     try {
       const { error } = await supabase.functions.invoke("delete-account", {
-        body: { action: "delete_child_profile", child_profile_id: deleteChildTarget.id },
+        body: { action: "delete_child_profile", child_profile_id: target.id },
       });
       if (error) throw error;
-      setChildren(prev => prev.filter(c => c.id !== deleteChildTarget.id));
-      if (selectedChild === deleteChildTarget.id) {
-        const remaining = children.filter(c => c.id !== deleteChildTarget.id);
+      setChildren(prev => prev.filter(c => c.id !== target.id));
+      if (selectedChild === target.id) {
+        const remaining = children.filter(c => c.id !== target.id);
         const newId = remaining.length > 0 ? remaining[0].id : null;
         setSelectedChild(newId);
         if (newId) { setActiveChildProfileId(newId); localStorage.setItem("inschool-parent-selected-child", newId); }
