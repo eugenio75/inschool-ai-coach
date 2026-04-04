@@ -1288,7 +1288,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
   return (
     <div className="h-screen flex flex-col bg-card">
       <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-        <button onClick={() => navigate("/dashboard")} className="p-1.5 rounded-lg hover:bg-muted">
+        <button onClick={() => { setStudyMode(null); setStep("mode-select"); }} className="p-1.5 rounded-lg hover:bg-muted">
           <ArrowLeft className="w-5 h-5 text-muted-foreground" />
         </button>
         <div className="flex-1">
