@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { MathText } from "@/components/shared/MathText";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PageBackButton } from "@/components/shared/PageBackButton";
 import { getMemoryItems, updateMemoryStrength, getDailyMissions, completeMission, autoCompleteMissions } from "@/lib/database";
 import { subjectColors } from "@/lib/mockData";
 import { isChildSession, getChildSession, childApi } from "@/lib/childSession";
