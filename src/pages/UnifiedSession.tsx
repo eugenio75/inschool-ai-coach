@@ -106,6 +106,7 @@ export default function UnifiedSession() {
   const [mode, setMode] = useState<"scritta" | "orale">("scritta");
    const [customSubjects, setCustomSubjects] = useState<string[]>([]);
    const [customSubjectInput, setCustomSubjectInput] = useState("");
+   const [showCustomSubjectInput, setShowCustomSubjectInput] = useState(false);
   const [learningGaps, setLearningGaps] = useState<string[]>([]);
   const missionsCompletedRef = useRef(false);
   const [reviewMode, setReviewMode] = useState<"chat" | "flashcard">("chat");
