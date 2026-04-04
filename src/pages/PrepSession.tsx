@@ -1244,9 +1244,10 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
             </div>
           )}
 
-          <Button onClick={() => setStep("mode-select")} disabled={!canStart} className="w-full">
+          <Button onClick={() => setStep("mode-select")} disabled={!canStart} className="w-full h-12 text-base font-semibold rounded-xl">
             {t("exam_start")} →
           </Button>
+        </div>
         </div>
       </div>
     );
