@@ -168,9 +168,11 @@ export default function PrepSession() {
   const prepLabel = t(getPrepLabelKey(schoolLevel));
 
   /* State */
-  const [step, setStep] = useState<"type" | "setup" | "plan" | "simulation" | "report" | "maturita-setup" | "maturita-analysis" | "maturita-sim">("type");
+  const [step, setStep] = useState<"type" | "setup" | "plan" | "mode-select" | "simulation" | "report" | "maturita-setup" | "maturita-analysis" | "maturita-mode-select" | "maturita-sim" | "games">("type");
   const [examType, setExamType] = useState<ExamType | null>(null);
+  const [studyMode, setStudyMode] = useState<null | "coach" | "flashcard" | "games">(null);
   const [userPrefsData, setUserPrefsData] = useState<any>(null);
+  const [coachName, setCoachName] = useState<string | undefined>(undefined);
 
   // Setup fields
   const [subject, setSubject] = useState(paramSubject || "");
