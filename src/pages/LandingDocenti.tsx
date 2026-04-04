@@ -8,7 +8,7 @@ import { LandingFooter } from "@/components/landing/LandingFooter";
 import { TrustSection } from "@/components/landing/TrustSection";
 import { TeacherGenerateMockup } from "@/components/landing/TeacherGenerateMockup";
 import { TeacherHomeMockup } from "@/components/landing/TeacherHomeMockup";
-import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
+
 
 const fade = {
   initial: { opacity: 0, y: 16 },
@@ -44,7 +44,7 @@ export default function LandingDocenti() {
   return (
     <div className="min-h-screen bg-white">
       <LandingNavbar />
-      <FloatingBackButton />
+      
 
       {/* ── HERO ── */}
       <section className="pt-24 pb-20 px-6 text-center">

@@ -1,12 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
 
 export default function TerminiDiServizio() {
   const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
-      <FloatingBackButton />
       <div className="max-w-3xl mx-auto px-6 py-24">
 
         <h1 className="text-3xl font-display font-bold mt-8 mb-2">{t("tos_title")}</h1>

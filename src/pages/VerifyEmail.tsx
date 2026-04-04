@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { MailCheck, ArrowLeft, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
+
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -38,7 +38,6 @@ export default function VerifyEmail() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <FloatingBackButton />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

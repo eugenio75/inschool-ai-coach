@@ -15,7 +15,7 @@ import { getPrepLabelKey } from "@/lib/schoolTerms";
 import { findMaturitaTrack, type MaturitaTrack } from "@/lib/maturitaMapping";
 import UniversityStudyPlan, { type StudyPlanExam } from "@/components/UniversityStudyPlan";
 import { loadStudyPlan, saveStudyPlan as saveStudyPlanService } from "@/lib/studyPlanService";
-import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
+
 
 /* ── Types ── */
 interface ChatMessage { role: "user" | "assistant"; content: string; }
@@ -519,7 +519,6 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
   if (step === "maturita-setup" && examType === "maturita") {
     return (
       <div className="min-h-screen bg-background pb-24">
-        <FloatingBackButton />
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <button onClick={() => { setStep("type"); setExamType(null); }} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-5 h-5" />
@@ -726,7 +725,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
   if (step === "type") {
     return (
       <div className="min-h-screen bg-background pb-24">
-        <FloatingBackButton />
+        
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-5 h-5" />

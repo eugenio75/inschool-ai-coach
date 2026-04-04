@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession, isChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
-import { PageBackButton } from "@/components/shared/PageBackButton";
+
 
 interface ChatMessage { role: "user" | "assistant"; content: string; }
 
@@ -174,7 +174,6 @@ Inizia presentando il primo blocco dell'argomento.`;
     return (
       <div className="min-h-screen bg-background pb-24">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
-          <PageBackButton to="/dashboard" />
           <BookOpen className="w-5 h-5 text-muted-foreground" />
           <h1 className="font-display text-lg font-bold text-foreground">Studio libero</h1>
         </div>
@@ -238,7 +237,6 @@ Inizia presentando il primo blocco dell'argomento.`;
     <div className="min-h-screen bg-card flex flex-col">
       {/* Header */}
       <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3 shrink-0">
-        <PageBackButton to="/dashboard" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground truncate">{topic}</p>
         </div>

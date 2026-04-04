@@ -12,7 +12,7 @@ import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
 import { verifyCredential, type CredentialInfo } from "@/lib/blockchainService";
-import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
+
 
 type VerifyState = "idle" | "loading" | "found" | "not_found" | "unavailable";
 
@@ -133,8 +133,6 @@ export default function CredentialVerify() {
 
   return (
     <div className="min-h-screen bg-background">
-      <FloatingBackButton />
-
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
