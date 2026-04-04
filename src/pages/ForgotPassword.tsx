@@ -26,7 +26,6 @@ export default function ForgotPassword() {
   if (sent) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <FloatingBackButton />
         <div className="w-full max-w-md text-center">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-6">
             <MailCheck className="w-8 h-8" />
