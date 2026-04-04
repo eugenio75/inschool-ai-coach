@@ -833,6 +833,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
             ← {t("exam_back_analysis")}
           </Button>
         </div>
+        </div>
       </div>
     );
   }
