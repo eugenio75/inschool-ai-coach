@@ -70,7 +70,6 @@ export default function ResetPassword() {
   if (success) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <FloatingBackButton />
         <div className="text-center max-w-md">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-foreground mb-2">Password aggiornata!</h1>
