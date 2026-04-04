@@ -106,8 +106,8 @@ const DashboardAlunno = () => {
                 </button>
               )}
               {showParentEsc && (
-                <button onClick={() => navigate("/parent-dashboard")} className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center hover:bg-destructive/20 transition-colors" title="Torna all'area genitori">
-                  <X className="w-4 h-4 text-destructive" />
+                <button onClick={() => navigate("/profiles")} className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center hover:bg-accent transition-colors" title="Esci dalla sessione">
+                  <LogOut className="w-4 h-4 text-muted-foreground" />
                 </button>
               )}
             </div>
