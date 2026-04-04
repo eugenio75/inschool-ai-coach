@@ -18,7 +18,7 @@ import { getMemoryItems, updateMemoryStrength, getDailyMissions, completeMission
 import { subjectColors } from "@/lib/mockData";
 import { isChildSession, getChildSession, childApi } from "@/lib/childSession";
 import { getCurrentLang } from "@/lib/langUtils";
-import { FloatingBackButton } from "@/components/shared/FloatingBackButton";
+
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
