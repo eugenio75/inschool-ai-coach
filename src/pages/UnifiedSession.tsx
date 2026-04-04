@@ -907,7 +907,18 @@ Inizia con la prima domanda.`;
       streamingText={streamingText}
       sending={sending}
       onSend={handleSend}
-      onBack={() => navigate(-1)}
+      onBack={() => {
+        if (type === "study" && studyMode === "coach") {
+          setSetupDone(false);
+          setStudyMode(null);
+          setShowModeSelect(true);
+          setMessages([]);
+          setStreamingText("");
+          setSending(false);
+          return;
+        }
+        navigate(-1);
+      }}
       showHint={type !== "prep"}
       showStuck={type !== "prep"}
       showExplain={true}
