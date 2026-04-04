@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getDailyMissions, completeMission } from "@/lib/database";
 import {
-  BookOpen, Plus,
+  BookOpen,
   FileText,
   Map,
   List,
@@ -97,8 +97,8 @@ export default function UnifiedSession() {
   const [topic, setTopic] = useState(urlSubject ? `Ripasso ${urlSubject}` : "");
   const [subject, setSubject] = useState(urlSubject || "");
   const [mode, setMode] = useState<"scritta" | "orale">("scritta");
-  const [customSubject, setCustomSubject] = useState("");
-  const [showCustomInput, setShowCustomInput] = useState(false);
+   const [customSubjects, setCustomSubjects] = useState<string[]>([]);
+   const [customSubjectInput, setCustomSubjectInput] = useState("");
   const [learningGaps, setLearningGaps] = useState<string[]>([]);
   const missionsCompletedRef = useRef(false);
   const [reviewMode, setReviewMode] = useState<"chat" | "flashcard">("chat");
@@ -627,63 +627,52 @@ Inizia con la prima domanda.`;
           )}
 
           <div>
-            <label className="text-sm font-medium text-foreground mb-2 block">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
               {type === "prep" ? "Materia" : "Materia (opzionale)"}
             </label>
             <div className="flex flex-wrap gap-2">
-              {subjects.map((s: string) => (
-                <button
-                  key={s}
-                  onClick={() => setSubject(subject === s ? "" : s)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                    subject === s
-                      ? "bg-foreground text-background border-foreground"
-                      : "bg-card text-muted-foreground border-border hover:border-foreground/40"
-                  }`}
-                >
+              {[...subjects, ...customSubjects].map((s: string) => (
+                <button key={s} onClick={() => setSubject(subject === s ? "" : s)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all inline-flex items-center gap-1 ${
+                    subject === s ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary"
+                  }`}>
                   {s}
+                  {customSubjects.includes(s) && (
+                    <span onClick={(e) => { e.stopPropagation(); setCustomSubjects(prev => prev.filter(c => c !== s)); if (subject === s) setSubject(""); }}
+                      className="ml-1 text-muted-foreground hover:text-destructive cursor-pointer">✕</span>
+                  )}
                 </button>
               ))}
-              {!showCustomInput && (
-                <button
-                  onClick={() => setShowCustomInput(true)}
-                  className="px-3 py-1.5 text-xs rounded-full border border-dashed border-border text-muted-foreground hover:border-foreground/40 flex items-center gap-1"
-                >
-                  <Plus className="w-3 h-3" /> Aggiungi materia
-                </button>
-              )}
             </div>
-            {showCustomInput && (
-              <div className="flex gap-2 mt-2">
-                <Input
-                  value={customSubject}
-                  onChange={e => setCustomSubject(e.target.value)}
-                  placeholder="Es: Elettronica, Diritto..."
-                  className="text-sm flex-1"
-                  onKeyDown={e => {
-                    if (e.key === "Enter" && customSubject.trim()) {
-                      setSubject(customSubject.trim());
-                      setShowCustomInput(false);
-                      setCustomSubject("");
+            <div className="flex gap-2 mt-2">
+              <Input
+                value={customSubjectInput}
+                onChange={e => setCustomSubjectInput(e.target.value)}
+                placeholder={t("add_custom_subject_placeholder")}
+                className="flex-1 h-9 text-sm"
+                onKeyDown={e => {
+                  if (e.key === "Enter" && customSubjectInput.trim()) {
+                    e.preventDefault();
+                    const val = customSubjectInput.trim();
+                    if (!subjects.includes(val) && !customSubjects.includes(val)) {
+                      setCustomSubjects(prev => [...prev, val]);
+                      setSubject(val);
                     }
-                  }}
-                />
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    if (customSubject.trim()) {
-                      setSubject(customSubject.trim());
-                      setShowCustomInput(false);
-                      setCustomSubject("");
-                    }
-                  }}
-                  disabled={!customSubject.trim()}
-                >
-                  Aggiungi
-                </Button>
-              </div>
-            )}
+                    setCustomSubjectInput("");
+                  }
+                }}
+              />
+              <Button size="sm" variant="outline" className="h-9 px-3"
+                disabled={!customSubjectInput.trim()}
+                onClick={() => {
+                  const val = customSubjectInput.trim();
+                  if (val && !subjects.includes(val) && !customSubjects.includes(val)) {
+                    setCustomSubjects(prev => [...prev, val]);
+                    setSubject(val);
+                  }
+                  setCustomSubjectInput("");
+                }}>+</Button>
+            </div>
           </div>
 
           {type === "review" && (
