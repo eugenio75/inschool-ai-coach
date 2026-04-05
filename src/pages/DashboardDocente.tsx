@@ -462,7 +462,7 @@ export default function DashboardDocente() {
             <span className="text-lg shrink-0 mt-0.5">✨</span>
             <div className="flex-1">
               <p className="text-sm text-foreground leading-relaxed">
-                Abbiamo creato una classe di esempio per mostrarti come funziona InSchool. Esplorala liberamente — puoi modificarla o eliminarla quando vuoi.
+                Abbiamo creato una classe di esempio per mostrarti come funziona SarAI. Esplorala liberamente — puoi modificarla o eliminarla quando vuoi.
               </p>
             </div>
             <button

@@ -11,7 +11,7 @@ export function LandingFooter() {
           {/* Brand */}
           <div>
             <p className="font-display font-bold text-white text-lg mb-1">
-              InSchool <span className="text-slate-500 font-normal text-sm">— Do Better</span>
+              SarAI <span className="text-slate-500 font-normal text-sm">— Do Better</span>
             </p>
             <p className="text-xs text-slate-500 mt-2">AzarLabs · Tenks S.r.l.s.</p>
             <p className="text-xs text-slate-500">inschool.privacy@azarlabs.com</p>
@@ -60,7 +60,7 @@ export function LandingFooter() {
 
         <div className="border-t border-slate-800 pt-6 text-center space-y-2">
           <p className="text-xs text-slate-500">
-            © 2026 InSchool · AzarLabs · {t("footer_rights")}
+            © 2026 SarAI · AzarLabs · {t("footer_rights")}
           </p>
           <p className="text-xs text-slate-600">
             {t("footer_gdpr_notice")}
