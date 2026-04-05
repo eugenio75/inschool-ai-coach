@@ -74,7 +74,7 @@ export default function DashboardMedie() {
               <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center">
                 <BookOpen className="w-4 h-4 text-primary-foreground" />
               </div>
-              <span className="font-display text-lg sm:text-xl font-semibold text-foreground">Inschool</span>
+              <span className="font-display text-lg sm:text-xl font-semibold text-foreground">SarAI</span>
             </div>
             <div className="flex items-center gap-1.5">
               <button onClick={() => navigate("/report")} className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors" title="Il tuo andamento"><BarChart3 className="w-4 h-4" /></button>

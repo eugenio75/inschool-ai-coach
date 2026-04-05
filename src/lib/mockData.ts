@@ -1,4 +1,4 @@
-// Centralized mock data for Inschool MVP
+// Centralized mock data for SarAI MVP
 
 export interface Task {
   id: string;
