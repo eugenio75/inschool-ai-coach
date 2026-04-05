@@ -627,7 +627,7 @@ ${verificationsSummary || "Nessuna verifica"}`;
 
     try {
       const classContext = buildClassContext();
-      const systemPrompt = `Sei il Coach AI di InSchool per la classe "${classe.nome}". Il docente ti chiede aiuto.
+      const systemPrompt = `Sei il Coach AI di SarAI per la classe "${classe.nome}". Il docente ti chiede aiuto.
 
 ${classContext}
 

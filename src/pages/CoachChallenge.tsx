@@ -50,7 +50,7 @@ function getProfile() {
 function getSystemPrompt(profile: any, subject?: string): string {
   const role = profile?.school_level || profile?.schoolLevel || "alunno";
   const name = profile?.name || "studente";
-  let prompt = `Sei l'AI InSchool, un assistente educativo. Lo studente si chiama ${name}.\n\n`;
+  let prompt = `Sei l'AI SarAI, un assistente educativo. Lo studente si chiama ${name}.\n\n`;
 
   if (role === "alunno") {
     prompt += `RUOLO: Tutor per Bambini (Elementari/Medie). Usa un linguaggio semplice, dolce e incoraggiante. Non dare mai la soluzione pronta, guida con domande socratiche e piccoli passi.`;
@@ -119,7 +119,7 @@ export default function CoachChallenge() {
     const role = profile?.school_level || "";
     if (role === "docente" && promptParam) {
       // Set a contextual system prompt for teacher quick actions
-      const teacherContext = `Sei il coach personale di un docente su InSchool. Conosci le sue classi, i materiali, le verifiche e le scadenze. Rispondi in modo contestuale, concreto e specifico. Non usare frasi generiche. Massimo 3-4 frasi per risposta.`;
+      const teacherContext = `Sei il coach personale di un docente su SarAI. Conosci le sue classi, i materiali, le verifiche e le scadenze. Rispondi in modo contestuale, concreto e specifico. Non usare frasi generiche. Massimo 3-4 frasi per risposta.`;
       setCustomSystemPrompt(teacherContext);
     }
 

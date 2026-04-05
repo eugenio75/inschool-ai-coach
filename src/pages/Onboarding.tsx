@@ -1262,7 +1262,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center relative overflow-x-hidden font-sans">
         <div className="absolute top-0 w-full p-6 z-20">
             <div className="max-w-2xl mx-auto flex items-center justify-between">
-                <span className="font-display font-bold text-foreground text-lg">InSchool Onboarding</span>
+                <span className="font-display font-bold text-foreground text-lg">SarAI Onboarding</span>
                 <span className="text-sm font-medium text-muted-foreground">Step {currentStep + 1} {t('onb_step_of')} {totalSteps}</span>
             </div>
             <div className="max-w-2xl mx-auto mt-4 h-1.5 bg-muted rounded-full overflow-hidden">

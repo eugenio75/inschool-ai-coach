@@ -32,7 +32,7 @@ export function LogoutButton({ showLabel = false, className }: { showLabel?: boo
         <AlertDialogHeader>
           <AlertDialogTitle>Sei sicuro di voler uscire?</AlertDialogTitle>
           <AlertDialogDescription>
-            Verrai disconnesso dal tuo account InSchool.
+            Verrai disconnesso dal tuo account SarAI.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
