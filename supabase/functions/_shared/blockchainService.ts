@@ -1,5 +1,5 @@
 /**
- * InSchool Blockchain Service — Deno Edge Function version
+ * SarAI Blockchain Service — Deno Edge Function version
  * Fire-and-forget logging of AI sessions on private chain.
  * If env vars are missing → skip silently.
  * No personal data on-chain — only HMAC hashes.

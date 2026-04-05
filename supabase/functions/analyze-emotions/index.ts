@@ -240,7 +240,7 @@ serve(async (req) => {
           : "Un po' di attenzione in più";
         
         const notifMessage = alertLevel === "urgent"
-          ? "InSchool ha rilevato alcuni segnali che potrebbero indicare un momento difficile per tuo figlio. Ti invitiamo a dedicargli qualche momento di attenzione oggi. Non è un'emergenza — è un segnale preventivo."
+          ? "SarAI ha rilevato alcuni segnali che potrebbero indicare un momento difficile per tuo figlio. Ti invitiamo a dedicargli qualche momento di attenzione oggi. Non è un'emergenza — è un segnale preventivo."
           : "Negli ultimi giorni tuo figlio sembra attraversare un momento un po' pesante. Un po' di attenzione in più può fare la differenza.";
 
         await supabase.from("parent_notifications").insert({

@@ -102,7 +102,7 @@ serve(async (req) => {
 
     if (effectiveMode === "deep-summary") {
       systemPrompt = isEN
-        ? `You are InSchool's coach. You must generate a CLEAR AND COMPLETE SUMMARY of a topic studied by ${studentName}.
+        ? `You are SarAI's coach. You must generate a CLEAR AND COMPLETE SUMMARY of a topic studied by ${studentName}.
 
 TOPIC: ${concept}
 SUBJECT: ${subject || "not specified"}
@@ -156,7 +156,7 @@ ISTRUZIONI:
 
     } else if (effectiveMode === "strengthen") {
       systemPrompt = isEN
-        ? `You are InSchool's coach. You are doing a REINFORCEMENT session with ${studentName} on a concept where they showed difficulty.
+        ? `You are SarAI's coach. You are doing a REINFORCEMENT session with ${studentName} on a concept where they showed difficulty.
 ALWAYS address ${studentName} by name.
 
 WEAK CONCEPT: ${concept}
@@ -234,7 +234,7 @@ dove XX è il nuovo valore di forza (0-100) basato sulle risposte.`;
 
     } else {
       systemPrompt = isEN
-        ? `You are InSchool's coach. You are doing a REVIEW with ${studentName} on a concept they have already studied.
+        ? `You are SarAI's coach. You are doing a REVIEW with ${studentName} on a concept they have already studied.
 ALWAYS address ${studentName} by name.
 
 CONCEPT: ${concept}

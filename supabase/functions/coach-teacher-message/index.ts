@@ -84,7 +84,7 @@ REGOLE LINGUAGGIO:
 
     if (mode === "class_chat") {
       systemPrompt = isEN
-        ? `You are the personal coach of ${teacherName || "a teacher"}, a teacher on InSchool.
+        ? `You are the personal coach of ${teacherName || "a teacher"}, a teacher on SarAI.
 You are responding in the chat of the ${classId ? "selected " : ""}class.
 
 CLASS CONTEXT:
@@ -101,7 +101,7 @@ Rules:
 - Tone: collegial, precise, warm but not patronizing.
 - ALWAYS respond in English
 - Reply ONLY with valid JSON: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }`
-        : `Sei il coach personale di ${teacherName || "un docente"}, docente su InSchool.
+        : `Sei il coach personale di ${teacherName || "un docente"}, docente su SarAI.
 Stai rispondendo nella chat della classe ${classId ? "selezionata" : ""}.
 
 CONTESTO CLASSE:
@@ -119,7 +119,7 @@ Regole:
 - Rispondi SOLO con JSON valido: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }`;
     } else {
       systemPrompt = isEN
-        ? `You are the personal coach of ${teacherName || "a teacher"}, a teacher on InSchool.
+        ? `You are the personal coach of ${teacherName || "a teacher"}, a teacher on SarAI.
 
 FUNDAMENTAL RULE: speak first with something specific and contextual.
 NEVER open with 'How can I help you today?' or generic phrases.
@@ -144,7 +144,7 @@ Rules:
 - ALWAYS respond in English
 
 Reply ONLY with valid JSON: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }`
-        : `Sei il coach personale di ${teacherName || "un docente"}, docente su InSchool.
+        : `Sei il coach personale di ${teacherName || "un docente"}, docente su SarAI.
 
 REGOLA FONDAMENTALE: parla per primo con qualcosa di specifico e contestuale.
 MAI aprire con 'Come posso aiutarti oggi?' o frasi generiche.

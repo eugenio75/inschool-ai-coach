@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
 
     if (!hasActivity) {
       const result = {
-        summary: `Oggi ${childName} non ha ancora studiato. Puoi incoraggiarlo ad aprire InSchool.`,
+        summary: `Oggi ${childName} non ha ancora studiato. Puoi incoraggiarlo ad aprire SarAI.`,
         has_attention_signal: false,
         generated_at: new Date().toISOString(),
         today_stats: {
