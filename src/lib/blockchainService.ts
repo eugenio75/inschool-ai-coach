@@ -1,5 +1,5 @@
 /**
- * InSchool × Azar Chain — Blockchain Service
+ * SarAI × Azar Chain — Blockchain Service
  *
  * Unico punto di comunicazione con la blockchain dall'app.
  * Chiama il backend API di Azar Chain via fetch() — nessuna libreria blockchain.

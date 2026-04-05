@@ -75,7 +75,7 @@ export function StepRoleSelect({ age, onSelect, onBack, onSwitchToLogin }: StepR
 
       <div className="text-center mb-6">
         <h1 className="font-display text-2xl font-bold text-foreground tracking-tight">
-          Come usi InSchool?
+          Come usi SarAI?
         </h1>
       </div>
 

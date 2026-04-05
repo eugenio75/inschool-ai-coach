@@ -1,5 +1,5 @@
 /**
- * InSchool × Azar Chain — Anonimizzazione HMAC
+ * SarAI × Azar Chain — Anonimizzazione HMAC
  *
  * Trasforma qualsiasi ID in un hash bytes32 irreversibile.
  * Usato per garantire che nessun dato personale vada on-chain.

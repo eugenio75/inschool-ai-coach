@@ -39,7 +39,7 @@ export async function translateBundle(
           messages: [
             {
               role: "system",
-              content: `Translate these Italian UI strings to ${targetName}. Return ONLY a JSON array of strings, same order, same length. Keep "InSchool" untranslated. Keep placeholders like {{name}} unchanged. Keep HTML tags unchanged. Keep short and concise.`,
+              content: `Translate these Italian UI strings to ${targetName}. Return ONLY a JSON array of strings, same order, same length. Keep "SarAI" untranslated. Keep placeholders like {{name}} unchanged. Keep HTML tags unchanged. Keep short and concise.`,
             },
             { role: "user", content: JSON.stringify(chunk) },
           ],

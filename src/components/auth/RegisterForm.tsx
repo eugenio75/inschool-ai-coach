@@ -311,7 +311,7 @@ export function RegisterForm({ selectedRole, onBack }: RegisterFormProps) {
           <label className="flex items-start gap-2 cursor-pointer">
             <Checkbox checked={marketingConsent} onCheckedChange={(v) => setMarketingConsent(!!v)} className="mt-0.5" />
             <span className="text-xs text-muted-foreground leading-relaxed">
-              Acconsento a ricevere comunicazioni su novità e aggiornamenti di InSchool
+              Acconsento a ricevere comunicazioni su novità e aggiornamenti di SarAI
             </span>
           </label>
         </div>

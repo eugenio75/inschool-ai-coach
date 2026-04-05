@@ -156,7 +156,7 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
     <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
       <div className="text-center mb-8">
         <h1 className="font-display text-2xl font-bold text-foreground tracking-tight">
-          Bentornato su InSchool
+          Bentornato su SarAI
         </h1>
         <p className="text-sm text-muted-foreground mt-2">Accedi al tuo account</p>
       </div>

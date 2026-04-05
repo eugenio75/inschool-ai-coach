@@ -262,7 +262,7 @@ export function StepCredentials({ role, dob, age, onBack, onSwitchToLogin }: Ste
               className="mt-0.5"
             />
             <span className="text-xs text-muted-foreground leading-relaxed">
-              Acconsento a ricevere aggiornamenti e novità di InSchool
+              Acconsento a ricevere aggiornamenti e novità di SarAI
             </span>
           </label>
         </div>

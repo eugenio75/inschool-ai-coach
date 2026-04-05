@@ -138,7 +138,7 @@ export default function CredentialVerify() {
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <GraduationCap className="w-6 h-6 text-primary" />
-            <span className="font-display font-bold text-foreground">InSchool</span>
+            <span className="font-display font-bold text-foreground">SarAI</span>
           </div>
           <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Accedi
@@ -157,7 +157,7 @@ export default function CredentialVerify() {
             <ShieldCheck className="w-8 h-8 text-primary" />
           </motion.div>
           <h1 className="font-display text-3xl sm:text-4xl font-bold text-foreground mb-3">
-            Verifica una credenziale InSchool
+            Verifica una credenziale SarAI
           </h1>
           <p className="text-muted-foreground max-w-md mx-auto">
             Inserisci il codice della credenziale o scansiona il QR per verificare in tempo reale.
@@ -246,7 +246,7 @@ export default function CredentialVerify() {
 
               <div className="bg-primary/5 border border-primary/20 rounded-xl px-4 py-2 mb-6 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-primary" />
-                <span className="text-sm text-primary font-medium">Verificato su InSchool Blockchain</span>
+                <span className="text-sm text-primary font-medium">Verificato su SarAI Blockchain</span>
               </div>
 
               <div className="flex gap-3">
@@ -389,7 +389,7 @@ export default function CredentialVerify() {
       {/* Footer */}
       <footer className="border-t border-border py-6 mt-16">
         <p className="text-center text-xs text-muted-foreground">
-          Nessun dato personale viene memorizzato &middot; Conforme EU AI Act &middot; &copy; InSchool
+          Nessun dato personale viene memorizzato &middot; Conforme EU AI Act &middot; &copy; SarAI
         </p>
       </footer>
     </div>

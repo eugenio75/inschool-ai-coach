@@ -23,7 +23,7 @@ export function LandingNavbar() {
         {/* Logo */}
         <Link to="/" className="flex items-baseline gap-1.5">
           <span className="font-display text-xl font-bold" style={{ color: "#1A3A5C" }}>
-            InSchool
+            SarAI
           </span>
           <span className="text-xs text-muted-foreground hidden sm:inline">
             — {t("home_tagline")}

@@ -135,7 +135,7 @@ serve(async (req) => {
           : null;
 
         const aiPrompt = isEN
-          ? `You are InSchool's coach. Generate ONE personalized daily mission for ${studentName} (${profileResult.data?.age || ""} years old, ${profileResult.data?.school_level || ""}).
+          ? `You are SarAI's coach. Generate ONE personalized daily mission for ${studentName} (${profileResult.data?.age || ""} years old, ${profileResult.data?.school_level || ""}).
 ${todayInterest ? `\nTODAY'S INTEREST: ${todayInterest}\nUse ONLY this interest as the thread for the challenge. Don't mix multiple interests — the narrative should be coherent around ONE theme.\n` : ""}
 CONCEPTS WITH GAPS:
 ${conceptsList || "None"}

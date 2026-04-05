@@ -35,7 +35,7 @@ function TeacherNavbar() {
         onClick={() => navigate("/dashboard")}
         className="font-display text-lg font-bold text-primary tracking-tight hover:opacity-80 transition-opacity"
       >
-        InSchool
+        SarAI
       </button>
       <div className="flex items-center gap-1">
         <LangToggle />

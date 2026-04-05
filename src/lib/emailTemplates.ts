@@ -1,5 +1,5 @@
 /**
- * InSchool — Email HTML Templates
+ * SarAI — Email HTML Templates
  * 
  * Template HTML professionali per email transazionali.
  * Usa solo HTML/CSS inline per compatibilità con tutti i client email.
@@ -9,7 +9,7 @@
  */
 
 const BRAND = {
-  name: "InSchool",
+  name: "SarAI",
   domain: "inschool.azarlabs.com",
   year: 2026,
   bgColor: "#f8fafc",
@@ -28,7 +28,7 @@ function wrapTemplate(body: string): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InSchool</title>
+  <title>SarAI</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: ${BRAND.bgColor}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: ${BRAND.bgColor};">
@@ -39,7 +39,7 @@ function wrapTemplate(body: string): string {
           <tr>
             <td style="padding: 32px 40px 24px; text-align: center; border-bottom: 1px solid ${BRAND.borderColor};">
               <div style="display: inline-block; font-size: 28px; font-weight: 800; color: ${BRAND.primaryColor}; letter-spacing: -0.5px;">
-                📚 InSchool
+                📚 SarAI
               </div>
             </td>
           </tr>
@@ -53,10 +53,10 @@ function wrapTemplate(body: string): string {
           <tr>
             <td style="padding: 24px 40px; text-align: center; border-top: 1px solid ${BRAND.borderColor}; background-color: ${BRAND.bgColor};">
               <p style="margin: 0; font-size: 12px; color: ${BRAND.mutedColor}; line-height: 1.5;">
-                InSchool © ${BRAND.year} — <a href="https://${BRAND.domain}" style="color: ${BRAND.primaryColor}; text-decoration: none;">${BRAND.domain}</a>
+                SarAI © ${BRAND.year} — <a href="https://${BRAND.domain}" style="color: ${BRAND.primaryColor}; text-decoration: none;">${BRAND.domain}</a>
               </p>
               <p style="margin: 8px 0 0; font-size: 11px; color: ${BRAND.mutedColor};">
-                Hai ricevuto questa email perché sei registrato su InSchool.
+                Hai ricevuto questa email perché sei registrato su SarAI.
               </p>
             </td>
           </tr>
@@ -85,17 +85,17 @@ function ctaButton(text: string, url: string): string {
 // ── WELCOME EMAIL ────────────────────────────────────────────────────────────
 export const welcomeEmailTemplate = wrapTemplate(`
   <h1 style="margin: 0 0 16px; font-size: 22px; font-weight: 700; color: ${BRAND.textColor}; text-align: center;">
-    Benvenuto su InSchool! 🎉
+    Benvenuto su SarAI! 🎉
   </h1>
   <p style="margin: 0 0 12px; font-size: 15px; color: ${BRAND.textColor}; line-height: 1.6;">
     Ciao,
   </p>
   <p style="margin: 0 0 12px; font-size: 15px; color: ${BRAND.textColor}; line-height: 1.6;">
-    Grazie per aver creato il tuo account su InSchool. Per iniziare, conferma il tuo indirizzo email cliccando il bottone qui sotto.
+    Grazie per aver creato il tuo account su SarAI. Per iniziare, conferma il tuo indirizzo email cliccando il bottone qui sotto.
   </p>
   ${ctaButton("Conferma la tua email", "{{ .ConfirmationURL }}")}
   <p style="margin: 16px 0 0; font-size: 13px; color: ${BRAND.mutedColor}; line-height: 1.5; text-align: center;">
-    Se non hai creato un account su InSchool, puoi ignorare questa email.
+    Se non hai creato un account su SarAI, puoi ignorare questa email.
   </p>
 `);
 
@@ -108,7 +108,7 @@ export const resetPasswordEmailTemplate = wrapTemplate(`
     Ciao,
   </p>
   <p style="margin: 0 0 12px; font-size: 15px; color: ${BRAND.textColor}; line-height: 1.6;">
-    Abbiamo ricevuto una richiesta per reimpostare la password del tuo account InSchool. Clicca il bottone qui sotto per scegliere una nuova password.
+    Abbiamo ricevuto una richiesta per reimpostare la password del tuo account SarAI. Clicca il bottone qui sotto per scegliere una nuova password.
   </p>
   ${ctaButton("Reimposta password", "{{ .ConfirmationURL }}")}
   <p style="margin: 16px 0 0; font-size: 13px; color: ${BRAND.mutedColor}; line-height: 1.5; text-align: center;">
@@ -125,7 +125,7 @@ export const confirmEmailChangeTemplate = wrapTemplate(`
     Ciao,
   </p>
   <p style="margin: 0 0 12px; font-size: 15px; color: ${BRAND.textColor}; line-height: 1.6;">
-    Hai richiesto di cambiare il tuo indirizzo email su InSchool. Clicca il bottone qui sotto per confermare il nuovo indirizzo.
+    Hai richiesto di cambiare il tuo indirizzo email su SarAI. Clicca il bottone qui sotto per confermare il nuovo indirizzo.
   </p>
   ${ctaButton("Conferma email", "{{ .ConfirmationURL }}")}
   <p style="margin: 16px 0 0; font-size: 13px; color: ${BRAND.mutedColor}; line-height: 1.5; text-align: center;">

@@ -117,7 +117,7 @@ const ProfileSelector = () => {
           <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-sm">
             <BookOpen className="w-6 h-6 text-primary-foreground" />
           </div>
-          <span className="font-display text-2xl font-bold text-foreground tracking-tight">InSchool Hub</span>
+          <span className="font-display text-2xl font-bold text-foreground tracking-tight">SarAI Hub</span>
         </div>
 
         <div className="text-center mb-12">

@@ -5,7 +5,7 @@ export default function PrivacyPolicy() {
     <div className="min-h-screen bg-background text-foreground font-sans">
       <div className="max-w-3xl mx-auto px-6 py-24">
 
-        <h1 className="text-3xl font-display font-bold mt-8 mb-2">InSchool — Privacy Policy</h1>
+        <h1 className="text-3xl font-display font-bold mt-8 mb-2">SarAI — Privacy Policy</h1>
         <p className="text-sm text-muted-foreground mb-10">Ultimo aggiornamento: marzo 2026</p>
 
         <div className="prose prose-neutral dark:prose-invert max-w-none space-y-6 text-sm leading-relaxed">
@@ -51,7 +51,7 @@ export default function PrivacyPolicy() {
 
           <section>
             <h2 className="text-lg font-semibold">Blockchain</h2>
-            <p>InSchool usa Azar Chain, blockchain privata proprietaria, per certificare competenze e garantire conformità EU AI Act. Sulla blockchain vengono registrati esclusivamente hash anonimi — mai dati personali identificativi.</p>
+            <p>SarAI usa Azar Chain, blockchain privata proprietaria, per certificare competenze e garantire conformità EU AI Act. Sulla blockchain vengono registrati esclusivamente hash anonimi — mai dati personali identificativi.</p>
           </section>
 
           <section>
@@ -71,7 +71,7 @@ export default function PrivacyPolicy() {
 
           <section>
             <h2 className="text-lg font-semibold">Cookie</h2>
-            <p>InSchool usa cookie tecnici necessari al funzionamento del servizio e cookie analitici opzionali. Per dettagli vedere la <Link to="/cookie-policy" className="text-primary">Cookie Policy</Link>.</p>
+            <p>SarAI usa cookie tecnici necessari al funzionamento del servizio e cookie analitici opzionali. Per dettagli vedere la <Link to="/cookie-policy" className="text-primary">Cookie Policy</Link>.</p>
           </section>
 
           <section>

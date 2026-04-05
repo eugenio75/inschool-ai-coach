@@ -204,7 +204,7 @@ export default function DashboardSuperiori() {
   async function handleTimerComplete() {
     playBeep();
     if ("Notification" in window && Notification.permission === "granted") {
-      new Notification("InSchool — Sessione completata!", {
+      new Notification("SarAI — Sessione completata!", {
         body: `${TIMER_CONFIGS[timerType].label}${timerMateria ? ` su ${timerMateria}` : ""} completata.`,
       });
     }

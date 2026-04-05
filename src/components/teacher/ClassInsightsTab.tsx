@@ -108,7 +108,7 @@ export default function ClassInsightsTab({ classId }: ClassInsightsProps) {
         <Users className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
         <p className="font-medium text-foreground mb-1">Nessun dato disponibile</p>
         <p className="text-sm text-muted-foreground">
-          Gli insights appariranno quando gli studenti inizieranno a studiare con InSchool.
+          Gli insights appariranno quando gli studenti inizieranno a studiare con SarAI.
         </p>
       </div>
     );
