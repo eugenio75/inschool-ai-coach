@@ -128,7 +128,7 @@ INSTRUCTIONS:
 - Use emojis sparingly to make the text more readable
 - Length: about 150-300 words
 - ALWAYS respond in English`
-        : `Sei il coach di Inschool. Devi generare una SINTESI CHIARA E COMPLETA di un argomento studiato da ${studentName}.
+        : `Sei il coach di SarAI. Devi generare una SINTESI CHIARA E COMPLETA di un argomento studiato da ${studentName}.
 
 ARGOMENTO: ${concept}
 MATERIA: ${subject || "non specificata"}
@@ -194,7 +194,7 @@ RULES:
 IMPORTANT: In the LAST message (after 2-3 exchanges), conclude with:
 [STRENGTH_UPDATE: XX]
 where XX is the new strength value (0-100) based on the answers.`
-        : `Sei il coach di Inschool. Stai facendo una sessione di RINFORZO con ${studentName} su un concetto dove ha mostrato difficoltà.
+        : `Sei il coach di SarAI. Stai facendo una sessione di RINFORZO con ${studentName} su un concetto dove ha mostrato difficoltà.
 Rivolgiti SEMPRE a ${studentName} usando il suo nome.
 
 CONCETTO DEBOLE: ${concept}
@@ -274,7 +274,7 @@ RULES:
 IMPORTANT: In the LAST message (after 2-3 exchanges), conclude with:
 [STRENGTH_UPDATE: XX]
 where XX is the new strength value (0-100) based on the answers.`
-        : `Sei il coach di Inschool. Stai facendo un RIPASSO con ${studentName} su un concetto che ha già studiato.
+        : `Sei il coach di SarAI. Stai facendo un RIPASSO con ${studentName} su un concetto che ha già studiato.
 Rivolgiti SEMPRE a ${studentName} usando il suo nome.
 
 CONCETTO: ${concept}
