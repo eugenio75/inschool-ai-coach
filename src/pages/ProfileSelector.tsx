@@ -92,7 +92,7 @@ const ProfileSelector = () => {
   const isDocente = profiles.some(p => p.school_level === "docente");
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-start px-6 pt-8 pb-32 sm:pt-12 relative font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-start px-4 pt-8 pb-40 sm:px-6 sm:pt-12 relative font-sans overflow-x-hidden">
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
       <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10" />
       
