@@ -78,7 +78,7 @@ serve(async (req) => {
     const { messages, concept, summary, subject, studentProfile, strength, mode, studyMode, lang } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    if (!LOVABLE_API_KEY) throw new Error("OPENAI_API_KEY not configured");
 
     const effectiveLang = lang || "it";
     const isEN = effectiveLang === "en";
@@ -328,7 +328,7 @@ dove XX è il nuovo valore di forza (0-100) basato sulle risposte.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "gpt-4o-mini",
         messages: aiMessages,
         stream: true,
       }),

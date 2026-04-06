@@ -770,7 +770,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
+          model: "gpt-4o-mini",
           messages: [
             { role: "system", content: "In massimo 4 parole italiane, dai un titolo a questa conversazione. Solo il titolo, nessun preambolo." },
             { role: "user", content: generateTitle },

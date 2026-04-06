@@ -170,7 +170,7 @@ Regole:
 Rispondi SOLO con JSON valido: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }`;
     }
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -178,7 +178,7 @@ Rispondi SOLO con JSON valido: { "message": "...", "suggestedAction": "...", "ac
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: isEN

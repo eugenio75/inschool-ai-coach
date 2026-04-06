@@ -329,7 +329,7 @@ Giorno: ${new Date().toLocaleDateString("it-IT", { weekday: "long" })}`;
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: context },

@@ -209,7 +209,7 @@ IMPORTANTE: Basa i consigli sui DATI REALI di studio, NON sulle preferenze dichi
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: getSystemPrompt(effectiveSchoolLevel) },
           { role: "user", content: userPrompt },

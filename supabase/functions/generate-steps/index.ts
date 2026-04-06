@@ -182,7 +182,7 @@ ${description ? `\nTESTO/CONTENUTO ALLEGATO AL COMPITO (questo è il materiale d
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
