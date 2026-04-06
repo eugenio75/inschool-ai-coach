@@ -242,7 +242,7 @@ const Settings = () => {
     navigate("/onboarding");
   };
   const handleSaveCoach = async () => {
-    const pid = activeProfileId;
+    const pid = session?.profileId || activeProfileId;
     if (!pid) return;
     setSavingCoach(true);
     const { data: existing } = await supabase
