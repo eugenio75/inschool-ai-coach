@@ -146,7 +146,7 @@ const StudentProfile = () => {
           .eq("profile_id", profile.id)
           .maybeSingle();
         const merged = { ...((existing?.data as Record<string, any>) || {}), coach_name: coachName.trim() || null };
-        await supabase.from("user_preferences").upsert({ profile_id: profile.id, data: merged }, { onConflict: "profile_id" });
+        await (supabase.rpc as any)("save_user_preferences", { p_profile_id: profile.id, p_data: merged });
       }
 
       toast({ title: t("profile_saved") });
