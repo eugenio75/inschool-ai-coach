@@ -507,6 +507,12 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   const [adaptedLoading, setAdaptedLoading] = useState(false);
   const [adaptedError, setAdaptedError] = useState(false);
 
+  // Preview content modal state (must be before early returns)
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewModalType, setPreviewModalType] = useState<"student" | "teacher">("student");
+  const [previewEditMode, setPreviewEditMode] = useState(false);
+  const [previewEditText, setPreviewEditText] = useState("");
+
   function resetForm() {
     setMode(null);
     setActivityType("compito");
