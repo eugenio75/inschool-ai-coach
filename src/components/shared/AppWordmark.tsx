@@ -10,7 +10,7 @@ export function AppWordmark({ className = "", compact = false }: AppWordmarkProp
         <span className="text-foreground">Sar</span>
         <span className="text-primary">AI</span>
       </span>
-      <span className="text-xs font-medium text-muted-foreground">Do Better</span>
+      <span className="text-xs font-medium text-muted-foreground">Better</span>
     </div>
   );
 }
