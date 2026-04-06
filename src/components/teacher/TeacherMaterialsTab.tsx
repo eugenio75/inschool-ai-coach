@@ -1091,7 +1091,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
           <div>
             <Label className="text-xs text-muted-foreground">Contenuto</Label>
             <Textarea
-              placeholder={PLACEHOLDERS_FORM_A[activityType]}
+              placeholder={getPlaceholderA(activityType, selectedSubjects)}
               value={content}
               onChange={e => setContent(e.target.value)}
               className="mt-1 rounded-xl min-h-[120px]"
