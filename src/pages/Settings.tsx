@@ -256,12 +256,7 @@ const Settings = () => {
       .select("id, data")
       .eq("profile_id", pid)
       .maybeSingle();
-    const newData = { ...((existing?.data as any) || {}), coach_name: coachNameSetting };
-    if (existing) {
-      await supabase.from("user_preferences").update({ data: newData } as any).eq("id", existing.id);
-    } else {
-      await supabase.from("user_preferences").insert({ profile_id: pid, data: newData } as any);
-    }
+    await (supabase.rpc as any)("save_coach_name", { p_profile_id: pid, p_coach_name: coachNameSetting });
     setSavingCoach(false);
     toast.success("Coach aggiornato!");
   };
