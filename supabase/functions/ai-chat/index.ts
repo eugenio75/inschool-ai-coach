@@ -770,7 +770,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
+          model: "google/gemini-2.5-flash-lite",
           messages: [
             { role: "system", content: "In massimo 4 parole italiane, dai un titolo a questa conversazione. Solo il titolo, nessun preambolo." },
             { role: "user", content: generateTitle },
@@ -963,7 +963,7 @@ Non aggiungere altro. Non tornare sul compito.`;
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: model || "gpt-4o-mini",
+        model: model || "google/gemini-3-flash-preview",
         messages: allMessages,
         stream: shouldStream,
         ...(maxTokens ? { max_tokens: maxTokens } : {}),

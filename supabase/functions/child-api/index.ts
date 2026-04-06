@@ -558,7 +558,7 @@ Estrai da 1 a 4 concetti. Rispondi SOLO con il JSON, senza markdown.`;
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                  model: "gpt-4o-mini",
+                  model: "google/gemini-2.5-flash-lite",
                   messages: [{ role: "user", content: extractPrompt }],
                 }),
               });

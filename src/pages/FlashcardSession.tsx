@@ -191,6 +191,7 @@ export default function FlashcardSession() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const subjectFilter = searchParams.get("subject") || "";
+  const topicParam = searchParams.get("topic") || "";
   const modeParam = searchParams.get("mode") as FlashcardMode | null;
   const fromMemory = searchParams.get("fromMemory") === "true";
   const profile = getProfile();
@@ -270,9 +271,9 @@ export default function FlashcardSession() {
   // If mode is set via param, auto-start
   useEffect(() => {
     if (modeParam && !checkingCards && !fromMemory) {
-      handleModeSelect(modeParam);
+      handleModeSelect(modeParam, topicParam || undefined);
     }
-  }, [modeParam, checkingCards]);
+  }, [modeParam, checkingCards, fromMemory, topicParam]);
 
   async function handleModeSelect(selectedMode: FlashcardMode, topic?: string) {
     setMode(selectedMode);
@@ -295,7 +296,7 @@ export default function FlashcardSession() {
 
       let prompt = "";
       if (selectedMode === "topic") {
-        prompt = `Genera flashcard di ripasso sull'argomento: "${topic}". Livello scolastico: ${schoolLevel}. Classe: ${classSection}.`;
+        prompt = `Genera flashcard di ripasso sull'argomento: "${topic || topicParam}". Materia: ${subjectFilter || "non specificata"}. Livello scolastico: ${schoolLevel}. Classe: ${classSection}.`;
       } else {
         const isExam = schoolLevel === "universitario" || schoolLevel === "superiori";
         const subjectList = [...subjects, ...difficultSubjects].filter(Boolean).join(", ");
@@ -320,7 +321,7 @@ export default function FlashcardSession() {
           method: "POST",
           headers,
           body: JSON.stringify({
-            subject: topic || "Programma di studio",
+            subject: subjectFilter || topic || topicParam || "Programma di studio",
             conversationHistory: prompt,
             schoolLevel,
             lang: getCurrentLang(),
@@ -334,7 +335,7 @@ export default function FlashcardSession() {
           id: `gen-${Date.now()}-${i}`,
           question: c.question,
           answer: c.answer,
-          subject: topic || "Programma",
+          subject: subjectFilter || topic || topicParam || "Programma",
           difficulty: c.difficulty || 1,
           times_correct: 0,
           times_wrong: 0,
