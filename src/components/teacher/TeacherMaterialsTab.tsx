@@ -3,10 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   PenLine, Sparkles, Upload, ArrowLeft, Send, Download,
   FileText, Trash2, CalendarIcon, BookOpen, Eye, Archive, RotateCcw, Pencil,
-  Loader2, AlertCircle, CheckCircle2,
+  Loader2, AlertCircle, CheckCircle2, Lock, ChevronRight, X,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
+import { formatMaterialContent } from "@/components/teacher/SharedMaterialsList";
 import SharedMaterialsList from "@/components/teacher/SharedMaterialsList";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
