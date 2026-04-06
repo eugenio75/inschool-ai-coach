@@ -1147,6 +1147,8 @@ const MemoryRecap = () => {
 
   const isRinforza = activeTab === "rinforza" || wizard.section === "rinforza";
 
+  const displayCoachName = coachName || "il Coach";
+
   const methodCards: { method: StudyMethod; icon: any; label: string; desc: string; color: string }[] = [
     {
       method: "coach",
@@ -1159,21 +1161,14 @@ const MemoryRecap = () => {
       method: "flashcard",
       icon: Layers,
       label: "Flashcard",
-      desc: isRinforza ? "Allenati sui concetti da consolidare" : "Allenati sui concetti chiave in modo rapido",
+      desc: t("study_mode_flashcard_desc").replace("{{coachName}}", displayCoachName),
       color: "text-amber-600 bg-amber-50 dark:bg-amber-900/20",
     },
     {
-      method: "challenge",
-      icon: Zap,
-      label: "Sfide",
-      desc: isRinforza ? "Lavora su un punto debole con una mini missione" : "Mettiti alla prova con una mini missione",
-      color: "text-orange-600 bg-orange-50 dark:bg-orange-900/20",
-    },
-    {
-      method: "game",
+      method: "games",
       icon: Gamepad2,
-      label: "Giochi",
-      desc: isRinforza ? "Capisci meglio con un'attività interattiva" : "Ripassa con un'attività più leggera e interattiva",
+      label: t("study_mode_games_title"),
+      desc: t("study_mode_games_desc").replace("{{coachName}}", displayCoachName),
       color: "text-green-600 bg-green-50 dark:bg-green-900/20",
     },
   ];
