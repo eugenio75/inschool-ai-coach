@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getTeacherTitle } from "@/lib/teacherTitle";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Plus, FileText, LayoutDashboard, AlertCircle,
   Send, Copy, CheckSquare, ChevronRight,
   Calendar, Clock, FolderOpen, MoreVertical, Pencil, Trash2, X, Heart,
+  CloudRain, BatteryLow, Coffee,
 } from "lucide-react";
 import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,7 +61,18 @@ export default function DashboardDocente() {
   // Coach — home shows only initial message (no inline replies)
   const [coachLastMsg, setCoachLastMsg] = useState("");
   const [coachInput, setCoachInput] = useState("");
+  const [showMood, setShowMood] = useState(false);
+  const moodRef = useRef<HTMLDivElement>(null);
   const [isLoadingCoachMsg, setIsLoadingCoachMsg] = useState(true);
+
+  // Close mood on click outside
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (moodRef.current && !moodRef.current.contains(e.target as Node)) setShowMood(false);
+    }
+    if (showMood) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showMood]);
 
   // Modal
   const [showClasseModal, setShowClasseModal] = useState(false);
@@ -424,7 +436,51 @@ export default function DashboardDocente() {
           </div>
 
           <div className="flex gap-2 items-center">
-            <Heart className="w-5 h-5 text-red-500 fill-red-500 animate-pulse shrink-0" />
+            {/* Mood toggle for teachers */}
+            <div className="relative" ref={moodRef}>
+              <button
+                onClick={() => setShowMood(!showMood)}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors shrink-0 ${
+                  showMood ? "bg-red-50 dark:bg-red-500/10" : "bg-muted/50 hover:bg-red-50 dark:hover:bg-red-500/10"
+                }`}
+                title="Come ti senti?"
+              >
+                <Heart className={`w-5 h-5 ${showMood ? "text-red-500 fill-red-500" : "text-red-500 hover:text-red-600"}`} />
+              </button>
+
+              <AnimatePresence>
+                {showMood && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute bottom-full left-0 mb-2 bg-card border border-border rounded-xl shadow-lg p-1.5 min-w-[220px] z-10"
+                  >
+                    <p className="text-[10px] text-muted-foreground font-medium px-2 pt-1 pb-1.5">Come ti senti oggi?</p>
+                    {[
+                      { label: "Sono sopraffatto/a", icon: CloudRain, msg: "Mi sento sopraffatto/a dal carico di lavoro, ho bisogno di supporto", color: "text-blue-600 dark:text-blue-400" },
+                      { label: "Sono stanco/a", icon: BatteryLow, msg: "Mi sento stanco/a e senza energie oggi", color: "text-amber-600 dark:text-amber-400" },
+                      { label: "Ho bisogno di una pausa", icon: Coffee, msg: "Sento di aver bisogno di staccare un momento e ricaricarmi", color: "text-orange-600 dark:text-orange-400" },
+                      { label: "Ho bisogno di parlare", icon: Heart, msg: "Ho bisogno di parlare con qualcuno di come mi sento come docente", color: "text-rose-600 dark:text-rose-400" },
+                    ].map((opt) => (
+                      <button
+                        key={opt.label}
+                        onClick={() => {
+                          setShowMood(false);
+                          navigateToCoach(opt.msg);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left hover:bg-muted transition-colors"
+                      >
+                        <opt.icon className={`w-4 h-4 shrink-0 ${opt.color}`} />
+                        <span className="text-xs font-medium text-foreground">{opt.label}</span>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <input
               type="text"
               value={coachInput}
