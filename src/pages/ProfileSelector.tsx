@@ -160,7 +160,7 @@ const ProfileSelector = () => {
             whileHover={{ y: -4, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate("/onboarding")}
-            className="group flex flex-col p-6 rounded-[2rem] border-2 border-dashed border-border bg-muted/30 hover:bg-primary/5 hover:border-primary/30 transition-all text-left min-h-[220px] justify-center items-center"
+            className="group flex flex-col p-5 rounded-[2rem] border-2 border-dashed border-border bg-muted/30 hover:bg-primary/5 hover:border-primary/30 transition-all text-left min-h-[160px] justify-center items-center"
           >
             <div className="w-16 h-16 rounded-full bg-card border border-border flex items-center justify-center mb-4 group-hover:bg-primary/10 group-hover:border-primary/20 transition-colors shadow-sm">
               <Plus className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
