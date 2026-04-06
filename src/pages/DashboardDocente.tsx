@@ -6,6 +6,7 @@ import {
   Users, Plus, FileText, LayoutDashboard, AlertCircle,
   Send, Copy, CheckSquare, ChevronRight,
   Calendar, Clock, FolderOpen, MoreVertical, Pencil, Trash2, X, Heart,
+  CloudRain, BatteryLow, Coffee,
 } from "lucide-react";
 import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { supabase } from "@/integrations/supabase/client";
