@@ -748,9 +748,9 @@ serve(async (req) => {
     const { messages, studentProfile, taskContext, weakConcepts, lang: reqLang } = await req.json();
     const lang = reqLang || 'it';
     const L = getContextLabels(lang);
-    const LOVABLE_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     
-    if (!LOVABLE_API_KEY) {
+    if (!OPENAI_API_KEY) {
       throw new Error("OPENAI_API_KEY is not configured");
     }
 
@@ -981,12 +981,12 @@ Se il testo dell'esercizio dice "23,5 km", tu DEVI usare "23,5 km" — mai "24 k
     );
     const hasSourceImage = !!(taskContext?.sourceImageUrl);
 
-    const model = hasSourceImage ? "google/gemini-2.5-pro" : hasImages ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview";
+    const model = hasSourceImage ? "gpt-4o" : hasImages ? "gpt-4o-mini" : "gpt-4o-mini";
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

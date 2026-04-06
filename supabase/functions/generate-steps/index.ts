@@ -174,15 +174,15 @@ Materia: ${subject}
 Familiarità studente: ${familiarity || "non specificata"}
 ${description ? `\nTESTO/CONTENUTO ALLEGATO AL COMPITO (questo è il materiale da studiare):\n---\n${description}\n---` : ""}`;
 
-    const LOVABLE_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },

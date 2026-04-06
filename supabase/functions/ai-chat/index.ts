@@ -761,16 +761,16 @@ serve(async (req) => {
 
   try {
     const { messages, systemPrompt, stream, model, maxTokens, generateTitle, profileId, subject: chatSubject, sessionFormat, lang } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
 
     // Title generation (non-streaming)
     if (generateTitle) {
       const res = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
+          model: "gpt-4o-mini",
           messages: [
             { role: "system", content: "In massimo 4 parole italiane, dai un titolo a questa conversazione. Solo il titolo, nessun preambolo." },
             { role: "user", content: generateTitle },
@@ -961,9 +961,9 @@ Non aggiungere altro. Non tornare sul compito.`;
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: model || "google/gemini-3-flash-preview",
+        model: model || "gpt-4o-mini",
         messages: allMessages,
         stream: shouldStream,
         ...(maxTokens ? { max_tokens: maxTokens } : {}),
