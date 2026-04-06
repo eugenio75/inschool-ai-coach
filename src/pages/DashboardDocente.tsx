@@ -133,8 +133,16 @@ export default function DashboardDocente() {
     window.addEventListener("inschool:nuova-classe", handler);
     return () => window.removeEventListener("inschool:nuova-classe", handler);
   }, []);
+  // Fetch coach name from preferences
+  useEffect(() => {
+    if (!profileId) return;
+    supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle()
+      .then(({ data: pref }) => {
+        const name = (pref?.data as any)?.coach_name;
+        if (name) setCoachName(name);
+      });
+  }, [profileId]);
 
-  // Coach initial message with TTL cache
   const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
   const BEHAVIOR_TTL = 30 * 60 * 1000; // 30 minutes
   useEffect(() => {
