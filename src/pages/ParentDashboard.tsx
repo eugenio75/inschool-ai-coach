@@ -284,9 +284,6 @@ const ParentDashboard = () => {
       <div className="bg-card border-b border-border px-6 pt-6 pb-6">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3 mb-4">
-            <button onClick={() => navigate("/profiles")} className="text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="w-5 h-5" />
-            </button>
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
                 <BookOpen className="w-3.5 h-3.5 text-primary-foreground" />
