@@ -122,14 +122,11 @@ export default function TeacherMaterialsArchive() {
       {/* Header */}
       <div className="bg-card border-b border-border px-6 pt-6 pb-5">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-start justify-between gap-4">
-            <div>
+          <div>
               <h1 className="text-2xl font-display font-bold text-foreground">I miei materiali</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 Tutto quello che hai creato — pronto da riutilizzare, riassegnare o stampare.
               </p>
-            </div>
-            </div>
           </div>
 
           {/* Search */}
