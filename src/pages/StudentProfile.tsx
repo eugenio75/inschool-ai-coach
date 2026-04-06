@@ -47,6 +47,8 @@ const StudentProfile = () => {
   const [customInterest, setCustomInterest] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [studyPlan, setStudyPlan] = useState<StudyPlanExam[]>([]);
+  const [coachName, setCoachName] = useState("");
+  const [originalCoachName, setOriginalCoachName] = useState("");
   const { t } = useLang();
 
   useEffect(() => {
