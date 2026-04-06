@@ -174,7 +174,7 @@ const ProfileSelector = () => {
           </motion.button>
         </div>
 
-        <div className="flex items-center justify-center gap-6 flex-wrap bg-card px-8 py-4 rounded-[2rem] border border-border shadow-sm">
+        <div className="flex items-center justify-center gap-4 sm:gap-6 flex-wrap bg-card px-6 sm:px-8 py-3 sm:py-4 rounded-2xl sm:rounded-[2rem] border border-border shadow-sm">
           {!isDocente && (
               <button
                 onClick={() => navigate("/parent-dashboard")}
