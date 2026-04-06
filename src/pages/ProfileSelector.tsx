@@ -96,7 +96,7 @@ const ProfileSelector = () => {
       className="min-h-screen-safe bg-background flex flex-col items-center justify-start px-4 pt-8 sm:px-6 sm:pt-12 relative font-sans overflow-x-hidden"
       style={{
         WebkitOverflowScrolling: "touch",
-        paddingBottom: "calc(14rem + var(--cookie-banner-height, 0px))",
+        paddingBottom: "calc(8rem + var(--cookie-banner-height, 0px))",
       }}
     >
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
@@ -106,7 +106,7 @@ const ProfileSelector = () => {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={spring}
-        className="w-full max-w-5xl flex min-h-[calc(100vh-2rem)] flex-col items-center"
+        className="w-full max-w-5xl flex flex-col items-center"
       >
         <AppWordmark className="mb-8" />
 
@@ -119,7 +119,7 @@ const ProfileSelector = () => {
             </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 items-stretch gap-4 sm:gap-5 w-full mb-16 sm:mb-20 lg:mb-24 max-w-4xl">
+        <div className="grid w-full max-w-4xl grid-cols-1 auto-rows-max items-start gap-4 sm:grid-cols-2 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 mb-12 sm:mb-14">
           <AnimatePresence>
           {profiles.map((profile, i) => (
             <motion.button
@@ -130,7 +130,7 @@ const ProfileSelector = () => {
               whileHover={{ y: -4, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => selectProfile(profile.id)}
-              className="group flex h-full min-h-[112px] flex-col overflow-hidden rounded-2xl border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-lg sm:min-h-[136px] sm:rounded-[2rem] sm:p-5"
+              className="group flex min-h-[112px] flex-col overflow-hidden rounded-2xl border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-lg sm:min-h-[136px] sm:rounded-[2rem] sm:p-5"
             >
               <div className="absolute top-5 right-5 text-muted-foreground group-hover:text-primary transition-colors">
                   <ChevronRight className="w-5 h-5" />
@@ -180,7 +180,7 @@ const ProfileSelector = () => {
           </motion.button>
         </div>
 
-        <div className="mt-auto flex w-full max-w-4xl items-center justify-center gap-4 rounded-2xl border border-border bg-card px-6 py-3 shadow-sm sm:gap-6 sm:rounded-[2rem] sm:px-8 sm:py-4 flex-wrap">
+        <div className="mt-2 flex w-full max-w-4xl flex-wrap items-center justify-center gap-4 rounded-2xl border border-border bg-card px-6 py-3 shadow-sm sm:mt-4 sm:gap-6 sm:rounded-[2rem] sm:px-8 sm:py-4">
           {!isDocente && (
               <button
                 onClick={() => navigate("/parent-dashboard")}
