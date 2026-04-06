@@ -61,6 +61,8 @@ export default function DashboardDocente() {
   // Coach — home shows only initial message (no inline replies)
   const [coachLastMsg, setCoachLastMsg] = useState("");
   const [coachInput, setCoachInput] = useState("");
+  const [showMood, setShowMood] = useState(false);
+  const moodRef = useRef<HTMLDivElement>(null);
   const [isLoadingCoachMsg, setIsLoadingCoachMsg] = useState(true);
 
   // Modal
