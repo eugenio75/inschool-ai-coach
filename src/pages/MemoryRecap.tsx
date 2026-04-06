@@ -26,7 +26,7 @@ const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 // ─── Types ───
 type Section = "ripasso" | "rinforza";
 type ContentType = "today" | "cumulative" | "specific";
-type StudyMethod = "coach" | "flashcard" | "challenge" | "game";
+type StudyMethod = "coach" | "flashcard" | "challenge" | "game" | "games";
 type Step = "home" | "subject-pick" | "summary" | "study";
 
 interface WizardState {
@@ -959,6 +959,18 @@ const MemoryRecap = () => {
   const [activeStudy, setActiveStudy] = useState<{ subject: string; concepts: any[]; method: StudyMethod; topic: string } | null>(null);
   const [generatingFlashcards, setGeneratingFlashcards] = useState(false);
   const [generatedCards, setGeneratedCards] = useState<any[]>([]);
+  const [coachName, setCoachName] = useState("");
+
+  useEffect(() => {
+    const profile = getProfile();
+    const profileId = profile?.id;
+    if (!profileId) return;
+    supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle()
+      .then(({ data }) => {
+        const prefs = (data?.data as any) || {};
+        if (prefs.coach_name) setCoachName(prefs.coach_name);
+      });
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -1135,6 +1147,8 @@ const MemoryRecap = () => {
 
   const isRinforza = activeTab === "rinforza" || wizard.section === "rinforza";
 
+  const displayCoachName = coachName || "il Coach";
+
   const methodCards: { method: StudyMethod; icon: any; label: string; desc: string; color: string }[] = [
     {
       method: "coach",
@@ -1147,21 +1161,14 @@ const MemoryRecap = () => {
       method: "flashcard",
       icon: Layers,
       label: "Flashcard",
-      desc: isRinforza ? "Allenati sui concetti da consolidare" : "Allenati sui concetti chiave in modo rapido",
+      desc: t("study_mode_flashcard_desc").replace("{{coachName}}", displayCoachName),
       color: "text-amber-600 bg-amber-50 dark:bg-amber-900/20",
     },
     {
-      method: "challenge",
-      icon: Zap,
-      label: "Sfide",
-      desc: isRinforza ? "Lavora su un punto debole con una mini missione" : "Mettiti alla prova con una mini missione",
-      color: "text-orange-600 bg-orange-50 dark:bg-orange-900/20",
-    },
-    {
-      method: "game",
+      method: "games",
       icon: Gamepad2,
-      label: "Giochi",
-      desc: isRinforza ? "Capisci meglio con un'attività interattiva" : "Ripassa con un'attività più leggera e interattiva",
+      label: t("study_mode_games_title"),
+      desc: t("study_mode_games_desc").replace("{{coachName}}", displayCoachName),
       color: "text-green-600 bg-green-50 dark:bg-green-900/20",
     },
   ];
