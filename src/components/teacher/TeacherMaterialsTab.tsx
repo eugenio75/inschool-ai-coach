@@ -514,6 +514,9 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   const [previewModalType, setPreviewModalType] = useState<"student" | "teacher">("student");
   const [previewEditMode, setPreviewEditMode] = useState(false);
   const [previewEditText, setPreviewEditText] = useState("");
+  const [previewAiEditMode, setPreviewAiEditMode] = useState(false);
+  const [previewAiPrompt, setPreviewAiPrompt] = useState("");
+  const [previewAiRefining, setPreviewAiRefining] = useState(false);
 
   function resetForm() {
     setMode(null);
@@ -546,6 +549,9 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     setAdaptedError(false);
     setPreviewModalOpen(false);
     setPreviewEditMode(false);
+    setPreviewAiEditMode(false);
+    setPreviewAiPrompt("");
+    setPreviewAiRefining(false);
   }
 
   function getPreviewContent(): string {
@@ -1243,6 +1249,8 @@ Return only the three versions with no commentary, separated exactly by ===BES==
     const openContentModal = (type: "student" | "teacher") => {
       setPreviewModalType(type);
       setPreviewEditMode(false);
+      setPreviewAiEditMode(false);
+      setPreviewAiPrompt("");
       setPreviewEditText(type === "student" ? previewContent : (aiSolutions || ""));
       setPreviewModalOpen(true);
     };
@@ -1256,6 +1264,53 @@ Return only the three versions with no commentary, separated exactly by ===BES==
       }
       setPreviewEditMode(false);
       toast.success("Contenuto aggiornato");
+    };
+
+    // AI refinement scoped to the current modal section
+    const handleModalAiRefine = async () => {
+      if (!previewAiPrompt.trim()) return;
+      setPreviewAiRefining(true);
+      try {
+        const currentContent = previewModalType === "student" ? previewContent : (aiSolutions || "");
+        const sectionLabel = previewModalType === "student" ? "contenuto per gli studenti" : "soluzioni per il docente";
+
+        const systemPrompt = `Stai modificando SOLO la sezione "${sectionLabel}" di un documento didattico. Applica la modifica richiesta e restituisci SOLO questa sezione aggiornata, senza aggiungere commenti o spiegazioni. Mantieni la stessa struttura e formattazione.`;
+
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({
+              stream: false,
+              maxTokens: 4000,
+              systemPrompt,
+              messages: [{ role: "user", content: `CONTENUTO ATTUALE:\n---\n${currentContent}\n---\n\nMODIFICA RICHIESTA: ${previewAiPrompt}` }],
+            }),
+          }
+        );
+        const data = await res.json();
+        const refined = data.choices?.[0]?.message?.content?.trim();
+        if (!refined) { toast.error("Errore nella modifica AI."); return; }
+
+        if (previewModalType === "student") {
+          if (mode === "ai") setAiOutput(refined);
+          else setContent(refined);
+        } else {
+          setAiSolutions(refined);
+        }
+
+        setPreviewAiPrompt("");
+        setPreviewAiEditMode(false);
+        toast.success("Contenuto aggiornato con AI!");
+      } catch {
+        toast.error("Errore nella modifica AI.");
+      } finally {
+        setPreviewAiRefining(false);
+      }
     };
 
     const modalContent = previewModalType === "student" ? previewContent : (aiSolutions || "");
@@ -1307,6 +1362,31 @@ Return only the three versions with no commentary, separated exactly by ===BES==
                 Annulla
               </Button>
             </div>
+          ) : previewAiEditMode ? (
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  value={previewAiPrompt}
+                  onChange={e => setPreviewAiPrompt(e.target.value)}
+                  placeholder="Es: 'Aggiungi un esempio', 'Semplifica il linguaggio', 'Riduci a 5 domande'"
+                  className="rounded-xl text-sm"
+                  disabled={previewAiRefining}
+                  onKeyDown={e => { if (e.key === "Enter" && previewAiPrompt.trim()) handleModalAiRefine(); }}
+                  autoFocus
+                />
+                <Button
+                  size="sm"
+                  className="shrink-0 rounded-xl"
+                  onClick={handleModalAiRefine}
+                  disabled={!previewAiPrompt.trim() || previewAiRefining}
+                >
+                  {previewAiRefining ? <><RotateCcw className="mr-1 h-3.5 w-3.5 animate-spin" /> Aggiorno...</> : <><Sparkles className="mr-1 h-3.5 w-3.5" /> Applica</>}
+                </Button>
+              </div>
+              <Button variant="ghost" size="sm" className="rounded-xl text-xs" onClick={() => { setPreviewAiEditMode(false); setPreviewAiPrompt(""); }}>
+                ← Torna all'anteprima
+              </Button>
+            </div>
           ) : (
             <>
               <div className="flex gap-2">
@@ -1319,8 +1399,18 @@ Return only the three versions with no commentary, separated exactly by ===BES==
                     setPreviewEditMode(true);
                   }}
                 >
-                  <Pencil className="mr-1 h-3.5 w-3.5" /> Modifica
+                  <Pencil className="mr-1 h-3.5 w-3.5" /> Modifica manuale
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 rounded-xl"
+                  onClick={() => setPreviewAiEditMode(true)}
+                >
+                  <Sparkles className="mr-1 h-3.5 w-3.5" /> Modifica con AI
+                </Button>
+              </div>
+              <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -1332,7 +1422,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
                   }}
                 >
                   <Download className="mr-1 h-3.5 w-3.5" />
-                  {previewModalType === "student" ? "Scarica PDF studente" : "Scarica soluzioni docente"}
+                  {previewModalType === "student" ? "Scarica PDF" : "Scarica soluzioni"}
                 </Button>
               </div>
               <Button
@@ -1341,7 +1431,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
                   setPreviewModalOpen(false);
                   handleConfirm();
                 }}
-                disabled={saving || aiRefining}
+                disabled={saving || aiRefining || previewAiRefining}
               >
                 <Send className="mr-1 h-3.5 w-3.5" />
                 {saving ? "Salvataggio..." : "Conferma e salva"}

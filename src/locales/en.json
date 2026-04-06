@@ -1320,5 +1320,13 @@
   "onb_section_label": "Section (optional)",
   "onb_section_placeholder": "e.g. A",
   "onb_classe_label": "Class (optional)",
-  "onb_classe_placeholder": "E.g. 3rd A"
+  "onb_classe_placeholder": "E.g. 3rd A",
+  "mat_preview_edit_manual": "Edit manually",
+  "mat_preview_edit_ai": "Edit with AI",
+  "mat_preview_ai_placeholder": "E.g. 'Add an example', 'Simplify the language', 'Reduce to 5 questions'",
+  "mat_preview_ai_apply": "Apply",
+  "mat_preview_ai_updating": "Updating...",
+  "mat_preview_ai_back": "Back to preview",
+  "mat_preview_ai_updated": "Content updated with AI!",
+  "mat_preview_ai_error": "Error in AI editing."
 }
