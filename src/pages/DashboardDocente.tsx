@@ -65,6 +65,15 @@ export default function DashboardDocente() {
   const moodRef = useRef<HTMLDivElement>(null);
   const [isLoadingCoachMsg, setIsLoadingCoachMsg] = useState(true);
 
+  // Close mood on click outside
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (moodRef.current && !moodRef.current.contains(e.target as Node)) setShowMood(false);
+    }
+    if (showMood) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showMood]);
+
   // Modal
   const [showClasseModal, setShowClasseModal] = useState(false);
   const [newClasse, setNewClasse] = useState({ nome: "", materie: [] as string[], ordine_scolastico: "", num_studenti: "", school_code: "", school_name: "" });
