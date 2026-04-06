@@ -421,6 +421,9 @@ export default function DashboardDocente() {
               <CoachAvatar mood="default" size={32} />
             </div>
             <div className="flex-1">
+              {coachName && (
+                <p className="text-xs font-semibold text-primary mb-1">{coachName}</p>
+              )}
               {isLoadingCoachMsg ? (
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-3/4" />
