@@ -1105,7 +1105,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
             <div>
               <Label className="text-xs text-muted-foreground">Descrivi cosa vuoi</Label>
               <Textarea
-                placeholder={PLACEHOLDERS_FORM_B[activityType]}
+                placeholder={getPlaceholderB(activityType, selectedSubjects, classe?.nome || "")}
                 value={aiPrompt}
                 onChange={e => setAiPrompt(e.target.value)}
                 className="mt-1 rounded-xl min-h-[100px]"
