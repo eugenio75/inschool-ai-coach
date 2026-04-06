@@ -26,7 +26,7 @@ const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 // ─── Types ───
 type Section = "ripasso" | "rinforza";
 type ContentType = "today" | "cumulative" | "specific";
-type StudyMethod = "coach" | "flashcard" | "challenge" | "game";
+type StudyMethod = "coach" | "flashcard" | "challenge" | "game" | "games";
 type Step = "home" | "subject-pick" | "summary" | "study";
 
 interface WizardState {
