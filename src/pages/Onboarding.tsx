@@ -175,12 +175,20 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             });
             const profileUpdates: any = { onboarding_completed: true };
             const interestsToSave = Array.isArray(answers.interests) ? answers.interests.filter((i: unknown) => typeof i === "string" && i.trim()) : [];
+            const teacherSchools = Array.isArray(answers.teacher_declaration?.schools) ? answers.teacher_declaration.schools : [];
+            const lastTeacherSchool = teacherSchools[teacherSchools.length - 1];
+            const teacherSubjects = Array.isArray(answers.docente_materie)
+              ? answers.docente_materie.filter((s: unknown) => typeof s === "string" && s.trim())
+              : [];
             console.log("[Onboarding] Saving interests:", interestsToSave);
             if (interestsToSave.length > 0) profileUpdates.interests = interestsToSave;
-            if (answers.school_name) profileUpdates.school_name = answers.school_name;
-            if (answers.school_code) profileUpdates.school_code = answers.school_code;
+            if (answers.school_name || lastTeacherSchool?.school_name) profileUpdates.school_name = answers.school_name || lastTeacherSchool?.school_name;
+            if (answers.school_code || lastTeacherSchool?.school_code) profileUpdates.school_code = answers.school_code || lastTeacherSchool?.school_code;
             if (answers.school_section) profileUpdates.class_section = answers.school_section;
-            const cityVal = answers.medie_citta || answers.superiori_citta || answers.uni_citta;
+            if (role === "docente" && teacherSubjects.length > 0) {
+              profileUpdates.favorite_subjects = teacherSubjects;
+            }
+            const cityVal = answers.medie_citta || answers.superiori_citta || answers.uni_citta || lastTeacherSchool?.city || answers.docente_citta;
             if (cityVal) profileUpdates.city = cityVal;
             // Gender is now set during registration for teachers
             await supabase.from("child_profiles").update(profileUpdates as any).eq("id", profileId);
@@ -188,7 +196,7 @@ function OnboardingAdult({ role, profileId, initialStep, initialData }: any) {
             if (currentSession?.profile) {
               setChildSession({
                 ...currentSession,
-                profile: { ...currentSession.profile, onboarding_completed: true } as any,
+                profile: { ...currentSession.profile, ...profileUpdates } as any,
               });
             }
             setSaving(false);

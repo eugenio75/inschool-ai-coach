@@ -128,6 +128,27 @@ function getPlaceholderB(type: ActivityType, subjects: string[], className: stri
   return defaults[type];
 }
 
+function normalizeSubjects(subjects: Array<string | null | undefined>): string[] {
+  return [...new Set(subjects.map((subject) => subject?.trim()).filter(Boolean) as string[])];
+}
+
+function parseSubjects(subjects?: string | null): string[] {
+  return normalizeSubjects((subjects || "").split(","));
+}
+
+function resolveDefaultSubjects(classSubjects: string[], teacherSubjects: string[]): string[] {
+  const normalizedClassSubjects = normalizeSubjects(classSubjects);
+  const normalizedTeacherSubjects = normalizeSubjects(teacherSubjects);
+
+  if (normalizedTeacherSubjects.length === 0) return normalizedClassSubjects;
+  if (normalizedClassSubjects.length === 0) return normalizedTeacherSubjects;
+
+  const teacherSubjectsSet = new Set(normalizedTeacherSubjects.map((subject) => subject.toLowerCase()));
+  const overlappingSubjects = normalizedClassSubjects.filter((subject) => teacherSubjectsSet.has(subject.toLowerCase()));
+
+  return overlappingSubjects.length > 0 ? overlappingSubjects : normalizedTeacherSubjects;
+}
+
 type FormMode = null | "write" | "ai" | "file";
 type DestinationType = "all" | "selected" | "pdf";
 
@@ -154,6 +175,7 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   const [adaptedMap, setAdaptedMap] = useState<Record<string, Record<string, any>>>({});
   const [classiList, setClassiList] = useState<any[]>([]);
   const [teacherSubjects, setTeacherSubjects] = useState<string[]>([]);
+  const [coachName, setCoachName] = useState("");
 
   // Fetch teacher's subjects from user_preferences (onboarding data)
   useEffect(() => {
@@ -162,21 +184,33 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
       // Find teacher's profile id
       const { data: profiles } = await supabase
         .from("child_profiles")
-        .select("id")
+        .select("id, favorite_subjects")
         .eq("parent_id", userId)
         .eq("school_level", "docente")
         .limit(1);
-      const profileId = profiles?.[0]?.id;
+      const profile = profiles?.[0];
+      const profileId = profile?.id;
       if (!profileId) return;
       const { data: prefs } = await supabase
         .from("user_preferences")
         .select("data")
         .eq("profile_id", profileId)
         .maybeSingle();
-      const subjects: string[] = (prefs?.data as any)?.docente_materie || [];
+      const prefsData = (prefs?.data as any) || {};
+      const profileSubjects = normalizeSubjects(profile?.favorite_subjects || []);
+      const preferenceSubjects = normalizeSubjects(prefsData.docente_materie || []);
+      const subjects = profileSubjects.length > 0 ? profileSubjects : preferenceSubjects;
       if (subjects.length > 0) setTeacherSubjects(subjects);
+      setCoachName(typeof prefsData.coach_name === "string" ? prefsData.coach_name.trim() : "");
     })();
   }, [userId]);
+
+  const classSubjects = useMemo(() => parseSubjects(classe?.materia), [classe?.materia]);
+  const defaultSubjects = useMemo(
+    () => resolveDefaultSubjects(classSubjects, teacherSubjects),
+    [classSubjects, teacherSubjects]
+  );
+  const coachGeneratorLabel = coachName ? `Genera con ${coachName}` : "Genera con AI";
 
   // Build MATERIE_OPTIONS with teacher's subjects prioritized at top
   const MATERIE_OPTIONS = useMemo(() => {
@@ -219,18 +253,14 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>(() => {
-    const classMateria = classe?.materia;
-    if (!classMateria) return [];
-    return classMateria.split(",").map((m: string) => m.trim()).filter(Boolean);
-  });
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [didCustomizeSubjects, setDidCustomizeSubjects] = useState(false);
 
-  // When teacherSubjects load & selectedSubjects is still empty (no class materia), default to teacher's subjects
   useEffect(() => {
-    if (teacherSubjects.length > 0 && selectedSubjects.length === 0) {
-      setSelectedSubjects(teacherSubjects);
+    if (!didCustomizeSubjects) {
+      setSelectedSubjects(defaultSubjects);
     }
-  }, [teacherSubjects]);
+  }, [defaultSubjects, didCustomizeSubjects]);
 
   // AI state
   const [aiPrompt, setAiPrompt] = useState("");
@@ -287,8 +317,8 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     setUploadFile(null);
     setUploadUrl(null);
     setOcrText(null);
-    const classSubjects = classe?.materia ? classe.materia.split(",").map((m: string) => m.trim()).filter(Boolean) : [];
-    setSelectedSubjects(classSubjects.length > 0 ? classSubjects : teacherSubjects);
+    setDidCustomizeSubjects(false);
+    setSelectedSubjects(defaultSubjects);
     setShowDownloadPanel(false);
     setConfirmedContent("");
     setConfirmedTitle("");
@@ -912,7 +942,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
               {
                 key: "ai" as const,
                 icon: Sparkles,
-                title: "Genera con AI",
+                title: coachGeneratorLabel,
                 desc: "Non hai il materiale — descrivi cosa vuoi e il sistema lo costruisce per te. Puoi anche caricare un tuo materiale come modello.",
               },
               {
@@ -1077,7 +1107,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
       <div className="bg-card border border-border rounded-2xl p-5 space-y-5">
         <p className="text-sm font-semibold text-foreground flex items-center gap-2">
           {mode === "write" && <><PenLine className="w-4 h-4 text-primary" /> Scrivo io</>}
-          {mode === "ai" && <><Sparkles className="w-4 h-4 text-primary" /> Genera con AI</>}
+          {mode === "ai" && <><Sparkles className="w-4 h-4 text-primary" /> {coachGeneratorLabel}</>}
           {mode === "file" && <><Upload className="w-4 h-4 text-primary" /> Carico e assegno</>}
         </p>
 
@@ -1101,14 +1131,20 @@ Return only the three versions with no commentary, separated exactly by ===BES==
             {selectedSubjects.map(s => (
               <span key={s} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
                 {s}
-                <button onClick={() => setSelectedSubjects(prev => prev.filter(x => x !== s))} className="hover:text-destructive">×</button>
+                <button onClick={() => {
+                  setDidCustomizeSubjects(true);
+                  setSelectedSubjects(prev => prev.filter(x => x !== s));
+                }} className="hover:text-destructive">×</button>
               </span>
             ))}
           </div>
           <Select
             value=""
             onValueChange={(v) => {
-              if (v && !selectedSubjects.includes(v)) setSelectedSubjects(prev => [...prev, v]);
+              if (v && !selectedSubjects.includes(v)) {
+                setDidCustomizeSubjects(true);
+                setSelectedSubjects(prev => [...prev, v]);
+              }
             }}
           >
             <SelectTrigger className="rounded-xl">
