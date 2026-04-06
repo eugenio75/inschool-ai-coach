@@ -242,7 +242,13 @@ const Settings = () => {
     navigate("/onboarding");
   };
   const handleSaveCoach = async () => {
-    const pid = session?.profileId || activeProfileId;
+    // Per il genitore usa il primo figlio, per adulto usa session.profileId
+    let pid = session?.profileId || activeProfileId;
+    if (!pid && profiles.length > 0) {
+      // Genitore: trova il profilo non-alunno o usa il primo disponibile
+      const adultProfile = profiles.find((p: any) => ["superiori","universitario","docente"].includes(p.school_level));
+      pid = adultProfile?.id || profiles[0]?.id;
+    }
     if (!pid) return;
     setSavingCoach(true);
     const { data: existing } = await supabase
