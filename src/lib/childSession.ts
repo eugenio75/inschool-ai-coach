@@ -121,82 +121,21 @@ export async function childApi(action: string, payload?: any): Promise<any> {
       case "delete-task": {
         return callChildApiEdge();
       }
-      case "get-gamification": {
-        const { data } = await supabase.rpc("get_child_gamification", { p_profile_id: profileId });
-        return data;
-      }
-      case "get-memory-items": {
-        const { data } = await supabase.from("memory_items").select("*").eq("child_profile_id", profileId).order("created_at", { ascending: false });
-        return data || [];
-      }
-      case "update-memory-strength": {
-        const { data } = await supabase.from("memory_items").update({ strength: payload.strength, last_reviewed: new Date().toISOString() }).eq("id", payload.itemId).eq("child_profile_id", profileId).select().single();
-        return data;
-      }
-      case "get-learning-errors": {
-        const { data } = await supabase.from("learning_errors").select("*").eq("user_id", profileId).order("created_at", { ascending: false });
-        return data || [];
-      }
-      case "get-flagged-flashcards": {
-        const { data } = await supabase.from("flashcards").select("*").eq("user_id", profileId).eq("is_flagged", true);
-        return data || [];
-      }
-      case "get-badges": {
-        const { data } = await supabase.from("badges").select("*").eq("child_profile_id", profileId);
-        return data || [];
-      }
-      case "get-focus-sessions": {
-        const { data } = await supabase.from("focus_sessions").select("*").eq("child_profile_id", profileId).order("completed_at", { ascending: false });
-        return data || [];
-      }
-      case "save-focus-session": {
-        const { data } = await supabase.from("focus_sessions").insert({ ...payload, child_profile_id: profileId }).select().single();
-        return data;
-      }
-      case "get-daily-missions": {
-        const today = new Date().toISOString().split("T")[0];
-        const { data } = await supabase.rpc("get_child_daily_missions", { p_profile_id: profileId, p_date: today });
-        return data || [];
-      }
-      case "complete-mission": {
-        const { data } = await supabase.from("daily_missions").update({ completed: true, completed_at: new Date().toISOString() }).eq("id", payload.missionId).eq("child_profile_id", profileId).select().single();
-        // Update gamification points
-        if (payload.pointsReward) {
-          await supabase.rpc("generate_child_access_code").then(() => {}); // no-op, just placeholder
-          const { data: gam } = await supabase.from("gamification").select("*").eq("child_profile_id", profileId).maybeSingle();
-          if (gam) {
-            await supabase.from("gamification").update({ focus_points: (gam.focus_points || 0) + payload.pointsReward, updated_at: new Date().toISOString() }).eq("child_profile_id", profileId);
-          }
-        }
-        return data;
-      }
-      case "save-checkin": {
-        const { data } = await supabase.from("emotional_checkins").insert({ ...payload, child_profile_id: profileId }).select().single();
-        return data;
-      }
-      case "get-paused-session": {
-        const { data: sessions } = await supabase.from("guided_sessions").select("*, conversation_sessions(*)").eq("user_id", profileId).eq("homework_id", payload.homeworkId).order("started_at", { ascending: false }).limit(1);
-        if (!sessions || sessions.length === 0) return { session: null, completed: false, steps: [] };
-        const sess = sessions[0];
-        const { data: steps } = await supabase.from("study_steps").select("*").eq("session_id", sess.id).order("step_number");
-        return { session: sess, completed: sess.status === "completed", steps: steps || [] };
-      }
-      case "create-session": {
-        const { data } = await supabase.from("guided_sessions").insert({
-          user_id: profileId,
-          homework_id: payload.homeworkId,
-          total_steps: payload.totalSteps,
-          emotional_checkin: payload.emotionalCheckin || null,
-          status: "active",
-          current_step: 1,
-          started_at: new Date().toISOString(),
-        }).select().single();
-        return data;
-      }
+      case "get-gamification":
+      case "get-memory-items":
+      case "update-memory-strength":
+      case "get-learning-errors":
+      case "get-flagged-flashcards":
+      case "get-badges":
+      case "get-focus-sessions":
+      case "save-focus-session":
+      case "get-daily-missions":
+      case "complete-mission":
+      case "save-checkin":
+      case "get-paused-session":
+      case "create-session":
       case "update-session": {
-        const { sessionId, updates } = payload;
-        const { data } = await supabase.from("guided_sessions").update(updates).eq("id", sessionId).eq("user_id", profileId).select().single();
-        return data;
+        return callChildApiEdge();
       }
       case "insert-steps": {
         const { data } = await supabase.from("study_steps").insert(payload.steps.map((s: any) => ({ ...s, user_id: profileId }))).select();
