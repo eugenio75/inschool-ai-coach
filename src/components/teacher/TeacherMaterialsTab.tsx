@@ -1524,7 +1524,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
           </Sheet>
         ) : (
           <Dialog open={previewModalOpen} onOpenChange={setPreviewModalOpen}>
-            <DialogContent className="h-[85vh] max-w-4xl overflow-hidden p-0">
+            <DialogContent className="flex h-[85vh] max-w-4xl flex-col overflow-hidden p-0">
               {previewModalBody}
             </DialogContent>
           </Dialog>
