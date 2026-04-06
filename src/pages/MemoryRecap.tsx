@@ -1153,8 +1153,8 @@ const MemoryRecap = () => {
     {
       method: "coach",
       icon: MessageCircle,
-      label: isRinforza ? "Coach" : "Coach",
-      desc: isRinforza ? "Ti aiuto a capire meglio i punti più difficili" : "Rivedi l'argomento passo dopo passo con il tuo Coach",
+      label: isRinforza ? `Coach ${displayCoachName}` : `Coach ${displayCoachName}`,
+      desc: isRinforza ? `${displayCoachName} ti aiuta a capire meglio i punti più difficili` : `Rivedi l'argomento passo dopo passo con ${displayCoachName}`,
       color: "text-primary bg-primary/10",
     },
     {
