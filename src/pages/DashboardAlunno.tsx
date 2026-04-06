@@ -15,6 +15,7 @@ import { BadgeDisplay } from "@/components/BadgeDisplay";
 import { supabase } from "@/integrations/supabase/client";
 import { JoinClassPrompt } from "@/components/JoinClassPrompt";
 import { useAuth } from "@/hooks/useAuth";
+import { AppWordmark } from "@/components/shared/AppWordmark";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -88,12 +89,7 @@ const DashboardAlunno = () => {
       <div className="bg-card border-b border-border px-4 sm:px-6 pt-5 sm:pt-6 pb-6 sm:pb-8 shadow-sm">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center">
-                <BookOpen className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="font-display text-lg sm:text-xl font-semibold text-foreground">SarAI</span>
-            </div>
+            <AppWordmark compact />
             <div className="flex items-center gap-1.5">
               {showLibrary && <button onClick={() => navigate("/libreria")} className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors" title="Libreria materiali"><FolderOpen className="w-4 h-4" /></button>}
               

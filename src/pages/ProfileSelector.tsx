@@ -9,6 +9,7 @@ import { getChildProfiles, setActiveChildProfileId } from "@/lib/database";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { getChildSession, setChildSession } from "@/lib/childSession";
 import { toast } from "sonner";
+import { AppWordmark } from "@/components/shared/AppWordmark";
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
@@ -113,12 +114,7 @@ const ProfileSelector = () => {
         transition={spring}
         className="w-full max-w-5xl flex flex-col items-center"
       >
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-sm">
-            <BookOpen className="w-6 h-6 text-primary-foreground" />
-          </div>
-          <span className="font-display text-2xl font-bold text-foreground tracking-tight">SarAI Hub</span>
-        </div>
+        <AppWordmark className="mb-8" />
 
         <div className="text-center mb-12">
             <h1 className="font-display text-4xl md:text-5xl font-extrabold text-foreground mb-4 tracking-tight">
