@@ -17,7 +17,7 @@ export default function ForgotPassword() {
     if (!email.trim()) return;
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://inschool.azarlabs.com/reset-password",
+      redirectTo: "https://sarai.azarlabs.com/reset-password",
     });
     setLoading(false);
     if (!error) setSent(true);
