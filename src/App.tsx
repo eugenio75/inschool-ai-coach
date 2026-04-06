@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { isChildSession, getChildSession, setChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/BottomNav";
+import { TeacherBottomNav } from "@/components/TeacherBottomNav";
 import { AdultLayout } from "@/components/AdultLayout";
 import { getChildSession as getCS } from "@/lib/childSession";
 import { Loader2 } from "lucide-react";
@@ -228,6 +229,7 @@ const App = () => (
           <BrowserRouter>
             <AppRoutes />
             <BottomNav />
+            <TeacherBottomNav />
             <CookieBanner />
           </BrowserRouter>
         </TooltipProvider>
