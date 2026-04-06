@@ -66,7 +66,7 @@ export default function DashboardMedie() {
   const avatarInitial = (profile?.name || "S").charAt(0).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-background pb-20 sm:pb-8 font-sans">
+    <div className="min-h-screen-safe bg-background pb-28 sm:pb-8 font-sans">
       {/* Header */}
       <div className="bg-card border-b border-border px-4 sm:px-6 pt-5 sm:pt-6 pb-6 sm:pb-8 shadow-sm">
         <div className="max-w-3xl mx-auto">
