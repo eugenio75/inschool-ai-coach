@@ -21,13 +21,13 @@ export function LandingNavbar() {
     <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border">
       <div className="max-w-6xl mx-auto flex items-center justify-between h-16 px-5">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/" className="flex items-baseline gap-1.5">
           <span className="font-black text-2xl tracking-tight">
             <span className="text-foreground">Sar</span>
             <span className="text-primary">AI</span>
           </span>
           <span className="text-xs text-muted-foreground font-medium">
-            — {t("home_tagline")}
+            {t("home_tagline")}
           </span>
         </Link>
 
