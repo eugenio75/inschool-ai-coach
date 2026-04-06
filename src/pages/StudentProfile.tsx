@@ -94,6 +94,20 @@ const StudentProfile = () => {
         if (p.school_level === "università") {
           loadStudyPlan(p.id).then(setStudyPlan);
         }
+
+        // Load coach name from user_preferences
+        if (p.id) {
+          try {
+            const { data: prefData } = await supabase
+              .from("user_preferences")
+              .select("data")
+              .eq("profile_id", p.id)
+              .maybeSingle();
+            const cn = (prefData?.data as Record<string, any>)?.coach_name || "";
+            setCoachName(cn);
+            setOriginalCoachName(cn);
+          } catch {}
+        }
       }
       setLoading(false);
     };
