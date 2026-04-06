@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { JoinClassPrompt } from "@/components/JoinClassPrompt";
 import { useAuth } from "@/hooks/useAuth";
 import { AppWordmark } from "@/components/shared/AppWordmark";
+import { getCoachName } from "@/lib/coachPreferences";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -59,7 +60,7 @@ const DashboardAlunno = () => {
         const { data } = await supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
         const prefs = (data?.data as any) || {};
         if (currentProfile?.school_level === "alunno") setShowLibrary(!!prefs.show_library);
-        if (prefs.coach_name) setCoachName(prefs.coach_name);
+        setCoachName(await getCoachName(profileId, isChild));
       }
       const dbTasks = await getTasks();
       setTasks(dbTasks);
