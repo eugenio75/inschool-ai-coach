@@ -41,10 +41,13 @@ function TeacherNavbar() {
       <header className="h-14 flex items-center justify-between border-b border-border px-5 bg-card sticky top-0 z-50">
         <button
           onClick={() => navigate("/dashboard")}
-          className="font-black text-2xl tracking-tight hover:opacity-80 transition-opacity"
+          className="flex items-baseline gap-1.5 hover:opacity-80 transition-opacity"
         >
-          <span className="text-foreground">Sar</span>
-          <span className="text-primary">AI</span>
+          <span className="font-black text-2xl tracking-tight">
+            <span className="text-foreground">Sar</span>
+            <span className="text-primary">AI</span>
+          </span>
+          <span className="text-xs font-medium text-muted-foreground">Better</span>
         </button>
 
         {/* Desktop nav */}
