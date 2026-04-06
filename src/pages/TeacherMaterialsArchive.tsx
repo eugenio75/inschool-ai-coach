@@ -54,6 +54,13 @@ export default function TeacherMaterialsArchive() {
     loadData();
   }, [user]);
 
+  // Auto-open class picker when navigating with ?create=true
+  useEffect(() => {
+    if (searchParams.get("create") === "true" && !loading && classi.length > 0) {
+      setShowClassPicker(true);
+    }
+  }, [searchParams, loading, classi]);
+
   async function loadData() {
     setLoading(true);
     const [matRes, classRes] = await Promise.all([
