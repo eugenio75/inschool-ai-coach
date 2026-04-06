@@ -11,7 +11,7 @@ export function LandingFooter() {
           {/* Brand */}
           <div>
             <p className="font-display font-bold text-white text-lg mb-1">
-              SarAI <span className="text-slate-500 font-normal text-sm">— Do Better</span>
+              SarAI <span className="text-slate-500 font-normal text-sm">— Better</span>
             </p>
             <p className="text-xs text-slate-500 mt-2">AzarLabs · Tenks S.r.l.s.</p>
             <p className="text-xs text-slate-500">inschool.privacy@azarlabs.com</p>
