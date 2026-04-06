@@ -213,6 +213,23 @@ const StudentProfile = () => {
           {/* Access Code — always visible for primaria/medie */}
           {showAccessCode && accessCode && <AccessCodeCard code={accessCode} />}
 
+          {/* Coach Name */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.05 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
+            <div className="flex items-center gap-2 mb-1">
+              <MessageCircleHeart className="w-4 h-4 text-primary" />
+              <h3 className="font-display font-semibold text-foreground text-sm">{t("profile_coach_name_title") || "Nome del Coach"}</h3>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">{t("profile_coach_name_desc") || "Dai un nome al tuo coach AI personale"}</p>
+            <input
+              type="text"
+              value={coachName}
+              onChange={(e) => setCoachName(e.target.value)}
+              placeholder={t("profile_coach_name_placeholder") || "Es. Luna, Sensei, Buddy…"}
+              maxLength={20}
+              className="w-full px-4 py-2 rounded-xl border border-border bg-muted text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </motion.div>
+
           {/* Gender */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.1 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
             <h3 className="font-display font-semibold text-foreground mb-3 text-sm">{t("profile_gender_title")}</h3>
