@@ -1332,5 +1332,13 @@
   "exam_maturita_custom_placeholder": "Scrivi un argomento...",
   "exam_maturita_start_generic": "Simulazione generica senza argomento specifico",
   "onb_classe_label": "Classe (opzionale)",
-  "onb_classe_placeholder": "Es. 3ª A"
+  "onb_classe_placeholder": "Es. 3ª A",
+  "mat_preview_edit_manual": "Modifica manuale",
+  "mat_preview_edit_ai": "Modifica con AI",
+  "mat_preview_ai_placeholder": "Es: 'Aggiungi un esempio', 'Semplifica il linguaggio', 'Riduci a 5 domande'",
+  "mat_preview_ai_apply": "Applica",
+  "mat_preview_ai_updating": "Aggiorno...",
+  "mat_preview_ai_back": "Torna all'anteprima",
+  "mat_preview_ai_updated": "Contenuto aggiornato con AI!",
+  "mat_preview_ai_error": "Errore nella modifica AI."
 }
