@@ -89,6 +89,28 @@ export async function childApi(action: string, payload?: any): Promise<any> {
   const { supabase } = await import("@/integrations/supabase/client");
   const profileId = session.profileId;
 
+  const callChildApiEdge = async () => {
+    const { data: { session: authSession } } = await supabase.auth.getSession();
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/child-api`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        ...(authSession?.access_token ? { Authorization: `Bearer ${authSession.access_token}` } : {}),
+      },
+      body: JSON.stringify({
+        action,
+        accessCode: session.accessCode,
+        childProfileId: profileId,
+        payload,
+      }),
+    });
+
+    const result = await response.json();
+    if (!response.ok) throw new Error(result?.error || "Errore di comunicazione");
+    return result;
+  };
+
   try {
     switch (action) {
       case "get-tasks": {
@@ -196,7 +218,7 @@ export async function childApi(action: string, payload?: any): Promise<any> {
         return data;
       }
       case "update-profile": {
-        const { data } = await supabase.from("child_profiles").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", profileId).select().single();
+        const data = await callChildApiEdge();
         if (data) {
           // Update local session
           const currentSession = getChildSession();
@@ -205,6 +227,12 @@ export async function childApi(action: string, payload?: any): Promise<any> {
           }
         }
         return data;
+      }
+      case "get-user-preferences": {
+        return callChildApiEdge();
+      }
+      case "save-user-preferences": {
+        return callChildApiEdge();
       }
       case "upload-homework-image": {
         const { base64, fileName } = payload;

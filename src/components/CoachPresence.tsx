@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getCurrentLang } from "@/lib/langUtils";
 import { detectCoachMood, type CoachMood } from "@/components/shared/CoachAvatarPicker";
 import { CoachAvatar, type CoachAvatarMood } from "@/components/shared/CoachAvatar";
+import { getCoachName } from "@/lib/coachPreferences";
 
 function getProfile() {
   try {
@@ -172,16 +173,18 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
   }, [showMood]);
 
   useEffect(() => {
-    fetchCoachMessage();
-    // Load coach preferences and student avatar
-    const loadCoachPrefs = async () => {
+    const bootstrap = async () => {
+      let loadedCoachName: string | null = null;
       const profileId = getChildSession()?.profileId || profile?.id;
-      if (!profileId) return;
-      const prefsRes = await supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle();
-      const prefs = (prefsRes.data?.data as any) || {};
-      if (prefs.coach_name) setCoachName(prefs.coach_name);
+      if (profileId) {
+        try {
+          loadedCoachName = await getCoachName(profileId, isChildSession());
+          setCoachName(loadedCoachName || null);
+        } catch {}
+      }
+      fetchCoachMessage(loadedCoachName || undefined);
     };
-    loadCoachPrefs();
+    bootstrap();
   }, []);
 
   // Map internal CoachMood to CoachAvatarMood
@@ -193,7 +196,7 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
     "default"
   );
 
-  async function fetchCoachMessage() {
+  async function fetchCoachMessage(loadedCoachName?: string) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const profileId = getChildSession()?.profileId || profile?.id;
@@ -308,7 +311,7 @@ export function CoachPresence({ variant = "full" }: { variant?: "home" | "full" 
             urgentCount,
             gamification: gamData,
             lang: getCurrentLang(),
-            coachName: coachName || undefined,
+            coachName: loadedCoachName || coachName || undefined,
           }),
         });
 

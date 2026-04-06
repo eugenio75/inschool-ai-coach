@@ -178,20 +178,63 @@ serve(async (req) => {
 
       case "update-profile": {
         const allowedFields: Record<string, any> = {};
-        if (payload.avatar_emoji) allowedFields.avatar_emoji = payload.avatar_emoji;
-        if (payload.interests) allowedFields.interests = payload.interests;
+        if (payload.avatar_emoji !== undefined) allowedFields.avatar_emoji = payload.avatar_emoji;
+        if (payload.interests !== undefined) allowedFields.interests = payload.interests;
         if (payload.class_section !== undefined) allowedFields.class_section = payload.class_section;
         if (payload.school_name !== undefined) allowedFields.school_name = payload.school_name;
+        if (payload.school_code !== undefined) allowedFields.school_code = payload.school_code;
         if (payload.city !== undefined) allowedFields.city = payload.city;
+        if (payload.gender !== undefined) allowedFields.gender = payload.gender;
         allowedFields.updated_at = new Date().toISOString();
 
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("child_profiles")
           .update(allowedFields)
           .eq("id", childProfileId)
           .select()
           .single();
+        if (error) throw error;
         result = data;
+        break;
+      }
+
+      case "get-user-preferences": {
+        const { data, error } = await supabase
+          .from("user_preferences")
+          .select("data")
+          .eq("profile_id", childProfileId)
+          .maybeSingle();
+        if (error) throw error;
+        result = data?.data || {};
+        break;
+      }
+
+      case "save-user-preferences": {
+        const { data: existing, error: existingError } = await supabase
+          .from("user_preferences")
+          .select("data, role, current_step")
+          .eq("profile_id", childProfileId)
+          .maybeSingle();
+        if (existingError) throw existingError;
+
+        const mergedData = {
+          ...((existing?.data as Record<string, any> | null) || {}),
+          ...((payload as Record<string, any> | null) || {}),
+        };
+
+        const { data, error } = await supabase
+          .from("user_preferences")
+          .upsert({
+            profile_id: childProfileId,
+            role: existing?.role || null,
+            current_step: existing?.current_step ?? 0,
+            data: mergedData,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: "profile_id" })
+          .select("data")
+          .single();
+        if (error) throw error;
+        result = data?.data || mergedData;
         break;
       }
 

@@ -14,6 +14,7 @@ import { AccessCodeCard } from "@/components/profile/AccessCodeCard";
 import { EditableSchoolCard } from "@/components/profile/EditableSchoolCard";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeClass } from "@/lib/normalizeClass";
+import { getCoachName, saveCoachName } from "@/lib/coachPreferences";
 
 const INTEREST_SUGGESTIONS = [
   "Calcio", "Basket", "Nuoto", "Danza", "Musica", "Chitarra", "Pianoforte",
@@ -98,12 +99,7 @@ const StudentProfile = () => {
         // Load coach name from user_preferences
         if (p.id) {
           try {
-            const { data: prefData } = await supabase
-              .from("user_preferences")
-              .select("data")
-              .eq("profile_id", p.id)
-              .maybeSingle();
-            const cn = (prefData?.data as Record<string, any>)?.coach_name || "";
+            const cn = await getCoachName(p.id, isChild);
             setCoachName(cn);
             setOriginalCoachName(cn);
           } catch {}
@@ -140,7 +136,7 @@ const StudentProfile = () => {
 
       // Save coach name if changed
       if (coachName !== originalCoachName && profile.id) {
-        await (supabase.rpc as any)("save_coach_name", { p_profile_id: profile.id, p_coach_name: coachName.trim() || "" });
+        await saveCoachName(profile.id, coachName, isChild);
       }
 
       toast({ title: t("profile_saved") });
