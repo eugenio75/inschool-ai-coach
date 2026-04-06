@@ -1221,59 +1221,105 @@ Return only the three versions with no commentary, separated exactly by ===BES==
   }
 
   // --- Preview view ---
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewModalType, setPreviewModalType] = useState<"student" | "teacher">("student");
+  const [previewEditMode, setPreviewEditMode] = useState(false);
+  const [previewEditText, setPreviewEditText] = useState("");
+
   if (showPreview) {
     const previewContent = getPreviewContent();
     const title = getTitle();
+
+    const openContentModal = (type: "student" | "teacher") => {
+      setPreviewModalType(type);
+      setPreviewEditMode(false);
+      setPreviewEditText(type === "student" ? previewContent : (aiSolutions || ""));
+      setPreviewModalOpen(true);
+    };
+
+    const handleEditSave = () => {
+      if (previewModalType === "student") {
+        if (mode === "ai") setAiOutput(previewEditText);
+        else setContent(previewEditText);
+      } else {
+        setAiSolutions(previewEditText || null);
+      }
+      setPreviewEditMode(false);
+      toast.success("Contenuto aggiornato");
+    };
+
+    const modalContent = previewModalType === "student" ? previewContent : (aiSolutions || "");
+    const modalTitle = previewModalType === "student" ? "Contenuto per gli alunni" : "Soluzioni per il docente";
+    const modalIcon = previewModalType === "student" ? <FileText className="w-5 h-5 text-primary" /> : <Lock className="w-5 h-5 text-emerald-600" />;
+
     return (
       <div className="space-y-4">
         <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)} className="rounded-xl">
           <ArrowLeft className="w-4 h-4 mr-1" /> Modifica
         </Button>
+
         <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
           <div className="flex items-center gap-2">
             <Eye className="w-4 h-4 text-primary" />
             <p className="text-sm font-semibold text-foreground">Anteprima</p>
           </div>
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">Titolo</p>
-            <p className="text-sm font-medium text-foreground">{title}</p>
-          </div>
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">Tipo</p>
+
+          {/* Info summary */}
+          <div className="flex items-center gap-2 flex-wrap">
             <Badge variant="secondary">{activityType.charAt(0).toUpperCase() + activityType.slice(1)}</Badge>
+            {selectedSubjects.length > 0 && <Badge variant="outline" className="text-xs">{selectedSubjects.join(", ")}</Badge>}
+            {dueDate && <span className="text-xs text-muted-foreground">{format(dueDate, "dd MMM yyyy", { locale: it })}</span>}
           </div>
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">Contenuto per lo studente</p>
-            <div className="bg-muted/50 border border-border rounded-xl p-4 text-sm whitespace-pre-wrap max-h-64 overflow-y-auto">
-              {previewContent}
-            </div>
+          <div className="text-xs text-muted-foreground">
+            {destination === "all" ? `Tutta la classe (${students.length} studenti)` :
+              destination === "selected" ? `${selectedStudents.length} studenti selezionati` :
+                "Solo scarica PDF (non assegnato digitalmente)"}
           </div>
-          {aiSolutions && (
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
-                Soluzioni (solo docente — non visibili allo studente)
-              </p>
-              <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-xl p-4 text-sm whitespace-pre-wrap max-h-48 overflow-y-auto">
-                {aiSolutions}
+
+          {/* Clickable preview cards */}
+          <div className="space-y-3">
+            {/* Student content card */}
+            <motion.button
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => openContentModal("student")}
+              className="w-full text-left bg-card border border-border rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-primary/30 transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <FileText className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground">Contenuto per gli alunni</p>
+                  <p className="text-xs text-muted-foreground truncate">{title}</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
               </div>
-            </div>
-          )}
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">Destinazione</p>
-            <p className="text-sm text-foreground">
-              {destination === "all" ? `Tutta la classe (${students.length} studenti)` :
-                destination === "selected" ? `${selectedStudents.length} studenti selezionati` :
-                  "Solo scarica PDF (non assegnato digitalmente)"}
-            </p>
+            </motion.button>
+
+            {/* Teacher solutions card */}
+            {aiSolutions && (
+              <motion.button
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => openContentModal("teacher")}
+                className="w-full text-left bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-green-400 dark:hover:border-green-600 transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/50 flex items-center justify-center shrink-0">
+                    <Lock className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground">Soluzioni per il docente</p>
+                    <p className="text-xs text-muted-foreground truncate">{title}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                </div>
+              </motion.button>
+            )}
           </div>
-          {dueDate && (
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">Scadenza</p>
-              <p className="text-sm text-foreground">{format(dueDate, "dd MMMM yyyy", { locale: it })}</p>
-            </div>
-          )}
-          {/* Inline refinement */}
+
+          {/* Inline refinement — kept outside modal */}
           {mode === "ai" && aiOutput && (
             <div className="space-y-2 border-t border-border pt-4">
               <Label className="text-xs text-muted-foreground">Vuoi modificare qualcosa?</Label>
@@ -1298,11 +1344,81 @@ Return only the three versions with no commentary, separated exactly by ===BES==
               </div>
             </div>
           )}
-          <Button className="w-full rounded-xl" onClick={handleConfirm} disabled={saving || aiRefining}>
+
+          <Button className="w-full rounded-xl h-12" onClick={handleConfirm} disabled={saving || aiRefining}>
             <Send className="w-3.5 h-3.5 mr-1" />
             {saving ? "Salvataggio..." : "Conferma e assegna"}
           </Button>
         </div>
+
+        {/* Content preview modal — Sheet on mobile, Dialog on desktop */}
+        <Sheet open={previewModalOpen} onOpenChange={setPreviewModalOpen}>
+          <SheetContent side="bottom" className="h-[92vh] rounded-t-2xl p-0 sm:max-w-2xl sm:mx-auto overflow-hidden">
+            <div className="flex flex-col h-full">
+              {/* Modal header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
+                <div className="flex items-center gap-2">
+                  {modalIcon}
+                  <p className="text-sm font-semibold text-foreground">{modalTitle}</p>
+                </div>
+                <button onClick={() => setPreviewModalOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Content area */}
+              <div className="flex-1 overflow-y-auto px-5 py-4">
+                {previewEditMode ? (
+                  <Textarea
+                    value={previewEditText}
+                    onChange={e => setPreviewEditText(e.target.value)}
+                    className="min-h-[400px] font-mono text-xs rounded-xl"
+                  />
+                ) : (
+                  <div className="prose prose-sm max-w-none text-foreground text-sm leading-relaxed">
+                    {formatMaterialContent(modalContent)}
+                  </div>
+                )}
+              </div>
+
+              {/* Modal actions */}
+              <div className="shrink-0 border-t border-border px-5 py-4 space-y-2 bg-card">
+                {previewEditMode ? (
+                  <div className="flex gap-2">
+                    <Button className="flex-1 rounded-xl" onClick={handleEditSave}>
+                      <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Salva modifiche
+                    </Button>
+                    <Button variant="outline" className="rounded-xl" onClick={() => setPreviewEditMode(false)}>
+                      Annulla
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="rounded-xl flex-1" onClick={() => {
+                        setPreviewEditText(modalContent);
+                        setPreviewEditMode(true);
+                      }}>
+                        <Pencil className="w-3.5 h-3.5 mr-1" /> Modifica
+                      </Button>
+                      <Button variant="outline" size="sm" className="rounded-xl flex-1" onClick={() => {
+                        if (previewModalType === "student") exportToPdf(title, previewContent, activityType);
+                        else if (aiSolutions) exportSolutionsPdf(title, aiSolutions);
+                        toast.success("PDF generato");
+                      }}>
+                        <Download className="w-3.5 h-3.5 mr-1" /> Scarica PDF
+                      </Button>
+                    </div>
+                    <Button className="w-full rounded-xl h-11" onClick={() => { setPreviewModalOpen(false); handleConfirm(); }} disabled={saving || aiRefining}>
+                      <Send className="w-3.5 h-3.5 mr-1" />
+                      {saving ? "Salvataggio..." : "Conferma e assegna"}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     );
   }
