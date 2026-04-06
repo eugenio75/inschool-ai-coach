@@ -981,7 +981,7 @@ Se il testo dell'esercizio dice "23,5 km", tu DEVI usare "23,5 km" — mai "24 k
     );
     const hasSourceImage = !!(taskContext?.sourceImageUrl);
 
-    const model = hasSourceImage ? "google/gemini-2.5-pro" : hasImages ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview";
+    const model = hasSourceImage ? "gpt-4o" : hasImages ? "google/gemini-2.5-flash" : "gpt-4o-mini";
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",

@@ -124,7 +124,7 @@ Rispondi SOLO con il JSON, senza markdown o altro testo.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
+        model: "gpt-4o-mini",
         messages: [{ role: "user", content: extractPrompt }],
       }),
     });

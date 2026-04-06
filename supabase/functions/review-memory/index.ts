@@ -328,7 +328,7 @@ dove XX è il nuovo valore di forza (0-100) basato sulle risposte.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "gpt-4o-mini",
         messages: aiMessages,
         stream: true,
       }),
