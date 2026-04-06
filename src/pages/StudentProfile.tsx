@@ -178,7 +178,8 @@ const StudentProfile = () => {
     || schoolData.classSection !== (profile.class_section || "")
     || schoolData.schoolName !== (profile.school_name || "")
     || schoolData.schoolCode !== (profile.school_code || null)
-    || schoolData.city !== (profile.city || "");
+    || schoolData.city !== (profile.city || "")
+    || coachName !== originalCoachName;
 
   const accessCode = profile?.access_code;
   const showAccessCode = !!accessCode || isChild || isChildLevel(profile.school_level);
