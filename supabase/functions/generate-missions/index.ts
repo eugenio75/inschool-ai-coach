@@ -194,7 +194,7 @@ Rispondi SOLO con un JSON:
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: "google/gemini-2.5-flash-lite",
             messages: [{ role: "user", content: aiPrompt }],
           }),
         });
