@@ -1621,6 +1621,70 @@ Return only the three versions with no commentary, separated exactly by ===BES==
           )}
         </div>
 
+        {/* --- Destination (before content so generation is always last) --- */}
+        <div>
+          <Label className="text-xs text-muted-foreground mb-2 block">Destinazione</Label>
+          <RadioGroup value={destination} onValueChange={(v) => setDestination(v as DestinationType)} className="flex gap-2 flex-wrap">
+            {([
+              { value: "all", label: "Tutta la classe" },
+              { value: "selected", label: "Studenti specifici" },
+              { value: "pdf", label: "Scarica PDF" },
+            ] as const).map(({ value, label }) => (
+              <label
+                key={value}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all text-xs font-medium",
+                  destination === value
+                    ? "bg-primary/10 border-primary/40 text-primary"
+                    : "bg-background border-border text-muted-foreground hover:border-primary/20"
+                )}
+              >
+                <RadioGroupItem value={value} className="sr-only" />
+                {label}
+              </label>
+            ))}
+          </RadioGroup>
+          {destination === "selected" && (
+            <div className="max-h-40 overflow-y-auto border border-border rounded-xl p-2 space-y-1 mt-2">
+              {students.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-2">Nessuno studente iscritto</p>
+              ) : students.map(s => {
+                const sid = s.student_id || s.id;
+                const checked = selectedStudents.includes(sid);
+                return (
+                  <label key={sid} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/50 cursor-pointer">
+                    <Checkbox checked={checked} onCheckedChange={(v) => {
+                      setSelectedStudents(prev => v ? [...prev, sid] : prev.filter(x => x !== sid));
+                    }} />
+                    <span className="text-sm">{s.profile?.name || s.name || "Studente"}</span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Due date */}
+        <div>
+          <Label className="text-xs text-muted-foreground">Scadenza (opzionale)</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn("w-full mt-1 rounded-xl justify-start text-left font-normal", !dueDate && "text-muted-foreground")}>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dueDate ? format(dueDate, "dd MMM yyyy", { locale: it }) : "Seleziona data"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={dueDate} onSelect={setDueDate}
+                disabled={(date) => date < new Date()}
+                initialFocus className="p-3 pointer-events-auto" />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* Separator */}
+        <div className="border-t border-border" />
+
         {/* --- FORM A: Scrivo io --- */}
         {mode === "write" && (
           <div>
@@ -1701,7 +1765,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
             {aiOutput && (
               <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-3">
                 <p className="text-xs text-muted-foreground">
-                  Anteprima pronta. Usa “Anteprima e conferma” per rivedere il contenuto formattato.
+                  Anteprima pronta. Usa "Anteprima e conferma" per rivedere il contenuto formattato.
                 </p>
               </div>
             )}
@@ -1771,67 +1835,6 @@ Return only the three versions with no commentary, separated exactly by ===BES==
             )}
           </div>
         )}
-
-        {/* --- Destination (shared) --- */}
-        <div>
-          <Label className="text-xs text-muted-foreground mb-2 block">Destinazione</Label>
-          <RadioGroup value={destination} onValueChange={(v) => setDestination(v as DestinationType)} className="flex gap-2 flex-wrap">
-            {([
-              { value: "all", label: "Tutta la classe" },
-              { value: "selected", label: "Studenti specifici" },
-              { value: "pdf", label: "Scarica PDF" },
-            ] as const).map(({ value, label }) => (
-              <label
-                key={value}
-                className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all text-xs font-medium",
-                  destination === value
-                    ? "bg-primary/10 border-primary/40 text-primary"
-                    : "bg-background border-border text-muted-foreground hover:border-primary/20"
-                )}
-              >
-                <RadioGroupItem value={value} className="sr-only" />
-                {label}
-              </label>
-            ))}
-          </RadioGroup>
-          {destination === "selected" && (
-            <div className="max-h-40 overflow-y-auto border border-border rounded-xl p-2 space-y-1 mt-2">
-              {students.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-2">Nessuno studente iscritto</p>
-              ) : students.map(s => {
-                const sid = s.student_id || s.id;
-                const checked = selectedStudents.includes(sid);
-                return (
-                  <label key={sid} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/50 cursor-pointer">
-                    <Checkbox checked={checked} onCheckedChange={(v) => {
-                      setSelectedStudents(prev => v ? [...prev, sid] : prev.filter(x => x !== sid));
-                    }} />
-                    <span className="text-sm">{s.profile?.name || s.name || "Studente"}</span>
-                  </label>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Due date */}
-        <div>
-          <Label className="text-xs text-muted-foreground">Scadenza (opzionale)</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className={cn("w-full mt-1 rounded-xl justify-start text-left font-normal", !dueDate && "text-muted-foreground")}>
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dueDate ? format(dueDate, "dd MMM yyyy", { locale: it }) : "Seleziona data"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="single" selected={dueDate} onSelect={setDueDate}
-                disabled={(date) => date < new Date()}
-                initialFocus className="p-3 pointer-events-auto" />
-            </PopoverContent>
-          </Popover>
-        </div>
 
         {/* CTA */}
         <Button
