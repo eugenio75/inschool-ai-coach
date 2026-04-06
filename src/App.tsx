@@ -229,6 +229,7 @@ const App = () => (
           <BrowserRouter>
             <AppRoutes />
             <BottomNav />
+            <TeacherBottomNav />
             <CookieBanner />
           </BrowserRouter>
         </TooltipProvider>
