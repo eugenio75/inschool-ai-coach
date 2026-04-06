@@ -13,10 +13,8 @@ export const BottomNav = () => {
   const session = getChildSession();
   const role = session?.profile?.school_level || "";
 
-  // Only show for student roles
+  // Hide for teacher/no session; show for all student roles
   if (!role || HIDDEN_ROLES.includes(role)) return null;
-  const studentRoles = ["medie", "superiori", "universitario", "bambino", "alunno"];
-  if (!studentRoles.includes(role)) return null;
 
   const hiddenPaths = ["/focus", "/homework", "/auth", "/onboarding", "/", "/challenge", "/us"];
   if (hiddenPaths.some((p) => location.pathname.startsWith(p) && (p !== "/" || location.pathname === "/"))) {
