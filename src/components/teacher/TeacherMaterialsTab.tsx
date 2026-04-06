@@ -542,6 +542,8 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     setAdaptedVersions({ bes: null, dsa: null, h: null });
     setAdaptedLoading(false);
     setAdaptedError(false);
+    setPreviewModalOpen(false);
+    setPreviewEditMode(false);
   }
 
   function getPreviewContent(): string {
