@@ -1597,7 +1597,68 @@ Return only the three versions with no commentary, separated exactly by ===BES==
           )}
         </div>
 
-        {/* --- Destination (before content so generation is always last) --- */}
+        {/* --- FORM B prompt: Descrivi cosa vuoi (right after Materia for AI mode) --- */}
+        {mode === "ai" && (
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs text-muted-foreground">Descrivi cosa vuoi</Label>
+              <Textarea
+                placeholder={getPlaceholderB(activityType, selectedSubjects, classe?.nome || "")}
+                value={aiPrompt}
+                onChange={e => setAiPrompt(e.target.value)}
+                className="mt-1 rounded-xl min-h-[100px]"
+              />
+            </div>
+
+            {/* Model upload */}
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">Carica modello (opzionale)</Label>
+              <input
+                ref={aiFileRef}
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                className="hidden"
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) handleAiContextUpload(file);
+                }}
+              />
+              {!aiContextFile ? (
+                <button
+                  onClick={() => aiFileRef.current?.click()}
+                  disabled={aiContextUploading}
+                  className="w-full border border-dashed border-border rounded-xl p-3 text-center hover:bg-muted/30 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Upload className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    {aiContextUploading ? "Analisi in corso..." : "Carica un file come riferimento di formato e livello"}
+                  </span>
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 p-2.5 bg-primary/5 border border-primary/20 rounded-xl">
+                  <FileText className="w-5 h-5 text-primary shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-foreground truncate">{aiContextFile.name}</p>
+                    {aiContextText && <p className="text-[10px] text-muted-foreground truncate">{aiContextText.slice(0, 80)}...</p>}
+                  </div>
+                  <Button size="sm" variant="ghost" className="shrink-0 h-7 w-7 p-0" onClick={() => {
+                    setAiContextFile(null);
+                    setAiContextText(null);
+                  }}>
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              )}
+              {aiContextFile && (
+                <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">
+                  Il sistema userà questo materiale come modello. Descrivi l'argomento e la classe e l'AI creerà qualcosa di simile nello stesso formato e allo stesso livello.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* --- Destination --- */}
         <div>
           <Label className="text-xs text-muted-foreground mb-2 block">Destinazione</Label>
           <RadioGroup value={destination} onValueChange={(v) => setDestination(v as DestinationType)} className="flex gap-2 flex-wrap">
@@ -1674,65 +1735,9 @@ Return only the three versions with no commentary, separated exactly by ===BES==
           </div>
         )}
 
-        {/* --- FORM B: Genera con AI --- */}
+        {/* --- FORM B: Genera button (AI mode, always last) --- */}
         {mode === "ai" && (
           <div className="space-y-4">
-            <div>
-              <Label className="text-xs text-muted-foreground">Descrivi cosa vuoi</Label>
-              <Textarea
-                placeholder={getPlaceholderB(activityType, selectedSubjects, classe?.nome || "")}
-                value={aiPrompt}
-                onChange={e => setAiPrompt(e.target.value)}
-                className="mt-1 rounded-xl min-h-[100px]"
-              />
-            </div>
-
-            {/* Model upload */}
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1.5 block">Carica modello (opzionale)</Label>
-              <input
-                ref={aiFileRef}
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                className="hidden"
-                onChange={e => {
-                  const file = e.target.files?.[0];
-                  if (file) handleAiContextUpload(file);
-                }}
-              />
-              {!aiContextFile ? (
-                <button
-                  onClick={() => aiFileRef.current?.click()}
-                  disabled={aiContextUploading}
-                  className="w-full border border-dashed border-border rounded-xl p-3 text-center hover:bg-muted/30 transition-colors flex items-center justify-center gap-2"
-                >
-                  <Upload className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">
-                    {aiContextUploading ? "Analisi in corso..." : "Carica un file come riferimento di formato e livello"}
-                  </span>
-                </button>
-              ) : (
-                <div className="flex items-center gap-2 p-2.5 bg-primary/5 border border-primary/20 rounded-xl">
-                  <FileText className="w-5 h-5 text-primary shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-foreground truncate">{aiContextFile.name}</p>
-                    {aiContextText && <p className="text-[10px] text-muted-foreground truncate">{aiContextText.slice(0, 80)}...</p>}
-                  </div>
-                  <Button size="sm" variant="ghost" className="shrink-0 h-7 w-7 p-0" onClick={() => {
-                    setAiContextFile(null);
-                    setAiContextText(null);
-                  }}>
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              )}
-              {aiContextFile && (
-                <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">
-                  Il sistema userà questo materiale come modello. Descrivi l'argomento e la classe e l'AI creerà qualcosa di simile nello stesso formato e allo stesso livello.
-                </p>
-              )}
-            </div>
-
             <Button onClick={generateAiContent} disabled={aiLoading} variant="outline" className="w-full rounded-xl">
               <Sparkles className="w-3.5 h-3.5 mr-1" />
               {aiLoading ? "Generazione in corso..." : "Genera contenuto"}
