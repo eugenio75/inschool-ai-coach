@@ -11,7 +11,15 @@ export const BottomNav = () => {
   const { t } = useLang();
 
   const session = getChildSession();
-  const role = session?.profile?.school_level || "";
+  const storedProfile = (() => {
+    try {
+      const saved = localStorage.getItem("inschool-profile");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const role = session?.profile?.school_level || storedProfile?.school_level || storedProfile?.schoolLevel || "";
 
   // Hide for teacher/no session; show for all student roles
   if (!role || HIDDEN_ROLES.includes(role)) return null;
