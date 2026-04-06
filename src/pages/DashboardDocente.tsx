@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { getTeacherTitle } from "@/lib/teacherTitle";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Plus, FileText, LayoutDashboard, AlertCircle,
   Send, Copy, CheckSquare, ChevronRight,
