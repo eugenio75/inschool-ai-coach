@@ -518,8 +518,8 @@ serve(async (req) => {
             .eq("id", payload.homeworkId)
             .maybeSingle();
 
-          const LOVABLE_API_KEY = Deno.env.get("OPENAI_API_KEY");
-          if (LOVABLE_API_KEY && hwInfo) {
+          const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+          if (OPENAI_API_KEY && hwInfo) {
             // Extract concepts inline (same logic as extract-concepts function)
             try {
               const { data: childProfile } = await supabase
@@ -554,7 +554,7 @@ Estrai da 1 a 4 concetti. Rispondi SOLO con il JSON, senza markdown.`;
               const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
                 headers: {
-                  Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                  Authorization: `Bearer ${OPENAI_API_KEY}`,
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({

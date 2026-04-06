@@ -16,9 +16,9 @@ serve(async (req) => {
     // Support both old single imageUrl and new imageUrls array
     const imageUrls: string[] = body.imageUrls || (body.imageUrl ? [body.imageUrl] : []);
     const { sourceType, userNote } = body;
-    const LOVABLE_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
-    if (!LOVABLE_API_KEY) {
+    if (!OPENAI_API_KEY) {
       throw new Error("OPENAI_API_KEY is not configured");
     }
 
@@ -128,7 +128,7 @@ Nessun altro testo, solo il JSON.`;
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

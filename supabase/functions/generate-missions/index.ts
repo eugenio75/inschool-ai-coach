@@ -118,9 +118,9 @@ serve(async (req) => {
     }
 
     let aiMission: any = null;
-    const LOVABLE_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
-    if (LOVABLE_API_KEY && (hasWeakConcepts || hasTasks)) {
+    if (OPENAI_API_KEY && (hasWeakConcepts || hasTasks)) {
       try {
         const conceptsList = weakConcepts.slice(0, 5).map((c: any) =>
           `- "${c.concept}" (${c.subject}, ${isEN ? "strength" : "forza"}: ${c.strength}/100)${c.summary ? `: ${c.summary}` : ""}`
@@ -190,7 +190,7 @@ Rispondi SOLO con un JSON:
         const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
