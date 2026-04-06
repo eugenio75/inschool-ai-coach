@@ -26,7 +26,7 @@ export function LandingNavbar() {
             <span className="text-foreground">Sar</span>
             <span className="text-primary">AI</span>
           </span>
-          <span className="text-xs text-muted-foreground font-medium hidden sm:inline">
+          <span className="text-xs text-muted-foreground font-medium">
             — {t("home_tagline")}
           </span>
         </Link>
