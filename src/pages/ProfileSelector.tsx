@@ -124,7 +124,7 @@ const ProfileSelector = () => {
               whileHover={{ y: -4, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => selectProfile(profile.id)}
-              className="group flex flex-col p-6 rounded-[2rem] border border-border bg-card hover:border-primary hover:shadow-lg transition-all text-left relative overflow-hidden h-full min-h-[220px]"
+              className="group flex flex-col p-5 rounded-[2rem] border border-border bg-card hover:border-primary hover:shadow-lg transition-all text-left relative overflow-hidden h-full min-h-[160px]"
             >
               <div className="absolute top-5 right-5 text-muted-foreground group-hover:text-primary transition-colors">
                   <ChevronRight className="w-5 h-5" />
