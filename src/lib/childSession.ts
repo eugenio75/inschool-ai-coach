@@ -137,9 +137,9 @@ export async function childApi(action: string, payload?: any): Promise<any> {
       case "update-session": {
         return callChildApiEdge();
       }
-      case "insert-steps": {
-        const { data } = await supabase.from("study_steps").insert(payload.steps.map((s: any) => ({ ...s, user_id: profileId }))).select();
-        return data;
+      case "insert-steps":
+      case "update-step": {
+        return callChildApiEdge();
       }
       case "update-profile": {
         const data = await callChildApiEdge();
