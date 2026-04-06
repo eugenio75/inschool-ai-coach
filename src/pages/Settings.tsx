@@ -171,6 +171,9 @@ const Settings = () => {
             .eq("profile_id", profileId)
             .maybeSingle();
           const prefs2 = (prefData2?.data as any) || {};
+          if ((session.profile.favorite_subjects || []).length === 0 && (prefs2.docente_materie || []).length > 0) {
+            setDocenteMaterie(prefs2.docente_materie);
+          }
           setDiscoverable(!!prefs2.discoverable);
           // Load schools array (with backward compat)
           const schools = prefs2.teacher_declaration?.schools || [];
@@ -267,7 +270,18 @@ const Settings = () => {
   const handleSaveMaterie = async (materie: string[]) => {
     if (!session?.profileId) return;
     setSavingMaterie(true);
-    await supabase.from("child_profiles").update({ favorite_subjects: materie } as any).eq("id", session.profileId);
+    const { data: existing } = await supabase
+      .from("user_preferences")
+      .select("id, data")
+      .eq("profile_id", session.profileId)
+      .maybeSingle();
+    const newData = { ...((existing?.data as any) || {}), docente_materie: materie };
+    await Promise.all([
+      supabase.from("child_profiles").update({ favorite_subjects: materie } as any).eq("id", session.profileId),
+      existing
+        ? supabase.from("user_preferences").update({ data: newData } as any).eq("id", existing.id)
+        : supabase.from("user_preferences").insert({ profile_id: session.profileId, data: newData } as any),
+    ]);
     const currentSession = getChildSession();
     if (currentSession?.profile) {
       setChildSession({
@@ -311,9 +325,35 @@ const Settings = () => {
       },
     };
     if (existing) {
-      await supabase.from("user_preferences").update({ data: newData } as any).eq("id", existing.id);
+      await Promise.all([
+        supabase.from("user_preferences").update({ data: newData } as any).eq("id", existing.id),
+        supabase.from("child_profiles").update({
+          school_name: lastSchool?.school_name || null,
+          school_code: lastSchool?.school_code || null,
+          city: lastSchool?.city || null,
+        } as any).eq("id", session.profileId),
+      ]);
     } else {
-      await supabase.from("user_preferences").insert({ profile_id: session.profileId, data: newData } as any);
+      await Promise.all([
+        supabase.from("user_preferences").insert({ profile_id: session.profileId, data: newData } as any),
+        supabase.from("child_profiles").update({
+          school_name: lastSchool?.school_name || null,
+          school_code: lastSchool?.school_code || null,
+          city: lastSchool?.city || null,
+        } as any).eq("id", session.profileId),
+      ]);
+    }
+    const currentSession = getChildSession();
+    if (currentSession?.profile) {
+      setChildSession({
+        ...currentSession,
+        profile: {
+          ...currentSession.profile,
+          school_name: lastSchool?.school_name || null,
+          school_code: lastSchool?.school_code || null,
+          city: lastSchool?.city || null,
+        } as any,
+      });
     }
     setTeacherSchools(schools);
     setSavingSchools(false);
