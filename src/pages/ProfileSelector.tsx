@@ -92,7 +92,13 @@ const ProfileSelector = () => {
   const isDocente = profiles.some(p => p.school_level === "docente");
 
   return (
-    <div className="min-h-screen-safe bg-background flex flex-col items-center justify-start px-4 pt-8 pb-48 sm:px-6 sm:pt-12 relative font-sans overflow-x-hidden" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div
+      className="min-h-screen-safe bg-background flex flex-col items-center justify-start px-4 pt-8 sm:px-6 sm:pt-12 relative font-sans overflow-x-hidden"
+      style={{
+        WebkitOverflowScrolling: "touch",
+        paddingBottom: "calc(14rem + var(--cookie-banner-height, 0px))",
+      }}
+    >
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
       <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10" />
       
@@ -100,7 +106,7 @@ const ProfileSelector = () => {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={spring}
-        className="w-full max-w-5xl flex flex-col items-center"
+        className="w-full max-w-5xl flex min-h-[calc(100vh-2rem)] flex-col items-center"
       >
         <AppWordmark className="mb-8" />
 
@@ -113,7 +119,7 @@ const ProfileSelector = () => {
             </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 w-full mb-12 max-w-4xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 items-stretch gap-4 sm:gap-5 w-full mb-16 sm:mb-20 lg:mb-24 max-w-4xl">
           <AnimatePresence>
           {profiles.map((profile, i) => (
             <motion.button
@@ -124,7 +130,7 @@ const ProfileSelector = () => {
               whileHover={{ y: -4, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => selectProfile(profile.id)}
-              className="group flex flex-col p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] border border-border bg-card hover:border-primary hover:shadow-lg transition-all text-left relative overflow-hidden h-full min-h-[120px] sm:min-h-[150px]"
+              className="group flex h-full min-h-[112px] flex-col overflow-hidden rounded-2xl border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-lg sm:min-h-[136px] sm:rounded-[2rem] sm:p-5"
             >
               <div className="absolute top-5 right-5 text-muted-foreground group-hover:text-primary transition-colors">
                   <ChevronRight className="w-5 h-5" />
@@ -160,7 +166,7 @@ const ProfileSelector = () => {
             whileHover={{ y: -4, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate("/onboarding")}
-            className="group flex flex-col p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] border-2 border-dashed border-border bg-muted/30 hover:bg-primary/5 hover:border-primary/30 transition-all text-left min-h-[120px] sm:min-h-[150px] justify-center items-center"
+            className="group flex min-h-[112px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/30 p-4 text-left transition-all hover:border-primary/30 hover:bg-primary/5 sm:min-h-[136px] sm:rounded-[2rem] sm:p-5"
           >
             <div className="w-16 h-16 rounded-full bg-card border border-border flex items-center justify-center mb-4 group-hover:bg-primary/10 group-hover:border-primary/20 transition-colors shadow-sm">
               <Plus className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -174,7 +180,7 @@ const ProfileSelector = () => {
           </motion.button>
         </div>
 
-        <div className="flex items-center justify-center gap-4 sm:gap-6 flex-wrap bg-card px-6 sm:px-8 py-3 sm:py-4 rounded-2xl sm:rounded-[2rem] border border-border shadow-sm">
+        <div className="mt-auto flex w-full max-w-4xl items-center justify-center gap-4 rounded-2xl border border-border bg-card px-6 py-3 shadow-sm sm:gap-6 sm:rounded-[2rem] sm:px-8 sm:py-4 flex-wrap">
           {!isDocente && (
               <button
                 onClick={() => navigate("/parent-dashboard")}
