@@ -1369,5 +1369,8 @@
   "game_false": "Falso",
   "game_placeholder_complete": "Completa la frase...",
   "game_placeholder_correct": "Scrivi la correzione...",
-  "game_back_btn": "Indietro"
+  "game_back_btn": "Indietro",
+  "profile_coach_name_title": "Nome del Coach",
+  "profile_coach_name_desc": "Dai un nome al tuo coach AI personale",
+  "profile_coach_name_placeholder": "Es. Luna, Sensei, Buddy…"
 }
