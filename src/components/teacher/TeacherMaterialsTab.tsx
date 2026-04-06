@@ -27,23 +27,106 @@ import { renderAndPrintPdf, splitTeacherContent } from "@/lib/pdfExport";
 const ACTIVITY_TYPES = ["lezione", "compito", "verifica", "esercizi", "recupero", "potenziamento"] as const;
 type ActivityType = typeof ACTIVITY_TYPES[number];
 
-const PLACEHOLDERS_FORM_A: Record<ActivityType, string> = {
-  lezione: "Es. Scrivi qui la tua scaletta di lezione completa — introduzione, corpo, attività, sintesi e compito per casa.",
-  compito: "Es. Leggi il brano a pagina 34 e rispondi alle domande 1, 2 e 3 sul quaderno.",
-  verifica: "Es. Parte A — 5 domande aperte sulla Rivoluzione Francese. Parte B — 5 domande a scelta multipla. Tempo: 45 minuti.",
-  esercizi: "Es. Completa gli esercizi 5, 6 e 7 a pagina 52. Mostra il procedimento per ogni calcolo.",
-  recupero: "Es. Rileggi il paragrafo 3.2 e riscrivi con parole tue le 3 regole principali. Poi fai i primi 3 esercizi.",
-  potenziamento: "Es. Risolvi i problemi 8, 9 e 10 a pagina 78. Per il problema 10 spiega il ragionamento usato.",
+// Subject-specific examples for contextual placeholders
+const SUBJECT_EXAMPLES_A: Record<string, Partial<Record<ActivityType, string>>> = {
+  Italiano: {
+    compito: "Es. Leggi il brano a pagina 34 e rispondi alle domande 1, 2 e 3 sul quaderno.",
+    verifica: "Es. Parte A — 5 domande aperte sui Promessi Sposi. Parte B — 5 domande a scelta multipla. Tempo: 45 minuti.",
+    esercizi: "Es. Analisi grammaticale delle frasi a pagina 52, esercizi 5, 6 e 7.",
+    recupero: "Es. Rileggi il paragrafo 3.2 e riscrivi con parole tue le 3 regole principali della sintassi.",
+    potenziamento: "Es. Scrivi un racconto breve (max 300 parole) usando almeno 3 figure retoriche studiate.",
+  },
+  Matematica: {
+    compito: "Es. Risolvi le equazioni a pagina 45, numeri 1-5. Mostra il procedimento.",
+    verifica: "Es. 5 esercizi sulle equazioni di secondo grado + 3 problemi applicativi. Tempo: 50 minuti.",
+    esercizi: "Es. Completa gli esercizi sulle frazioni a pagina 52, dal numero 5 al 10.",
+    recupero: "Es. Ripassa la differenza tra area e perimetro con gli esercizi guidati a pagina 30.",
+    potenziamento: "Es. Risolvi i problemi 8, 9 e 10 a pagina 78. Per il problema 10 spiega il ragionamento usato.",
+  },
+  Scienze: {
+    compito: "Es. Leggi il capitolo sulla cellula e completa la scheda di laboratorio.",
+    verifica: "Es. 8 domande misto aperto/chiuso sull'apparato circolatorio. Tempo: 40 minuti.",
+    esercizi: "Es. Completa lo schema del ciclo dell'acqua e rispondi alle domande di comprensione.",
+    recupero: "Es. Ripassa i 5 regni dei viventi con la mappa concettuale guidata.",
+    potenziamento: "Es. Progetta un esperimento per dimostrare l'osmosi, descrivi ipotesi, materiali e procedimento.",
+  },
+  Storia: {
+    compito: "Es. Leggi le pagine 56-60 sulla Rivoluzione Francese e rispondi alle domande.",
+    verifica: "Es. 5 domande aperte + 5 a scelta multipla sulla Seconda Guerra Mondiale. Tempo: 45 minuti.",
+    esercizi: "Es. Completa la linea del tempo del Risorgimento italiano con le date principali.",
+    recupero: "Es. Rileggi il paragrafo sulle cause della Prima Guerra Mondiale e fai uno schema riassuntivo.",
+    potenziamento: "Es. Confronta le cause della Rivoluzione Francese e quella Americana in un testo argomentativo.",
+  },
+  Inglese: {
+    compito: "Es. Completa gli esercizi sul Present Perfect a pagina 42, numeri 1-4.",
+    verifica: "Es. Reading comprehension + grammar exercises + short writing. Tempo: 50 minuti.",
+    esercizi: "Es. Fill in the blanks con il Past Simple o il Present Perfect, esercizi 3-6.",
+    recupero: "Es. Ripassa i verbi irregolari con la tabella e completa gli esercizi guidati.",
+    potenziamento: "Es. Write a short essay (150 words) about your favourite book, using at least 3 conditional sentences.",
+  },
 };
 
-const PLACEHOLDERS_FORM_B: Record<ActivityType, string> = {
-  lezione: "Es. Una lezione di 50 minuti sulla Rivoluzione Francese per una terza media — con aggancio motivazionale, attività in classe e verifica di comprensione.",
-  compito: "Es. Un compito di comprensione del testo per una seconda media — brano di narrativa con 5 domande aperte, livello medio.",
-  verifica: "Es. Una verifica sui Promessi Sposi per una terza media, 8 domande misto aperto e chiuso, con soluzione, difficoltà media.",
-  esercizi: "Es. 5 esercizi sulle equazioni di secondo grado con procedimento guidato, livello medio, per un quarto liceo scientifico.",
-  recupero: "Es. Una scheda di recupero sulla differenza tra area e perimetro per una seconda media — spiegazione semplice, 3 esempi pratici, 4 esercizi facili.",
-  potenziamento: "Es. 3 problemi avanzati di logica matematica per chi ha già acquisito le basi, quarta liceo scientifico, con soluzione commentata.",
+const SUBJECT_EXAMPLES_B: Record<string, Partial<Record<ActivityType, string>>> = {
+  Italiano: {
+    lezione: "Es. Una lezione di 50 minuti sulla struttura del testo narrativo — con aggancio motivazionale, attività in classe e verifica di comprensione.",
+    compito: "Es. Un compito di comprensione del testo — brano di narrativa con 5 domande aperte, livello medio.",
+    verifica: "Es. Una verifica sui Promessi Sposi, 8 domande misto aperto e chiuso, con soluzione, difficoltà media.",
+  },
+  Matematica: {
+    lezione: "Es. Una lezione di 50 minuti sulle equazioni di secondo grado — con esempi guidati, esercizi in classe e compito per casa.",
+    compito: "Es. 5 esercizi sulle frazioni con procedimento guidato, livello medio.",
+    verifica: "Es. Una verifica sulle equazioni, 8 esercizi a difficoltà crescente, con soluzioni, tempo 50 minuti.",
+  },
+  Scienze: {
+    lezione: "Es. Una lezione di 50 minuti sulla cellula — con immagini, esperimento pratico e quiz finale.",
+    compito: "Es. Una scheda sulla fotosintesi con domande di comprensione e uno schema da completare.",
+    verifica: "Es. Una verifica sull'apparato digerente, 6 domande aperte + 4 a scelta multipla, con soluzioni.",
+  },
+  Storia: {
+    lezione: "Es. Una lezione di 50 minuti sulla Rivoluzione Francese — con aggancio motivazionale, attività in classe e verifica di comprensione.",
+    compito: "Es. Un compito sulla Seconda Guerra Mondiale con 5 domande aperte e una linea del tempo da completare.",
+    verifica: "Es. Una verifica sul Risorgimento, 8 domande misto aperto e chiuso, con soluzione, difficoltà media.",
+  },
+  Inglese: {
+    lezione: "Es. A 50-minute lesson on the Present Perfect — with warm-up, practice activities and wrap-up.",
+    compito: "Es. A reading comprehension task with 5 questions, intermediate level.",
+    verifica: "Es. A test on Past Simple vs Present Perfect, 8 exercises, with answer key.",
+  },
 };
+
+function getPlaceholderA(type: ActivityType, subjects: string[]): string {
+  const defaults: Record<ActivityType, string> = {
+    lezione: "Es. Scrivi qui la tua scaletta di lezione completa — introduzione, corpo, attività, sintesi e compito per casa.",
+    compito: "Es. Leggi il brano a pagina 34 e rispondi alle domande 1, 2 e 3 sul quaderno.",
+    verifica: "Es. Parte A — 5 domande aperte. Parte B — 5 domande a scelta multipla. Tempo: 45 minuti.",
+    esercizi: "Es. Completa gli esercizi 5, 6 e 7 a pagina 52. Mostra il procedimento per ogni calcolo.",
+    recupero: "Es. Rileggi il paragrafo 3.2 e riscrivi con parole tue le 3 regole principali. Poi fai i primi 3 esercizi.",
+    potenziamento: "Es. Risolvi i problemi 8, 9 e 10 a pagina 78. Per il problema 10 spiega il ragionamento usato.",
+  };
+  const subj = subjects[0];
+  if (subj && SUBJECT_EXAMPLES_A[subj]?.[type]) return SUBJECT_EXAMPLES_A[subj][type]!;
+  return defaults[type];
+}
+
+function getPlaceholderB(type: ActivityType, subjects: string[], className: string): string {
+  const defaults: Record<ActivityType, string> = {
+    lezione: `Es. Una lezione di 50 minuti${className ? ` per ${className}` : ""} — con aggancio motivazionale, attività in classe e verifica di comprensione.`,
+    compito: `Es. Un compito${className ? ` per ${className}` : ""} — con domande aperte, livello medio.`,
+    verifica: `Es. Una verifica${className ? ` per ${className}` : ""}, 8 domande misto aperto e chiuso, con soluzione, difficoltà media.`,
+    esercizi: `Es. 5 esercizi${className ? ` per ${className}` : ""} con procedimento guidato, livello medio.`,
+    recupero: `Es. Una scheda di recupero${className ? ` per ${className}` : ""} — spiegazione semplice, 3 esempi pratici, 4 esercizi facili.`,
+    potenziamento: `Es. 3 problemi avanzati${className ? ` per ${className}` : ""} per chi ha già acquisito le basi, con soluzione commentata.`,
+  };
+  const subj = subjects[0];
+  if (subj && SUBJECT_EXAMPLES_B[subj]?.[type]) {
+    let ph = SUBJECT_EXAMPLES_B[subj][type]!;
+    if (className && !ph.includes(className)) {
+      ph = ph.replace("Es. ", `Es. [${className}] `);
+    }
+    return ph;
+  }
+  return defaults[type];
+}
 
 type FormMode = null | "write" | "ai" | "file";
 type DestinationType = "all" | "selected" | "pdf";
@@ -1008,7 +1091,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
           <div>
             <Label className="text-xs text-muted-foreground">Contenuto</Label>
             <Textarea
-              placeholder={PLACEHOLDERS_FORM_A[activityType]}
+              placeholder={getPlaceholderA(activityType, selectedSubjects)}
               value={content}
               onChange={e => setContent(e.target.value)}
               className="mt-1 rounded-xl min-h-[120px]"
@@ -1022,7 +1105,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
             <div>
               <Label className="text-xs text-muted-foreground">Descrivi cosa vuoi</Label>
               <Textarea
-                placeholder={PLACEHOLDERS_FORM_B[activityType]}
+                placeholder={getPlaceholderB(activityType, selectedSubjects, classe?.nome || "")}
                 value={aiPrompt}
                 onChange={e => setAiPrompt(e.target.value)}
                 className="mt-1 rounded-xl min-h-[100px]"
