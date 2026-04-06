@@ -129,7 +129,7 @@ const ProfileSelector = () => {
               <div className="absolute top-5 right-5 text-muted-foreground group-hover:text-primary transition-colors">
                   <ChevronRight className="w-5 h-5" />
               </div>
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 bg-muted border border-border group-hover:bg-primary/10 group-hover:border-primary/20 transition-colors">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 bg-muted border border-border group-hover:bg-primary/10 group-hover:border-primary/20 transition-colors">
                   {profile.school_level === "docente" 
                     ? <UserCog className="w-7 h-7 text-primary" /> 
                     : <AvatarInitials name={profile.name || "U"} size="md" />}
