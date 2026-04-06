@@ -117,6 +117,7 @@ const Settings = () => {
   // Check if adult role
   const session = getChildSession();
   const isAdult = ["superiori", "universitario", "docente"].includes(session?.profile?.school_level || "");
+  const activeProfileId = session?.profileId || localStorage.getItem("inschool-active-child-id");
 
   useEffect(() => {
     const load = async () => {
@@ -149,7 +150,7 @@ const Settings = () => {
       }
 
       // Load coach prefs
-      const profileId = session?.profileId;
+      const profileId = session?.profileId || localStorage.getItem("inschool-active-child-id");
       if (profileId) {
         const { data: prefData } = await supabase
           .from("user_preferences")
@@ -241,18 +242,19 @@ const Settings = () => {
     navigate("/onboarding");
   };
   const handleSaveCoach = async () => {
-    if (!session?.profileId) return;
+    const pid = activeProfileId;
+    if (!pid) return;
     setSavingCoach(true);
     const { data: existing } = await supabase
       .from("user_preferences")
       .select("id, data")
-      .eq("profile_id", session.profileId)
+      .eq("profile_id", pid)
       .maybeSingle();
     const newData = { ...((existing?.data as any) || {}), coach_name: coachNameSetting };
     if (existing) {
       await supabase.from("user_preferences").update({ data: newData } as any).eq("id", existing.id);
     } else {
-      await supabase.from("user_preferences").insert({ profile_id: session.profileId, data: newData } as any);
+      await supabase.from("user_preferences").insert({ profile_id: pid, data: newData } as any);
     }
     setSavingCoach(false);
     toast.success("Coach aggiornato!");

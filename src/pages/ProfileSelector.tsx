@@ -92,7 +92,7 @@ const ProfileSelector = () => {
   const isDocente = profiles.some(p => p.school_level === "docente");
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-start px-6 pt-8 pb-32 sm:pt-12 relative font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-start px-4 pt-8 pb-40 sm:px-6 sm:pt-12 relative font-sans overflow-x-hidden">
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
       <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10" />
       
@@ -124,7 +124,7 @@ const ProfileSelector = () => {
               whileHover={{ y: -4, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => selectProfile(profile.id)}
-              className="group flex flex-col p-6 rounded-[2rem] border border-border bg-card hover:border-primary hover:shadow-lg transition-all text-left relative overflow-hidden h-full min-h-[220px]"
+              className="group flex flex-col p-5 rounded-[2rem] border border-border bg-card hover:border-primary hover:shadow-lg transition-all text-left relative overflow-hidden h-full min-h-[160px]"
             >
               <div className="absolute top-5 right-5 text-muted-foreground group-hover:text-primary transition-colors">
                   <ChevronRight className="w-5 h-5" />
@@ -160,7 +160,7 @@ const ProfileSelector = () => {
             whileHover={{ y: -4, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate("/onboarding")}
-            className="group flex flex-col p-6 rounded-[2rem] border-2 border-dashed border-border bg-muted/30 hover:bg-primary/5 hover:border-primary/30 transition-all text-left min-h-[220px] justify-center items-center"
+            className="group flex flex-col p-5 rounded-[2rem] border-2 border-dashed border-border bg-muted/30 hover:bg-primary/5 hover:border-primary/30 transition-all text-left min-h-[160px] justify-center items-center"
           >
             <div className="w-16 h-16 rounded-full bg-card border border-border flex items-center justify-center mb-4 group-hover:bg-primary/10 group-hover:border-primary/20 transition-colors shadow-sm">
               <Plus className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
