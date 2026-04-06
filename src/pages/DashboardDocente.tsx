@@ -487,7 +487,6 @@ export default function DashboardDocente() {
             >
               <Send className="w-4 h-4" />
             </button>
-            </button>
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
             {["Organizza il lavoro", "Chiedi un suggerimento", "Rivedi le priorità"].map((label) => (
