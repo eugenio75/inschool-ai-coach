@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Sparkles, X, Plus, Loader2, User, GraduationCap } from "lucide-react";
+import { ArrowLeft, Sparkles, X, Plus, Loader2, User, GraduationCap, MessageCircleHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isChildSession, getChildSession, setChildSession } from "@/lib/childSession";
 import { getActiveChildProfileId, getChildProfile, updateChildProfile } from "@/lib/database";
@@ -47,6 +47,8 @@ const StudentProfile = () => {
   const [customInterest, setCustomInterest] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [studyPlan, setStudyPlan] = useState<StudyPlanExam[]>([]);
+  const [coachName, setCoachName] = useState("");
+  const [originalCoachName, setOriginalCoachName] = useState("");
   const { t } = useLang();
 
   useEffect(() => {
@@ -92,6 +94,20 @@ const StudentProfile = () => {
         if (p.school_level === "università") {
           loadStudyPlan(p.id).then(setStudyPlan);
         }
+
+        // Load coach name from user_preferences
+        if (p.id) {
+          try {
+            const { data: prefData } = await supabase
+              .from("user_preferences")
+              .select("data")
+              .eq("profile_id", p.id)
+              .maybeSingle();
+            const cn = (prefData?.data as Record<string, any>)?.coach_name || "";
+            setCoachName(cn);
+            setOriginalCoachName(cn);
+          } catch {}
+        }
       }
       setLoading(false);
     };
@@ -121,6 +137,18 @@ const StudentProfile = () => {
       } else {
         await updateChildProfile(profile.id, updates);
       }
+
+      // Save coach name if changed
+      if (coachName !== originalCoachName && profile.id) {
+        const { data: existing } = await supabase
+          .from("user_preferences")
+          .select("data")
+          .eq("profile_id", profile.id)
+          .maybeSingle();
+        const merged = { ...((existing?.data as Record<string, any>) || {}), coach_name: coachName.trim() || null };
+        await supabase.from("user_preferences").upsert({ profile_id: profile.id, data: merged }, { onConflict: "profile_id" });
+      }
+
       toast({ title: t("profile_saved") });
       navigate(-1);
     } catch (e) {
@@ -150,7 +178,8 @@ const StudentProfile = () => {
     || schoolData.classSection !== (profile.class_section || "")
     || schoolData.schoolName !== (profile.school_name || "")
     || schoolData.schoolCode !== (profile.school_code || null)
-    || schoolData.city !== (profile.city || "");
+    || schoolData.city !== (profile.city || "")
+    || coachName !== originalCoachName;
 
   const accessCode = profile?.access_code;
   const showAccessCode = !!accessCode || isChild || isChildLevel(profile.school_level);
@@ -183,6 +212,23 @@ const StudentProfile = () => {
         <div className="max-w-lg mx-auto space-y-6">
           {/* Access Code — always visible for primaria/medie */}
           {showAccessCode && accessCode && <AccessCodeCard code={accessCode} />}
+
+          {/* Coach Name */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.05 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">
+            <div className="flex items-center gap-2 mb-1">
+              <MessageCircleHeart className="w-4 h-4 text-primary" />
+              <h3 className="font-display font-semibold text-foreground text-sm">{t("profile_coach_name_title") || "Nome del Coach"}</h3>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">{t("profile_coach_name_desc") || "Dai un nome al tuo coach AI personale"}</p>
+            <input
+              type="text"
+              value={coachName}
+              onChange={(e) => setCoachName(e.target.value)}
+              placeholder={t("profile_coach_name_placeholder") || "Es. Luna, Sensei, Buddy…"}
+              maxLength={20}
+              className="w-full px-4 py-2 rounded-xl border border-border bg-muted text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </motion.div>
 
           {/* Gender */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.1 }} className="bg-card rounded-2xl border border-border p-5 shadow-soft">

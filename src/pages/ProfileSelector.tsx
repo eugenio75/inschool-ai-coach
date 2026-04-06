@@ -92,7 +92,7 @@ const ProfileSelector = () => {
   const isDocente = profiles.some(p => p.school_level === "docente");
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-start px-4 pt-8 pb-40 sm:px-6 sm:pt-12 relative font-sans overflow-x-hidden">
+    <div className="min-h-screen-safe bg-background flex flex-col items-center justify-start px-4 pt-8 pb-48 sm:px-6 sm:pt-12 relative font-sans overflow-x-hidden" style={{ WebkitOverflowScrolling: 'touch' }}>
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
       <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10" />
       
@@ -113,7 +113,7 @@ const ProfileSelector = () => {
             </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full mb-12 max-w-4xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 w-full mb-12 max-w-4xl">
           <AnimatePresence>
           {profiles.map((profile, i) => (
             <motion.button
@@ -124,12 +124,12 @@ const ProfileSelector = () => {
               whileHover={{ y: -4, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => selectProfile(profile.id)}
-              className="group flex flex-col p-5 rounded-[2rem] border border-border bg-card hover:border-primary hover:shadow-lg transition-all text-left relative overflow-hidden h-full min-h-[160px]"
+              className="group flex flex-col p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] border border-border bg-card hover:border-primary hover:shadow-lg transition-all text-left relative overflow-hidden h-full min-h-[120px] sm:min-h-[150px]"
             >
               <div className="absolute top-5 right-5 text-muted-foreground group-hover:text-primary transition-colors">
                   <ChevronRight className="w-5 h-5" />
               </div>
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 bg-muted border border-border group-hover:bg-primary/10 group-hover:border-primary/20 transition-colors">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 bg-muted border border-border group-hover:bg-primary/10 group-hover:border-primary/20 transition-colors">
                   {profile.school_level === "docente" 
                     ? <UserCog className="w-7 h-7 text-primary" /> 
                     : <AvatarInitials name={profile.name || "U"} size="md" />}
@@ -160,7 +160,7 @@ const ProfileSelector = () => {
             whileHover={{ y: -4, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate("/onboarding")}
-            className="group flex flex-col p-5 rounded-[2rem] border-2 border-dashed border-border bg-muted/30 hover:bg-primary/5 hover:border-primary/30 transition-all text-left min-h-[160px] justify-center items-center"
+            className="group flex flex-col p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] border-2 border-dashed border-border bg-muted/30 hover:bg-primary/5 hover:border-primary/30 transition-all text-left min-h-[120px] sm:min-h-[150px] justify-center items-center"
           >
             <div className="w-16 h-16 rounded-full bg-card border border-border flex items-center justify-center mb-4 group-hover:bg-primary/10 group-hover:border-primary/20 transition-colors shadow-sm">
               <Plus className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -174,7 +174,7 @@ const ProfileSelector = () => {
           </motion.button>
         </div>
 
-        <div className="flex items-center justify-center gap-6 flex-wrap bg-card px-8 py-4 rounded-[2rem] border border-border shadow-sm">
+        <div className="flex items-center justify-center gap-4 sm:gap-6 flex-wrap bg-card px-6 sm:px-8 py-3 sm:py-4 rounded-2xl sm:rounded-[2rem] border border-border shadow-sm">
           {!isDocente && (
               <button
                 onClick={() => navigate("/parent-dashboard")}
