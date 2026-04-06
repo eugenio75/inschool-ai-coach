@@ -140,13 +140,7 @@ const StudentProfile = () => {
 
       // Save coach name if changed
       if (coachName !== originalCoachName && profile.id) {
-        const { data: existing } = await supabase
-          .from("user_preferences")
-          .select("data")
-          .eq("profile_id", profile.id)
-          .maybeSingle();
-        const merged = { ...((existing?.data as Record<string, any>) || {}), coach_name: coachName.trim() || null };
-        await (supabase.rpc as any)("save_user_preferences", { p_profile_id: profile.id, p_data: merged });
+        await (supabase.rpc as any)("save_coach_name", { p_profile_id: profile.id, p_coach_name: coachName.trim() || "" });
       }
 
       toast({ title: t("profile_saved") });
