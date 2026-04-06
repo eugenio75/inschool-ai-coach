@@ -150,7 +150,7 @@ const Settings = () => {
       }
 
       // Load coach prefs
-      const profileId = session?.profileId;
+      const profileId = session?.profileId || localStorage.getItem("inschool-active-child-id");
       if (profileId) {
         const { data: prefData } = await supabase
           .from("user_preferences")
