@@ -175,7 +175,7 @@ const StudentProfile = () => {
   const showAccessCode = !!accessCode || isChild || isChildLevel(profile.school_level);
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen-safe bg-background pb-28 sm:pb-8">
       {/* Header */}
       <div className="bg-card border-b border-border px-6 pt-6 pb-8">
         <div className="max-w-lg mx-auto">

@@ -536,7 +536,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
   /* ══════════════ MATURITÀ SCREEN 1: Indirizzo e prova ══════════════ */
   if (step === "maturita-setup" && examType === "maturita") {
     return (
-      <div className="min-h-screen bg-background pb-24">
+      <div className="min-h-screen-safe bg-background pb-28 sm:pb-8">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <button onClick={() => { setStep("type"); setExamType(null); }} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-5 h-5" />
@@ -607,7 +607,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
     };
 
     return (
-      <div className="min-h-screen bg-background pb-24">
+      <div className="min-h-screen-safe bg-background pb-28 sm:pb-8">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <button onClick={() => setStep("maturita-setup")} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-5 h-5" />
@@ -720,7 +720,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
       }
     };
     return (
-      <div className="min-h-screen bg-muted/40 pb-24">
+      <div className="min-h-screen-safe bg-muted/40 pb-28 sm:pb-8">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <button onClick={() => { setStudyMode(null); setStep("setup"); }} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-5 h-5" />
@@ -791,7 +791,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
       }
     };
     return (
-      <div className="min-h-screen bg-muted/40 pb-24">
+      <div className="min-h-screen-safe bg-muted/40 pb-28 sm:pb-8">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <button onClick={() => { setStudyMode(null); setStep("maturita-analysis"); }} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-5 h-5" />
@@ -910,7 +910,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
   /* ══════════════ STEP: Type selector ══════════════ */
   if (step === "type") {
     return (
-      <div className="min-h-screen bg-background pb-24">
+      <div className="min-h-screen-safe bg-background pb-28 sm:pb-8">
         
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <PageBackButton to="/dashboard" />
@@ -941,7 +941,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
   /* ══════════════ STEP: Study Plan ══════════════ */
   if (step === "plan") {
     return (
-      <div className="min-h-screen bg-background pb-24">
+      <div className="min-h-screen-safe bg-background pb-28 sm:pb-8">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <button onClick={() => setStep("setup")} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-5 h-5" />
@@ -989,7 +989,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
     };
 
     return (
-      <div className="min-h-screen bg-muted/40 pb-24">
+      <div className="min-h-screen-safe bg-muted/40 pb-28 sm:pb-8">
         <div className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
           <button onClick={() => setStep("type")} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-5 h-5" />
