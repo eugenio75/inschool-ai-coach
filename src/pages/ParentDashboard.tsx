@@ -279,7 +279,7 @@ const ParentDashboard = () => {
 
   return (
     <>
-    <div className="min-h-screen bg-background pb-12">
+    <div className="min-h-screen bg-background pb-28">
       {/* Header */}
       <div className="bg-card border-b border-border px-6 pt-6 pb-6">
         <div className="max-w-3xl mx-auto">
