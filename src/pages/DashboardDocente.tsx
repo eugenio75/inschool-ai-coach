@@ -495,7 +495,7 @@ export default function DashboardDocente() {
               value={coachInput}
               onChange={(e) => setCoachInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && navigateToCoach()}
-              placeholder="Scrivi al coach..."
+              placeholder={coachName ? `Scrivi a ${coachName}...` : "Scrivi al coach..."}
               className="flex-1 text-sm border border-input rounded-lg px-3 py-2.5 bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 transition-colors"
             />
             <button

@@ -201,9 +201,7 @@ export default function TeacherMaterialsArchive() {
               {materials.length === 0 ? "Inizia adesso." : "Prova con un termine diverso."}
             </p>
             {materials.length === 0 && (
-              <Button onClick={() => setShowClassPicker(true)} className="mt-4">
-                <Plus className="w-4 h-4 mr-1" /> Crea materiale
-              </Button>
+              <p className="text-sm text-muted-foreground mt-2">Vai nella Home per creare un nuovo materiale.</p>
             )}
           </div>
         ) : (
