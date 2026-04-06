@@ -514,6 +514,9 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   const [previewModalType, setPreviewModalType] = useState<"student" | "teacher">("student");
   const [previewEditMode, setPreviewEditMode] = useState(false);
   const [previewEditText, setPreviewEditText] = useState("");
+  const [previewAiEditMode, setPreviewAiEditMode] = useState(false);
+  const [previewAiPrompt, setPreviewAiPrompt] = useState("");
+  const [previewAiRefining, setPreviewAiRefining] = useState(false);
 
   function resetForm() {
     setMode(null);
