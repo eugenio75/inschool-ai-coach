@@ -1277,18 +1277,18 @@ Return only the three versions with no commentary, separated exactly by ===BES==
         const systemPrompt = `Stai modificando SOLO la sezione "${sectionLabel}" di un documento didattico. Applica la modifica richiesta e restituisci SOLO questa sezione aggiornata, senza aggiungere commenti o spiegazioni. Mantieni la stessa struttura e formattazione.`;
 
         const res = await fetch(
-          \`\${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat\`,
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: \`Bearer \${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}\`,
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
             },
             body: JSON.stringify({
               stream: false,
               maxTokens: 4000,
               systemPrompt,
-              messages: [{ role: "user", content: \`CONTENUTO ATTUALE:\n---\n\${currentContent}\n---\n\nMODIFICA RICHIESTA: \${previewAiPrompt}\` }],
+              messages: [{ role: "user", content: `CONTENUTO ATTUALE:\n---\n${currentContent}\n---\n\nMODIFICA RICHIESTA: ${previewAiPrompt}` }],
             }),
           }
         );
