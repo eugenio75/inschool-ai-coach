@@ -15,9 +15,12 @@ export function AdultLayout({ children }: { children: React.ReactNode }) {
           <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-card px-4 sm:px-5">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="ml-1 hidden sm:inline-flex" />
-              <span className="font-black text-2xl tracking-tight sm:hidden">
-                <span className="text-foreground">Sar</span>
-                <span className="text-primary">AI</span>
+              <span className="flex items-baseline gap-1.5 sm:hidden">
+                <span className="font-black text-2xl tracking-tight">
+                  <span className="text-foreground">Sar</span>
+                  <span className="text-primary">AI</span>
+                </span>
+                <span className="text-xs font-medium text-muted-foreground">Better</span>
               </span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">

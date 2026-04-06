@@ -78,11 +78,13 @@ export function AppSidebar() {
             </div>
             {!collapsed && (
               <div>
-                <span className="font-black text-lg tracking-tight">
-                  <span className="text-sidebar-foreground">Sar</span>
-                  <span className="text-primary">AI</span>
+                <span className="flex items-baseline gap-1">
+                  <span className="font-black text-lg tracking-tight">
+                    <span className="text-sidebar-foreground">Sar</span>
+                    <span className="text-primary">AI</span>
+                  </span>
+                  <span className="text-[10px] font-medium text-sidebar-foreground/50">Better</span>
                 </span>
-                <span className="block text-[10px] text-sidebar-foreground/50 -mt-0.5">by AzarLabs</span>
               </div>
             )}
           </button>
