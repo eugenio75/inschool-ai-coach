@@ -113,28 +113,13 @@ export async function childApi(action: string, payload?: any): Promise<any> {
 
   try {
     switch (action) {
-      case "get-tasks": {
-        const { data } = await supabase.from("homework_tasks").select("*").eq("child_profile_id", profileId).order("created_at", { ascending: false });
-        return data || [];
-      }
-      case "get-task": {
-        const { data } = await supabase.from("homework_tasks").select("*").eq("id", payload.taskId).eq("child_profile_id", profileId).maybeSingle();
-        return data;
-      }
+      case "get-tasks":
+      case "get-task":
       case "create-task":
-      case "save-task": {
-        const { data } = await supabase.from("homework_tasks").insert({ ...payload, child_profile_id: profileId }).select().single();
-        return data;
-      }
-      case "update-task": {
-        const { taskId, updates, ...rest } = payload;
-        const upd = updates || rest;
-        const { data } = await supabase.from("homework_tasks").update(upd).eq("id", taskId).eq("child_profile_id", profileId).select().single();
-        return data;
-      }
+      case "save-task":
+      case "update-task":
       case "delete-task": {
-        await supabase.from("homework_tasks").delete().eq("id", payload.taskId).eq("child_profile_id", profileId);
-        return { success: true };
+        return callChildApiEdge();
       }
       case "get-gamification": {
         const { data } = await supabase.rpc("get_child_gamification", { p_profile_id: profileId });
