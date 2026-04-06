@@ -136,7 +136,7 @@ export default function Agenda() {
       })();
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-24">
+    <div className="min-h-screen-safe bg-[#F8FAFC] pb-28 sm:pb-8">
       <div className="bg-white border-b px-4 py-4 flex items-center gap-3">
         <button onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5 text-slate-600" /></button>
         <CalendarDays className="w-5 h-5 text-slate-600" />

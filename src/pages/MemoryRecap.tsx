@@ -1257,7 +1257,7 @@ const MemoryRecap = () => {
   };
 
   return (
-    <div className="min-h-screen bg-muted/40 pb-24">
+    <div className="min-h-screen-safe bg-muted/40 pb-28 sm:pb-8">
       {/* Header */}
       <div className="bg-card border-b border-border px-4 py-4 pb-0">
         <div className="flex items-center gap-3 mb-1">
