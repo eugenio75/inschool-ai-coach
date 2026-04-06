@@ -136,17 +136,32 @@
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Safari 100vh fix */
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  html {
+    height: -webkit-fill-available;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Sora', system-ui, sans-serif;
     font-weight: 700;
     letter-spacing: -0.02em;
+  }
+  /* iOS input zoom prevention */
+  input, select, textarea {
+    font-size: 16px;
   }
 }
 
@@ -163,19 +178,40 @@
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
   .font-display {
     font-family: 'Sora', system-ui, sans-serif;
   }
   .font-body {
     font-family: 'DM Sans', system-ui, sans-serif;
   }
+  /* Safari-safe min-height: 100vh */
+  .min-h-screen-safe {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  .h-screen-safe {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+/* Scrollbar — webkit browsers only */
+@supports selector(::-webkit-scrollbar) {
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+}
+/* Firefox scrollbar */
+@supports (scrollbar-width: thin) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+}
 
 /* Selection */
 ::selection { background: hsl(207 100% 38% / 0.15); color: hsl(var(--foreground)); }
