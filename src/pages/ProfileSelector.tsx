@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Plus, Settings, LogOut, BookOpen, Loader2, Users, GraduationCap, ChevronRight, UserCog, Copy, Check, ArrowLeft } from "lucide-react";
-import { useLang } from "@/contexts/LangContext";
-import { Button } from "@/components/ui/button";
+import { Plus, Settings, LogOut, BookOpen, Loader2, Users, GraduationCap, ChevronRight, UserCog, Copy, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildProfiles, setActiveChildProfileId } from "@/lib/database";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
@@ -15,7 +13,6 @@ const spring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 const ProfileSelector = () => {
   const navigate = useNavigate();
-  const { t } = useLang();
   const { signOut } = useAuth();
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,8 +92,7 @@ const ProfileSelector = () => {
   const isDocente = profiles.some(p => p.school_level === "docente");
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12 relative font-sans overflow-hidden">
-      {/* Sfondo geometrico minimale */}
+    <div className="min-h-screen bg-background flex flex-col items-center justify-start px-6 pt-8 pb-32 sm:pt-12 relative font-sans overflow-x-hidden">
       <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
       <div className="absolute -top-32 -right-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10" />
       
@@ -157,7 +153,6 @@ const ProfileSelector = () => {
           ))}
           </AnimatePresence>
 
-          {/* Add Profile/Class Action */}
           <motion.button
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -179,7 +174,6 @@ const ProfileSelector = () => {
           </motion.button>
         </div>
 
-        {/* Global Controls */}
         <div className="flex items-center justify-center gap-6 flex-wrap bg-card px-8 py-4 rounded-[2rem] border border-border shadow-sm">
           {!isDocente && (
               <button
