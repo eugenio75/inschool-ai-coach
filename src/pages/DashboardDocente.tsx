@@ -64,6 +64,7 @@ export default function DashboardDocente() {
   const [showMood, setShowMood] = useState(false);
   const moodRef = useRef<HTMLDivElement>(null);
   const [isLoadingCoachMsg, setIsLoadingCoachMsg] = useState(true);
+  const [coachName, setCoachName] = useState("");
 
   // Close mood on click outside
   useEffect(() => {
@@ -132,8 +133,16 @@ export default function DashboardDocente() {
     window.addEventListener("inschool:nuova-classe", handler);
     return () => window.removeEventListener("inschool:nuova-classe", handler);
   }, []);
+  // Fetch coach name from preferences
+  useEffect(() => {
+    if (!profileId) return;
+    supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle()
+      .then(({ data: pref }) => {
+        const name = (pref?.data as any)?.coach_name;
+        if (name) setCoachName(name);
+      });
+  }, [profileId]);
 
-  // Coach initial message with TTL cache
   const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
   const BEHAVIOR_TTL = 30 * 60 * 1000; // 30 minutes
   useEffect(() => {
@@ -412,6 +421,9 @@ export default function DashboardDocente() {
               <CoachAvatar mood="default" size={32} />
             </div>
             <div className="flex-1">
+              {coachName && (
+                <p className="text-xs font-semibold text-primary mb-1">{coachName}</p>
+              )}
               {isLoadingCoachMsg ? (
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-3/4" />
@@ -486,7 +498,7 @@ export default function DashboardDocente() {
               value={coachInput}
               onChange={(e) => setCoachInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && navigateToCoach()}
-              placeholder="Scrivi al coach..."
+              placeholder={coachName ? `Scrivi a ${coachName}...` : "Scrivi al coach..."}
               className="flex-1 text-sm border border-input rounded-lg px-3 py-2.5 bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 transition-colors"
             />
             <button

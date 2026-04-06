@@ -122,16 +122,11 @@ export default function TeacherMaterialsArchive() {
       {/* Header */}
       <div className="bg-card border-b border-border px-6 pt-6 pb-5">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-start justify-between gap-4">
-            <div>
+          <div>
               <h1 className="text-2xl font-display font-bold text-foreground">I miei materiali</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 Tutto quello che hai creato — pronto da riutilizzare, riassegnare o stampare.
               </p>
-            </div>
-            <Button onClick={() => setShowClassPicker(true)} size="sm" className="shrink-0 hidden sm:inline-flex">
-              <Plus className="w-4 h-4 mr-1" /> Crea materiale
-            </Button>
           </div>
 
           {/* Search */}
@@ -203,9 +198,7 @@ export default function TeacherMaterialsArchive() {
               {materials.length === 0 ? "Inizia adesso." : "Prova con un termine diverso."}
             </p>
             {materials.length === 0 && (
-              <Button onClick={() => setShowClassPicker(true)} className="mt-4">
-                <Plus className="w-4 h-4 mr-1" /> Crea materiale
-              </Button>
+              <p className="text-sm text-muted-foreground mt-2">Vai nella Home per creare un nuovo materiale.</p>
             )}
           </div>
         ) : (
