@@ -117,6 +117,7 @@ const Settings = () => {
   // Check if adult role
   const session = getChildSession();
   const isAdult = ["superiori", "universitario", "docente"].includes(session?.profile?.school_level || "");
+  const activeProfileId = session?.profileId || localStorage.getItem("inschool-active-child-id");
 
   useEffect(() => {
     const load = async () => {
