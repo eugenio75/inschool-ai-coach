@@ -1227,10 +1227,6 @@ Return only the three versions with no commentary, separated exactly by ===BES==
   }
 
   // --- Preview view ---
-  const [previewModalOpen, setPreviewModalOpen] = useState(false);
-  const [previewModalType, setPreviewModalType] = useState<"student" | "teacher">("student");
-  const [previewEditMode, setPreviewEditMode] = useState(false);
-  const [previewEditText, setPreviewEditText] = useState("");
 
   if (showPreview) {
     const previewContent = getPreviewContent();
