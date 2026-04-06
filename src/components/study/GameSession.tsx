@@ -1,13 +1,15 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft, Loader2, Gamepad2, CheckCircle2, XCircle,
-  HelpCircle, Shuffle, ChevronRight,
+  ArrowLeft, Loader2, Gamepad2, CheckCircle, XCircle,
+  PenLine, ListChecks,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { autoCompleteMissions } from "@/lib/database";
 import { getCurrentLang } from "@/lib/langUtils";
+import { useTranslation } from "react-i18next";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
 
@@ -33,6 +35,7 @@ interface GameItem {
 export const GameSession = ({ subject, topic, section, concepts, onClose }: {
   subject: string; topic: string; section: GameSection; concepts: any[]; onClose: () => void;
 }) => {
+  const { t } = useTranslation();
   const [gameItems, setGameItems] = useState<GameItem[]>([]);
   const [gameType, setGameType] = useState<GameType | null>(null);
   const [loading, setLoading] = useState(false);
@@ -43,14 +46,14 @@ export const GameSession = ({ subject, topic, section, concepts, onClose }: {
   const [done, setDone] = useState(false);
   const [textInput, setTextInput] = useState("");
 
-  const gameOptions: { type: GameType; label: string; desc: string; icon: any; forSection: GameSection[] }[] = [
-    { type: "true-false", label: "Vero o falso", desc: section === "rinforza" ? "Individua le affermazioni corrette e scorrette" : "Rispondi velocemente: vero o falso?", icon: CheckCircle2, forSection: ["ripasso", "rinforza"] },
-    { type: "complete", label: "Completa la frase", desc: section === "rinforza" ? "Completa il passaggio mancante" : "Inserisci la parola giusta", icon: HelpCircle, forSection: ["ripasso", "rinforza"] },
-    { type: "find-error", label: "Trova l'errore", desc: "Correggi l'affermazione sbagliata", icon: XCircle, forSection: ["rinforza"] },
-    { type: "memory-match", label: "Scegli la risposta", desc: "Seleziona la risposta corretta", icon: Shuffle, forSection: ["ripasso", "rinforza"] },
+  const gameCards: { type: GameType; labelKey: string; descKey: string; descKeyRinforza?: string; icon: any; forSection: GameSection[] }[] = [
+    { type: "true-false", labelKey: "game_tf_label", descKey: "game_tf_desc", descKeyRinforza: "game_tf_desc_rinforza", icon: CheckCircle, forSection: ["ripasso", "rinforza"] },
+    { type: "complete", labelKey: "game_complete_label", descKey: "game_complete_desc", descKeyRinforza: "game_complete_desc_rinforza", icon: PenLine, forSection: ["ripasso", "rinforza"] },
+    { type: "find-error", labelKey: "game_find_error_label", descKey: "game_find_error_desc", icon: XCircle, forSection: ["rinforza"] },
+    { type: "memory-match", labelKey: "game_match_label", descKey: "game_match_desc", icon: ListChecks, forSection: ["ripasso", "rinforza"] },
   ];
 
-  const availableGames = gameOptions.filter(g => g.forSection.includes(section));
+  const availableGames = gameCards.filter(g => g.forSection.includes(section));
 
   const shuffleArray = <T,>(arr: T[]): T[] => {
     const copy = [...arr];
@@ -154,164 +157,197 @@ export const GameSession = ({ subject, topic, section, concepts, onClose }: {
     }
   };
 
+  /* ─── Game selection screen ─── */
   if (!gameType) {
     return (
-      <div className="max-w-lg mx-auto px-6 py-6 space-y-4">
-        <div className="flex items-center gap-3 mb-2">
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><ArrowLeft className="w-5 h-5" /></button>
-          <h2 className="font-display text-lg font-bold text-foreground">Scegli il gioco</h2>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {section === "rinforza" ? "Capisci meglio con un'attività interattiva" : "Ripassa con un'attività più leggera e interattiva"}
-        </p>
-        <div className="space-y-2.5">
-          {availableGames.map((g, i) => (
-            <motion.button key={g.type} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ ...spring, delay: i * 0.05 }}
-              onClick={() => startGame(g.type)}
-              className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-all text-left group">
-              <div className="w-10 h-10 rounded-xl bg-accent/50 flex items-center justify-center">
-                <g.icon className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-foreground">{g.label}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{g.desc}</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
-            </motion.button>
-          ))}
+      <div className="min-h-[60vh] bg-muted/40 px-4 py-8">
+        <div className="max-w-lg mx-auto space-y-6">
+          <div className="flex items-center gap-3">
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <h2 className="font-display text-xl font-bold text-foreground">{t("game_choose_title")}</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {section === "rinforza" ? t("game_choose_subtitle_rinforza") : t("game_choose_subtitle_ripasso")}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            {availableGames.map((g, i) => (
+              <motion.button
+                key={g.type}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ ...spring, delay: i * 0.07 }}
+                onClick={() => startGame(g.type)}
+                className="bg-card rounded-2xl shadow-sm border border-border p-6 flex flex-col items-center text-center gap-3 hover:shadow-md hover:scale-[1.02] transition-all group"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-accent/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                  <g.icon className="w-7 h-7 text-primary" />
+                </div>
+                <p className="text-base font-bold text-foreground">{t(g.labelKey)}</p>
+                <p className="text-sm text-muted-foreground leading-snug">
+                  {section === "rinforza" && g.descKeyRinforza ? t(g.descKeyRinforza) : t(g.descKey)}
+                </p>
+              </motion.button>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
+  /* ─── Loading ─── */
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-3">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">Preparo il gioco...</p>
+      <div className="min-h-[60vh] bg-muted/40 flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-7 h-7 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground font-medium">{t("game_loading")}</p>
       </div>
     );
   }
 
+  /* ─── Done / no items ─── */
   if (done || gameItems.length === 0) {
     const pct = gameItems.length > 0 ? Math.round((score / gameItems.length) * 100) : 0;
     return (
-      <div className="max-w-md mx-auto px-6 py-12 text-center">
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+      <div className="min-h-[60vh] bg-muted/40 flex items-center justify-center px-4">
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+          className="bg-card rounded-2xl shadow-sm p-8 max-w-sm w-full text-center">
           <div className="w-16 h-16 rounded-2xl bg-accent/50 flex items-center justify-center mx-auto mb-4">
             <Gamepad2 className="w-8 h-8 text-primary" />
           </div>
           <h2 className="font-display text-xl font-bold text-foreground mb-1">
-            {gameItems.length === 0 ? "Nessun gioco disponibile" : "Gioco completato!"}
+            {gameItems.length === 0 ? t("game_no_items") : t("game_completed")}
           </h2>
           {gameItems.length > 0 && (
             <>
-              <p className="text-3xl font-bold text-primary mt-4">{pct}%</p>
-              <p className="text-sm text-muted-foreground">{score} su {gameItems.length}</p>
+              <p className="text-4xl font-bold text-primary mt-4">{pct}%</p>
+              <p className="text-sm text-muted-foreground mt-1">{score} / {gameItems.length}</p>
               <div className="mt-3 text-sm text-muted-foreground">
-                {pct >= 80 ? "🎉 Fantastico!" : pct >= 50 ? "💪 Bene, continua!" : "📖 Rivedi i concetti e riprova!"}
+                {pct >= 80 ? t("game_score_great") : pct >= 50 ? t("game_score_good") : t("game_score_retry")}
               </div>
             </>
           )}
-          <button onClick={onClose} className="mt-6 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium text-sm">Torna indietro</button>
+          <Button onClick={onClose} className="w-full mt-6 h-12 rounded-xl text-base font-semibold">
+            {t("game_back")}
+          </Button>
         </motion.div>
       </div>
     );
   }
 
+  /* ─── Game play screen ─── */
   const item = gameItems[currentIdx];
+  const progressPct = ((currentIdx + 1) / gameItems.length) * 100;
 
   return (
-    <div className="max-w-lg mx-auto px-6 py-6 space-y-5">
-      <div className="flex items-center justify-between">
-        <button onClick={onClose} className="flex items-center gap-2 text-sm text-primary font-medium">
-          <ArrowLeft className="w-4 h-4" /> Indietro
-        </button>
-        <span className="text-xs font-semibold text-primary">{score} pt</span>
-      </div>
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <span>{currentIdx + 1} / {gameItems.length}</span>
-        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${((currentIdx + 1) / gameItems.length) * 100}%` }} />
-        </div>
-      </div>
-
-      <motion.div key={currentIdx} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-        <div className="bg-card rounded-2xl border border-border p-5">
-          <p className="text-sm font-semibold text-foreground leading-relaxed">{item.statement}</p>
+    <div className="min-h-[60vh] bg-muted/40 px-4 py-6">
+      <div className="max-w-lg mx-auto space-y-5">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <button onClick={onClose} className="flex items-center gap-2 text-sm text-primary font-medium hover:underline">
+            <ArrowLeft className="w-4 h-4" /> {t("game_back_btn")}
+          </button>
+          <span className="bg-primary/10 text-primary text-sm font-bold rounded-full px-3 py-1">
+            {score} pt
+          </span>
         </div>
 
-        {gameType === "true-false" && (
-          <div className="grid grid-cols-2 gap-3">
-            {["Vero", "Falso"].map((label, i) => {
-              const val = i === 0;
-              let style = "border-border bg-card hover:border-primary/30";
-              if (answered) {
-                if (val === item.isTrue) style = "border-green-400 bg-green-50 dark:bg-green-900/20";
-                else if (val === userAnswer) style = "border-destructive bg-destructive/5";
-                else style = "border-border bg-card opacity-60";
-              }
-              return (
-                <button key={label} onClick={() => handleTrueFalse(val)} disabled={answered}
-                  className={`p-4 rounded-xl border-2 transition-all text-sm font-semibold ${style}`}>
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        )}
+        {/* Progress */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-semibold text-foreground whitespace-nowrap">
+            {currentIdx + 1} / {gameItems.length}
+          </span>
+          <Progress value={progressPct} className="flex-1 h-2.5" />
+        </div>
 
-        {(gameType === "complete" || gameType === "find-error") && (
-          <div className="space-y-3">
-            <input type="text" value={textInput} onChange={e => setTextInput(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter" && textInput.trim()) handleTextAnswer(textInput.trim()); }}
-              placeholder={gameType === "find-error" ? "Scrivi la correzione..." : "Completa la frase..."}
-              disabled={answered}
-              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
-            />
-            {!answered && (
-              <Button onClick={() => textInput.trim() && handleTextAnswer(textInput.trim())} disabled={!textInput.trim()} className="w-full">
-                Conferma
+        {/* Question + answers card */}
+        <motion.div key={currentIdx} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+          className="bg-card rounded-2xl shadow-sm border border-border p-6 space-y-5">
+
+          {/* Question */}
+          <p className="text-lg font-medium text-foreground leading-relaxed">{item.statement}</p>
+
+          {/* True / False */}
+          {gameType === "true-false" && (
+            <div className="grid grid-cols-2 gap-3">
+              {[t("game_true"), t("game_false")].map((label, i) => {
+                const val = i === 0;
+                let style = "border-border bg-card hover:border-primary/30";
+                if (answered) {
+                  if (val === item.isTrue) style = "border-green-400 bg-green-50 dark:bg-green-900/20";
+                  else if (val === userAnswer) style = "border-destructive bg-destructive/5";
+                  else style = "border-border bg-card opacity-60";
+                }
+                return (
+                  <button key={label} onClick={() => handleTrueFalse(val)} disabled={answered}
+                    className={`p-5 rounded-xl border-2 transition-all text-base font-semibold ${style}`}>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Complete / Find error */}
+          {(gameType === "complete" || gameType === "find-error") && (
+            <div className="space-y-3">
+              <input
+                type="text" value={textInput} onChange={e => setTextInput(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter" && textInput.trim()) handleTextAnswer(textInput.trim()); }}
+                placeholder={gameType === "find-error" ? t("game_placeholder_correct") : t("game_placeholder_complete")}
+                disabled={answered}
+                className="w-full rounded-xl border border-border bg-background px-4 py-3.5 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+              />
+              {!answered && (
+                <Button onClick={() => textInput.trim() && handleTextAnswer(textInput.trim())} disabled={!textInput.trim()}
+                  className="w-full h-12 rounded-xl text-base font-semibold">
+                  {t("game_confirm")}
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Multiple choice */}
+          {gameType === "memory-match" && item.shuffledOptions && (
+            <div className="space-y-2.5">
+              {item.shuffledOptions.map((opt, i) => {
+                let style = "border-border bg-card hover:border-primary/30";
+                if (answered) {
+                  if (opt === item.answer) style = "border-green-400 bg-green-50 dark:bg-green-900/20";
+                  else if (opt === userAnswer) style = "border-destructive bg-destructive/5";
+                  else style = "border-border bg-card opacity-60";
+                }
+                return (
+                  <button key={`${currentIdx}-${i}`} onClick={() => handleOptionSelect(opt)} disabled={answered}
+                    className={`w-full text-left p-4 rounded-xl border-2 transition-all text-base ${style}`}>
+                    <span className="font-medium text-foreground">{opt}</span>
+                    {answered && opt === item.answer && <CheckCircle className="w-5 h-5 text-green-500 inline ml-2" />}
+                    {answered && opt === userAnswer && opt !== item.answer && <XCircle className="w-5 h-5 text-destructive inline ml-2" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Feedback + next */}
+          {answered && (
+            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-3 pt-1">
+              {item.correction && (
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm text-foreground leading-relaxed">
+                  💡 {item.correction}
+                </div>
+              )}
+              <Button onClick={nextItem} className="w-full h-12 rounded-xl text-base font-semibold">
+                {currentIdx + 1 >= gameItems.length ? t("game_see_results") : t("game_next")}
               </Button>
-            )}
-          </div>
-        )}
-
-        {gameType === "memory-match" && item.shuffledOptions && (
-          <div className="space-y-2">
-            {item.shuffledOptions.map((opt, i) => {
-              let style = "border-border bg-card hover:border-primary/30";
-              if (answered) {
-                if (opt === item.answer) style = "border-green-400 bg-green-50 dark:bg-green-900/20";
-                else if (opt === userAnswer) style = "border-destructive bg-destructive/5";
-                else style = "border-border bg-card opacity-60";
-              }
-              return (
-                <button key={`${currentIdx}-${i}`} onClick={() => handleOptionSelect(opt)} disabled={answered}
-                  className={`w-full text-left p-3.5 rounded-xl border-2 transition-all text-sm ${style}`}>
-                  <span className="font-medium text-foreground">{opt}</span>
-                  {answered && opt === item.answer && <CheckCircle2 className="w-4 h-4 text-green-500 inline ml-2" />}
-                  {answered && opt === userAnswer && opt !== item.answer && <XCircle className="w-4 h-4 text-destructive inline ml-2" />}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {answered && (
-          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-            {item.correction && (
-              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm text-foreground leading-relaxed">
-                💡 {item.correction}
-              </div>
-            )}
-            <Button onClick={nextItem} className="w-full">
-              {currentIdx + 1 >= gameItems.length ? "Vedi risultati" : "Prossimo"}
-            </Button>
-          </motion.div>
-        )}
-      </motion.div>
+            </motion.div>
+          )}
+        </motion.div>
+      </div>
     </div>
   );
 };
