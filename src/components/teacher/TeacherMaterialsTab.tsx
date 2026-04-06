@@ -549,6 +549,9 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     setAdaptedError(false);
     setPreviewModalOpen(false);
     setPreviewEditMode(false);
+    setPreviewAiEditMode(false);
+    setPreviewAiPrompt("");
+    setPreviewAiRefining(false);
   }
 
   function getPreviewContent(): string {
