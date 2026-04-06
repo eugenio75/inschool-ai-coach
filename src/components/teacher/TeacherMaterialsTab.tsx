@@ -1514,30 +1514,6 @@ Return only the three versions with no commentary, separated exactly by ===BES==
             )}
           </div>
 
-          {mode === "ai" && aiOutput && (
-            <div className="space-y-2 border-t border-border pt-4">
-              <Label className="text-xs text-muted-foreground">Vuoi modificare qualcosa?</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={aiRefinePrompt}
-                  onChange={e => setAiRefinePrompt(e.target.value)}
-                  placeholder="Es: 'Aggiungi un esempio sulla Rivoluzione Francese', 'Togli la griglia di valutazione', 'Rendi le domande più semplici'"
-                  className="rounded-xl text-sm"
-                  disabled={aiRefining}
-                  onKeyDown={e => { if (e.key === "Enter" && aiRefinePrompt.trim()) refineAiContent(); }}
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0 rounded-xl"
-                  onClick={refineAiContent}
-                  disabled={!aiRefinePrompt.trim() || aiRefining}
-                >
-                  {aiRefining ? <><RotateCcw className="mr-1 h-3.5 w-3.5 animate-spin" /> Aggiorno...</> : <><Pencil className="mr-1 h-3.5 w-3.5" /> Aggiorna</>}
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
 
         {isMobile ? (
