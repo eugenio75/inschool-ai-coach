@@ -41,6 +41,8 @@ function TeacherNavbar() {
       <div className="flex items-center gap-1">
         <LangToggle />
         {navItems.map(({ icon: Icon, route, label, badge }) => (
+          // Hide nav icons on mobile — teacher bottom nav handles it
+
           <button
             key={route}
             onClick={() => navigate(route)}

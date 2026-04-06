@@ -423,18 +423,16 @@ export default function DashboardDocente() {
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={coachInput}
-                onChange={(e) => setCoachInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && navigateToCoach()}
-                placeholder="Scrivi al coach..."
-                className="w-full text-sm border border-input rounded-lg px-3 py-2.5 pr-10 bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 transition-colors"
-              />
-              <Heart className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-red-500 fill-red-500 animate-pulse" />
-            </div>
+          <div className="flex gap-2 items-center">
+            <Heart className="w-5 h-5 text-red-500 fill-red-500 animate-pulse shrink-0" />
+            <input
+              type="text"
+              value={coachInput}
+              onChange={(e) => setCoachInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && navigateToCoach()}
+              placeholder="Scrivi al coach..."
+              className="flex-1 text-sm border border-input rounded-lg px-3 py-2.5 bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 transition-colors"
+            />
             <button
               onClick={() => navigateToCoach()}
               disabled={!coachInput.trim()}
