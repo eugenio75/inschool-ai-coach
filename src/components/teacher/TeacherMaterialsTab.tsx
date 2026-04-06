@@ -141,7 +141,7 @@ interface Props {
   autoCreate?: boolean;
 }
 
-const MATERIE_OPTIONS = [
+const MATERIE_OPTIONS_BASE = [
   "Italiano", "Matematica", "Scienze", "Storia", "Geografia", "Inglese",
   "Francese", "Spagnolo", "Tedesco", "Arte", "Musica", "Educazione Fisica",
   "Tecnologia", "Religione", "Filosofia", "Fisica", "Chimica", "Biologia",
@@ -153,6 +153,37 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   const [localMaterials, setLocalMaterials] = useState<any[]>([]);
   const [adaptedMap, setAdaptedMap] = useState<Record<string, Record<string, any>>>({});
   const [classiList, setClassiList] = useState<any[]>([]);
+  const [teacherSubjects, setTeacherSubjects] = useState<string[]>([]);
+
+  // Fetch teacher's subjects from user_preferences (onboarding data)
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      // Find teacher's profile id
+      const { data: profiles } = await supabase
+        .from("child_profiles")
+        .select("id")
+        .eq("parent_id", userId)
+        .eq("school_level", "docente")
+        .limit(1);
+      const profileId = profiles?.[0]?.id;
+      if (!profileId) return;
+      const { data: prefs } = await supabase
+        .from("user_preferences")
+        .select("data")
+        .eq("profile_id", profileId)
+        .maybeSingle();
+      const subjects: string[] = (prefs?.data as any)?.docente_materie || [];
+      if (subjects.length > 0) setTeacherSubjects(subjects);
+    })();
+  }, [userId]);
+
+  // Build MATERIE_OPTIONS with teacher's subjects prioritized at top
+  const MATERIE_OPTIONS = useMemo(() => {
+    const extra = teacherSubjects.filter(s => !MATERIE_OPTIONS_BASE.includes(s));
+    const ordered = [...teacherSubjects, ...MATERIE_OPTIONS_BASE.filter(s => !teacherSubjects.includes(s)), ...extra.filter(s => !teacherSubjects.includes(s))];
+    return [...new Set(ordered)];
+  }, [teacherSubjects]);
 
   useEffect(() => {
     // Separate parent materials from adapted children
@@ -193,6 +224,13 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     if (!classMateria) return [];
     return classMateria.split(",").map((m: string) => m.trim()).filter(Boolean);
   });
+
+  // When teacherSubjects load & selectedSubjects is still empty (no class materia), default to teacher's subjects
+  useEffect(() => {
+    if (teacherSubjects.length > 0 && selectedSubjects.length === 0) {
+      setSelectedSubjects(teacherSubjects);
+    }
+  }, [teacherSubjects]);
 
   // AI state
   const [aiPrompt, setAiPrompt] = useState("");
