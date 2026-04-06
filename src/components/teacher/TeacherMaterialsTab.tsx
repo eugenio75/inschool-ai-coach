@@ -287,7 +287,8 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     setUploadFile(null);
     setUploadUrl(null);
     setOcrText(null);
-    setSelectedSubjects(classe?.materia ? classe.materia.split(",").map((m: string) => m.trim()).filter(Boolean) : []);
+    const classSubjects = classe?.materia ? classe.materia.split(",").map((m: string) => m.trim()).filter(Boolean) : [];
+    setSelectedSubjects(classSubjects.length > 0 ? classSubjects : teacherSubjects);
     setShowDownloadPanel(false);
     setConfirmedContent("");
     setConfirmedTitle("");
