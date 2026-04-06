@@ -518,7 +518,7 @@ serve(async (req) => {
             .eq("id", payload.homeworkId)
             .maybeSingle();
 
-          const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+          const LOVABLE_API_KEY = Deno.env.get("OPENAI_API_KEY");
           if (LOVABLE_API_KEY && hwInfo) {
             // Extract concepts inline (same logic as extract-concepts function)
             try {
@@ -551,7 +551,7 @@ Rispondi SOLO con un JSON array di oggetti, ognuno con:
 
 Estrai da 1 a 4 concetti. Rispondi SOLO con il JSON, senza markdown.`;
 
-              const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+              const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
                 method: "POST",
                 headers: {
                   Authorization: `Bearer ${LOVABLE_API_KEY}`,

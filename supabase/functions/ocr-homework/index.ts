@@ -16,10 +16,10 @@ serve(async (req) => {
     // Support both old single imageUrl and new imageUrls array
     const imageUrls: string[] = body.imageUrls || (body.imageUrl ? [body.imageUrl] : []);
     const { sourceType, userNote } = body;
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+      throw new Error("OPENAI_API_KEY is not configured");
     }
 
     if (imageUrls.length === 0) {
@@ -125,7 +125,7 @@ Nessun altro testo, solo il JSON.`;
         : `Analizza ${imageUrls.length > 1 ? "tutte queste foto" : "questa foto"} e estrai tutti i compiti che vedi. Rispondi SOLO con il JSON.`,
     });
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,

@@ -77,7 +77,7 @@ serve(async (req) => {
   try {
     const { messages, concept, summary, subject, studentProfile, strength, mode, studyMode, lang } = await req.json();
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const effectiveLang = lang || "it";
@@ -321,7 +321,7 @@ dove XX è il nuovo valore di forza (0-100) basato sulle risposte.`;
           : `Genera una sintesi completa e chiara dell'argomento "${concept}" in ${subject || "questa materia"}.` }]
       : [{ role: "system", content: systemPrompt }, ...messages];
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,

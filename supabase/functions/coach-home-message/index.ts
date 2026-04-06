@@ -321,8 +321,8 @@ Errori di apprendimento non risolti: ${recentErrors?.length ? JSON.stringify(rec
 Ora: ${new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}
 Giorno: ${new Date().toLocaleDateString("it-IT", { weekday: "long" })}`;
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const LOVABLE_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
