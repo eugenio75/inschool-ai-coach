@@ -136,17 +136,32 @@
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Safari 100vh fix */
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  html {
+    height: -webkit-fill-available;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Sora', system-ui, sans-serif;
     font-weight: 700;
     letter-spacing: -0.02em;
+  }
+  /* iOS input zoom prevention */
+  input, select, textarea {
+    font-size: 16px;
   }
 }
 
