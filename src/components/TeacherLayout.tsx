@@ -33,9 +33,10 @@ function TeacherNavbar() {
     <header className="h-14 flex items-center justify-between border-b border-border px-5 bg-card sticky top-0 z-50">
       <button
         onClick={() => navigate("/dashboard")}
-        className="font-display text-lg font-bold text-primary tracking-tight hover:opacity-80 transition-opacity"
+        className="font-black text-2xl tracking-tight hover:opacity-80 transition-opacity"
       >
-        SarAI
+        <span className="text-foreground">Sar</span>
+        <span className="text-primary">AI</span>
       </button>
       <div className="flex items-center gap-1">
         <LangToggle />

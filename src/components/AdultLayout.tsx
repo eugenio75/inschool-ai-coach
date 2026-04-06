@@ -15,7 +15,10 @@ export function AdultLayout({ children }: { children: React.ReactNode }) {
           <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-card px-4 sm:px-5">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="ml-1 hidden sm:inline-flex" />
-              <span className="font-display text-sm font-bold tracking-tight text-foreground sm:hidden">SarAI</span>
+              <span className="font-black text-2xl tracking-tight sm:hidden">
+                <span className="text-foreground">Sar</span>
+                <span className="text-primary">AI</span>
+              </span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <LangToggle />
