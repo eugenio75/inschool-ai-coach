@@ -19,7 +19,7 @@ export function TeacherBottomNav() {
 
   const navItems = [
     { path: "/dashboard", label: "Home", icon: Home },
-    { path: "/dashboard?action=create", label: "Crea", icon: Plus },
+    { path: "/materiali-docente?create=true", label: "Crea", icon: Plus },
     { path: "/materiali-docente", label: "Materiali", icon: FolderOpen },
     { path: "/agenda-docente", label: "Agenda", icon: Calendar },
   ];
