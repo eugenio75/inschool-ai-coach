@@ -959,6 +959,18 @@ const MemoryRecap = () => {
   const [activeStudy, setActiveStudy] = useState<{ subject: string; concepts: any[]; method: StudyMethod; topic: string } | null>(null);
   const [generatingFlashcards, setGeneratingFlashcards] = useState(false);
   const [generatedCards, setGeneratedCards] = useState<any[]>([]);
+  const [coachName, setCoachName] = useState("");
+
+  useEffect(() => {
+    const profile = getProfile();
+    const profileId = profile?.id;
+    if (!profileId) return;
+    supabase.from("user_preferences").select("data").eq("profile_id", profileId).maybeSingle()
+      .then(({ data }) => {
+        const prefs = (data?.data as any) || {};
+        if (prefs.coach_name) setCoachName(prefs.coach_name);
+      });
+  }, []);
 
   useEffect(() => {
     const load = async () => {
