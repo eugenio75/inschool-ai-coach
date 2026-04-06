@@ -64,6 +64,7 @@ export default function DashboardDocente() {
   const [showMood, setShowMood] = useState(false);
   const moodRef = useRef<HTMLDivElement>(null);
   const [isLoadingCoachMsg, setIsLoadingCoachMsg] = useState(true);
+  const [coachName, setCoachName] = useState("");
 
   // Close mood on click outside
   useEffect(() => {
