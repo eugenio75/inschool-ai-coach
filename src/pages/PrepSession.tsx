@@ -773,7 +773,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
     const modeCards = [
       { id: "coach" as const, icon: MessageCircle, titleKey: "prep_mode_coach_title", descKey: "prep_mode_coach_desc" },
       { id: "flashcard" as const, icon: Brain, titleKey: "study_mode_flashcard_title", descKey: "prep_mode_flashcard_desc" },
-      { id: "games" as const, icon: Gamepad2, titleKey: "study_mode_games_title", descKey: "study_mode_games_desc" },
+      { id: "games" as const, icon: Gamepad2, titleKey: "study_mode_games_title", descKey: "prep_mode_games_desc" },
     ];
     const handleModeSelect = (modeId: "coach" | "flashcard" | "games") => {
       setStudyMode(modeId);
