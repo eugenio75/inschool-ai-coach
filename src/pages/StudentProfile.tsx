@@ -137,6 +137,18 @@ const StudentProfile = () => {
       } else {
         await updateChildProfile(profile.id, updates);
       }
+
+      // Save coach name if changed
+      if (coachName !== originalCoachName && profile.id) {
+        const { data: existing } = await supabase
+          .from("user_preferences")
+          .select("data")
+          .eq("profile_id", profile.id)
+          .maybeSingle();
+        const merged = { ...((existing?.data as Record<string, any>) || {}), coach_name: coachName.trim() || null };
+        await supabase.from("user_preferences").upsert({ profile_id: profile.id, data: merged }, { onConflict: "profile_id" });
+      }
+
       toast({ title: t("profile_saved") });
       navigate(-1);
     } catch (e) {
