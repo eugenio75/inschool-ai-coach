@@ -129,7 +129,7 @@ export default function TeacherMaterialsArchive() {
                 Tutto quello che hai creato — pronto da riutilizzare, riassegnare o stampare.
               </p>
             </div>
-            <Button onClick={() => setShowClassPicker(true)} size="sm" className="shrink-0">
+            <Button onClick={() => setShowClassPicker(true)} size="sm" className="shrink-0 hidden sm:inline-flex">
               <Plus className="w-4 h-4 mr-1" /> Crea materiale
             </Button>
           </div>
