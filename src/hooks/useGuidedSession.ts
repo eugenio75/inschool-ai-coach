@@ -90,6 +90,15 @@ function extractExactExercises(text: string): string[] {
     .filter(item => EXERCISE_ITEM_REGEX.test(item));
 }
 
+function getVisibleLoadedContent(taskType: string, title: string, description: string | null | undefined, stepText?: string) {
+  const isExerciseTask = !isOralStudyTask(taskType, title) && !isMixedWritingTask(taskType, title);
+  if (isExerciseTask) {
+    const exercises = extractExactExercises(description || "");
+    if (exercises.length > 0) return exercises.join("\n");
+  }
+  return stepText || description || title;
+}
+
 function buildExactExerciseSteps(description: string, familiarity: Familiarity | null): Array<{ number: number; text: string; bloomLevel: number }> {
   const exercises = extractExactExercises(description);
   if (exercises.length === 0) return [];
@@ -460,7 +469,8 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
             const sanitizedSteps = sanitizeExerciseSteps(result.steps || [], hw.task_type, hw.title, hw.description, getSavedFamiliarity(homeworkId) || familiarity);
             setSteps(sanitizedSteps);
             const stepInfo = sanitizedSteps[sess.current_step - 1];
-            const stepContext = stepInfo ? `\n\nRipartiamo da questo contenuto già caricato:\n${stepInfo.step_text || stepInfo.text}` : "";
+            const visibleContent = getVisibleLoadedContent(hw.task_type, hw.title, hw.description, stepInfo?.step_text || stepInfo?.text);
+            const stepContext = visibleContent ? `\n\nRipartiamo da questo contenuto già caricato:\n${visibleContent}` : "";
             const resumeMsg = sess.last_difficulty
               ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}.${stepContext}`
               : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
@@ -528,7 +538,8 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
 
             if (!restoredMessages) {
               const stepInfo = sanitizedSteps[sess.current_step! - 1];
-              const stepContext = stepInfo ? `\n\nRipartiamo da questo contenuto già caricato:\n${stepInfo.step_text || stepInfo.text}` : "";
+              const visibleContent = getVisibleLoadedContent(hw.task_type, hw.title, hw.description, stepInfo?.step_text || stepInfo?.text);
+              const stepContext = visibleContent ? `\n\nRipartiamo da questo contenuto già caricato:\n${visibleContent}` : "";
               const resumeMsg = sess.last_difficulty
                 ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}.${stepContext}`
                 : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
@@ -875,7 +886,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       setCurrentStep(1);
 
       const firstStep = generatedSteps[0];
-      const firstStepText = firstStep?.step_text || firstStep?.text || homework.description || homework.title;
+      const firstStepText = getVisibleLoadedContent(homework.task_type, homework.title, homework.description, firstStep?.step_text || firstStep?.text);
       const stepIntro = `${homework.title}\n\nPartiamo da questo contenuto già caricato:\n${firstStepText}`;
 
       // Mic suggestion: show only once EVER per student profile
