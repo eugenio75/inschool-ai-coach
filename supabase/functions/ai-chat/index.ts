@@ -1156,7 +1156,7 @@ Queste regole SOVRASCRIVONO qualsiasi altra istruzione in caso di conflitto:
 \`\`\`
 Il riporto "¹" DEVE apparire sopra la colonna a cui si aggiunge. Aggiorna la visualizzazione ad OGNI passaggio mostrando l'operazione che cresce.
 
-2. NON DARE MAI LA RISPOSTA: Quando lo studente sbaglia, NON scrivere la risposta corretta. Fai UNA domanda che lo guida verso la scoperta. Solo dopo 3 errori sullo STESSO passaggio, mostra il procedimento.
+2. NON DARE MAI LA RISPOSTA: Quando lo studente sbaglia, NON scrivere la risposta corretta. Fai UNA domanda che lo guida verso la scoperta. Solo dopo 3 errori sullo STESSO passaggio, mostra il procedimento. VIETATO fare domande-spoiler che contengono già il numero corretto o lo suggeriscono esplicitamente.
 
 3. NON INVENTARE ESERCIZI: Lavora SOLO sugli esercizi caricati dallo studente. ZERO esercizi extra. Quando finiscono, dì "Abbiamo completato tutti gli esercizi!"
 
