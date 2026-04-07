@@ -739,6 +739,277 @@ function getWeakConceptsInstructions(lang: string): string {
 - Priorità: il compito attuale viene PRIMA. Il rinforzo è secondario e deve essere leggero`;
 }
 
+function extractTextContent(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return "";
+
+  return content
+    .map((item: any) => {
+      if (typeof item === "string") return item;
+      if (item?.type === "text" && typeof item.text === "string") return item.text;
+      return "";
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+type DivisionStep = {
+  current: number;
+  q: number;
+  p: number;
+  r: number;
+  endIndex: number;
+};
+
+function isProceduralDivisionSession(taskContext: any, messages: any[]): boolean {
+  const text = [
+    taskContext?.title,
+    taskContext?.subject,
+    taskContext?.description,
+    ...messages.slice(-8).map((m: any) => extractTextContent(m?.content)),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return /(divisione|divisioni|dividendo|divisore|quoziente|resto|in colonna|colonna)/.test(text)
+    && /(\d+)\s*[:÷/]\s*(\d+)/.test(text);
+}
+
+function extractDivisionOperands(taskContext: any, messages: any[]): { dividend: string; divisor: number } | null {
+  const haystacks = [
+    taskContext?.description,
+    taskContext?.title,
+    ...messages.map((m: any) => extractTextContent(m?.content)),
+  ].filter(Boolean);
+
+  for (const item of haystacks) {
+    const match = String(item).match(/(\d+)\s*[:÷/]\s*(\d+)/);
+    if (match) {
+      const divisor = Number(match[2]);
+      if (divisor > 0) return { dividend: match[1], divisor };
+    }
+  }
+
+  return null;
+}
+
+function buildDivisionSteps(dividend: string, divisor: number): DivisionStep[] {
+  const digits = dividend.split("").map(Number);
+  const steps: DivisionStep[] = [];
+  let remainder = 0;
+  let started = false;
+
+  for (let i = 0; i < digits.length; i++) {
+    const current = remainder * 10 + digits[i];
+
+    if (!started && current < divisor && i < digits.length - 1) {
+      remainder = current;
+      continue;
+    }
+
+    started = true;
+    const q = Math.floor(current / divisor);
+    const p = q * divisor;
+    const r = current - p;
+    steps.push({ current, q, p, r, endIndex: i });
+    remainder = r;
+  }
+
+  return steps;
+}
+
+function parseDivisionQuestion(text: string):
+  | { type: "quotient"; current: number; divisor: number }
+  | { type: "product"; q: number; divisor: number }
+  | { type: "remainder"; current: number; product: number }
+  | null {
+  const normalized = text.replace(/\s+/g, " ");
+  const quotient = normalized.match(/quante volte il\s+(\d+)\s+sta nel\s+(\d+)/i);
+  if (quotient) return { type: "quotient", divisor: Number(quotient[1]), current: Number(quotient[2]) };
+
+  const product = normalized.match(/quanto fa\s*\$?\s*(\d+)\s*[×x]\s*(\d+)/i);
+  if (product) return { type: "product", q: Number(product[1]), divisor: Number(product[2]) };
+
+  const remainder = normalized.match(/quanto rimane(?: facendo)?\s*\$?\s*(\d+)\s*[-−]\s*(\d+)/i);
+  if (remainder) return { type: "remainder", current: Number(remainder[1]), product: Number(remainder[2]) };
+
+  return null;
+}
+
+function parseNumericAnswer(text: string): number | null {
+  const numeric = text.trim().match(/-?\d+/);
+  if (numeric) return Number(numeric[0]);
+
+  const words: Record<string, number> = {
+    zero: 0,
+    uno: 1,
+    una: 1,
+    due: 2,
+    tre: 3,
+    quattro: 4,
+    cinque: 5,
+    sei: 6,
+    sette: 7,
+    otto: 8,
+    nove: 9,
+    dieci: 10,
+  };
+
+  return words[text.trim().toLowerCase()] ?? null;
+}
+
+function alignedNumber(value: string, endIndex: number, dividendWidth: number, withMinus = false): string {
+  const width = dividendWidth + 3;
+  const start = Math.max(0, width - dividendWidth + endIndex - value.length + 1);
+  const chars = Array.from({ length: width }, () => " ");
+
+  for (let i = 0; i < value.length; i++) {
+    const col = start + i;
+    if (col >= 0 && col < width) chars[col] = value[i];
+  }
+
+  if (withMinus) {
+    const minusCol = Math.max(0, start - 2);
+    chars[minusCol] = "-";
+  }
+
+  return chars.join("").replace(/\s+$/, "");
+}
+
+function alignedSeparator(value: string, endIndex: number, dividendWidth: number): string {
+  const width = dividendWidth + 3;
+  const start = Math.max(0, width - dividendWidth + endIndex - value.length + 1 - 2);
+  const end = width - dividendWidth + endIndex;
+  const chars = Array.from({ length: width }, () => " ");
+
+  for (let col = start; col <= end; col++) {
+    if (col >= 0 && col < width) chars[col] = "-";
+  }
+
+  return chars.join("").replace(/\s+$/, "");
+}
+
+function renderDivisionBlock(
+  dividend: string,
+  divisor: number,
+  steps: DivisionStep[],
+  stepIndex: number,
+  phase: "quotient" | "product" | "remainder" | "after_remainder",
+): string {
+  const width = dividend.length + 3;
+  const quotient = (phase === "quotient" ? steps.slice(0, stepIndex) : steps.slice(0, stepIndex + 1))
+    .map((step) => String(step.q))
+    .join("");
+
+  const lines = [
+    `${" ".repeat(width - dividend.length)}${dividend} | ${divisor}`,
+    `${" ".repeat(width)}|------`,
+    `${" ".repeat(width)}|${quotient ? ` ${quotient}` : ""}`,
+  ];
+
+  for (let i = 0; i < stepIndex; i++) {
+    lines.push(alignedNumber(String(steps[i].p), steps[i].endIndex, dividend.length, true));
+    lines.push(alignedSeparator(String(steps[i].p), steps[i].endIndex, dividend.length));
+    const nextStep = steps[i + 1];
+    lines.push(alignedNumber(String(nextStep.current), nextStep.endIndex, dividend.length));
+  }
+
+  const step = steps[stepIndex];
+  if (phase === "remainder" || phase === "after_remainder") {
+    lines.push(alignedNumber(String(step.p), step.endIndex, dividend.length, true));
+    lines.push(alignedSeparator(String(step.p), step.endIndex, dividend.length));
+  }
+
+  if (phase === "after_remainder") {
+    const nextStep = steps[stepIndex + 1];
+    lines.push(alignedNumber(String(nextStep ? nextStep.current : step.r), nextStep ? nextStep.endIndex : step.endIndex, dividend.length));
+  }
+
+  return `\`\`\`\n${lines.join("\n")}\n\`\`\``;
+}
+
+function buildSseResponse(text: string): Response {
+  const payload = `data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\ndata: [DONE]\n\n`;
+  return new Response(payload, {
+    headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+  });
+}
+
+function maybeBuildDeterministicDivisionReply(taskContext: any, messages: any[], lang: string): string | null {
+  if (!isProceduralDivisionSession(taskContext, messages)) return null;
+
+  const operands = extractDivisionOperands(taskContext, messages);
+  if (!operands) return null;
+
+  const lastAssistant = [...messages].reverse().find((m: any) => m.role === "assistant");
+  const lastUser = [...messages].reverse().find((m: any) => m.role === "user");
+  if (!lastAssistant || !lastUser) return null;
+
+  const question = parseDivisionQuestion(extractTextContent(lastAssistant.content));
+  const answer = parseNumericAnswer(extractTextContent(lastUser.content));
+  if (!question || answer === null) return null;
+
+  const steps = buildDivisionSteps(operands.dividend, operands.divisor);
+  let stepIndex = -1;
+  let type: "quotient" | "product" | "remainder" | null = null;
+
+  if (question.type === "quotient") {
+    stepIndex = steps.findIndex((step) => step.current === question.current && question.divisor === operands.divisor);
+    type = "quotient";
+  } else if (question.type === "product") {
+    stepIndex = steps.findIndex((step) => step.q === question.q && question.divisor === operands.divisor);
+    type = "product";
+  } else {
+    stepIndex = steps.findIndex((step) => step.current === question.current && step.p === question.product);
+    type = "remainder";
+  }
+
+  if (stepIndex < 0 || !type) return null;
+
+  const step = steps[stepIndex];
+  const okText = lang === "en" ? "Good." : "Giusto.";
+  const retryText = lang === "en" ? "Riprova." : "Riprova.";
+
+  if (type === "quotient") {
+    const questionText = lang === "en"
+      ? `How much is $${step.q} \\times ${operands.divisor}$?`
+      : `Quanto fa $${step.q} \\times ${operands.divisor}$?`;
+    const retryQuestion = lang === "en"
+      ? `How many times does ${operands.divisor} go into ${step.current}?`
+      : `Quante volte il ${operands.divisor} sta nel ${step.current}?`;
+    return `${answer === step.q ? okText : retryText}\n\n${renderDivisionBlock(operands.dividend, operands.divisor, steps, stepIndex, answer === step.q ? "product" : "quotient")}\n\n${answer === step.q ? questionText : retryQuestion}`;
+  }
+
+  if (type === "product") {
+    const questionText = lang === "en"
+      ? `How much is left doing $${step.current} - ${step.p}$?`
+      : `Quanto rimane facendo $${step.current} - ${step.p}$?`;
+    const retryQuestion = lang === "en"
+      ? `How much is $${step.q} \\times ${operands.divisor}$?`
+      : `Quanto fa $${step.q} \\times ${operands.divisor}$?`;
+    return `${answer === step.p ? okText : retryText}\n\n${renderDivisionBlock(operands.dividend, operands.divisor, steps, stepIndex, answer === step.p ? "remainder" : "product")}\n\n${answer === step.p ? questionText : retryQuestion}`;
+  }
+
+  const nextStep = steps[stepIndex + 1];
+  const successQuestion = nextStep
+    ? (lang === "en"
+      ? `How many times does ${operands.divisor} go into ${nextStep.current}?`
+      : `Quante volte il ${operands.divisor} sta nel ${nextStep.current}?`)
+    : (step.r === 0
+      ? (lang === "en"
+        ? `The result is $${steps.map((s) => s.q).join("")}$. Do you want to continue with another exercise or stop here?`
+        : `Il risultato è $${steps.map((s) => s.q).join("")}$. Vuoi continuare con un altro esercizio o terminiamo qui?`)
+      : (lang === "en"
+        ? `The result is $${steps.map((s) => s.q).join("")}$ with remainder $${step.r}$. Do you want to continue with another exercise or stop here?`
+        : `Il risultato è $${steps.map((s) => s.q).join("")}$ con resto $${step.r}$. Vuoi continuare con un altro esercizio o terminiamo qui?`));
+  const retryQuestion = lang === "en"
+    ? `How much is left doing $${step.current} - ${step.p}$?`
+    : `Quanto rimane facendo $${step.current} - ${step.p}$?`;
+
+  return `${answer === step.r ? okText : retryText}\n\n${renderDivisionBlock(operands.dividend, operands.divisor, steps, stepIndex, answer === step.r ? "after_remainder" : "remainder")}\n\n${answer === step.r ? successQuestion : retryQuestion}`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -966,6 +1237,12 @@ Se il testo dell'esercizio dice "23,5 km", tu DEVI usare "23,5 km" — mai "24 k
       }
     }
 
+    if (isProceduralDivisionSession(taskContext, messages)) {
+      contextPrompt += lang === 'en'
+        ? `\n\nLONG DIVISION VISUAL CONTRACT: one code block per turn, one question per turn, never 07/09, minus sign outside the digits column, and never mention a visual step before it appears in the block.`
+        : `\n\nCONTRATTO VISIVO DIVISIONE IN COLONNA: un blocco di codice per turno, una domanda per turno, mai 07/09, segno meno fuori dalla colonna delle cifre, e mai nominare un passaggio visivo prima che compaia nel blocco.`;
+    }
+
     // Inject weak memory concepts for reinforcement
     if (weakConcepts && weakConcepts.length > 0) {
       contextPrompt += `\n\n${L.weakConcepts}`;
@@ -973,6 +1250,11 @@ Se il testo dell'esercizio dice "23,5 km", tu DEVI usare "23,5 km" — mai "24 k
         contextPrompt += `\n${i + 1}. "${c.concept}" (${L.strength}: ${c.strength || 0}/100)${c.summary ? ` — ${c.summary}` : ""}`;
       });
       contextPrompt += getWeakConceptsInstructions(lang);
+    }
+
+    const deterministicDivisionReply = maybeBuildDeterministicDivisionReply(taskContext, messages, lang);
+    if (deterministicDivisionReply) {
+      return buildSseResponse(deterministicDivisionReply);
     }
 
     // Check if any message contains an image
