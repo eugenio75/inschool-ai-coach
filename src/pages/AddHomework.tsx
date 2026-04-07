@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Camera, Type, BookOpen, Plus, X, Sparkles, Check, Loader2, CalendarDays, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { createTask, uploadHomeworkImage, extractTasksFromImage, deleteHomeworkImages } from "@/lib/database";
+import { createTask, parseHomeworkFiles } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
