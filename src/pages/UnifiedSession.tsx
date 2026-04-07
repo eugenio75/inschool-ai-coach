@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { getDailyMissions, completeMission } from "@/lib/database";
+import { getDailyMissions, completeMission, saveFocusSession, getGamification } from "@/lib/database";
 import {
   BookOpen,
   FileText,
@@ -114,8 +114,15 @@ export default function UnifiedSession() {
   const [streamingText, setStreamingText] = useState("");
   const [sending, setSending] = useState(false);
   const [showPauseDialog, setShowPauseDialog] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [guidedCustomEmotion, setGuidedCustomEmotion] = useState("");
   const [coachName, setCoachName] = useState<string | undefined>(undefined);
+  const [showStudyCelebration, setShowStudyCelebration] = useState(false);
+  const [studyPoints, setStudyPoints] = useState<import("@/components/SessionCelebration").PointsEarned | undefined>();
+  const [studyTotalPoints, setStudyTotalPoints] = useState<number | undefined>();
+  const [studyPrevTotal, setStudyPrevTotal] = useState<number | undefined>();
+  const [studyStreak, setStudyStreak] = useState<number | undefined>();
+  const sessionStartRef = useRef<number>(Date.now());
 
   // Load coach name from preferences
   useEffect(() => {
@@ -314,6 +321,7 @@ Inizia con la prima domanda.`;
     if (!subject && type === "prep") return;
 
     const sessionSystemPrompt = getSystemPrompt();
+    sessionStartRef.current = Date.now();
     setSetupDone(true);
     setMessages([]);
     setSending(true);
@@ -374,6 +382,67 @@ Inizia con la prima domanda.`;
       setSending(false);
     });
   }, [messages, sending, profileId, subject]);
+
+  async function handleEndStudySession() {
+    setShowEndConfirm(false);
+    const pid = profileId || getChildSession()?.profileId;
+
+    // Save conversation to conversation_sessions
+    if (pid && messages.length > 0) {
+      try {
+        await supabase.from("conversation_sessions").insert({
+          profile_id: pid,
+          titolo: topic || subject || "Studio libero",
+          materia: subject || null,
+          messaggi: messages.map(m => ({ role: m.role, content: m.content })),
+          ruolo_utente: "studente",
+        });
+      } catch (e) {
+        console.error("Save conversation error:", e);
+      }
+    }
+
+    // Calculate points
+    try {
+      const durationSec = Math.floor((Date.now() - sessionStartRef.current) / 1000);
+      const durationMin = Math.floor(durationSec / 60);
+      const focusPoints = Math.min(10 + durationMin, 20);
+      const userMsgCount = messages.filter(m => m.role === "user").length;
+      const autonomyPoints = userMsgCount >= 6 ? 10 : userMsgCount >= 3 ? 5 : 0;
+      let consistencyPoints = 5;
+
+      if (pid) {
+        const gam = await getGamification(pid);
+        if (gam && (gam.streak || 0) >= 2) consistencyPoints = 10;
+        const prevTotal = (gam?.focus_points || 0) + (gam?.autonomy_points || 0) + (gam?.consistency_points || 0);
+        setStudyPrevTotal(prevTotal);
+      }
+
+      setStudyPoints({ focus: focusPoints, autonomy: autonomyPoints, consistency: consistencyPoints });
+
+      await saveFocusSession({
+        emotion: undefined,
+        duration_seconds: durationSec,
+        focus_points: focusPoints,
+        autonomy_points: autonomyPoints,
+        consistency_points: consistencyPoints,
+      });
+
+      if (pid) {
+        const updatedGam = await getGamification(pid);
+        if (updatedGam) {
+          setStudyTotalPoints(
+            (updatedGam.focus_points || 0) + (updatedGam.autonomy_points || 0) + (updatedGam.consistency_points || 0)
+          );
+          setStudyStreak(updatedGam.streak || 0);
+        }
+      }
+    } catch (err) {
+      console.error("Points calc error:", err);
+    }
+
+    setShowStudyCelebration(true);
+  }
 
   async function generateOutput(outputType: string) {
     const outputPrompts: Record<string, string> = {
@@ -1004,34 +1073,74 @@ Inizia con la prima domanda.`;
   ) : undefined;
 
   return (
-    <ChatShell
-      coachName={coachName}
-      title={topic || subject || getTitle()}
-      subtitle={subject && topic ? subject : undefined}
-      badgeText={type === "prep" ? (mode === "orale" ? "Orale" : "Scritta") : undefined}
-      messages={messages}
-      streamingText={streamingText}
-      sending={sending}
-      onSend={handleSend}
-      onBack={() => {
-        if (type === "study" && studyMode === "coach") {
-          setSetupDone(false);
-          setStudyMode(null);
-          setShowModeSelect(true);
-          setMessages([]);
-          setStreamingText("");
-          setSending(false);
-          return;
-        }
-        navigate(-1);
-      }}
-      showHint={type !== "prep"}
-      showStuck={type !== "prep"}
-      showExplain={true}
-      showVoice={type === "prep" ? mode === "orale" || schoolLevel === "superiori" || schoolLevel === "universitario" : true}
-      showAttach={type === "study"}
-      extraFooter={studyOutputFooter}
-      inputPlaceholder={type === "prep" ? "Scrivi la tua risposta..." : "Scrivi..."}
-    />
+    <>
+      <ChatShell
+        coachName={coachName}
+        title={topic || subject || getTitle()}
+        subtitle={subject && topic ? subject : undefined}
+        badgeText={type === "prep" ? (mode === "orale" ? "Orale" : "Scritta") : undefined}
+        messages={messages}
+        streamingText={streamingText}
+        sending={sending}
+        onSend={handleSend}
+        onEndSession={(type === "study" || type === "prep" || type === "review") ? () => setShowEndConfirm(true) : undefined}
+        onBack={() => {
+          if (type === "study" && studyMode === "coach") {
+            setSetupDone(false);
+            setStudyMode(null);
+            setShowModeSelect(true);
+            setMessages([]);
+            setStreamingText("");
+            setSending(false);
+            return;
+          }
+          navigate(-1);
+        }}
+        showHint={type !== "prep"}
+        showStuck={type !== "prep"}
+        showExplain={true}
+        showVoice={type === "prep" ? mode === "orale" || schoolLevel === "superiori" || schoolLevel === "universitario" : true}
+        showAttach={type === "study"}
+        extraFooter={studyOutputFooter}
+        inputPlaceholder={type === "prep" ? "Scrivi la tua risposta..." : "Scrivi..."}
+      />
+
+      <AlertDialog open={showEndConfirm} onOpenChange={setShowEndConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Terminare la sessione?</AlertDialogTitle>
+            <AlertDialogDescription>
+              I tuoi progressi verranno salvati e riceverai i punti guadagnati.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continua a studiare</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEndStudySession} className="bg-primary">
+              Termina e salva
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <SessionCelebration
+        isVisible={showStudyCelebration}
+        onClose={() => {
+          setShowStudyCelebration(false);
+          navigate("/dashboard");
+        }}
+        onGoToReview={() => {
+          setShowStudyCelebration(false);
+          navigate("/memory?section=ripasso&content=today");
+        }}
+        studentName={studentName}
+        bloomLevel={0}
+        subject={subject || topic || ""}
+        isJunior={isJunior}
+        pointsEarned={studyPoints}
+        totalPoints={studyTotalPoints}
+        previousTotalPoints={studyPrevTotal}
+        streak={studyStreak}
+      />
+    </>
   );
 }

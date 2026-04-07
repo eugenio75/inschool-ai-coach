@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, Send, Mic, Paperclip, Lightbulb, AlertCircle, RefreshCw, Loader2,
+  ArrowLeft, Send, Mic, Paperclip, Lightbulb, AlertCircle, RefreshCw, Loader2, Square,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatMsg } from "@/lib/streamChat";
@@ -21,6 +21,7 @@ interface ChatShellProps {
   onSend?: (text: string) => void;
   onBack: () => void;
   onAction?: (value: string) => void;
+  onEndSession?: () => void;
   progress?: number;
   progressLabel?: string;
   showHint?: boolean;
@@ -51,7 +52,7 @@ function detectMoodFromText(text: string): CoachAvatarMood {
 export function ChatShell({
   title, subtitle, badgeText, coachName,
   messages, streamingText, sending,
-  onSend, onBack, onAction,
+  onSend, onBack, onAction, onEndSession,
   progress, progressLabel,
   showHint = true, showStuck = true, showExplain = true,
   showVoice = true, showAttach = true,
@@ -203,6 +204,15 @@ export function ChatShell({
         )}
         {showPomodoro && (
           <PomodoroTimer compact focusMinutes={pomodoroMinutes} userMessageCount={messages.filter(m => m.role === "user").length} />
+        )}
+        {onEndSession && messages.length >= 2 && (
+          <button
+            onClick={onEndSession}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors font-medium"
+          >
+            <Square className="w-3 h-3" />
+            Termina
+          </button>
         )}
       </div>
 
