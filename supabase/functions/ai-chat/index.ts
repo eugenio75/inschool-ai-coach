@@ -1569,10 +1569,10 @@ I termini che useremo:
 Nella divisione in colonna, lavoriamo cifra per cifra da sinistra a destra. Ti faccio vedere con un esempio semplice, $6 \\div 2$:
 
 \`\`\`
-  6 | 2
-  6 |---
- -- | 3
-  0
+    6 | 2
+  - 6 |------
+  --- | 3
+    0
 \`\`\`
 
 Prendiamo il 6 (dividendo) e ci chiediamo: quante volte il 2 (divisore) sta nel 6? Tre volte! Il quoziente è 3. Controlliamo: $3 \\times 2 = 6$, $6 - 6 = 0$. Il resto è zero, perfetto!
