@@ -170,6 +170,8 @@ RISPONDI ESCLUSIVAMENTE con un JSON valido: {"tasks": [...]}`;
       },
       body: JSON.stringify({
         model: "gpt-4o",
+        temperature: 0,
+        max_tokens: 16384,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: contentParts },
