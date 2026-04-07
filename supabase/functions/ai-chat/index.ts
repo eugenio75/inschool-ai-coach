@@ -1603,8 +1603,8 @@ REGOLE:
 - Confronto frazioni: $\\frac{2}{3} > \\frac{1}{2}$
 - Operazioni in riga: $12 \\times 3 = 36$, $789 \\div 3 = 263$, $45 + 78 = 123$
 
-QUANDO USARE CODE BLOCK vs LaTeX:
-- Operazioni IN COLONNA (addizioni, sottrazioni, moltiplicazioni, divisioni in colonna) → usa \`\`\` code block con allineamento fisso
+QUANDO USARE TAG COLONNA vs LaTeX:
+- Operazioni IN COLONNA (addizioni, sottrazioni, moltiplicazioni, divisioni in colonna) → usa [COLONNA: ...]
 - Tutto il resto (frazioni, espressioni, equazioni, formule, risultati) → usa $...$ LaTeX inline
 
 Esempio corretto in un messaggio:
