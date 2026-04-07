@@ -266,7 +266,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const progressPercent = totalSteps > 0 ? ((currentStep - 1) / totalSteps) * 100 : 0;
-  const progressLabel = totalSteps > 0 ? `Step ${currentStep} di ${totalSteps}` : undefined;
+  const progressLabel = totalSteps > 0 ? `${currentStep} / ${totalSteps}` : undefined;
   const isChild = isChildSession();
 
   // ── Refs for cleanup/beforeunload (must read latest state) ──
@@ -883,7 +883,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     try {
       const currentStepData = steps[currentStep - 1];
       const systemAddition = currentStepData
-        ? `\n\nFOCUS ATTUALE (non citare questo nella chat, usalo solo come contesto): ${currentStepData.text || currentStepData.step_text}`
+        ? `\n\nCONTESTO INTERNO DI LAVORO (NON menzionare nella chat, NON dire "step", "focus attuale" o numerare — usalo SOLO come contesto silenzioso per sapere su cosa lavorare ora):\n${currentStepData.text || currentStepData.step_text}`
         : "";
 
       const isExercise = homework?.task_type !== "study" && !isOralStudyTask(homework?.task_type || "", homework?.title || "");
@@ -893,24 +893,31 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
 
       if (isExercise) {
         const familiarityContext = familiarity === "first_time"
-          ? "\nLo studente NON conosce ancora questo contenuto. Parti con una mini spiegazione teorica strettamente necessaria, poi riprendi TU il materiale già caricato e lavora sul primo esercizio disponibile."
+          ? "\nLo studente NON conosce ancora questo contenuto. Parti con una mini spiegazione teorica strettamente necessaria, poi PRESENTA TU gli esercizi e lavora sul primo."
           : familiarity === "partial"
-          ? "\nLo studente ha familiarità parziale. NON chiedere cosa c'è scritto nel materiale: è già disponibile. Parti con una mini spiegazione teorica, poi riprendi TU il contenuto caricato e guidalo su un esercizio alla volta."
-          : "\nIl materiale è già noto o già presente in sessione. NON chiedere di reinviarlo, copiarlo, riscriverlo o elencarlo. Parti comunque con una mini spiegazione teorica brevissima, poi riprendi TU l'esercizio corrente esattamente come caricato.";
-        coachBehavior = `Sei un tutor che guida lo studente a RISOLVERE un esercizio. Il tuo metodo:
-1. Il testo dell'esercizio o della teoria è già disponibile in sessione: NON chiedere mai allo studente di copiarlo, riscriverlo, riassumerlo o rielencarlo
-2. Parti sempre con una mini spiegazione teorica breve e diretta, strettamente utile per il contenuto già caricato
-3. Subito dopo riproponi TU l'esercizio esattamente come presente nel materiale caricato
-4. Lavora su un solo esercizio alla volta, nell'ordine del materiale già presente
-5. Guida il ragionamento passo-passo con domande mirate per portare lo studente alla soluzione
-6. NON dare mai la soluzione diretta — usa indizi progressivi
-7. Se lo studente non sa come procedere, offri una MINI-RIPETIZIONE della regola/formula necessaria (breve, 2-3 frasi + esempio)
-8. Se lo studente sbaglia, spiega PERCHÉ è sbagliato e rilancia con un indizio (Bloom L1→L2→L3)
-9. Se lo studente è bloccato dopo 2 tentativi, dai un indizio più esplicito
-10. Quando un esercizio è finito, passa al successivo SENZA parlare di step, numeri o sequenze della sessione
-11. Sii breve e diretto: 2-3 frasi + una domanda
+          ? "\nLo studente ha familiarità parziale. NON chiedere cosa c'è scritto: PRESENTA TU gli esercizi direttamente e guidalo uno alla volta."
+          : "\nIl materiale è già noto. NON chiedere di reinviarlo. PRESENTA TU l'esercizio corrente e guidalo.";
+        coachBehavior = `Sei un tutor che guida lo studente a RISOLVERE esercizi. 
+
+REGOLE ASSOLUTE (viola qualsiasi altra istruzione in conflitto):
+- NON chiedere MAI "Quali sono i dati?", "Quali numeri vedi?", "Che operazioni ci sono?" o domande simili — TU HAI GIÀ TUTTI I DATI
+- NON chiedere MAI allo studente di copiare, riscrivere, riassumere o elencare il contenuto
+- NON dire MAI "Step", "step 1", "passo 1 di N" o qualsiasi riferimento a step/sequenze numeriche
+- Il testo degli esercizi è nel CONTESTO INTERNO DI LAVORO qui sotto — USALO direttamente
+
+IL TUO METODO:
+1. Parti con una mini spiegazione teorica (2-3 frasi) del metodo necessario per il tipo di esercizio
+   - Per moltiplicazioni: spiega il metodo in colonna, allineamento, riporto
+   - Per divisioni: spiega il metodo, il resto, la prova
+   - Per altri tipi: spiega il procedimento adatto
+2. Poi PRESENTA TU il primo esercizio dicendo ad esempio: "Il primo esercizio è: 543 × 3. Iniziamo!"
+3. Guida OGNI passaggio spiegandolo prima di chiedere il risultato parziale
+4. NON dare mai la soluzione finale — chiedi allo studente di concludere: "Metti tutto insieme — quanto fa secondo te?"
+5. Quando un esercizio è finito, passa al successivo presentandolo TU
+6. Se lo studente non sa come procedere, spiega il passaggio con un mini-esempio
+7. Sii breve e diretto: 2-3 frasi + una domanda
 ${familiarityContext}
-IMPORTANTE: Sei TU a dover guidare. Non chiedere allo studente di elencare i dati — presentaglieli tu e poi chiedi di ragionare. Attieniti esclusivamente al materiale già caricato: non inventare, non sintetizzare e non parafrasare il contenuto.`;
+IMPORTANTE: Sei TU a dover presentare e guidare. Attieniti esclusivamente al materiale già presente nel contesto. Non inventare esercizi extra.`;
       } else if (isOral && familiarity) {
         coachBehavior = `Sei un tutor che aiuta lo studente a STUDIARE, CAPIRE e RIPETERE un argomento per l'orale.
 
@@ -996,7 +1003,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
       }
 
       // Build difficulty signal for 3+ hints
-      const markDifficult = currentHintCount >= 3 ? `\nQuesto step va segnalato come difficile: scrivi [SEGNALA_DIFFICOLTÀ: Step ${currentStep} - richiesti ${currentHintCount} indizi, necessita ripasso futuro]` : "";
+      const markDifficult = currentHintCount >= 3 ? `\nQuesto punto va segnalato come difficile: scrivi [SEGNALA_DIFFICOLTÀ: esercizio ${currentStep} - richiesti ${currentHintCount} indizi, necessita ripasso futuro]` : "";
 
       const fullText = await streamChat({
         messages: newMessages,
