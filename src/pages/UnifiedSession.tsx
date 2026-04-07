@@ -1083,7 +1083,7 @@ Inizia con la prima domanda.`;
         streamingText={streamingText}
         sending={sending}
         onSend={handleSend}
-        onEndSession={(type === "study" || type === "prep" || type === "review") ? () => setShowEndConfirm(true) : undefined}
+        onEndSession={() => setShowEndConfirm(true)}
         onBack={() => {
           if (type === "study" && studyMode === "coach") {
             setSetupDone(false);
