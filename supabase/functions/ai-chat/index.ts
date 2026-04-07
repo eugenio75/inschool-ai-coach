@@ -1214,6 +1214,10 @@ CONTESTO SESSIONE SPECIFICO (prioritario)
 ═══════════════════════════════════════
 ${clientSystemPrompt}`
             : enhancedPrompt;
+
+          if (isProceduralMathSession({ messages, systemPrompt: clientSystemPrompt, subject: chatSubject })) {
+            finalSystemPrompt += `\n\n${buildProceduralMathUniversalPrompt(lang || "it")}`;
+          }
         }
       } catch (e) {
         console.error("Error building enhanced prompt:", e);
