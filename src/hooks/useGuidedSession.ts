@@ -80,6 +80,50 @@ function isOralStudyTask(taskType: string, title: string): boolean {
 type MethodPhase = "none" | "propose_method" | "ready";
 type Familiarity = "first_time" | "already_know" | "partial";
 
+const EXERCISE_ITEM_REGEX = /\d+\s*[x×:÷+\-*/]\s*\d+/i;
+
+function extractExactExercises(text: string): string[] {
+  return text
+    .split(/[\n,;]+/)
+    .map(item => item.replace(/^[-•\s]+/, "").trim())
+    .filter(Boolean)
+    .filter(item => EXERCISE_ITEM_REGEX.test(item));
+}
+
+function buildExactExerciseSteps(description: string, familiarity: Familiarity | null): Array<{ number: number; text: string; bloomLevel: number }> {
+  const exercises = extractExactExercises(description);
+  if (exercises.length === 0) return [];
+
+  const intro = familiarity === "first_time"
+    ? "Spiega in modo breve e semplice il metodo necessario per questi esercizi, poi presenta TU il primo esercizio esattamente come scritto."
+    : familiarity === "partial"
+    ? "Riprendi con una mini spiegazione del metodo, poi presenta TU il primo esercizio esattamente come scritto."
+    : "Presenta TU il primo esercizio esattamente come scritto e guidane subito la risoluzione con domande mirate.";
+
+  return [
+    { number: 1, text: intro, bloomLevel: 1 },
+    ...exercises.map((exercise, index) => ({
+      number: index + 2,
+      text: `Lavora esclusivamente su questo esercizio, riportandolo esattamente com'è scritto: ${exercise}`,
+      bloomLevel: Math.min(4, index + 2),
+    })),
+  ];
+}
+
+function sanitizeExerciseSteps(
+  rawSteps: any[],
+  taskType: string,
+  title: string,
+  description: string | null | undefined,
+  familiarity: Familiarity | null,
+) {
+  const isExerciseTask = !isOralStudyTask(taskType, title) && !isMixedWritingTask(taskType, title);
+  if (!isExerciseTask) return rawSteps;
+
+  const exactSteps = buildExactExerciseSteps(description || "", familiarity);
+  return exactSteps.length > 0 ? exactSteps : rawSteps;
+}
+
 function isMixedWritingTask(taskType: string, title: string): boolean {
   const types = taskType.split(",").map(t => t.trim().toLowerCase());
   if (types.some(t => ["riassunto", "summarize", "write", "tema", "testo"].includes(t))) return true;
@@ -413,8 +457,9 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
             setSessionId(sess.id);
             setCurrentStep(sess.current_step || 1);
             setTotalSteps(sess.total_steps || 0);
-            setSteps(result.steps || []);
-            const stepInfo = result.steps?.[sess.current_step - 1];
+            const sanitizedSteps = sanitizeExerciseSteps(result.steps || [], hw.task_type, hw.title, hw.description, getSavedFamiliarity(homeworkId) || familiarity);
+            setSteps(sanitizedSteps);
+            const stepInfo = sanitizedSteps[sess.current_step - 1];
             const stepContext = stepInfo ? `\n\nRipartiamo da questo contenuto già caricato:\n${stepInfo.step_text || stepInfo.text}` : "";
             const resumeMsg = sess.last_difficulty
               ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}.${stepContext}`
@@ -459,7 +504,8 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
               .select("*")
               .eq("session_id", sess.id)
               .order("step_number", { ascending: true });
-            setSteps(savedSteps || []);
+            const sanitizedSteps = sanitizeExerciseSteps(savedSteps || [], hw.task_type, hw.title, hw.description, getSavedFamiliarity(homeworkId) || familiarity);
+            setSteps(sanitizedSteps);
 
             // Try to restore conversation messages from incremental save
             let restoredMessages = false;
@@ -481,8 +527,8 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
             }
 
             if (!restoredMessages) {
-              const stepInfo = savedSteps?.[sess.current_step! - 1];
-              const stepContext = stepInfo ? `\n\nRipartiamo da questo contenuto già caricato:\n${stepInfo.step_text}` : "";
+              const stepInfo = sanitizedSteps[sess.current_step! - 1];
+              const stepContext = stepInfo ? `\n\nRipartiamo da questo contenuto già caricato:\n${stepInfo.step_text || stepInfo.text}` : "";
               const resumeMsg = sess.last_difficulty
                 ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}.${stepContext}`
                 : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
@@ -701,56 +747,59 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       let generatedSteps: any[] = [];
       if (res.ok) {
         const result = await res.json();
-        generatedSteps = result.steps || [];
+        generatedSteps = sanitizeExerciseSteps(result.steps || [], homework.task_type, homework.title, homework.description, fam || null);
       }
 
       if (generatedSteps.length === 0) {
-        const isExercise = !isOralStudyTask(homework.task_type, homework.title);
-        if (isExercise) {
-          if (fam === "first_time") {
-            generatedSteps = [
-              { number: 1, text: "Prima di tutto, ti spiego la teoria necessaria per affrontare questo esercizio.", bloomLevel: 1 },
-              { number: 2, text: "Ora leggiamo insieme l'esercizio e vediamo cosa ci viene chiesto.", bloomLevel: 2 },
-              { number: 3, text: "Prova ad impostare il primo passaggio. Ti guido se ti blocchi.", bloomLevel: 3 },
-              { number: 4, text: "Controlla il risultato: ha senso? Come puoi verificarlo?", bloomLevel: 4 },
-            ];
-          } else if (fam === "partial") {
-            generatedSteps = [
-              { number: 1, text: "Rivediamo velocemente la parte di teoria che non ricordi bene.", bloomLevel: 1 },
-              { number: 2, text: "Ora leggiamo l'esercizio e applichiamo quello che sappiamo.", bloomLevel: 2 },
-              { number: 3, text: "Prova a risolvere — se ti blocchi chiedimi un suggerimento.", bloomLevel: 3 },
-              { number: 4, text: "Controlla il risultato e prova a spiegare il ragionamento.", bloomLevel: 4 },
-            ];
-          } else {
-            generatedSteps = [
-              { number: 1, text: "Leggiamo insieme l'esercizio. Ti presento il problema e vediamo cosa ci viene chiesto.", bloomLevel: 1 },
-              { number: 2, text: "Quale formula, regola o procedimento pensi si possa applicare qui?", bloomLevel: 2 },
-              { number: 3, text: "Prova ad impostare il primo passaggio della risoluzione. Cosa ottieni?", bloomLevel: 3 },
-              { number: 4, text: "Controlla il risultato: ha senso? Come puoi verificarlo?", bloomLevel: 4 },
-            ];
-          }
+        const exactExerciseSteps = sanitizeExerciseSteps([], homework.task_type, homework.title, homework.description, fam || null);
+        if (exactExerciseSteps.length > 0) {
+          generatedSteps = exactExerciseSteps;
         } else {
-          // Oral study fallback steps based on familiarity
-          if (fam === "already_know") {
-            generatedSteps = [
-              { number: 1, text: "Chiudi il materiale. Cosa ricordi di questo argomento? Spiegamelo a voce.", bloomLevel: 2 },
-              { number: 2, text: "Approfondiamo i punti deboli. Ti faccio qualche domanda mirata.", bloomLevel: 3 },
-              { number: 3, text: "Mini simulazione orale: immagina di essere davanti al professore.", bloomLevel: 5 },
-            ];
-          } else if (fam === "partial") {
-            generatedSteps = [
-              { number: 1, text: "Dimmi cosa hai già studiato e dove ti sei fermato.", bloomLevel: 1 },
-              { number: 2, text: "Completiamo le parti mancanti e poi richiamiamo tutto.", bloomLevel: 2 },
-              { number: 3, text: "Adesso proviamo a ripetere tutto l'argomento dalla memoria.", bloomLevel: 4 },
-            ];
+          const isExercise = !isOralStudyTask(homework.task_type, homework.title);
+          if (isExercise) {
+            if (fam === "first_time") {
+              generatedSteps = [
+                { number: 1, text: "Prima di tutto, ti spiego la teoria necessaria per affrontare questo esercizio.", bloomLevel: 1 },
+                { number: 2, text: "Ora leggiamo insieme l'esercizio e vediamo cosa ci viene chiesto.", bloomLevel: 2 },
+                { number: 3, text: "Prova ad impostare il primo passaggio. Ti guido se ti blocchi.", bloomLevel: 3 },
+                { number: 4, text: "Controlla il risultato: ha senso? Come puoi verificarlo?", bloomLevel: 4 },
+              ];
+            } else if (fam === "partial") {
+              generatedSteps = [
+                { number: 1, text: "Rivediamo velocemente la parte di teoria che non ricordi bene.", bloomLevel: 1 },
+                { number: 2, text: "Ora leggiamo l'esercizio e applichiamo quello che sappiamo.", bloomLevel: 2 },
+                { number: 3, text: "Prova a risolvere — se ti blocchi chiedimi un suggerimento.", bloomLevel: 3 },
+                { number: 4, text: "Controlla il risultato e prova a spiegare il ragionamento.", bloomLevel: 4 },
+              ];
+            } else {
+              generatedSteps = [
+                { number: 1, text: "Leggiamo insieme l'esercizio. Ti presento il problema e vediamo cosa ci viene chiesto.", bloomLevel: 1 },
+                { number: 2, text: "Quale formula, regola o procedimento pensi si possa applicare qui?", bloomLevel: 2 },
+                { number: 3, text: "Prova ad impostare il primo passaggio della risoluzione. Cosa ottieni?", bloomLevel: 3 },
+                { number: 4, text: "Controlla il risultato: ha senso? Come puoi verificarlo?", bloomLevel: 4 },
+              ];
+            }
           } else {
-            // first_time: guide reading, don't ask questions yet
-            generatedSteps = [
-              { number: 1, text: "Iniziamo a leggere insieme l'argomento. Ti presento il contenuto un pezzo alla volta e ti spiego i punti importanti.", bloomLevel: 1 },
-              { number: 2, text: "Ora che abbiamo letto, proviamo a richiamare i concetti principali. Cosa ti ricordi?", bloomLevel: 2 },
-              { number: 3, text: "Colleghiamo le idee tra loro. Sapresti spiegarmi il filo logico dell'argomento?", bloomLevel: 3 },
-              { number: 4, text: "Mini simulazione: prova a ripetere l'argomento come se fossi davanti al professore.", bloomLevel: 5 },
-            ];
+            if (fam === "already_know") {
+              generatedSteps = [
+                { number: 1, text: "Chiudi il materiale. Cosa ricordi di questo argomento? Spiegamelo a voce.", bloomLevel: 2 },
+                { number: 2, text: "Approfondiamo i punti deboli. Ti faccio qualche domanda mirata.", bloomLevel: 3 },
+                { number: 3, text: "Mini simulazione orale: immagina di essere davanti al professore.", bloomLevel: 5 },
+              ];
+            } else if (fam === "partial") {
+              generatedSteps = [
+                { number: 1, text: "Dimmi cosa hai già studiato e dove ti sei fermato.", bloomLevel: 1 },
+                { number: 2, text: "Completiamo le parti mancanti e poi richiamiamo tutto.", bloomLevel: 2 },
+                { number: 3, text: "Adesso proviamo a ripetere tutto l'argomento dalla memoria.", bloomLevel: 4 },
+              ];
+            } else {
+              generatedSteps = [
+                { number: 1, text: "Iniziamo a leggere insieme l'argomento. Ti presento il contenuto un pezzo alla volta e ti spiego i punti importanti.", bloomLevel: 1 },
+                { number: 2, text: "Ora che abbiamo letto, proviamo a richiamare i concetti principali. Cosa ti ricordi?", bloomLevel: 2 },
+                { number: 3, text: "Colleghiamo le idee tra loro. Sapresti spiegarmi il filo logico dell'argomento?", bloomLevel: 3 },
+                { number: 4, text: "Mini simulazione: prova a ripetere l'argomento come se fossi davanti al professore.", bloomLevel: 5 },
+              ];
+            }
           }
         }
       }
@@ -826,7 +875,8 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       setCurrentStep(1);
 
       const firstStep = generatedSteps[0];
-      const stepIntro = `${homework.title}\n\nPartiamo da questo contenuto già caricato:\n${firstStep.text}`;
+      const firstStepText = firstStep?.step_text || firstStep?.text || homework.description || homework.title;
+      const stepIntro = `${homework.title}\n\nPartiamo da questo contenuto già caricato:\n${firstStepText}`;
 
       // Mic suggestion: show only once EVER per student profile
       const isOral = isOralStudyTask(homework.task_type, homework.title);

@@ -41,19 +41,21 @@ serve(async (req) => {
 
     if (isExercise) {
       taskInstructions = isEN
-        ? `This is an EXERCISE to solve. Steps should guide the student toward the SOLUTION:
-- Step 1: Identify the data and what the problem asks
-- Next steps: Guide reasoning step-by-step toward the solution
-- If formulas/rules are needed, ask the student if they know them before proceeding
-- Each step should be a question that makes them THINK about the next logical step
-- DO NOT ask "what do you already know" or "describe in your own words" — go straight to the problem
+        ? `This is an EXERCISE to solve. Steps must use the EXACT exercise text already provided in the attached content:
+- If the attached content contains multiple exercises, create ONE step per exercise, in the SAME order
+- NEVER create a step like "identify the data", "which numbers do you see", or "what operation is required" — the coach already has the data
+- NEVER ask the student to copy, rewrite, or re-list the exercise
+- First create a brief theory/method step, then create steps that each QUOTE the exact exercise text
+- For each exercise step, include the exact operation/value/formula as written in the source content
+- DO NOT ask if the student knows the rule before proceeding; explain the needed method briefly first
 - ABSOLUTE RULE: NEVER modify, paraphrase, round, or substitute ANY number, value, formula, unit, or data from the original exercise. Use EXCLUSIVELY the exact values provided. Any variation is a serious error.`
-        : `Questo è un ESERCIZIO da risolvere. Gli step devono guidare lo studente verso la SOLUZIONE:
-- Step 1: Identifica i dati e cosa chiede il problema
-- Step successivi: Guida il ragionamento passo-passo verso la soluzione
-- Se servono formule/regole, chiedi allo studente se le conosce prima di procedere
-- Ogni step deve essere una domanda che fa RAGIONARE sullo step logico successivo della risoluzione
-- NON chiedere "cosa sai già" o "descrivi con parole tue" — vai dritto al problema
+        : `Questo è un ESERCIZIO da risolvere. Gli step devono usare il testo ESATTO degli esercizi già presenti nel contenuto allegato:
+- Se il contenuto allegato contiene più esercizi, crea UNO step per ogni esercizio, nello STESSO ordine
+- NON creare MAI uno step del tipo "identifica i dati", "quali numeri vedi" o "quale operazione devi fare" — il coach ha già i dati
+- NON chiedere MAI allo studente di copiare, riscrivere o rielencare l'esercizio
+- Crea prima un breve step di teoria/metodo, poi step che riportano ciascun esercizio citando il testo esatto
+- In ogni step esercizio, includi l'operazione/valore/formula esattamente come scritti nel contenuto sorgente
+- NON chiedere se lo studente conosce la regola prima di procedere; spiega prima brevemente il metodo necessario
 - REGOLA ASSOLUTA: Non modificare, parafrasare, arrotondare o sostituire MAI nessun numero, valore, formula, unità di misura o dato presente nell'esercizio originale. Usa esclusivamente i valori esatti forniti. Qualsiasi variazione dei dati originali è un errore grave.`;
     } else if (familiarity === "first_time") {
       taskInstructions = isEN
