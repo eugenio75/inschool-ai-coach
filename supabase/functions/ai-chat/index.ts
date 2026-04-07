@@ -729,6 +729,128 @@ function mapToFormatCategory(sessionFormat?: string): string | null {
   return map[sessionFormat.toLowerCase()] || null;
 }
 
+const PROCEDURAL_MATH_EXPRESSION_REGEX = /\b\d+(?:[.,]\d+)?\s*[x×:÷+\-*/]\s*\d+(?:[.,]\d+)?\b/i;
+
+function normalizePromptText(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function isProceduralMathSession(params: {
+  messages?: Array<{ content?: unknown }>;
+  systemPrompt?: string;
+  subject?: string;
+}): boolean {
+  const corpus = [
+    normalizePromptText(params.subject),
+    normalizePromptText(params.systemPrompt),
+    ...(params.messages || []).map((msg) => normalizePromptText(msg?.content)),
+  ].join("\n").toLowerCase();
+
+  const keywords = [
+    "matematica",
+    "divisione",
+    "divisioni",
+    "divisore",
+    "dividendo",
+    "quoziente",
+    "resto",
+    "moltiplicazione",
+    "moltiplicazioni",
+    "sottrazione",
+    "addizione",
+    "in colonna",
+    "riporto",
+    "con la prova",
+    "prova della divisione",
+    "prova del nove",
+    "procedimento",
+  ];
+
+  return PROCEDURAL_MATH_EXPRESSION_REGEX.test(corpus) || keywords.some((keyword) => corpus.includes(keyword));
+}
+
+function buildProceduralMathUniversalPrompt(lang?: string): string {
+  if (lang === "en") {
+    return `
+═══════════════════════════════════════
+UNIVERSAL BLOCK — PROCEDURAL MATH
+═══════════════════════════════════════
+This block applies ANY TIME the session contains arithmetic operations, column calculations, proofs/checks, or procedural math vocabulary. It overrides mode-specific behavior and stays active in study, review, prep, guided, and every other session format.
+
+MANDATORY RULES:
+1. Before solving, explain the meaning of each term BEFORE using it. For division: dividend = the number we are dividing, divisor = the number we divide by, quotient = how many times it fits, remainder = what is left over. For multiplication/addition, explain carry in simple child-friendly words before the first use.
+2. Before the real exercise, show one COMPLETE mini-example using the SAME method as the exercise. If the exercise is long division, the example must also be long division in a code block. If it is column multiplication, the example must also be column multiplication.
+3. In division, ALWAYS ask using containment language: "How many times does 3 fit into 15?" NEVER ask: "What is 15 divided by 3?"
+4. Column layout is mandatory: full dividend always visible on the first row, digits right-aligned, subtractions aligned under the number they belong to, carries placed above the correct column, updated code block in EVERY assistant message.
+5. Exactly ONE micro-step per message and exactly ONE new question per message.
+6. The proof/check is a SECOND guided exercise. Never solve the proof alone.
+7. After the final step, close with ONE final question only: continue or end. If the student says stop, do not add extra chat messages.
+
+FIXED DIVISION TEMPLATE — keep the grid stable:
+\`\`\`
+  675 | 3
+  -6  |---
+  --  | 2
+   07
+   -6
+   --
+    15
+   -15
+   ---
+     0
+\`\`\`
+
+FIXED MULTIPLICATION TEMPLATE — keep carries above the correct column:
+\`\`\`
+    ²²
+    189
+  ×   3
+  -----
+    567
+\`\`\`
+`;
+  }
+
+  return `
+═══════════════════════════════════════
+BLOCCO UNIVERSALE — MATEMATICA PROCEDURALE
+═══════════════════════════════════════
+Questo blocco si attiva OGNI VOLTA che nella sessione compaiono operazioni, calcoli in colonna, prova/verifica o lessico matematico procedurale. SOVRASCRIVE i comportamenti legati alla modalità e resta valido sempre: study, review, prep, guided o qualsiasi altra variante.
+
+REGOLE OBBLIGATORIE:
+1. Prima di risolvere, spiega il significato dei termini PRIMA di usarli. Per la divisione: dividendo = numero che stiamo dividendo, divisore = numero con cui dividiamo, quoziente = quante volte il divisore ci sta, resto = quello che avanza. Per moltiplicazioni/addizioni, spiega il riporto con parole da bambino prima del primo uso.
+2. Prima dell'esercizio vero, mostra un mini-esempio COMPLETO con lo STESSO metodo dell'esercizio. Se l'esercizio è una divisione in colonna, anche l'esempio deve essere una divisione in colonna in un blocco di codice. Se è una moltiplicazione in colonna, anche l'esempio deve essere una moltiplicazione in colonna.
+3. Nella divisione chiedi SEMPRE così: "Quante volte il 3 sta nel 15?". NON chiedere mai: "Quanto fa 15 diviso 3?".
+4. L'incolonnamento è obbligatorio: dividendo completo sempre visibile in alto, cifre allineate a destra, sottrazioni sotto il numero corretto, riporti sopra la colonna corretta, blocco visivo aggiornato in OGNI messaggio del coach.
+5. Esattamente UN micro-passo per messaggio ed ESATTAMENTE UNA domanda nuova per messaggio.
+6. La prova/verifica è un SECONDO esercizio guidato. Mai svolgerla da solo.
+7. Alla fine fai UNA sola domanda finale: continuare o terminare. Se lo studente dice di fermarsi, non aggiungere altri messaggi.
+
+TEMPLATE FISSO DIVISIONE — mantieni la griglia stabile:
+\`\`\`
+  675 | 3
+  -6  |---
+  --  | 2
+   07
+   -6
+   --
+    15
+   -15
+   ---
+     0
+\`\`\`
+
+TEMPLATE FISSO MOLTIPLICAZIONE — i riporti stanno sopra la colonna corretta:
+\`\`\`
+    ²²
+    189
+  ×   3
+  -----
+    567
+\`\`\`
+`;
+}
+
 // Fire-and-forget: update adaptive & cognitive profiles after each session
 async function updateAdaptiveProfile(profileId: string, messages: any[], sessionSubject?: string, sessionFormat?: string) {
   try {
@@ -1092,6 +1214,10 @@ CONTESTO SESSIONE SPECIFICO (prioritario)
 ═══════════════════════════════════════
 ${clientSystemPrompt}`
             : enhancedPrompt;
+
+          if (isProceduralMathSession({ messages, systemPrompt: clientSystemPrompt, subject: chatSubject })) {
+            finalSystemPrompt += `\n\n${buildProceduralMathUniversalPrompt(lang || "it")}`;
+          }
         }
       } catch (e) {
         console.error("Error building enhanced prompt:", e);
