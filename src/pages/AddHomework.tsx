@@ -56,7 +56,7 @@ const AddHomework = () => {
   const [dueDate, setDueDate] = useState(getToday());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  // uploadedImageUrls no longer needed for storage, kept for preview only
+  
   const [extractedTasks, setExtractedTasks] = useState<ExtractedTask[]>([]);
   const [extractedSourceType, setExtractedSourceType] = useState<"photo-book" | "photo-diary" | null>(null);
   const [saving, setSaving] = useState(false);
