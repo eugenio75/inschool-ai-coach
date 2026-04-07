@@ -233,7 +233,7 @@ export function ChatShell({
                 <div className={`rounded-xl px-4 py-3 text-[15px] leading-[1.7] whitespace-pre-wrap ${
                   msg.role === "user"
                     ? "bg-primary text-primary-foreground rounded-br-sm"
-                    : "bg-muted text-foreground rounded-bl-sm"
+                    : "notebook-bubble rounded-bl-sm"
                 }`}>
                   <MathText>{msg.content}</MathText>
                 </div>
@@ -267,7 +267,7 @@ export function ChatShell({
             <div className="flex-shrink-0 mr-2 mt-1">
               <CoachAvatar mood="thinking" size={32} />
             </div>
-            <div className="max-w-[80%] rounded-xl rounded-bl-sm bg-muted px-4 py-3 text-[15px] leading-[1.7] whitespace-pre-wrap text-foreground">
+            <div className="max-w-[80%] rounded-xl rounded-bl-sm notebook-bubble px-4 py-3 whitespace-pre-wrap">
               <MathText>{streamingText}</MathText>
               <span className="inline-block w-1.5 h-4 bg-primary ml-0.5 animate-pulse" />
             </div>
