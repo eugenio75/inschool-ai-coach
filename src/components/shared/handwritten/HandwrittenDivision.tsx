@@ -49,7 +49,7 @@ function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTi
   const rightCols = Math.max(dvStr.length, qStr.length);
   const totalW = bracketX + rightCols * CW + 20 + PX;
 
-  // Row 0: dividend
+  // Row 0: dividend — appears first
   const row0Y = PY + FS;
   for (let i = 0; i < dLen; i++) {
     els.push({
@@ -81,22 +81,27 @@ function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTi
     });
   }
 
-  // --- Steps ---
+  // --- Placeholders for quotient digits (visible immediately as "_ _ _") ---
+  for (let s = 0; s < steps.length; s++) {
+    const qPos = steps[s].rightIdx - steps[0].rightIdx;
+    const qDelay = 1.8 + s * 1.8; // will be revealed at this step's delay
+    els.push({
+      id: `qp${s}`, type: "text",
+      x: bracketX + 16 + qPos * CW + CW / 2, y: PY + RH + 8 + FS,
+      text: steps[s].qDigit, color: COLORS.result, bold: true, fontSize: FS,
+      delay: qDelay, seed: ns(),
+      isResult: s === steps.length - 1,
+      isPlaceholder: true, // shows "_" first, digit appears at delay
+    });
+  }
+
+  // --- Steps (intermediate work) ---
   let leftRow = 1;
-  let groupDelay = 1.8; // start later for dramatic effect
+  let groupDelay = 1.8;
 
   for (let s = 0; s < steps.length; s++) {
     const step = steps[s];
     const d = groupDelay;
-
-    // Quotient digit on the right — green
-    const qPos = step.rightIdx - steps[0].rightIdx;
-    els.push({
-      id: `q${s}`, type: "text",
-      x: bracketX + 16 + qPos * CW + CW / 2, y: PY + RH + 8 + FS,
-      text: step.qDigit, color: COLORS.result, bold: true, fontSize: FS,
-      delay: d, seed: ns(), isResult: s === steps.length - 1,
-    });
 
     // Bring-down number — amber
     if (s > 0) {
@@ -132,7 +137,7 @@ function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTi
     }
     leftRow++;
 
-    // Separator line — drawn slowly
+    // Separator line
     const lineY = PY + leftRow * RH - 6;
     const lineL = cx(pLeftCol - 1) - CW / 2 + 4;
     const lineR = cx(step.rightIdx) + CW / 2 + 2;
@@ -143,7 +148,7 @@ function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTi
       delay: d + 1.0, seed: ns(),
     });
 
-    // Remainder — blue, or final remainder with pulse
+    // Final remainder — blue with pulse
     if (s === steps.length - 1) {
       const rStr = String(step.remainder);
       for (let i = 0; i < rStr.length; i++) {

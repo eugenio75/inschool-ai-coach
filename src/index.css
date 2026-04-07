@@ -319,17 +319,24 @@
   background-color: #FAFAF7;
   background-image: repeating-linear-gradient(
     transparent,
-    transparent 27px,
-    #E8E8E0 27px,
-    #E8E8E0 28px
+    transparent 31px,
+    #EBEBE3 31px,
+    #EBEBE3 32px
   );
   border-left: 4px solid #E57373;
-  font-family: 'Caveat', cursive;
-  font-size: 1.15rem;
-  line-height: 28px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.375rem;
+  line-height: 32px;
   color: hsl(var(--foreground));
-  padding: 14px 16px 14px 20px;
+  padding: 16px 18px 16px 22px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+@media (max-width: 640px) {
+  .notebook-bubble {
+    font-size: 1.5rem;
+    line-height: 34px;
+  }
 }
 
 .dark .notebook-bubble {

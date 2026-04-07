@@ -102,14 +102,16 @@ function compute(type: "addition" | "subtraction", a: number, b: number, cfg: Re
     delay: 1.5, seed: ns(),
   });
 
-  // Row 3: result — green with pulse
+  // Row 3: result — placeholders first, then revealed progressively
   const r3Y = lineY + FS + 4;
   for (let i = 0; i < cols - 1; i++) {
     if (rP[i] !== " ") {
       els.push({
         id: `r${i}`, type: "text", x: cx(i + 1), y: r3Y,
         text: rP[i], color: COLORS.result, bold: true, fontSize: FS,
-        delay: 2.0 + i * 0.2, seed: ns(), isResult: true,
+        delay: 2.0 + i * 0.4, seed: ns(),
+        isResult: i === cols - 2, // last digit gets pulse
+        isPlaceholder: true,
       });
     }
   }
