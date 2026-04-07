@@ -325,7 +325,9 @@ Inizia presentando il primo blocco dell'argomento.`;
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-foreground"
             }`}>
-              {msg.content || (sending && i === messages.length - 1 ? (
+              {msg.content ? (
+                msg.role === "assistant" ? <MathText>{msg.content}</MathText> : msg.content
+              ) : (sending && i === messages.length - 1 ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : null)}
             </div>
