@@ -1,76 +1,34 @@
 import React, { useMemo } from "react";
-import { motion } from "framer-motion";
-import { CW, RH, PX, PY, FS, COLORS, jit, wobbly, colX, type El } from "./utils";
+import { COLORS, PX, PY, jit, wobbly, colX, type El, type AgeTier, getTierConfig } from "./utils";
+import { HandwrittenSVG } from "./HandwrittenSVG";
 
 interface Props {
   dividend: number;
   divisor: number;
+  tier?: AgeTier;
 }
 
-export function HandwrittenDivision({ dividend, divisor }: Props) {
-  const layout = useMemo(() => compute(dividend, divisor), [dividend, divisor]);
+export function HandwrittenDivision({ dividend, divisor, tier = "upper-elementary" }: Props) {
+  const cfg = getTierConfig(tier);
+  const layout = useMemo(() => compute(dividend, divisor, cfg), [dividend, divisor, cfg]);
 
-  return (
-    <svg
-      width={layout.width}
-      height={layout.height}
-      viewBox={`0 0 ${layout.width} ${layout.height}`}
-      className="my-3 max-w-full"
-      style={{ overflow: "visible" }}
-    >
-      {layout.elements.map((el) => (
-        <motion.g
-          key={el.id}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: el.delay, duration: 0.4 }}
-        >
-          {el.type === "text" ? (
-            <text
-              x={el.x + jit(el.seed, 0.8)}
-              y={el.y + jit(el.seed + 3, 0.5)}
-              fill={el.color}
-              fontSize={el.fontSize || FS}
-              fontFamily="'Caveat', cursive"
-              textAnchor="middle"
-              dominantBaseline="auto"
-              fontWeight={el.bold ? 700 : 400}
-            >
-              {el.text}
-            </text>
-          ) : (
-            <path
-              d={el.d!}
-              fill="none"
-              stroke={el.color}
-              strokeWidth={el.strokeWidth || 2}
-              strokeLinecap="round"
-            />
-          )}
-        </motion.g>
-      ))}
-    </svg>
-  );
+  return <HandwrittenSVG elements={layout.elements} width={layout.width} height={layout.height} tier={tier} />;
 }
 
-function compute(dividend: number, divisor: number) {
+function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTierConfig>) {
+  const { fontSize: FS, cellWidth: CW, rowHeight: RH } = cfg;
   const dStr = String(dividend);
   const dLen = dStr.length;
   const dvStr = String(divisor);
   const els: El[] = [];
   let sid = 100;
   const ns = () => sid++;
+  const cx = (col: number) => colX(col, CW);
 
   // --- Division computation ---
   let carry = 0;
   let qStr = "";
-  interface Step {
-    qDigit: string;
-    product: number;
-    carryBefore: number;
-    remainder: number;
-    rightIdx: number;
-  }
+  interface Step { qDigit: string; product: number; carryBefore: number; remainder: number; rightIdx: number; }
   const steps: Step[] = [];
 
   for (let i = 0; i < dLen; i++) {
@@ -78,15 +36,8 @@ function compute(dividend: number, divisor: number) {
     const q = Math.floor(carry / divisor);
     const prod = q * divisor;
     const rem = carry - prod;
-
     if (q > 0 || steps.length > 0) {
-      steps.push({
-        qDigit: String(q),
-        product: prod,
-        carryBefore: carry,
-        remainder: rem,
-        rightIdx: i,
-      });
+      steps.push({ qDigit: String(q), product: prod, carryBefore: carry, remainder: rem, rightIdx: i });
     }
     qStr += String(q);
     carry = rem;
@@ -102,9 +53,8 @@ function compute(dividend: number, divisor: number) {
   const row0Y = PY + FS;
   for (let i = 0; i < dLen; i++) {
     els.push({
-      id: `d${i}`, type: "text",
-      x: colX(i), y: row0Y,
-      text: dStr[i], color: COLORS.main, delay: 0, seed: ns(),
+      id: `d${i}`, type: "text", x: cx(i), y: row0Y,
+      text: dStr[i], color: COLORS.main, fontSize: FS, delay: 0.3 + i * 0.15, seed: ns(),
     });
   }
 
@@ -112,7 +62,7 @@ function compute(dividend: number, divisor: number) {
   els.push({
     id: "bv", type: "path", x: 0, y: 0,
     d: wobbly(bracketX, PY + 2, bracketX, PY + RH + 8, ns()),
-    color: COLORS.main, strokeWidth: 2.5, delay: 0, seed: ns(),
+    color: COLORS.lineAlpha, strokeWidth: 2.5, delay: 0.8, seed: ns(),
   });
 
   // Bracket: horizontal line
@@ -120,101 +70,94 @@ function compute(dividend: number, divisor: number) {
   els.push({
     id: "bh", type: "path", x: 0, y: 0,
     d: wobbly(bracketX, PY + RH + 8, hRight, PY + RH + 8, ns()),
-    color: COLORS.main, strokeWidth: 2.5, delay: 0, seed: ns(),
+    color: COLORS.lineAlpha, strokeWidth: 2.5, delay: 1.0, seed: ns(),
   });
 
-  // Divisor digits
+  // Divisor digits — in red
   for (let i = 0; i < dvStr.length; i++) {
     els.push({
-      id: `dv${i}`, type: "text",
-      x: bracketX + 16 + i * CW + CW / 2, y: row0Y,
-      text: dvStr[i], color: COLORS.main, delay: 0, seed: ns(),
+      id: `dv${i}`, type: "text", x: bracketX + 16 + i * CW + CW / 2, y: row0Y,
+      text: dvStr[i], color: COLORS.sign, fontSize: FS, delay: 0.5 + i * 0.15, seed: ns(),
     });
   }
 
   // --- Steps ---
   let leftRow = 1;
-  let groupDelay = 0.6;
+  let groupDelay = 1.8; // start later for dramatic effect
 
   for (let s = 0; s < steps.length; s++) {
     const step = steps[s];
     const d = groupDelay;
 
-    // Quotient digit on the right
+    // Quotient digit on the right — green
     const qPos = step.rightIdx - steps[0].rightIdx;
     els.push({
       id: `q${s}`, type: "text",
-      x: bracketX + 16 + qPos * CW + CW / 2,
-      y: PY + RH + 8 + FS,
-      text: step.qDigit, color: COLORS.result, bold: true,
-      delay: d, seed: ns(),
+      x: bracketX + 16 + qPos * CW + CW / 2, y: PY + RH + 8 + FS,
+      text: step.qDigit, color: COLORS.result, bold: true, fontSize: FS,
+      delay: d, seed: ns(), isResult: s === steps.length - 1,
     });
 
-    // Bring-down number (shown for steps after the first)
+    // Bring-down number — amber
     if (s > 0) {
       const cbStr = String(step.carryBefore);
       for (let i = 0; i < cbStr.length; i++) {
-        const cx = colX(step.rightIdx - (cbStr.length - 1 - i));
+        const colPos = step.rightIdx - (cbStr.length - 1 - i);
         els.push({
-          id: `cb${s}-${i}`, type: "text",
-          x: cx, y: PY + leftRow * RH + FS,
-          text: cbStr[i], color: COLORS.mid,
-          delay: d - 0.2, seed: ns(),
+          id: `cb${s}-${i}`, type: "text", x: cx(colPos), y: PY + leftRow * RH + FS,
+          text: cbStr[i], color: COLORS.bringDown, fontSize: FS,
+          delay: d - 0.3, seed: ns(),
         });
       }
       leftRow++;
     }
 
-    // Minus sign + product
+    // Minus sign — red
     const pStr = String(step.product);
     const pLeftCol = step.rightIdx - pStr.length + 1;
 
-    // Minus sign one column left of product
     els.push({
-      id: `m${s}`, type: "text",
-      x: colX(pLeftCol - 1), y: PY + leftRow * RH + FS,
+      id: `m${s}`, type: "text", x: cx(pLeftCol - 1), y: PY + leftRow * RH + FS,
       text: "−", color: COLORS.sign, fontSize: FS,
-      delay: d + 0.3, seed: ns(),
+      delay: d + 0.5, seed: ns(),
     });
 
     // Product digits
     for (let i = 0; i < pStr.length; i++) {
       els.push({
-        id: `p${s}-${i}`, type: "text",
-        x: colX(pLeftCol + i), y: PY + leftRow * RH + FS,
-        text: pStr[i], color: COLORS.main,
-        delay: d + 0.3, seed: ns(),
+        id: `p${s}-${i}`, type: "text", x: cx(pLeftCol + i), y: PY + leftRow * RH + FS,
+        text: pStr[i], color: COLORS.main, fontSize: FS,
+        delay: d + 0.5 + (i + 1) * 0.15, seed: ns(),
       });
     }
     leftRow++;
 
-    // Separator line (hand-drawn)
+    // Separator line — drawn slowly
     const lineY = PY + leftRow * RH - 6;
-    const lineL = colX(pLeftCol - 1) - CW / 2 + 4;
-    const lineR = colX(step.rightIdx) + CW / 2 + 2;
+    const lineL = cx(pLeftCol - 1) - CW / 2 + 4;
+    const lineR = cx(step.rightIdx) + CW / 2 + 2;
     els.push({
       id: `l${s}`, type: "path", x: 0, y: 0,
       d: wobbly(lineL, lineY, lineR, lineY, ns()),
-      color: COLORS.main, strokeWidth: 2,
-      delay: d + 0.5, seed: ns(),
+      color: COLORS.lineAlpha, strokeWidth: 2,
+      delay: d + 1.0, seed: ns(),
     });
 
-    // Remainder (for last step, or implicit for next bring-down)
+    // Remainder — blue, or final remainder with pulse
     if (s === steps.length - 1) {
       const rStr = String(step.remainder);
       for (let i = 0; i < rStr.length; i++) {
-        const cx = colX(step.rightIdx - (rStr.length - 1 - i));
+        const colPos = step.rightIdx - (rStr.length - 1 - i);
         els.push({
-          id: `r${s}-${i}`, type: "text",
-          x: cx, y: PY + leftRow * RH + FS,
-          text: rStr[i], color: COLORS.mid, bold: true,
-          delay: d + 0.7, seed: ns(),
+          id: `r${s}-${i}`, type: "text", x: cx(colPos), y: PY + leftRow * RH + FS,
+          text: rStr[i], color: COLORS.mid, bold: true, fontSize: FS,
+          delay: d + 1.3, seed: ns(), isResult: true,
         });
       }
       leftRow++;
     }
 
-    groupDelay += 1.2;
+    groupDelay += 1.8;
   }
 
   const totalH = PY + (leftRow + 0.5) * RH;
