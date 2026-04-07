@@ -1072,34 +1072,74 @@ Inizia con la prima domanda.`;
   ) : undefined;
 
   return (
-    <ChatShell
-      coachName={coachName}
-      title={topic || subject || getTitle()}
-      subtitle={subject && topic ? subject : undefined}
-      badgeText={type === "prep" ? (mode === "orale" ? "Orale" : "Scritta") : undefined}
-      messages={messages}
-      streamingText={streamingText}
-      sending={sending}
-      onSend={handleSend}
-      onBack={() => {
-        if (type === "study" && studyMode === "coach") {
-          setSetupDone(false);
-          setStudyMode(null);
-          setShowModeSelect(true);
-          setMessages([]);
-          setStreamingText("");
-          setSending(false);
-          return;
-        }
-        navigate(-1);
-      }}
-      showHint={type !== "prep"}
-      showStuck={type !== "prep"}
-      showExplain={true}
-      showVoice={type === "prep" ? mode === "orale" || schoolLevel === "superiori" || schoolLevel === "universitario" : true}
-      showAttach={type === "study"}
-      extraFooter={studyOutputFooter}
-      inputPlaceholder={type === "prep" ? "Scrivi la tua risposta..." : "Scrivi..."}
-    />
+    <>
+      <ChatShell
+        coachName={coachName}
+        title={topic || subject || getTitle()}
+        subtitle={subject && topic ? subject : undefined}
+        badgeText={type === "prep" ? (mode === "orale" ? "Orale" : "Scritta") : undefined}
+        messages={messages}
+        streamingText={streamingText}
+        sending={sending}
+        onSend={handleSend}
+        onEndSession={(type === "study" || type === "prep" || type === "review") ? () => setShowEndConfirm(true) : undefined}
+        onBack={() => {
+          if (type === "study" && studyMode === "coach") {
+            setSetupDone(false);
+            setStudyMode(null);
+            setShowModeSelect(true);
+            setMessages([]);
+            setStreamingText("");
+            setSending(false);
+            return;
+          }
+          navigate(-1);
+        }}
+        showHint={type !== "prep"}
+        showStuck={type !== "prep"}
+        showExplain={true}
+        showVoice={type === "prep" ? mode === "orale" || schoolLevel === "superiori" || schoolLevel === "universitario" : true}
+        showAttach={type === "study"}
+        extraFooter={studyOutputFooter}
+        inputPlaceholder={type === "prep" ? "Scrivi la tua risposta..." : "Scrivi..."}
+      />
+
+      <AlertDialog open={showEndConfirm} onOpenChange={setShowEndConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Terminare la sessione?</AlertDialogTitle>
+            <AlertDialogDescription>
+              I tuoi progressi verranno salvati e riceverai i punti guadagnati.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continua a studiare</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEndStudySession} className="bg-primary">
+              Termina e salva
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <SessionCelebration
+        isVisible={showStudyCelebration}
+        onClose={() => {
+          setShowStudyCelebration(false);
+          navigate("/dashboard");
+        }}
+        onGoToReview={() => {
+          setShowStudyCelebration(false);
+          navigate("/memory?section=ripasso&content=today");
+        }}
+        studentName={studentName}
+        bloomLevel={0}
+        subject={subject || topic || ""}
+        isJunior={isJunior}
+        pointsEarned={studyPoints}
+        totalPoints={studyTotalPoints}
+        previousTotalPoints={studyPrevTotal}
+        streak={studyStreak}
+      />
+    </>
   );
 }
