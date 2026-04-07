@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Type, BookOpen, Plus, X, Sparkles, Check, Loader2, CalendarDays, FileText } from "lucide-react";
+import { ArrowLeft, Camera, Type, BookOpen, Plus, X, Sparkles, Check, Loader2, CalendarDays, FileText, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createTask, parseHomeworkFiles } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
