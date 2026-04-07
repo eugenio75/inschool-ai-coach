@@ -25,11 +25,37 @@ function escapeHtml(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
+function renderCodeBlocks(text: string): string {
+  // Replace ```...``` code blocks with styled <pre><code> blocks
+  return text.replace(/```(\w*)\n?([\s\S]*?)```/g, (_match, _lang, code) => {
+    return `<pre class="bg-muted/50 border border-border rounded-lg px-4 py-3 my-2 overflow-x-auto font-mono text-sm leading-relaxed whitespace-pre">${escapeHtml(code.trimEnd())}</pre>`;
+  });
+}
+
+function renderInlineCode(text: string): string {
+  // Replace `...` inline code with styled <code> blocks
+  return text.replace(/`([^`\n]+)`/g, (_match, code) => {
+    return `<code class="bg-muted/50 px-1.5 py-0.5 rounded text-sm font-mono">${escapeHtml(code)}</code>`;
+  });
+}
+
 function renderMathInText(text: string): string {
+  // First, extract and protect code blocks from LaTeX processing
+  const codeBlocks: string[] = [];
+  let processed = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (match) => {
+    codeBlocks.push(match);
+    return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
+  });
+  const inlineCodes: string[] = [];
+  processed = processed.replace(/`([^`\n]+)`/g, (match) => {
+    inlineCodes.push(match);
+    return `__INLINE_CODE_${inlineCodes.length - 1}__`;
+  });
+
   // Process display math first ($$...$$), then inline math ($...$)
   // Also handle \(...\) and \[...\] notation
   const parts: string[] = [];
-  let remaining = text;
+  let remaining = processed;
 
   while (remaining.length > 0) {
     // Try display math $$...$$ 
@@ -79,7 +105,19 @@ function renderMathInText(text: string): string {
     remaining = remaining.substring(best.idx + best.len);
   }
 
-  return parts.join("");
+  let result = parts.join("");
+
+  // Restore code blocks and render them
+  codeBlocks.forEach((block, i) => {
+    const rendered = renderCodeBlocks(block);
+    result = result.replace(`__CODE_BLOCK_${i}__`, rendered);
+  });
+  inlineCodes.forEach((code, i) => {
+    const rendered = renderInlineCode(code);
+    result = result.replace(`__INLINE_CODE_${i}__`, rendered);
+  });
+
+  return result;
 }
 
 export default MathText;
