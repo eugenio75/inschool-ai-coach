@@ -313,3 +313,47 @@
   margin: 0.5rem 0;
   padding: 0.125rem 0;
 }
+
+/* ── Notebook paper bubble for coach messages ── */
+.notebook-bubble {
+  background-color: #FAFAF7;
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 27px,
+    #E8E8E0 27px,
+    #E8E8E0 28px
+  );
+  border-left: 4px solid #E57373;
+  font-family: 'Caveat', cursive;
+  font-size: 1.15rem;
+  line-height: 28px;
+  color: hsl(var(--foreground));
+  padding: 14px 16px 14px 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.dark .notebook-bubble {
+  background-color: hsl(222 20% 14%);
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 27px,
+    hsl(222 15% 22%) 27px,
+    hsl(222 15% 22%) 28px
+  );
+  border-left-color: #C62828;
+  color: hsl(var(--foreground));
+}
+
+.notebook-bubble .katex {
+  font-family: 'KaTeX_Main', 'Times New Roman', serif;
+}
+
+.notebook-bubble pre.math-code-block {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  background: rgba(0,0,0,0.04);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 8px 0;
+}
