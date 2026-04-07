@@ -883,7 +883,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     try {
       const currentStepData = steps[currentStep - 1];
       const systemAddition = currentStepData
-        ? `\n\nStep attuale (${currentStep}/${totalSteps}): ${currentStepData.text || currentStepData.step_text}`
+        ? `\n\nFOCUS ATTUALE (non citare questo nella chat, usalo solo come contesto): ${currentStepData.text || currentStepData.step_text}`
         : "";
 
       const isExercise = homework?.task_type !== "study" && !isOralStudyTask(homework?.task_type || "", homework?.title || "");
