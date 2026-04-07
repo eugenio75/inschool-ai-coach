@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Camera, Type, BookOpen, Plus, X, Sparkles, Check, Loader2, CalendarDays, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { createTask, uploadHomeworkImage, extractTasksFromImage } from "@/lib/database";
+import { createTask, uploadHomeworkImage, extractTasksFromImage, deleteHomeworkImages } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
@@ -65,14 +65,24 @@ const AddHomework = () => {
   const [photoNote, setPhotoNote] = useState("");
   const [photoTags, setPhotoTags] = useState<string[]>([]);
 
+  const cleanupUploadedImages = async (urls: string[]) => {
+    if (urls.length === 0) return;
+
+    try {
+      await deleteHomeworkImages(urls);
+    } catch (error) {
+      console.error("Homework image cleanup error:", error);
+    }
+  };
+
   const handlePhotoAnalysis = async () => {
     if (uploadedFiles.length === 0) return;
     const sourceType = mode === "photo-book" ? "photo-book" : "photo-diary";
     setExtractedSourceType(sourceType);
     setMode("processing");
+    let urls: string[] = [];
 
     try {
-      const urls: string[] = [];
       for (const uf of uploadedFiles) {
         if (uf.uploadedUrl) {
           urls.push(uf.uploadedUrl);
@@ -106,6 +116,8 @@ const AddHomework = () => {
       }
     } catch (err: any) {
       console.error("OCR error:", err);
+      await cleanupUploadedImages(urls);
+      setUploadedImageUrls([]);
       toast({
         title: "Errore nell'analisi",
         description: err.message || "Non sono riuscito ad analizzare la foto. Riprova con un'immagine più chiara.",
@@ -128,12 +140,12 @@ const AddHomework = () => {
           estimated_minutes: task.estimatedMinutes,
           difficulty: task.difficulty,
           source_type: extractedSourceType || "photo",
-          source_image_url: uploadedImageUrls[0] || undefined,
-          source_files: uploadedImageUrls.length > 0 ? uploadedImageUrls : undefined,
           due_date: dueDate,
           task_type: task.task_types.join(", "),
         });
       }
+      await cleanupUploadedImages(uploadedImageUrls);
+      setUploadedImageUrls([]);
       toast({ title: `${selected.length} ${selected.length === 1 ? "compito aggiunto" : "compiti aggiunti"}! ✨` });
       navigate("/dashboard");
     } catch {
@@ -200,10 +212,23 @@ const AddHomework = () => {
     }
   };
 
-  const goBack = () => {
-    if (mode === "confirm") setMode(extractedSourceType || "choose");
-    else if (mode === "choose") navigate("/dashboard");
-    else { setUploadedFiles([]); setMode("choose"); }
+  const goBack = async () => {
+    if (mode === "confirm") {
+      await cleanupUploadedImages(uploadedImageUrls);
+      setUploadedImageUrls([]);
+      setMode(extractedSourceType || "choose");
+      return;
+    }
+
+    if (mode === "choose") {
+      navigate("/dashboard");
+      return;
+    }
+
+    await cleanupUploadedImages(uploadedImageUrls);
+    setUploadedImageUrls([]);
+    setUploadedFiles([]);
+    setMode("choose");
   };
 
   const selectedCount = extractedTasks.filter(t => t.selected).length;

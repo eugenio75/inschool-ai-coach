@@ -674,6 +674,20 @@ Estrai da 1 a 4 concetti. Rispondi SOLO con il JSON, senza markdown.`;
         break;
       }
 
+      case "delete-homework-images": {
+        const paths = Array.isArray(payload?.paths)
+          ? payload.paths.filter((path: unknown): path is string => typeof path === "string" && path.length > 0)
+          : [];
+
+        if (paths.length > 0) {
+          const { error } = await supabase.storage.from("homework-images").remove(paths);
+          if (error) throw error;
+        }
+
+        result = { success: true };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Azione non supportata" }), {
           status: 400,
