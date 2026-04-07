@@ -65,37 +65,19 @@ const AddHomework = () => {
   const [photoNote, setPhotoNote] = useState("");
   const [photoTags, setPhotoTags] = useState<string[]>([]);
 
-  const cleanupUploadedImages = async (urls: string[]) => {
-    if (urls.length === 0) return;
-
-    try {
-      await deleteHomeworkImages(urls);
-    } catch (error) {
-      console.error("Homework image cleanup error:", error);
-    }
-  };
-
   const handlePhotoAnalysis = async () => {
     if (uploadedFiles.length === 0) return;
     const sourceType = mode === "photo-book" ? "photo-book" : "photo-diary";
     setExtractedSourceType(sourceType);
     setMode("processing");
-    let urls: string[] = [];
 
     try {
-      for (const uf of uploadedFiles) {
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(uf.file);
-        });
-        urls.push(dataUrl);
-      }
-      setUploadedImageUrls(urls);
-
       const combinedNote = [...photoTags, photoNote.trim()].filter(Boolean).join(". ") || undefined;
-      const result = await extractTasksFromImage(urls, sourceType, combinedNote);
+      const result = await parseHomeworkFiles(
+        uploadedFiles.map((uf) => uf.file),
+        sourceType,
+        combinedNote,
+      );
 
       if (result.tasks && result.tasks.length > 0) {
         setExtractedTasks(
@@ -116,8 +98,6 @@ const AddHomework = () => {
       }
     } catch (err: any) {
       console.error("OCR error:", err);
-      await cleanupUploadedImages(urls);
-      setUploadedImageUrls([]);
       toast({
         title: "Errore nell'analisi",
         description: err.message || "Non sono riuscito ad analizzare la foto. Riprova con un'immagine più chiara.",
