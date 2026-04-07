@@ -84,13 +84,13 @@ const AddHomework = () => {
 
     try {
       for (const uf of uploadedFiles) {
-        if (uf.uploadedUrl) {
-          urls.push(uf.uploadedUrl);
-        } else {
-          const url = await uploadHomeworkImage(uf.file);
-          if (!url) throw new Error("Upload fallito");
-          urls.push(url);
-        }
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(uf.file);
+        });
+        urls.push(dataUrl);
       }
       setUploadedImageUrls(urls);
 
