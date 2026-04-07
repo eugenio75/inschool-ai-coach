@@ -496,10 +496,10 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
             setSteps(sanitizedSteps);
             const stepInfo = sanitizedSteps[sess.current_step - 1];
             const visibleContent = getVisibleLoadedContent(hw.task_type, hw.title, hw.description, stepInfo?.step_text || stepInfo?.text);
-            const stepContext = visibleContent ? `\n\nRipartiamo da questo contenuto già caricato:\n${visibleContent}` : "";
+            const stepContext = visibleContent ? `\n\n${visibleContent}` : "";
             const resumeMsg = sess.last_difficulty
-              ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}.${stepContext}`
-              : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
+              ? `Ciao! 👋 L'ultima volta stavamo lavorando su questo e avevi qualche difficoltà con: ${sess.last_difficulty}.${stepContext}\n\nVuoi riprovare insieme? 😊\n\n👉 Sì, riproviamo!\n👉 Spiegamelo di nuovo\n👉 Passo al prossimo esercizio`
+              : `Ciao! 👋 Bentornato! Riprendiamo da dove eravamo.${stepContext}\n\nSei pronto? 🚀\n\n👉 Sì, avanti!\n👉 Prima fammi un ripasso veloce`;
             setMessages([{ role: "assistant", content: resumeMsg }]);
             setSetupDone(true);
             lastInteractionTime.current = Date.now();
@@ -565,10 +565,10 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
             if (!restoredMessages) {
               const stepInfo = sanitizedSteps[sess.current_step! - 1];
               const visibleContent = getVisibleLoadedContent(hw.task_type, hw.title, hw.description, stepInfo?.step_text || stepInfo?.text);
-              const stepContext = visibleContent ? `\n\nRipartiamo da questo contenuto già caricato:\n${visibleContent}` : "";
+              const stepContext = visibleContent ? `\n\n${visibleContent}` : "";
               const resumeMsg = sess.last_difficulty
-                ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}.${stepContext}`
-                : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
+                ? `Ciao! 👋 L'ultima volta stavamo lavorando su questo e avevi qualche difficoltà con: ${sess.last_difficulty}.${stepContext}\n\nVuoi riprovare insieme? 😊\n\n👉 Sì, riproviamo!\n👉 Spiegamelo di nuovo\n👉 Passo al prossimo esercizio`
+                : `Ciao! 👋 Bentornato! Riprendiamo da dove eravamo.${stepContext}\n\nSei pronto? 🚀\n\n👉 Sì, avanti!\n👉 Prima fammi un ripasso veloce`;
               setMessages([{ role: "assistant", content: resumeMsg }]);
             }
             setSetupDone(true);
@@ -913,7 +913,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
 
       const firstStep = generatedSteps[0];
       const firstStepText = getVisibleLoadedContent(homework.task_type, homework.title, homework.description, firstStep?.step_text || firstStep?.text);
-      const stepIntro = `${homework.title}\n\nPartiamo da questo contenuto già caricato:\n${firstStepText}`;
+      const stepIntro = `Ciao! 👋 Oggi lavoriamo su "${homework.title}"!\n\nPrima di iniziare... lo hai già studiato o è la prima volta? 😊\n\n👉 Sì, lo conosco\n👉 No, prima volta\n👉 L'ho visto ma non ricordo bene\n\nDimmi tu e partiamo insieme! 🚀`;
 
       // Mic suggestion: show only once EVER per student profile
       const isOral = isOralStudyTask(homework.task_type, homework.title);
