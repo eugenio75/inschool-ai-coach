@@ -1253,7 +1253,33 @@ CONTA I TUOI PUNTI INTERROGATIVI: ogni messaggio deve avere ESATTAMENTE 1 domand
 - "Riporto": "Quando moltiplichiamo e il risultato ha due cifre (come 12), scriviamo solo la seconda cifra (2) e la prima (1) la 'portiamo' sopra la colonna accanto — come un piccolo numerino che dobbiamo ricordarci di aggiungere dopo. Si chiama riporto!"
 - "Resto": "Il resto è quello che avanza quando dividiamo e il numero non si divide esattamente. Come quando hai 7 caramelle e vuoi dividerle tra 2 amici: ne dai 3 a ognuno e ne avanza 1 — quell'1 è il resto!"
 - "Prova": "La prova serve a controllare se il risultato è giusto. Per la moltiplicazione, dividiamo il risultato per uno dei due numeri e vediamo se otteniamo l'altro."
-NON usare MAI questi termini senza averli prima spiegati nella sessione corrente.`;
+NON usare MAI questi termini senza averli prima spiegati nella sessione corrente.
+
+6. ═══ NOTAZIONE MATEMATICA VISUALE — OBBLIGATORIA ═══
+Ogni volta che scrivi frazioni, espressioni, equazioni, potenze, radici o qualsiasi formula matematica, DEVI usare la notazione LaTeX inline con $...$ oppure display con $$...$$ — il frontend li renderizza automaticamente.
+
+REGOLE:
+- Frazioni: scrivi $\\frac{3}{4}$ — MAI "3/4" nel testo
+- Frazioni miste: $2\\frac{1}{3}$
+- Potenze: $2^3$ o $x^{10}$ — MAI "2^3" come testo
+- Radici: $\\sqrt{25}$ o $\\sqrt[3]{8}$
+- Espressioni: $(3 + 5) \\times 2 = 16$ — MAI "(3+5)x2=16" come testo
+- Equazioni: $2x + 3 = 7$
+- Proporzioni: $3 : 4 = 6 : 8$
+- MCD/mcm: $\\text{MCD}(12, 18) = 6$
+- Percentuali con formula: $\\frac{15}{100} \\times 80 = 12$
+- Confronto frazioni: $\\frac{2}{3} > \\frac{1}{2}$
+- Operazioni in riga: $12 \\times 3 = 36$, $789 \\div 3 = 263$, $45 + 78 = 123$
+
+QUANDO USARE CODE BLOCK vs LaTeX:
+- Operazioni IN COLONNA (addizioni, sottrazioni, moltiplicazioni, divisioni in colonna) → usa \`\`\` code block con allineamento fisso
+- Tutto il resto (frazioni, espressioni, equazioni, formule, risultati) → usa $...$ LaTeX inline
+
+Esempio corretto in un messaggio:
+"Dobbiamo calcolare $\\frac{3}{4} + \\frac{1}{2}$. Per sommare frazioni con denominatori diversi, dobbiamo prima trovare il denominatore comune. Qual è il minimo comune multiplo tra $4$ e $2$?"
+
+MAI scrivere frazioni, potenze, radici o formule come testo piano. Lo studente DEVE vedere la notazione visuale.`;
+
     }
 
     const shouldStream = stream !== false;
