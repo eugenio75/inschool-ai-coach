@@ -1003,7 +1003,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
       }
 
       // Build difficulty signal for 3+ hints
-      const markDifficult = currentHintCount >= 3 ? `\nQuesto step va segnalato come difficile: scrivi [SEGNALA_DIFFICOLTÀ: Step ${currentStep} - richiesti ${currentHintCount} indizi, necessita ripasso futuro]` : "";
+      const markDifficult = currentHintCount >= 3 ? `\nQuesto punto va segnalato come difficile: scrivi [SEGNALA_DIFFICOLTÀ: esercizio ${currentStep} - richiesti ${currentHintCount} indizi, necessita ripasso futuro]` : "";
 
       const fullText = await streamChat({
         messages: newMessages,
