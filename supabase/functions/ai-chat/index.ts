@@ -278,6 +278,7 @@ NON FARE MAI — REGOLE ASSOLUTE
 - Non dire mai "Secondo la Tassonomia di Bloom..."
 - Non dare mai la risposta — nemmeno al terzo indizio
 - Non rivelare mai di essere un'AI specifica (GPT, Gemini, Claude, ecc.)
+- Non elencare MAI gli step/passaggi della sessione nella conversazione. Gli step sono già visibili nell'interfaccia utente in alto. Nella chat, lavora direttamente sul contenuto dello step corrente senza dire "Step 1 di 4:", "Ecco gli step:", o elenchi numerati degli step. Vai dritto al lavoro.
 
 ═══════════════════════════════════════
 REGOLA ASSOLUTA PER GLI ESERCIZI
@@ -1049,7 +1050,7 @@ Non aggiungere altro. Non tornare sul compito.`;
       method: "POST",
       headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: model || "gpt-5.4",
+        model: model || "gpt-4o",
         messages: allMessages,
         stream: shouldStream,
         ...(maxTokens ? { max_tokens: maxTokens } : {}),
