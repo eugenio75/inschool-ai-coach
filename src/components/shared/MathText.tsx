@@ -9,6 +9,20 @@ import "katex/dist/katex.min.css";
  */
 export function MathText({ children }: { children: string }) {
   const html = useMemo(() => renderMathInText(children || ""), [children]);
+  const hasBlockContent = useMemo(
+    () => /```|(?:^|\n)\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]/.test(children || ""),
+    [children]
+  );
+
+  if (hasBlockContent) {
+    return (
+      <div
+        dangerouslySetInnerHTML={{ __html: html }}
+        className="math-text math-text-block"
+      />
+    );
+  }
+
   return (
     <span
       dangerouslySetInnerHTML={{ __html: html }}
@@ -28,14 +42,14 @@ function escapeHtml(text: string): string {
 function renderCodeBlocks(text: string): string {
   // Replace ```...``` code blocks with styled <pre><code> blocks
   return text.replace(/```(\w*)\n?([\s\S]*?)```/g, (_match, _lang, code) => {
-    return `<pre class="bg-muted/50 border border-border rounded-lg px-4 py-3 my-2 overflow-x-auto font-mono text-sm leading-relaxed whitespace-pre">${escapeHtml(code.trimEnd())}</pre>`;
+    return `<pre class="math-code-block"><code>${escapeHtml(code.trimEnd())}</code></pre>`;
   });
 }
 
 function renderInlineCode(text: string): string {
   // Replace `...` inline code with styled <code> blocks
   return text.replace(/`([^`\n]+)`/g, (_match, code) => {
-    return `<code class="bg-muted/50 px-1.5 py-0.5 rounded text-sm font-mono">${escapeHtml(code)}</code>`;
+    return `<code class="math-inline-code">${escapeHtml(code)}</code>`;
   });
 }
 
