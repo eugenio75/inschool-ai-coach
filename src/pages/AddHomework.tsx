@@ -190,10 +190,8 @@ const AddHomework = () => {
     }
   };
 
-  const goBack = async () => {
+  const goBack = () => {
     if (mode === "confirm") {
-      await cleanupUploadedImages(uploadedImageUrls);
-      setUploadedImageUrls([]);
       setMode(extractedSourceType || "choose");
       return;
     }
@@ -203,8 +201,6 @@ const AddHomework = () => {
       return;
     }
 
-    await cleanupUploadedImages(uploadedImageUrls);
-    setUploadedImageUrls([]);
     setUploadedFiles([]);
     setMode("choose");
   };
