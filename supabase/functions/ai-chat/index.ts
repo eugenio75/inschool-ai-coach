@@ -754,37 +754,16 @@ This block applies ANY TIME the session contains arithmetic operations, column c
 
 MANDATORY RULES:
 1. Before solving, explain the meaning of each term BEFORE using it. For division: dividend = the number we are dividing, divisor = the number we divide by, quotient = how many times it fits, remainder = what is left over. For multiplication/addition, explain carry in simple child-friendly words before the first use.
-2. Before the real exercise, show one COMPLETE mini-example using the SAME method as the exercise. If the exercise is long division, the example must also be long division in a code block. If it is column multiplication, the example must also be column multiplication.
+2. Before the real exercise, show one COMPLETE mini-example using the SAME method as the exercise. If the exercise is a column operation, the example must also use the [COLONNA: ...] tag.
 3. In division, ALWAYS ask using containment language: "How many times does 3 fit into 15?" NEVER ask: "What is 15 divided by 3?"
-4. Column layout is mandatory: full dividend always visible on the first row, digits right-aligned, subtractions aligned under the number they belong to, carries placed above the correct column, updated code block in EVERY assistant message.
+4. Column layout is mandatory, but it must be expressed ONLY through the [COLONNA: ...] tag — never with code blocks, pipes, dashes or ASCII art.
 5. Exactly ONE micro-step per message and exactly ONE new question per message.
 6. The proof/check is a SECOND guided exercise. Never solve the proof alone.
 7. After the final step, close with ONE final question only: continue or end. If the student says stop, do not add extra chat messages.
 
-FIXED DIVISION TEMPLATE — keep the grid stable:
-\`\`\`
-  546 | 4
-      |------
-      | 1
-  -   4
-  -----
-     14
-  -  12
-  -----
-     26
-  -  24
-  -----
-      2
-\`\`\`
-
-FIXED MULTIPLICATION TEMPLATE — keep carries above the correct column:
-\`\`\`
-    ²²
-    189
-  ×   3
-  -----
-    567
-\`\`\`
+MANDATORY COLUMN EXAMPLES:
+[COLONNA: tipo=divisione, numeri=546,4]
+[COLONNA: tipo=moltiplicazione, numeri=189,3]
 `;
   }
 
@@ -796,37 +775,16 @@ Questo blocco si attiva OGNI VOLTA che nella sessione compaiono operazioni, calc
 
 REGOLE OBBLIGATORIE:
 1. Prima di risolvere, spiega il significato dei termini PRIMA di usarli. Per la divisione: dividendo = numero che stiamo dividendo, divisore = numero con cui dividiamo, quoziente = quante volte il divisore ci sta, resto = quello che avanza. Per moltiplicazioni/addizioni, spiega il riporto con parole da bambino prima del primo uso.
-2. Prima dell'esercizio vero, mostra un mini-esempio COMPLETO con lo STESSO metodo dell'esercizio. Se l'esercizio è una divisione in colonna, anche l'esempio deve essere una divisione in colonna in un blocco di codice. Se è una moltiplicazione in colonna, anche l'esempio deve essere una moltiplicazione in colonna.
+2. Prima dell'esercizio vero, mostra un mini-esempio COMPLETO con lo STESSO metodo dell'esercizio. Se l'esercizio è un'operazione in colonna, l'esempio deve usare il tag [COLONNA: ...].
 3. Nella divisione chiedi SEMPRE così: "Quante volte il 3 sta nel 15?". NON chiedere mai: "Quanto fa 15 diviso 3?".
-4. L'incolonnamento è obbligatorio: dividendo completo sempre visibile in alto, cifre allineate a destra, sottrazioni sotto il numero corretto, riporti sopra la colonna corretta, blocco visivo aggiornato in OGNI messaggio del coach.
+4. L'incolonnamento è obbligatorio, ma deve essere espresso SOLO tramite il tag [COLONNA: ...] — mai con blocchi di codice, pipe, trattini o ASCII art.
 5. Esattamente UN micro-passo per messaggio ed ESATTAMENTE UNA domanda nuova per messaggio.
 6. La prova/verifica è un SECONDO esercizio guidato. Mai svolgerla da solo.
 7. Alla fine fai UNA sola domanda finale: continuare o terminare. Se lo studente dice di fermarsi, non aggiungere altri messaggi.
 
-TEMPLATE FISSO DIVISIONE — mantieni la griglia stabile:
-\`\`\`
-  546 | 4
-      |------
-      | 1
-  -   4
-  -----
-     14
-  -  12
-  -----
-     26
-  -  24
-  -----
-      2
-\`\`\`
-
-TEMPLATE FISSO MOLTIPLICAZIONE — i riporti stanno sopra la colonna corretta:
-\`\`\`
-    ²²
-    189
-  ×   3
-  -----
-    567
-\`\`\`
+ESEMPI OBBLIGATORI DI COLONNA:
+[COLONNA: tipo=divisione, numeri=546,4]
+[COLONNA: tipo=moltiplicazione, numeri=189,3]
 `;
 }
 
