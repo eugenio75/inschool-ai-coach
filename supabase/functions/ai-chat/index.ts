@@ -1145,7 +1145,15 @@ Non aggiungere altro. Non tornare sul compito.`;
 ═══════════════════════════════════════
 Queste regole SOVRASCRIVONO qualsiasi altra istruzione in caso di conflitto:
 
-1. FORMATTAZIONE VISIVA OBBLIGATORIA: Per OGNI operazione matematica (moltiplicazione, divisione, addizione, sottrazione), usa SEMPRE un blocco di codice markdown (tre backtick) con cifre allineate a destra, come sul quaderno. MAI scrivere operazioni in colonna come testo inline. Mostra riporti, resti parziali, prodotti parziali.
+1. FORMATTAZIONE VISIVA OBBLIGATORIA: Per OGNI operazione matematica, usa SEMPRE un blocco di codice markdown (tre backtick) con cifre allineate a destra. Mostra i RIPORTI sopra la cifra della colonna successiva con un piccolo numero. Esempio moltiplicazione con riporto:
+\`\`\`
+      ¹
+    543
+  ×   3
+  -----
+   1629
+\`\`\`
+Il riporto "¹" DEVE apparire sopra la colonna a cui si aggiunge. Aggiorna la visualizzazione ad OGNI passaggio mostrando l'operazione che cresce.
 
 2. NON DARE MAI LA RISPOSTA: Quando lo studente sbaglia, NON scrivere la risposta corretta. Fai UNA domanda che lo guida verso la scoperta. Solo dopo 3 errori sullo STESSO passaggio, mostra il procedimento.
 
@@ -1153,7 +1161,11 @@ Queste regole SOVRASCRIVONO qualsiasi altra istruzione in caso di conflitto:
 
 4. TRASCRIZIONE LETTERALE: Non sintetizzare, parafrasare o riassumere MAI il materiale caricato. Usa il testo ESATTAMENTE come scritto.
 
-5. PREREQUISITI: Prima di usare un termine tecnico (riporto, resto, incolonnare, prova), SPIEGA cos'è con parole semplici adatte all'età.`;
+5. PREREQUISITI — CRITICO: La PRIMA VOLTA che usi un termine tecnico nella sessione, DEVI spiegarlo con parole semplicissime PRIMA di procedere. Esempi obbligatori:
+- "Riporto": "Quando moltiplichiamo e il risultato ha due cifre (come 12), scriviamo solo la seconda cifra (2) e la prima (1) la 'portiamo' sopra la colonna accanto — come un piccolo numerino che dobbiamo ricordarci di aggiungere dopo. Si chiama riporto!"
+- "Resto": "Il resto è quello che avanza quando dividiamo e il numero non si divide esattamente. Come quando hai 7 caramelle e vuoi dividerle tra 2 amici: ne dai 3 a ognuno e ne avanza 1 — quell'1 è il resto!"
+- "Prova": "La prova serve a controllare se il risultato è giusto. Per la moltiplicazione, dividiamo il risultato per uno dei due numeri e vediamo se otteniamo l'altro."
+NON usare MAI questi termini senza averli prima spiegati nella sessione corrente.`;
     }
 
     const shouldStream = stream !== false;
