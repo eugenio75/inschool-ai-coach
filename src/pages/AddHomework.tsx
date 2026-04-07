@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Camera, Type, BookOpen, Plus, X, Sparkles, Check, Loader2, CalendarDays, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { createTask, uploadHomeworkImage, extractTasksFromImage, deleteHomeworkImages } from "@/lib/database";
+import { createTask, parseHomeworkFiles } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
@@ -24,7 +24,6 @@ interface ExtractedTask {
 interface UploadedFile {
   file: File;
   preview: string;
-  uploadedUrl?: string;
 }
 
 const subjects = [
@@ -57,7 +56,7 @@ const AddHomework = () => {
   const [dueDate, setDueDate] = useState(getToday());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
+  
   const [extractedTasks, setExtractedTasks] = useState<ExtractedTask[]>([]);
   const [extractedSourceType, setExtractedSourceType] = useState<"photo-book" | "photo-diary" | null>(null);
   const [saving, setSaving] = useState(false);
@@ -65,37 +64,19 @@ const AddHomework = () => {
   const [photoNote, setPhotoNote] = useState("");
   const [photoTags, setPhotoTags] = useState<string[]>([]);
 
-  const cleanupUploadedImages = async (urls: string[]) => {
-    if (urls.length === 0) return;
-
-    try {
-      await deleteHomeworkImages(urls);
-    } catch (error) {
-      console.error("Homework image cleanup error:", error);
-    }
-  };
-
   const handlePhotoAnalysis = async () => {
     if (uploadedFiles.length === 0) return;
     const sourceType = mode === "photo-book" ? "photo-book" : "photo-diary";
     setExtractedSourceType(sourceType);
     setMode("processing");
-    let urls: string[] = [];
 
     try {
-      for (const uf of uploadedFiles) {
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(uf.file);
-        });
-        urls.push(dataUrl);
-      }
-      setUploadedImageUrls(urls);
-
       const combinedNote = [...photoTags, photoNote.trim()].filter(Boolean).join(". ") || undefined;
-      const result = await extractTasksFromImage(urls, sourceType, combinedNote);
+      const result = await parseHomeworkFiles(
+        uploadedFiles.map((uf) => uf.file),
+        sourceType,
+        combinedNote,
+      );
 
       if (result.tasks && result.tasks.length > 0) {
         setExtractedTasks(
@@ -116,8 +97,6 @@ const AddHomework = () => {
       }
     } catch (err: any) {
       console.error("OCR error:", err);
-      await cleanupUploadedImages(urls);
-      setUploadedImageUrls([]);
       toast({
         title: "Errore nell'analisi",
         description: err.message || "Non sono riuscito ad analizzare la foto. Riprova con un'immagine più chiara.",
@@ -144,8 +123,6 @@ const AddHomework = () => {
           task_type: task.task_types.join(", "),
         });
       }
-      await cleanupUploadedImages(uploadedImageUrls);
-      setUploadedImageUrls([]);
       toast({ title: `${selected.length} ${selected.length === 1 ? "compito aggiunto" : "compiti aggiunti"}! ✨` });
       navigate("/dashboard");
     } catch {
@@ -212,10 +189,8 @@ const AddHomework = () => {
     }
   };
 
-  const goBack = async () => {
+  const goBack = () => {
     if (mode === "confirm") {
-      await cleanupUploadedImages(uploadedImageUrls);
-      setUploadedImageUrls([]);
       setMode(extractedSourceType || "choose");
       return;
     }
@@ -225,8 +200,6 @@ const AddHomework = () => {
       return;
     }
 
-    await cleanupUploadedImages(uploadedImageUrls);
-    setUploadedImageUrls([]);
     setUploadedFiles([]);
     setMode("choose");
   };

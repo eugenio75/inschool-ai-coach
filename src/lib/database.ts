@@ -615,69 +615,9 @@ async function triggerEmotionalAnalysis(profileId: string) {
   }
 }
 
-// ============ IMAGE UPLOAD ============
+// ============ OCR (base64 diretto, niente Storage) ============
 
-export async function uploadHomeworkImage(file: File): Promise<string | null> {
-  if (isChildSession()) {
-    const base64 = await fileToBase64(file);
-    const result = await childApi("upload-homework-image", {
-      base64,
-      fileName: file.name,
-      contentType: file.type,
-    });
-    return result?.publicUrl || null;
-  }
-
-  const { data: { user } } = await supabase.auth.getUser();
-  const userId = user?.id || "anonymous";
-  const fileName = `${userId}/${Date.now()}-${file.name}`;
-
-  const { data, error } = await supabase.storage
-    .from("homework-images")
-    .upload(fileName, file);
-  if (error) { console.error("Upload error:", error); return null; }
-
-  const { data: urlData } = supabase.storage
-    .from("homework-images")
-    .getPublicUrl(data.path);
-  return urlData.publicUrl;
-}
-
-function extractHomeworkStoragePath(imageUrl: string): string | null {
-  try {
-    const url = new URL(imageUrl);
-    const publicMarker = "/storage/v1/object/public/homework-images/";
-    const signedMarker = "/storage/v1/object/sign/homework-images/";
-    const marker = url.pathname.includes(publicMarker)
-      ? publicMarker
-      : url.pathname.includes(signedMarker)
-        ? signedMarker
-        : null;
-
-    if (!marker) return null;
-
-    const [, rawPath = ""] = url.pathname.split(marker);
-    const normalizedPath = decodeURIComponent(rawPath).replace(/^\/+/, "");
-    return normalizedPath || null;
-  } catch {
-    return null;
-  }
-}
-
-export async function deleteHomeworkImages(imageUrls: string[]) {
-  const paths = Array.from(new Set(imageUrls.map(extractHomeworkStoragePath).filter(Boolean) as string[]));
-  if (paths.length === 0) return;
-
-  if (isChildSession()) {
-    await childApi("delete-homework-images", { paths });
-    return;
-  }
-
-  const { error } = await supabase.storage.from("homework-images").remove(paths);
-  if (error) throw error;
-}
-
-function fileToBase64(file: File): Promise<string> {
+export function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -689,24 +629,39 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-// ============ OCR ============
-
-export async function extractTasksFromImage(imageUrl: string | string[], sourceType: string, userNote?: string) {
-  const imageUrls = Array.isArray(imageUrl) ? imageUrl : [imageUrl];
-  const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ocr-homework`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-      },
-      body: JSON.stringify({ imageUrls, sourceType, userNote: userNote || undefined }),
-    }
+export async function parseHomeworkFiles(
+  files: File[],
+  sourceType: string,
+  userNote?: string,
+) {
+  // Convert files to base64 payloads
+  const filePayloads = await Promise.all(
+    files.map(async (f) => ({
+      base64: await fileToBase64(f),
+      mimeType: f.type || "image/jpeg",
+      name: f.name,
+    })),
   );
+
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-homework-upload`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    },
+    body: JSON.stringify({
+      files: filePayloads,
+      sourceType,
+      userNote: userNote || undefined,
+    }),
+  });
+
   if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || "Errore nell'analisi dell'immagine");
+    const err = await response.json().catch(() => ({ error: "Errore sconosciuto" }));
+    throw new Error(err.details || err.error || "Errore nell'analisi");
   }
+
   return response.json();
 }
