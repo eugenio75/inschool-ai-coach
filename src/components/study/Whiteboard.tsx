@@ -134,7 +134,7 @@ export function Whiteboard({ open, onClose, onSubmit, loading }: WhiteboardProps
               variant="ghost"
               onClick={clearCanvas}
               disabled={!hasContent || loading}
-              className="text-white/70 hover:text-white hover:bg-white/10 gap-2"
+              className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 gap-2 rounded-xl"
             >
               <Trash2 className="w-4 h-4" /> 🗑️ Cancella
             </Button>
