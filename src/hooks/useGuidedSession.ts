@@ -1100,7 +1100,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
         onDelta: (full) => setStreamingText(full),
         onDone: () => {},
         extraBody: {
-          systemPrompt: `${coachBehavior}\n\nCompito: ${homework?.title}. Materia: ${homework?.subject}. Livello: ${schoolLevel}.\nOBIETTIVO: ${goalStr}.${contentInstruction}${systemAddition}${emotionContext}${hintEscalation}${markDifficult}\n\nSe lo studente completa lo step correttamente, scrivi [STEP_COMPLETATO: ${currentStep}]. Se tutti gli step sono completati, scrivi [SESSIONE_COMPLETATA]. Se lo studente mostra una difficoltà specifica, scrivi [SEGNALA_DIFFICOLTÀ: descrizione].`,
+          systemPrompt: `${coachBehavior}\n\nCONSEGNA DELLO STUDENTE (scritta da lui nel campo "Cosa devi fare?"): "${homework?.title}"\nQuesta consegna è VINCOLANTE: ogni parola conta. Se lo studente ha scritto "con la prova", "fai la verifica", "spiega il metodo", ecc., DEVI seguire TUTTE le indicazioni fino alla fine. Non considerare il compito concluso finché non hai coperto tutto ciò che la consegna richiede.\n\nMateria: ${homework?.subject}. Livello: ${schoolLevel}.\nOBIETTIVO: ${goalStr}.${contentInstruction}${systemAddition}${emotionContext}${hintEscalation}${markDifficult}\n\nSe lo studente completa lo step correttamente, scrivi [STEP_COMPLETATO: ${currentStep}]. Se tutti gli step sono completati, scrivi [SESSIONE_COMPLETATA]. Se lo studente mostra una difficoltà specifica, scrivi [SEGNALA_DIFFICOLTÀ: descrizione].`,
           sessionFormat: "guided",
           subject: homework?.subject || undefined,
         },
