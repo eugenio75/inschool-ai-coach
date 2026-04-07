@@ -162,7 +162,7 @@ export default function UnifiedSession() {
     if (urlMsg && !setupDone && !sending) {
       setTopic(urlMsg);
       const t = setTimeout(() => {
-        const systemPrompt = getSystemPrompt();
+        const sessionSystemPrompt = getSystemPrompt();
         setSetupDone(true);
         setMessages([]);
         setSending(true);
@@ -170,7 +170,6 @@ export default function UnifiedSession() {
 
         streamChat({
           messages: [
-            { role: "user", content: systemPrompt },
             { role: "user", content: urlMsg },
           ],
           onDelta: (full) => setStreamingText(full),
@@ -182,7 +181,7 @@ export default function UnifiedSession() {
             setStreamingText("");
             setSending(false);
           },
-          extraBody: { profileId, subject: subject || undefined, sessionFormat: type },
+          extraBody: { profileId, subject: subject || undefined, sessionFormat: type, systemPrompt: sessionSystemPrompt },
         });
       }, 150);
       return () => clearTimeout(t);
@@ -198,24 +197,54 @@ export default function UnifiedSession() {
   ];
   const subjects = profileSubjects.length > 0 ? profileSubjects : getSubjectsByLevel(schoolLevel);
 
+  function containsExercises(text: string): boolean {
+    return /[\d]+\s*[x×:÷+\-*/]\s*[\d]+/.test(text) ||
+           /^\s*[\d]/.test(text);
+  }
+
   function getSystemPrompt(): string {
+    const cName = coachName || "il Coach";
     switch (type) {
       case "study":
-        return `Sei il coach personale di ${studentName}.
+        if (containsExercises(topic)) {
+          return `Sei ${cName}, il coach personale di ${studentName} (livello: ${schoolLevel}).
+
+Lo studente ha scritto questi esercizi da svolgere: "${topic}"
+
+REGOLE ASSOLUTE — ESERCIZI SCRITTI MANUALMENTE:
+1. Lavora ESCLUSIVAMENTE sugli esercizi scritti sopra — non inventarne altri
+2. Tratta questo testo esattamente come se fosse un compito caricato
+3. Inizia chiedendo: "Hai già letto l'esercizio?"
+   - Se SÌ → breve teoria del metodo necessario → primo esercizio guidato
+   - Se NO → "Ok, leggiamolo insieme!" → breve teoria → primo esercizio guidato
+4. Prima di iniziare gli esercizi, spiega il metodo in modo semplice e adatto all'età:
+   - Per moltiplicazioni in colonna: spiega allineamento, procedura, riporto
+   - Per divisioni in colonna: spiega il metodo, il resto, la prova
+   - Usa esempi concreti adatti al livello ${schoolLevel}
+5. Guida ogni singolo passaggio con spiegazione — non solo "quanto fa X x Y?"
+   - Spiega ogni riporto prima di usarlo
+   - Spiega ogni passaggio del procedimento
+6. Non dare MAI la risposta finale — chiedi sempre allo studente di concludere:
+   "Ora metti tutto insieme — quanto fa secondo te?"
+7. Completa TUTTI gli esercizi in ordine, uno alla volta
+8. Non chiedere mai "quali sono i numeri?" o "quali operazioni vedi?" — lo studente lo sa già
+
+TONO: caldo, paziente, incoraggiante. Celebra ogni piccolo progresso.`;
+        }
+        return `Sei ${cName}, il coach personale di ${studentName} (livello: ${schoolLevel}).
 L'argomento da studiare è: "${topic}"${subject ? ` (${subject})` : ""}.
 
 COME INIZIARE:
 Fai UNA sola domanda: "Hai già letto qualcosa su questo argomento?"
-- Se SÌ → fai una brevissima introduzione teorica legata all'argomento specifico, poi inizia a lavorarci insieme
-- Se NO → di' "Ok, iniziamo dall'inizio!" poi fai una brevissima introduzione teorica, poi inizia a lavorarci insieme
+- Se SÌ → breve introduzione teorica → lavora sull'argomento insieme
+- Se NO → "Ok, iniziamo dall'inizio!" → breve introduzione teorica → lavora insieme
 
 DURANTE LA SESSIONE:
-- Lavora SOLO su "${topic}" — niente di più, niente di meno
-- Spiega in modo semplice e diretto, senza fare domande astratte
-- Guida passo dopo passo in modo naturale, come un amico che spiega
-- Se lo studente non capisce → spiega diversamente, non ripetere uguale
-- Non inventare esercizi extra non richiesti
+- Lavora SOLO su "${topic}" — niente di più
+- Spiega in modo semplice e diretto
+- Guida passo dopo passo come un amico che spiega
 - Adatta il linguaggio al livello ${schoolLevel}
+- Non dare mai la risposta finale — chiedi allo studente di concludere
 
 TONO: caldo, paziente, incoraggiante. Celebra ogni piccolo progresso.`;
       case "review":
@@ -284,21 +313,21 @@ Inizia con la prima domanda.`;
     }
     if (!subject && type === "prep") return;
 
-    const systemPrompt = getSystemPrompt();
+    const sessionSystemPrompt = getSystemPrompt();
     setSetupDone(true);
     setMessages([]);
     setSending(true);
     setStreamingText("");
 
     streamChat({
-      messages: [{ role: "user", content: systemPrompt }],
+      messages: [],
       onDelta: (full) => setStreamingText(full),
       onDone: (full) => {
         setMessages([{ role: "assistant", content: full }]);
         setStreamingText("");
         setSending(false);
       },
-      extraBody: { profileId, subject: subject || undefined, sessionFormat: type },
+      extraBody: { profileId, subject: subject || undefined, sessionFormat: type, systemPrompt: sessionSystemPrompt },
     }).catch(() => {
       setMessages([{ role: "assistant", content: "Mi dispiace, c'è stato un problema. Riprova." }]);
       setStreamingText("");
@@ -338,7 +367,7 @@ Inizia con la prima domanda.`;
         setStreamingText("");
         setSending(false);
       },
-      extraBody: { profileId, subject: subject || undefined, sessionFormat: type },
+      extraBody: { profileId, subject: subject || undefined, sessionFormat: type, systemPrompt: getSystemPrompt() },
     }).catch(() => {
       setMessages(prev => [...prev, { role: "assistant", content: "Errore. Riprova." }]);
       setStreamingText("");
