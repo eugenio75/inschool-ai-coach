@@ -375,16 +375,33 @@ Inizia presentando il primo blocco dell'argomento.`;
             <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${
               msg.role === "user"
                 ? "bg-primary text-primary-foreground"
-                : "bg-muted text-foreground"
+                : "notebook-bubble"
             }`}>
               {msg.content ? (
                 msg.role === "assistant" ? <MathText>{msg.content}</MathText> : msg.content
-              ) : (sending && i === messages.length - 1 ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (sending && i === messages.length - 1 && !streamingText ? (
+                <span className="flex items-center gap-2 text-muted-foreground font-['Patrick_Hand']">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Il professore sta pensando... 🤔
+                </span>
               ) : null)}
             </div>
           </motion.div>
         ))}
+        {streamingText && (() => {
+          const cleaned = streamingText.split("\n").filter(l => {
+            const t = l.trim();
+            return !t.startsWith("data:") && t !== "[DONE]" && !/chatcmpl|system_fingerprint/.test(t);
+          }).join("\n").trim();
+          if (!cleaned) return null;
+          return (
+            <div className="flex justify-start">
+              <div className="max-w-[80%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap notebook-bubble">
+                <MathText>{cleaned}</MathText>
+                <span className="inline-block w-0.5 h-4 bg-foreground/60 ml-0.5 animate-pulse rounded-full" />
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Output buttons (shown after some conversation) */}
