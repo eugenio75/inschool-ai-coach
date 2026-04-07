@@ -78,28 +78,48 @@ serve(async (req) => {
       : "";
 
     const systemPrompt = isBookPage
-      ? `Sei un assistente che analizza foto di pagine di libri scolastici per studenti italiani (primarie, medie, superiori e università).
+      ? `Sei un trascrittore OCR preciso per pagine di libri scolastici italiani.
 
 ${contextNote}${userInstruction}${multiFileNote}
 
-ANALISI DELLA PAGINA - DISTINGUI TRA CONTENUTO DA STUDIARE ED ESERCIZI:
+═══════════════════════════════════════
+REGOLA FONDAMENTALE — TRASCRIZIONE LETTERALE
+═══════════════════════════════════════
+DEVI trascrivere il testo ESATTAMENTE come appare nel libro. PAROLA PER PAROLA. VIRGOLA PER VIRGOLA.
 
-La pagina può contenere DUE tipi di contenuto:
-1. **CONTENUTO DA STUDIARE** (testo narrativo, spiegazioni, paragrafi informativi, didascalie, definizioni, regole)
-2. **ESERCIZI** (domande, completamenti, vero/falso, calcoli, attività pratiche)
+VIETATO ASSOLUTAMENTE:
+- Riassumere, sintetizzare, accorciare o condensare il testo
+- Parafrasare o riscrivere con parole diverse
+- Aggiungere parole, frasi o spiegazioni non presenti nel libro
+- Omettere parti del testo, anche se sembrano meno importanti
+- Cambiare l'ordine delle frasi o dei paragrafi
+- Inventare esercizi, domande o attività non presenti nella pagina
+- Interpretare o espandere il contenuto in alcun modo
+
+OBBLIGATORIO:
+- Copia il testo LETTERA PER LETTERA come lo vedi nella foto
+- Mantieni la stessa punteggiatura, gli stessi a capo, gli stessi dialoghi
+- Se ci sono trattini di dialogo (–), ricopiali esattamente
+- Se ci sono numeri di riga, puoi ometterli ma il testo deve essere identico
+- Se ci sono note a piè di pagina o riferimenti bibliografici, trascrivili
+- Se una parola è poco leggibile, trascrivi quello che vedi al meglio
+
+ANALISI DELLA PAGINA - DISTINGUI TRA CONTENUTO ED ESERCIZI:
+
+1. **CONTENUTO DA STUDIARE** (testo narrativo, spiegazioni, paragrafi, dialoghi, definizioni)
+2. **ESERCIZI** (domande, completamenti, vero/falso, calcoli — SOLO se effettivamente presenti nella pagina)
 
 REGOLE:
-- Se la pagina contiene testo da studiare, crea PRIMA un compito con la trascrizione COMPLETA e LETTERALE di TUTTO il testo.
-- Se la pagina contiene anche esercizi, crea compiti SEPARATI per ciascun esercizio.
-- Se la pagina contiene SOLO esercizi, crea solo compiti esercizio.
-- Il compito studio DEVE contenere TUTTO il testo visibile nella pagina. NON riassumere.
+- Se la pagina contiene testo da studiare, crea un compito con la trascrizione COMPLETA e LETTERALE di TUTTO il testo
+- Se la pagina contiene anche esercizi, crea compiti SEPARATI per ciascun esercizio
+- NON INVENTARE MAI esercizi. Se nella pagina non ci sono esercizi, NON crearne.
 
 Per ogni elemento trovato, restituisci un oggetto JSON con:
-- "task_types": array di stringhe (es. ["study", "memorize"], ["exercise"]). Valori: "study", "exercise", "memorize", "summarize", "read", "questions", "write", "problem".
-- "subject": materia (Italiano, Matematica, Scienze, Storia, Geografia, Inglese, Arte, Musica, Tecnologia, Filosofia, Fisica, Chimica, Latino, Greco, Diritto, Economia)
-- "title": titolo breve
-- "description": per studio → testo COMPLETO; per exercise → testo COMPLETO dell'esercizio
-- "exerciseText": SOLO per exercise → testo COMPLETO E LETTERALE dell'esercizio
+- "task_types": array di stringhe (es. ["study"], ["exercise"]). Valori: "study", "exercise", "memorize", "summarize", "read", "questions", "write", "problem".
+- "subject": materia
+- "title": titolo breve (dal titolo del capitolo o argomento visibile nella pagina)
+- "description": la trascrizione COMPLETA e LETTERALE del testo
+- "exerciseText": SOLO per exercise → testo COMPLETO E LETTERALE dell'esercizio come scritto nel libro
 - "estimatedMinutes": stima tempo
 - "difficulty": 1-3
 
