@@ -415,7 +415,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
             setTotalSteps(sess.total_steps || 0);
             setSteps(result.steps || []);
             const stepInfo = result.steps?.[sess.current_step - 1];
-            const stepContext = stepInfo ? `\n\n${hw.title} — Step ${sess.current_step} di ${sess.total_steps}:\n${stepInfo.step_text || stepInfo.text}` : "";
+            const stepContext = stepInfo ? `\n\nRipartiamo da questo contenuto già caricato:\n${stepInfo.step_text || stepInfo.text}` : "";
             const resumeMsg = sess.last_difficulty
               ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}.${stepContext}`
               : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
@@ -482,7 +482,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
 
             if (!restoredMessages) {
               const stepInfo = savedSteps?.[sess.current_step! - 1];
-              const stepContext = stepInfo ? `\n\n${hw.title} — Step ${sess.current_step} di ${sess.total_steps}:\n${stepInfo.step_text}` : "";
+              const stepContext = stepInfo ? `\n\nRipartiamo da questo contenuto già caricato:\n${stepInfo.step_text}` : "";
               const resumeMsg = sess.last_difficulty
                 ? `Ripartiamo da dove eravamo. L'ultima volta avevi difficoltà con: ${sess.last_difficulty}.${stepContext}`
                 : `Bentornato! Riprendiamo da dove eravamo.${stepContext}`;
@@ -826,7 +826,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       setCurrentStep(1);
 
       const firstStep = generatedSteps[0];
-      const stepIntro = `${homework.title} — Step 1 di ${generatedSteps.length}:\n\n${firstStep.text}`;
+      const stepIntro = `${homework.title}\n\nPartiamo da questo contenuto già caricato:\n${firstStep.text}`;
 
       // Mic suggestion: show only once EVER per student profile
       const isOral = isOralStudyTask(homework.task_type, homework.title);
@@ -893,21 +893,24 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
 
       if (isExercise) {
         const familiarityContext = familiarity === "first_time"
-          ? "\nLo studente NON conosce la teoria dietro questo esercizio. PRIMA spiega brevemente la regola/formula necessaria con un esempio, POI presenta l'esercizio."
+          ? "\nLo studente NON conosce ancora questo contenuto. Parti con una mini spiegazione teorica strettamente necessaria, poi riprendi TU il materiale già caricato e lavora sul primo esercizio disponibile."
           : familiarity === "partial"
-          ? "\nLo studente conosce PARZIALMENTE la teoria. Chiedi cosa ricorda della regola/formula, integra quello che manca, poi passa all'esercizio."
-          : "\nLo studente dice di conoscere l'argomento. Passa direttamente all'esercizio, offri aiuto solo se si blocca.";
+          ? "\nLo studente ha familiarità parziale. NON chiedere cosa c'è scritto nel materiale: è già disponibile. Parti con una mini spiegazione teorica, poi riprendi TU il contenuto caricato e guidalo su un esercizio alla volta."
+          : "\nIl materiale è già noto o già presente in sessione. NON chiedere di reinviarlo, copiarlo, riscriverlo o elencarlo. Parti comunque con una mini spiegazione teorica brevissima, poi riprendi TU l'esercizio corrente esattamente come caricato.";
         coachBehavior = `Sei un tutor che guida lo studente a RISOLVERE un esercizio. Il tuo metodo:
-1. All'inizio PRESENTA tu il problema allo studente: riporta il testo dell'esercizio e spiega cosa viene chiesto
-2. Guida il ragionamento passo-passo: fai domande mirate per portare lo studente alla soluzione
-3. NON dare mai la soluzione diretta — usa indizi progressivi
-4. Se lo studente non sa come procedere, offri una MINI-RIPETIZIONE della regola/formula necessaria (breve, 2-3 frasi + esempio)
-5. Se lo studente sbaglia, spiega PERCHÉ è sbagliato e rilancia con un indizio (Bloom L1→L2→L3)
-6. Se lo studente è bloccato dopo 2 tentativi, dai un indizio più esplicito
-7. Quando risponde correttamente, conferma e passa allo step successivo
-8. Sii breve e diretto: 2-3 frasi + una domanda
+1. Il testo dell'esercizio o della teoria è già disponibile in sessione: NON chiedere mai allo studente di copiarlo, riscriverlo, riassumerlo o rielencarlo
+2. Parti sempre con una mini spiegazione teorica breve e diretta, strettamente utile per il contenuto già caricato
+3. Subito dopo riproponi TU l'esercizio esattamente come presente nel materiale caricato
+4. Lavora su un solo esercizio alla volta, nell'ordine del materiale già presente
+5. Guida il ragionamento passo-passo con domande mirate per portare lo studente alla soluzione
+6. NON dare mai la soluzione diretta — usa indizi progressivi
+7. Se lo studente non sa come procedere, offri una MINI-RIPETIZIONE della regola/formula necessaria (breve, 2-3 frasi + esempio)
+8. Se lo studente sbaglia, spiega PERCHÉ è sbagliato e rilancia con un indizio (Bloom L1→L2→L3)
+9. Se lo studente è bloccato dopo 2 tentativi, dai un indizio più esplicito
+10. Quando un esercizio è finito, passa al successivo SENZA parlare di step, numeri o sequenze della sessione
+11. Sii breve e diretto: 2-3 frasi + una domanda
 ${familiarityContext}
-IMPORTANTE: Sei TU a dover guidare. Non chiedere allo studente di elencare i dati — presentaglieli tu e poi chiedi di ragionare.`;
+IMPORTANTE: Sei TU a dover guidare. Non chiedere allo studente di elencare i dati — presentaglieli tu e poi chiedi di ragionare. Attieniti esclusivamente al materiale già caricato: non inventare, non sintetizzare e non parafrasare il contenuto.`;
       } else if (isOral && familiarity) {
         coachBehavior = `Sei un tutor che aiuta lo studente a STUDIARE, CAPIRE e RIPETERE un argomento per l'orale.
 
