@@ -30,14 +30,14 @@ export function Whiteboard({ open, onClose, onSubmit, loading }: WhiteboardProps
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.scale(2, 2);
-    ctx.fillStyle = "#1A1A2E";
+    ctx.fillStyle = "#1A1A1A";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "#F5F5F5";
-    ctx.shadowColor = "rgba(255,255,255,0.3)";
-    ctx.shadowBlur = 2;
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#F0F0F0";
+    ctx.shadowColor = "rgba(255,255,255,0.25)";
+    ctx.shadowBlur = 0.5;
     setHasContent(false);
   }, [open]);
 
@@ -84,7 +84,7 @@ export function Whiteboard({ open, onClose, onSubmit, loading }: WhiteboardProps
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    ctx.fillStyle = "#1A1A2E";
+    ctx.fillStyle = "#1A1A1A";
     ctx.fillRect(0, 0, canvas.width / 2, canvas.height / 2);
     setHasContent(false);
   }, []);
@@ -103,7 +103,7 @@ export function Whiteboard({ open, onClose, onSubmit, loading }: WhiteboardProps
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="fixed inset-0 z-50 flex flex-col bg-[#0D0D1A]"
+          className="fixed inset-0 z-50 flex flex-col bg-[#111111]"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 shrink-0">
@@ -114,7 +114,7 @@ export function Whiteboard({ open, onClose, onSubmit, loading }: WhiteboardProps
           </div>
 
           {/* Canvas */}
-          <div className="flex-1 mx-3 mb-3 rounded-xl overflow-hidden" style={{ border: "4px solid #8B6914", borderRadius: "12px" }}>
+          <div className="flex-1 mx-3 mb-3 rounded-xl overflow-hidden" style={{ border: "8px solid #8B6914", borderRadius: "12px" }}>
             <canvas
               ref={canvasRef}
               className="w-full h-full touch-none cursor-crosshair"
@@ -134,7 +134,7 @@ export function Whiteboard({ open, onClose, onSubmit, loading }: WhiteboardProps
               variant="ghost"
               onClick={clearCanvas}
               disabled={!hasContent || loading}
-              className="text-white/70 hover:text-white hover:bg-white/10 gap-2"
+              className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 gap-2 rounded-xl"
             >
               <Trash2 className="w-4 h-4" /> 🗑️ Cancella
             </Button>

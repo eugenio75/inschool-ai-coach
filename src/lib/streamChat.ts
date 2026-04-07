@@ -63,6 +63,9 @@ export async function streamChat({
   let fullText = "";
   let buffer = "";
 
+  // Tokens that indicate raw SSE metadata — never show to user
+  const RAW_BLACKLIST = ["chatcmpl", "logprobs", "finish_reason", "system_fingerprint", "obfuscation"];
+
   if (reader) {
     while (true) {
       const { done, value } = await reader.read();
@@ -74,9 +77,23 @@ export async function streamChat({
         let line = buffer.slice(0, newlineIndex);
         buffer = buffer.slice(newlineIndex + 1);
         if (line.endsWith("\r")) line = line.slice(0, -1);
-        if (!line.startsWith("data: ")) continue;
-        const jsonStr = line.slice(6).trim();
+
+        // Skip empty lines
+        if (!line.trim()) continue;
+
+        // Only process SSE "data:" lines
+        if (!line.startsWith("data:")) continue;
+
+        const jsonStr = line.slice(5).trim();
+
+        // Skip SSE terminator
         if (jsonStr === "[DONE]") continue;
+
+        // Skip lines containing raw metadata tokens
+        if (RAW_BLACKLIST.some(tok => jsonStr.includes(tok) && !jsonStr.includes('"content"'))) {
+          // Still try to extract content from valid JSON
+        }
+
         try {
           const parsed = JSON.parse(jsonStr);
           const token = parsed.choices?.[0]?.delta?.content;
@@ -84,9 +101,15 @@ export async function streamChat({
             fullText += token;
             onDelta(fullText);
           }
+          // Silently skip chunks with no content (metadata-only)
         } catch {
-          buffer = line + "\n" + buffer;
-          break;
+          // If we can't parse, check if it's a partial chunk — hold in buffer
+          // But NEVER pass raw SSE to the UI
+          if (jsonStr.startsWith("{")) {
+            buffer = line + "\n" + buffer;
+            break;
+          }
+          // Otherwise discard the unparseable line entirely
         }
       }
     }

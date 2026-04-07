@@ -107,17 +107,68 @@ Inizia presentando il primo blocco dell'argomento.`;
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${authSession?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
             messages: history.map(m => ({ role: m.role, content: m.content })),
             schoolLevel,
             coachName: coachName || undefined,
+            stream: true,
           }),
         }
       );
-      const text = await res.text();
-      let content = text;
-      try { const j = JSON.parse(text); content = j.response || j.message || text; } catch {}
+
+      // Parse SSE stream, extracting only clean text content
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+      let buffer = "";
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          let newlineIndex: number;
+          while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+            let line = buffer.slice(0, newlineIndex);
+            buffer = buffer.slice(newlineIndex + 1);
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (!line.trim()) continue;
+            if (!line.startsWith("data:")) continue;
+            const jsonStr = line.slice(5).trim();
+            if (jsonStr === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const token = parsed.choices?.[0]?.delta?.content;
+              if (token) {
+                fullText += token;
+                setStreamingText(fullText);
+              }
+            } catch {
+              if (jsonStr.startsWith("{")) {
+                buffer = line + "\n" + buffer;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      // If no SSE content was extracted, try parsing as plain JSON
+      if (!fullText) {
+        const text = buffer || await res.text();
+        try { const j = JSON.parse(text); fullText = j.response || j.message || text; } catch { fullText = text; }
+        // Filter out any raw SSE artifacts
+        fullText = fullText.split("\n").filter((l: string) => {
+          const t = l.trim();
+          return !t.startsWith("data:") && t !== "[DONE]" && !/chatcmpl|system_fingerprint/.test(t);
+        }).join("\n").trim();
+      }
+
+      const content = fullText || "Il professore sta pensando... 🤔";
+      setStreamingText("");
 
       if (isFirst) {
         setMessages([{ role: "assistant", content }]);
@@ -126,6 +177,7 @@ Inizia presentando il primo blocco dell'argomento.`;
       }
     } catch {
       const fallback = "Mi dispiace, c'è stato un problema. Riprova.";
+      setStreamingText("");
       if (isFirst) setMessages([{ role: "assistant", content: fallback }]);
       else setMessages(prev => [...prev.slice(0, -1), { ...prev[prev.length - 1], content: fallback }]);
     }
@@ -323,16 +375,33 @@ Inizia presentando il primo blocco dell'argomento.`;
             <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${
               msg.role === "user"
                 ? "bg-primary text-primary-foreground"
-                : "bg-muted text-foreground"
+                : "notebook-bubble"
             }`}>
               {msg.content ? (
                 msg.role === "assistant" ? <MathText>{msg.content}</MathText> : msg.content
-              ) : (sending && i === messages.length - 1 ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (sending && i === messages.length - 1 && !streamingText ? (
+                <span className="flex items-center gap-2 text-muted-foreground font-['Patrick_Hand']">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Il professore sta pensando... 🤔
+                </span>
               ) : null)}
             </div>
           </motion.div>
         ))}
+        {streamingText && (() => {
+          const cleaned = streamingText.split("\n").filter(l => {
+            const t = l.trim();
+            return !t.startsWith("data:") && t !== "[DONE]" && !/chatcmpl|system_fingerprint/.test(t);
+          }).join("\n").trim();
+          if (!cleaned) return null;
+          return (
+            <div className="flex justify-start">
+              <div className="max-w-[80%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap notebook-bubble">
+                <MathText>{cleaned}</MathText>
+                <span className="inline-block w-0.5 h-4 bg-foreground/60 ml-0.5 animate-pulse rounded-full" />
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Output buttons (shown after some conversation) */}

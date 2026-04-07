@@ -467,21 +467,39 @@ export function ChatShell({
           })}
         </AnimatePresence>
 
-        {streamingText && (
-          <div className="flex justify-start">
-            <div className="flex-shrink-0 mr-2 mt-1">
-              <CoachAvatar mood="thinking" size={32} />
-            </div>
-            <div className="max-w-[80%] rounded-xl rounded-bl-sm notebook-bubble px-4 py-3 whitespace-pre-wrap">
-              <div className="flex items-center gap-1 mb-1 opacity-60">
-                <WritingPen writing={true} />
-                <span className="text-sm text-[#7F77DD] font-['Patrick_Hand']">sta scrivendo...</span>
+        {streamingText && (() => {
+          // Filter: never show raw SSE data to user
+          const cleaned = streamingText
+            .split("\n")
+            .filter(line => {
+              const trimmed = line.trim();
+              if (trimmed.startsWith("data:")) return false;
+              if (trimmed === "[DONE]") return false;
+              if (/chatcmpl|logprobs|finish_reason|system_fingerprint|obfuscation/.test(trimmed)) return false;
+              if (/^\{.*"id"\s*:\s*"chatcmpl/.test(trimmed)) return false;
+              return true;
+            })
+            .join("\n")
+            .trim();
+
+          if (!cleaned) return null;
+
+          return (
+            <div className="flex justify-start">
+              <div className="flex-shrink-0 mr-2 mt-1">
+                <CoachAvatar mood="thinking" size={32} />
               </div>
-              <MathText>{streamingText}</MathText>
-              <span className="inline-block w-0.5 h-4 bg-foreground/60 ml-0.5 animate-pulse rounded-full" />
+              <div className="max-w-[80%] rounded-xl rounded-bl-sm notebook-bubble px-4 py-3 whitespace-pre-wrap">
+                <div className="flex items-center gap-1 mb-1 opacity-60">
+                  <WritingPen writing={true} />
+                  <span className="text-sm text-[#7F77DD] font-['Patrick_Hand']">sta scrivendo...</span>
+                </div>
+                <MathText>{cleaned}</MathText>
+                <span className="inline-block w-0.5 h-4 bg-foreground/60 ml-0.5 animate-pulse rounded-full" />
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {sending && !streamingText && (
           <div className="flex justify-start">
