@@ -59,15 +59,33 @@ function isWaitingForStudent(text: string): boolean {
   return /\?\s*$/.test(text.trim()) || /tocca a te|prova tu|rispondi|dimmi|qual è|quanto fa/i.test(text);
 }
 
-// Detect if the coach confirms a correct answer
-function isCorrectFeedback(text: string): boolean {
-  return /esatto|corrett[oai]|bravo|bravissim|perfetto|giusto|ben fatto|ottimo|eccellente|✅|🎉/i.test(text) &&
-    !/non è corrett|sbagliato|non proprio/i.test(text);
-}
+function sanitizeWhiteboardRecognition(raw: string): string {
+  if (!raw) return "";
 
-// Detect if the coach signals a wrong answer
-function isWrongFeedback(text: string): boolean {
-  return /quasi|riprova|non proprio|non è|proviamo|rifacciamo|attenzione|hmm|🤔/i.test(text);
+  const cleaned = raw
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => {
+      if (!line) return false;
+      if (line.startsWith("data:")) return false;
+      if (line === "[DONE]") return false;
+      if (/chatcmpl|system_fingerprint|logprobs|finish_reason|obfuscation|service_tier|chat\.completion\.chunk/i.test(line)) return false;
+      if (/^\{\s*"id"\s*:\s*"chatcmpl/i.test(line)) return false;
+      return true;
+    })
+    .join(" ")
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/i, "")
+    .replace(/^\[Risposta scritta sulla lavagna\]\s*/i, "")
+    .replace(/^\[Risposta dalla lavagna\]\s*/i, "")
+    .trim();
+
+  if (!cleaned) return "";
+  if (/^\{[\s\S]*\}$/.test(cleaned) && !/[a-zàèéìòù\d]/i.test(cleaned.replace(/[{}":,\[\]]/g, ""))) {
+    return "";
+  }
+
+  return cleaned;
 }
 
 type CoachStatus = "thinking" | "writing" | "reading" | "waiting" | "idle";
@@ -75,8 +93,8 @@ type CoachStatus = "thinking" | "writing" | "reading" | "waiting" | "idle";
 function getStatusIndicator(status: CoachStatus) {
   switch (status) {
     case "thinking": return { icon: "💭", text: "Il professore sta pensando..." };
-    case "writing": return { icon: "🖊️", text: "Il professore sta scrivendo..." };
-    case "reading": return { icon: "👀", text: "Il professore sta leggendo..." };
+    case "writing": return { icon: "🖊️", text: "Il professore sta preparando la risposta..." };
+    case "reading": return { icon: "👀", text: "Il professore sta leggendo la lavagna..." };
     case "waiting": return { icon: "✏️", text: "Tocca a te!" };
     case "idle": return null;
   }
