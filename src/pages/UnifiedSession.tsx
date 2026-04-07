@@ -367,7 +367,7 @@ Inizia con la prima domanda.`;
         setStreamingText("");
         setSending(false);
       },
-      extraBody: { profileId, subject: subject || undefined, sessionFormat: type },
+      extraBody: { profileId, subject: subject || undefined, sessionFormat: type, systemPrompt: getSystemPrompt() },
     }).catch(() => {
       setMessages(prev => [...prev, { role: "assistant", content: "Errore. Riprova." }]);
       setStreamingText("");
