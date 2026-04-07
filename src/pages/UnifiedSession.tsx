@@ -114,8 +114,15 @@ export default function UnifiedSession() {
   const [streamingText, setStreamingText] = useState("");
   const [sending, setSending] = useState(false);
   const [showPauseDialog, setShowPauseDialog] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [guidedCustomEmotion, setGuidedCustomEmotion] = useState("");
   const [coachName, setCoachName] = useState<string | undefined>(undefined);
+  const [showStudyCelebration, setShowStudyCelebration] = useState(false);
+  const [studyPoints, setStudyPoints] = useState<import("@/components/SessionCelebration").PointsEarned | undefined>();
+  const [studyTotalPoints, setStudyTotalPoints] = useState<number | undefined>();
+  const [studyPrevTotal, setStudyPrevTotal] = useState<number | undefined>();
+  const [studyStreak, setStudyStreak] = useState<number | undefined>();
+  const sessionStartRef = useRef<number>(Date.now());
 
   // Load coach name from preferences
   useEffect(() => {
