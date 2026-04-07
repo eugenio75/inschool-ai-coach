@@ -88,6 +88,17 @@ function sanitizeWhiteboardRecognition(raw: string): string {
   return cleaned;
 }
 
+// Detect if the coach confirms a correct answer
+function isCorrectFeedback(text: string): boolean {
+  return /esatto|corrett[oai]|bravo|bravissim|perfetto|giusto|ben fatto|ottimo|eccellente|✅|🎉/i.test(text) &&
+    !/non è corrett|sbagliato|non proprio/i.test(text);
+}
+
+// Detect if the coach signals a wrong answer
+function isWrongFeedback(text: string): boolean {
+  return /quasi|riprova|non proprio|non è|proviamo|rifacciamo|attenzione|hmm|🤔/i.test(text);
+}
+
 type CoachStatus = "thinking" | "writing" | "reading" | "waiting" | "idle";
 
 function getStatusIndicator(status: CoachStatus) {
