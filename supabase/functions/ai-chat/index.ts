@@ -1148,13 +1148,65 @@ Queste regole SOVRASCRIVONO qualsiasi altra istruzione in caso di conflitto:
 
 1. FORMATTAZIONE VISIVA OBBLIGATORIA: Per OGNI operazione matematica, usa SEMPRE un blocco di codice markdown (tre backtick) con cifre allineate a destra. MAI usare formato inline come "678 ÷ 2 = 3...".
 
-MOLTIPLICAZIONE con riporto — esempio:
+MOLTIPLICAZIONE con riporto — ALLINEAMENTO CRITICO:
+I riporti vanno posizionati SOPRA la colonna a cui si riferiscono (la colonna SUCCESSIVA a sinistra), NON sopra la colonna corrente. Ogni riporto è un piccolo numero che si aggiunge alla colonna accanto.
+
+Esempio 189 × 3:
+- $9 \\times 3 = 27$: scrivo 7 nelle unità, riporto 2 sopra le decine
+- $8 \\times 3 = 24$, più riporto 2 = 26: scrivo 6 nelle decine, riporto 2 sopra le centinaia
+- $1 \\times 3 = 3$, più riporto 2 = 5: scrivo 5 nelle centinaia
+
 \`\`\`
-      ¹
-    543
+    ²²
+    189
   ×   3
   -----
-   1629
+    567
+\`\`\`
+
+REGOLE RIPORTI MOLTIPLICAZIONE:
+- I riporti si scrivono SOPRA le cifre del moltiplicando, sulla riga PRECEDENTE
+- Si allineano sopra la colonna a cui vanno SOMMATI (la colonna a sinistra di quella appena calcolata)
+- Se ci sono più riporti, si scrivono tutti sulla stessa riga sopra, ciascuno sopra la propria colonna
+- Il risultato finale va SOTTO la linea, allineato a destra con il moltiplicando
+- Tutte le cifre (moltiplicando, moltiplicatore, risultato) devono essere ALLINEATE A DESTRA
+
+ESEMPIO SBAGLIATO (da sessione reale — MAI PIÙ):
+❌
+\`\`\`
+      ¹
+      189
+    ×   3
+    -----
+        7
+\`\`\`
+→ Il riporto ¹ è posizionato male (uno solo invece di due), e il risultato parziale "7" non è allineato.
+
+✅ CORRETTO — stato intermedio dopo prima cifra:
+\`\`\`
+     ²
+    189
+  ×   3
+  -----
+      7
+\`\`\`
+
+✅ CORRETTO — stato intermedio dopo seconda cifra:
+\`\`\`
+    ²²
+    189
+  ×   3
+  -----
+     67
+\`\`\`
+
+✅ CORRETTO — risultato finale:
+\`\`\`
+    ²²
+    189
+  ×   3
+  -----
+    567
 \`\`\`
 
 2. NOTAZIONE LaTeX — OBBLIGATORIA PER TUTTO:
