@@ -159,13 +159,7 @@ export async function childApi(action: string, payload?: any): Promise<any> {
         return callChildApiEdge();
       }
       case "upload-homework-image": {
-        const { base64, fileName } = payload;
-        const bytes = Uint8Array.from(atob(base64.split(",").pop() || base64), c => c.charCodeAt(0));
-        const path = `${profileId}/${Date.now()}_${fileName}`;
-        const { error } = await supabase.storage.from("homework-images").upload(path, bytes, { contentType: "image/jpeg" });
-        if (error) throw error;
-        const { data: urlData } = supabase.storage.from("homework-images").getPublicUrl(path);
-        return { url: urlData.publicUrl };
+        return callChildApiEdge();
       }
       default:
         console.warn(`childApi: unknown action "${action}", returning empty`);

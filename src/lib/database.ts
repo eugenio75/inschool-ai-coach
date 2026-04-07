@@ -619,18 +619,13 @@ async function triggerEmotionalAnalysis(profileId: string) {
 
 export async function uploadHomeworkImage(file: File): Promise<string | null> {
   if (isChildSession()) {
-    try {
-      const base64 = await fileToBase64(file);
-      const result = await childApi("upload-homework-image", {
-        base64,
-        fileName: file.name,
-        contentType: file.type,
-      });
-      return result?.publicUrl || null;
-    } catch (err) {
-      console.error("Child upload error:", err);
-      return null;
-    }
+    const base64 = await fileToBase64(file);
+    const result = await childApi("upload-homework-image", {
+      base64,
+      fileName: file.name,
+      contentType: file.type,
+    });
+    return result?.publicUrl || null;
   }
 
   const { data: { user } } = await supabase.auth.getUser();
