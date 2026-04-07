@@ -321,6 +321,7 @@ Inizia con la prima domanda.`;
     if (!subject && type === "prep") return;
 
     const sessionSystemPrompt = getSystemPrompt();
+    sessionStartRef.current = Date.now();
     setSetupDone(true);
     setMessages([]);
     setSending(true);
