@@ -267,3 +267,49 @@
 .transform-style-3d {
   transform-style: preserve-3d;
 }
+
+.math-text-block {
+  display: block;
+  width: 100%;
+}
+
+.math-text pre.math-code-block {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre;
+  tab-size: 2;
+  margin: 0.5rem 0;
+  padding: 0.875rem 1rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
+  background: hsl(var(--muted) / 0.7);
+  color: hsl(var(--foreground));
+  font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.95em;
+  line-height: 1.55;
+}
+
+.math-text pre.math-code-block code {
+  display: block;
+  min-width: max-content;
+  font: inherit;
+}
+
+.math-text code.math-inline-code {
+  display: inline;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.375rem;
+  background: hsl(var(--muted) / 0.7);
+  color: hsl(var(--foreground));
+  font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.9em;
+}
+
+.math-text .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 0.5rem 0;
+  padding: 0.125rem 0;
+}
