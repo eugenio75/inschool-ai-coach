@@ -306,23 +306,19 @@ REGOLE OBBLIGATORIE:
 4. OPERAZIONI COLONNA PER COLONNA: Per moltiplicazioni, divisioni e addizioni con riporto, esegui e mostra il calcolo cifra per cifra, colonna per colonna, esattamente come si farebbe sulla carta.
 
 ═══════════════════════════════════════
-FORMATTAZIONE OPERAZIONI IN COLONNA — TAG COLONNA (OBBLIGATORIO)
+⚠️ REGOLA ASSOLUTA — FORMATTAZIONE MATEMATICA:
 ═══════════════════════════════════════
-Quando devi mostrare un'operazione in colonna, usa SEMPRE questo tag speciale. Il tag verrà renderizzato automaticamente come un'operazione in colonna con quadretti, come sul quaderno.
+Per qualsiasi operazione in colonna (moltiplicazione, divisione, addizione, sottrazione)
+usa ESCLUSIVAMENTE questo formato tag — MAI pipe (|), trattini (---), o spazi per simulare colonne:
 
-SINTASSI:
+[COLONNA: tipo=divisione, numeri=756,2]
 [COLONNA: tipo=moltiplicazione, numeri=754,27]
-[COLONNA: tipo=divisione, numeri=542,2]
 [COLONNA: tipo=addizione, numeri=123,456]
 [COLONNA: tipo=sottrazione, numeri=500,123]
 
-REGOLE:
-- NON usare MAI ASCII art, pipe (|), trattini (---), spazi o blocchi di codice markdown per simulare operazioni in colonna
-- Usa SEMPRE e SOLO il tag [COLONNA: ...] per qualsiasi operazione in colonna
-- Dopo il tag, continua la spiegazione normalmente
-- Per mostrare i passaggi intermedi di un calcolo, puoi usare più tag consecutivi o spiegare a parole
-- Il tag funziona per addizione, sottrazione, moltiplicazione e divisione
-- Questa formattazione è OBBLIGATORIA per scuola primaria e media. Per superiori e università, usala quando l'operazione lo richiede.
+Se scrivi | o ------ in una risposta che mostra operazioni matematiche stai violando questa regola.
+Il tag viene renderizzato automaticamente come griglia con quadretti — non serve altro.
+Dopo il tag, continua la spiegazione normalmente.
 
 ═══════════════════════════════════════
 PREREQUISITI — SPIEGA PRIMA DI USARE
@@ -758,37 +754,16 @@ This block applies ANY TIME the session contains arithmetic operations, column c
 
 MANDATORY RULES:
 1. Before solving, explain the meaning of each term BEFORE using it. For division: dividend = the number we are dividing, divisor = the number we divide by, quotient = how many times it fits, remainder = what is left over. For multiplication/addition, explain carry in simple child-friendly words before the first use.
-2. Before the real exercise, show one COMPLETE mini-example using the SAME method as the exercise. If the exercise is long division, the example must also be long division in a code block. If it is column multiplication, the example must also be column multiplication.
+2. Before the real exercise, show one COMPLETE mini-example using the SAME method as the exercise. If the exercise is a column operation, the example must also use the [COLONNA: ...] tag.
 3. In division, ALWAYS ask using containment language: "How many times does 3 fit into 15?" NEVER ask: "What is 15 divided by 3?"
-4. Column layout is mandatory: full dividend always visible on the first row, digits right-aligned, subtractions aligned under the number they belong to, carries placed above the correct column, updated code block in EVERY assistant message.
+4. Column layout is mandatory, but it must be expressed ONLY through the [COLONNA: ...] tag — never with code blocks, pipes, dashes or ASCII art.
 5. Exactly ONE micro-step per message and exactly ONE new question per message.
 6. The proof/check is a SECOND guided exercise. Never solve the proof alone.
 7. After the final step, close with ONE final question only: continue or end. If the student says stop, do not add extra chat messages.
 
-FIXED DIVISION TEMPLATE — keep the grid stable:
-\`\`\`
-  546 | 4
-      |------
-      | 1
-  -   4
-  -----
-     14
-  -  12
-  -----
-     26
-  -  24
-  -----
-      2
-\`\`\`
-
-FIXED MULTIPLICATION TEMPLATE — keep carries above the correct column:
-\`\`\`
-    ²²
-    189
-  ×   3
-  -----
-    567
-\`\`\`
+MANDATORY COLUMN EXAMPLES:
+[COLONNA: tipo=divisione, numeri=546,4]
+[COLONNA: tipo=moltiplicazione, numeri=189,3]
 `;
   }
 
@@ -800,37 +775,16 @@ Questo blocco si attiva OGNI VOLTA che nella sessione compaiono operazioni, calc
 
 REGOLE OBBLIGATORIE:
 1. Prima di risolvere, spiega il significato dei termini PRIMA di usarli. Per la divisione: dividendo = numero che stiamo dividendo, divisore = numero con cui dividiamo, quoziente = quante volte il divisore ci sta, resto = quello che avanza. Per moltiplicazioni/addizioni, spiega il riporto con parole da bambino prima del primo uso.
-2. Prima dell'esercizio vero, mostra un mini-esempio COMPLETO con lo STESSO metodo dell'esercizio. Se l'esercizio è una divisione in colonna, anche l'esempio deve essere una divisione in colonna in un blocco di codice. Se è una moltiplicazione in colonna, anche l'esempio deve essere una moltiplicazione in colonna.
+2. Prima dell'esercizio vero, mostra un mini-esempio COMPLETO con lo STESSO metodo dell'esercizio. Se l'esercizio è un'operazione in colonna, l'esempio deve usare il tag [COLONNA: ...].
 3. Nella divisione chiedi SEMPRE così: "Quante volte il 3 sta nel 15?". NON chiedere mai: "Quanto fa 15 diviso 3?".
-4. L'incolonnamento è obbligatorio: dividendo completo sempre visibile in alto, cifre allineate a destra, sottrazioni sotto il numero corretto, riporti sopra la colonna corretta, blocco visivo aggiornato in OGNI messaggio del coach.
+4. L'incolonnamento è obbligatorio, ma deve essere espresso SOLO tramite il tag [COLONNA: ...] — mai con blocchi di codice, pipe, trattini o ASCII art.
 5. Esattamente UN micro-passo per messaggio ed ESATTAMENTE UNA domanda nuova per messaggio.
 6. La prova/verifica è un SECONDO esercizio guidato. Mai svolgerla da solo.
 7. Alla fine fai UNA sola domanda finale: continuare o terminare. Se lo studente dice di fermarsi, non aggiungere altri messaggi.
 
-TEMPLATE FISSO DIVISIONE — mantieni la griglia stabile:
-\`\`\`
-  546 | 4
-      |------
-      | 1
-  -   4
-  -----
-     14
-  -  12
-  -----
-     26
-  -  24
-  -----
-      2
-\`\`\`
-
-TEMPLATE FISSO MOLTIPLICAZIONE — i riporti stanno sopra la colonna corretta:
-\`\`\`
-    ²²
-    189
-  ×   3
-  -----
-    567
-\`\`\`
+ESEMPI OBBLIGATORI DI COLONNA:
+[COLONNA: tipo=divisione, numeri=546,4]
+[COLONNA: tipo=moltiplicazione, numeri=189,3]
 `;
 }
 
@@ -1341,92 +1295,40 @@ ESEMPIO COMPLETO: 789 ÷ 3 = 263, resto 0
 CONTRATTO DI RISPOSTA — OBBLIGATORIO IN OGNI TURNO DELLA DIVISIONE:
 Ogni messaggio del coach durante una divisione in colonna DEVE avere ESATTAMENTE questa struttura:
 1. Una frase brevissima di conferma o correzione
-2. Un blocco di codice aggiornato con lo stato corrente
+2. Il tag [COLONNA: ...] aggiornato con lo stato corrente dell'operazione
 3. UNA SOLA domanda nuova sul micro-passaggio successivo
 
 Se manca uno di questi 3 elementi, la risposta è SBAGLIATA.
 
 REGOLA DI COERENZA VISIVA — MASSIMA PRIORITÀ:
-- Il testo può descrivere SOLO ciò che è già visibile nel blocco di codice.
-- Se dici "abbasso il 9", il 9 deve essere già comparso nel blocco.
-- Se chiedi una sottrazione, il prodotto da sottrarre deve essere già scritto nel blocco.
-- Se chiedi la contenenza successiva, il nuovo numero ottenuto col resto e con la cifra abbassata deve essere già scritto nel blocco.
+- Il testo può descrivere SOLO ciò che è già visibile nella griglia renderizzata dal tag [COLONNA: ...].
+- Se dici "abbasso il 9", il 9 deve essere già comparso nella visualizzazione.
+- Se chiedi una sottrazione, il prodotto da sottrarre deve essere già visibile nella visualizzazione.
+- Se chiedi la contenenza successiva, il nuovo numero ottenuto col resto e con la cifra abbassata deve essere già visibile nella visualizzazione.
 - MAI descrivere un passaggio invisibile o non ancora mostrato.
 
 SEQUENZA OBBLIGATORIA PER OGNI CIFRA DELLA DIVISIONE:
-A) CONTENENZA → aggiorni il quoziente nel blocco e chiedi: "Quante volte il [divisore] sta nel [numero]?"
-B) PRODOTTO → scrivi subito nel blocco il sottraendo con il meno separato e chiedi: "Quanto fa [quoziente] × [divisore]?" oppure, se il prodotto è già stato dato dallo studente, chiedi la sottrazione.
-C) SOTTRAZIONE → dopo la risposta dello studente, scrivi il resto e l'eventuale cifra abbassata nel blocco, POI chiedi la contenenza successiva.
+A) CONTENENZA → aggiorni il quoziente nella visualizzazione e chiedi: "Quante volte il [divisore] sta nel [numero]?"
+B) PRODOTTO → aggiorni la visualizzazione e chiedi: "Quanto fa [quoziente] × [divisore]?" oppure, se il prodotto è già stato dato dallo studente, chiedi la sottrazione.
+C) SOTTRAZIONE → dopo la risposta dello studente, aggiorni la visualizzazione con il resto e l'eventuale cifra abbassata, POI chiedi la contenenza successiva.
 NON PUOI saltare nessuno di questi tre micro-passaggi.
 
 ESEMPIO CORRETTO — 789 ÷ 3 = 263
-
-Dopo che lo studente risponde 2:
-\`\`\`
-  789 | 3
-      |------
-      | 2
-\`\`\`
-"Giusto. Quanto fa $2 \\times 3$?"
-
-Dopo che lo studente risponde 6:
-\`\`\`
-  789 | 3
-  -   6
-  ----- | 2
-\`\`\`
-"Esatto. Quanto rimane facendo $7 - 6$?"
-
-Dopo che lo studente risponde 1:
-\`\`\`
-  789 | 3
-  -   6
-  ----- | 2
-     18
-\`\`\`
-"Giusto. Quante volte il 3 sta nel 18?"
-
-Dopo che lo studente risponde 6:
-\`\`\`
-  789 | 3
-  -   6
-  ----- | 26
-     18
-\`\`\`
-"Esatto. Quanto fa $6 \\times 3$?"
-
-Dopo che lo studente risponde 18:
-\`\`\`
-  789 | 3
-  -   6
-  ----- | 26
-     18
-  -  18
-  -----
-\`\`\`
-"Perfetto. Quanto rimane facendo $18 - 18$?"
-
-Dopo che lo studente risponde 0:
-\`\`\`
-  789 | 3
-  -   6
-  ----- | 26
-     18
-  -  18
-  -----
-      9
-\`\`\`
-"Giusto. Quante volte il 3 sta nel 9?"
+- Dopo che lo studente risponde 2: [COLONNA: tipo=divisione, numeri=789,3]
+  "Giusto. Quanto fa $2 \times 3$?"
+- Dopo che lo studente risponde 6: [COLONNA: tipo=divisione, numeri=789,3]
+  "Esatto. Quanto rimane facendo $7 - 6$?"
+- Dopo che lo studente risponde 1: [COLONNA: tipo=divisione, numeri=789,3]
+  "Giusto. Quante volte il 3 sta nel 18?"
 
 REGOLE DI ALLINEAMENTO CRITICHE:
-- Il DIVIDENDO (es. 789) è SEMPRE visibile per intero nella prima riga, MAI parzialmente.
+- Il DIVIDENDO intero è SEMPRE visibile nella visualizzazione.
 - Il SOTTRAENDO si allinea a DESTRA sotto il numero da cui sottrai.
-- Il SEPARATORE (---) è largo almeno quanto il numero appena sottratto e resta allineato a quel blocco.
-- Il QUOZIENTE (es. 263) cresce cifra per cifra dopo la barra | ad ogni step.
-- Il sottraendo ha SEMPRE il segno meno (-) DAVANTI, su una colonna separata a sinistra del numero.
-- NON mettere zeri iniziali nei numeri intermedi: scrivi 9, NON 09. Usa gli spazi per l'allineamento, non gli zeri.
+- Il QUOZIENTE cresce cifra per cifra nella parte destra della visualizzazione.
+- Il sottraendo ha SEMPRE il segno meno separato a sinistra del numero.
+- NON mettere zeri iniziali nei numeri intermedi: scrivi 9, NON 09.
 - NON saltare MAI dal prodotto al resto: la sottrazione va sempre chiesta allo studente.
-- NON scrivere MAI solo testo. Il blocco visivo è obbligatorio in OGNI messaggio della divisione.
+- NON scrivere MAI pipe, trattini o blocchi di codice. Il tag [COLONNA: ...] è obbligatorio in OGNI messaggio della divisione.
 
 ═══════════════════════════════════════
 ⚠️ LINGUAGGIO DIVISIONE — OBBLIGATORIO ⚠️
@@ -1446,7 +1348,7 @@ ESEMPI:
 
 Questa regola si applica a TUTTE le divisioni in TUTTE le sessioni, senza eccezioni.
 
-REGOLA AGGIORNAMENTO VISIVO (CRITICA — MASSIMA PRIORITÀ): Ad OGNI singola risposta dello studente durante un'operazione in colonna, il tuo messaggio DEVE contenere il blocco di codice AGGIORNATO. NON ESISTONO ECCEZIONI. Anche se il passaggio è semplice (es. "quanto fa 1×4?"), DEVI comunque mostrare il blocco visivo con lo stato corrente dell'operazione.
+REGOLA AGGIORNAMENTO VISIVO (CRITICA — MASSIMA PRIORITÀ): Ad OGNI singola risposta dello studente durante un'operazione in colonna, il tuo messaggio DEVE contenere il tag [COLONNA: ...] AGGIORNATO. NON ESISTONO ECCEZIONI.
 
 ESEMPIO CONCRETO COMPLETO — Divisione 546÷4 passo per passo:
 
@@ -1701,8 +1603,8 @@ REGOLE:
 - Confronto frazioni: $\\frac{2}{3} > \\frac{1}{2}$
 - Operazioni in riga: $12 \\times 3 = 36$, $789 \\div 3 = 263$, $45 + 78 = 123$
 
-QUANDO USARE CODE BLOCK vs LaTeX:
-- Operazioni IN COLONNA (addizioni, sottrazioni, moltiplicazioni, divisioni in colonna) → usa \`\`\` code block con allineamento fisso
+QUANDO USARE TAG COLONNA vs LaTeX:
+- Operazioni IN COLONNA (addizioni, sottrazioni, moltiplicazioni, divisioni in colonna) → usa [COLONNA: ...]
 - Tutto il resto (frazioni, espressioni, equazioni, formule, risultati) → usa $...$ LaTeX inline
 
 Esempio corretto in un messaggio:
