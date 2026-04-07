@@ -81,6 +81,7 @@ type MethodPhase = "none" | "propose_method" | "ready";
 type Familiarity = "first_time" | "already_know" | "partial";
 
 const EXERCISE_ITEM_REGEX = /\d+\s*[x×:÷+\-*/]\s*\d+/i;
+const EXERCISE_PROOF_REGEX = /\b(con la prova|fai la prova|fare la prova|prova della divisione|prova del nove)\b/i;
 
 function extractExactExercises(text: string): string[] {
   return text
@@ -88,6 +89,12 @@ function extractExactExercises(text: string): string[] {
     .map(item => item.replace(/^[-•\s]+/, "").trim())
     .filter(Boolean)
     .filter(item => EXERCISE_ITEM_REGEX.test(item));
+}
+
+function requiresOperationProof(taskType: string, title: string, description: string | null | undefined): boolean {
+  const isExerciseTask = !isOralStudyTask(taskType, title) && !isMixedWritingTask(taskType, title);
+  if (!isExerciseTask) return false;
+  return EXERCISE_PROOF_REGEX.test(`${title} ${description || ""}`);
 }
 
 function getVisibleLoadedContent(taskType: string, title: string, description: string | null | undefined, stepText?: string) {
@@ -99,24 +106,43 @@ function getVisibleLoadedContent(taskType: string, title: string, description: s
   return stepText || description || title;
 }
 
-function buildExactExerciseSteps(description: string, familiarity: Familiarity | null): Array<{ number: number; text: string; bloomLevel: number }> {
+function buildExactExerciseSteps(
+  taskType: string,
+  title: string,
+  description: string,
+  familiarity: Familiarity | null,
+): Array<{ number: number; text: string; bloomLevel: number }> {
   const exercises = extractExactExercises(description);
   if (exercises.length === 0) return [];
 
+  const needsProof = requiresOperationProof(taskType, title, description);
   const intro = familiarity === "first_time"
-    ? "Spiega in modo breve e semplice il metodo necessario per questi esercizi, poi presenta TU il primo esercizio esattamente come scritto."
+    ? `Spiega in modo breve e semplice il metodo necessario per questi esercizi, poi presenta TU il primo esercizio esattamente come scritto.${needsProof ? " La consegna richiede anche la prova finale, quindi dopo ogni operazione devi guidare anche la prova." : ""}`
     : familiarity === "partial"
-    ? "Riprendi con una mini spiegazione del metodo, poi presenta TU il primo esercizio esattamente come scritto."
-    : "Presenta TU il primo esercizio esattamente come scritto e guidane subito la risoluzione con domande mirate.";
+    ? `Riprendi con una mini spiegazione del metodo, poi presenta TU il primo esercizio esattamente come scritto.${needsProof ? " Ricorda: dopo ogni operazione devi guidare anche la prova finale." : ""}`
+    : `Presenta TU il primo esercizio esattamente come scritto e guidane subito la risoluzione con domande mirate.${needsProof ? " Non considerare concluso l'esercizio finché non hai guidato anche la prova." : ""}`;
 
-  return [
+  const steps: Array<{ number: number; text: string; bloomLevel: number }> = [
     { number: 1, text: intro, bloomLevel: 1 },
-    ...exercises.map((exercise, index) => ({
-      number: index + 2,
-      text: `Lavora esclusivamente su questo esercizio, riportandolo esattamente com'è scritto: ${exercise}`,
-      bloomLevel: Math.min(4, index + 2),
-    })),
   ];
+
+  exercises.forEach((exercise, index) => {
+    steps.push({
+      number: steps.length + 1,
+      text: `Lavora esclusivamente su questo esercizio, riportandolo esattamente com'è scritto: ${exercise}${needsProof ? ". Dopo il risultato, NON fermarti: guida anche la prova di questo stesso esercizio." : ""}`,
+      bloomLevel: Math.min(4, index + 2),
+    });
+
+    if (needsProof) {
+      steps.push({
+        number: steps.length + 1,
+        text: `Ora guida la prova dello stesso esercizio: ${exercise}. Se è una divisione, verifica con divisore × quoziente + resto = dividendo. Se è un'altra operazione, usa la verifica corretta. Non passare all'esercizio successivo finché la prova non è completata.`,
+        bloomLevel: Math.min(5, index + 3),
+      });
+    }
+  });
+
+  return steps;
 }
 
 function sanitizeExerciseSteps(
@@ -129,7 +155,7 @@ function sanitizeExerciseSteps(
   const isExerciseTask = !isOralStudyTask(taskType, title) && !isMixedWritingTask(taskType, title);
   if (!isExerciseTask) return rawSteps;
 
-  const exactSteps = buildExactExerciseSteps(description || "", familiarity);
+  const exactSteps = buildExactExerciseSteps(taskType, title, description || "", familiarity);
   return exactSteps.length > 0 ? exactSteps : rawSteps;
 }
 
@@ -958,6 +984,9 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
           : familiarity === "partial"
           ? "\nLo studente ha familiarità parziale. NON chiedere cosa c'è scritto: PRESENTA TU gli esercizi direttamente e guidalo uno alla volta."
           : "\nIl materiale è già noto. NON chiedere di reinviarlo. PRESENTA TU l'esercizio corrente e guidalo.";
+        const proofContext = requiresOperationProof(homework?.task_type || "", homework?.title || "", homework?.description)
+          ? "\nVINCOLO EXTRA DELLA CONSEGNA: nel compito compare una richiesta tipo 'con la prova'. Quindi NON considerare concluso un esercizio quando ottieni il risultato: devi continuare tu automaticamente e guidare anche la prova finale, passo dopo passo, prima di passare oltre. Se è una divisione, usa la verifica divisore × quoziente + resto = dividendo."
+          : "";
         coachBehavior = `Sei un tutor che guida lo studente a RISOLVERE esercizi. 
 
 REGOLE ASSOLUTE (viola qualsiasi altra istruzione in conflitto):
@@ -977,7 +1006,7 @@ IL TUO METODO:
 5. Quando un esercizio è finito, passa al successivo presentandolo TU
 6. Se lo studente non sa come procedere, spiega il passaggio con un mini-esempio
 7. Sii breve e diretto: 2-3 frasi + una domanda
-${familiarityContext}
+${familiarityContext}${proofContext}
 IMPORTANTE: Sei TU a dover presentare e guidare. Attieniti esclusivamente al materiale già presente nel contesto. Non inventare esercizi extra.`;
       } else if (isOral && familiarity) {
         coachBehavior = `Sei un tutor che aiuta lo studente a STUDIARE, CAPIRE e RIPETERE un argomento per l'orale.
