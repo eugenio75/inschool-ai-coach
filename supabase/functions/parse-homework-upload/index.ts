@@ -78,57 +78,54 @@ serve(async (req) => {
       : "";
 
     const systemPrompt = isBookPage
-      ? `Sei un trascrittore OCR preciso per pagine di libri scolastici italiani.
+      ? `Sei un TRASCRITTORE OCR. Il tuo UNICO compito è COPIARE il testo che vedi nella foto. Non sei un riassuntore. Non sei un interprete. Sei una FOTOCOPIATRICE di testo.
 
 ${contextNote}${userInstruction}${multiFileNote}
 
 ═══════════════════════════════════════
-REGOLA FONDAMENTALE — TRASCRIZIONE LETTERALE
+⚠️ REGOLA ASSOLUTA — TRASCRIZIONE IDENTICA ⚠️
 ═══════════════════════════════════════
-DEVI trascrivere il testo ESATTAMENTE come appare nel libro. PAROLA PER PAROLA. VIRGOLA PER VIRGOLA.
+Immagina di essere una persona che RICOPIAVA A MANO i manoscritti nel medioevo: copia OGNI singola parola ESATTAMENTE come la vedi. Non cambiare NULLA.
+
+ESEMPIO DI COSA È VIETATO:
+- Testo originale: "La cosa aveva a che fare con lui e col suo gatto, Horace"
+- Trascrizione SBAGLIATA: "La cosa assurda era che il suo gatto Horace" ← HAI CAMBIATO LE PAROLE!
+- Trascrizione CORRETTA: "La cosa aveva a che fare con lui e col suo gatto, Horace" ← IDENTICA!
 
 VIETATO ASSOLUTAMENTE:
-- Riassumere, sintetizzare, accorciare o condensare il testo
-- Parafrasare o riscrivere con parole diverse
-- Aggiungere parole, frasi o spiegazioni non presenti nel libro
-- Omettere parti del testo, anche se sembrano meno importanti
-- Cambiare l'ordine delle frasi o dei paragrafi
-- Inventare esercizi, domande o attività non presenti nella pagina
-- Interpretare o espandere il contenuto in alcun modo
+- Cambiare anche UNA SOLA parola del testo originale
+- Usare sinonimi (es. "assurda" al posto di "aveva a che fare")
+- Riassumere o accorciare qualsiasi frase
+- Unire o separare frasi
+- Aggiungere parole non presenti nella foto
+- Omettere parti del testo, anche se lunghe
+- Cambiare l'ordine di qualsiasi elemento
+- Inventare esercizi, domande o attività non visibili nella pagina
 
 OBBLIGATORIO:
-- Copia il testo LETTERA PER LETTERA come lo vedi nella foto
-- Mantieni la stessa punteggiatura, gli stessi a capo, gli stessi dialoghi
+- Copia il testo CARATTERE PER CARATTERE come lo vedi
+- Mantieni la STESSA punteggiatura: virgole, punti, trattini, due punti
+- Mantieni gli STESSI a capo e paragrafi
 - Se ci sono trattini di dialogo (–), ricopiali esattamente
-- Se ci sono numeri di riga, puoi ometterli ma il testo deve essere identico
-- Se ci sono note a piè di pagina o riferimenti bibliografici, trascrivili
-- Se una parola è poco leggibile, trascrivi quello che vedi al meglio
+- Se ci sono numeri di riga, puoi ometterli ma il TESTO deve essere IDENTICO
+- Se ci sono note, riferimenti bibliografici, didascalie: trascrivili
+- Se una parola è poco leggibile, fai del tuo meglio ma NON inventare
 
-ANALISI DELLA PAGINA - DISTINGUI TRA CONTENUTO ED ESERCIZI:
+ANALISI DELLA PAGINA — DISTINGUI:
 
-1. **CONTENUTO DA STUDIARE** (testo narrativo, spiegazioni, paragrafi, dialoghi, definizioni)
-2. **ESERCIZI** (domande, completamenti, vero/falso, calcoli — SOLO se effettivamente presenti nella pagina)
+1. **CONTENUTO DA STUDIARE** (testo narrativo, spiegazioni, dialoghi, definizioni)
+   → Crea UN compito con la trascrizione COMPLETA e IDENTICA di TUTTO il testo
+2. **ESERCIZI** (domande, completamenti, vero/falso, calcoli — SOLO se presenti nella pagina)
+   → Crea compiti SEPARATI per ciascun esercizio, trascritti PAROLA PER PAROLA
 
-REGOLE:
-- Se la pagina contiene testo da studiare, crea un compito con la trascrizione COMPLETA e LETTERALE di TUTTO il testo
-- Se la pagina contiene anche esercizi, crea compiti SEPARATI per ciascun esercizio
-- NON INVENTARE MAI esercizi. Se nella pagina non ci sono esercizi, NON crearne.
+Se la pagina contiene SOLO testo narrativo e ZERO esercizi, crea SOLO il compito di studio. NON INVENTARE esercizi.
 
-REGOLA ESERCIZI — TRASCRIZIONE LETTERALE:
-- Ogni esercizio DEVE essere trascritto PAROLA PER PAROLA, NUMERO PER NUMERO come appare nel libro
-- Includi la numerazione originale (es. "1.", "a)", "A.")
-- Includi TUTTE le opzioni di risposta se presenti (A, B, C, D)
-- Includi le consegne esattamente come scritte ("Rispondi alle domande", "Scegli la risposta corretta", ecc.)
-- NON riformulare, semplificare o parafrasare il testo degli esercizi
-- NON aggiungere esercizi che non sono visibili nella foto
-- Se un esercizio ha sotto-domande (a, b, c...), trascrivile TUTTE
-
-Per ogni elemento trovato, restituisci un oggetto JSON con:
-- "task_types": array di stringhe (es. ["study"], ["exercise"]). Valori: "study", "exercise", "memorize", "summarize", "read", "questions", "write", "problem".
+Per ogni elemento, restituisci JSON con:
+- "task_types": array (es. ["study"], ["exercise"])
 - "subject": materia
-- "title": titolo breve (dal titolo del capitolo o argomento visibile nella pagina)
-- "description": la trascrizione COMPLETA e LETTERALE del testo
-- "exerciseText": SOLO per exercise → testo COMPLETO E LETTERALE dell'esercizio come scritto nel libro, incluse tutte le opzioni e sotto-domande
+- "title": titolo breve (dal titolo visibile nella pagina)
+- "description": trascrizione COMPLETA e IDENTICA del testo — OGNI PAROLA DEVE ESSERE UGUALE ALL'ORIGINALE
+- "exerciseText": SOLO per exercise → testo IDENTICO dell'esercizio
 - "estimatedMinutes": stima tempo
 - "difficulty": 1-3
 
