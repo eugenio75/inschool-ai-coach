@@ -80,6 +80,50 @@ function isOralStudyTask(taskType: string, title: string): boolean {
 type MethodPhase = "none" | "propose_method" | "ready";
 type Familiarity = "first_time" | "already_know" | "partial";
 
+const EXERCISE_ITEM_REGEX = /\d+\s*[x×:÷+\-*/]\s*\d+/i;
+
+function extractExactExercises(text: string): string[] {
+  return text
+    .split(/[\n,;]+/)
+    .map(item => item.replace(/^[-•\s]+/, "").trim())
+    .filter(Boolean)
+    .filter(item => EXERCISE_ITEM_REGEX.test(item));
+}
+
+function buildExactExerciseSteps(description: string, familiarity: Familiarity | null): Array<{ number: number; text: string; bloomLevel: number }> {
+  const exercises = extractExactExercises(description);
+  if (exercises.length === 0) return [];
+
+  const intro = familiarity === "first_time"
+    ? "Spiega in modo breve e semplice il metodo necessario per questi esercizi, poi presenta TU il primo esercizio esattamente come scritto."
+    : familiarity === "partial"
+    ? "Riprendi con una mini spiegazione del metodo, poi presenta TU il primo esercizio esattamente come scritto."
+    : "Presenta TU il primo esercizio esattamente come scritto e guidane subito la risoluzione con domande mirate.";
+
+  return [
+    { number: 1, text: intro, bloomLevel: 1 },
+    ...exercises.map((exercise, index) => ({
+      number: index + 2,
+      text: `Lavora esclusivamente su questo esercizio, riportandolo esattamente com'è scritto: ${exercise}`,
+      bloomLevel: Math.min(4, index + 2),
+    })),
+  ];
+}
+
+function sanitizeExerciseSteps(
+  rawSteps: any[],
+  taskType: string,
+  title: string,
+  description: string | null | undefined,
+  familiarity: Familiarity | null,
+) {
+  const isExerciseTask = !isOralStudyTask(taskType, title) && !isMixedWritingTask(taskType, title);
+  if (!isExerciseTask) return rawSteps;
+
+  const exactSteps = buildExactExerciseSteps(description || "", familiarity);
+  return exactSteps.length > 0 ? exactSteps : rawSteps;
+}
+
 function isMixedWritingTask(taskType: string, title: string): boolean {
   const types = taskType.split(",").map(t => t.trim().toLowerCase());
   if (types.some(t => ["riassunto", "summarize", "write", "tema", "testo"].includes(t))) return true;
