@@ -114,26 +114,41 @@ REGOLE:
 - Se la pagina contiene anche esercizi, crea compiti SEPARATI per ciascun esercizio
 - NON INVENTARE MAI esercizi. Se nella pagina non ci sono esercizi, NON crearne.
 
+REGOLA ESERCIZI — TRASCRIZIONE LETTERALE:
+- Ogni esercizio DEVE essere trascritto PAROLA PER PAROLA, NUMERO PER NUMERO come appare nel libro
+- Includi la numerazione originale (es. "1.", "a)", "A.")
+- Includi TUTTE le opzioni di risposta se presenti (A, B, C, D)
+- Includi le consegne esattamente come scritte ("Rispondi alle domande", "Scegli la risposta corretta", ecc.)
+- NON riformulare, semplificare o parafrasare il testo degli esercizi
+- NON aggiungere esercizi che non sono visibili nella foto
+- Se un esercizio ha sotto-domande (a, b, c...), trascrivile TUTTE
+
 Per ogni elemento trovato, restituisci un oggetto JSON con:
 - "task_types": array di stringhe (es. ["study"], ["exercise"]). Valori: "study", "exercise", "memorize", "summarize", "read", "questions", "write", "problem".
 - "subject": materia
 - "title": titolo breve (dal titolo del capitolo o argomento visibile nella pagina)
 - "description": la trascrizione COMPLETA e LETTERALE del testo
-- "exerciseText": SOLO per exercise → testo COMPLETO E LETTERALE dell'esercizio come scritto nel libro
+- "exerciseText": SOLO per exercise → testo COMPLETO E LETTERALE dell'esercizio come scritto nel libro, incluse tutte le opzioni e sotto-domande
 - "estimatedMinutes": stima tempo
 - "difficulty": 1-3
 
 RISPONDI ESCLUSIVAMENTE con un JSON valido: {"tasks": [...]}`
-      : `Sei un assistente che analizza foto di compiti scolastici per studenti italiani (primarie, medie, superiori e università).
+      : `Sei un trascrittore OCR preciso per foto di compiti scolastici italiani (diario, quaderno, foglio stampato).
 
 ${contextNote}${userInstruction}${multiFileNote}
+
+REGOLA FONDAMENTALE: Trascrivi ogni compito ed esercizio ESATTAMENTE come scritto. PAROLA PER PAROLA.
+- NON inventare, aggiungere o modificare esercizi
+- NON riformulare o parafrasare le consegne
+- Includi numeri, opzioni di risposta, sotto-domande ESATTAMENTE come appaiono
+- Se il testo è poco leggibile, trascrivi al meglio ma NON inventare
 
 Per ogni compito/esercizio trovato, restituisci un oggetto JSON con:
 - "task_types": array di stringhe. Valori: "study", "exercise", "memorize", "summarize", "read", "questions", "write", "problem".
 - "subject": materia
 - "title": titolo breve
-- "description": dettagli (pagine, cosa fare)
-- "exerciseText": testo COMPLETO E LETTERALE dell'esercizio
+- "description": trascrizione LETTERALE del compito/esercizio
+- "exerciseText": testo COMPLETO E LETTERALE dell'esercizio come scritto nella foto
 - "estimatedMinutes": stima tempo
 - "difficulty": 1-3
 
