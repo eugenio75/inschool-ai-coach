@@ -24,7 +24,6 @@ interface ExtractedTask {
 interface UploadedFile {
   file: File;
   preview: string;
-  uploadedUrl?: string;
 }
 
 const subjects = [
