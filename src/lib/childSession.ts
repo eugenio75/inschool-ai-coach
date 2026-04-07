@@ -161,6 +161,9 @@ export async function childApi(action: string, payload?: any): Promise<any> {
       case "upload-homework-image": {
         return callChildApiEdge();
       }
+      case "delete-homework-images": {
+        return callChildApiEdge();
+      }
       default:
         console.warn(`childApi: unknown action "${action}", returning empty`);
         return [];

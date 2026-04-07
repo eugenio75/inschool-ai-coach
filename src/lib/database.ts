@@ -643,6 +643,40 @@ export async function uploadHomeworkImage(file: File): Promise<string | null> {
   return urlData.publicUrl;
 }
 
+function extractHomeworkStoragePath(imageUrl: string): string | null {
+  try {
+    const url = new URL(imageUrl);
+    const publicMarker = "/storage/v1/object/public/homework-images/";
+    const signedMarker = "/storage/v1/object/sign/homework-images/";
+    const marker = url.pathname.includes(publicMarker)
+      ? publicMarker
+      : url.pathname.includes(signedMarker)
+        ? signedMarker
+        : null;
+
+    if (!marker) return null;
+
+    const [, rawPath = ""] = url.pathname.split(marker);
+    const normalizedPath = decodeURIComponent(rawPath).replace(/^\/+/, "");
+    return normalizedPath || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteHomeworkImages(imageUrls: string[]) {
+  const paths = Array.from(new Set(imageUrls.map(extractHomeworkStoragePath).filter(Boolean) as string[]));
+  if (paths.length === 0) return;
+
+  if (isChildSession()) {
+    await childApi("delete-homework-images", { paths });
+    return;
+  }
+
+  const { error } = await supabase.storage.from("homework-images").remove(paths);
+  if (error) throw error;
+}
+
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
