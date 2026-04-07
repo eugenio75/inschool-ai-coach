@@ -219,6 +219,18 @@ export default function UnifiedSession() {
 Lo studente ha scritto questi esercizi da svolgere: "${topic}"
 
 REGOLE ASSOLUTE — ESERCIZI SCRITTI MANUALMENTE:
+⚠️ REGOLA ASSOLUTA — FORMATTAZIONE MATEMATICA:
+Per qualsiasi operazione in colonna (moltiplicazione, divisione, addizione, sottrazione)
+usa ESCLUSIVAMENTE questo formato tag — MAI pipe (|), trattini (---), o spazi per simulare colonne:
+
+[COLONNA: tipo=divisione, numeri=756,2]
+[COLONNA: tipo=moltiplicazione, numeri=754,27]
+[COLONNA: tipo=addizione, numeri=123,456]
+[COLONNA: tipo=sottrazione, numeri=500,123]
+
+Se scrivi | o ------ in una risposta che mostra operazioni matematiche stai violando questa regola.
+Il tag viene renderizzato automaticamente come griglia con quadretti — non serve altro.
+
 1. Lavora ESCLUSIVAMENTE sugli esercizi scritti sopra — non inventarne altri
 2. Tratta questo testo esattamente come se fosse un compito caricato
 3. Inizia chiedendo: "Hai già letto l'esercizio?"

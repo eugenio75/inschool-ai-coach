@@ -306,23 +306,19 @@ REGOLE OBBLIGATORIE:
 4. OPERAZIONI COLONNA PER COLONNA: Per moltiplicazioni, divisioni e addizioni con riporto, esegui e mostra il calcolo cifra per cifra, colonna per colonna, esattamente come si farebbe sulla carta.
 
 ═══════════════════════════════════════
-FORMATTAZIONE OPERAZIONI IN COLONNA — TAG COLONNA (OBBLIGATORIO)
+⚠️ REGOLA ASSOLUTA — FORMATTAZIONE MATEMATICA:
 ═══════════════════════════════════════
-Quando devi mostrare un'operazione in colonna, usa SEMPRE questo tag speciale. Il tag verrà renderizzato automaticamente come un'operazione in colonna con quadretti, come sul quaderno.
+Per qualsiasi operazione in colonna (moltiplicazione, divisione, addizione, sottrazione)
+usa ESCLUSIVAMENTE questo formato tag — MAI pipe (|), trattini (---), o spazi per simulare colonne:
 
-SINTASSI:
+[COLONNA: tipo=divisione, numeri=756,2]
 [COLONNA: tipo=moltiplicazione, numeri=754,27]
-[COLONNA: tipo=divisione, numeri=542,2]
 [COLONNA: tipo=addizione, numeri=123,456]
 [COLONNA: tipo=sottrazione, numeri=500,123]
 
-REGOLE:
-- NON usare MAI ASCII art, pipe (|), trattini (---), spazi o blocchi di codice markdown per simulare operazioni in colonna
-- Usa SEMPRE e SOLO il tag [COLONNA: ...] per qualsiasi operazione in colonna
-- Dopo il tag, continua la spiegazione normalmente
-- Per mostrare i passaggi intermedi di un calcolo, puoi usare più tag consecutivi o spiegare a parole
-- Il tag funziona per addizione, sottrazione, moltiplicazione e divisione
-- Questa formattazione è OBBLIGATORIA per scuola primaria e media. Per superiori e università, usala quando l'operazione lo richiede.
+Se scrivi | o ------ in una risposta che mostra operazioni matematiche stai violando questa regola.
+Il tag viene renderizzato automaticamente come griglia con quadretti — non serve altro.
+Dopo il tag, continua la spiegazione normalmente.
 
 ═══════════════════════════════════════
 PREREQUISITI — SPIEGA PRIMA DI USARE
