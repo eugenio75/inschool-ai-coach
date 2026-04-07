@@ -21,6 +21,7 @@ interface ChatShellProps {
   onSend?: (text: string) => void;
   onBack: () => void;
   onAction?: (value: string) => void;
+  onEndSession?: () => void;
   progress?: number;
   progressLabel?: string;
   showHint?: boolean;
