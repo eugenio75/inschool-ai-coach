@@ -162,7 +162,7 @@ export default function UnifiedSession() {
     if (urlMsg && !setupDone && !sending) {
       setTopic(urlMsg);
       const t = setTimeout(() => {
-        const systemPrompt = getSystemPrompt();
+        const sessionSystemPrompt = getSystemPrompt();
         setSetupDone(true);
         setMessages([]);
         setSending(true);
@@ -170,7 +170,6 @@ export default function UnifiedSession() {
 
         streamChat({
           messages: [
-            { role: "user", content: systemPrompt },
             { role: "user", content: urlMsg },
           ],
           onDelta: (full) => setStreamingText(full),
@@ -182,7 +181,7 @@ export default function UnifiedSession() {
             setStreamingText("");
             setSending(false);
           },
-          extraBody: { profileId, subject: subject || undefined, sessionFormat: type },
+          extraBody: { profileId, subject: subject || undefined, sessionFormat: type, systemPrompt: sessionSystemPrompt },
         });
       }, 150);
       return () => clearTimeout(t);
