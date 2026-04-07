@@ -179,7 +179,7 @@ export default function UnifiedSession() {
           messages: [
             { role: "user", content: urlMsg },
           ],
-          onDelta: (full) => setStreamingText(full),
+          onDelta: () => {},
           onDone: (full) => {
             setMessages([
               { role: "user", content: urlMsg },
@@ -375,7 +375,7 @@ Inizia con la prima domanda.`;
 
     streamChat({
       messages: [],
-      onDelta: (full) => setStreamingText(full),
+      onDelta: () => {},
       onDone: (full) => {
         setMessages([{ role: "assistant", content: full }]);
         setStreamingText("");
@@ -399,11 +399,10 @@ Inizia con la prima domanda.`;
 
     streamChat({
       messages: newMessages,
-      onDelta: (full) => setStreamingText(full),
+      onDelta: () => {},
       onDone: (full) => {
         setMessages(prev => {
           const updated = [...prev, { role: "assistant" as const, content: full }];
-          // Complete missions after meaningful engagement (4+ messages)
           if (!missionsCompletedRef.current && updated.length >= 4) {
             missionsCompletedRef.current = true;
             getDailyMissions().then(missions => {

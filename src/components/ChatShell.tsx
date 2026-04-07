@@ -59,6 +59,35 @@ function isWaitingForStudent(text: string): boolean {
   return /\?\s*$/.test(text.trim()) || /tocca a te|prova tu|rispondi|dimmi|qual è|quanto fa/i.test(text);
 }
 
+function sanitizeWhiteboardRecognition(raw: string): string {
+  if (!raw) return "";
+
+  const cleaned = raw
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => {
+      if (!line) return false;
+      if (line.startsWith("data:")) return false;
+      if (line === "[DONE]") return false;
+      if (/chatcmpl|system_fingerprint|logprobs|finish_reason|obfuscation|service_tier|chat\.completion\.chunk/i.test(line)) return false;
+      if (/^\{\s*"id"\s*:\s*"chatcmpl/i.test(line)) return false;
+      return true;
+    })
+    .join(" ")
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/i, "")
+    .replace(/^\[Risposta scritta sulla lavagna\]\s*/i, "")
+    .replace(/^\[Risposta dalla lavagna\]\s*/i, "")
+    .trim();
+
+  if (!cleaned) return "";
+  if (/^\{[\s\S]*\}$/.test(cleaned) && !/[a-zàèéìòù\d]/i.test(cleaned.replace(/[{}":,\[\]]/g, ""))) {
+    return "";
+  }
+
+  return cleaned;
+}
+
 // Detect if the coach confirms a correct answer
 function isCorrectFeedback(text: string): boolean {
   return /esatto|corrett[oai]|bravo|bravissim|perfetto|giusto|ben fatto|ottimo|eccellente|✅|🎉/i.test(text) &&
@@ -75,8 +104,8 @@ type CoachStatus = "thinking" | "writing" | "reading" | "waiting" | "idle";
 function getStatusIndicator(status: CoachStatus) {
   switch (status) {
     case "thinking": return { icon: "💭", text: "Il professore sta pensando..." };
-    case "writing": return { icon: "🖊️", text: "Il professore sta scrivendo..." };
-    case "reading": return { icon: "👀", text: "Il professore sta leggendo..." };
+    case "writing": return { icon: "🖊️", text: "Il professore sta preparando la risposta..." };
+    case "reading": return { icon: "👀", text: "Il professore sta leggendo la lavagna..." };
     case "waiting": return { icon: "✏️", text: "Tocca a te!" };
     case "idle": return null;
   }
@@ -112,11 +141,13 @@ export function ChatShell({
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Coach status
-  const coachStatus: CoachStatus = sending && !streamingText ? "thinking" : 
-    sending && streamingText ? "writing" :
-    whiteboardLoading ? "reading" :
-    !sending && messages.length > 0 && isWaitingForStudent(messages[messages.length - 1]?.content || "") ? "waiting" :
-    "idle";
+  const coachStatus: CoachStatus = whiteboardLoading
+    ? "reading"
+    : sending
+      ? "thinking"
+      : !sending && messages.length > 0 && isWaitingForStudent(messages[messages.length - 1]?.content || "")
+        ? "waiting"
+        : "idle";
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -230,51 +261,48 @@ export function ChatShell({
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
+            stream: false,
             messages: [{
               role: "user",
               content: [
-                { type: "text", text: `Sei un sistema OCR scolastico. Leggi questa immagine scritta a mano da un bambino delle elementari/medie. Restituisci SOLO un JSON: {"recognized": "testo/operazione riconosciuta", "confidence": 0.0-1.0, "type": "numero | operazione | testo | incomprensibile"} Sii tollerante con la scrittura infantile imperfetta.` },
+                {
+                  type: "text",
+                  text: `Leggi questa immagine scritta a mano da uno studente. Restituisci SOLO il testo riconosciuto, pulito e naturale. Non restituire JSON, non restituire codice, non restituire markdown, non spiegare nulla. Se non è leggibile, rispondi solo con: ILLEGGIBILE`,
+                },
                 { type: "image_url", image_url: { url: imageDataUrl } },
               ],
             }],
+            model: "gpt-4o",
+            maxTokens: 120,
           }),
         }
       );
 
       const text = await res.text();
       let recognized = "";
-      let confidence = 0;
+
       try {
-        // Try to parse JSON from response
-        let content = text;
-        try { const j = JSON.parse(text); content = j.response || j.message || text; } catch {}
-        const jsonMatch = content.match(/\{[\s\S]*?\}/);
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          recognized = parsed.recognized || "";
-          confidence = parsed.confidence || 0;
-        } else {
-          recognized = content.trim();
-          confidence = 0.7;
-        }
+        const parsed = JSON.parse(text);
+        recognized = parsed?.choices?.[0]?.message?.content || parsed?.response || parsed?.message || "";
       } catch {
-        recognized = text.trim();
-        confidence = 0.5;
+        recognized = text;
       }
 
-      setWhiteboardOpen(false);
-      setWhiteboardLoading(false);
+      const cleanedRecognition = sanitizeWhiteboardRecognition(recognized);
 
-      if (confidence < 0.5 || !recognized) {
-        onSend?.("[Risposta dalla lavagna] Non riesco a leggere bene... puoi riscrivere più grande? 😊");
+      setWhiteboardOpen(false);
+
+      if (!cleanedRecognition || /^illeggibile$/i.test(cleanedRecognition)) {
+        onSend?.("Non riesco a leggere bene la lavagna... puoi riscrivere più grande? 😊");
       } else {
-        onSend?.(`[Risposta scritta sulla lavagna] ${recognized}`);
+        onSend?.(cleanedRecognition);
       }
     } catch (err) {
       console.error("Whiteboard OCR error:", err);
       setWhiteboardOpen(false);
+      onSend?.("Non riesco a leggere la lavagna. Prova a scrivere con la tastiera.");
+    } finally {
       setWhiteboardLoading(false);
-      onSend?.("[Errore lavagna] Non riesco a leggere la lavagna. Prova a scrivere con la tastiera.");
     }
   }
 
@@ -467,48 +495,16 @@ export function ChatShell({
           })}
         </AnimatePresence>
 
-        {streamingText && (() => {
-          // Filter: never show raw SSE data to user
-          const cleaned = streamingText
-            .split("\n")
-            .filter(line => {
-              const trimmed = line.trim();
-              if (trimmed.startsWith("data:")) return false;
-              if (trimmed === "[DONE]") return false;
-              if (/chatcmpl|logprobs|finish_reason|system_fingerprint|obfuscation/.test(trimmed)) return false;
-              if (/^\{.*"id"\s*:\s*"chatcmpl/.test(trimmed)) return false;
-              return true;
-            })
-            .join("\n")
-            .trim();
-
-          if (!cleaned) return null;
-
-          return (
-            <div className="flex justify-start">
-              <div className="flex-shrink-0 mr-2 mt-1">
-                <CoachAvatar mood="thinking" size={32} />
-              </div>
-              <div className="max-w-[80%] rounded-xl rounded-bl-sm notebook-bubble px-4 py-3 whitespace-pre-wrap">
-                <div className="flex items-center gap-1 mb-1 opacity-60">
-                  <WritingPen writing={true} />
-                  <span className="text-sm text-[#7F77DD] font-['Patrick_Hand']">sta scrivendo...</span>
-                </div>
-                <MathText>{cleaned}</MathText>
-                <span className="inline-block w-0.5 h-4 bg-foreground/60 ml-0.5 animate-pulse rounded-full" />
-              </div>
-            </div>
-          );
-        })()}
-
         {sending && !streamingText && (
           <div className="flex justify-start">
             <div className="flex-shrink-0 mr-2">
-              <CoachAvatar mood="thinking" size={32} />
+              <CoachAvatar mood={whiteboardLoading ? "thinking" : "thinking"} size={32} />
             </div>
             <div className="bg-muted rounded-xl rounded-bl-sm px-4 py-3 flex items-center gap-2">
               <WritingPen writing={true} />
-              <span className="text-sm text-muted-foreground font-['Patrick_Hand']">Il professore sta pensando...</span>
+              <span className="text-sm text-muted-foreground font-['Patrick_Hand']">
+                {whiteboardLoading ? "Il professore sta leggendo la lavagna..." : "Il professore sta pensando..."}
+              </span>
             </div>
           </div>
         )}
