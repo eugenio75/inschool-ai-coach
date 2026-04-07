@@ -52,7 +52,7 @@ function detectMoodFromText(text: string): CoachAvatarMood {
 export function ChatShell({
   title, subtitle, badgeText, coachName,
   messages, streamingText, sending,
-  onSend, onBack, onAction,
+  onSend, onBack, onAction, onEndSession,
   progress, progressLabel,
   showHint = true, showStuck = true, showExplain = true,
   showVoice = true, showAttach = true,
