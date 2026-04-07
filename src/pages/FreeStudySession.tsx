@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Send, Loader2, BookOpen, FileText, Map, List, Key, Layers, Plus,
 } from "lucide-react";
+import { MathText } from "@/components/shared/MathText";
 import { PageBackButton } from "@/components/shared/PageBackButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
