@@ -1045,6 +1045,7 @@ serve(async (req) => {
 
   try {
     const { messages, systemPrompt, stream, model, maxTokens, generateTitle, profileId, subject: chatSubject, sessionFormat, lang } = await req.json();
+    console.log("[ai-chat] Mr. Ranedeer framework active — FRAMEWORK PEDAGOGICO MR. RANEDEER (integrato)");
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
 

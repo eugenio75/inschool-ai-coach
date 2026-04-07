@@ -8,6 +8,8 @@ import { ChatMsg } from "@/lib/streamChat";
 import { PomodoroTimer } from "@/components/PomodoroTimer";
 import { CoachAvatar, type CoachAvatarMood } from "@/components/shared/CoachAvatar";
 import { MathText } from "@/components/shared/MathText";
+import { ProgressiveMessage } from "@/components/shared/ProgressiveMessage";
+import { WritingPen } from "@/components/shared/handwritten/WritingPen";
 import { useTranslation } from "react-i18next";
 
 interface ChatShellProps {
@@ -235,7 +237,16 @@ export function ChatShell({
                     ? "bg-primary text-primary-foreground rounded-br-sm"
                     : "notebook-bubble rounded-bl-sm"
                 }`}>
-                  <MathText>{msg.content}</MathText>
+                  {msg.role === "assistant" && i === messages.length - 1 ? (
+                    <div>
+                      <div className="flex items-center gap-1 mb-1 opacity-60">
+                        <WritingPen writing={false} />
+                      </div>
+                      <ProgressiveMessage content={msg.content} charDelay={35} blockPause={800} />
+                    </div>
+                  ) : (
+                    <MathText>{msg.content}</MathText>
+                  )}
                 </div>
                 {msg.actions && msg.actions.length > 0 && i === messages.length - 1 && (
                   <div className="flex flex-col gap-2 mt-3">
