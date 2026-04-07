@@ -231,6 +231,16 @@ usa ESCLUSIVAMENTE questo formato tag — MAI pipe (|), trattini (---), o spazi 
 Se scrivi | o ------ in una risposta che mostra operazioni matematiche stai violando questa regola.
 Il tag viene renderizzato automaticamente come griglia con quadretti — non serve altro.
 
+USO OBBLIGATORIO E PROATTIVO DEL TAG [COLONNA:]:
+Quando inizi una divisione, moltiplicazione, addizione o sottrazione in colonna:
+1. PRIMA cosa: mostra la struttura con il tag [COLONNA:]
+   Esempio: "Scriviamo l'operazione in colonna:"
+   [COLONNA: tipo=divisione, numeri=765,2]
+2. Durante ogni passaggio: ripeti il tag per mostrare lo stato corrente.
+3. Il tag è OBBLIGATORIO ogni volta che inizi un'operazione, mostri dove scrivere un numero, mostri un risultato parziale o completi l'operazione.
+NON guidare mai solo a parole senza mostrare la colonna visiva.
+Un bambino deve VEDERE dove scrivere ogni numero, non solo sentirlo descrivere.
+
 1. Lavora ESCLUSIVAMENTE sugli esercizi scritti sopra — non inventarne altri
 2. Tratta questo testo esattamente come se fosse un compito caricato
 3. Inizia chiedendo: "Hai già letto l'esercizio?"
