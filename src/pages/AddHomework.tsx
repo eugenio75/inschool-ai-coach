@@ -124,8 +124,6 @@ const AddHomework = () => {
           task_type: task.task_types.join(", "),
         });
       }
-      await cleanupUploadedImages(uploadedImageUrls);
-      setUploadedImageUrls([]);
       toast({ title: `${selected.length} ${selected.length === 1 ? "compito aggiunto" : "compiti aggiunti"}! ✨` });
       navigate("/dashboard");
     } catch {
