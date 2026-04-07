@@ -5,6 +5,7 @@ import { FS, jit, pathLength, type El, type AgeTier, getTierConfig } from "./uti
 /**
  * Shared SVG renderer for all handwritten math operations.
  * Renders elements with stroke-draw and fade-in animations.
+ * Placeholder elements render as dashed underscores until their step arrives.
  */
 interface Props {
   elements: El[];
@@ -49,7 +50,57 @@ export function HandwrittenSVG({ elements, width, height, tier = "upper-elementa
           );
         }
 
-        // Text element
+        // Placeholder: show dashed underscore, then reveal real digit
+        if (el.isPlaceholder) {
+          const fontSize = el.fontSize || FS;
+          return (
+            <React.Fragment key={el.id}>
+              {/* Dashed placeholder visible immediately */}
+              <motion.text
+                x={el.x + jit(el.seed, 0.5)}
+                y={el.y}
+                fill={el.color}
+                fontSize={fontSize}
+                fontFamily="'Patrick Hand', cursive"
+                textAnchor="middle"
+                dominantBaseline="auto"
+                initial={{ opacity: 0.6 }}
+                animate={{ opacity: delay > 0 ? [0.6, 0.6, 0] : 0 }}
+                transition={{
+                  opacity: { delay: 0.3, duration: delay > 0 ? delay : 0.01, times: [0, 0.95, 1] },
+                }}
+              >
+                _
+              </motion.text>
+              {/* Real digit fades in at its delay */}
+              <motion.text
+                x={el.x + jit(el.seed, 0.8)}
+                y={el.y + jit(el.seed + 3, 0.5)}
+                fill={el.isResult ? "#1D9E75" : el.color}
+                fontSize={fontSize}
+                fontFamily="'Patrick Hand', cursive"
+                textAnchor="middle"
+                dominantBaseline="auto"
+                fontWeight={700}
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{
+                  opacity: 1,
+                  scale: el.isResult ? [1, 1.2, 1] : 1,
+                }}
+                transition={{
+                  opacity: { delay, duration: 0.4 * tm },
+                  scale: el.isResult
+                    ? { delay: delay + 0.1 * tm, duration: 0.5, times: [0, 0.5, 1] }
+                    : { delay, duration: 0.3 * tm },
+                }}
+              >
+                {el.text}
+              </motion.text>
+            </React.Fragment>
+          );
+        }
+
+        // Normal text element
         const fontSize = el.fontSize || FS;
         return (
           <motion.text
@@ -58,7 +109,7 @@ export function HandwrittenSVG({ elements, width, height, tier = "upper-elementa
             y={el.y + jit(el.seed + 3, 0.5)}
             fill={el.color}
             fontSize={fontSize}
-            fontFamily="'Caveat', cursive"
+            fontFamily="'Patrick Hand', cursive"
             textAnchor="middle"
             dominantBaseline="auto"
             fontWeight={el.bold ? 700 : 400}

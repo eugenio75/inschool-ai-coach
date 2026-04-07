@@ -14,6 +14,7 @@ export const COLORS = {
   bringDown: "#BA7517",
   annotation: "#7F77DD",
   lineAlpha: "rgba(44,44,42,0.6)",
+  placeholder: "#BBBBBB",
 };
 
 /** Age-adaptive tier configuration */
@@ -27,10 +28,10 @@ export interface TierConfig {
 }
 
 const TIER_CONFIGS: Record<AgeTier, TierConfig> = {
-  "lower-elementary": { fontSize: 42, cellWidth: 38, rowHeight: 52, timingMultiplier: 1.3 },
-  "upper-elementary": { fontSize: 36, cellWidth: 32, rowHeight: 46, timingMultiplier: 1.0 },
-  "middle":           { fontSize: 30, cellWidth: 28, rowHeight: 40, timingMultiplier: 0.8 },
-  "high":             { fontSize: 26, cellWidth: 24, rowHeight: 36, timingMultiplier: 0.6 },
+  "lower-elementary": { fontSize: 52, cellWidth: 46, rowHeight: 60, timingMultiplier: 1.3 },
+  "upper-elementary": { fontSize: 44, cellWidth: 38, rowHeight: 52, timingMultiplier: 1.0 },
+  "middle":           { fontSize: 36, cellWidth: 32, rowHeight: 44, timingMultiplier: 0.8 },
+  "high":             { fontSize: 28, cellWidth: 26, rowHeight: 38, timingMultiplier: 0.6 },
 };
 
 export function getTierConfig(tier: AgeTier): TierConfig {
@@ -61,7 +62,6 @@ export function colX(col: number, cw = CW): number {
 
 /** Path length for stroke-draw animation */
 export function pathLength(d: string): number {
-  // Approximation — for wobbly paths, use distance between endpoints × 1.1
   const match = d.match(/M([\d.]+),([\d.]+).*?([\d.]+),([\d.]+)$/);
   if (!match) return 100;
   const dx = parseFloat(match[3]) - parseFloat(match[1]);
@@ -83,4 +83,5 @@ export interface El {
   delay: number;
   seed: number;
   isResult?: boolean; // pulse animation on final result
+  isPlaceholder?: boolean; // dashed placeholder for result
 }

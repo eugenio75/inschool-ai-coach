@@ -111,14 +111,16 @@ function compute(a: number, b: number, cfg: ReturnType<typeof getTierConfig>) {
     });
   }
 
-  // Final result — green with pulse
+  // Final result — placeholder, revealed last with pulse
   const resultDelay = 1.6 + partials.length * 1.2 + 0.5;
   for (let i = 0; i < rStr.length; i++) {
     const c = cols - 1 - (rStr.length - 1 - i);
     els.push({
       id: `r${i}`, type: "text", x: cx(c), y: curY,
       text: rStr[i], color: COLORS.result, bold: true, fontSize: FS,
-      delay: resultDelay + i * 0.15, seed: ns(), isResult: true,
+      delay: resultDelay + i * 0.15, seed: ns(),
+      isResult: i === rStr.length - 1,
+      isPlaceholder: true,
     });
   }
 
