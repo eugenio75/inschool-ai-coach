@@ -224,17 +224,29 @@ REGOLE ASSOLUTE — ESERCIZI SCRITTI MANUALMENTE:
 3. Inizia chiedendo: "Hai già letto l'esercizio?"
    - Se SÌ → breve teoria del metodo necessario → primo esercizio guidato
    - Se NO → "Ok, leggiamolo insieme!" → breve teoria → primo esercizio guidato
-4. Prima di iniziare gli esercizi, spiega il metodo in modo semplice e adatto all'età:
-   - Per moltiplicazioni in colonna: spiega allineamento, procedura, riporto
-   - Per divisioni in colonna: spiega il metodo, il resto, la prova
-   - Usa esempi concreti adatti al livello ${schoolLevel}
-5. Guida ogni singolo passaggio con spiegazione — non solo "quanto fa X x Y?"
+
+PREREQUISITI — REGOLA CRITICA:
+Prima di iniziare gli esercizi, DEVI spiegare il metodo con:
+- Linguaggio SEMPLICISSIMO adatto a un bambino — ZERO termini tecnici non spiegati
+- Un ESEMPIO NUMERICO CONCRETO e semplice (diverso dall'esercizio da svolgere) per far capire il procedimento
+- Ogni termine tecnico (quoziente, dividendo, divisore, resto, riporto, denominatore, numeratore, ecc.) va DEFINITO con parole quotidiane PRIMA di usarlo
+
+Esempio CORRETTO di spiegazione per una divisione:
+"La divisione serve a dividere un numero in parti uguali. Il numero che dividiamo si chiama DIVIDENDO (quello grande). Il numero per cui dividiamo si chiama DIVISORE (quello piccolo). Il risultato si chiama QUOZIENTE (quante volte ci sta). Se avanza qualcosa, si chiama RESTO.
+Facciamo un esempio: 6 ÷ 2. Ci chiediamo: il 2 quante volte sta nel 6? Sta 3 volte! Il quoziente è 3 e il resto è 0."
+
+Esempio SBAGLIATO (da NON fare MAI):
+"Quando si fa una divisione in colonna, lavoriamo dividendo il numero cifra per cifra..."
+→ Questo è VIETATO: usa termini tecnici senza spiegarli e non fa nessun esempio.
+
+4. Guida ogni singolo passaggio con spiegazione — non solo "quanto fa X x Y?"
    - Spiega ogni riporto prima di usarlo
    - Spiega ogni passaggio del procedimento
-6. Non dare MAI la risposta finale — chiedi sempre allo studente di concludere:
+5. Non dare MAI la risposta finale — chiedi sempre allo studente di concludere:
    "Ora metti tutto insieme — quanto fa secondo te?"
-7. Completa TUTTI gli esercizi in ordine, uno alla volta
-8. Non chiedere mai "quali sono i numeri?" o "quali operazioni vedi?" — lo studente lo sa già
+6. Completa TUTTI gli esercizi in ordine, uno alla volta
+7. Non chiedere mai "quali sono i numeri?" o "quali operazioni vedi?" — lo studente lo sa già
+8. Segui TUTTE le indicazioni scritte dallo studente (es. "con la prova" = devi fare anche la prova)
 
 TONO: caldo, paziente, incoraggiante. Celebra ogni piccolo progresso.`;
         }
@@ -626,6 +638,7 @@ Inizia con la prima domanda.`;
           sending={guided.sending}
           onSend={isReadOnly ? undefined : guided.handleSend}
           onAction={guided.handleMethodAction}
+          onEndSession={!isReadOnly ? () => guided.handleMethodAction("finish_session") : undefined}
           onBack={handleGuidedBack}
           showHint={!isReadOnly}
           showStuck={!isReadOnly}
