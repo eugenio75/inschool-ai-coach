@@ -626,6 +626,7 @@ Inizia con la prima domanda.`;
           sending={guided.sending}
           onSend={isReadOnly ? undefined : guided.handleSend}
           onAction={guided.handleMethodAction}
+          onEndSession={!isReadOnly ? () => guided.handleMethodAction("finish_session") : undefined}
           onBack={handleGuidedBack}
           showHint={!isReadOnly}
           showStuck={!isReadOnly}
