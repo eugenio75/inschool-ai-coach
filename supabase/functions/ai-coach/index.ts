@@ -1239,9 +1239,14 @@ Se il testo dell'esercizio dice "23,5 km", tu DEVI usare "23,5 km" — mai "24 k
 
     if (isProceduralDivisionSession(taskContext, messages)) {
       contextPrompt += lang === 'en'
-        ? `\n\nLONG DIVISION VISUAL CONTRACT: one code block per turn, one question per turn, never 07/09, minus sign outside the digits column, and never mention a visual step before it appears in the block.`
-        : `\n\nCONTRATTO VISIVO DIVISIONE IN COLONNA: un blocco di codice per turno, una domanda per turno, mai 07/09, segno meno fuori dalla colonna delle cifre, e mai nominare un passaggio visivo prima che compaia nel blocco.`;
+        ? `\n\nLONG DIVISION VISUAL CONTRACT: Use the [COLONNA: tipo=division, numeri=X,Y] tag to show column operations. Do NOT use ASCII art, pipes, dashes or code blocks for column layout. The tag renders automatically as a grid with squares. One question per turn, never 07/09, never mention a visual step before asking the question.`
+        : `\n\nCONTRATTO VISIVO DIVISIONE IN COLONNA: Usa il tag [COLONNA: tipo=divisione, numeri=X,Y] per mostrare le operazioni in colonna. NON usare MAI ASCII art, pipe, trattini o blocchi di codice per il layout in colonna. Il tag viene renderizzato automaticamente come una griglia con quadretti. Una domanda per turno, mai 07/09, mai nominare un passaggio visivo prima di porre la domanda.`;
     }
+
+    // Always inject COLONNA tag instructions
+    contextPrompt += lang === 'en'
+      ? `\n\nCOLUMN OPERATION FORMATTING (MANDATORY): When showing any column operation (addition, subtraction, multiplication, division), ALWAYS use this special tag: [COLONNA: tipo=multiplication, numeri=754,27] or [COLONNA: tipo=division, numeri=542,2] etc. NEVER use ASCII art, pipes (|), dashes (---) or code blocks to simulate columns. The tag renders automatically as a grid with squares like a math notebook.`
+      : `\n\nFORMATTAZIONE OPERAZIONI IN COLONNA (OBBLIGATORIO): Quando devi mostrare qualsiasi operazione in colonna, usa SEMPRE questo tag speciale: [COLONNA: tipo=moltiplicazione, numeri=754,27] oppure [COLONNA: tipo=divisione, numeri=542,2] ecc. NON usare MAI ASCII art, pipe (|), trattini (---) o blocchi di codice per simulare colonne. Il tag viene renderizzato automaticamente come una griglia con quadretti come sul quaderno.`;
 
     // Inject weak memory concepts for reinforcement
     if (weakConcepts && weakConcepts.length > 0) {

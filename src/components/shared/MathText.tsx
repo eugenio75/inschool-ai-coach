@@ -1,34 +1,86 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import { ColumnOperation, type ColumnOperationProps } from "./ColumnOperation";
+
+const COLONNA_RE = /\[COLONNA:\s*tipo\s*=\s*(\w+)\s*,\s*numeri\s*=\s*([\d,]+)\s*\]/gi;
+
+const TIPO_MAP: Record<string, ColumnOperationProps["type"]> = {
+  moltiplicazione: "multiplication",
+  divisione: "division",
+  addizione: "addition",
+  sottrazione: "subtraction",
+  multiplication: "multiplication",
+  division: "division",
+  addition: "addition",
+  subtraction: "subtraction",
+};
 
 /**
- * Renders text that may contain LaTeX math expressions.
- * Supports both inline math ($...$) and display math ($$...$$).
- * Non-math text is rendered as-is.
+ * Renders text that may contain LaTeX math expressions and [COLONNA:...] tags.
  */
 export function MathText({ children }: { children: string }) {
-  const html = useMemo(() => renderMathInText(children || ""), [children]);
+  const text = children || "";
+
+  // Split text by COLONNA tags
+  const segments = useMemo(() => splitByColonna(text), [text]);
+
   const hasBlockContent = useMemo(
-    () => /```|(?:^|\n)\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]/.test(children || ""),
-    [children]
+    () => /```|(?:^|\n)\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]/.test(text) || COLONNA_RE.test(text),
+    [text]
   );
 
-  if (hasBlockContent) {
-    return (
-      <div
-        dangerouslySetInnerHTML={{ __html: html }}
-        className="math-text math-text-block"
-      />
-    );
+  if (segments.length === 1 && segments[0].type === "text") {
+    const html = renderMathInText(segments[0].value);
+    if (hasBlockContent) {
+      return <div dangerouslySetInnerHTML={{ __html: html }} className="math-text math-text-block" />;
+    }
+    return <span dangerouslySetInnerHTML={{ __html: html }} className="math-text" />;
   }
 
+  // Mixed content with COLONNA tags
   return (
-    <span
-      dangerouslySetInnerHTML={{ __html: html }}
-      className="math-text"
-    />
+    <div className="math-text math-text-block">
+      {segments.map((seg, i) => {
+        if (seg.type === "colonna") {
+          return <ColumnOperation key={i} type={seg.opType} numbers={seg.numbers} />;
+        }
+        const html = renderMathInText(seg.value);
+        return <span key={i} dangerouslySetInnerHTML={{ __html: html }} />;
+      })}
+    </div>
   );
+}
+
+interface TextSegment { type: "text"; value: string; }
+interface ColonnaSegment { type: "colonna"; opType: ColumnOperationProps["type"]; numbers: number[]; }
+type Segment = TextSegment | ColonnaSegment;
+
+function splitByColonna(text: string): Segment[] {
+  const segments: Segment[] = [];
+  let lastIndex = 0;
+  const re = new RegExp(COLONNA_RE.source, "gi");
+  let match: RegExpExecArray | null;
+
+  while ((match = re.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      segments.push({ type: "text", value: text.slice(lastIndex, match.index) });
+    }
+    const tipo = TIPO_MAP[match[1].toLowerCase()];
+    const nums = match[2].split(",").map(Number).filter(n => !isNaN(n));
+    if (tipo && nums.length >= 2) {
+      segments.push({ type: "colonna", opType: tipo, numbers: nums });
+    } else {
+      segments.push({ type: "text", value: match[0] });
+    }
+    lastIndex = re.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    segments.push({ type: "text", value: text.slice(lastIndex) });
+  }
+
+  return segments.length === 0 ? [{ type: "text", value: text }] : segments;
 }
 
 function escapeHtml(text: string): string {
@@ -40,21 +92,18 @@ function escapeHtml(text: string): string {
 }
 
 function renderCodeBlocks(text: string): string {
-  // Replace ```...``` code blocks with styled <pre><code> blocks
   return text.replace(/```(\w*)\n?([\s\S]*?)```/g, (_match, _lang, code) => {
     return `<pre class="math-code-block"><code>${escapeHtml(code.trimEnd())}</code></pre>`;
   });
 }
 
 function renderInlineCode(text: string): string {
-  // Replace `...` inline code with styled <code> blocks
   return text.replace(/`([^`\n]+)`/g, (_match, code) => {
     return `<code class="math-inline-code">${escapeHtml(code)}</code>`;
   });
 }
 
 function renderMathInText(text: string): string {
-  // First, extract and protect code blocks from LaTeX processing
   const codeBlocks: string[] = [];
   let processed = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (match) => {
     codeBlocks.push(match);
@@ -66,22 +115,15 @@ function renderMathInText(text: string): string {
     return `__INLINE_CODE_${inlineCodes.length - 1}__`;
   });
 
-  // Process display math first ($$...$$), then inline math ($...$)
-  // Also handle \(...\) and \[...\] notation
   const parts: string[] = [];
   let remaining = processed;
 
   while (remaining.length > 0) {
-    // Try display math $$...$$ 
     const ddMatch = remaining.match(/\$\$([\s\S]+?)\$\$/);
-    // Try \[...\]
     const bracketDisplay = remaining.match(/\\\[([\s\S]+?)\\\]/);
-    // Try inline math $...$
     const inlineMatch = remaining.match(/\$([^\$\n]+?)\$/);
-    // Try \(...\)
     const bracketInline = remaining.match(/\\\(([\s\S]+?)\\\)/);
 
-    // Find earliest match
     const candidates = [
       ddMatch ? { idx: ddMatch.index!, len: ddMatch[0].length, latex: ddMatch[1], display: true } : null,
       bracketDisplay ? { idx: bracketDisplay.index!, len: bracketDisplay[0].length, latex: bracketDisplay[1], display: true } : null,
@@ -94,16 +136,13 @@ function renderMathInText(text: string): string {
       break;
     }
 
-    // Pick the one that appears first
     candidates.sort((a, b) => a.idx - b.idx);
     const best = candidates[0];
 
-    // Add text before the match
     if (best.idx > 0) {
       parts.push(escapeHtml(remaining.substring(0, best.idx)));
     }
 
-    // Render LaTeX
     try {
       const rendered = katex.renderToString(best.latex.trim(), {
         throwOnError: false,
@@ -112,7 +151,6 @@ function renderMathInText(text: string): string {
       });
       parts.push(rendered);
     } catch {
-      // If rendering fails, show the original text
       parts.push(escapeHtml(remaining.substring(best.idx, best.idx + best.len)));
     }
 
@@ -121,7 +159,6 @@ function renderMathInText(text: string): string {
 
   let result = parts.join("");
 
-  // Restore code blocks and render them
   codeBlocks.forEach((block, i) => {
     const rendered = renderCodeBlocks(block);
     result = result.replace(`__CODE_BLOCK_${i}__`, rendered);

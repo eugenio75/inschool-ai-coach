@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Send, Loader2, BookOpen, FileText, Map, List, Key, Layers, Plus,
 } from "lucide-react";
+import { MathText } from "@/components/shared/MathText";
 import { PageBackButton } from "@/components/shared/PageBackButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -324,7 +325,9 @@ Inizia presentando il primo blocco dell'argomento.`;
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-foreground"
             }`}>
-              {msg.content || (sending && i === messages.length - 1 ? (
+              {msg.content ? (
+                msg.role === "assistant" ? <MathText>{msg.content}</MathText> : msg.content
+              ) : (sending && i === messages.length - 1 ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : null)}
             </div>
