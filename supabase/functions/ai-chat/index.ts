@@ -319,17 +319,18 @@ Usa un blocco di codice con le cifre allineate a destra:
 Spiega ogni colonna: "8 x 7 = 56, scrivo 6 e riporto 5", ecc.
 
 DIVISIONE IN COLONNA — esempio 678 : 2:
-Mostra la divisione passo dopo passo con blocco di codice:
-  678 | 2
- -6   |---
-  --  | 339
-  07
-  -6
-  --
-   18
-  -18
-  ---
-    0
+Mostra la divisione passo dopo passo con blocco di codice.
+Il segno meno (-) va su una COLONNA SEPARATA a sinistra, MAI attaccato al numero:
+    678 | 2
+  -   6 |------
+  ----- | 339
+     07
+  -   6
+  -----
+     18
+  -  18
+  -----
+      0
 
 ADDIZIONE/SOTTRAZIONE IN COLONNA:
     456
