@@ -205,6 +205,15 @@ export function ChatShell({
         {showPomodoro && (
           <PomodoroTimer compact focusMinutes={pomodoroMinutes} userMessageCount={messages.filter(m => m.role === "user").length} />
         )}
+        {onEndSession && messages.length >= 2 && (
+          <button
+            onClick={onEndSession}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors font-medium"
+          >
+            <Square className="w-3 h-3" />
+            Termina
+          </button>
+        )}
       </div>
 
       {/* Messages */}
