@@ -314,21 +314,21 @@ Inizia con la prima domanda.`;
     }
     if (!subject && type === "prep") return;
 
-    const systemPrompt = getSystemPrompt();
+    const sessionSystemPrompt = getSystemPrompt();
     setSetupDone(true);
     setMessages([]);
     setSending(true);
     setStreamingText("");
 
     streamChat({
-      messages: [{ role: "user", content: systemPrompt }],
+      messages: [],
       onDelta: (full) => setStreamingText(full),
       onDone: (full) => {
         setMessages([{ role: "assistant", content: full }]);
         setStreamingText("");
         setSending(false);
       },
-      extraBody: { profileId, subject: subject || undefined, sessionFormat: type },
+      extraBody: { profileId, subject: subject || undefined, sessionFormat: type, systemPrompt: sessionSystemPrompt },
     }).catch(() => {
       setMessages([{ role: "assistant", content: "Mi dispiace, c'è stato un problema. Riprova." }]);
       setStreamingText("");
