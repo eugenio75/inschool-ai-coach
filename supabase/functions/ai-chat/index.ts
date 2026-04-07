@@ -306,46 +306,22 @@ REGOLE OBBLIGATORIE:
 4. OPERAZIONI COLONNA PER COLONNA: Per moltiplicazioni, divisioni e addizioni con riporto, esegui e mostra il calcolo cifra per cifra, colonna per colonna, esattamente come si farebbe sulla carta.
 
 ═══════════════════════════════════════
-FORMATTAZIONE VISIVA DELLE OPERAZIONI — OBBLIGATORIA
+FORMATTAZIONE OPERAZIONI IN COLONNA — TAG COLONNA (OBBLIGATORIO)
 ═══════════════════════════════════════
-Per QUALSIASI operazione in colonna (addizione, sottrazione, moltiplicazione, divisione), DEVI mostrare l'operazione VISIVAMENTE formattata come si farebbe sul quaderno, usando blocchi di codice markdown (tre backtick) per allineare le cifre.
+Quando devi mostrare un'operazione in colonna, usa SEMPRE questo tag speciale. Il tag verrà renderizzato automaticamente come un'operazione in colonna con quadretti, come sul quaderno.
 
-MOLTIPLICAZIONE IN COLONNA — esempio 567 x 8:
-Usa un blocco di codice con le cifre allineate a destra:
-    567
-  x   8
-  -----
-   4536
-Spiega ogni colonna: "8 x 7 = 56, scrivo 6 e riporto 5", ecc.
-
-DIVISIONE IN COLONNA — esempio 678 : 2:
-Mostra la divisione passo dopo passo con blocco di codice.
-Il segno meno (-) va su una COLONNA SEPARATA a sinistra, MAI attaccato al numero:
-    678 | 2
-        |------
-        | 3
-  -   6
-  -----
-      7
-  -   6
-  -----
-     18
-  -  18
-  -----
-      0
-
-ADDIZIONE/SOTTRAZIONE IN COLONNA:
-    456
-  + 789
-  -----
-   1245
+SINTASSI:
+[COLONNA: tipo=moltiplicazione, numeri=754,27]
+[COLONNA: tipo=divisione, numeri=542,2]
+[COLONNA: tipo=addizione, numeri=123,456]
+[COLONNA: tipo=sottrazione, numeri=500,123]
 
 REGOLE:
-- Usa SEMPRE blocchi di codice markdown (tre backtick) per le operazioni in colonna — mai testo inline senza formattazione
-- Allinea le cifre a destra come sul quaderno
-- Mostra i riporti sopra le cifre quando possibile
-- Aggiorna la visualizzazione ad ogni passaggio: mostra l'operazione che cresce mano a mano che lo studente procede
-- Per le moltiplicazioni con due cifre, mostra anche i prodotti parziali incolonnati
+- NON usare MAI ASCII art, pipe (|), trattini (---), spazi o blocchi di codice markdown per simulare operazioni in colonna
+- Usa SEMPRE e SOLO il tag [COLONNA: ...] per qualsiasi operazione in colonna
+- Dopo il tag, continua la spiegazione normalmente
+- Per mostrare i passaggi intermedi di un calcolo, puoi usare più tag consecutivi o spiegare a parole
+- Il tag funziona per addizione, sottrazione, moltiplicazione e divisione
 - Questa formattazione è OBBLIGATORIA per scuola primaria e media. Per superiori e università, usala quando l'operazione lo richiede.
 
 ═══════════════════════════════════════
