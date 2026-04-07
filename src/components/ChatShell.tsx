@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Send, Mic, Paperclip, Lightbulb, AlertCircle, RefreshCw, Loader2, Square,
+  Volume2, VolumeX,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatMsg } from "@/lib/streamChat";
@@ -10,6 +11,8 @@ import { CoachAvatar, type CoachAvatarMood } from "@/components/shared/CoachAvat
 import { MathText } from "@/components/shared/MathText";
 import { ProgressiveMessage } from "@/components/shared/ProgressiveMessage";
 import { WritingPen } from "@/components/shared/handwritten/WritingPen";
+import { Whiteboard } from "@/components/study/Whiteboard";
+import { fireConfetti, playCorrectSound } from "@/lib/confetti";
 import { useTranslation } from "react-i18next";
 
 interface ChatShellProps {
@@ -51,6 +54,34 @@ function detectMoodFromText(text: string): CoachAvatarMood {
   return "default";
 }
 
+// Detect if the coach is asking the student a question (waiting for response)
+function isWaitingForStudent(text: string): boolean {
+  return /\?\s*$/.test(text.trim()) || /tocca a te|prova tu|rispondi|dimmi|qual è|quanto fa/i.test(text);
+}
+
+// Detect if the coach confirms a correct answer
+function isCorrectFeedback(text: string): boolean {
+  return /esatto|corrett[oai]|bravo|bravissim|perfetto|giusto|ben fatto|ottimo|eccellente|✅|🎉/i.test(text) &&
+    !/non è corrett|sbagliato|non proprio/i.test(text);
+}
+
+// Detect if the coach signals a wrong answer
+function isWrongFeedback(text: string): boolean {
+  return /quasi|riprova|non proprio|non è|proviamo|rifacciamo|attenzione|hmm|🤔/i.test(text);
+}
+
+type CoachStatus = "thinking" | "writing" | "reading" | "waiting" | "idle";
+
+function getStatusIndicator(status: CoachStatus) {
+  switch (status) {
+    case "thinking": return { icon: "💭", text: "Il professore sta pensando..." };
+    case "writing": return { icon: "🖊️", text: "Il professore sta scrivendo..." };
+    case "reading": return { icon: "👀", text: "Il professore sta leggendo..." };
+    case "waiting": return { icon: "✏️", text: "Tocca a te!" };
+    case "idle": return null;
+  }
+}
+
 export function ChatShell({
   title, subtitle, badgeText, coachName,
   messages, streamingText, sending,
@@ -69,9 +100,52 @@ export function ChatShell({
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Whiteboard state
+  const [whiteboardOpen, setWhiteboardOpen] = useState(false);
+  const [whiteboardLoading, setWhiteboardLoading] = useState(false);
+
+  // Points & feedback state
+  const [sessionPoints, setSessionPoints] = useState(0);
+  const [correctStreak, setCorrectStreak] = useState(0);
+  const [pointsPopup, setPointsPopup] = useState<number | null>(null);
+  const [shaking, setShaking] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // Coach status
+  const coachStatus: CoachStatus = sending && !streamingText ? "thinking" : 
+    sending && streamingText ? "writing" :
+    whiteboardLoading ? "reading" :
+    !sending && messages.length > 0 && isWaitingForStudent(messages[messages.length - 1]?.content || "") ? "waiting" :
+    "idle";
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, streamingText]);
+
+  // Detect correct/wrong answers from new assistant messages
+  useEffect(() => {
+    if (messages.length < 2) return;
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg.role !== "assistant") return;
+
+    if (isCorrectFeedback(lastMsg.content)) {
+      const newStreak = correctStreak + 1;
+      setCorrectStreak(newStreak);
+      setSessionPoints(prev => prev + 10);
+      setPointsPopup(10);
+      setTimeout(() => setPointsPopup(null), 1500);
+
+      if (soundEnabled) playCorrectSound();
+
+      if (newStreak >= 3 && newStreak % 3 === 0) {
+        fireConfetti();
+      }
+    } else if (isWrongFeedback(lastMsg.content)) {
+      setCorrectStreak(0);
+      setShaking(true);
+      setTimeout(() => setShaking(false), 400);
+    }
+  }, [messages.length]);
 
   function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
@@ -140,6 +214,70 @@ export function ChatShell({
     }
   }
 
+  // Whiteboard OCR submission
+  async function handleWhiteboardSubmit(imageDataUrl: string) {
+    setWhiteboardLoading(true);
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            messages: [{
+              role: "user",
+              content: [
+                { type: "text", text: `Sei un sistema OCR scolastico. Leggi questa immagine scritta a mano da un bambino delle elementari/medie. Restituisci SOLO un JSON: {"recognized": "testo/operazione riconosciuta", "confidence": 0.0-1.0, "type": "numero | operazione | testo | incomprensibile"} Sii tollerante con la scrittura infantile imperfetta.` },
+                { type: "image_url", image_url: { url: imageDataUrl } },
+              ],
+            }],
+          }),
+        }
+      );
+
+      const text = await res.text();
+      let recognized = "";
+      let confidence = 0;
+      try {
+        // Try to parse JSON from response
+        let content = text;
+        try { const j = JSON.parse(text); content = j.response || j.message || text; } catch {}
+        const jsonMatch = content.match(/\{[\s\S]*?\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          recognized = parsed.recognized || "";
+          confidence = parsed.confidence || 0;
+        } else {
+          recognized = content.trim();
+          confidence = 0.7;
+        }
+      } catch {
+        recognized = text.trim();
+        confidence = 0.5;
+      }
+
+      setWhiteboardOpen(false);
+      setWhiteboardLoading(false);
+
+      if (confidence < 0.5 || !recognized) {
+        onSend?.("[Risposta dalla lavagna] Non riesco a leggere bene... puoi riscrivere più grande? 😊");
+      } else {
+        onSend?.(`[Risposta scritta sulla lavagna] ${recognized}`);
+      }
+    } catch (err) {
+      console.error("Whiteboard OCR error:", err);
+      setWhiteboardOpen(false);
+      setWhiteboardLoading(false);
+      onSend?.("[Errore lavagna] Non riesco a leggere la lavagna. Prova a scrivere con la tastiera.");
+    }
+  }
+
   function startVoice() {
     try {
       const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -177,6 +315,8 @@ export function ChatShell({
 
   const lastMsg = messages[messages.length - 1];
   const hasActions = lastMsg?.role === "assistant" && lastMsg.actions && lastMsg.actions.length > 0;
+  const showWhiteboardOption = lastMsg?.role === "assistant" && isWaitingForStudent(lastMsg.content || "") && !hasActions && !sending;
+  const statusInfo = getStatusIndicator(coachStatus);
 
   return (
     <div className="h-screen flex flex-col bg-card">
@@ -201,6 +341,42 @@ export function ChatShell({
             </div>
           )}
         </div>
+
+        {/* Points display */}
+        <div className="relative flex items-center gap-1">
+          {sessionPoints > 0 && (
+            <motion.div
+              key={sessionPoints}
+              initial={{ scale: 1 }}
+              animate={{ scale: [1, 1.2, 1] }}
+              className="text-xs font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded-full"
+            >
+              ⭐ {sessionPoints}
+            </motion.div>
+          )}
+          <AnimatePresence>
+            {pointsPopup && (
+              <motion.span
+                initial={{ opacity: 1, y: 0 }}
+                animate={{ opacity: 0, y: -20 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.2 }}
+                className="absolute -top-4 right-0 text-xs font-bold text-[#1D9E75]"
+              >
+                +{pointsPopup}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Sound toggle */}
+        <button
+          onClick={() => setSoundEnabled(!soundEnabled)}
+          className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground"
+        >
+          {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+        </button>
+
         {badgeText && (
           <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">{badgeText}</span>
         )}
@@ -218,8 +394,26 @@ export function ChatShell({
         )}
       </div>
 
+      {/* Status indicator bar */}
+      <AnimatePresence>
+        {statusInfo && coachStatus !== "idle" && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="bg-muted/50 border-b border-border px-4 py-1.5 flex items-center gap-2 text-xs text-muted-foreground font-['Patrick_Hand'] overflow-hidden"
+          >
+            <span className={coachStatus === "waiting" ? "animate-pulse text-[#E57373]" : ""}>{statusInfo.icon}</span>
+            <span className={coachStatus === "waiting" ? "text-[#E57373] font-semibold" : ""}>{statusInfo.text}</span>
+            {correctStreak >= 3 && (
+              <span className="ml-auto text-amber-500 font-bold">🔥 Zona! ×{correctStreak}</span>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+      <div ref={scrollRef} className={`flex-1 overflow-y-auto px-4 py-4 space-y-4 ${shaking ? "animate-shake" : ""}`}>
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => {
             const msgMood: CoachAvatarMood = msg.role === "assistant" ? detectMoodFromText(msg.content || "") : "default";
@@ -300,6 +494,33 @@ export function ChatShell({
             </div>
           </div>
         )}
+
+        {/* Whiteboard/keyboard choice when coach asks question */}
+        {showWhiteboardOption && onSend && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-center"
+          >
+            <div className="bg-muted/60 border border-border rounded-xl px-4 py-3 text-center">
+              <p className="text-xs text-muted-foreground mb-2 font-['Patrick_Hand']">Come vuoi rispondere?</p>
+              <div className="flex gap-2 justify-center">
+                <button
+                  onClick={() => setWhiteboardOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-card border border-border text-sm font-medium hover:border-primary transition-colors"
+                >
+                  ✏️ Scrivi sulla lavagna
+                </button>
+                <button
+                  onClick={() => inputRef.current?.focus()}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-card border border-border text-sm font-medium hover:border-primary transition-colors"
+                >
+                  ⌨️ Scrivi testo
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Extra footer */}
@@ -378,6 +599,14 @@ export function ChatShell({
           </form>
         </div>
       )}
+
+      {/* Whiteboard modal */}
+      <Whiteboard
+        open={whiteboardOpen}
+        onClose={() => setWhiteboardOpen(false)}
+        onSubmit={handleWhiteboardSubmit}
+        loading={whiteboardLoading}
+      />
     </div>
   );
 }
