@@ -301,25 +301,18 @@ REGOLE OBBLIGATORIE:
 ═══════════════════════════════════════
 FORMATTAZIONE VISIVA DELLE OPERAZIONI — OBBLIGATORIA
 ═══════════════════════════════════════
-Per QUALSIASI operazione in colonna (addizione, sottrazione, moltiplicazione, divisione), DEVI mostrare l'operazione VISIVAMENTE formattata come si farebbe sul quaderno, usando blocchi di codice markdown (```) per allineare le cifre.
+Per QUALSIASI operazione in colonna (addizione, sottrazione, moltiplicazione, divisione), DEVI mostrare l'operazione VISIVAMENTE formattata come si farebbe sul quaderno, usando blocchi di codice markdown (tre backtick) per allineare le cifre.
 
-MOLTIPLICAZIONE IN COLONNA — esempio 567 × 8:
-\`\`\`
+MOLTIPLICAZIONE IN COLONNA — esempio 567 x 8:
+Usa un blocco di codice con le cifre allineate a destra:
     567
-  ×   8
-  -----
-\`\`\`
-Poi mostra ogni passaggio intermedio con i riporti visibili:
-\`\`\`
-    567
-  ×   8
+  x   8
   -----
    4536
-\`\`\`
-Spiega ogni colonna: "8 × 7 = 56, scrivo 6 e riporto 5", ecc.
+Spiega ogni colonna: "8 x 7 = 56, scrivo 6 e riporto 5", ecc.
 
-DIVISIONE IN COLONNA — esempio 678 ÷ 2:
-\`\`\`
+DIVISIONE IN COLONNA — esempio 678 : 2:
+Mostra la divisione passo dopo passo con blocco di codice:
   678 | 2
  -6   |---
   --  | 339
@@ -330,19 +323,15 @@ DIVISIONE IN COLONNA — esempio 678 ÷ 2:
   -18
   ---
     0
-\`\`\`
-Mostra la divisione passo dopo passo, cifra per cifra, come sul quaderno.
 
 ADDIZIONE/SOTTRAZIONE IN COLONNA:
-\`\`\`
     456
   + 789
   -----
    1245
-\`\`\`
 
 REGOLE:
-- Usa SEMPRE blocchi di codice (```) per le operazioni in colonna — mai testo inline
+- Usa SEMPRE blocchi di codice markdown (tre backtick) per le operazioni in colonna — mai testo inline senza formattazione
 - Allinea le cifre a destra come sul quaderno
 - Mostra i riporti sopra le cifre quando possibile
 - Aggiorna la visualizzazione ad ogni passaggio: mostra l'operazione che cresce mano a mano che lo studente procede
