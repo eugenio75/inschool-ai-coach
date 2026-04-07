@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Type, BookOpen, Plus, X, Sparkles, Check, Loader2, CalendarDays, FileText } from "lucide-react";
+import { ArrowLeft, Camera, Type, BookOpen, Plus, X, Sparkles, Check, Loader2, CalendarDays, FileText, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createTask, parseHomeworkFiles } from "@/lib/database";
 import { useToast } from "@/hooks/use-toast";
@@ -309,6 +309,10 @@ const AddHomework = () => {
                     <p className="text-sm text-muted-foreground">
                       Puoi caricare <strong>più foto</strong> o un <strong>PDF multipagina</strong>
                     </p>
+                    <div className="mt-3 flex items-center gap-2 justify-center text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-lg px-3 py-2">
+                      <Smartphone className="w-4 h-4 flex-shrink-0" />
+                      <span>Scatta le foto in <strong>verticale</strong> (portrait) per una lettura più accurata</span>
+                    </div>
                   </div>
                   <input type="file" accept="image/*,application/pdf" capture="environment" multiple className="hidden" onChange={handlePhotoUpload} />
                 </label>
