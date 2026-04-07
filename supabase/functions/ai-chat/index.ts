@@ -791,16 +791,18 @@ MANDATORY RULES:
 
 FIXED DIVISION TEMPLATE — keep the grid stable:
 \`\`\`
-  675 | 3
-  -6  |---
-  --  | 2
-   07
-   -6
-   --
-    15
-   -15
-   ---
-     0
+  546 | 4
+      |------
+      | 1
+  -   4
+  -----
+     14
+  -  12
+  -----
+     26
+  -  24
+  -----
+      2
 \`\`\`
 
 FIXED MULTIPLICATION TEMPLATE — keep carries above the correct column:
