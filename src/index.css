@@ -343,9 +343,9 @@
   background-color: hsl(222 20% 14%);
   background-image: repeating-linear-gradient(
     transparent,
-    transparent 27px,
-    hsl(222 15% 22%) 27px,
-    hsl(222 15% 22%) 28px
+    transparent 31px,
+    hsl(222 15% 22%) 31px,
+    hsl(222 15% 22%) 32px
   );
   border-left-color: #C62828;
   color: hsl(var(--foreground));

@@ -8,7 +8,7 @@ export function WritingPen({ writing }: { writing: boolean }) {
   if (!writing) {
     // Blinking cursor
     return (
-      <span className="inline-flex items-center gap-1 text-xs text-[#7F77DD] font-['Caveat'] ml-1">
+      <span className="inline-flex items-center gap-1 text-sm text-[#7F77DD] font-['Patrick_Hand'] ml-1">
         <span className="w-0.5 h-4 bg-[#7F77DD] animate-pulse rounded-full" />
       </span>
     );

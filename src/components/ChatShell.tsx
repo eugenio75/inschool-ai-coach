@@ -281,7 +281,7 @@ export function ChatShell({
             <div className="max-w-[80%] rounded-xl rounded-bl-sm notebook-bubble px-4 py-3 whitespace-pre-wrap">
               <div className="flex items-center gap-1 mb-1 opacity-60">
                 <WritingPen writing={true} />
-                <span className="text-xs text-[#7F77DD] font-['Caveat']">sta scrivendo...</span>
+                <span className="text-sm text-[#7F77DD] font-['Patrick_Hand']">sta scrivendo...</span>
               </div>
               <MathText>{streamingText}</MathText>
               <span className="inline-block w-0.5 h-4 bg-foreground/60 ml-0.5 animate-pulse rounded-full" />
@@ -296,7 +296,7 @@ export function ChatShell({
             </div>
             <div className="bg-muted rounded-xl rounded-bl-sm px-4 py-3 flex items-center gap-2">
               <WritingPen writing={true} />
-              <span className="text-xs text-muted-foreground font-['Caveat']">Il professore sta pensando...</span>
+              <span className="text-sm text-muted-foreground font-['Patrick_Hand']">Il professore sta pensando...</span>
             </div>
           </div>
         )}
