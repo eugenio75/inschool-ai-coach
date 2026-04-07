@@ -279,8 +279,12 @@ export function ChatShell({
               <CoachAvatar mood="thinking" size={32} />
             </div>
             <div className="max-w-[80%] rounded-xl rounded-bl-sm notebook-bubble px-4 py-3 whitespace-pre-wrap">
+              <div className="flex items-center gap-1 mb-1 opacity-60">
+                <WritingPen writing={true} />
+                <span className="text-xs text-[#7F77DD] font-['Caveat']">sta scrivendo...</span>
+              </div>
               <MathText>{streamingText}</MathText>
-              <span className="inline-block w-1.5 h-4 bg-primary ml-0.5 animate-pulse" />
+              <span className="inline-block w-0.5 h-4 bg-foreground/60 ml-0.5 animate-pulse rounded-full" />
             </div>
           </div>
         )}
@@ -290,8 +294,9 @@ export function ChatShell({
             <div className="flex-shrink-0 mr-2">
               <CoachAvatar mood="thinking" size={32} />
             </div>
-            <div className="bg-muted rounded-xl rounded-bl-sm px-4 py-3">
-              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+            <div className="bg-muted rounded-xl rounded-bl-sm px-4 py-3 flex items-center gap-2">
+              <WritingPen writing={true} />
+              <span className="text-xs text-muted-foreground font-['Caveat']">Il professore sta pensando...</span>
             </div>
           </div>
         )}
