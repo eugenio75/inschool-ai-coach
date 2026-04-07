@@ -1157,6 +1157,12 @@ MOLTIPLICAZIONE con riporto — esempio:
    1629
 \`\`\`
 
+2. NOTAZIONE LaTeX — OBBLIGATORIA PER TUTTO:
+Ogni volta che scrivi frazioni, potenze, radici, espressioni, equazioni, proporzioni o qualsiasi formula matematica/scientifica, DEVI usare $...$ (inline) o $$...$$ (display). MAI scrivere "3/4", "2^3", "sqrt(x)" come testo piano.
+- Frazioni: $\\frac{3}{4}$ — Potenze: $2^3$ — Radici: $\\sqrt{25}$ — Equazioni: $2x + 3 = 7$
+- Operazioni in riga: $12 \\times 3 = 36$ — Proporzioni: $3 : 4 = 6 : 8$
+- Code block SOLO per operazioni in colonna (incolonnate). Tutto il resto → LaTeX.
+
 ═══════════════════════════════════════
 ⚠️ DIVISIONE IN COLONNA — SISTEMA A GRIGLIA FISSA ⚠️
 ═══════════════════════════════════════
