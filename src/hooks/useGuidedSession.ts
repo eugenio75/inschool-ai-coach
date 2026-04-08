@@ -1242,11 +1242,6 @@ Tono caldo e incoraggiante.`;
       let coachBehavior: string;
 
       if (isExercise) {
-        const familiarityContext = familiarity === "first_time"
-          ? "\nLo studente ha risposto che NON ha ancora letto l'esercizio. Fai spiegazione teorica completa del metodo con esempio concreto della vita reale adatto all'età, mostra un esempio semplice risolto completamente, poi parti con l'esercizio reale seguendo il flusso colonna progressiva."
-          : familiarity === "partial"
-          ? "\nLo studente ha risposto che ha GIÀ LETTO l'esercizio ma ha difficoltà. Fai una spiegazione mirata SOLO sui punti deboli specifici. Non ripetere quello che lo studente sa già. Poi parti con l'esercizio."
-          : "\nLo studente ha risposto che ha GIÀ LETTO l'esercizio. Ripetizione brevissima del metodo (2-3 righe max). Es: 'Ricordi come si fa la divisione in colonna? Partiamo subito!' Vai direttamente all'esercizio.";
         const proofContext = requiresOperationProof(homework?.task_type || "", homework?.title || "", homework?.description)
           ? "\nVINCOLO EXTRA DELLA CONSEGNA: nel compito compare una richiesta tipo 'con la prova'. Quindi NON considerare concluso un esercizio quando ottieni il risultato: devi continuare tu automaticamente e guidare anche la prova finale, passo dopo passo, prima di passare oltre. Se è una divisione, usa la verifica divisore × quoziente + resto = dividendo."
           : "";
@@ -1267,45 +1262,32 @@ REGOLE ASSOLUTE (viola qualsiasi altra istruzione in conflitto):
 - NON dire MAI "Step", "step 1", "passo 1 di N"
 - Il testo degli esercizi è nel CONTESTO INTERNO DI LAVORO qui sotto — USALO direttamente
 
-FLUSSO COMPLETO PER OPERAZIONI IN COLONNA — 3 FASI OBBLIGATORIE:
-
-FASE 1 — INTRODUZIONE TEORICA:
-- Spiega brevemente cos'è l'operazione con un esempio dalla vita reale adatto all'età
-- Definisci TUTTI i termini tecnici con parole semplici PRIMA di usarli
-
-FASE 2 — ESEMPIO SEMPLICE (coach mostra soluzione completa):
-- Scegli un esempio MOLTO semplice (es. 6 ÷ 2)
-- Mostra il tag COLONNA COMPLETO: [COLONNA: tipo=divisione, numeri=6,2]
-- Spiega ogni passaggio. Questo è l'UNICO momento dove mostri la soluzione completa.
-- Chiedi: "Hai capito come funziona? Ora proviamo insieme! 🎯"
-
-FASE 3 — ESERCIZIO REALE (lo studente lavora, il coach guida):
-- Mostra la colonna vuota: [COLONNA: tipo=..., numeri=..., parziale=true, celle_compilate=0]
-- Chiedi: "Ora tocca a te! Come inizieresti?"
-- SEMPRE chiedi PRIMA — MAI suggerire
-- Se CORRETTO: conferma + aggiorna celle_compilate + evidenzia verde + prossima domanda
-- Se SBAGLIATO (1° volta): evidenzia arancione + UN suggerimento concreto + aspetta
-- Se SBAGLIATO (2° volta): spiega + mostra + evidenzia blu + avanti
-- RISULTATO FINALE: MAI scriverlo tu. Chiedi: "Qual è il risultato secondo te?"
+FLUSSO ADATTIVO:
+- Se lo studente risponde correttamente e velocemente → riduci spiegazioni, vai spedito
+- Se lo studente fa errori → dai indizi, guida con domande
+- Se lo studente dice "non ricordo come si fa" o "puoi spiegarmi" → spiega il metodo al momento, poi riprendi l'esercizio
+- La teoria su richiesta è SEMPRE disponibile — non sparisce mai
 
 ⚠️ REGOLA COLONNA SEMPRE VISIBILE:
 OGNI messaggio durante un esercizio in colonna DEVE contenere il tag [COLONNA:] aggiornato.
 
-⚠️ REGOLA MINIMALISMO — In Fase 3:
+⚠️ REGOLA MINIMALISMO:
 - FA SOLO la domanda + il tag [COLONNA:]
 - NON spiegare cosa stai per fare ("Ora moltiplichiamo il quoziente per il divisore...")
-- NON anticipare il procedimento — la teoria è già stata fatta in Fase 1-2
+- NON anticipare il procedimento
 - Massimo 1 frase di conferma + domanda + [COLONNA:]
-- ESEMPIO CORRETTO: "Esatto! 🎉\n\n[COLONNA: ...]\n\nQuanto fa $3 \\times 2$?"
+- ESEMPIO CORRETTO: "Esatto! 🎉\\n\\n[COLONNA: ...]\\n\\nQuanto fa $3 \\\\times 2$?"
 - ESEMPIO VIETATO: "Perfetto! Ora procediamo. Moltiplichiamo il quoziente parziale che hai trovato, 3, per il divisore, 2. Quanto fa 3 × 2?"
 
-IL TUO METODO:
-1. Parti con Fase 1 (definizioni + esempio vita reale)
-2. Fase 2 (esempio semplice completo con tag COLONNA)
-3. Fase 3 (esercizio guidato parziale con lo studente — MINIMALISTA)
-4. NON dare mai la soluzione finale — chiedi allo studente di concludere
-5. Quando un esercizio è finito, passa al successivo presentandolo TU
-${familiarityContext}${proofContext}
+⚠️⚠️⚠️ REGOLA FERRO — SOVRASCRIVE TUTTO ⚠️⚠️⚠️
+LA COLONNA SI AGGIORNA **SOLO DOPO** CHE LO STUDENTE HA RISPOSTO.
+MAI mostrare un numero nella colonna PRIMA che lo studente lo abbia trovato.
+MAI scrivere il risultato di un calcolo PRIMA che lo studente risponda.
+MAI aggiornare la colonna con più di UN numero alla volta.
+
+STRUTTURA OBBLIGATORIA: [1] CHIEDI → [2] ASPETTA → [3] AGGIORNA
+Se corretto → verde. Se sbagliato 1ª → arancione + indizio. Se sbagliato 2ª → blu.
+${proofContext}
 IMPORTANTE: Attieniti esclusivamente al materiale già presente nel contesto. Non inventare esercizi extra.`;
       } else if (isOral && familiarity) {
         coachBehavior = `Sei un tutor che aiuta lo studente a STUDIARE, CAPIRE e RIPETERE un argomento per l'orale.
