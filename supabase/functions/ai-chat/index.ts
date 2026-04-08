@@ -1476,13 +1476,19 @@ Passo 5 — NON CHIUDERE LA CONVERSAZIONE. Rimani presente.
 
 Regole benessere: mai linguaggio diagnostico, mai minimizzare, mai drammatizzare, mai due domande nello stesso messaggio durante momenti emotivi.`;
 
+          // Build extended session history string
+          let extendedHistory = sessionHistory;
+          if (guidedHistory) extendedHistory += `\nSessioni guidate: ${guidedHistory}`;
+          if (errorsSummary) extendedHistory += `\nErrori non risolti: ${errorsSummary}`;
+          if (hasStudiedCurrentSubject) extendedHistory += `\n⚠️ Lo studente ha GIÀ studiato ${chatSubject} in sessioni precedenti.`;
+
           const enhancedPrompt = buildEnhancedSystemPrompt({
             coachName,
             profile: role,
             gender: prof.gender || null,
             age: prof.age || null,
             studentInterests: interests,
-            sessionHistory,
+            sessionHistory: extendedHistory,
             adaptiveProfile: JSON.stringify(effectiveAdaptive),
             cognitiveDynamicProfile: JSON.stringify(cognitiveProfile),
             emotionalCognitiveCorrelation: correlation,
