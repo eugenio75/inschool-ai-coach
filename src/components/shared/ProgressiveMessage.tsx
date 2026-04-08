@@ -10,6 +10,8 @@ interface Props {
   blockPause?: number;
   /** Called when all content has been revealed */
   onComplete?: () => void;
+  /** Exercise step for incremental SVG rendering */
+  exerciseStep?: number;
 }
 
 /**
