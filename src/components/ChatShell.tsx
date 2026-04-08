@@ -208,7 +208,7 @@ export function ChatShell({
     return steps;
   }, [messages]);
 
-
+  useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, streamingText]);
 
