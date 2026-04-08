@@ -1,6 +1,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// Load Mr. Ranedeer framework from file
+const MR_RANEDEER_RAW = await Deno.readTextFile(new URL("./mr_ranedeer.txt", import.meta.url));
+
+function mapDepth(schoolLevel: string, age: number | string | null): string {
+  const ageNum = typeof age === "string" ? parseInt(age) : age;
+  const level = (schoolLevel || "").toLowerCase();
+  if (level.includes("primaria-1-2") || (ageNum && ageNum <= 7)) return "Elementary (Grade 1-6), depth 1-2";
+  if (level.includes("primaria-3-5") || level === "alunno" || (ageNum && ageNum <= 10)) return "Elementary (Grade 1-6), depth 3";
+  if (level.includes("media-1")) return "Middle School (Grade 7-9), depth 4";
+  if (level.includes("media-2") || level.includes("media-3") || level === "medie") return "Middle School (Grade 7-9), depth 5";
+  if (level === "superiori" || level === "highschool") return "High School (Grade 10-12), depth 6-7";
+  if (level === "universitario" || level === "university") return "Undergraduate, depth 8-9";
+  return "Middle School (Grade 7-9), depth 4";
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
