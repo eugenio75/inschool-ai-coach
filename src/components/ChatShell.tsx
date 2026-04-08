@@ -509,32 +509,7 @@ export function ChatShell({
           </div>
         )}
 
-        {/* Whiteboard/keyboard choice when coach asks question */}
-        {showWhiteboardOption && onSend && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-center"
-          >
-            <div className="bg-muted/60 border border-border rounded-xl px-4 py-3 text-center">
-              <p className="text-xs text-muted-foreground mb-2 font-['Patrick_Hand']">Come vuoi rispondere?</p>
-              <div className="flex gap-2 justify-center">
-                <button
-                  onClick={() => setWhiteboardOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-card border border-border text-sm font-medium hover:border-primary transition-colors"
-                >
-                  ✏️ Scrivi sulla lavagna
-                </button>
-                <button
-                  onClick={() => inputRef.current?.focus()}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-card border border-border text-sm font-medium hover:border-primary transition-colors"
-                >
-                  ⌨️ Scrivi testo
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
+        {/* Whiteboard card removed — button now in toolbar below */}
       </div>
 
       {/* Extra footer */}

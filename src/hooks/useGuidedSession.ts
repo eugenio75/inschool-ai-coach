@@ -657,16 +657,9 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     setSetupDone(true);
     setLoading(false);
 
-    const emotionResponse = getEmotionResponse(emotion);
-    const proposal = getMethodProposal(fam, homework?.task_type || "study", homework?.title || "");
-
-    setMessages([{
-      role: "assistant",
-      content: `${emotionResponse}\n\n${proposal}`,
-      actions: [
-        { label: "🚀  Cominciamo", value: "start_session", primary: true },
-      ],
-    }]);
+    // Skip the intermediate "Cominciamo" screen — start directly
+    setMessages([]);
+    createAndStartSession(emotion, fam);
   }
 
   async function handleMethodAction(value: string) {
