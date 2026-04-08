@@ -76,11 +76,17 @@ export default function FreeStudySession() {
     if (!topic.trim()) return;
     setStep("study");
 
+    console.log('SESSIONE:', { materia: selectedSubject, argomento: topic, livello: schoolLevel });
+
     const coachLabel = coachName || "il Coach";
-    const subjectCtx = selectedSubject ? ` Materia: ${selectedSubject}.` : "";
-    const systemPrompt = `Sei ${coachLabel}, il coach personale dello studente su SarAI. Livello: ${schoolLevel}.${subjectCtx} 
-L'argomento è: "${topic}".
-Quando ti presenti dì sempre "Sono ${coachLabel}, il tuo coach."
+    const systemPrompt = `Materia: ${selectedSubject || "non specificata"}
+Argomento: ${topic}
+Livello scolastico: ${schoolLevel}
+Stai insegnando ESCLUSIVAMENTE ${selectedSubject || "l'argomento indicato"} e ESCLUSIVAMENTE l'argomento "${topic}".
+NON parlare mai di altri argomenti o materie.
+Se lo studente va fuori tema, riportalo gentilmente all'argomento "${topic}"${selectedSubject ? ` di ${selectedSubject}` : ""}.
+
+Sei ${coachLabel}, il coach personale dello studente su SarAI.
 Dividi l'argomento in blocchi logici. Per ogni blocco:
 1. Presenta brevemente il concetto
 2. Fai una domanda di comprensione
@@ -98,14 +104,15 @@ NON usare frasi da sistema informatico. Sei un professore vivo ed entusiasta.`;
 
     const initialMsg: ChatMessage = { role: "assistant", content: "" };
     setMessages([initialMsg]);
-    callAI([{ role: "user", content: systemPrompt }], true);
+    callAIWithContext([{ role: "user", content: `Voglio studiare "${topic}"${selectedSubject ? ` (${selectedSubject})` : ""}` }], systemPrompt, true);
   }
 
-  async function callAI(history: ChatMessage[], isFirst = false) {
+  async function callAIWithContext(history: ChatMessage[], sysPrompt: string | null, isFirst = false) {
     setSending(true);
     setStreamingText("");
     try {
       const { data: { session: authSession } } = await supabase.auth.getSession();
+      const pid = profile?.id;
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
         {
@@ -120,6 +127,10 @@ NON usare frasi da sistema informatico. Sei un professore vivo ed entusiasta.`;
             schoolLevel,
             coachName: coachName || undefined,
             stream: true,
+            profileId: pid || undefined,
+            subject: selectedSubject || undefined,
+            sessionFormat: "study",
+            ...(sysPrompt ? { systemPrompt: sysPrompt } : {}),
           }),
         }
       );
@@ -196,7 +207,7 @@ NON usare frasi da sistema informatico. Sei un professore vivo ed entusiasta.`;
     const newMessages = [...messages, userMsg, { role: "assistant" as const, content: "" }];
     setMessages(newMessages);
     setInput("");
-    callAI(newMessages.slice(0, -1));
+    callAIWithContext(newMessages.slice(0, -1), null);
   }
 
   async function generateOutput(type: string) {

@@ -346,8 +346,24 @@ export function ChatShell({
   const showWhiteboardOption = lastMsg?.role === "assistant" && isWaitingForStudent(lastMsg.content || "") && !hasActions && !sending;
   const statusInfo = getStatusIndicator(coachStatus);
 
+  // Parse arrow options from assistant messages into action buttons
+  function parseInlineOptions(text: string): { cleanText: string; options: string[] } {
+    const lines = text.split("\n");
+    const options: string[] = [];
+    const cleanLines: string[] = [];
+    for (const line of lines) {
+      const match = line.match(/^\s*(?:👉|•|-)\s+(.+)$/);
+      if (match) {
+        options.push(match[1].trim());
+      } else {
+        cleanLines.push(line);
+      }
+    }
+    return { cleanText: cleanLines.join("\n").trim(), options };
+  }
+
   return (
-    <div className="h-screen flex flex-col bg-card">
+    <div className="h-[100dvh] flex flex-col bg-card">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card shrink-0">
         <button onClick={onBack} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
@@ -445,6 +461,12 @@ export function ChatShell({
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => {
             const msgMood: CoachAvatarMood = msg.role === "assistant" ? detectMoodFromText(msg.content || "") : "default";
+            const isLastAssistant = msg.role === "assistant" && i === messages.length - 1;
+            // Parse inline options (👉) from assistant messages
+            const { cleanText: parsedCleanText, options: parsedOptions } = msg.role === "assistant" ? parseInlineOptions(msg.content || "") : { cleanText: msg.content || "", options: [] };
+            const showParsedOptions = isLastAssistant && parsedOptions.length > 0 && !msg.actions?.length;
+            const displayContent = showParsedOptions ? parsedCleanText : msg.content;
+
             return (
             <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -459,17 +481,33 @@ export function ChatShell({
                     ? "bg-primary text-primary-foreground rounded-br-sm"
                     : "notebook-bubble rounded-bl-sm"
                 }`}>
-                  {msg.role === "assistant" && i === messages.length - 1 ? (
+                  {isLastAssistant ? (
                     <div>
                       <div className="flex items-center gap-1 mb-1 opacity-60">
                         <WritingPen writing={false} />
                       </div>
-                      <ProgressiveMessage content={msg.content} charDelay={35} blockPause={800} />
+                      <ProgressiveMessage content={displayContent || ""} charDelay={35} blockPause={800} />
                     </div>
                   ) : (
-                    <MathText>{msg.content}</MathText>
+                    <MathText>{displayContent || ""}</MathText>
                   )}
                 </div>
+                {/* Parsed inline options as vertical buttons */}
+                {showParsedOptions && (
+                  <div className="flex flex-col gap-2 mt-3">
+                    {parsedOptions.map((opt, oi) => (
+                      <button
+                        key={oi}
+                        onClick={() => onSend?.(opt)}
+                        disabled={sending}
+                        className="flex items-center gap-2 px-4 py-3 rounded-xl border border-border bg-card text-foreground text-sm font-medium hover:border-primary hover:bg-primary/5 transition-all text-left"
+                      >
+                        <span className="text-lg">👉</span>
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {msg.actions && msg.actions.length > 0 && i === messages.length - 1 && (
                   <div className="flex flex-col gap-2 mt-3">
                     {msg.actions.map((action, ai) => (
@@ -517,7 +555,7 @@ export function ChatShell({
 
       {/* Input toolbar */}
       {!hasActions && !disabled && onSend && (
-        <div className="border-t border-border bg-card p-3 shrink-0">
+        <div className="border-t border-border bg-card p-3 shrink-0 sticky bottom-0 z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}>
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {showVoice && (
               <button onClick={startVoice} disabled={sending || isListening}

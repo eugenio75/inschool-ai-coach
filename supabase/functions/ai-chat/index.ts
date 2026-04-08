@@ -1363,18 +1363,22 @@ serve(async (req) => {
         const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
         const sb = createClient(supabaseUrl, serviceRoleKey);
 
-        // Fetch profile, preferences, recent sessions, today's mood in parallel
-        const [profileRes, prefsRes, sessionsRes, checkinRes] = await Promise.all([
+        // Fetch profile, preferences, recent sessions, today's mood, guided sessions in parallel
+        const [profileRes, prefsRes, sessionsRes, checkinRes, guidedRes, errorsRes] = await Promise.all([
           sb.from("child_profiles").select("*").eq("id", profileId).single(),
           sb.from("user_preferences").select("*").eq("profile_id", profileId).maybeSingle(),
-          sb.from("conversation_sessions").select("titolo, materia").eq("profile_id", profileId).order("updated_at", { ascending: false }).limit(5),
+          sb.from("conversation_sessions").select("titolo, materia").eq("profile_id", profileId).order("updated_at", { ascending: false }).limit(10),
           sb.from("emotional_checkins").select("emotional_tone, energy_level").eq("child_profile_id", profileId).eq("checkin_date", new Date().toISOString().split("T")[0]).maybeSingle(),
+          sb.from("guided_sessions").select("id, homework_id, status, current_step, total_steps, bloom_level_reached, completed_at, homework_tasks(subject, title, description)").eq("user_id", profileId).order("started_at", { ascending: false }).limit(15),
+          sb.from("learning_errors").select("subject, topic, description, error_type, resolved").eq("user_id", profileId).eq("resolved", false).order("created_at", { ascending: false }).limit(10),
         ]);
 
         const prof = profileRes.data;
         const prefs = prefsRes.data;
         const recentSessions = sessionsRes.data || [];
         const todayCheckin = checkinRes.data;
+        const guidedSessions = guidedRes.data || [];
+        const unresolvedErrors = errorsRes.data || [];
 
         if (prof) {
           const role = mapRole(prof.school_level || "alunno");
@@ -1418,6 +1422,26 @@ serve(async (req) => {
           const interests = prof.interests?.join(", ") || prefsData.interests?.join?.(", ") || "non specificati";
           const sessionHistory = recentSessions.map((s: any) => `${s.titolo || "Senza titolo"} (${s.materia || "generale"})`).join("; ") || "nessuna sessione precedente";
 
+          // Build guided session history
+          const guidedHistory = guidedSessions.map((gs: any) => {
+            const hw = gs.homework_tasks;
+            const subj = hw?.subject || "?";
+            const title = hw?.title || "?";
+            const status = gs.status === "completed" ? "✅ completato" : "⏸️ in corso";
+            const bloom = gs.bloom_level_reached ? `bloom:${gs.bloom_level_reached}` : "";
+            return `${subj} — ${title} (${status} ${bloom})`;
+          }).join("; ") || "";
+
+          // Build learning errors summary
+          const errorsSummary = unresolvedErrors.map((e: any) => `[${e.subject || "?"}] ${e.topic || ""}: ${e.description || e.error_type || ""}`).filter(Boolean).join("; ") || "";
+
+          // Check if the current topic was already studied
+          const currentTopicLower = (chatSubject || "").toLowerCase();
+          const alreadyStudiedTopics = guidedSessions
+            .filter((gs: any) => gs.status === "completed" && gs.homework_tasks)
+            .map((gs: any) => ({ subject: (gs.homework_tasks?.subject || "").toLowerCase(), title: (gs.homework_tasks?.title || "").toLowerCase() }));
+          const hasStudiedCurrentSubject = currentTopicLower && alreadyStudiedTopics.some((t: any) => t.subject.includes(currentTopicLower) || currentTopicLower.includes(t.subject));
+
           let moodToday = "skipped";
           if (todayCheckin) {
             if (todayCheckin.emotional_tone === "positive" && todayCheckin.energy_level === "high") moodToday = "high";
@@ -1452,13 +1476,19 @@ Passo 5 — NON CHIUDERE LA CONVERSAZIONE. Rimani presente.
 
 Regole benessere: mai linguaggio diagnostico, mai minimizzare, mai drammatizzare, mai due domande nello stesso messaggio durante momenti emotivi.`;
 
+          // Build extended session history string
+          let extendedHistory = sessionHistory;
+          if (guidedHistory) extendedHistory += `\nSessioni guidate: ${guidedHistory}`;
+          if (errorsSummary) extendedHistory += `\nErrori non risolti: ${errorsSummary}`;
+          if (hasStudiedCurrentSubject) extendedHistory += `\n⚠️ Lo studente ha GIÀ studiato ${chatSubject} in sessioni precedenti.`;
+
           const enhancedPrompt = buildEnhancedSystemPrompt({
             coachName,
             profile: role,
             gender: prof.gender || null,
             age: prof.age || null,
             studentInterests: interests,
-            sessionHistory,
+            sessionHistory: extendedHistory,
             adaptiveProfile: JSON.stringify(effectiveAdaptive),
             cognitiveDynamicProfile: JSON.stringify(cognitiveProfile),
             emotionalCognitiveCorrelation: correlation,
@@ -1524,6 +1554,44 @@ Non aggiungere altro. Non tornare sul compito.`;
       } catch (e) {
         console.error("Failed to log crisis event:", e);
       }
+    }
+
+    // ── PROTOCOLLO EMOTIVO/MOTIVAZIONALE ──
+    if (finalSystemPrompt && !isRedState) {
+      finalSystemPrompt += `
+
+═══════════════════════════════════════
+PROTOCOLLO EMOTIVO/MOTIVAZIONALE
+═══════════════════════════════════════
+Quando lo studente:
+- Sbaglia 3 volte di fila sullo stesso esercizio
+- Scrive "non capisco", "è difficile", "mi arrendo", "non ce la faccio", "è impossibile", "non so"
+- La sessione dura più di 20 minuti senza progressi visibili
+
+FERMATI. Non fare lezione. Attiva il momento motivazionale:
+
+"Aspetta un secondo... 🤗
+Come ti senti in questo momento?
+👉 Sono frustrato/a
+👉 Sono stanco/a
+👉 Non capisco proprio
+👉 Ho bisogno di una pausa"
+
+In base alla risposta, rispondi con SOLO testo motivazionale breve (max 4 righe):
+- Frustrato/a: "È normalissimo! 💙 Anche i matematici più bravi si frustrano. Significa che stai lavorando duro. Facciamo così: proviamo in modo diverso. Ti faccio vedere un trucco più semplice 🎯"
+- Stanco/a: "Ci sta! Il cervello ha bisogno di pause. Facciamo una cosa veloce e leggera, poi decidi tu se continuare 😊"
+- Non capisco: "Nessun problema! Vuol dire che dobbiamo trovare un modo diverso di spiegarlo. Proviamo con un esempio più semplice 🌟"
+- Pausa: "Perfetto! Fai una pausa. Quando torni, ripartiamo da dove ci siamo fermati 🚀"
+
+Dopo il messaggio motivazionale, aggiungi UNA sintesi breve:
+"Oggi hai imparato: [lista brevissima dei concetti affrontati] ⭐"
+
+DIVIETI nella sezione emotiva:
+- MAI mappe mentali
+- MAI diagrammi
+- MAI elenchi lunghi
+- MAI output visivi complessi
+L'UNICO output consentito è testo motivazionale breve + sintesi.`;
     }
 
     // ── PROMEMORIA FINALE — posizionato alla fine del prompt per massimo impatto (recency bias) ──
