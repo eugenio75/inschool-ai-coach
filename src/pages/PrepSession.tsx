@@ -360,7 +360,16 @@ export default function PrepSession() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const allMsgs = [...history, { role: "user" as const, content: userText }];
-      const body: any = { messages: allMsgs.map(m => ({ role: m.role, content: m.content })), stream: true };
+      const pid = profile?.id;
+      const body: any = {
+        messages: allMsgs.map(m => ({ role: m.role, content: m.content })),
+        stream: true,
+        profileId: pid || undefined,
+        subject: subject || undefined,
+        schoolLevel,
+        coachName: coachName || undefined,
+        sessionFormat: "prep",
+      };
       if (systemPrompt) body.systemPrompt = systemPrompt;
 
       const res = await fetch(
@@ -1319,7 +1328,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
   const modeSubtitle = examType === "orale" ? "Orale" : examType === "verifica" ? "Scritta" : t(EXAM_TYPES.find(e => e.id === examType)?.labelKey || "");
 
   return (
-    <div className="h-screen flex flex-col bg-card">
+    <div className="h-[100dvh] flex flex-col bg-card">
       <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
         <button onClick={() => { setStudyMode(null); setStep("mode-select"); }} className="p-1.5 rounded-lg hover:bg-muted">
           <ArrowLeft className="w-5 h-5 text-muted-foreground" />
@@ -1378,7 +1387,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
         </div>
       )}
 
-      <div className="border-t border-border bg-card p-3">
+      <div className="border-t border-border bg-card p-3 sticky bottom-0 z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}>
         <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex items-center gap-2">
           {isOralMode && (
             <button type="button" onClick={toggleVoice}
@@ -1388,7 +1397,7 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
           )}
           <input type="text" value={input} onChange={e => setInput(e.target.value)}
             placeholder={isOralMode ? t("exam_input_oral") : t("exam_input_written")}
-            className="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary"
+            className="flex-1 bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
             disabled={sending} />
           <Button type="submit" size="icon" disabled={!input.trim() || sending} className="rounded-xl h-10 w-10">
             <Send className="w-4 h-4" />
