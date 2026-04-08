@@ -16,7 +16,7 @@ export function HandwrittenAddSub({ type, a, b, tier = "upper-elementary", parti
   const cfg = getTierConfig(tier);
   const layout = useMemo(() => compute(type, a, b, cfg, partial, filledCells, highlights), [type, a, b, cfg, partial, filledCells, highlights]);
 
-  return <HandwrittenSVG elements={layout.elements} width={layout.width} height={layout.height} tier={tier} />;
+  return <HandwrittenSVG elements={layout.elements} width={layout.width} height={layout.height} tier={tier} interactive={partial} />;
 }
 
 function applyHighlights(els: El[], highlights?: CellHighlight[]): El[] {
