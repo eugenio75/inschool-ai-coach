@@ -13,6 +13,8 @@ export interface ColumnOperationProps {
   partial?: boolean;
   /** How many result cells are filled (left to right) */
   filledCells?: number;
+  /** Sub-step within the current step (division: 0=ask, 1=quotient, 2=product, 3=remainder) */
+  subStep?: number;
   /** Cells to highlight with specific colors */
   highlights?: CellHighlight[];
 }
@@ -23,6 +25,7 @@ export function ColumnOperation({
   tier = "upper-elementary",
   partial = false,
   filledCells,
+  subStep,
   highlights,
 }: ColumnOperationProps) {
   if (numbers.length < 2) return null;
@@ -37,7 +40,7 @@ export function ColumnOperation({
         ) : type === "multiplication" ? (
           <HandwrittenMultiplication a={a} b={b} tier={tier} partial={partial} filledCells={filledCells} highlights={highlights} />
         ) : type === "division" ? (
-          <HandwrittenDivision dividend={a} divisor={b} tier={tier} partial={partial} filledCells={filledCells} highlights={highlights} />
+          <HandwrittenDivision dividend={a} divisor={b} tier={tier} partial={partial} filledCells={filledCells} subStep={subStep} highlights={highlights} />
         ) : null}
       </div>
     </div>
