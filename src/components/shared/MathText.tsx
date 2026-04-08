@@ -2,8 +2,10 @@ import React, { useMemo } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import { ColumnOperation, type ColumnOperationProps } from "./ColumnOperation";
+import type { CellHighlight, HighlightColor } from "./handwritten/utils";
 
-const COLONNA_RE = /\[COLONNA:\s*tipo\s*=\s*(\w+)\s*,\s*numeri\s*=\s*([\d,]+)\s*\]/gi;
+// Extended regex: supports optional parziale, celle_compilate, evidenzia
+const COLONNA_RE = /\[COLONNA:\s*tipo\s*=\s*(\w+)\s*,\s*numeri\s*=\s*([\d,]+)(?:\s*,\s*parziale\s*=\s*(true|false))?(?:\s*,\s*celle_compilate\s*=\s*(\d+))?(?:\s*,\s*evidenzia\s*=\s*([^\]]+))?\s*\]/gi;
 
 const TIPO_MAP: Record<string, ColumnOperationProps["type"]> = {
   moltiplicazione: "multiplication",
@@ -16,6 +18,26 @@ const TIPO_MAP: Record<string, ColumnOperationProps["type"]> = {
   subtraction: "subtraction",
 };
 
+const COLOR_MAP: Record<string, HighlightColor> = {
+  verde: "green", green: "green",
+  arancione: "orange", orange: "orange",
+  blu: "blue", blue: "blue",
+};
+
+function parseHighlights(raw: string): CellHighlight[] {
+  // Format: "7,6:arancione" or "r0:verde,r1:blu"
+  const highlights: CellHighlight[] = [];
+  const parts = raw.split(",");
+  for (const part of parts) {
+    const [cellId, colorStr] = part.trim().split(":");
+    if (cellId && colorStr) {
+      const color = COLOR_MAP[colorStr.trim().toLowerCase()];
+      if (color) highlights.push({ cellId: cellId.trim(), color });
+    }
+  }
+  return highlights;
+}
+
 /**
  * Renders text that may contain LaTeX math expressions and [COLONNA:...] tags.
  */
@@ -26,7 +48,7 @@ export function MathText({ children }: { children: string }) {
   const segments = useMemo(() => splitByColonna(text), [text]);
 
   const hasBlockContent = useMemo(
-    () => /```|(?:^|\n)\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]/.test(text) || COLONNA_RE.test(text),
+    () => /```|(?:^|\n)\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]/.test(text) || /\[COLONNA:/.test(text),
     [text]
   );
 
@@ -43,7 +65,16 @@ export function MathText({ children }: { children: string }) {
     <div className="math-text math-text-block">
       {segments.map((seg, i) => {
         if (seg.type === "colonna") {
-          return <ColumnOperation key={i} type={seg.opType} numbers={seg.numbers} />;
+          return (
+            <ColumnOperation
+              key={i}
+              type={seg.opType}
+              numbers={seg.numbers}
+              partial={seg.partial}
+              filledCells={seg.filledCells}
+              highlights={seg.highlights}
+            />
+          );
         }
         const html = renderMathInText(seg.value);
         return <span key={i} dangerouslySetInnerHTML={{ __html: html }} />;
@@ -53,7 +84,14 @@ export function MathText({ children }: { children: string }) {
 }
 
 interface TextSegment { type: "text"; value: string; }
-interface ColonnaSegment { type: "colonna"; opType: ColumnOperationProps["type"]; numbers: number[]; }
+interface ColonnaSegment {
+  type: "colonna";
+  opType: ColumnOperationProps["type"];
+  numbers: number[];
+  partial?: boolean;
+  filledCells?: number;
+  highlights?: CellHighlight[];
+}
 type Segment = TextSegment | ColonnaSegment;
 
 function splitByColonna(text: string): Segment[] {
@@ -68,8 +106,12 @@ function splitByColonna(text: string): Segment[] {
     }
     const tipo = TIPO_MAP[match[1].toLowerCase()];
     const nums = match[2].split(",").map(Number).filter(n => !isNaN(n));
+    const partial = match[3] === "true";
+    const filledCells = match[4] ? parseInt(match[4], 10) : undefined;
+    const highlights = match[5] ? parseHighlights(match[5]) : undefined;
+
     if (tipo && nums.length >= 2) {
-      segments.push({ type: "colonna", opType: tipo, numbers: nums });
+      segments.push({ type: "colonna", opType: tipo, numbers: nums, partial, filledCells, highlights });
     } else {
       segments.push({ type: "text", value: match[0] });
     }

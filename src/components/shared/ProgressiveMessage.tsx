@@ -146,7 +146,7 @@ interface ColonnaBlock {
 
 type Block = TextBlock | ColonnaBlock;
 
-const COLONNA_RE = /\[COLONNA:\s*tipo\s*=\s*\w+\s*,\s*numeri\s*=\s*[\d,]+\s*\]/gi;
+const COLONNA_RE = /\[COLONNA:\s*tipo\s*=\s*\w+\s*,\s*numeri\s*=\s*[\d,]+(?:\s*,\s*(?:parziale|celle_compilate|evidenzia)\s*=\s*[^\],]+)*\s*\]/gi;
 
 function splitIntoBlocks(content: string): Block[] {
   const blocks: Block[] = [];

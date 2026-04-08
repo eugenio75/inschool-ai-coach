@@ -1,21 +1,34 @@
 import React, { useMemo } from "react";
-import { COLORS, PX, PY, wobbly, colX, type El, type AgeTier, getTierConfig } from "./utils";
+import { COLORS, PX, PY, wobbly, colX, type El, type AgeTier, getTierConfig, type CellHighlight, getHighlightHex } from "./utils";
 import { HandwrittenSVG } from "./HandwrittenSVG";
 
 interface Props {
   a: number;
   b: number;
   tier?: AgeTier;
+  partial?: boolean;
+  filledCells?: number;
+  highlights?: CellHighlight[];
 }
 
-export function HandwrittenMultiplication({ a, b, tier = "upper-elementary" }: Props) {
+export function HandwrittenMultiplication({ a, b, tier = "upper-elementary", partial = false, filledCells, highlights }: Props) {
   const cfg = getTierConfig(tier);
-  const layout = useMemo(() => compute(a, b, cfg), [a, b, cfg]);
+  const layout = useMemo(() => compute(a, b, cfg, partial, filledCells, highlights), [a, b, cfg, partial, filledCells, highlights]);
 
   return <HandwrittenSVG elements={layout.elements} width={layout.width} height={layout.height} tier={tier} />;
 }
 
-function compute(a: number, b: number, cfg: ReturnType<typeof getTierConfig>) {
+function applyHighlights(els: El[], highlights?: CellHighlight[]): El[] {
+  if (!highlights || highlights.length === 0) return els;
+  const map = new Map(highlights.map(h => [h.cellId, getHighlightHex(h.color)]));
+  return els.map(el => {
+    const hc = map.get(el.id);
+    if (hc) return { ...el, highlightColor: hc };
+    return el;
+  });
+}
+
+function compute(a: number, b: number, cfg: ReturnType<typeof getTierConfig>, partial: boolean, filledCells?: number, highlights?: CellHighlight[]) {
   const { fontSize: FS, cellWidth: CW, rowHeight: RH } = cfg;
   const aStr = String(a);
   const bStr = String(b);
@@ -35,8 +48,9 @@ function compute(a: number, b: number, cfg: ReturnType<typeof getTierConfig>) {
   const ns = () => sid++;
   const cx = (col: number) => colX(col, CW);
   const totalW = PX * 2 + cols * CW;
+  const maxFilled = partial ? (filledCells ?? 0) : Infinity;
 
-  // Row 0: first number
+  // Row 0: first number (always visible)
   const r0Y = PY + FS;
   for (let i = 0; i < aStr.length; i++) {
     const c = cols - 1 - (aStr.length - 1 - i);
@@ -47,7 +61,7 @@ function compute(a: number, b: number, cfg: ReturnType<typeof getTierConfig>) {
     });
   }
 
-  // Row 1: × + second number
+  // Row 1: × + second number (always visible)
   const r1Y = r0Y + RH;
   els.push({
     id: "op", type: "text", x: cx(0), y: r1Y,
@@ -85,6 +99,7 @@ function compute(a: number, b: number, cfg: ReturnType<typeof getTierConfig>) {
         id: `z${i}-${z}`, type: "text", x: cx(c), y: curY,
         text: "0", color: COLORS.mid, fontSize: Math.round(FS * 0.82),
         delay: baseDelay, seed: ns(),
+        isHidden: partial,
       });
     }
 
@@ -94,6 +109,7 @@ function compute(a: number, b: number, cfg: ReturnType<typeof getTierConfig>) {
         id: `pp${i}-${d}`, type: "text", x: cx(c), y: curY,
         text: pStr[d], color: COLORS.mid, fontSize: FS,
         delay: baseDelay + (d + 1) * 0.12, seed: ns(),
+        isHidden: partial,
       });
     }
 
@@ -101,7 +117,7 @@ function compute(a: number, b: number, cfg: ReturnType<typeof getTierConfig>) {
   });
 
   // Second separator (if multiple partials)
-  if (partials.length > 1) {
+  if (partials.length > 1 && !partial) {
     const sep2Y = curY - RH * 0.7;
     els.push({
       id: "sep2", type: "path", x: 0, y: 0,
@@ -113,19 +129,24 @@ function compute(a: number, b: number, cfg: ReturnType<typeof getTierConfig>) {
 
   // Final result — placeholder, revealed last with pulse
   const resultDelay = 1.6 + partials.length * 1.2 + 0.5;
+  let resultIdx = 0;
   for (let i = 0; i < rStr.length; i++) {
     const c = cols - 1 - (rStr.length - 1 - i);
+    const isFilled = resultIdx < maxFilled;
     els.push({
       id: `r${i}`, type: "text", x: cx(c), y: curY,
       text: rStr[i], color: COLORS.result, bold: true, fontSize: FS,
       delay: resultDelay + i * 0.15, seed: ns(),
       isResult: i === rStr.length - 1,
-      isPlaceholder: true,
+      isPlaceholder: !partial || isFilled,
+      isHidden: partial && !isFilled,
     });
+    resultIdx++;
   }
 
   const totalH = curY + PY + 8;
-  return { elements: els, width: totalW, height: totalH };
+  const finalEls = applyHighlights(els, highlights);
+  return { elements: finalEls, width: totalW, height: totalH };
 }
 
 export default HandwrittenMultiplication;

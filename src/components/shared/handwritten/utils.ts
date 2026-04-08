@@ -15,6 +15,11 @@ export const COLORS = {
   annotation: "#7F77DD",
   lineAlpha: "rgba(44,44,42,0.6)",
   placeholder: "#BBBBBB",
+  // New highlight colours for interactive coaching
+  highlightGreen: "#1D9E75",
+  highlightOrange: "#E8920D",
+  highlightBlue: "#378ADD",
+  empty: "#D1D5DB",       // gray for unfilled cells
 };
 
 /** Age-adaptive tier configuration */
@@ -69,6 +74,23 @@ export function pathLength(d: string): number {
   return Math.sqrt(dx * dx + dy * dy) * 1.1;
 }
 
+/** Highlight color type for interactive coaching */
+export type HighlightColor = "green" | "orange" | "blue";
+
+export interface CellHighlight {
+  /** Identifier matching an element id pattern, or digit position */
+  cellId: string;
+  color: HighlightColor;
+}
+
+export function getHighlightHex(color: HighlightColor): string {
+  switch (color) {
+    case "green": return COLORS.highlightGreen;
+    case "orange": return COLORS.highlightOrange;
+    case "blue": return COLORS.highlightBlue;
+  }
+}
+
 export interface El {
   id: string;
   type: "text" | "path";
@@ -84,4 +106,6 @@ export interface El {
   seed: number;
   isResult?: boolean; // pulse animation on final result
   isPlaceholder?: boolean; // dashed placeholder for result
+  isHidden?: boolean; // hidden in partial mode (unfilled cell)
+  highlightColor?: string; // override color for highlighting
 }
