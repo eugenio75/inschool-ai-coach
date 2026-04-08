@@ -34,8 +34,8 @@ const BADGE_LABELS: Record<string, Record<SchoolLevel, { emoji: string; label: s
     universitario: { emoji: "", label: "Miglioramento registrato" },
   },
   first_review: {
-    elementari: { emoji: "🔁", label: "Hai ripassato per la prima volta!" },
-    medie: { emoji: "🔁", label: "Hai ripassato per la prima volta" },
+    elementari: { emoji: "🔁", label: "Primo ripasso completato!" },
+    medie: { emoji: "🔁", label: "Primo ripasso completato" },
     superiori: { emoji: "", label: "Hai ripassato prima della scadenza" },
     universitario: { emoji: "", label: "Ripasso distribuito completato" },
   },
