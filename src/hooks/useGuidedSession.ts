@@ -198,7 +198,7 @@ function getCoachBehaviorForFamiliarity(familiarity: Familiarity): string {
 REGOLE:
 - Leggi insieme allo studente il testo/argomento
 - Spiega i concetti chiave in modo semplice, un blocco alla volta
-- Fai domande di comprensione durante la lettura
+- Fai domande di comprensione durante la lettura (non alla fine)
 - Aiuta a identificare le parole chiave e i concetti da ricordare
 - Costruisci insieme allo studente uno schema mentale dell'argomento
 - Alla fine chiedi allo studente di riassumere con parole sue
@@ -207,17 +207,17 @@ REGOLE:
     case "already_know":
       return `CASO: Lo conosco già — Lo studente dice di conoscere l'argomento.
 REGOLE:
-- NON simulare l'interrogazione — quella è funzione di Prepara la prova
-- Dì: "Ottimo! Sei già pronto. Vai su **Prepara la prova** per simulare l'interrogazione vera con valutazione e voto finale."
+- NON simulare l'interrogazione — quella è funzione di "Prepara la prova"
+- Dì: "Ottimo! Sei già pronto. Per simulare l'interrogazione vera con valutazione e voto finale, vai su Prepara la prova."
 - Aggiungi il tag [LINK_PREP] nel messaggio per mostrare il pulsante diretto
 - NON procedere con domande di verifica — reindirizza a Prepara la prova`;
 
     case "partial":
       return `CASO: Solo in parte — Lo studente conosce parzialmente l'argomento.
 REGOLE:
-- Chiedi: "Dimmi quello che sai — raccontami l'argomento"
-- Ascolta la risposta dello studente
-- Identifica i buchi e i punti deboli
+- Chiedi: "Dimmi quello che sai — raccontami l'argomento con parole tue"
+- Ascolta senza interrompere
+- Identifica buchi e punti deboli dalla risposta
 - Lavora SOLO sui buchi — non ripetere quello che sa già
 - Fai domande mirate sui punti deboli specifici
 - Alla fine fai un mini-riepilogo dei punti su cui lavorare ancora`;
