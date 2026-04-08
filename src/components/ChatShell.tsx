@@ -527,6 +527,17 @@ export function ChatShell({
                     })}
                   </motion.div>
                 )}
+                {/* Prep redirect CTA button when [LINK_PREP] tag detected */}
+                {hasLinkPrep && progressiveComplete && (
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mt-3">
+                    <button
+                      onClick={() => navigate("/session?type=prep" + (msg.content?.match(/materia/i) ? "" : ""))}
+                      className="flex items-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all w-full justify-center"
+                    >
+                      🎯 Vai a Prepara la prova
+                    </button>
+                  </motion.div>
+                )}
                 {msg.actions && msg.actions.length > 0 && i === messages.length - 1 && (
                   <div className="flex flex-col gap-2 mt-3">
                     {msg.actions.map((action, ai) => (
