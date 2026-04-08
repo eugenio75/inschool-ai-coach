@@ -1363,12 +1363,14 @@ serve(async (req) => {
         const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
         const sb = createClient(supabaseUrl, serviceRoleKey);
 
-        // Fetch profile, preferences, recent sessions, today's mood in parallel
-        const [profileRes, prefsRes, sessionsRes, checkinRes] = await Promise.all([
+        // Fetch profile, preferences, recent sessions, today's mood, guided sessions in parallel
+        const [profileRes, prefsRes, sessionsRes, checkinRes, guidedRes, errorsRes] = await Promise.all([
           sb.from("child_profiles").select("*").eq("id", profileId).single(),
           sb.from("user_preferences").select("*").eq("profile_id", profileId).maybeSingle(),
-          sb.from("conversation_sessions").select("titolo, materia").eq("profile_id", profileId).order("updated_at", { ascending: false }).limit(5),
+          sb.from("conversation_sessions").select("titolo, materia").eq("profile_id", profileId).order("updated_at", { ascending: false }).limit(10),
           sb.from("emotional_checkins").select("emotional_tone, energy_level").eq("child_profile_id", profileId).eq("checkin_date", new Date().toISOString().split("T")[0]).maybeSingle(),
+          sb.from("guided_sessions").select("id, homework_id, status, current_step, total_steps, bloom_level_reached, completed_at, homework_tasks(subject, title, description)").eq("user_id", profileId).order("started_at", { ascending: false }).limit(15),
+          sb.from("learning_errors").select("subject, topic, description, error_type, resolved").eq("user_id", profileId).eq("resolved", false).order("created_at", { ascending: false }).limit(10),
         ]);
 
         const prof = profileRes.data;
