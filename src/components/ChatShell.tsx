@@ -127,8 +127,14 @@ export function ChatShell({
   const resolvedPlaceholder = inputPlaceholder || t("chat_input_placeholder");
   const [input, setInput] = useState("");
   const [showExplainOptions, setShowExplainOptions] = useState(false);
+  const [progressiveComplete, setProgressiveComplete] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Reset progressive complete when messages change
+  useEffect(() => {
+    setProgressiveComplete(false);
+  }, [messages.length]);
 
   // Whiteboard state
   const [whiteboardOpen, setWhiteboardOpen] = useState(false);
@@ -489,15 +495,15 @@ export function ChatShell({
                       <div className="flex items-center gap-1 mb-1 opacity-60">
                         <WritingPen writing={false} />
                       </div>
-                      <ProgressiveMessage content={displayContent || ""} charDelay={35} blockPause={800} />
+                      <ProgressiveMessage content={displayContent || ""} charDelay={35} blockPause={800} onComplete={() => setProgressiveComplete(true)} />
                     </div>
                   ) : (
                     <MathText>{displayContent || ""}</MathText>
                   )}
                 </div>
-                {/* Parsed inline options as vertical buttons */}
-                {showParsedOptions && (
-                  <div className="flex flex-col gap-2 mt-3">
+                {/* Parsed inline options as vertical buttons — only show AFTER progressive message finishes */}
+                {showParsedOptions && progressiveComplete && (
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="flex flex-col gap-2 mt-3">
                     {parsedOptions.map((opt, oi) => {
                       const letter = String.fromCharCode(65 + oi); // A, B, C...
                       return (
