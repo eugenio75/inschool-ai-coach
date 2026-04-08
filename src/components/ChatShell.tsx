@@ -125,6 +125,7 @@ export function ChatShell({
   disabled = false,
 }: ChatShellProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const resolvedPlaceholder = inputPlaceholder || t("chat_input_placeholder");
   const [input, setInput] = useState("");
   const [showExplainOptions, setShowExplainOptions] = useState(false);
