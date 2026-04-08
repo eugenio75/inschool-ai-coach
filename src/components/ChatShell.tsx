@@ -355,11 +355,17 @@ export function ChatShell({
   const statusInfo = getStatusIndicator(coachStatus, coachName);
 
   // Parse arrow options from assistant messages into action buttons
-  function parseInlineOptions(text: string): { cleanText: string; options: string[] } {
+  function parseInlineOptions(text: string): { cleanText: string; options: string[]; hasLinkPrep: boolean } {
     const lines = text.split("\n");
     const options: string[] = [];
     const cleanLines: string[] = [];
+    let hasLinkPrep = false;
     for (const line of lines) {
+      if (line.includes("[LINK_PREP]")) {
+        hasLinkPrep = true;
+        cleanLines.push(line.replace(/\[LINK_PREP\]/g, "").trim());
+        continue;
+      }
       const match = line.match(/^\s*(?:👉|•|-)\s+(.+)$/);
       if (match) {
         options.push(match[1].trim());
@@ -367,7 +373,7 @@ export function ChatShell({
         cleanLines.push(line);
       }
     }
-    return { cleanText: cleanLines.join("\n").trim(), options };
+    return { cleanText: cleanLines.join("\n").trim(), options, hasLinkPrep };
   }
 
   return (
@@ -471,11 +477,11 @@ export function ChatShell({
             const msgMood: CoachAvatarMood = msg.role === "assistant" ? detectMoodFromText(msg.content || "") : "default";
             const isLastAssistant = msg.role === "assistant" && i === messages.length - 1;
             // Parse inline options (👉) from assistant messages
-            const { cleanText: parsedCleanText, options: parsedOptions } = msg.role === "assistant" ? parseInlineOptions(msg.content || "") : { cleanText: msg.content || "", options: [] };
+            const { cleanText: parsedCleanText, options: parsedOptions, hasLinkPrep } = msg.role === "assistant" ? parseInlineOptions(msg.content || "") : { cleanText: msg.content || "", options: [], hasLinkPrep: false };
             // Only show parsed inline options on the FIRST assistant message (familiarity check), not on every message
             const isFirstAssistantMsg = msg.role === "assistant" && messages.filter((m, idx) => m.role === "assistant" && idx <= i).length === 1;
             const showParsedOptions = isLastAssistant && isFirstAssistantMsg && parsedOptions.length > 0 && !msg.actions?.length;
-            const displayContent = showParsedOptions ? parsedCleanText : msg.content;
+            const displayContent = (showParsedOptions || hasLinkPrep) ? parsedCleanText : msg.content;
 
             return (
             <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
