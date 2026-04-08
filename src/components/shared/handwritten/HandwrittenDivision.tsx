@@ -20,7 +20,7 @@ export function HandwrittenDivision({ dividend, divisor, tier = "upper-elementar
     [dividend, divisor, cfg, partial, filledCells, subStep, highlights]
   );
 
-  return <HandwrittenSVG elements={layout.elements} width={layout.width} height={layout.height} tier={tier} />;
+  return <HandwrittenSVG elements={layout.elements} width={layout.width} height={layout.height} tier={tier} interactive={partial} />;
 }
 
 function applyHighlights(els: El[], highlights?: CellHighlight[]): El[] {
@@ -102,8 +102,8 @@ function compute(
 
   // Granularity: maxFilled = completed steps, currentSubStep = progress within current step
   const maxFilled = partial ? (filledCells ?? 0) : Infinity;
-  // Default subStep to 4 (show everything) for backward compat when not specified
-  const currentSubStep = partial ? (subStep ?? 4) : Infinity;
+  // In interactive mode, default to the asking state: nothing new is revealed until the student answers.
+  const currentSubStep = partial ? (subStep ?? 0) : Infinity;
 
   // Row 0: dividend — always visible
   const row0Y = PY + FS;

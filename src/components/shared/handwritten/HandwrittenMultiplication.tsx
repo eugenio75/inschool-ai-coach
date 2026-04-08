@@ -15,7 +15,7 @@ export function HandwrittenMultiplication({ a, b, tier = "upper-elementary", par
   const cfg = getTierConfig(tier);
   const layout = useMemo(() => compute(a, b, cfg, partial, filledCells, highlights), [a, b, cfg, partial, filledCells, highlights]);
 
-  return <HandwrittenSVG elements={layout.elements} width={layout.width} height={layout.height} tier={tier} />;
+  return <HandwrittenSVG elements={layout.elements} width={layout.width} height={layout.height} tier={tier} interactive={partial} />;
 }
 
 function applyHighlights(els: El[], highlights?: CellHighlight[]): El[] {
