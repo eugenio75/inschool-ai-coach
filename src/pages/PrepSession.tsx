@@ -18,6 +18,21 @@ import { findMaturitaTrack, type MaturitaTrack } from "@/lib/maturitaMapping";
 import UniversityStudyPlan, { type StudyPlanExam } from "@/components/UniversityStudyPlan";
 import { loadStudyPlan, saveStudyPlan as saveStudyPlanService } from "@/lib/studyPlanService";
 import { GameSession } from "@/components/study/GameSession";
+import { ChatShell } from "@/components/ChatShell";
+import type { ChatMsg } from "@/lib/streamChat";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { isChildSession, getChildSession } from "@/lib/childSession";
+import { useAuth } from "@/hooks/useAuth";
+import { MathText } from "@/components/shared/MathText";
+import { useLang } from "@/contexts/LangContext";
+import { PageBackButton } from "@/components/shared/PageBackButton";
+import { getPrepLabelKey } from "@/lib/schoolTerms";
+import { findMaturitaTrack, type MaturitaTrack } from "@/lib/maturitaMapping";
+import UniversityStudyPlan, { type StudyPlanExam } from "@/components/UniversityStudyPlan";
+import { loadStudyPlan, saveStudyPlan as saveStudyPlanService } from "@/lib/studyPlanService";
+import { GameSession } from "@/components/study/GameSession";
 
 
 /* ── Types ── */
