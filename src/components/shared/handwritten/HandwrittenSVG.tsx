@@ -52,26 +52,9 @@ export function HandwrittenSVG({ elements, width, height, tier = "upper-elementa
           );
         }
 
-        // Hidden cell — show gray underscore placeholder
+        // Hidden cell — completely removed from DOM (no spoilers)
         if (el.isHidden) {
-          const fontSize = el.fontSize || FS;
-          return (
-            <motion.text
-              key={el.id}
-              x={el.x + jit(el.seed, 0.5)}
-              y={el.y}
-              fill={COLORS.empty}
-              fontSize={fontSize}
-              fontFamily="'Patrick Hand', cursive"
-              textAnchor="middle"
-              dominantBaseline="auto"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              transition={{ delay: 0.3, duration: 0.3 }}
-            >
-              _
-            </motion.text>
-          );
+          return null;
         }
 
         // Placeholder: show dashed underscore, then reveal real digit
