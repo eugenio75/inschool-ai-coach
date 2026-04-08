@@ -1358,5 +1358,10 @@
   "game_placeholder_complete": "Fill in the blank...",
   "game_placeholder_correct": "Write the correction...",
   "game_back_btn": "Back",
-  "coach_cta_go_to_prep": "Go to Exam Prep"
+  "coach_cta_go_to_prep": "Go to Exam Prep",
+  "session_fam_math_yes": "✅ Yes, I've read the exercise",
+  "session_fam_math_no": "📖 No, I haven't read it yet",
+  "session_fam_oral_yes": "✅ Yes, I know it well",
+  "session_fam_oral_partial": "🔶 I know it partially",
+  "session_fam_oral_no": "📖 No, first time"
 }
