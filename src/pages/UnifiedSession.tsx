@@ -525,11 +525,24 @@ Inizia con la prima domanda.`;
     }
 
     if (guided.showFamiliarity) {
-      const familiarityOptions = [
-        { key: "first_time" as const, label: "È la prima volta", desc: "Non l'ho mai visto", icon: "🆕" },
-        { key: "partial" as const, label: "Lo conosco in parte", desc: "L'ho studiato ma non sono sicuro", icon: "🔄" },
-        { key: "already_know" as const, label: "Lo conosco già", desc: "L'ho studiato e lo ricordo", icon: "✅" },
-      ];
+      const hw = guided.homework;
+      const taskType = hw?.task_type || "";
+      const isExerciseTask = taskType !== "study" && !["studio", "ripasso", "orale", "memorizzazione"].some(t => taskType.includes(t) || (hw?.title || "").toLowerCase().includes(t));
+      
+      const familiarityOptions = isExerciseTask
+        ? [
+            { key: "already_know" as const, label: "Sì, l'ho letto", desc: "So già cosa devo fare", icon: "✅" },
+            { key: "first_time" as const, label: "No, non ancora", desc: "Spiegami come si fa", icon: "🆕" },
+          ]
+        : [
+            { key: "first_time" as const, label: "È la prima volta", desc: "Non l'ho mai visto", icon: "🆕" },
+            { key: "partial" as const, label: "Lo so in parte", desc: "L'ho studiato ma non sono sicuro", icon: "🔄" },
+            { key: "already_know" as const, label: "Lo so già", desc: "L'ho studiato e lo ricordo", icon: "✅" },
+          ];
+
+      const familiarityQuestion = isExerciseTask
+        ? "Hai già letto l'esercizio?"
+        : "Hai già studiato questo argomento?";
 
       return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -545,7 +558,7 @@ Inizia con la prima domanda.`;
               Prima di iniziare, dimmi:
             </h2>
             <p className="text-sm text-muted-foreground mb-2">
-              Hai già studiato questo argomento?
+              {familiarityQuestion}
             </p>
             <p className="text-xs text-primary font-medium mb-6">
               {guided.homework?.title}
