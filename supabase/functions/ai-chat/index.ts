@@ -1422,6 +1422,26 @@ serve(async (req) => {
           const interests = prof.interests?.join(", ") || prefsData.interests?.join?.(", ") || "non specificati";
           const sessionHistory = recentSessions.map((s: any) => `${s.titolo || "Senza titolo"} (${s.materia || "generale"})`).join("; ") || "nessuna sessione precedente";
 
+          // Build guided session history
+          const guidedHistory = guidedSessions.map((gs: any) => {
+            const hw = gs.homework_tasks;
+            const subj = hw?.subject || "?";
+            const title = hw?.title || "?";
+            const status = gs.status === "completed" ? "✅ completato" : "⏸️ in corso";
+            const bloom = gs.bloom_level_reached ? `bloom:${gs.bloom_level_reached}` : "";
+            return `${subj} — ${title} (${status} ${bloom})`;
+          }).join("; ") || "";
+
+          // Build learning errors summary
+          const errorsSummary = unresolvedErrors.map((e: any) => `[${e.subject || "?"}] ${e.topic || ""}: ${e.description || e.error_type || ""}`).filter(Boolean).join("; ") || "";
+
+          // Check if the current topic was already studied
+          const currentTopicLower = (chatSubject || "").toLowerCase();
+          const alreadyStudiedTopics = guidedSessions
+            .filter((gs: any) => gs.status === "completed" && gs.homework_tasks)
+            .map((gs: any) => ({ subject: (gs.homework_tasks?.subject || "").toLowerCase(), title: (gs.homework_tasks?.title || "").toLowerCase() }));
+          const hasStudiedCurrentSubject = currentTopicLower && alreadyStudiedTopics.some((t: any) => t.subject.includes(currentTopicLower) || currentTopicLower.includes(t.subject));
+
           let moodToday = "skipped";
           if (todayCheckin) {
             if (todayCheckin.emotional_tone === "positive" && todayCheckin.energy_level === "high") moodToday = "high";
