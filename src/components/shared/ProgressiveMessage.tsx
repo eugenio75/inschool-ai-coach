@@ -24,6 +24,7 @@ export function ProgressiveMessage({
   charDelay = 35,
   blockPause = 800,
   onComplete,
+  exerciseStep,
 }: Props) {
   const blocks = useMemo(() => splitIntoBlocks(content), [content]);
   const [visibleBlocks, setVisibleBlocks] = useState(0);
