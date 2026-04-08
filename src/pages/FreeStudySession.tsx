@@ -184,7 +184,8 @@ NON usare frasi da sistema informatico. Sei un professore vivo ed entusiasta.`;
         }).join("\n").trim();
       }
 
-      const content = fullText || "Il professore sta pensando... 🤔";
+      const thinkingLabel = coachName ? `${coachName} sta pensando...` : "Il tuo coach sta pensando...";
+      const content = fullText || `${thinkingLabel} 🤔`;
       setStreamingText("");
 
       if (isFirst) {
@@ -398,7 +399,7 @@ NON usare frasi da sistema informatico. Sei un professore vivo ed entusiasta.`;
                 msg.role === "assistant" ? <MathText>{msg.content}</MathText> : msg.content
               ) : (sending && i === messages.length - 1 && !streamingText ? (
                 <span className="flex items-center gap-2 text-muted-foreground font-['Patrick_Hand']">
-                  <Loader2 className="w-4 h-4 animate-spin" /> Il professore sta pensando... 🤔
+                  <Loader2 className="w-4 h-4 animate-spin" /> {coachName ? `${coachName} sta pensando...` : "Il tuo coach sta pensando..."} 🤔
                 </span>
               ) : null)}
             </div>
