@@ -85,6 +85,41 @@ const DashboardAlunno = () => {
     steps: Array.isArray(t.micro_steps) ? t.micro_steps.length : 0, completed: t.completed || false,
   });
 
+  const SkeletonDashboard = () => (
+    <div className="min-h-screen-safe bg-background pb-28 sm:pb-8 font-sans">
+      <div className="bg-card border-b border-border px-4 sm:px-6 pt-5 sm:pt-6 pb-6 sm:pb-8 shadow-sm">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <AppWordmark compact />
+            <div className="flex items-center gap-1.5">
+              <div className="w-8 h-8 rounded-lg bg-muted animate-pulse" />
+            </div>
+          </div>
+          {/* Greeting skeleton */}
+          <div className="h-7 w-48 bg-muted rounded-lg animate-pulse mb-2" />
+          <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+          {/* KPI skeleton */}
+          <div className="mt-4 grid grid-cols-4 gap-2">
+            {[...Array(4)].map((_, i) => <div key={i} className="h-20 bg-muted rounded-xl animate-pulse" />)}
+          </div>
+        </div>
+      </div>
+      {/* Coach skeleton */}
+      <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto">
+        <div className="h-32 bg-muted rounded-xl animate-pulse" />
+      </div></div>
+      {/* Action cards skeleton */}
+      <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto">
+        <div className="h-4 w-28 bg-muted rounded animate-pulse mb-3" />
+        <div className="grid grid-cols-2 gap-3">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-muted rounded-xl animate-pulse" />)}
+        </div>
+      </div></div>
+    </div>
+  );
+
+  if (loading) return <SkeletonDashboard />;
+
   return (
     <div className="min-h-screen-safe bg-background pb-28 sm:pb-8 font-sans">
       <div className="bg-card border-b border-border px-4 sm:px-6 pt-5 sm:pt-6 pb-6 sm:pb-8 shadow-sm">
@@ -110,7 +145,7 @@ const DashboardAlunno = () => {
             </div>
           </div>
 
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-1">{profile?.gender === "F" ? "Bentornata" : "Bentornato"} {name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()}!</h1>
@@ -124,27 +159,22 @@ const DashboardAlunno = () => {
             )}
           </motion.div>
 
-          {/* KPI cards */}
-          {!loading && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.12 }} className="mt-4">
-              <GamificationKPI />
-            </motion.div>
-          )}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.1 }} className="mt-4">
+            <GamificationKPI />
+          </motion.div>
         </div>
       </div>
 
       {/* AI Coach - above session cards */}
       <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto">
-        {!loading && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.14 }}>
-            <CoachPresence variant="home" />
-          </motion.div>
-        )}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.15 }}>
+          <CoachPresence variant="home" />
+        </motion.div>
       </div></div>
 
       {/* 4 Action Cards */}
       <div className="px-4 sm:px-6 mt-4"><div className="max-w-3xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...spring, delay: 0.16 }}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.2 }}>
           <h3 className="font-display font-semibold text-foreground text-sm mb-3">Cosa vuoi fare?</h3>
           <StudentActionCards hasTasks={tasks.length > 0} schoolLevel={profile?.school_level || "alunno"} coachName={coachName} />
         </motion.div>
