@@ -969,10 +969,10 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
 
       if (isExercise) {
         const familiarityContext = familiarity === "first_time"
-          ? "\nLo studente NON conosce ancora questo contenuto. Parti con una mini spiegazione teorica strettamente necessaria, poi PRESENTA TU gli esercizi e lavora sul primo."
+          ? "\nCASO 1A — PRIMA VOLTA ASSOLUTA: Lo studente non ha mai fatto questo tipo di esercizio. NON fare domande preliminari — sai già che è la prima volta. Parti con spiegazione teorica completa con esempio concreto della vita reale, poi mostra un esempio semplice risolto completamente, poi parti con l'esercizio reale seguendo il flusso colonna progressiva."
           : familiarity === "partial"
-          ? "\nLo studente ha familiarità parziale. NON chiedere cosa c'è scritto: PRESENTA TU gli esercizi direttamente e guidalo uno alla volta."
-          : "\nIl materiale è già noto. NON chiedere di reinviarlo. PRESENTA TU l'esercizio corrente e guidalo.";
+          ? "\nCASO 1C — HA DIFFICOLTÀ: Il profilo adattivo segnala lacune su questo tipo di esercizio. Fai una spiegazione mirata sui punti deboli specifici, poi parti con l'esercizio."
+          : "\nCASO 1B — HA GIÀ FATTO ESERCIZI SIMILI: NON fare domande. Ripetizione brevissima del metodo (2-3 righe max). Es: 'Ricordi le divisioni in colonna? Partiamo subito!' Vai direttamente all'esercizio.";
         const proofContext = requiresOperationProof(homework?.task_type || "", homework?.title || "", homework?.description)
           ? "\nVINCOLO EXTRA DELLA CONSEGNA: nel compito compare una richiesta tipo 'con la prova'. Quindi NON considerare concluso un esercizio quando ottieni il risultato: devi continuare tu automaticamente e guidare anche la prova finale, passo dopo passo, prima di passare oltre. Se è una divisione, usa la verifica divisore × quoziente + resto = dividendo."
           : "";
