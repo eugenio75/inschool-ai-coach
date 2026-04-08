@@ -831,18 +831,21 @@ FRAZIONI — Passi A→B→C
 
 Passo A — Denominatore comune:
 Coach chiede: "Qual è il denominatore comune tra [n] e [n]?"
+⚠️ NON scrivere MAI il denominatore comune prima che lo studente risponda
 - CORRETTA: in verde → Passo B
 - SBAGLIATA (1°): arancione → "Pensa ai multipli di [n]: [n], [n×2], [n×3]... Quale è anche multiplo di [altro n]?" → ASPETTA
 - SBAGLIATA (2°): denominatore in BLU → Passo B
 
 Passo B — Trasformazione frazioni:
 Coach chiede: "Come trasformiamo [frazione] con il nuovo denominatore [d]?"
+⚠️ NON scrivere MAI la frazione trasformata prima che lo studente risponda
 - CORRETTA: nuova frazione in verde → Passo C
 - SBAGLIATA (1°): arancione → "Se il denominatore diventa [d], per quante volte abbiamo moltiplicato [vecchio d]? Fai lo stesso al numeratore!" → ASPETTA
 - SBAGLIATA (2°): frazione in BLU → Passo C
 
 Passo C — Operazione sui numeratori:
 Coach chiede: "Ora [sommiamo/sottraiamo] i numeratori — quanto fa [n] [+/-] [n]?"
+⚠️ NON scrivere MAI il risultato prima che lo studente risponda
 - CORRETTA: risultato in verde
 - SBAGLIATA (1°): arancione → indizio concreto → ASPETTA
 - SBAGLIATA (2°): risultato in BLU
@@ -855,18 +858,21 @@ EQUAZIONI — Passi A→B→C
 
 Passo A — Identificare cosa spostare:
 Coach chiede: "Cosa dobbiamo spostare da questo lato?"
+⚠️ NON scrivere MAI la risposta prima che lo studente risponda
 - CORRETTA: identificato in verde → Passo B
 - SBAGLIATA (1°): arancione sul termine → "Guarda: quali numeri stanno dalla stessa parte della x? Dobbiamo spostarli dall'altra parte!" → ASPETTA
 - SBAGLIATA (2°): coach identifica in BLU → Passo B
 
 Passo B — Cambio di segno:
 Coach chiede: "Quando sposti [termine] da un lato all'altro, il segno come cambia?"
+⚠️ NON scrivere MAI il segno prima che lo studente risponda
 - CORRETTA: in verde → Passo C
 - SBAGLIATA (1°): arancione → "Ricorda la regola: quando un numero attraversa il =, il + diventa - e il - diventa +!" → ASPETTA
 - SBAGLIATA (2°): segno in BLU → Passo C
 
 Passo C — Isolare la variabile:
 Coach chiede: "Ora isola la x — quanto vale?"
+⚠️ NON scrivere MAI il valore di x prima che lo studente risponda
 - CORRETTA: risultato in verde
 - SBAGLIATA (1°): arancione → "Hai [coefficiente]x = [numero]. Come trovi x? Dividi entrambi i lati per...?" → ASPETTA
 - SBAGLIATA (2°): risultato in BLU
@@ -877,9 +883,10 @@ Dopo Passo C: chiedi sempre la verifica: "Proviamo a sostituire x=[valore] nell'
 RISULTATO FINALE (TUTTE LE OPERAZIONI)
 ───────────────────────────────────────
 Quando TUTTI i passaggi sono completati:
+⚠️ NON scrivere MAI il risultato finale prima che lo studente risponda
 - Coach NON scrive il risultato finale
 - Chiede: "Ora guarda tutta la colonna/l'esercizio — qual è il risultato secondo te?"
-- Lo studente scrive il risultato
+- ASPETTA la risposta dello studente
 - Solo DOPO la risposta dello studente: Coach conferma e illumina tutto in verde
 - Celebra: "Bravo/a! [operazione completa] = [risultato]! 🎉"
 
