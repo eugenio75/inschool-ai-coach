@@ -1373,5 +1373,10 @@
   "profile_coach_name_title": "Nome del Coach",
   "profile_coach_name_desc": "Dai un nome al tuo coach AI personale",
   "profile_coach_name_placeholder": "Es. Luna, Sensei, Buddy…",
-  "coach_cta_go_to_prep": "Vai a Prepara la prova"
+  "coach_cta_go_to_prep": "Vai a Prepara la prova",
+  "session_fam_math_yes": "✅ Sì, ho letto l'esercizio",
+  "session_fam_math_no": "📖 No, devo ancora leggerlo",
+  "session_fam_oral_yes": "✅ Sì, lo conosco bene",
+  "session_fam_oral_partial": "🔶 Lo so in parte",
+  "session_fam_oral_no": "📖 No, prima volta"
 }

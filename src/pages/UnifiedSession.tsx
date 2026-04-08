@@ -122,6 +122,7 @@ export default function UnifiedSession() {
   const [studyTotalPoints, setStudyTotalPoints] = useState<number | undefined>();
   const [studyPrevTotal, setStudyPrevTotal] = useState<number | undefined>();
   const [studyStreak, setStudyStreak] = useState<number | undefined>();
+  const [studyFamiliarityDone, setStudyFamiliarityDone] = useState(false);
   const sessionStartRef = useRef<number>(Date.now());
 
   // Load coach name from preferences
@@ -373,6 +374,7 @@ Inizia con la prima domanda.`;
     }
   }
 
+
   function startSession() {
     if (!topic.trim() && type !== "prep" && type !== "review") return;
     if (!topic.trim() && type === "review" && subject) {
@@ -380,27 +382,52 @@ Inizia con la prima domanda.`;
     }
     if (!subject && type === "prep") return;
 
-    const sessionSystemPrompt = getSystemPrompt();
     sessionStartRef.current = Date.now();
     setSetupDone(true);
-    setMessages([]);
-    setSending(true);
     setStreamingText("");
 
-    streamChat({
-      messages: [],
-      onDelta: () => {},
-      onDone: (full) => {
-        setMessages([{ role: "assistant", content: full }]);
+    // For prep and review sessions, start normally (no familiarity question)
+    if (type === "prep" || type === "review") {
+      setMessages([]);
+      setSending(true);
+      const sessionSystemPrompt = getSystemPrompt();
+      streamChat({
+        messages: [],
+        onDelta: () => {},
+        onDone: (full) => {
+          setMessages([{ role: "assistant", content: full }]);
+          setStreamingText("");
+          setSending(false);
+        },
+        extraBody: { profileId, subject: subject || undefined, sessionFormat: type, systemPrompt: sessionSystemPrompt },
+      }).catch(() => {
+        setMessages([{ role: "assistant", content: "Mi dispiace, c'è stato un problema. Riprova." }]);
         setStreamingText("");
         setSending(false);
-      },
-      extraBody: { profileId, subject: subject || undefined, sessionFormat: type, systemPrompt: sessionSystemPrompt },
-    }).catch(() => {
-      setMessages([{ role: "assistant", content: "Mi dispiace, c'è stato un problema. Riprova." }]);
-      setStreamingText("");
-      setSending(false);
-    });
+      });
+      return;
+    }
+
+    // Study session: show welcome message with quick-reply familiarity buttons
+    const isMathSession = containsExercises(topic);
+    const cName = coachName || "il Coach";
+    const welcomeMsg = isMathSession
+      ? `Ciao! 👋 Oggi lavoriamo su questi esercizi!\n\nHai già letto l'esercizio?`
+      : `Ciao! 👋 Oggi lavoriamo su "${topic}"!\n\nHai già studiato questo argomento o lo vedi per la prima volta?`;
+
+    const familiarityActions: import("@/lib/streamChat").ChatAction[] = isMathSession
+      ? [
+          { label: t("session_fam_math_yes"), value: "study_fam:already_know", icon: "✅" },
+          { label: t("session_fam_math_no"), value: "study_fam:first_time", icon: "📖" },
+        ]
+      : [
+          { label: t("session_fam_oral_yes"), value: "study_fam:already_know", icon: "✅" },
+          { label: t("session_fam_oral_partial"), value: "study_fam:partial", icon: "🔶" },
+          { label: t("session_fam_oral_no"), value: "study_fam:first_time", icon: "📖" },
+        ];
+
+    setMessages([{ role: "assistant", content: welcomeMsg, actions: familiarityActions }]);
+    setSending(false);
   }
 
   const handleSend = useCallback((text: string) => {
@@ -524,64 +551,7 @@ Inizia con la prima domanda.`;
       );
     }
 
-    if (guided.showFamiliarity) {
-      const hw = guided.homework;
-      const taskType = hw?.task_type || "";
-      const isExerciseTask = taskType !== "study" && !["studio", "ripasso", "orale", "memorizzazione"].some(t => taskType.includes(t) || (hw?.title || "").toLowerCase().includes(t));
-      
-      const familiarityOptions = isExerciseTask
-        ? [
-            { key: "already_know" as const, label: "Sì, l'ho letto", desc: "So già cosa devo fare", icon: "✅" },
-            { key: "first_time" as const, label: "No, non ancora", desc: "Spiegami come si fa", icon: "🆕" },
-          ]
-        : [
-            { key: "first_time" as const, label: "È la prima volta", desc: "Non l'ho mai visto", icon: "🆕" },
-            { key: "partial" as const, label: "Lo so in parte", desc: "L'ho studiato ma non sono sicuro", icon: "🔄" },
-            { key: "already_know" as const, label: "Lo so già", desc: "L'ho studiato e lo ricordo", icon: "✅" },
-          ];
-
-      const familiarityQuestion = isExerciseTask
-        ? "Hai già letto l'esercizio?"
-        : "Hai già studiato questo argomento?";
-
-      return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-md w-full bg-card rounded-xl border border-border p-8 text-center"
-          >
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <BookOpen className="w-5 h-5 text-primary" />
-            </div>
-            <h2 className="font-display text-xl font-bold text-foreground mb-2">
-              Prima di iniziare, dimmi:
-            </h2>
-            <p className="text-sm text-muted-foreground mb-2">
-              {familiarityQuestion}
-            </p>
-            <p className="text-xs text-primary font-medium mb-6">
-              {guided.homework?.title}
-            </p>
-            <div className="space-y-3">
-              {familiarityOptions.map((opt) => (
-                <button
-                  key={opt.key}
-                  onClick={() => guided.selectFamiliarity(opt.key)}
-                  className="w-full flex items-center gap-4 p-4 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all text-left"
-                >
-                  <span className="text-2xl">{opt.icon}</span>
-                  <div>
-                    <span className="font-medium text-foreground block">{opt.label}</span>
-                    <span className="text-xs text-muted-foreground">{opt.desc}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      );
-    }
+    // Familiarity is now handled via quick-reply buttons in chat — no separate screen needed
 
     if (guided.showCheckin) {
       // Age-differentiated emotional check-in
@@ -1145,6 +1115,63 @@ Inizia con la prima domanda.`;
     </div>
   ) : undefined;
 
+  // Handle study session familiarity action clicks — defined as regular function to avoid hook ordering issues
+  function handleStudyAction(value: string) {
+    if (value.startsWith("study_fam:")) {
+      const famKey = value.replace("study_fam:", "");
+      setStudyFamiliarityDone(true);
+
+      const isMathSession = containsExercises(topic);
+      const labelMap: Record<string, string> = {
+        already_know: isMathSession ? t("session_fam_math_yes") : t("session_fam_oral_yes"),
+        partial: t("session_fam_oral_partial"),
+        first_time: isMathSession ? t("session_fam_math_no") : t("session_fam_oral_no"),
+      };
+      const userLabel = (labelMap[famKey] || value).replace(/^[✅📖🔶]\s*/, "");
+
+      setMessages(prev => [
+        ...prev.map(m => ({ ...m, actions: undefined })),
+        { role: "user" as const, content: userLabel },
+      ]);
+      setSending(true);
+      setStreamingText("");
+
+      let familiarityInstruction = "";
+      if (famKey === "first_time") {
+        familiarityInstruction = isMathSession
+          ? "\nLo studente NON ha ancora letto l'esercizio. Fai spiegazione teorica completa del metodo, poi un esempio semplice risolto, poi parti con l'esercizio."
+          : "\nLo studente vede questo argomento per la prima volta. Leggi insieme, spiega i concetti chiave, fai domande durante la lettura.";
+      } else if (famKey === "partial") {
+        familiarityInstruction = "\nLo studente conosce parzialmente l'argomento. Chiedi cosa sa, identifica le lacune, lavora solo sui punti deboli.";
+      } else {
+        familiarityInstruction = isMathSession
+          ? "\nLo studente ha GIÀ LETTO l'esercizio. Ripetizione brevissima del metodo (2-3 righe max), poi vai direttamente all'esercizio."
+          : "\nLo studente dice di conoscere l'argomento. Non simulare l'interrogazione. Dì: 'Ottimo! Sei già pronto. Per simulare l'interrogazione vera vai su Prepara la prova.' e aggiungi [LINK_PREP].";
+      }
+
+      const sessionSystemPrompt = getSystemPrompt() + familiarityInstruction;
+      const allMsgs = [
+        ...messages.map(m => ({ ...m, actions: undefined })),
+        { role: "user" as const, content: userLabel },
+      ];
+
+      streamChat({
+        messages: allMsgs,
+        onDelta: () => {},
+        onDone: (full) => {
+          setMessages(prev => [...prev, { role: "assistant" as const, content: full }]);
+          setStreamingText("");
+          setSending(false);
+        },
+        extraBody: { profileId, subject: subject || undefined, sessionFormat: type, systemPrompt: sessionSystemPrompt },
+      }).catch(() => {
+        setMessages(prev => [...prev, { role: "assistant" as const, content: "Errore. Riprova." }]);
+        setStreamingText("");
+        setSending(false);
+      });
+    }
+  }
+
   return (
     <>
       <ChatShell
@@ -1156,6 +1183,7 @@ Inizia con la prima domanda.`;
         streamingText={streamingText}
         sending={sending}
         onSend={handleSend}
+        onAction={handleStudyAction}
         onEndSession={() => setShowEndConfirm(true)}
         onBack={() => {
           if (type === "study" && studyMode === "coach") {
