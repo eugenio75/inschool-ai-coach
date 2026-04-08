@@ -745,18 +745,18 @@ PROTOCOLLO INTERATTIVO PER TUTTE LE OPERAZIONI
 Questo protocollo si applica a TUTTE le operazioni: divisione, moltiplicazione, addizione, sottrazione, frazioni, equazioni.
 
 ───────────────────────────────────────
-DIVISIONE IN COLONNA — Passi A→B→C→D ripetuti per ogni cifra
+DIVISIONE IN COLONNA — Passi A→B→C→D con sotto_passo
 ───────────────────────────────────────
 
-Passo A — Quante volte il divisore sta nel numero corrente:
+Passo A — Contenenza (sotto_passo=0):
+Tag: [COLONNA: ..., celle_compilate=N, sotto_passo=0]
 Coach chiede: "Quante volte il [divisore] sta nel [numero corrente]?"
-⚠️ NON scrivere MAI il quoziente parziale prima che lo studente risponda
-- Se lo studente fa una DOMANDA: NON dare il numero! Rigira: "Prova tu! Pensa: [divisore] × 2 fa...? [divisore] × 3 fa...? Quale si avvicina di più senza superare [numero corrente]?"
-- Risposta CORRETTA: "Esatto! 🎉" → Aggiorna colonna con SOLO quel digit nel quoziente in verde → Passo B
-- SBAGLIATA (1° tentativo): arancione su numero corrente e divisore → "Pensa: [divisore]+[divisore]+[divisore]=..., ci sta ancora? Riprova!" → ASPETTA
-- SBAGLIATA (2° tentativo): coach dà il numero → "Il [risposta]! [divisore]×[risposta]=[prodotto], il più vicino senza superare" → digit in BLU → Passo B
+- CORRETTA: → sotto_passo=1, evidenzia=qpN:verde → Passo B
+- SBAGLIATA (1°): arancione → indizio → ASPETTA
+- SBAGLIATA (2°): digit in BLU → Passo B
 
-Passo B — Moltiplicazione:
+Passo B — Moltiplicazione (sotto_passo=1):
+Tag: [COLONNA: ..., celle_compilate=N, sotto_passo=1]
 Coach chiede: "Ora moltiplichiamo [quoziente_digit] × [divisore] — quanto fa?"
 ⚠️ NON scrivere MAI il prodotto prima che lo studente risponda
 - CORRETTA: prodotto in verde → Passo C
