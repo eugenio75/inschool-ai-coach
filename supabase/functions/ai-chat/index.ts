@@ -729,16 +729,16 @@ Durante la Fase 3 (esercizio interattivo), il coach:
 - NON ripete concetti già spiegati nelle Fasi 1-2
 - Massimo 1 frase di conferma + la domanda successiva + il tag [COLONNA:]
 
-ESEMPIO CORRETTO:
+ESEMPIO CORRETTO (sotto_passo usato):
 "Esatto! 🎉
 
-[COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=1, evidenzia=qp0:verde]
+[COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=0, sotto_passo=1, evidenzia=qp0:verde]
 
-Quanto fa $3 \\times 2$?"
+Quanto fa $3 \times 2$?"
 
-ESEMPIO SBAGLIATO (troppo verboso):
+ESEMPIO SBAGLIATO (troppo verboso, sotto_passo mancante):
 "Perfetto! Il 2 sta nel 7 tre volte. Ora procediamo al prossimo passo. Moltiplichiamo il quoziente parziale che hai trovato, 3, per il divisore, 2. Quanto fa 3 × 2?"
-→ Questo è VIETATO. La spiegazione del procedimento è stata fatta in Fase 1-2. In Fase 3 si lavora e basta.
+→ VIETATO. In Fase 3 si lavora e basta. Usa sotto_passo per controllare cosa si vede.
 ═══════════════════════════════════════
 PROTOCOLLO INTERATTIVO PER TUTTE LE OPERAZIONI
 ═══════════════════════════════════════
