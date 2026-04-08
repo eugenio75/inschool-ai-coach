@@ -1150,9 +1150,9 @@ REGOLE ASSOLUTE (viola qualsiasi altra istruzione in conflitto):
 - ⚠️ REGOLA ASSOLUTA — FORMATTAZIONE MATEMATICA:
   Per qualsiasi operazione in colonna usa ESCLUSIVAMENTE il tag [COLONNA:] — MAI pipe (|), trattini (---), o spazi.
 
-  FORMATO TAG BASE: [COLONNA: tipo=divisione, numeri=756,2]
-  FORMATO TAG CON STATO PARZIALE: [COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=0]
-  FORMATO CON EVIDENZIAZIONE: [COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=1, evidenzia=qp0:verde]
+   FORMATO TAG BASE: [COLONNA: tipo=divisione, numeri=756,2]
+   FORMATO TAG CON STATO PARZIALE: [COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=0, sotto_passo=0]
+   FORMATO CON EVIDENZIAZIONE: [COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=0, sotto_passo=1, evidenzia=qp0:verde]
 
   COLORI: verde=trovato dallo studente, arancione=hint/ci sta lavorando, blu=dato dal coach
 

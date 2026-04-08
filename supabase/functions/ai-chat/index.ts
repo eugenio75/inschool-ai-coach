@@ -636,14 +636,21 @@ FORMATO TAG BASE:
 [COLONNA: tipo=sottrazione, numeri=500,123]
 
 FORMATO TAG CON STATO PARZIALE (per guida interattiva):
-[COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=0]
-→ Mostra SOLO i numeri iniziali, risultato tutto vuoto (celle grigie _ _ _)
+[COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=0, sotto_passo=0]
+→ Mostra SOLO i numeri iniziali, risultato tutto vuoto — chiedi "Quante volte il 2 sta nel 7?"
 
-[COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=1]
-→ Mostra la prima cifra del risultato, le altre vuote
+[COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=0, sotto_passo=1, evidenzia=qp0:verde]
+→ Mostra la cifra del quoziente trovata — chiedi "Quanto fa 3 × 2?"
 
-[COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=2, evidenzia=qp1:verde]
-→ Mostra 2 cifre, la seconda evidenziata in verde (trovata dallo studente)
+[COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=0, sotto_passo=2]
+→ Mostra anche il prodotto (−6) — chiedi "Quanto fa 7 − 6?"
+
+Dopo risposta corretta alla sottrazione → chiedi "Quale cifra abbassiamo?"
+Dopo risposta → passa a celle_compilate=1, sotto_passo=0 (mostra bring-down)
+
+Per l'ULTIMA cifra, sotto_passo=3 mostra il resto finale.
+
+⚠️ REGOLA: sotto_passo CONTROLLA cosa si vede. NON incrementare sotto_passo senza risposta dello studente.
 
 COLORI PER EVIDENZIAZIONE:
 - verde = cifra trovata correttamente dallo studente
@@ -722,53 +729,49 @@ Durante la Fase 3 (esercizio interattivo), il coach:
 - NON ripete concetti già spiegati nelle Fasi 1-2
 - Massimo 1 frase di conferma + la domanda successiva + il tag [COLONNA:]
 
-ESEMPIO CORRETTO:
+ESEMPIO CORRETTO (sotto_passo usato):
 "Esatto! 🎉
 
-[COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=1, evidenzia=qp0:verde]
+[COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=0, sotto_passo=1, evidenzia=qp0:verde]
 
-Quanto fa $3 \\times 2$?"
+Quanto fa $3 \times 2$?"
 
-ESEMPIO SBAGLIATO (troppo verboso):
+ESEMPIO SBAGLIATO (troppo verboso, sotto_passo mancante):
 "Perfetto! Il 2 sta nel 7 tre volte. Ora procediamo al prossimo passo. Moltiplichiamo il quoziente parziale che hai trovato, 3, per il divisore, 2. Quanto fa 3 × 2?"
-→ Questo è VIETATO. La spiegazione del procedimento è stata fatta in Fase 1-2. In Fase 3 si lavora e basta.
+→ VIETATO. In Fase 3 si lavora e basta. Usa sotto_passo per controllare cosa si vede.
 ═══════════════════════════════════════
 PROTOCOLLO INTERATTIVO PER TUTTE LE OPERAZIONI
 ═══════════════════════════════════════
 Questo protocollo si applica a TUTTE le operazioni: divisione, moltiplicazione, addizione, sottrazione, frazioni, equazioni.
 
 ───────────────────────────────────────
-DIVISIONE IN COLONNA — Passi A→B→C→D ripetuti per ogni cifra
+DIVISIONE IN COLONNA — Passi A→B→C→D con sotto_passo
 ───────────────────────────────────────
 
-Passo A — Quante volte il divisore sta nel numero corrente:
+Passo A — Contenenza (sotto_passo=0):
+Tag: [COLONNA: ..., celle_compilate=N, sotto_passo=0]
 Coach chiede: "Quante volte il [divisore] sta nel [numero corrente]?"
-⚠️ NON scrivere MAI il quoziente parziale prima che lo studente risponda
-- Se lo studente fa una DOMANDA: NON dare il numero! Rigira: "Prova tu! Pensa: [divisore] × 2 fa...? [divisore] × 3 fa...? Quale si avvicina di più senza superare [numero corrente]?"
-- Risposta CORRETTA: "Esatto! 🎉" → Aggiorna colonna con SOLO quel digit nel quoziente in verde → Passo B
-- SBAGLIATA (1° tentativo): arancione su numero corrente e divisore → "Pensa: [divisore]+[divisore]+[divisore]=..., ci sta ancora? Riprova!" → ASPETTA
-- SBAGLIATA (2° tentativo): coach dà il numero → "Il [risposta]! [divisore]×[risposta]=[prodotto], il più vicino senza superare" → digit in BLU → Passo B
+- CORRETTA: → sotto_passo=1, evidenzia=qpN:verde → Passo B
+- SBAGLIATA (1°): arancione → indizio → ASPETTA
+- SBAGLIATA (2°): digit in BLU → Passo B
 
-Passo B — Moltiplicazione:
-Coach chiede: "Ora moltiplichiamo [quoziente_digit] × [divisore] — quanto fa?"
-⚠️ NON scrivere MAI il prodotto prima che lo studente risponda
-- CORRETTA: prodotto in verde → Passo C
-- SBAGLIATA (1°): arancione → "[quoziente_digit]+[quoziente_digit] quanto fa?" → ASPETTA
+Passo B — Moltiplicazione (sotto_passo=1):
+Tag: [COLONNA: ..., celle_compilate=N, sotto_passo=1]
+Coach chiede: "Quanto fa [quoziente_digit] × [divisore]?"
+- CORRETTA: → sotto_passo=2 → Passo C
+- SBAGLIATA (1°): arancione → ASPETTA
 - SBAGLIATA (2°): prodotto in BLU → Passo C
 
-Passo C — Sottrazione:
-Coach chiede: "Sottraiamo [numero corrente] - [prodotto] — quanto rimane?"
-⚠️ NON scrivere MAI il resto prima che lo studente risponda
-- CORRETTA: resto in verde → Passo D (o risultato finale se ultime cifre)
-- SBAGLIATA (1°): arancione → "Se hai [numero] mele e ne togli [prodotto], quante rimangono?" → ASPETTA
-- SBAGLIATA (2°): resto in BLU → Passo D
+Passo C — Sottrazione (sotto_passo=2):
+Tag: [COLONNA: ..., celle_compilate=N, sotto_passo=2]
+Coach chiede: "[numero] − [prodotto] — quanto rimane?"
+- CORRETTA: conferma → chiedi "Quale cifra abbassiamo?" (resta sotto_passo=2)
+- SBAGLIATA (1°): arancione → ASPETTA
+- SBAGLIATA (2°): resto in BLU → chiedi cifra da abbassare
 
-Passo D — Abbassa cifra successiva:
-Coach chiede: "Quale cifra del dividendo dobbiamo abbassare adesso?"
-⚠️ NON abbassare MAI la cifra prima che lo studente la indichi
-- CORRETTA: cifra abbassata in verde, nuovo numero formato → Ricomincia Passo A
-- SBAGLIATA (1°): arancione sulla cifra successiva → "Guarda il dividendo — quale cifra viene dopo?" → ASPETTA
-- SBAGLIATA (2°): cifra in BLU → Ricomincia Passo A
+Passo D — Abbassa cifra:
+Quando lo studente indica la cifra corretta → celle_compilate=N+1, sotto_passo=0 → Ricomincia Passo A
+Per l'ULTIMA cifra: dopo sottrazione → sotto_passo=3 (mostra resto finale) → chiedi risultato completo
 
 ───────────────────────────────────────
 MOLTIPLICAZIONE IN COLONNA — Passi A→B→C→D ripetuti per ogni cifra

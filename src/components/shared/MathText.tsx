@@ -5,7 +5,7 @@ import { ColumnOperation, type ColumnOperationProps } from "./ColumnOperation";
 import type { CellHighlight, HighlightColor } from "./handwritten/utils";
 
 // Extended regex: supports optional parziale, celle_compilate, evidenzia
-const COLONNA_RE = /\[COLONNA:\s*tipo\s*=\s*(\w+)\s*,\s*numeri\s*=\s*([\d,]+)(?:\s*,\s*parziale\s*=\s*(true|false))?(?:\s*,\s*celle_compilate\s*=\s*(\d+))?(?:\s*,\s*evidenzia\s*=\s*([^\]]+))?\s*\]/gi;
+const COLONNA_RE = /\[COLONNA:\s*tipo\s*=\s*(\w+)\s*,\s*numeri\s*=\s*([\d,]+)(?:\s*,\s*parziale\s*=\s*(true|false))?(?:\s*,\s*celle_compilate\s*=\s*(\d+))?(?:\s*,\s*sotto_passo\s*=\s*(\d+))?(?:\s*,\s*evidenzia\s*=\s*([^\]]+))?\s*\]/gi;
 
 const TIPO_MAP: Record<string, ColumnOperationProps["type"]> = {
   moltiplicazione: "multiplication",
@@ -72,6 +72,7 @@ export function MathText({ children }: { children: string }) {
               numbers={seg.numbers}
               partial={seg.partial}
               filledCells={seg.filledCells}
+              subStep={seg.subStep}
               highlights={seg.highlights}
             />
           );
@@ -90,6 +91,7 @@ interface ColonnaSegment {
   numbers: number[];
   partial?: boolean;
   filledCells?: number;
+  subStep?: number;
   highlights?: CellHighlight[];
 }
 type Segment = TextSegment | ColonnaSegment;
@@ -108,10 +110,11 @@ function splitByColonna(text: string): Segment[] {
     const nums = match[2].split(",").map(Number).filter(n => !isNaN(n));
     const partial = match[3] === "true";
     const filledCells = match[4] ? parseInt(match[4], 10) : undefined;
-    const highlights = match[5] ? parseHighlights(match[5]) : undefined;
+    const subStep = match[5] ? parseInt(match[5], 10) : undefined;
+    const highlights = match[6] ? parseHighlights(match[6]) : undefined;
 
     if (tipo && nums.length >= 2) {
-      segments.push({ type: "colonna", opType: tipo, numbers: nums, partial, filledCells, highlights });
+      segments.push({ type: "colonna", opType: tipo, numbers: nums, partial, filledCells, subStep, highlights });
     } else {
       segments.push({ type: "text", value: match[0] });
     }
