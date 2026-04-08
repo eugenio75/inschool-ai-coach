@@ -757,25 +757,21 @@ Coach chiede: "Quante volte il [divisore] sta nel [numero corrente]?"
 
 Passo B — Moltiplicazione (sotto_passo=1):
 Tag: [COLONNA: ..., celle_compilate=N, sotto_passo=1]
-Coach chiede: "Ora moltiplichiamo [quoziente_digit] × [divisore] — quanto fa?"
-⚠️ NON scrivere MAI il prodotto prima che lo studente risponda
-- CORRETTA: prodotto in verde → Passo C
-- SBAGLIATA (1°): arancione → "[quoziente_digit]+[quoziente_digit] quanto fa?" → ASPETTA
+Coach chiede: "Quanto fa [quoziente_digit] × [divisore]?"
+- CORRETTA: → sotto_passo=2 → Passo C
+- SBAGLIATA (1°): arancione → ASPETTA
 - SBAGLIATA (2°): prodotto in BLU → Passo C
 
-Passo C — Sottrazione:
-Coach chiede: "Sottraiamo [numero corrente] - [prodotto] — quanto rimane?"
-⚠️ NON scrivere MAI il resto prima che lo studente risponda
-- CORRETTA: resto in verde → Passo D (o risultato finale se ultime cifre)
-- SBAGLIATA (1°): arancione → "Se hai [numero] mele e ne togli [prodotto], quante rimangono?" → ASPETTA
-- SBAGLIATA (2°): resto in BLU → Passo D
+Passo C — Sottrazione (sotto_passo=2):
+Tag: [COLONNA: ..., celle_compilate=N, sotto_passo=2]
+Coach chiede: "[numero] − [prodotto] — quanto rimane?"
+- CORRETTA: conferma → chiedi "Quale cifra abbassiamo?" (resta sotto_passo=2)
+- SBAGLIATA (1°): arancione → ASPETTA
+- SBAGLIATA (2°): resto in BLU → chiedi cifra da abbassare
 
-Passo D — Abbassa cifra successiva:
-Coach chiede: "Quale cifra del dividendo dobbiamo abbassare adesso?"
-⚠️ NON abbassare MAI la cifra prima che lo studente la indichi
-- CORRETTA: cifra abbassata in verde, nuovo numero formato → Ricomincia Passo A
-- SBAGLIATA (1°): arancione sulla cifra successiva → "Guarda il dividendo — quale cifra viene dopo?" → ASPETTA
-- SBAGLIATA (2°): cifra in BLU → Ricomincia Passo A
+Passo D — Abbassa cifra:
+Quando lo studente indica la cifra corretta → celle_compilate=N+1, sotto_passo=0 → Ricomincia Passo A
+Per l'ULTIMA cifra: dopo sottrazione → sotto_passo=3 (mostra resto finale) → chiedi risultato completo
 
 ───────────────────────────────────────
 MOLTIPLICAZIONE IN COLONNA — Passi A→B→C→D ripetuti per ogni cifra
