@@ -103,7 +103,7 @@ export function ProgressiveMessage({
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4 }}
               >
-                <MathText>{block.raw}</MathText>
+                <MathText exerciseStep={exerciseStep}>{block.raw}</MathText>
               </motion.div>
             );
           }
@@ -124,7 +124,7 @@ export function ProgressiveMessage({
               }}
               transition={{ duration: 0.3 }}
             >
-              <MathText>{displayText}</MathText>
+              <MathText exerciseStep={exerciseStep}>{displayText}</MathText>
               {isCurrentBlock && typedChars < block.text.length && (
                 <span className="inline-block w-0.5 h-4 bg-foreground/60 ml-0.5 animate-pulse rounded-full" />
               )}
