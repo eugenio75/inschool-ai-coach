@@ -629,11 +629,12 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       setShowCheckin(true);
       return;
     }
-    // Show familiarity selection first
-    setShowFamiliarity(true);
+    // Skip familiarity screen — will show quick-reply buttons in chat instead
+    // Go directly to checkin; familiarity will be asked via chat buttons after session starts
+    setShowCheckin(true);
   }
 
-  // Called from familiarity UI — stores choice then shows checkin
+  // Called from familiarity UI (legacy) — stores choice then shows checkin
   function selectFamiliarity(fam: Familiarity) {
     setFamiliarity(fam);
     saveFamiliarity(homeworkId!, fam);
