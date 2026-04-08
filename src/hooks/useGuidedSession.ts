@@ -901,9 +901,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       setSteps(generatedSteps);
       setCurrentStep(1);
 
-      const firstStep = generatedSteps[0];
-      const firstStepText = getVisibleLoadedContent(homework.task_type, homework.title, homework.description, firstStep?.step_text || firstStep?.text);
-      const stepIntro = `Ciao! 👋 Oggi lavoriamo su "${homework.title}"!\n\nPrima di iniziare... lo hai già studiato o è la prima volta? 😊\n\n👉 Sì, lo conosco\n👉 No, prima volta\n👉 L'ho visto ma non ricordo bene\n\nDimmi tu e partiamo insieme! 🚀`;
+      const isExercise = !isOralStudyTask(homework.task_type, homework.title) && !isMixedWritingTask(homework.task_type, homework.title);
 
       // Mic suggestion: show only once EVER per student profile
       const isOral = isOralStudyTask(homework.task_type, homework.title);
@@ -916,15 +914,80 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
         }
       }
 
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: `${stepIntro}${voicePrompt}`,
-      }]);
-      setSetupDone(true);
-      // Start inactivity timer and reset time tracking for fresh session
-      lastInteractionTime.current = Date.now();
-      activeStudySeconds.current = 0;
-      resetInactivityTimer();
+      // If familiarity is already known (saved from previous session or recovery), skip the question
+      if (fam) {
+        const familiarityLabel = fam === "first_time" ? "No, prima volta" : fam === "partial" ? "Lo so in parte" : "Sì, lo conosco";
+        const introMsg = `Ciao! 👋 Oggi lavoriamo su "${homework.title}"!${voicePrompt}\n\nPartiamo! 🚀`;
+        setMessages(prev => [
+          ...prev,
+          { role: "assistant", content: introMsg },
+          { role: "user", content: familiarityLabel },
+        ]);
+        setSetupDone(true);
+        lastInteractionTime.current = Date.now();
+        activeStudySeconds.current = 0;
+        resetInactivityTimer();
+
+        // Immediately send first AI interaction with familiarity context
+        setSending(true);
+        setStreamingText("");
+        const firstStep = generatedSteps[0];
+        const firstStepText = getVisibleLoadedContent(homework.task_type, homework.title, homework.description, firstStep?.step_text || firstStep?.text);
+        const familiarityContext = getCoachBehaviorForFamiliarity(fam);
+        const systemCtx = `\n\nCONTESTO INTERNO DI LAVORO:\n${firstStepText}\n\n${familiarityContext}`;
+        
+        try {
+          const lang = getCurrentLang();
+          await streamChat({
+            messages: [
+              ...messages,
+              { role: "assistant", content: introMsg },
+              { role: "user", content: familiarityLabel },
+            ],
+            onDelta: () => {},
+            onDone: (full) => {
+              setMessages(prev => [...prev, { role: "assistant", content: full }]);
+              setStreamingText("");
+              setSending(false);
+            },
+            extraBody: {
+              profileId: isChild ? getChildSession()?.profileId : homework?.child_profile_id || userId,
+              subject: homework.subject || undefined,
+              sessionFormat: "guided",
+              systemPrompt: systemCtx,
+              lang,
+            },
+          });
+        } catch {
+          setSending(false);
+        }
+      } else {
+        // No familiarity known — show quick-reply buttons in chat
+        const openingMsg = isExercise
+          ? `Ciao! 👋 Oggi lavoriamo su "${homework.title}"!${voicePrompt}\n\nHai già letto l'esercizio?`
+          : `Ciao! 👋 Oggi lavoriamo su "${homework.title}"!${voicePrompt}\n\nHai già studiato questo argomento o lo vedi per la prima volta?`;
+
+        const familiarityActions: ChatAction[] = isExercise
+          ? [
+              { label: "✅ Sì, ho letto l'esercizio", value: "familiarity:already_know", icon: "✅" },
+              { label: "📖 No, devo ancora leggerlo", value: "familiarity:first_time", icon: "📖" },
+            ]
+          : [
+              { label: "✅ Sì, lo conosco bene", value: "familiarity:already_know", icon: "✅" },
+              { label: "🔶 Lo so in parte", value: "familiarity:partial", icon: "🔶" },
+              { label: "📖 No, prima volta", value: "familiarity:first_time", icon: "📖" },
+            ];
+
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: openingMsg,
+          actions: familiarityActions,
+        }]);
+        setSetupDone(true);
+        lastInteractionTime.current = Date.now();
+        activeStudySeconds.current = 0;
+        resetInactivityTimer();
+      }
     } catch (err) {
       console.error("startNewSession error:", err);
       setMessages(prev => [...prev, { role: "assistant", content: "Si è verificato un errore nell'avvio della sessione. Riprova." }]);
