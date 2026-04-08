@@ -373,6 +373,9 @@ Inizia con la prima domanda.`;
     }
   }
 
+  // Track whether study session familiarity has been answered
+  const [studyFamiliarityDone, setStudyFamiliarityDone] = useState(false);
+
   function startSession() {
     if (!topic.trim() && type !== "prep" && type !== "review") return;
     if (!topic.trim() && type === "review" && subject) {
@@ -380,27 +383,52 @@ Inizia con la prima domanda.`;
     }
     if (!subject && type === "prep") return;
 
-    const sessionSystemPrompt = getSystemPrompt();
     sessionStartRef.current = Date.now();
     setSetupDone(true);
-    setMessages([]);
-    setSending(true);
     setStreamingText("");
 
-    streamChat({
-      messages: [],
-      onDelta: () => {},
-      onDone: (full) => {
-        setMessages([{ role: "assistant", content: full }]);
+    // For prep and review sessions, start normally (no familiarity question)
+    if (type === "prep" || type === "review") {
+      setMessages([]);
+      setSending(true);
+      const sessionSystemPrompt = getSystemPrompt();
+      streamChat({
+        messages: [],
+        onDelta: () => {},
+        onDone: (full) => {
+          setMessages([{ role: "assistant", content: full }]);
+          setStreamingText("");
+          setSending(false);
+        },
+        extraBody: { profileId, subject: subject || undefined, sessionFormat: type, systemPrompt: sessionSystemPrompt },
+      }).catch(() => {
+        setMessages([{ role: "assistant", content: "Mi dispiace, c'è stato un problema. Riprova." }]);
         setStreamingText("");
         setSending(false);
-      },
-      extraBody: { profileId, subject: subject || undefined, sessionFormat: type, systemPrompt: sessionSystemPrompt },
-    }).catch(() => {
-      setMessages([{ role: "assistant", content: "Mi dispiace, c'è stato un problema. Riprova." }]);
-      setStreamingText("");
-      setSending(false);
-    });
+      });
+      return;
+    }
+
+    // Study session: show welcome message with quick-reply familiarity buttons
+    const isMathSession = containsExercises(topic);
+    const cName = coachName || "il Coach";
+    const welcomeMsg = isMathSession
+      ? `Ciao! 👋 Oggi lavoriamo su questi esercizi!\n\nHai già letto l'esercizio?`
+      : `Ciao! 👋 Oggi lavoriamo su "${topic}"!\n\nHai già studiato questo argomento o lo vedi per la prima volta?`;
+
+    const familiarityActions: import("@/lib/streamChat").ChatAction[] = isMathSession
+      ? [
+          { label: t("session_fam_math_yes"), value: "study_fam:already_know", icon: "✅" },
+          { label: t("session_fam_math_no"), value: "study_fam:first_time", icon: "📖" },
+        ]
+      : [
+          { label: t("session_fam_oral_yes"), value: "study_fam:already_know", icon: "✅" },
+          { label: t("session_fam_oral_partial"), value: "study_fam:partial", icon: "🔶" },
+          { label: t("session_fam_oral_no"), value: "study_fam:first_time", icon: "📖" },
+        ];
+
+    setMessages([{ role: "assistant", content: welcomeMsg, actions: familiarityActions }]);
+    setSending(false);
   }
 
   const handleSend = useCallback((text: string) => {
