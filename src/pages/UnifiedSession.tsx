@@ -122,6 +122,7 @@ export default function UnifiedSession() {
   const [studyTotalPoints, setStudyTotalPoints] = useState<number | undefined>();
   const [studyPrevTotal, setStudyPrevTotal] = useState<number | undefined>();
   const [studyStreak, setStudyStreak] = useState<number | undefined>();
+  const [studyFamiliarityDone, setStudyFamiliarityDone] = useState(false);
   const sessionStartRef = useRef<number>(Date.now());
 
   // Load coach name from preferences
