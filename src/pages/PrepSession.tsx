@@ -1327,87 +1327,35 @@ ${weaknessContext ? `STUDENT WEAK AREAS:\n${weaknessContext}` : ""}`;
     );
   }
 
-  /* ══════════════ STEP: Simulation chat ══════════════ */
+  /* ══════════════ STEP: Simulation chat — using ChatShell ══════════════ */
   const examEmoji = EXAM_TYPES.find(e => e.id === examType)?.emoji || "📝";
   const modeSubtitle = examType === "orale" ? "Orale" : examType === "verifica" ? "Scritta" : t(EXAM_TYPES.find(e => e.id === examType)?.labelKey || "");
 
+  // Convert messages to ChatMsg format
+  const chatMessages: ChatMsg[] = messages.map(m => ({ role: m.role, content: m.content }));
+
+  function handleChatSend(text: string) {
+    setMessages(prev => [...prev, { role: "user", content: text }]);
+    sendToAI(messages, text);
+  }
+
   return (
-    <div className="h-[100dvh] flex flex-col bg-card">
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-        <button onClick={() => { setStudyMode(null); setStep("mode-select"); }} className="p-1.5 rounded-lg hover:bg-muted">
-          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-sm font-semibold text-foreground">{examEmoji} {prepLabel}</h1>
-          <span className="text-xs text-muted-foreground">{subject ? `${subject} — ` : ""}{modeSubtitle}</span>
-        </div>
-      </div>
-
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {messages.map((msg, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-            {msg.role === "assistant" && (
-              <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center mr-2 mt-1 flex-shrink-0">
-                <span className="text-primary-foreground text-xs font-bold">C</span>
-              </div>
-            )}
-            <div className={`max-w-[80%] rounded-xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
-              msg.role === "user" ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted text-foreground rounded-bl-sm"
-            }`}>
-              {msg.content ? <MathText>{msg.content}</MathText> : (sending && i === messages.length - 1 ? <Loader2 className="w-4 h-4 animate-spin" /> : null)}
-            </div>
-          </motion.div>
-        ))}
-        {streamingText && (
-          <div className="flex justify-start">
-            <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center mr-2 mt-1 flex-shrink-0">
-              <span className="text-primary-foreground text-xs font-bold">C</span>
-            </div>
-            <div className="max-w-[80%] rounded-xl rounded-bl-sm bg-muted px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap">
-              <MathText>{streamingText}</MathText><span className="inline-block w-1.5 h-4 bg-primary ml-0.5 animate-pulse" />
-            </div>
-          </div>
-        )}
-        {sending && !streamingText && messages[messages.length - 1]?.content && (
-          <div className="flex justify-start">
-            <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center mr-2 flex-shrink-0">
-              <span className="text-primary-foreground text-xs font-bold">C</span>
-            </div>
-            <div className="bg-muted rounded-xl rounded-bl-sm px-4 py-3">
-              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {isListening && voiceTranscript && (
-        <div className="border-t border-border bg-primary/5 px-4 py-2">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
-            <span className="text-xs font-medium text-muted-foreground">{t("exam_voice_transcribing")}</span>
-          </div>
-          <p className="text-sm text-foreground">{voiceTranscript}</p>
-        </div>
-      )}
-
-      <div className="border-t border-border bg-card p-3 sticky bottom-0 z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}>
-        <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex items-center gap-2">
-          {isOralMode && (
-            <button type="button" onClick={toggleVoice}
-              className={`p-2.5 rounded-xl border transition-colors ${isListening ? "bg-destructive/10 border-destructive/30 text-destructive" : "border-border text-muted-foreground"}`}>
-              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-            </button>
-          )}
-          <input type="text" value={input} onChange={e => setInput(e.target.value)}
-            placeholder={isOralMode ? t("exam_input_oral") : t("exam_input_written")}
-            className="flex-1 bg-muted border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
-            disabled={sending} />
-          <Button type="submit" size="icon" disabled={!input.trim() || sending} className="rounded-xl h-10 w-10">
-            <Send className="w-4 h-4" />
-          </Button>
-        </form>
-      </div>
-    </div>
+    <ChatShell
+      title={`${examEmoji} ${prepLabel}`}
+      subtitle={subject ? `${subject} — ${modeSubtitle}` : modeSubtitle}
+      coachName={coachName}
+      messages={chatMessages}
+      streamingText={streamingText}
+      sending={sending}
+      onSend={handleChatSend}
+      onBack={() => { setStudyMode(null); setStep("mode-select"); }}
+      showHint={true}
+      showStuck={true}
+      showExplain={true}
+      showVoice={isOralMode}
+      showAttach={false}
+      showPomodoro={false}
+      inputPlaceholder={isOralMode ? t("exam_input_oral") : t("exam_input_written")}
+    />
   );
 }
