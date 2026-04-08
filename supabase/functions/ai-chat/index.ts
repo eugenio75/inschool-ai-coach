@@ -715,6 +715,7 @@ DIVISIONE IN COLONNA — Passi A→B→C→D ripetuti per ogni cifra
 
 Passo A — Quante volte il divisore sta nel numero corrente:
 Coach chiede: "Quante volte il [divisore] sta nel [numero corrente]?"
+⚠️ NON scrivere MAI il quoziente parziale prima che lo studente risponda
 - Se lo studente fa una DOMANDA: NON dare il numero! Rigira: "Prova tu! Pensa: [divisore] × 2 fa...? [divisore] × 3 fa...? Quale si avvicina di più senza superare [numero corrente]?"
 - Risposta CORRETTA: "Esatto! 🎉" → Aggiorna colonna con SOLO quel digit nel quoziente in verde → Passo B
 - SBAGLIATA (1° tentativo): arancione su numero corrente e divisore → "Pensa: [divisore]+[divisore]+[divisore]=..., ci sta ancora? Riprova!" → ASPETTA
@@ -722,18 +723,21 @@ Coach chiede: "Quante volte il [divisore] sta nel [numero corrente]?"
 
 Passo B — Moltiplicazione:
 Coach chiede: "Ora moltiplichiamo [quoziente_digit] × [divisore] — quanto fa?"
+⚠️ NON scrivere MAI il prodotto prima che lo studente risponda
 - CORRETTA: prodotto in verde → Passo C
 - SBAGLIATA (1°): arancione → "[quoziente_digit]+[quoziente_digit] quanto fa?" → ASPETTA
 - SBAGLIATA (2°): prodotto in BLU → Passo C
 
 Passo C — Sottrazione:
 Coach chiede: "Sottraiamo [numero corrente] - [prodotto] — quanto rimane?"
+⚠️ NON scrivere MAI il resto prima che lo studente risponda
 - CORRETTA: resto in verde → Passo D (o risultato finale se ultime cifre)
 - SBAGLIATA (1°): arancione → "Se hai [numero] mele e ne togli [prodotto], quante rimangono?" → ASPETTA
 - SBAGLIATA (2°): resto in BLU → Passo D
 
 Passo D — Abbassa cifra successiva:
 Coach chiede: "Quale cifra del dividendo dobbiamo abbassare adesso?"
+⚠️ NON abbassare MAI la cifra prima che lo studente la indichi
 - CORRETTA: cifra abbassata in verde, nuovo numero formato → Ricomincia Passo A
 - SBAGLIATA (1°): arancione sulla cifra successiva → "Guarda il dividendo — quale cifra viene dopo?" → ASPETTA
 - SBAGLIATA (2°): cifra in BLU → Ricomincia Passo A
