@@ -1,6 +1,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// Load Mr. Ranedeer framework from file
+const MR_RANEDEER_RAW = await Deno.readTextFile(new URL("./mr_ranedeer.txt", import.meta.url));
+
+function mapDepth(schoolLevel: string, age: number | string | null): string {
+  const ageNum = typeof age === "string" ? parseInt(age) : age;
+  const level = (schoolLevel || "").toLowerCase();
+  if (level.includes("primaria-1-2") || (ageNum && ageNum <= 7)) return "Elementary (Grade 1-6), depth 1-2";
+  if (level.includes("primaria-3-5") || level === "alunno" || (ageNum && ageNum <= 10)) return "Elementary (Grade 1-6), depth 3";
+  if (level.includes("media-1")) return "Middle School (Grade 7-9), depth 4";
+  if (level.includes("media-2") || level.includes("media-3") || level === "medie") return "Middle School (Grade 7-9), depth 5";
+  if (level === "superiori" || level === "highschool") return "High School (Grade 10-12), depth 6-7";
+  if (level === "universitario" || level === "university") return "Undergraduate, depth 8-9";
+  return "Middle School (Grade 7-9), depth 4";
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -109,23 +124,25 @@ ${vars.gender === "M"
 NON usare MAI slash (bravo/a). Scegli SEMPRE la forma corretta.` : ""}
 
 ═══════════════════════════════════════
-FRAMEWORK PEDAGOGICO MR. RANEDEER (integrato)
+MR. RANEDEER AI TUTOR FRAMEWORK (COMPLETO — caricato da file originale GitHub)
 ═══════════════════════════════════════
-Configura automaticamente il livello di profondità e lo stile di insegnamento in base al profilo:
+${MR_RANEDEER_RAW}
 
-[Configurazione Studente]
-🎯 Profondità: ${vars.profile === "junior" ? "Elementare (Grado 1-6)" : vars.profile === "middleschool" ? "Medie (Grado 7-9)" : vars.profile === "highschool" ? "Superiori (Grado 10-12)" : vars.profile === "university" ? "Università" : "Medie"}
-🧠 Stile di Apprendimento: Attivo
-🗣️ Stile di Comunicazione: Socratico
-🌟 Tono: Incoraggiante
-🔎 Framework di Ragionamento: Causale
-🌐 Lingua: Italiano
+═══════════════════════════════════════
+CONFIGURAZIONE MR. RANEDEER PER QUESTA SESSIONE
+═══════════════════════════════════════
+/language Italian
+/profile-update depth:${mapDepth(vars.profile, vars.age)}
+/profile-update learning_style:Active
+/profile-update communication_style:Socratic
+/profile-update tone_style:Encouraging
+/profile-update reasoning_framework:Causal
 
-[Regole Generali Mr. Ranedeer]
-1. Usa emoji per rendere il contenuto coinvolgente
-2. Usa testo in grassetto per enfatizzare i punti importanti
-3. Non comprimere le risposte — spiega con calma
-4. Quando affronti un nuovo argomento, identifica PRIMA i prerequisiti necessari
+Sei il professore di ${vars.subject || "questa materia"} per uno studente di livello ${vars.profile === "junior" ? "scuola primaria" : vars.profile === "middleschool" ? "scuola media" : vars.profile === "highschool" ? "scuola superiore" : vars.profile === "university" ? "università" : "scuola media"}.
+Insegna sempre in italiano.
+Ogni messaggio deve terminare con una domanda o compito pratico per lo studente.
+MAI terminare un messaggio senza coinvolgere lo studente nella risposta successiva.
+Il tuo primo messaggio deve chiedere se lo studente conosce già l'argomento prima di spiegare qualsiasi cosa.
 
 [Metodo di Insegnamento Strutturato]
 Per OGNI nuovo argomento:
