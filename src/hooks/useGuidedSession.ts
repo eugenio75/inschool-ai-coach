@@ -647,8 +647,8 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     setShowCheckin(false);
     setSessionEmotion(emotion);
 
-    // Show method proposal in chat then start
-    const fam = familiarity || "first_time";
+    // Use saved familiarity if available, otherwise null → will show quick-reply buttons
+    const fam = familiarity; // DO NOT default to "first_time" — null means "not yet chosen"
     setPendingEmotion(emotion);
     setMethodPhase("propose_method");
     setSetupDone(true);
@@ -745,13 +745,52 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
         { role: "user" as const, content: userLabel },
       ]);
 
-      // Now send to AI with familiarity context
+      // Now send to AI with familiarity context — use exercise-specific prompt for math
       setSending(true);
       setStreamingText("");
       const firstStep = steps[0] || {};
       const firstStepText = getVisibleLoadedContent(homework?.task_type || "", homework?.title || "", homework?.description, firstStep?.step_text || firstStep?.text);
-      const familiarityContext = getCoachBehaviorForFamiliarity(famKey);
-      const systemCtx = `\n\nCONTESTO INTERNO DI LAVORO:\n${firstStepText}\n\n${familiarityContext}`;
+      const isExerciseFam = homework && !isOralStudyTask(homework.task_type, homework.title) && !isMixedWritingTask(homework.task_type, homework.title);
+
+      let systemCtx: string;
+      if (isExerciseFam) {
+        const familiarityContext = famKey === "first_time"
+          ? "\nLo studente ha risposto che NON ha ancora letto l'esercizio. Fai spiegazione teorica completa del metodo con esempio concreto della vita reale adatto all'età, mostra un esempio semplice risolto completamente, poi parti con l'esercizio reale seguendo il flusso colonna progressiva."
+          : famKey === "partial"
+          ? "\nLo studente ha risposto che ha GIÀ LETTO l'esercizio ma ha difficoltà. Fai una spiegazione mirata SOLO sui punti deboli specifici. Non ripetere quello che lo studente sa già. Poi parti con l'esercizio."
+          : "\nLo studente ha risposto che ha GIÀ LETTO l'esercizio. Ripetizione brevissima del metodo (2-3 righe max). Vai direttamente all'esercizio.";
+        const proofContext = requiresOperationProof(homework.task_type, homework.title, homework.description)
+          ? "\nVINCOLO EXTRA DELLA CONSEGNA: nel compito compare 'con la prova'. Dopo il risultato guida anche la prova finale."
+          : "";
+        systemCtx = `Sei un tutor che guida lo studente a RISOLVERE esercizi.
+
+REGOLE ASSOLUTE:
+⚠️ Per qualsiasi operazione in colonna usa ESCLUSIVAMENTE il tag [COLONNA:] — MAI pipe, trattini, o spazi.
+FORMATO TAG PARZIALE: [COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=0]
+FORMATO CON EVIDENZIAZIONE: [COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=1, evidenzia=qp0:verde]
+COLORI: verde=trovato dallo studente, arancione=hint, blu=dato dal coach
+
+⚠️⚠️⚠️ REGOLA FERRO — SOVRASCRIVE TUTTO ⚠️⚠️⚠️
+LA COLONNA SI AGGIORNA **SOLO DOPO** CHE LO STUDENTE HA RISPOSTO.
+MAI mostrare un numero nella colonna PRIMA che lo studente lo abbia trovato.
+MAI scrivere il risultato di un calcolo PRIMA che lo studente risponda.
+MAI aggiornare la colonna con più di UN numero alla volta.
+
+STRUTTURA OBBLIGATORIA: [1] CHIEDI → [2] ASPETTA → [3] AGGIORNA
+Se corretto → verde. Se sbagliato 1ª → arancione + indizio. Se sbagliato 2ª → blu.
+
+FLUSSO: Fase 1 (teoria+esempio vita reale) → Fase 2 (esempio semplice completo) → Fase 3 (esercizio con studente, colonna parziale)
+NON chiedere MAI "Quali sono i dati?" — TU HAI GIÀ TUTTI I DATI.
+${familiarityContext}${proofContext}
+
+CONTESTO INTERNO DI LAVORO:
+${firstStepText}
+
+Sii breve: 2-3 frasi + una domanda. Tono caldo e incoraggiante.`;
+      } else {
+        const familiarityContext = getCoachBehaviorForFamiliarity(famKey);
+        systemCtx = `\n\nCONTESTO INTERNO DI LAVORO:\n${firstStepText}\n\n${familiarityContext}`;
+      }
 
       const allMsgs = [
         ...messages.map(m => ({ ...m, actions: undefined })),
