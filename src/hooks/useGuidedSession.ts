@@ -721,6 +721,68 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       return;
     }
 
+    // Handle familiarity quick-reply buttons from chat
+    if (value.startsWith("familiarity:")) {
+      const famKey = value.replace("familiarity:", "") as Familiarity;
+      setFamiliarity(famKey);
+      saveFamiliarity(homeworkId!, famKey);
+
+      // Map to user-facing label
+      const labelMap: Record<string, string> = {
+        already_know: homework && !isOralStudyTask(homework.task_type, homework.title) && !isMixedWritingTask(homework.task_type, homework.title)
+          ? "Sì, ho letto l'esercizio"
+          : "Sì, lo conosco bene",
+        partial: "Lo so in parte",
+        first_time: homework && !isOralStudyTask(homework.task_type, homework.title) && !isMixedWritingTask(homework.task_type, homework.title)
+          ? "No, devo ancora leggerlo"
+          : "No, prima volta",
+      };
+      const userLabel = labelMap[famKey] || value;
+
+      // Remove actions from the message and add user response
+      setMessages(prev => [
+        ...prev.map(m => ({ ...m, actions: undefined })),
+        { role: "user" as const, content: userLabel },
+      ]);
+
+      // Now send to AI with familiarity context
+      setSending(true);
+      setStreamingText("");
+      const firstStep = steps[0] || {};
+      const firstStepText = getVisibleLoadedContent(homework?.task_type || "", homework?.title || "", homework?.description, firstStep?.step_text || firstStep?.text);
+      const familiarityContext = getCoachBehaviorForFamiliarity(famKey);
+      const systemCtx = `\n\nCONTESTO INTERNO DI LAVORO:\n${firstStepText}\n\n${familiarityContext}`;
+
+      const allMsgs = [
+        ...messages.map(m => ({ ...m, actions: undefined })),
+        { role: "user" as const, content: userLabel },
+      ];
+
+      try {
+        const lang = getCurrentLang();
+        await streamChat({
+          messages: allMsgs,
+          onDelta: () => {},
+          onDone: (full: string) => {
+            setMessages(prev => [...prev, { role: "assistant" as const, content: full }]);
+            setStreamingText("");
+            setSending(false);
+          },
+          extraBody: {
+            profileId: isChild ? getChildSession()?.profileId : homework?.child_profile_id || userId,
+            subject: homework?.subject || undefined,
+            sessionFormat: "guided",
+            systemPrompt: systemCtx,
+            lang,
+          },
+        });
+      } catch {
+        setMessages(prev => [...prev, { role: "assistant" as const, content: "Errore. Riprova." }]);
+        setSending(false);
+      }
+      return;
+    }
+
     if (methodPhase === "propose_method" && value === "start_session") {
       setMethodPhase("ready");
       setMessages(prev => [
