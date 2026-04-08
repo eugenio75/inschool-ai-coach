@@ -1,11 +1,12 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { FS, jit, pathLength, type El, type AgeTier, getTierConfig } from "./utils";
+import { FS, jit, pathLength, type El, type AgeTier, getTierConfig, COLORS } from "./utils";
 
 /**
  * Shared SVG renderer for all handwritten math operations.
  * Renders elements with stroke-draw and fade-in animations.
  * Placeholder elements render as dashed underscores until their step arrives.
+ * Hidden elements render as gray underscores (for partial/interactive mode).
  */
 interface Props {
   elements: El[];
@@ -50,9 +51,32 @@ export function HandwrittenSVG({ elements, width, height, tier = "upper-elementa
           );
         }
 
+        // Hidden cell — show gray underscore placeholder
+        if (el.isHidden) {
+          const fontSize = el.fontSize || FS;
+          return (
+            <motion.text
+              key={el.id}
+              x={el.x + jit(el.seed, 0.5)}
+              y={el.y}
+              fill={COLORS.empty}
+              fontSize={fontSize}
+              fontFamily="'Patrick Hand', cursive"
+              textAnchor="middle"
+              dominantBaseline="auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              transition={{ delay: 0.3, duration: 0.3 }}
+            >
+              _
+            </motion.text>
+          );
+        }
+
         // Placeholder: show dashed underscore, then reveal real digit
         if (el.isPlaceholder) {
           const fontSize = el.fontSize || FS;
+          const fillColor = el.highlightColor || (el.isResult ? COLORS.result : el.color);
           return (
             <React.Fragment key={el.id}>
               {/* Dashed placeholder visible immediately */}
@@ -76,7 +100,7 @@ export function HandwrittenSVG({ elements, width, height, tier = "upper-elementa
               <motion.text
                 x={el.x + jit(el.seed, 0.8)}
                 y={el.y + jit(el.seed + 3, 0.5)}
-                fill={el.isResult ? "#1D9E75" : el.color}
+                fill={fillColor}
                 fontSize={fontSize}
                 fontFamily="'Patrick Hand', cursive"
                 textAnchor="middle"
@@ -102,12 +126,13 @@ export function HandwrittenSVG({ elements, width, height, tier = "upper-elementa
 
         // Normal text element
         const fontSize = el.fontSize || FS;
+        const fillColor = el.highlightColor || el.color;
         return (
           <motion.text
             key={el.id}
             x={el.x + jit(el.seed, 0.8)}
             y={el.y + jit(el.seed + 3, 0.5)}
-            fill={el.color}
+            fill={fillColor}
             fontSize={fontSize}
             fontFamily="'Patrick Hand', cursive"
             textAnchor="middle"
