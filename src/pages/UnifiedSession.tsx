@@ -1116,6 +1116,66 @@ Inizia con la prima domanda.`;
     </div>
   ) : undefined;
 
+  // Handle study session familiarity action clicks
+  const handleStudyAction = useCallback((value: string) => {
+    if (value.startsWith("study_fam:")) {
+      const famKey = value.replace("study_fam:", "");
+      setStudyFamiliarityDone(true);
+
+      const isMathSession = containsExercises(topic);
+      const labelMap: Record<string, string> = {
+        already_know: isMathSession ? t("session_fam_math_yes") : t("session_fam_oral_yes"),
+        partial: t("session_fam_oral_partial"),
+        first_time: isMathSession ? t("session_fam_math_no") : t("session_fam_oral_no"),
+      };
+      const userLabel = (labelMap[famKey] || value).replace(/^[✅📖🔶]\s*/, "");
+
+      // Remove actions, add user response, then call AI
+      setMessages(prev => [
+        ...prev.map(m => ({ ...m, actions: undefined })),
+        { role: "user" as const, content: userLabel },
+      ]);
+      setSending(true);
+      setStreamingText("");
+
+      // Build familiarity context for the system prompt
+      let familiarityInstruction = "";
+      if (famKey === "first_time") {
+        familiarityInstruction = isMathSession
+          ? "\nLo studente NON ha ancora letto l'esercizio. Fai spiegazione teorica completa del metodo, poi un esempio semplice risolto, poi parti con l'esercizio."
+          : "\nLo studente vede questo argomento per la prima volta. Leggi insieme, spiega i concetti chiave, fai domande durante la lettura.";
+      } else if (famKey === "partial") {
+        familiarityInstruction = "\nLo studente conosce parzialmente l'argomento. Chiedi cosa sa, identifica le lacune, lavora solo sui punti deboli.";
+      } else {
+        familiarityInstruction = isMathSession
+          ? "\nLo studente ha GIÀ LETTO l'esercizio. Ripetizione brevissima del metodo (2-3 righe max), poi vai direttamente all'esercizio."
+          : "\nLo studente dice di conoscere l'argomento. Non simulare l'interrogazione. Dì: 'Ottimo! Sei già pronto. Per simulare l'interrogazione vera vai su Prepara la prova.' e aggiungi [LINK_PREP].";
+      }
+
+      const sessionSystemPrompt = getSystemPrompt() + familiarityInstruction;
+
+      const allMsgs = [
+        ...messages.map(m => ({ ...m, actions: undefined })),
+        { role: "user" as const, content: userLabel },
+      ];
+
+      streamChat({
+        messages: allMsgs,
+        onDelta: () => {},
+        onDone: (full) => {
+          setMessages(prev => [...prev, { role: "assistant" as const, content: full }]);
+          setStreamingText("");
+          setSending(false);
+        },
+        extraBody: { profileId, subject: subject || undefined, sessionFormat: type, systemPrompt: sessionSystemPrompt },
+      }).catch(() => {
+        setMessages(prev => [...prev, { role: "assistant" as const, content: "Errore. Riprova." }]);
+        setStreamingText("");
+        setSending(false);
+      });
+    }
+  }, [messages, topic, subject, profileId, type, t]);
+
   return (
     <>
       <ChatShell
@@ -1127,6 +1187,7 @@ Inizia con la prima domanda.`;
         streamingText={streamingText}
         sending={sending}
         onSend={handleSend}
+        onAction={handleStudyAction}
         onEndSession={() => setShowEndConfirm(true)}
         onBack={() => {
           if (type === "study" && studyMode === "coach") {
