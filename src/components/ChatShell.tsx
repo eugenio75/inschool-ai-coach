@@ -346,8 +346,24 @@ export function ChatShell({
   const showWhiteboardOption = lastMsg?.role === "assistant" && isWaitingForStudent(lastMsg.content || "") && !hasActions && !sending;
   const statusInfo = getStatusIndicator(coachStatus);
 
+  // Parse arrow options from assistant messages into action buttons
+  function parseInlineOptions(text: string): { cleanText: string; options: string[] } {
+    const lines = text.split("\n");
+    const options: string[] = [];
+    const cleanLines: string[] = [];
+    for (const line of lines) {
+      const match = line.match(/^\s*(?:👉|•|-)\s+(.+)$/);
+      if (match) {
+        options.push(match[1].trim());
+      } else {
+        cleanLines.push(line);
+      }
+    }
+    return { cleanText: cleanLines.join("\n").trim(), options };
+  }
+
   return (
-    <div className="h-screen flex flex-col bg-card">
+    <div className="h-[100dvh] flex flex-col bg-card">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card shrink-0">
         <button onClick={onBack} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
