@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -157,6 +157,56 @@ export function ChatShell({
       : !sending && messages.length > 0 && isWaitingForStudent(messages[messages.length - 1]?.content || "")
         ? "waiting"
         : "idle";
+
+  // ── Incremental SVG: compute per-message exercise step ──
+  // Tracks how many sub-steps the student has confirmed so far.
+  // exerciseSteps[i] = undefined means "show full SVG" (explanation mode).
+  // exerciseSteps[i] = 0 means "show only the problem, no solution".
+  // exerciseSteps[i] = N means "show N confirmed sub-steps".
+  const exerciseSteps = useMemo(() => {
+    const steps: (number | undefined)[] = [];
+    let inExercise = false;
+    let step = 0;
+
+    for (const msg of messages) {
+      if (msg.role !== "assistant") {
+        steps.push(undefined);
+        continue;
+      }
+      const text = msg.content || "";
+      const hasColonna = /\[COLONNA:/i.test(text);
+
+      if (!inExercise) {
+        // Detect exercise start: COLONNA tag + question to student
+        if (hasColonna && /prova tu|tocca a te|quanto fa|quante volte|calcola/i.test(text.toLowerCase())) {
+          inExercise = true;
+          step = 0;
+          steps.push(step);
+          continue;
+        }
+        steps.push(undefined); // explanation mode
+        continue;
+      }
+
+      // Already in exercise mode
+      const isConfirm = /esatto|perfetto|brav[oaie]|bravissim|corretto|giusto|ottimo|eccellente|ben fatto|✅|🎉/i.test(text)
+        && !/non è corrett|sbagliato|non proprio|purtroppo/i.test(text);
+
+      if (isConfirm) {
+        step++;
+      }
+
+      // If exercise seems to end (no more COLONNA, or "completo/finito")
+      if (/abbiamo finito|risultato finale|complimenti.*completato|hai completato/i.test(text.toLowerCase())) {
+        steps.push(undefined); // show full result
+        inExercise = false;
+        continue;
+      }
+
+      steps.push(hasColonna ? step : undefined);
+    }
+    return steps;
+  }, [messages]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -503,10 +553,10 @@ export function ChatShell({
                       <div className="flex items-center gap-1 mb-1 opacity-60">
                         <WritingPen writing={false} />
                       </div>
-                      <ProgressiveMessage content={displayContent || ""} charDelay={35} blockPause={800} onComplete={() => setProgressiveComplete(true)} />
+                      <ProgressiveMessage content={displayContent || ""} charDelay={35} blockPause={800} onComplete={() => setProgressiveComplete(true)} exerciseStep={exerciseSteps[i]} />
                     </div>
                   ) : (
-                    <MathText>{displayContent || ""}</MathText>
+                    <MathText exerciseStep={exerciseSteps[i]}>{displayContent || ""}</MathText>
                   )}
                 </div>
                 {/* Parsed inline options as vertical buttons — only show AFTER progressive message finishes */}

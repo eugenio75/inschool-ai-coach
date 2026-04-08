@@ -10,6 +10,8 @@ interface Props {
   blockPause?: number;
   /** Called when all content has been revealed */
   onComplete?: () => void;
+  /** Exercise step for incremental SVG rendering */
+  exerciseStep?: number;
 }
 
 /**
@@ -22,6 +24,7 @@ export function ProgressiveMessage({
   charDelay = 35,
   blockPause = 800,
   onComplete,
+  exerciseStep,
 }: Props) {
   const blocks = useMemo(() => splitIntoBlocks(content), [content]);
   const [visibleBlocks, setVisibleBlocks] = useState(0);
@@ -100,7 +103,7 @@ export function ProgressiveMessage({
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4 }}
               >
-                <MathText>{block.raw}</MathText>
+                <MathText exerciseStep={exerciseStep}>{block.raw}</MathText>
               </motion.div>
             );
           }
@@ -121,7 +124,7 @@ export function ProgressiveMessage({
               }}
               transition={{ duration: 0.3 }}
             >
-              <MathText>{displayText}</MathText>
+              <MathText exerciseStep={exerciseStep}>{displayText}</MathText>
               {isCurrentBlock && typedChars < block.text.length && (
                 <span className="inline-block w-0.5 h-4 bg-foreground/60 ml-0.5 animate-pulse rounded-full" />
               )}

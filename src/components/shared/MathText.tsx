@@ -41,11 +41,18 @@ function parseHighlights(raw: string): CellHighlight[] {
 /**
  * Renders text that may contain LaTeX math expressions and [COLONNA:...] tags.
  */
-export function MathText({ children }: { children: string }) {
+export function MathText({ children, exerciseStep }: { children: string; exerciseStep?: number }) {
   const text = children || "";
 
   // Split text by COLONNA tags
   const segments = useMemo(() => splitByColonna(text), [text]);
+
+  // Detect if the message text contains exercise questions (used as fallback)
+  const isExerciseMessage = useMemo(() => {
+    if (exerciseStep !== undefined) return exerciseStep >= 0;
+    // Auto-detect: message has COLONNA + question pattern
+    return /\[COLONNA:/i.test(text) && /\?\s*$/m.test(text);
+  }, [text, exerciseStep]);
 
   const hasBlockContent = useMemo(
     () => /```|(?:^|\n)\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]/.test(text) || /\[COLONNA:/.test(text),
@@ -65,14 +72,39 @@ export function MathText({ children }: { children: string }) {
     <div className="math-text math-text-block">
       {segments.map((seg, i) => {
         if (seg.type === "colonna") {
+          // In exercise mode, force partial rendering
+          const forcePartial = isExerciseMessage && !seg.partial;
+          const effectiveStep = exerciseStep ?? 0;
+          let effectiveFilledCells = seg.filledCells;
+          let effectiveSubStep = seg.subStep;
+
+          if (forcePartial || (seg.partial && exerciseStep !== undefined)) {
+            // Map exerciseStep to (filledCells, subStep)
+            // Division: 3 sub-steps per quotient digit (quotient, product, remainder)
+            // Other ops: 1 step per result digit
+            if (seg.opType === "division") {
+              if (effectiveStep === 0) {
+                effectiveFilledCells = 0;
+                effectiveSubStep = 0;
+              } else {
+                const idx = effectiveStep - 1;
+                effectiveFilledCells = Math.floor(idx / 3);
+                effectiveSubStep = (idx % 3) + 1;
+              }
+            } else {
+              effectiveFilledCells = effectiveStep;
+              effectiveSubStep = undefined;
+            }
+          }
+
           return (
             <ColumnOperation
               key={i}
               type={seg.opType}
               numbers={seg.numbers}
-              partial={seg.partial}
-              filledCells={seg.filledCells}
-              subStep={seg.subStep}
+              partial={forcePartial || seg.partial}
+              filledCells={effectiveFilledCells}
+              subStep={effectiveSubStep}
               highlights={seg.highlights}
             />
           );
