@@ -547,6 +547,11 @@ export function ChatShell({
                 <AlertCircle className="w-3.5 h-3.5" /> {t("chat_stuck")}
               </button>
             )}
+            {/* Whiteboard button — always visible */}
+            <button onClick={() => setWhiteboardOpen(true)} disabled={sending}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-muted-foreground text-xs font-medium hover:bg-muted transition-colors">
+              🖊️ Lavagna
+            </button>
             {showExplain && (
               <div className="relative">
                 <button onClick={() => setShowExplainOptions(!showExplainOptions)} disabled={sending}
