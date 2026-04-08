@@ -101,11 +101,12 @@ function isWrongFeedback(text: string): boolean {
 
 type CoachStatus = "thinking" | "writing" | "reading" | "waiting" | "idle";
 
-function getStatusIndicator(status: CoachStatus) {
+function getStatusIndicator(status: CoachStatus, name?: string) {
+  const label = name || "Il tuo coach";
   switch (status) {
-    case "thinking": return { icon: "💭", text: "Il professore sta pensando..." };
-    case "writing": return { icon: "🖊️", text: "Il professore sta preparando la risposta..." };
-    case "reading": return { icon: "👀", text: "Il professore sta leggendo la lavagna..." };
+    case "thinking": return { icon: "💭", text: `${label} sta pensando...` };
+    case "writing": return { icon: "🖊️", text: `${label} sta preparando la risposta...` };
+    case "reading": return { icon: "👀", text: `${label} sta leggendo la lavagna...` };
     case "waiting": return { icon: "✏️", text: "Tocca a te!" };
     case "idle": return null;
   }
@@ -541,7 +542,7 @@ export function ChatShell({
             <div className="bg-muted rounded-xl rounded-bl-sm px-4 py-3 flex items-center gap-2">
               <WritingPen writing={true} />
               <span className="text-sm text-muted-foreground font-['Patrick_Hand']">
-                {whiteboardLoading ? "Il professore sta leggendo la lavagna..." : "Il professore sta pensando..."}
+                {whiteboardLoading ? `${coachName || "Il tuo coach"} sta leggendo la lavagna...` : `${coachName || "Il tuo coach"} sta pensando...`}
               </span>
             </div>
           </div>
