@@ -1377,6 +1377,8 @@ serve(async (req) => {
         const prefs = prefsRes.data;
         const recentSessions = sessionsRes.data || [];
         const todayCheckin = checkinRes.data;
+        const guidedSessions = guidedRes.data || [];
+        const unresolvedErrors = errorsRes.data || [];
 
         if (prof) {
           const role = mapRole(prof.school_level || "alunno");
