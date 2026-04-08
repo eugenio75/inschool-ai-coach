@@ -11,7 +11,6 @@ import { PomodoroTimer } from "@/components/PomodoroTimer";
 import { CoachAvatar, type CoachAvatarMood } from "@/components/shared/CoachAvatar";
 import { MathText } from "@/components/shared/MathText";
 import { ProgressiveMessage } from "@/components/shared/ProgressiveMessage";
-import { useMemo } from "react";
 import { WritingPen } from "@/components/shared/handwritten/WritingPen";
 import { Whiteboard } from "@/components/study/Whiteboard";
 import { fireConfetti, playCorrectSound } from "@/lib/confetti";
