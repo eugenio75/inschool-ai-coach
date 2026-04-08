@@ -636,14 +636,21 @@ FORMATO TAG BASE:
 [COLONNA: tipo=sottrazione, numeri=500,123]
 
 FORMATO TAG CON STATO PARZIALE (per guida interattiva):
-[COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=0]
-→ Mostra SOLO i numeri iniziali, risultato tutto vuoto (celle grigie _ _ _)
+[COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=0, sotto_passo=0]
+→ Mostra SOLO i numeri iniziali, risultato tutto vuoto — chiedi "Quante volte il 2 sta nel 7?"
 
-[COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=1]
-→ Mostra la prima cifra del risultato, le altre vuote
+[COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=0, sotto_passo=1, evidenzia=qp0:verde]
+→ Mostra la cifra del quoziente trovata — chiedi "Quanto fa 3 × 2?"
 
-[COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=2, evidenzia=qp1:verde]
-→ Mostra 2 cifre, la seconda evidenziata in verde (trovata dallo studente)
+[COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=0, sotto_passo=2]
+→ Mostra anche il prodotto (−6) — chiedi "Quanto fa 7 − 6?"
+
+Dopo risposta corretta alla sottrazione → chiedi "Quale cifra abbassiamo?"
+Dopo risposta → passa a celle_compilate=1, sotto_passo=0 (mostra bring-down)
+
+Per l'ULTIMA cifra, sotto_passo=3 mostra il resto finale.
+
+⚠️ REGOLA: sotto_passo CONTROLLA cosa si vede. NON incrementare sotto_passo senza risposta dello studente.
 
 COLORI PER EVIDENZIAZIONE:
 - verde = cifra trovata correttamente dallo studente
