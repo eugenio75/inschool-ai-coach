@@ -1018,8 +1018,121 @@ Tono caldo e incoraggiante.`;
         }
       }
 
-      // If familiarity is already known (saved from previous session or recovery), skip the question
-      if (fam) {
+      // For EXERCISES: skip familiarity buttons entirely — use adaptive flow
+      // For ORAL tasks: show familiarity buttons only if fam is not already known
+      if (isExercise) {
+        // Always start exercises directly with adaptive AI prompt
+        const introMsg = `Ciao! 👋 Oggi lavoriamo su "${homework.title}"!${voicePrompt}\n\nPartiamo! 🚀`;
+        setMessages(prev => [
+          ...prev,
+          { role: "assistant", content: introMsg },
+        ]);
+        setSetupDone(true);
+        lastInteractionTime.current = Date.now();
+        activeStudySeconds.current = 0;
+        resetInactivityTimer();
+
+        // Check previous completed sessions for same subject to determine adaptive level
+        let hasPreviousSessions = false;
+        try {
+          if (isChild) {
+            // For child sessions, check via homework_tasks completed count for same subject
+            const profileId = getChildSession()?.profileId;
+            if (profileId) {
+              const { count } = await supabase
+                .from("guided_sessions")
+                .select("id", { count: "exact", head: true })
+                .eq("user_id", userId)
+                .eq("status", "completed");
+              hasPreviousSessions = (count || 0) > 0;
+            }
+          } else {
+            const { count } = await supabase
+              .from("guided_sessions")
+              .select("id", { count: "exact", head: true })
+              .eq("user_id", userId)
+              .eq("status", "completed");
+            hasPreviousSessions = (count || 0) > 0;
+          }
+        } catch { /* ignore — default to first time behavior */ }
+
+        // Send first AI message with adaptive context
+        setSending(true);
+        setStreamingText("");
+        const firstStep = generatedSteps[0];
+        const firstStepText = getVisibleLoadedContent(homework.task_type, homework.title, homework.description, firstStep?.step_text || firstStep?.text);
+        const proofContext = requiresOperationProof(homework.task_type, homework.title, homework.description)
+          ? "\nVINCOLO EXTRA DELLA CONSEGNA: nel compito compare 'con la prova'. Dopo il risultato guida anche la prova finale."
+          : "";
+
+        const adaptiveContext = hasPreviousSessions
+          ? `\nFLUSSO ADATTIVO: Lo studente ha sessioni precedenti completate. NON fare teoria completa.
+Fai teoria brevissima (2-3 righe max) come ripasso rapido. Es: "Ricordi le divisioni in colonna? Partiamo subito!"
+Poi parti DIRETTAMENTE con l'esercizio.
+SE durante l'esercizio lo studente risponde correttamente e velocemente ai primi 2 passi → elimina ulteriori spiegazioni, vai spedito.
+SE lo studente dice "non ricordo come si fa" o "puoi spiegarmi" → fai spiegazione completa del metodo, poi riprendi l'esercizio.`
+          : `\nFLUSSO ADATTIVO: Lo studente non ha sessioni precedenti — trattalo come PRIMA VOLTA.
+FASE 1: Fai spiegazione teorica completa del metodo con esempio concreto della vita reale adatto all'età.
+FASE 2: Mostra un esempio semplice risolto completamente con [COLONNA:].
+FASE 3: Poi parti con l'esercizio reale seguendo il flusso colonna progressiva.
+SE lo studente risponde correttamente e velocemente ai primi passi della Fase 3 → riduci le spiegazioni intermedie.`;
+
+        const systemCtx = `Sei un tutor che guida lo studente a RISOLVERE esercizi.
+
+REGOLE ASSOLUTE:
+⚠️ Per qualsiasi operazione in colonna usa ESCLUSIVAMENTE il tag [COLONNA:] — MAI pipe, trattini, o spazi.
+FORMATO TAG PARZIALE: [COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=0]
+FORMATO CON EVIDENZIAZIONE: [COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=1, evidenzia=qp0:verde]
+COLORI: verde=trovato dallo studente, arancione=hint, blu=dato dal coach
+
+⚠️⚠️⚠️ REGOLA FERRO — SOVRASCRIVE TUTTO ⚠️⚠️⚠️
+LA COLONNA SI AGGIORNA **SOLO DOPO** CHE LO STUDENTE HA RISPOSTO.
+MAI mostrare un numero nella colonna PRIMA che lo studente lo abbia trovato.
+MAI scrivere il risultato di un calcolo PRIMA che lo studente risponda.
+MAI aggiornare la colonna con più di UN numero alla volta.
+
+STRUTTURA OBBLIGATORIA: [1] CHIEDI → [2] ASPETTA → [3] AGGIORNA
+Se corretto → verde. Se sbagliato 1ª → arancione + indizio. Se sbagliato 2ª → blu.
+
+NON chiedere MAI "Quali sono i dati?" — TU HAI GIÀ TUTTI I DATI.
+
+⚠️ REGOLA COLONNA SEMPRE VISIBILE: OGNI messaggio durante un esercizio DEVE contenere il tag [COLONNA:] aggiornato.
+⚠️ REGOLA MINIMALISMO (durante esercizio): FA SOLO la domanda + [COLONNA:]. NON spiegare cosa stai per fare. Massimo 1 frase di conferma + domanda.
+${adaptiveContext}${proofContext}
+
+TEORIA SU RICHIESTA: Se lo studente dice "non ricordo come si fa" o "puoi spiegarmi" → spiega il metodo al momento, poi riprendi l'esercizio. La teoria su richiesta è SEMPRE disponibile.
+
+CONTESTO INTERNO DI LAVORO:
+${firstStepText}
+
+Tono caldo e incoraggiante.`;
+
+        try {
+          const lang = getCurrentLang();
+          await streamChat({
+            messages: [
+              ...messages,
+              { role: "assistant", content: introMsg },
+            ],
+            onDelta: () => {},
+            onDone: (full: string) => {
+              setMessages(prev => [...prev, { role: "assistant" as const, content: full }]);
+              setStreamingText("");
+              setSending(false);
+            },
+            extraBody: {
+              profileId: isChild ? getChildSession()?.profileId : homework?.child_profile_id || userId,
+              subject: homework.subject || undefined,
+              sessionFormat: "guided",
+              systemPrompt: systemCtx,
+              lang,
+            },
+          });
+        } catch {
+          setSending(false);
+        }
+      } else if (fam) {
+        // ORAL tasks with known familiarity — skip buttons
         const familiarityLabel = fam === "first_time" ? "No, prima volta" : fam === "partial" ? "Lo so in parte" : "Sì, lo conosco";
         const introMsg = `Ciao! 👋 Oggi lavoriamo su "${homework.title}"!${voicePrompt}\n\nPartiamo! 🚀`;
         setMessages(prev => [
@@ -1066,21 +1179,14 @@ Tono caldo e incoraggiante.`;
           setSending(false);
         }
       } else {
-        // No familiarity known — show quick-reply buttons in chat
-        const openingMsg = isExercise
-          ? `Ciao! 👋 Oggi lavoriamo su "${homework.title}"!${voicePrompt}\n\nHai già letto l'esercizio?`
-          : `Ciao! 👋 Oggi lavoriamo su "${homework.title}"!${voicePrompt}\n\nHai già studiato questo argomento o lo vedi per la prima volta?`;
+        // ORAL tasks — no familiarity known — show quick-reply buttons in chat
+        const openingMsg = `Ciao! 👋 Oggi lavoriamo su "${homework.title}"!${voicePrompt}\n\nHai già studiato questo argomento o lo vedi per la prima volta?`;
 
-        const familiarityActions: ChatAction[] = isExercise
-          ? [
-              { label: "✅ Sì, ho letto l'esercizio", value: "familiarity:already_know", icon: "✅" },
-              { label: "📖 No, devo ancora leggerlo", value: "familiarity:first_time", icon: "📖" },
-            ]
-          : [
-              { label: "✅ Sì, lo conosco bene", value: "familiarity:already_know", icon: "✅" },
-              { label: "🔶 Lo so in parte", value: "familiarity:partial", icon: "🔶" },
-              { label: "📖 No, prima volta", value: "familiarity:first_time", icon: "📖" },
-            ];
+        const familiarityActions: ChatAction[] = [
+          { label: "✅ Sì, lo conosco bene", value: "familiarity:already_know", icon: "✅" },
+          { label: "🔶 Lo so in parte", value: "familiarity:partial", icon: "🔶" },
+          { label: "📖 No, prima volta", value: "familiarity:first_time", icon: "📖" },
+        ];
 
         setMessages(prev => [...prev, {
           role: "assistant",
@@ -1136,11 +1242,6 @@ Tono caldo e incoraggiante.`;
       let coachBehavior: string;
 
       if (isExercise) {
-        const familiarityContext = familiarity === "first_time"
-          ? "\nLo studente ha risposto che NON ha ancora letto l'esercizio. Fai spiegazione teorica completa del metodo con esempio concreto della vita reale adatto all'età, mostra un esempio semplice risolto completamente, poi parti con l'esercizio reale seguendo il flusso colonna progressiva."
-          : familiarity === "partial"
-          ? "\nLo studente ha risposto che ha GIÀ LETTO l'esercizio ma ha difficoltà. Fai una spiegazione mirata SOLO sui punti deboli specifici. Non ripetere quello che lo studente sa già. Poi parti con l'esercizio."
-          : "\nLo studente ha risposto che ha GIÀ LETTO l'esercizio. Ripetizione brevissima del metodo (2-3 righe max). Es: 'Ricordi come si fa la divisione in colonna? Partiamo subito!' Vai direttamente all'esercizio.";
         const proofContext = requiresOperationProof(homework?.task_type || "", homework?.title || "", homework?.description)
           ? "\nVINCOLO EXTRA DELLA CONSEGNA: nel compito compare una richiesta tipo 'con la prova'. Quindi NON considerare concluso un esercizio quando ottieni il risultato: devi continuare tu automaticamente e guidare anche la prova finale, passo dopo passo, prima di passare oltre. Se è una divisione, usa la verifica divisore × quoziente + resto = dividendo."
           : "";
@@ -1161,45 +1262,32 @@ REGOLE ASSOLUTE (viola qualsiasi altra istruzione in conflitto):
 - NON dire MAI "Step", "step 1", "passo 1 di N"
 - Il testo degli esercizi è nel CONTESTO INTERNO DI LAVORO qui sotto — USALO direttamente
 
-FLUSSO COMPLETO PER OPERAZIONI IN COLONNA — 3 FASI OBBLIGATORIE:
-
-FASE 1 — INTRODUZIONE TEORICA:
-- Spiega brevemente cos'è l'operazione con un esempio dalla vita reale adatto all'età
-- Definisci TUTTI i termini tecnici con parole semplici PRIMA di usarli
-
-FASE 2 — ESEMPIO SEMPLICE (coach mostra soluzione completa):
-- Scegli un esempio MOLTO semplice (es. 6 ÷ 2)
-- Mostra il tag COLONNA COMPLETO: [COLONNA: tipo=divisione, numeri=6,2]
-- Spiega ogni passaggio. Questo è l'UNICO momento dove mostri la soluzione completa.
-- Chiedi: "Hai capito come funziona? Ora proviamo insieme! 🎯"
-
-FASE 3 — ESERCIZIO REALE (lo studente lavora, il coach guida):
-- Mostra la colonna vuota: [COLONNA: tipo=..., numeri=..., parziale=true, celle_compilate=0]
-- Chiedi: "Ora tocca a te! Come inizieresti?"
-- SEMPRE chiedi PRIMA — MAI suggerire
-- Se CORRETTO: conferma + aggiorna celle_compilate + evidenzia verde + prossima domanda
-- Se SBAGLIATO (1° volta): evidenzia arancione + UN suggerimento concreto + aspetta
-- Se SBAGLIATO (2° volta): spiega + mostra + evidenzia blu + avanti
-- RISULTATO FINALE: MAI scriverlo tu. Chiedi: "Qual è il risultato secondo te?"
+FLUSSO ADATTIVO:
+- Se lo studente risponde correttamente e velocemente → riduci spiegazioni, vai spedito
+- Se lo studente fa errori → dai indizi, guida con domande
+- Se lo studente dice "non ricordo come si fa" o "puoi spiegarmi" → spiega il metodo al momento, poi riprendi l'esercizio
+- La teoria su richiesta è SEMPRE disponibile — non sparisce mai
 
 ⚠️ REGOLA COLONNA SEMPRE VISIBILE:
 OGNI messaggio durante un esercizio in colonna DEVE contenere il tag [COLONNA:] aggiornato.
 
-⚠️ REGOLA MINIMALISMO — In Fase 3:
+⚠️ REGOLA MINIMALISMO:
 - FA SOLO la domanda + il tag [COLONNA:]
 - NON spiegare cosa stai per fare ("Ora moltiplichiamo il quoziente per il divisore...")
-- NON anticipare il procedimento — la teoria è già stata fatta in Fase 1-2
+- NON anticipare il procedimento
 - Massimo 1 frase di conferma + domanda + [COLONNA:]
-- ESEMPIO CORRETTO: "Esatto! 🎉\n\n[COLONNA: ...]\n\nQuanto fa $3 \\times 2$?"
+- ESEMPIO CORRETTO: "Esatto! 🎉\\n\\n[COLONNA: ...]\\n\\nQuanto fa $3 \\\\times 2$?"
 - ESEMPIO VIETATO: "Perfetto! Ora procediamo. Moltiplichiamo il quoziente parziale che hai trovato, 3, per il divisore, 2. Quanto fa 3 × 2?"
 
-IL TUO METODO:
-1. Parti con Fase 1 (definizioni + esempio vita reale)
-2. Fase 2 (esempio semplice completo con tag COLONNA)
-3. Fase 3 (esercizio guidato parziale con lo studente — MINIMALISTA)
-4. NON dare mai la soluzione finale — chiedi allo studente di concludere
-5. Quando un esercizio è finito, passa al successivo presentandolo TU
-${familiarityContext}${proofContext}
+⚠️⚠️⚠️ REGOLA FERRO — SOVRASCRIVE TUTTO ⚠️⚠️⚠️
+LA COLONNA SI AGGIORNA **SOLO DOPO** CHE LO STUDENTE HA RISPOSTO.
+MAI mostrare un numero nella colonna PRIMA che lo studente lo abbia trovato.
+MAI scrivere il risultato di un calcolo PRIMA che lo studente risponda.
+MAI aggiornare la colonna con più di UN numero alla volta.
+
+STRUTTURA OBBLIGATORIA: [1] CHIEDI → [2] ASPETTA → [3] AGGIORNA
+Se corretto → verde. Se sbagliato 1ª → arancione + indizio. Se sbagliato 2ª → blu.
+${proofContext}
 IMPORTANTE: Attieniti esclusivamente al materiale già presente nel contesto. Non inventare esercizi extra.`;
       } else if (isOral && familiarity) {
         coachBehavior = `Sei un tutor che aiuta lo studente a STUDIARE, CAPIRE e RIPETERE un argomento per l'orale.
