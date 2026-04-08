@@ -647,8 +647,8 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     setShowCheckin(false);
     setSessionEmotion(emotion);
 
-    // Show method proposal in chat then start
-    const fam = familiarity || "first_time";
+    // Use saved familiarity if available, otherwise null → will show quick-reply buttons
+    const fam = familiarity; // DO NOT default to "first_time" — null means "not yet chosen"
     setPendingEmotion(emotion);
     setMethodPhase("propose_method");
     setSetupDone(true);
