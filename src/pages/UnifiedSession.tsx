@@ -1115,8 +1115,8 @@ Inizia con la prima domanda.`;
     </div>
   ) : undefined;
 
-  // Handle study session familiarity action clicks
-  const handleStudyAction = useCallback((value: string) => {
+  // Handle study session familiarity action clicks — defined as regular function to avoid hook ordering issues
+  function handleStudyAction(value: string) {
     if (value.startsWith("study_fam:")) {
       const famKey = value.replace("study_fam:", "");
       setStudyFamiliarityDone(true);
@@ -1129,7 +1129,6 @@ Inizia con la prima domanda.`;
       };
       const userLabel = (labelMap[famKey] || value).replace(/^[✅📖🔶]\s*/, "");
 
-      // Remove actions, add user response, then call AI
       setMessages(prev => [
         ...prev.map(m => ({ ...m, actions: undefined })),
         { role: "user" as const, content: userLabel },
@@ -1137,7 +1136,6 @@ Inizia con la prima domanda.`;
       setSending(true);
       setStreamingText("");
 
-      // Build familiarity context for the system prompt
       let familiarityInstruction = "";
       if (famKey === "first_time") {
         familiarityInstruction = isMathSession
@@ -1152,7 +1150,6 @@ Inizia con la prima domanda.`;
       }
 
       const sessionSystemPrompt = getSystemPrompt() + familiarityInstruction;
-
       const allMsgs = [
         ...messages.map(m => ({ ...m, actions: undefined })),
         { role: "user" as const, content: userLabel },
@@ -1173,7 +1170,7 @@ Inizia con la prima domanda.`;
         setSending(false);
       });
     }
-  }, [messages, topic, subject, profileId, type, t]);
+  }
 
   return (
     <>
