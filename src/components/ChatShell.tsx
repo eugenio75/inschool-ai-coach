@@ -345,7 +345,7 @@ export function ChatShell({
   const lastMsg = messages[messages.length - 1];
   const hasActions = lastMsg?.role === "assistant" && lastMsg.actions && lastMsg.actions.length > 0;
   const showWhiteboardOption = lastMsg?.role === "assistant" && isWaitingForStudent(lastMsg.content || "") && !hasActions && !sending;
-  const statusInfo = getStatusIndicator(coachStatus);
+  const statusInfo = getStatusIndicator(coachStatus, coachName);
 
   // Parse arrow options from assistant messages into action buttons
   function parseInlineOptions(text: string): { cleanText: string; options: string[] } {
