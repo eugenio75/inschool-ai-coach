@@ -198,7 +198,7 @@ function getCoachBehaviorForFamiliarity(familiarity: Familiarity): string {
 REGOLE:
 - Leggi insieme allo studente il testo/argomento
 - Spiega i concetti chiave in modo semplice, un blocco alla volta
-- Fai domande di comprensione durante la lettura
+- Fai domande di comprensione durante la lettura (non alla fine)
 - Aiuta a identificare le parole chiave e i concetti da ricordare
 - Costruisci insieme allo studente uno schema mentale dell'argomento
 - Alla fine chiedi allo studente di riassumere con parole sue
@@ -207,17 +207,17 @@ REGOLE:
     case "already_know":
       return `CASO: Lo conosco già — Lo studente dice di conoscere l'argomento.
 REGOLE:
-- NON simulare l'interrogazione — quella è funzione di Prepara la prova
-- Dì: "Ottimo! Sei già pronto. Vai su **Prepara la prova** per simulare l'interrogazione vera con valutazione e voto finale."
+- NON simulare l'interrogazione — quella è funzione di "Prepara la prova"
+- Dì: "Ottimo! Sei già pronto. Per simulare l'interrogazione vera con valutazione e voto finale, vai su Prepara la prova."
 - Aggiungi il tag [LINK_PREP] nel messaggio per mostrare il pulsante diretto
 - NON procedere con domande di verifica — reindirizza a Prepara la prova`;
 
     case "partial":
       return `CASO: Solo in parte — Lo studente conosce parzialmente l'argomento.
 REGOLE:
-- Chiedi: "Dimmi quello che sai — raccontami l'argomento"
-- Ascolta la risposta dello studente
-- Identifica i buchi e i punti deboli
+- Chiedi: "Dimmi quello che sai — raccontami l'argomento con parole tue"
+- Ascolta senza interrompere
+- Identifica buchi e punti deboli dalla risposta
 - Lavora SOLO sui buchi — non ripetere quello che sa già
 - Fai domande mirate sui punti deboli specifici
 - Alla fine fai un mini-riepilogo dei punti su cui lavorare ancora`;
@@ -971,7 +971,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
         const familiarityContext = familiarity === "first_time"
           ? "\nCASO 1A — PRIMA VOLTA ASSOLUTA: Lo studente non ha mai fatto questo tipo di esercizio. NON fare domande preliminari — sai già che è la prima volta. Parti con spiegazione teorica completa con esempio concreto della vita reale, poi mostra un esempio semplice risolto completamente, poi parti con l'esercizio reale seguendo il flusso colonna progressiva."
           : familiarity === "partial"
-          ? "\nCASO 1C — HA DIFFICOLTÀ: Il profilo adattivo segnala lacune su questo tipo di esercizio. Fai una spiegazione mirata sui punti deboli specifici, poi parti con l'esercizio."
+          ? "\nCASO 1C — HA DIFFICOLTÀ: Il profilo adattivo segnala lacune su questo tipo di esercizio. Fai una spiegazione mirata SOLO sui punti deboli specifici. Non ripetere quello che lo studente sa già. Poi parti con l'esercizio."
           : "\nCASO 1B — HA GIÀ FATTO ESERCIZI SIMILI: NON fare domande. Ripetizione brevissima del metodo (2-3 righe max). Es: 'Ricordi le divisioni in colonna? Partiamo subito!' Vai direttamente all'esercizio.";
         const proofContext = requiresOperationProof(homework?.task_type || "", homework?.title || "", homework?.description)
           ? "\nVINCOLO EXTRA DELLA CONSEGNA: nel compito compare una richiesta tipo 'con la prova'. Quindi NON considerare concluso un esercizio quando ottieni il risultato: devi continuare tu automaticamente e guidare anche la prova finale, passo dopo passo, prima di passare oltre. Se è una divisione, usa la verifica divisore × quoziente + resto = dividendo."
