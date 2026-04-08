@@ -553,10 +553,10 @@ export function ChatShell({
                       <div className="flex items-center gap-1 mb-1 opacity-60">
                         <WritingPen writing={false} />
                       </div>
-                      <ProgressiveMessage content={displayContent || ""} charDelay={35} blockPause={800} onComplete={() => setProgressiveComplete(true)} />
+                      <ProgressiveMessage content={displayContent || ""} charDelay={35} blockPause={800} onComplete={() => setProgressiveComplete(true)} exerciseStep={exerciseSteps[i]} />
                     </div>
                   ) : (
-                    <MathText>{displayContent || ""}</MathText>
+                    <MathText exerciseStep={exerciseSteps[i]}>{displayContent || ""}</MathText>
                   )}
                 </div>
                 {/* Parsed inline options as vertical buttons — only show AFTER progressive message finishes */}
