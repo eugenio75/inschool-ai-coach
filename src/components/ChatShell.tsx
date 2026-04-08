@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -11,6 +11,7 @@ import { PomodoroTimer } from "@/components/PomodoroTimer";
 import { CoachAvatar, type CoachAvatarMood } from "@/components/shared/CoachAvatar";
 import { MathText } from "@/components/shared/MathText";
 import { ProgressiveMessage } from "@/components/shared/ProgressiveMessage";
+import { useMemo } from "react";
 import { WritingPen } from "@/components/shared/handwritten/WritingPen";
 import { Whiteboard } from "@/components/study/Whiteboard";
 import { fireConfetti, playCorrectSound } from "@/lib/confetti";
