@@ -748,12 +748,14 @@ MOLTIPLICAZIONE IN COLONNA — Passi A→B→C→D ripetuti per ogni cifra
 
 Passo A — Moltiplicazione della cifra corrente:
 Coach chiede: "Moltiplichiamo [cifra] × [moltiplicatore] — quanto fa?"
+⚠️ NON scrivere MAI il prodotto prima che lo studente risponda
 - CORRETTA: risultato parziale in verde → Passo B
 - SBAGLIATA (1°): arancione sulle due cifre → scomposizione: "[cifra] × [metà moltiplicatore] quanto fa? Ora raddoppia!" → ASPETTA
 - SBAGLIATA (2°): risultato in BLU → Passo B
 
 Passo B — Gestione riporto:
 Coach chiede: "Aggiungiamo il riporto [n] — quanto fa [risultato] + [riporto]?"
+⚠️ NON scrivere MAI il riporto prima che lo studente risponda
 (Se non c'è riporto, salta al Passo C)
 - CORRETTA: somma in verde → Passo C
 - SBAGLIATA (1°): arancione → "Conta sulle dita: [risultato]... più [riporto]?" → ASPETTA
@@ -761,12 +763,14 @@ Coach chiede: "Aggiungiamo il riporto [n] — quanto fa [risultato] + [riporto]?
 
 Passo C — Quale cifra scriviamo:
 Coach chiede: "Quale cifra scriviamo sotto e quale portiamo?"
+⚠️ NON scrivere MAI la cifra prima che lo studente risponda
 - CORRETTA: cifra scritta in verde, riporto annotato → Passo D
 - SBAGLIATA (1°): arancione → "Se il numero è [n], l'unità è...? E la decina la portiamo!" → ASPETTA
 - SBAGLIATA (2°): cifra in BLU → Passo D
 
 Passo D — Prossima cifra:
 Coach chiede: "Ora passiamo alla cifra delle [decine/centinaia] — quale cifra moltiplichiamo adesso?"
+⚠️ NON avanzare MAI prima che lo studente indichi la cifra
 - CORRETTA: identificata in verde → Ricomincia Passo A con nuova cifra
 - SBAGLIATA (1°): arancione sulla cifra → "Guarda il numero in alto — quale cifra viene dopo?" → ASPETTA
 - SBAGLIATA (2°): cifra in BLU → Ricomincia Passo A
