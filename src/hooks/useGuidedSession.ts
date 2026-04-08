@@ -1066,19 +1066,22 @@ Tono caldo e incoraggiante.`;
           : "";
 
         const adaptiveContext = hasPreviousSessions
-          ? `\nFLUSSO ADATTIVO: Lo studente ha sessioni precedenti completate. NON fare teoria completa.
-Fai teoria brevissima (2-3 righe max) come ripasso rapido. Es: "Ricordi le divisioni in colonna? Partiamo subito!"
-Poi parti DIRETTAMENTE con l'esercizio.
-SE durante l'esercizio lo studente risponde correttamente e velocemente ai primi 2 passi → elimina ulteriori spiegazioni, vai spedito.
-SE lo studente dice "non ricordo come si fa" o "puoi spiegarmi" → fai spiegazione completa del metodo, poi riprendi l'esercizio.`
-          : `\nFLUSSO ADATTIVO: Lo studente non ha sessioni precedenti — trattalo come PRIMA VOLTA.
-FASE 1: Fai spiegazione teorica completa del metodo con esempio concreto della vita reale adatto all'età.
-FASE 2: Mostra UN SOLO esempio semplice risolto completamente con [COLONNA:].
-  ⚠️ L'ESEMPIO SEMPLICE DEVE USARE NUMERI DIVERSI E PIÙ PICCOLI rispetto all'esercizio reale.
-  ⚠️ Se l'esercizio è 765:2, l'esempio deve essere qualcosa come 6:2 o 8:4. MAI usare i numeri dell'esercizio.
-  ⚠️ L'esempio completo è l'UNICO momento in cui mostri tutti i passaggi risolti.
-FASE 3: Poi parti con l'esercizio reale seguendo il flusso colonna progressiva.
-SE lo studente risponde correttamente e velocemente ai primi passi della Fase 3 → riduci le spiegazioni intermedie.`;
+          ? `\nFLUSSO ADATTIVO: Lo studente ha già fatto esercizi simili in passato. NON fare teoria completa.
+Fai un brevissimo ripasso (2-3 righe max). Es: "Ricordi come si fanno? Partiamo subito!"
+Poi parti DIRETTAMENTE con l'esercizio usando [COLONNA: ..., parziale=true, celle_compilate=0].
+SE lo studente risponde correttamente ai primi 2 passi → vai spedito senza spiegazioni.
+SE lo studente dice "non ricordo" o "spiegami" → spiega il metodo, poi riprendi.`
+          : `\nFLUSSO ADATTIVO: Lo studente affronta questo tipo di esercizio per la prima volta.
+NON scrivere MAI "è la prima volta" o "prima volta" — inizia direttamente con il contenuto.
+FASE 1: Spiega brevemente il metodo con un esempio concreto dalla vita reale adatto all'età.
+FASE 2: Mostra UN SOLO esempio semplice COMPLETAMENTE RISOLTO con [COLONNA:] (SENZA parziale=true).
+  ⚠️ NUMERI DELL'ESEMPIO: devono essere DIVERSI e PIÙ PICCOLI dell'esercizio reale.
+  ⚠️ Se l'esercizio è 765:2, l'esempio deve essere 6:2 o 8:4. MAI usare i numeri dell'esercizio.
+  ⚠️ Questo è l'UNICO caso in cui mostri [COLONNA:] con la soluzione completa visibile.
+FASE 3: Parti con l'esercizio reale usando [COLONNA: ..., parziale=true, celle_compilate=0].
+  ⚠️ In Fase 3 la colonna è SEMPRE parziale — la soluzione NON è MAI visibile.
+  ⚠️ Ogni cifra/risultato si svela SOLO DOPO che lo studente ha risposto correttamente.
+SE lo studente risponde correttamente ai primi passi → riduci spiegazioni, vai spedito.`;
 
         const systemCtx = `Sei un tutor che guida lo studente a RISOLVERE esercizi.
 
@@ -1087,6 +1090,15 @@ REGOLE ASSOLUTE:
 FORMATO TAG PARZIALE: [COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=0]
 FORMATO CON EVIDENZIAZIONE: [COLONNA: tipo=divisione, numeri=765,2, parziale=true, celle_compilate=1, evidenzia=qp0:verde]
 COLORI: verde=trovato dallo studente, arancione=hint, blu=dato dal coach
+
+⚠️⚠️⚠️ REGOLA SVG FONDAMENTALE ⚠️⚠️⚠️
+Il tag [COLONNA:] mostra un'operazione SVG animata. Quando usi parziale=true, i risultati sono NASCOSTI.
+Quando NON usi parziale=true, il risultato è VISIBILE E COMPLETO.
+QUINDI:
+- Per l'ESERCIZIO REALE: usa SEMPRE parziale=true → la soluzione resta nascosta finché lo studente non risponde
+- SENZA parziale=true: usalo SOLO per l'esempio risolto (Fase 2) o quando lo studente CHIEDE un esempio/dimostrazione
+- Se lo studente chiede "fammi un esempio" o "mostrami come si fa" → mostra [COLONNA:] COMPLETO (senza parziale)
+- MAI mostrare [COLONNA:] senza parziale=true durante l'esercizio attivo — è come dare la soluzione
 
 ⚠️⚠️⚠️ REGOLA FERRO — SOVRASCRIVE TUTTO ⚠️⚠️⚠️
 LA COLONNA SI AGGIORNA **SOLO DOPO** CHE LO STUDENTE HA RISPOSTO.
