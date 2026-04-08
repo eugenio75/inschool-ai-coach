@@ -555,7 +555,7 @@ export function ChatShell({
 
       {/* Input toolbar */}
       {!hasActions && !disabled && onSend && (
-        <div className="border-t border-border bg-card p-3 shrink-0">
+        <div className="border-t border-border bg-card p-3 shrink-0 sticky bottom-0 z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}>
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {showVoice && (
               <button onClick={startVoice} disabled={sending || isListening}
