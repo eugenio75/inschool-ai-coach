@@ -535,7 +535,7 @@ export function ChatShell({
                       onClick={() => navigate("/session?type=prep" + (msg.content?.match(/materia/i) ? "" : ""))}
                       className="flex items-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all w-full justify-center"
                     >
-                      🎯 Vai a Prepara la prova
+                      🎯 {t("coach_cta_go_to_prep")}
                     </button>
                   </motion.div>
                 )}

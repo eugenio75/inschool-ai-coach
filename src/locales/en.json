@@ -1357,5 +1357,6 @@
   "game_false": "False",
   "game_placeholder_complete": "Fill in the blank...",
   "game_placeholder_correct": "Write the correction...",
-  "game_back_btn": "Back"
+  "game_back_btn": "Back",
+  "coach_cta_go_to_prep": "Go to Exam Prep"
 }

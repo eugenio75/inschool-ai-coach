@@ -1372,5 +1372,6 @@
   "game_back_btn": "Indietro",
   "profile_coach_name_title": "Nome del Coach",
   "profile_coach_name_desc": "Dai un nome al tuo coach AI personale",
-  "profile_coach_name_placeholder": "Es. Luna, Sensei, Buddy…"
+  "profile_coach_name_placeholder": "Es. Luna, Sensei, Buddy…",
+  "coach_cta_go_to_prep": "Vai a Prepara la prova"
 }
