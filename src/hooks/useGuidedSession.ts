@@ -781,12 +781,15 @@ Se corretto → verde. Se sbagliato 1ª → arancione + indizio. Se sbagliato 2�
 
 FLUSSO: Fase 1 (teoria+esempio vita reale) → Fase 2 (esempio semplice completo) → Fase 3 (esercizio con studente, colonna parziale)
 NON chiedere MAI "Quali sono i dati?" — TU HAI GIÀ TUTTI I DATI.
+
+⚠️ REGOLA COLONNA SEMPRE VISIBILE: OGNI messaggio durante un esercizio DEVE contenere il tag [COLONNA:] aggiornato.
+⚠️ REGOLA MINIMALISMO (Fase 3): FA SOLO la domanda + [COLONNA:]. NON spiegare cosa stai per fare. Massimo 1 frase di conferma + domanda.
 ${familiarityContext}${proofContext}
 
 CONTESTO INTERNO DI LAVORO:
 ${firstStepText}
 
-Sii breve: 2-3 frasi + una domanda. Tono caldo e incoraggiante.`;
+Tono caldo e incoraggiante.`;
       } else {
         const familiarityContext = getCoachBehaviorForFamiliarity(famKey);
         systemCtx = `\n\nCONTESTO INTERNO DI LAVORO:\n${firstStepText}\n\n${familiarityContext}`;
