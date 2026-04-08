@@ -374,8 +374,6 @@ Inizia con la prima domanda.`;
     }
   }
 
-  // Track whether study session familiarity has been answered
-  const [studyFamiliarityDone, setStudyFamiliarityDone] = useState(false);
 
   function startSession() {
     if (!topic.trim() && type !== "prep" && type !== "review") return;
