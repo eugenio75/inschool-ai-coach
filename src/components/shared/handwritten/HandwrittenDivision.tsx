@@ -1,21 +1,34 @@
 import React, { useMemo } from "react";
-import { COLORS, PX, PY, jit, wobbly, colX, type El, type AgeTier, getTierConfig } from "./utils";
+import { COLORS, PX, PY, wobbly, colX, type El, type AgeTier, getTierConfig, type CellHighlight, getHighlightHex } from "./utils";
 import { HandwrittenSVG } from "./HandwrittenSVG";
 
 interface Props {
   dividend: number;
   divisor: number;
   tier?: AgeTier;
+  partial?: boolean;
+  filledCells?: number;
+  highlights?: CellHighlight[];
 }
 
-export function HandwrittenDivision({ dividend, divisor, tier = "upper-elementary" }: Props) {
+export function HandwrittenDivision({ dividend, divisor, tier = "upper-elementary", partial = false, filledCells, highlights }: Props) {
   const cfg = getTierConfig(tier);
-  const layout = useMemo(() => compute(dividend, divisor, cfg), [dividend, divisor, cfg]);
+  const layout = useMemo(() => compute(dividend, divisor, cfg, partial, filledCells, highlights), [dividend, divisor, cfg, partial, filledCells, highlights]);
 
   return <HandwrittenSVG elements={layout.elements} width={layout.width} height={layout.height} tier={tier} />;
 }
 
-function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTierConfig>) {
+function applyHighlights(els: El[], highlights?: CellHighlight[]): El[] {
+  if (!highlights || highlights.length === 0) return els;
+  const map = new Map(highlights.map(h => [h.cellId, getHighlightHex(h.color)]));
+  return els.map(el => {
+    const hc = map.get(el.id);
+    if (hc) return { ...el, highlightColor: hc };
+    return el;
+  });
+}
+
+function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTierConfig>, partial: boolean, filledCells?: number, highlights?: CellHighlight[]) {
   const { fontSize: FS, cellWidth: CW, rowHeight: RH } = cfg;
   const dStr = String(dividend);
   const dLen = dStr.length;
@@ -49,7 +62,10 @@ function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTi
   const rightCols = Math.max(dvStr.length, qStr.length);
   const totalW = bracketX + rightCols * CW + 20 + PX;
 
-  // Row 0: dividend — appears first
+  // Determine how many result elements to show in partial mode
+  const maxFilled = partial ? (filledCells ?? 0) : Infinity;
+
+  // Row 0: dividend — appears first (always visible)
   const row0Y = PY + FS;
   for (let i = 0; i < dLen; i++) {
     els.push({
@@ -73,7 +89,7 @@ function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTi
     color: COLORS.lineAlpha, strokeWidth: 2.5, delay: 1.0, seed: ns(),
   });
 
-  // Divisor digits — in red
+  // Divisor digits — in red (always visible)
   for (let i = 0; i < dvStr.length; i++) {
     els.push({
       id: `dv${i}`, type: "text", x: bracketX + 16 + i * CW + CW / 2, y: row0Y,
@@ -81,18 +97,22 @@ function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTi
     });
   }
 
-  // --- Placeholders for quotient digits (visible immediately as "_ _ _") ---
+  // --- Quotient digits ---
+  let resultCellIdx = 0;
   for (let s = 0; s < steps.length; s++) {
     const qPos = steps[s].rightIdx - steps[0].rightIdx;
-    const qDelay = 1.8 + s * 1.8; // will be revealed at this step's delay
+    const qDelay = 1.8 + s * 1.8;
+    const isFilled = resultCellIdx < maxFilled;
     els.push({
       id: `qp${s}`, type: "text",
       x: bracketX + 16 + qPos * CW + CW / 2, y: PY + RH + 8 + FS,
       text: steps[s].qDigit, color: COLORS.result, bold: true, fontSize: FS,
       delay: qDelay, seed: ns(),
       isResult: s === steps.length - 1,
-      isPlaceholder: true, // shows "_" first, digit appears at delay
+      isPlaceholder: !partial || isFilled,
+      isHidden: partial && !isFilled,
     });
+    resultCellIdx++;
   }
 
   // --- Steps (intermediate work) ---
@@ -102,6 +122,7 @@ function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTi
   for (let s = 0; s < steps.length; s++) {
     const step = steps[s];
     const d = groupDelay;
+    const stepVisible = !partial || s < maxFilled;
 
     // Bring-down number — amber
     if (s > 0) {
@@ -112,6 +133,7 @@ function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTi
           id: `cb${s}-${i}`, type: "text", x: cx(colPos), y: PY + leftRow * RH + FS,
           text: cbStr[i], color: COLORS.bringDown, fontSize: FS,
           delay: d - 0.3, seed: ns(),
+          isHidden: !stepVisible,
         });
       }
       leftRow++;
@@ -125,6 +147,7 @@ function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTi
       id: `m${s}`, type: "text", x: cx(pLeftCol - 1), y: PY + leftRow * RH + FS,
       text: "−", color: COLORS.sign, fontSize: FS,
       delay: d + 0.5, seed: ns(),
+      isHidden: !stepVisible,
     });
 
     // Product digits
@@ -133,6 +156,7 @@ function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTi
         id: `p${s}-${i}`, type: "text", x: cx(pLeftCol + i), y: PY + leftRow * RH + FS,
         text: pStr[i], color: COLORS.main, fontSize: FS,
         delay: d + 0.5 + (i + 1) * 0.15, seed: ns(),
+        isHidden: !stepVisible,
       });
     }
     leftRow++;
@@ -141,12 +165,14 @@ function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTi
     const lineY = PY + leftRow * RH - 6;
     const lineL = cx(pLeftCol - 1) - CW / 2 + 4;
     const lineR = cx(step.rightIdx) + CW / 2 + 2;
-    els.push({
-      id: `l${s}`, type: "path", x: 0, y: 0,
-      d: wobbly(lineL, lineY, lineR, lineY, ns()),
-      color: COLORS.lineAlpha, strokeWidth: 2,
-      delay: d + 1.0, seed: ns(),
-    });
+    if (stepVisible) {
+      els.push({
+        id: `l${s}`, type: "path", x: 0, y: 0,
+        d: wobbly(lineL, lineY, lineR, lineY, ns()),
+        color: COLORS.lineAlpha, strokeWidth: 2,
+        delay: d + 1.0, seed: ns(),
+      });
+    }
 
     // Final remainder — blue with pulse
     if (s === steps.length - 1) {
@@ -157,6 +183,7 @@ function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTi
           id: `r${s}-${i}`, type: "text", x: cx(colPos), y: PY + leftRow * RH + FS,
           text: rStr[i], color: COLORS.mid, bold: true, fontSize: FS,
           delay: d + 1.3, seed: ns(), isResult: true,
+          isHidden: !stepVisible,
         });
       }
       leftRow++;
@@ -166,7 +193,8 @@ function compute(dividend: number, divisor: number, cfg: ReturnType<typeof getTi
   }
 
   const totalH = PY + (leftRow + 0.5) * RH;
-  return { elements: els, width: totalW, height: totalH };
+  const finalEls = applyHighlights(els, highlights);
+  return { elements: finalEls, width: totalW, height: totalH };
 }
 
 export default HandwrittenDivision;

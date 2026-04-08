@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { COLORS, PX, PY, wobbly, colX, type El, type AgeTier, getTierConfig } from "./utils";
+import { COLORS, PX, PY, wobbly, colX, type El, type AgeTier, getTierConfig, type CellHighlight, getHighlightHex } from "./utils";
 import { HandwrittenSVG } from "./HandwrittenSVG";
 
 interface Props {
@@ -7,16 +7,29 @@ interface Props {
   a: number;
   b: number;
   tier?: AgeTier;
+  partial?: boolean;
+  filledCells?: number;
+  highlights?: CellHighlight[];
 }
 
-export function HandwrittenAddSub({ type, a, b, tier = "upper-elementary" }: Props) {
+export function HandwrittenAddSub({ type, a, b, tier = "upper-elementary", partial = false, filledCells, highlights }: Props) {
   const cfg = getTierConfig(tier);
-  const layout = useMemo(() => compute(type, a, b, cfg), [type, a, b, cfg]);
+  const layout = useMemo(() => compute(type, a, b, cfg, partial, filledCells, highlights), [type, a, b, cfg, partial, filledCells, highlights]);
 
   return <HandwrittenSVG elements={layout.elements} width={layout.width} height={layout.height} tier={tier} />;
 }
 
-function compute(type: "addition" | "subtraction", a: number, b: number, cfg: ReturnType<typeof getTierConfig>) {
+function applyHighlights(els: El[], highlights?: CellHighlight[]): El[] {
+  if (!highlights || highlights.length === 0) return els;
+  const map = new Map(highlights.map(h => [h.cellId, getHighlightHex(h.color)]));
+  return els.map(el => {
+    const hc = map.get(el.id);
+    if (hc) return { ...el, highlightColor: hc };
+    return el;
+  });
+}
+
+function compute(type: "addition" | "subtraction", a: number, b: number, cfg: ReturnType<typeof getTierConfig>, partial: boolean, filledCells?: number, highlights?: CellHighlight[]) {
   const { fontSize: FS, cellWidth: CW, rowHeight: RH } = cfg;
   const result = type === "addition" ? a + b : a - b;
   const aStr = String(a);
@@ -33,6 +46,8 @@ function compute(type: "addition" | "subtraction", a: number, b: number, cfg: Re
   const aP = pad(aStr, cols - 1);
   const bP = pad(bStr, cols - 1);
   const rP = pad(rStr, cols - 1);
+
+  const maxFilled = partial ? (filledCells ?? 0) : Infinity;
 
   // Carries for addition
   const carries: number[] = new Array(cols - 1).fill(0);
@@ -51,7 +66,7 @@ function compute(type: "addition" | "subtraction", a: number, b: number, cfg: Re
   const hasCarries = carries.some((c) => c > 0);
   const carryRowH = hasCarries ? RH * 0.6 : 0;
 
-  // Row 1: first number
+  // Row 1: first number (always visible)
   const r1Y = PY + carryRowH + FS;
   for (let i = 0; i < cols - 1; i++) {
     if (aP[i] !== " ") {
@@ -71,11 +86,12 @@ function compute(type: "addition" | "subtraction", a: number, b: number, cfg: Re
         text: String(carries[i]), color: COLORS.sign,
         fontSize: Math.round(FS * 0.55),
         delay: 2.0 + i * 0.3, seed: ns(),
+        isHidden: partial,
       });
     }
   }
 
-  // Row 2: operator + second number
+  // Row 2: operator + second number (always visible)
   const r2Y = r1Y + RH;
   els.push({
     id: "op", type: "text", x: cx(0), y: r2Y,
@@ -93,7 +109,7 @@ function compute(type: "addition" | "subtraction", a: number, b: number, cfg: Re
     }
   }
 
-  // Separator line
+  // Separator line (always visible)
   const lineY = r2Y + RH * 0.3;
   els.push({
     id: "sep", type: "path", x: 0, y: 0,
@@ -102,22 +118,27 @@ function compute(type: "addition" | "subtraction", a: number, b: number, cfg: Re
     delay: 1.5, seed: ns(),
   });
 
-  // Row 3: result — placeholders first, then revealed progressively
+  // Row 3: result — placeholders, revealed progressively
   const r3Y = lineY + FS + 4;
+  let resultIdx = 0;
   for (let i = 0; i < cols - 1; i++) {
     if (rP[i] !== " ") {
+      const isFilled = resultIdx < maxFilled;
       els.push({
         id: `r${i}`, type: "text", x: cx(i + 1), y: r3Y,
         text: rP[i], color: COLORS.result, bold: true, fontSize: FS,
         delay: 2.0 + i * 0.4, seed: ns(),
-        isResult: i === cols - 2, // last digit gets pulse
-        isPlaceholder: true,
+        isResult: i === cols - 2,
+        isPlaceholder: !partial || isFilled,
+        isHidden: partial && !isFilled,
       });
+      resultIdx++;
     }
   }
 
   const totalH = r3Y + PY + 8;
-  return { elements: els, width: totalW, height: totalH };
+  const finalEls = applyHighlights(els, highlights);
+  return { elements: finalEls, width: totalW, height: totalH };
 }
 
 export default HandwrittenAddSub;
