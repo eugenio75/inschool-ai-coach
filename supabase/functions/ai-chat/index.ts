@@ -783,6 +783,7 @@ ADDIZIONE IN COLONNA — Passi A→B→C da destra a sinistra
 
 Passo A — Somma della colonna corrente:
 Coach chiede: "Sommiamo le [unità/decine/centinaia]: [n] + [n] — quanto fa?"
+⚠️ NON scrivere MAI la somma prima che lo studente risponda
 (Se c'è riporto dalla colonna precedente: "[n] + [n] + [riporto] — quanto fa?")
 - CORRETTA: somma in verde → Passo B
 - SBAGLIATA (1°): arancione sulle cifre → "Conta: [n]... più [n] fa...?" → ASPETTA
@@ -790,6 +791,7 @@ Coach chiede: "Sommiamo le [unità/decine/centinaia]: [n] + [n] — quanto fa?"
 
 Passo B — Gestione riporto:
 Coach chiede: "C'è un riporto? Quanto portiamo alle [decine/centinaia]?"
+⚠️ NON scrivere MAI il riporto prima che lo studente risponda
 (Se somma < 10: "Nessun riporto! Scriviamo [somma]" → Passo C)
 - CORRETTA: riporto annotato in verde → Passo C
 - SBAGLIATA (1°): arancione → "Se il totale è [somma], l'unità la scriviamo sotto. E la decina?" → ASPETTA
@@ -797,6 +799,7 @@ Coach chiede: "C'è un riporto? Quanto portiamo alle [decine/centinaia]?"
 
 Passo C — Prossima colonna:
 Coach chiede: "Ora le [decine/centinaia]: [n] + [n] (+ riporto) — quanto fa?"
+⚠️ NON scrivere MAI la somma prima che lo studente risponda
 → Ricomincia dal Passo A per la colonna successiva
 
 ───────────────────────────────────────
@@ -805,18 +808,21 @@ SOTTRAZIONE IN COLONNA — Passi A→B→C da destra a sinistra
 
 Passo A — Sottrazione della colonna corrente:
 Coach chiede: "Sottraiamo le [unità/decine/centinaia]: [n] - [n] — quanto fa?"
+⚠️ NON scrivere MAI il risultato prima che lo studente risponda
 - CORRETTA: differenza in verde → Passo B (o prossima colonna)
 - SBAGLIATA (1°): arancione → "Se hai [n] e ne togli [n], quante restano?" → ASPETTA
 - SBAGLIATA (2°): differenza in BLU → Passo B
 
 Passo B — Gestione prestito (se cifra superiore < cifra inferiore):
 Coach chiede: "Dobbiamo fare un prestito? Come funziona?"
+⚠️ NON modificare MAI i numeri prima che lo studente risponda
 - CORRETTA: prestito annotato in verde → Passo C
 - SBAGLIATA (1°): arancione → "[n] è più piccolo di [n]... dobbiamo prendere in prestito 1 dalla colonna a sinistra. Quanto diventa [n]?" → ASPETTA
 - SBAGLIATA (2°): prestito in BLU → Passo C
 
 Passo C — Prossima colonna:
 Coach chiede: "Ora le [decine/centinaia]: [n] - [n] (- prestito) — quanto fa?"
+⚠️ NON scrivere MAI il risultato prima che lo studente risponda
 → Ricomincia dal Passo A per la colonna successiva
 
 ───────────────────────────────────────
