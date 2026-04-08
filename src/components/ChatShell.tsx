@@ -518,7 +518,7 @@ export function ChatShell({
                         </button>
                       );
                     })}
-                  </div>
+                  </motion.div>
                 )}
                 {msg.actions && msg.actions.length > 0 && i === messages.length - 1 && (
                   <div className="flex flex-col gap-2 mt-3">
