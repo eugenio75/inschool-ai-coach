@@ -33,22 +33,8 @@ function parseCoachJsonResponse(raw: string): string {
     } catch { /* not JSON */ }
   }
 
-  // Parse and emit SVG_REVEAL marker, then strip it from displayed text
-  const svgMarker = text.match(
-    /\[SVG_REVEAL:\s*element=(\w+)\s+value=([\d.]+)\s+color=(#[A-Fa-f0-9]+)\]/
-  );
-  if (svgMarker) {
-    text = text.replace(svgMarker[0], '').trim();
-    try {
-      window.dispatchEvent(new CustomEvent('svgReveal', {
-        detail: {
-          element: svgMarker[1],
-          value: svgMarker[2],
-          color: svgMarker[3],
-        }
-      }));
-    } catch {}
-  }
+  // Strip SVG_REVEAL markers (dead code — reveal is handled by exerciseSteps + celle_compilate override)
+  text = text.replace(/\[SVG_REVEAL:\s*element=\w+\s+value=[\d.]+\s+color=#[A-Fa-f0-9]+\]/g, '').trim();
 
   return text;
 }
