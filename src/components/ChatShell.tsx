@@ -213,8 +213,12 @@ export function ChatShell({
         continue;
       }
 
-      // Already in exercise mode
-      const isConfirm = /esatto|perfetto|brav[oaie]|bravissim|corretto|giusto|ottimo|eccellente|ben fatto|✅|🎉/i.test(text)
+      // Already in exercise mode — only increment step if previous message was from the student
+      const msgIndex = messages.indexOf(msg);
+      const prevMsg = msgIndex > 0 ? messages[msgIndex - 1] : null;
+      const prevWasStudent = prevMsg?.role === "user";
+      const isConfirm = prevWasStudent
+        && /esatto|perfetto|brav[oaie]|bravissim|corretto|giusto|ottimo|eccellente|ben fatto|✅|🎉/i.test(text)
         && !/non è corrett|sbagliato|non proprio|purtroppo/i.test(text);
 
       if (isConfirm) {
