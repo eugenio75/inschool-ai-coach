@@ -147,45 +147,36 @@ export default function UnifiedSession() {
   const [mathGame, setMathGame] = useState<{ operation: "divisione" | "moltiplicazione" | "addizione" | "sottrazione"; a: number; b: number } | null>(null);
   const isElementary = profile?.age ? (profile.age >= 6 && profile.age <= 11) : (schoolLevel?.includes("primaria") || schoolLevel === "alunno");
 
-  // Detect math operations from coach messages to show MathGame
+  // SVG reveal state from coach markers
+  const [svgElements, setSvgElements] = useState<Array<{element: string; value: string; color: string}>>([]);
   useEffect(() => {
-    if (!isElementary || messages.length === 0) return;
-    const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
-    if (!lastAssistant) return;
-    const text = lastAssistant.content.toLowerCase();
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setSvgElements(prev => [...prev, detail]);
+    };
+    window.addEventListener('svgReveal', handler);
+    return () => window.removeEventListener('svgReveal', handler);
+  }, []);
 
-    // Try to parse JSON responses first (coach may respond in JSON format)
-    let parsedText = text;
-    try {
-      const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
-      const json = JSON.parse(cleaned);
-      parsedText = [json.socratic_question, json.hint_if_needed, json.confirm_if_correct].filter(Boolean).join(' ').toLowerCase();
-    } catch { /* not JSON, use raw text */ }
+  // Detect math operations from TOPIC first, then from coach messages
+  useEffect(() => {
+    if (!isElementary) return;
 
-    // Multiple patterns for each operation (symbol + natural language Italian)
     const divPatterns = [
       /(\d+)\s*(?:÷|diviso|:)\s*(\d+)/,
       /dividere\s+(\d+)\s+(?:per|in)\s+(\d+)/,
-      /(\d+)\s+diviso\s+(\d+)/,
-      /quante volte.+?(\d+).+?nel.+?(\d+)/,
-      /(\d+)\s+(?:caramelle|oggetti|palloni|stelle|mele).+?(\d+)\s+(?:cest|grupp|part)/,
     ];
     const mulPatterns = [
       /(\d+)\s*(?:×|x|per)\s*(\d+)/,
       /moltiplicare?\s+(\d+)\s+per\s+(\d+)/,
-      /(\d+)\s+per\s+(\d+)/,
-      /(\d+)\s+righe?\s+(?:da|di)\s+(\d+)/,
     ];
     const addPatterns = [
       /(\d+)\s*\+\s*(\d+)/,
       /(\d+)\s+più\s+(\d+)/,
-      /sommare?\s+(\d+)\s+(?:e|a|con)\s+(\d+)/,
     ];
     const subPatterns = [
       /(\d+)\s*(?:-|meno)\s*(\d+)/,
       /(\d+)\s+meno\s+(\d+)/,
-      /sottrarre?\s+(\d+)\s+(?:da|a)\s+(\d+)/,
-      /togli(?:ere?)?\s+(\d+)\s+(?:da|a)\s+(\d+)/,
     ];
 
     function tryMatch(patterns: RegExp[], txt: string): RegExpMatchArray | null {
@@ -196,31 +187,43 @@ export default function UnifiedSession() {
       return null;
     }
 
-    const divMatch = tryMatch(divPatterns, parsedText);
-    const mulMatch = tryMatch(mulPatterns, parsedText);
-    const addMatch = tryMatch(addPatterns, parsedText);
-    const subMatch = tryMatch(subPatterns, parsedText);
+    function detectFromText(txt: string): typeof mathGame {
+      const lower = txt.toLowerCase();
+      const divMatch = tryMatch(divPatterns, lower);
+      const mulMatch = tryMatch(mulPatterns, lower);
+      const addMatch = tryMatch(addPatterns, lower);
+      const subMatch = tryMatch(subPatterns, lower);
 
-    let detected: typeof mathGame = null;
-    // For "quante volte X nel Y" pattern, the numbers are reversed (divisor first, then dividend)
-    if (divMatch) {
-      let a = parseInt(divMatch[2] || divMatch[1]);
-      let b = parseInt(divMatch[1] || divMatch[2]);
-      // Ensure a > b (dividend > divisor)
-      if (a < b) [a, b] = [b, a];
-      if (a <= 20 && b <= 10) detected = { operation: "divisione", a, b };
-    } else if (mulMatch && parseInt(mulMatch[1]) <= 10 && parseInt(mulMatch[2]) <= 10) {
-      detected = { operation: "moltiplicazione", a: parseInt(mulMatch[1]), b: parseInt(mulMatch[2]) };
-    } else if (addMatch && parseInt(addMatch[1]) <= 20 && parseInt(addMatch[2]) <= 20) {
-      detected = { operation: "addizione", a: parseInt(addMatch[1]), b: parseInt(addMatch[2]) };
-    } else if (subMatch && parseInt(subMatch[1]) <= 20 && parseInt(subMatch[2]) <= 20) {
-      detected = { operation: "sottrazione", a: parseInt(subMatch[1]), b: parseInt(subMatch[2]) };
+      if (divMatch) {
+        let a = parseInt(divMatch[1]);
+        let b = parseInt(divMatch[2]);
+        if (a < b) [a, b] = [b, a];
+        if (a <= 30 && b <= 10) return { operation: "divisione", a, b };
+      } else if (mulMatch && parseInt(mulMatch[1]) <= 10 && parseInt(mulMatch[2]) <= 10) {
+        return { operation: "moltiplicazione", a: parseInt(mulMatch[1]), b: parseInt(mulMatch[2]) };
+      } else if (addMatch && parseInt(addMatch[1]) <= 20 && parseInt(addMatch[2]) <= 20) {
+        return { operation: "addizione", a: parseInt(addMatch[1]), b: parseInt(addMatch[2]) };
+      } else if (subMatch && parseInt(subMatch[1]) <= 20 && parseInt(subMatch[2]) <= 20) {
+        return { operation: "sottrazione", a: parseInt(subMatch[1]), b: parseInt(subMatch[2]) };
+      }
+      return null;
     }
 
-    if (detected && detected.a > 0 && detected.b > 0) {
-      setMathGame(detected);
+    // Try from topic first
+    if (topic && !mathGame) {
+      const fromTopic = detectFromText(topic);
+      if (fromTopic) { setMathGame(fromTopic); return; }
     }
-  }, [messages, isElementary]);
+
+    // Then try from last assistant message
+    if (messages.length > 0) {
+      const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
+      if (lastAssistant) {
+        const detected = detectFromText(lastAssistant.content);
+        if (detected && !mathGame) setMathGame(detected);
+      }
+    }
+  }, [messages, isElementary, topic]);
 
   // Load coach name from preferences
   useEffect(() => {

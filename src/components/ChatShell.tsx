@@ -18,19 +18,39 @@ import { useTranslation } from "react-i18next";
 
 /** Parse coach JSON responses (socratic_question format) into display text */
 function parseCoachJsonResponse(raw: string): string {
+  // First try JSON parsing
   const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-  if (!cleaned.startsWith('{')) return raw;
-  try {
-    const json = JSON.parse(cleaned);
-    const parts = [
-      json.confirm_if_correct,
-      json.socratic_question,
-      json.hint_if_needed,
-    ].filter(Boolean);
-    return parts.length > 0 ? parts.join('\n\n') : raw;
-  } catch {
-    return raw;
+  let text = raw;
+  if (cleaned.startsWith('{')) {
+    try {
+      const json = JSON.parse(cleaned);
+      const parts = [
+        json.confirm_if_correct,
+        json.socratic_question,
+        json.hint_if_needed,
+      ].filter(Boolean);
+      if (parts.length > 0) text = parts.join('\n\n');
+    } catch { /* not JSON */ }
   }
+
+  // Parse and emit SVG_REVEAL marker, then strip it from displayed text
+  const svgMarker = text.match(
+    /\[SVG_REVEAL:\s*element=(\w+)\s+value=([\d.]+)\s+color=(#[A-Fa-f0-9]+)\]/
+  );
+  if (svgMarker) {
+    text = text.replace(svgMarker[0], '').trim();
+    try {
+      window.dispatchEvent(new CustomEvent('svgReveal', {
+        detail: {
+          element: svgMarker[1],
+          value: svgMarker[2],
+          color: svgMarker[3],
+        }
+      }));
+    } catch {}
+  }
+
+  return text;
 }
 
 interface ChatShellProps {
