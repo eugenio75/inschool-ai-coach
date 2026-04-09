@@ -85,6 +85,22 @@ export default function UnifiedSession() {
   const userId = user?.id || profileId;
   const isJunior = schoolLevel === "alunno" || schoolLevel === "medie";
 
+  // Build student greeting for header
+  const schoolLevelLabel = (() => {
+    const lvl = (schoolLevel || "").toLowerCase();
+    if (lvl.includes("primaria-1-2")) return "1ª-2ª Elementare";
+    if (lvl.includes("primaria-3-5") || lvl === "alunno") return "3ª-5ª Elementare";
+    if (lvl.includes("media")) return "Medie";
+    if (lvl === "medie") return "Medie";
+    if (lvl === "superiori") return "Superiori";
+    if (lvl === "universitario") return "Università";
+    return "";
+  })();
+  const classSection = profile?.class_section;
+  const studentGreeting = studentName !== "Studente"
+    ? `Ciao, ${studentName}!${classSection ? ` • ${classSection}` : schoolLevelLabel ? ` • ${schoolLevelLabel}` : ""}`
+    : undefined;
+
   const guided = useGuidedSession({
     homeworkId,
     userId,
