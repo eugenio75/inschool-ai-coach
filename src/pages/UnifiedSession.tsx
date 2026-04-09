@@ -233,6 +233,18 @@ export default function UnifiedSession() {
     }
   }, [messages, isElementary, topic]);
 
+  // Reset svgElements when coach starts a new exercise
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
+    if (!lastAssistant) return;
+    const text = lastAssistant.content.toLowerCase();
+    if (/altro esercizio|prossimo esercizio|nuovo problema|adesso prova|proviamo un altro|ora prova questo/i.test(text)) {
+      setSvgElements([]);
+      setMathGame(null);
+    }
+  }, [messages]);
+
   // Load coach name from preferences
   useEffect(() => {
     const loadCoachName = async () => {
