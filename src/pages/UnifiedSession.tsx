@@ -145,6 +145,9 @@ export default function UnifiedSession() {
 
   // MathGame state for elementary students
   const [mathGame, setMathGame] = useState<{ operation: "divisione" | "moltiplicazione" | "addizione" | "sottrazione"; a: number; b: number } | null>(null);
+  const [manualGameInput, setManualGameInput] = useState(false);
+  const [manualA, setManualA] = useState("");
+  const [manualB, setManualB] = useState("");
   const isElementary =
     (profile?.age != null && profile.age >= 6 && profile.age <= 11) ||
     schoolLevel?.includes("primaria") ||
