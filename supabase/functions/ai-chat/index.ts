@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { COACH_RULES } from "./coach_rules.ts";
 
 // Mr. Ranedeer AI Tutor v2.7 - Full framework inlined for Edge Runtime compatibility
 const MR_RANEDEER_RAW = `===
