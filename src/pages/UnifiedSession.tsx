@@ -176,7 +176,7 @@ export default function UnifiedSession() {
 
   // Detect math operations from TOPIC first, then from coach messages
   useEffect(() => {
-    if (!isElementary) return;
+    // MathGame forced ON for all students (temporarily) to verify it works
 
     const divPatterns = [
       /(\d+)\s*(?:÷|diviso|:)\s*(\d+)/,
