@@ -221,10 +221,6 @@ export function ChatShell({
         && /esatto|perfetto|brav[oaie]|bravissim|corretto|giusto|ottimo|eccellente|ben fatto|✅|🎉/i.test(text)
         && !/non è corrett|sbagliato|non proprio|purtroppo/i.test(text);
 
-      if (isConfirm) {
-        step++;
-      }
-
       // If exercise seems to end (no more COLONNA, or "completo/finito")
       if (/abbiamo finito|risultato finale|complimenti.*completato|hai completato/i.test(text.toLowerCase())) {
         steps.push(undefined); // show full result
@@ -232,7 +228,14 @@ export function ChatShell({
         continue;
       }
 
+      // Push CURRENT step for this message, THEN increment.
+      // This way the confirmation message still shows the previous step,
+      // and only the NEXT message will show the revealed answer.
       steps.push(hasColonna ? step : undefined);
+
+      if (isConfirm) {
+        step++;
+      }
     }
     return steps;
   }, [messages]);
