@@ -1860,6 +1860,23 @@ Regole benessere: mai linguaggio diagnostico, mai minimizzare, mai drammatizzare
           });
 
           // Build student context from loaded DB data
+          let progressSummary = 'nessuno';
+          try {
+            const { data: progressData } = await supabaseClient
+              .from('coach_progress')
+              .select('subject, topic, score, completed_at')
+              .eq('user_id', profileId)
+              .order('completed_at', { ascending: false })
+              .limit(10);
+            if (progressData && progressData.length > 0) {
+              progressSummary = progressData.map((p: any) =>
+                `${p.subject}/${p.topic || '?'} (score: ${p.score}%, ${p.completed_at?.split('T')[0] || ''})`
+              ).join(', ');
+            }
+          } catch (e) {
+            console.error('Error loading coach_progress:', e);
+          }
+
           const studentContext = `
 DATI STUDENTE DAL DATABASE:
 Nome: ${prof.name || 'non disponibile'}
@@ -1868,6 +1885,7 @@ Livello: ${prof.school_level || 'non disponibile'}
 Materie preferite: ${(prof.favorite_subjects || []).join(', ') || 'nessuna'}
 Materie difficili: ${(prof.difficult_subjects || []).join(', ') || 'nessuna'}
 Sessioni precedenti: ${sessionHistory}
+Progressi coach (ultimi argomenti): ${progressSummary}
 `;
 
           finalSystemPrompt = clientSystemPrompt
