@@ -33,6 +33,8 @@ import { Button } from "@/components/ui/button";
 import { PageBackButton } from "@/components/shared/PageBackButton";
 import { ChallengeSession } from "@/components/study/ChallengeSession";
 import { GameSession } from "@/components/study/GameSession";
+import { MathGame } from "@/components/student-coach/MathGame";
+import { AnimatePresence } from "framer-motion";
 
 import { getSubjectsByLevel } from "@/lib/subjectsByLevel";
 import {
@@ -140,6 +142,38 @@ export default function UnifiedSession() {
   const [studyStreak, setStudyStreak] = useState<number | undefined>();
   const [studyFamiliarityDone, setStudyFamiliarityDone] = useState(false);
   const sessionStartRef = useRef<number>(Date.now());
+
+  // MathGame state for elementary students
+  const [mathGame, setMathGame] = useState<{ operation: "divisione" | "moltiplicazione" | "addizione" | "sottrazione"; a: number; b: number } | null>(null);
+  const isElementary = profile?.age ? (profile.age >= 6 && profile.age <= 11) : (schoolLevel?.includes("primaria") || schoolLevel === "alunno");
+
+  // Detect math operations from coach messages to show MathGame
+  useEffect(() => {
+    if (!isElementary || messages.length === 0) return;
+    const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
+    if (!lastAssistant) return;
+    const text = lastAssistant.content.toLowerCase();
+    // Only trigger game when coach asks a division/mult/add/sub question with small numbers
+    const divMatch = text.match(/(\d+)\s*(?:÷|diviso|:)\s*(\d+)/);
+    const mulMatch = text.match(/(\d+)\s*(?:×|x|per)\s*(\d+)/);
+    const addMatch = text.match(/(\d+)\s*\+\s*(\d+)/);
+    const subMatch = text.match(/(\d+)\s*(?:-|meno)\s*(\d+)/);
+
+    let detected: typeof mathGame = null;
+    if (divMatch && parseInt(divMatch[1]) <= 20 && parseInt(divMatch[2]) <= 10) {
+      detected = { operation: "divisione", a: parseInt(divMatch[1]), b: parseInt(divMatch[2]) };
+    } else if (mulMatch && parseInt(mulMatch[1]) <= 10 && parseInt(mulMatch[2]) <= 10) {
+      detected = { operation: "moltiplicazione", a: parseInt(mulMatch[1]), b: parseInt(mulMatch[2]) };
+    } else if (addMatch && parseInt(addMatch[1]) <= 20 && parseInt(addMatch[2]) <= 20) {
+      detected = { operation: "addizione", a: parseInt(addMatch[1]), b: parseInt(addMatch[2]) };
+    } else if (subMatch && parseInt(subMatch[1]) <= 20 && parseInt(subMatch[2]) <= 20) {
+      detected = { operation: "sottrazione", a: parseInt(subMatch[1]), b: parseInt(subMatch[2]) };
+    }
+
+    if (detected && detected.a > 0 && detected.b > 0) {
+      setMathGame(detected);
+    }
+  }, [messages, isElementary]);
 
   // Load coach name from preferences
   useEffect(() => {
@@ -1132,24 +1166,46 @@ Inizia con la prima domanda.`;
     );
   }
 
-  const studyOutputFooter = type === "study" && messages.length >= 4 ? (
-    <div className="px-4 py-2 border-t border-border bg-muted/50">
-      <p className="text-xs text-muted-foreground mb-2">Genera un output dalla sessione:</p>
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {OUTPUT_TYPES.map(ot => (
-          <button
-            key={ot.id}
-            onClick={() => generateOutput(ot.id)}
-            disabled={sending}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border bg-card text-muted-foreground hover:border-foreground/40 whitespace-nowrap transition-colors"
-          >
-            <ot.icon className="w-3 h-3" />
-            {ot.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  ) : undefined;
+  const handleMathGameAnswer = (answer: number) => {
+    setMathGame(null);
+    handleSend(String(answer));
+  };
+
+  const studyOutputFooter = (
+    <>
+      <AnimatePresence>
+        {mathGame && (
+          <div className="px-4 py-2">
+            <MathGame
+              operation={mathGame.operation}
+              a={mathGame.a}
+              b={mathGame.b}
+              onAnswer={handleMathGameAnswer}
+              onClose={() => setMathGame(null)}
+            />
+          </div>
+        )}
+      </AnimatePresence>
+      {type === "study" && messages.length >= 4 && (
+        <div className="px-4 py-2 border-t border-border bg-muted/50">
+          <p className="text-xs text-muted-foreground mb-2">Genera un output dalla sessione:</p>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {OUTPUT_TYPES.map(ot => (
+              <button
+                key={ot.id}
+                onClick={() => generateOutput(ot.id)}
+                disabled={sending}
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border bg-card text-muted-foreground hover:border-foreground/40 whitespace-nowrap transition-colors"
+              >
+                <ot.icon className="w-3 h-3" />
+                {ot.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
 
   // Handle study session familiarity action clicks — defined as regular function to avoid hook ordering issues
   function handleStudyAction(value: string) {
