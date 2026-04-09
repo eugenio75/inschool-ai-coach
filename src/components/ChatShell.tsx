@@ -16,6 +16,23 @@ import { Whiteboard } from "@/components/study/Whiteboard";
 import { fireConfetti, playCorrectSound } from "@/lib/confetti";
 import { useTranslation } from "react-i18next";
 
+/** Parse coach JSON responses (socratic_question format) into display text */
+function parseCoachJsonResponse(raw: string): string {
+  const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+  if (!cleaned.startsWith('{')) return raw;
+  try {
+    const json = JSON.parse(cleaned);
+    const parts = [
+      json.confirm_if_correct,
+      json.socratic_question,
+      json.hint_if_needed,
+    ].filter(Boolean);
+    return parts.length > 0 ? parts.join('\n\n') : raw;
+  } catch {
+    return raw;
+  }
+}
+
 interface ChatShellProps {
   title: string;
   subtitle?: string;
@@ -527,14 +544,16 @@ export function ChatShell({
       <div ref={scrollRef} className={`flex-1 overflow-y-auto px-4 py-4 space-y-4 ${shaking ? "animate-shake" : ""}`}>
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => {
-            const msgMood: CoachAvatarMood = msg.role === "assistant" ? detectMoodFromText(msg.content || "") : "default";
+            // Parse JSON coach responses before any other processing
+            const rawContent = msg.role === "assistant" ? parseCoachJsonResponse(msg.content || "") : (msg.content || "");
+            const msgMood: CoachAvatarMood = msg.role === "assistant" ? detectMoodFromText(rawContent) : "default";
             const isLastAssistant = msg.role === "assistant" && i === messages.length - 1;
             // Parse inline options (👉) from assistant messages
-            const { cleanText: parsedCleanText, options: parsedOptions, hasLinkPrep } = msg.role === "assistant" ? parseInlineOptions(msg.content || "") : { cleanText: msg.content || "", options: [], hasLinkPrep: false };
+            const { cleanText: parsedCleanText, options: parsedOptions, hasLinkPrep } = msg.role === "assistant" ? parseInlineOptions(rawContent) : { cleanText: rawContent, options: [], hasLinkPrep: false };
             // Only show parsed inline options on the FIRST assistant message (familiarity check), not on every message
             const isFirstAssistantMsg = msg.role === "assistant" && messages.filter((m, idx) => m.role === "assistant" && idx <= i).length === 1;
             const showParsedOptions = isLastAssistant && isFirstAssistantMsg && parsedOptions.length > 0 && !msg.actions?.length;
-            const displayContent = (showParsedOptions || hasLinkPrep) ? parsedCleanText : msg.content;
+            const displayContent = (showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent;
 
             return (
             <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
