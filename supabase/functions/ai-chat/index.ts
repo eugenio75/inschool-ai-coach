@@ -1882,6 +1882,16 @@ ${clientSystemPrompt}`
           if (isProceduralMathSession({ messages, systemPrompt: clientSystemPrompt, subject: chatSubject })) {
             finalSystemPrompt += `\n\n${buildProceduralMathUniversalPrompt(lang || "it")}`;
           }
+
+          // Debug logging for coach rules verification
+          console.log('=== COACH SYSTEM PROMPT PREVIEW ===');
+          console.log('RULES loaded:', finalSystemPrompt.includes('REGOLA 1'));
+          console.log('Anti-spoiler loaded:', finalSystemPrompt.includes('ANTI-SPOILER'));
+          console.log('Student context:', studentContext.substring(0, 300));
+          console.log('Total prompt length:', finalSystemPrompt.length);
+          console.log('Prompt order check - RULES position:', finalSystemPrompt.indexOf('ANTI-SPOILER'));
+          console.log('Prompt order check - Mr Ranedeer position:', finalSystemPrompt.indexOf('Mr. Ranedeer'));
+          console.log('===================================');
         }
       } catch (e) {
         console.error("Error building enhanced prompt:", e);
