@@ -176,7 +176,7 @@ export default function UnifiedSession() {
 
   // Detect math operations from TOPIC first, then from coach messages
   useEffect(() => {
-    if (!isElementary) return;
+    // MathGame forced ON for all students (temporarily) to verify it works
 
     const divPatterns = [
       /(\d+)\s*(?:÷|diviso|:)\s*(\d+)/,
@@ -233,10 +233,9 @@ export default function UnifiedSession() {
       if (fromTopic) { setMathGame(fromTopic); return; }
     }
 
-    // Then try from any assistant message (check all, not just last)
+    // Then try from ALL messages (user + assistant)
     if (messages.length > 0 && !mathGame) {
       for (const msg of messages) {
-        if (msg.role !== "assistant") continue;
         // Also check COLONNA tags for numbers
         const colonnaMatch = msg.content.match(/\[COLONNA:\s*tipo=(\w+),\s*numeri=(\d+),(\d+)/i);
         if (colonnaMatch) {
@@ -1281,6 +1280,36 @@ Inizia con la prima domanda.`;
           </div>
         )}
       </AnimatePresence>
+      {/* Manual MathGame trigger button */}
+      {!mathGame && messages.length >= 2 && (
+        <div className="px-4 py-1 flex gap-2">
+          <button
+            onClick={() => {
+              // Try to detect from all messages
+              const allText = messages.map(m => m.content || "").join(" ") + " " + (topic || "");
+              const divM = allText.match(/(\d+)\s*(?:÷|diviso|:|\/)\s*(\d+)/i);
+              const mulM = !divM && allText.match(/(\d+)\s*(?:×|x|per)\s*(\d+)/i);
+              const addM = !divM && !mulM && allText.match(/(\d+)\s*\+\s*(\d+)/);
+              const subM = !divM && !mulM && !addM && allText.match(/(\d+)\s*(?:-|meno)\s*(\d+)/i);
+              if (divM) {
+                let a = parseInt(divM[1]), b = parseInt(divM[2]);
+                if (a < b) [a, b] = [b, a];
+                setMathGame({ operation: "divisione", a, b });
+              } else if (mulM) {
+                setMathGame({ operation: "moltiplicazione", a: parseInt(mulM[1]), b: parseInt(mulM[2]) });
+              } else if (addM) {
+                setMathGame({ operation: "addizione", a: parseInt(addM[1]), b: parseInt(addM[2]) });
+              } else if (subM) {
+                setMathGame({ operation: "sottrazione", a: parseInt(subM[1]), b: parseInt(subM[2]) });
+              }
+            }}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border bg-card text-muted-foreground hover:border-foreground/40 whitespace-nowrap transition-colors"
+          >
+            <Gamepad2 className="w-3 h-3" />
+            🎮 Gioco
+          </button>
+        </div>
+      )}
       {type === "study" && messages.length >= 4 && (
         <div className="px-4 py-2 border-t border-border bg-muted/50">
           <p className="text-xs text-muted-foreground mb-2">Genera un output dalla sessione:</p>
