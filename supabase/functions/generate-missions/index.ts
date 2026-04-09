@@ -31,19 +31,22 @@ serve(async (req) => {
         });
       }
       resolvedChildId = codeResult.profile.id;
-    } else {
-      const authHeader = req.headers.get("Authorization");
-      if (authHeader) {
-        const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
-          global: { headers: { Authorization: authHeader } },
+    } else if (resolvedChildId) {
+      // childProfileId provided directly — validate it exists using service role
+      const { data: profileCheck } = await supabase
+        .from("child_profiles")
+        .select("id")
+        .eq("id", resolvedChildId)
+        .maybeSingle();
+      if (!profileCheck) {
+        return new Response(JSON.stringify({ error: isEN ? "Profile not found" : "Profilo non trovato" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
-        const { data: { user } } = await userClient.auth.getUser();
-        if (!user) {
-          return new Response(JSON.stringify({ error: isEN ? "Unauthorized" : "Non autorizzato" }), {
-            status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
       }
+    } else {
+      return new Response(JSON.stringify({ missions: [] }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     if (!resolvedChildId) {
