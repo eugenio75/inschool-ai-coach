@@ -237,6 +237,13 @@ export function ChatShell({
         step++;
       }
     }
+    // Debug logging for SVG step tracking
+    messages.forEach((msg, i) => {
+      if (msg.role === "assistant") {
+        console.log(`MSG ${i}: step=${steps[i]}, hasColonna=${/\[COLONNA:/i.test(msg.content||'')}, isConfirm=${/esatto|perfetto|bravo/i.test(msg.content||'')}`);
+      }
+    });
+
     return steps;
   }, [messages]);
 

@@ -1280,13 +1280,21 @@ Inizia con la prima domanda.`;
           </div>
         )}
       </AnimatePresence>
-      {/* Manual MathGame trigger button */}
-      {!mathGame && messages.length >= 2 && (
+      {/* Manual MathGame trigger button - always visible when no game active */}
+      {!mathGame && messages.length >= 1 && (
         <div className="px-4 py-1 flex gap-2">
           <button
             onClick={() => {
-              // Try to detect from all messages
               const allText = messages.map(m => m.content || "").join(" ") + " " + (topic || "");
+              const colonnaM = allText.match(/\[COLONNA:\s*tipo=(\w+),\s*numeri=(\d+),(\d+)/i);
+              if (colonnaM) {
+                const tipoMap: Record<string, "divisione"|"moltiplicazione"|"addizione"|"sottrazione"> = {
+                  divisione: "divisione", moltiplicazione: "moltiplicazione",
+                  addizione: "addizione", sottrazione: "sottrazione",
+                };
+                const op = tipoMap[colonnaM[1].toLowerCase()];
+                if (op) { setMathGame({ operation: op, a: parseInt(colonnaM[2]), b: parseInt(colonnaM[3]) }); return; }
+              }
               const divM = allText.match(/(\d+)\s*(?:÷|diviso|:|\/)\s*(\d+)/i);
               const mulM = !divM && allText.match(/(\d+)\s*(?:×|x|per)\s*(\d+)/i);
               const addM = !divM && !mulM && allText.match(/(\d+)\s*\+\s*(\d+)/);
@@ -1301,6 +1309,8 @@ Inizia con la prima domanda.`;
                 setMathGame({ operation: "addizione", a: parseInt(addM[1]), b: parseInt(addM[2]) });
               } else if (subM) {
                 setMathGame({ operation: "sottrazione", a: parseInt(subM[1]), b: parseInt(subM[2]) });
+              } else {
+                setManualGameInput(true);
               }
             }}
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-border bg-card text-muted-foreground hover:border-foreground/40 whitespace-nowrap transition-colors"
@@ -1308,6 +1318,43 @@ Inizia con la prima domanda.`;
             <Gamepad2 className="w-3 h-3" />
             🎮 Gioco
           </button>
+        </div>
+      )}
+      {/* Manual number input fallback */}
+      {manualGameInput && !mathGame && (
+        <div className="px-4 py-2 flex items-center gap-2 border-t border-border bg-muted/50">
+          <span className="text-xs text-muted-foreground">Inserisci:</span>
+          <Input
+            type="number"
+            placeholder="A"
+            className="w-16 h-8 text-sm"
+            value={manualA}
+            onChange={e => setManualA(e.target.value)}
+          />
+          <span className="text-xs">÷</span>
+          <Input
+            type="number"
+            placeholder="B"
+            className="w-16 h-8 text-sm"
+            value={manualB}
+            onChange={e => setManualB(e.target.value)}
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 text-xs"
+            onClick={() => {
+              const a = parseInt(manualA), b = parseInt(manualB);
+              if (a > 0 && b > 0) {
+                setMathGame({ operation: "divisione", a, b });
+                setManualGameInput(false);
+                setManualA(""); setManualB("");
+              }
+            }}
+          >Inizia</Button>
+          <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setManualGameInput(false); setManualA(""); setManualB(""); }}>
+            <X className="w-3 h-3" />
+          </Button>
         </div>
       )}
       {type === "study" && messages.length >= 4 && (
