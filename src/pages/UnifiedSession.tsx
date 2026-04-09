@@ -502,6 +502,26 @@ Inizia con la prima domanda.`;
       } catch (e) {
         console.error("Save conversation error:", e);
       }
+
+      // Save coach_progress summary
+      try {
+        const assistantMsgs = messages.filter(m => m.role === "assistant").map(m => m.content || "");
+        const userMsgs = messages.filter(m => m.role === "user");
+        const correctCount = assistantMsgs.filter(t => /esatto|corrett[oai]|bravo|perfetto|giusto|ottimo|eccellente|✅|🎉/i.test(t) && !/non è corrett|sbagliato/i.test(t)).length;
+        const totalAttempts = userMsgs.length || 1;
+        const score = Math.round((correctCount / totalAttempts) * 100);
+
+        await supabase.from("coach_progress").insert({
+          user_id: pid,
+          subject: subject || "generale",
+          topic: topic || null,
+          score,
+          learned: [] as string[],
+          struggled: [] as string[],
+        });
+      } catch (e) {
+        console.error("Save coach_progress error:", e);
+      }
     }
 
     // Calculate points
