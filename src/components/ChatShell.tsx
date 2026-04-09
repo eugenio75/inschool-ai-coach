@@ -544,14 +544,16 @@ export function ChatShell({
       <div ref={scrollRef} className={`flex-1 overflow-y-auto px-4 py-4 space-y-4 ${shaking ? "animate-shake" : ""}`}>
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => {
-            const msgMood: CoachAvatarMood = msg.role === "assistant" ? detectMoodFromText(msg.content || "") : "default";
+            // Parse JSON coach responses before any other processing
+            const rawContent = msg.role === "assistant" ? parseCoachJsonResponse(msg.content || "") : (msg.content || "");
+            const msgMood: CoachAvatarMood = msg.role === "assistant" ? detectMoodFromText(rawContent) : "default";
             const isLastAssistant = msg.role === "assistant" && i === messages.length - 1;
             // Parse inline options (👉) from assistant messages
-            const { cleanText: parsedCleanText, options: parsedOptions, hasLinkPrep } = msg.role === "assistant" ? parseInlineOptions(msg.content || "") : { cleanText: msg.content || "", options: [], hasLinkPrep: false };
+            const { cleanText: parsedCleanText, options: parsedOptions, hasLinkPrep } = msg.role === "assistant" ? parseInlineOptions(rawContent) : { cleanText: rawContent, options: [], hasLinkPrep: false };
             // Only show parsed inline options on the FIRST assistant message (familiarity check), not on every message
             const isFirstAssistantMsg = msg.role === "assistant" && messages.filter((m, idx) => m.role === "assistant" && idx <= i).length === 1;
             const showParsedOptions = isLastAssistant && isFirstAssistantMsg && parsedOptions.length > 0 && !msg.actions?.length;
-            const displayContent = (showParsedOptions || hasLinkPrep) ? parsedCleanText : msg.content;
+            const displayContent = (showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent;
 
             return (
             <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
