@@ -1863,7 +1863,7 @@ Regole benessere: mai linguaggio diagnostico, mai minimizzare, mai drammatizzare
           // Build student context from loaded DB data
           let progressSummary = 'nessuno';
           try {
-            const { data: progressData } = await supabaseClient
+            const { data: progressData } = await sb
               .from('coach_progress')
               .select('subject, topic, score, completed_at')
               .eq('user_id', profileId)
