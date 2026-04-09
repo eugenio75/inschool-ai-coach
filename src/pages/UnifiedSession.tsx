@@ -1166,10 +1166,10 @@ Inizia con la prima domanda.`;
     );
   }
 
-  const handleMathGameAnswer = useCallback((answer: number) => {
+  const handleMathGameAnswer = (answer: number) => {
     setMathGame(null);
     handleSend(String(answer));
-  }, [handleSend]);
+  };
 
   const studyOutputFooter = (
     <>
