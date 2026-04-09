@@ -148,13 +148,7 @@ export default function UnifiedSession() {
   const [manualGameInput, setManualGameInput] = useState(false);
   const [manualA, setManualA] = useState("");
   const [manualB, setManualB] = useState("");
-  const isElementary =
-    (profile?.age != null && profile.age >= 6 && profile.age <= 11) ||
-    schoolLevel?.includes("primaria") ||
-    schoolLevel?.includes("elementar") ||
-    schoolLevel === "alunno" ||
-    schoolLevel === "medie" ||
-    !schoolLevel;
+  const isElementary = true; // mostra il gioco per tutti gli studenti
   
   console.log('MathGame debug:', { isElementary, profileAge: profile?.age, schoolLevel, topic, mathGame, messagesCount: messages.length });
 
@@ -177,88 +171,64 @@ export default function UnifiedSession() {
     }
   }, [setupDone]);
 
-  // Detect math operations from TOPIC first, then from coach messages
+  // Detect math operations from topic, systemPrompt and all messages
   useEffect(() => {
-    // MathGame forced ON for all students (temporarily) to verify it works
+    if (mathGame) return;
+    
+    // Cerca in topic, systemPrompt e tutti i messaggi
+    const allText = [
+      topic || "",
+      ...(messages.map(m => m.content || ""))
+    ].join(" ").toLowerCase();
 
-    const divPatterns = [
-      /(\d+)\s*(?:÷|diviso|:)\s*(\d+)/,
-      /dividere\s+(\d+)\s+(?:per|in)\s+(\d+)/,
-      /(\d+)\s*(?:caramelle|oggetti|palloni|stelle|pizze|biscotti|figurine|matite|giocattoli|libri).*?(?:divid|grupp|cest|parti)\w*.*?(\d+)/,
-      /(?:divid|grupp|cest|parti)\w*.*?(\d+).*?(\d+)/,
-    ];
-    const mulPatterns = [
-      /(\d+)\s*(?:×|x|per)\s*(\d+)/,
-      /moltiplicare?\s+(\d+)\s+per\s+(\d+)/,
-    ];
-    const addPatterns = [
-      /(\d+)\s*\+\s*(\d+)/,
-      /(\d+)\s+più\s+(\d+)/,
-    ];
-    const subPatterns = [
-      /(\d+)\s*(?:-|meno)\s*(\d+)/,
-      /(\d+)\s+meno\s+(\d+)/,
-    ];
-
-    function tryMatch(patterns: RegExp[], txt: string): RegExpMatchArray | null {
-      for (const p of patterns) {
-        const m = txt.match(p);
-        if (m) return m;
-      }
-      return null;
-    }
-
-    function detectFromText(txt: string): typeof mathGame {
-      const lower = txt.toLowerCase();
-      const divMatch = tryMatch(divPatterns, lower);
-      const mulMatch = tryMatch(mulPatterns, lower);
-      const addMatch = tryMatch(addPatterns, lower);
-      const subMatch = tryMatch(subPatterns, lower);
-
-      if (divMatch) {
-        let a = parseInt(divMatch[1]);
-        let b = parseInt(divMatch[2]);
-        if (a < b) [a, b] = [b, a];
-        if (a <= 30 && b <= 10) return { operation: "divisione", a, b };
-      } else if (mulMatch && parseInt(mulMatch[1]) <= 10 && parseInt(mulMatch[2]) <= 10) {
-        return { operation: "moltiplicazione", a: parseInt(mulMatch[1]), b: parseInt(mulMatch[2]) };
-      } else if (addMatch && parseInt(addMatch[1]) <= 20 && parseInt(addMatch[2]) <= 20) {
-        return { operation: "addizione", a: parseInt(addMatch[1]), b: parseInt(addMatch[2]) };
-      } else if (subMatch && parseInt(subMatch[1]) <= 20 && parseInt(subMatch[2]) <= 20) {
-        return { operation: "sottrazione", a: parseInt(subMatch[1]), b: parseInt(subMatch[2]) };
-      }
-      return null;
-    }
-
-    // Try from topic first
-    if (topic && !mathGame) {
-      const fromTopic = detectFromText(topic);
-      if (fromTopic) { setMathGame(fromTopic); return; }
-    }
-
-    // Then try from ALL messages (user + assistant)
-    if (messages.length > 0 && !mathGame) {
-      for (const msg of messages) {
-        // Also check COLONNA tags for numbers
-        const colonnaMatch = msg.content.match(/\[COLONNA:\s*tipo=(\w+),\s*numeri=(\d+),(\d+)/i);
-        if (colonnaMatch) {
-          const tipoMap: Record<string, typeof mathGame extends null ? never : NonNullable<typeof mathGame>["operation"]> = {
-            divisione: "divisione", moltiplicazione: "moltiplicazione",
-            addizione: "addizione", sottrazione: "sottrazione",
-          };
-          const op = tipoMap[colonnaMatch[1].toLowerCase()];
-          const a = parseInt(colonnaMatch[2]);
-          const b = parseInt(colonnaMatch[3]);
-          if (op && a <= 30 && b <= 10) {
-            setMathGame({ operation: op, a, b });
-            return;
-          }
-        }
-        const detected = detectFromText(msg.content);
-        if (detected) { setMathGame(detected); return; }
+    // Divisione
+    const divMatch = allText.match(/(\d+)\s*(?:÷|diviso|:)\s*(\d+)/) ||
+                     allText.match(/divid\w+\s+(\d+)\s+(?:per|in|tra)\s+(\d+)/) ||
+                     allText.match(/numeri=(\d+),(\d+)/);
+    if (divMatch) {
+      let a = parseInt(divMatch[1]);
+      let b = parseInt(divMatch[2]);
+      if (a < b) [a, b] = [b, a];
+      if (a > 0 && b > 0 && a <= 50 && b <= 10) {
+        setMathGame({ operation: "divisione", a, b });
+        return;
       }
     }
-  }, [messages, isElementary, topic]);
+
+    // Moltiplicazione
+    const mulMatch = allText.match(/(\d+)\s*(?:×|x|per)\s*(\d+)/);
+    if (mulMatch) {
+      const a = parseInt(mulMatch[1]);
+      const b = parseInt(mulMatch[2]);
+      if (a > 0 && b > 0 && a <= 10 && b <= 10) {
+        setMathGame({ operation: "moltiplicazione", a, b });
+        return;
+      }
+    }
+
+    // Addizione
+    const addMatch = allText.match(/(\d+)\s*\+\s*(\d+)/) ||
+                     allText.match(/(\d+)\s+più\s+(\d+)/);
+    if (addMatch) {
+      const a = parseInt(addMatch[1]);
+      const b = parseInt(addMatch[2]);
+      if (a > 0 && b > 0 && a <= 20 && b <= 20) {
+        setMathGame({ operation: "addizione", a, b });
+        return;
+      }
+    }
+
+    // Sottrazione
+    const subMatch = allText.match(/(\d+)\s*(?:-|meno)\s*(\d+)/);
+    if (subMatch) {
+      const a = parseInt(subMatch[1]);
+      const b = parseInt(subMatch[2]);
+      if (a > b && a > 0 && b > 0 && a <= 20) {
+        setMathGame({ operation: "sottrazione", a, b });
+        return;
+      }
+    }
+  }, [topic, messages, mathGame]);
 
   // Reset svgElements when coach starts a new exercise
   useEffect(() => {
