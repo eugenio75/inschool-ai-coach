@@ -21,6 +21,7 @@ interface ChatShellProps {
   subtitle?: string;
   badgeText?: string;
   coachName?: string;
+  studentGreeting?: string;
   messages: ChatMsg[];
   streamingText: string;
   sending: boolean;
@@ -114,7 +115,7 @@ function getStatusIndicator(status: CoachStatus, name?: string) {
 }
 
 export function ChatShell({
-  title, subtitle, badgeText, coachName,
+  title, subtitle, badgeText, coachName, studentGreeting,
   messages, streamingText, sending,
   onSend, onBack, onAction, onEndSession,
   progress, progressLabel,
@@ -439,6 +440,7 @@ export function ChatShell({
         )}
         <div className="flex-1 min-w-0">
           {coachName && <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">{coachName}</p>}
+          {studentGreeting && <p className="text-[10px] text-muted-foreground">{studentGreeting}</p>}
           <h1 className="text-sm font-semibold text-foreground truncate">{title}</h1>
           {subtitle && <p className="text-xs text-muted-foreground truncate">{subtitle}</p>}
           {progress !== undefined && (
