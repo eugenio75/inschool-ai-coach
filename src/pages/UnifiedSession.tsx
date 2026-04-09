@@ -1192,6 +1192,7 @@ Inizia con la prima domanda.`;
     <>
       <ChatShell
         coachName={coachName}
+        studentGreeting={studentGreeting}
         title={topic || subject || getTitle()}
         subtitle={subject && topic ? subject : undefined}
         badgeText={type === "prep" ? (mode === "orale" ? "Orale" : "Scritta") : undefined}
