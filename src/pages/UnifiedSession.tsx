@@ -181,6 +181,8 @@ export default function UnifiedSession() {
     const divPatterns = [
       /(\d+)\s*(?:÷|diviso|:)\s*(\d+)/,
       /dividere\s+(\d+)\s+(?:per|in)\s+(\d+)/,
+      /(\d+)\s*(?:caramelle|oggetti|palloni|stelle|pizze|biscotti|figurine|matite|giocattoli|libri).*?(?:divid|grupp|cest|parti)\w*.*?(\d+)/,
+      /(?:divid|grupp|cest|parti)\w*.*?(\d+).*?(\d+)/,
     ];
     const mulPatterns = [
       /(\d+)\s*(?:×|x|per)\s*(\d+)/,
