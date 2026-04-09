@@ -16,6 +16,23 @@ import { Whiteboard } from "@/components/study/Whiteboard";
 import { fireConfetti, playCorrectSound } from "@/lib/confetti";
 import { useTranslation } from "react-i18next";
 
+/** Parse coach JSON responses (socratic_question format) into display text */
+function parseCoachJsonResponse(raw: string): string {
+  const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+  if (!cleaned.startsWith('{')) return raw;
+  try {
+    const json = JSON.parse(cleaned);
+    const parts = [
+      json.confirm_if_correct,
+      json.socratic_question,
+      json.hint_if_needed,
+    ].filter(Boolean);
+    return parts.length > 0 ? parts.join('\n\n') : raw;
+  } catch {
+    return raw;
+  }
+}
+
 interface ChatShellProps {
   title: string;
   subtitle?: string;
