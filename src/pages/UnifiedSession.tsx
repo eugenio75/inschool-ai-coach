@@ -145,7 +145,15 @@ export default function UnifiedSession() {
 
   // MathGame state for elementary students
   const [mathGame, setMathGame] = useState<{ operation: "divisione" | "moltiplicazione" | "addizione" | "sottrazione"; a: number; b: number } | null>(null);
-  const isElementary = profile?.age ? (profile.age >= 6 && profile.age <= 11) : (schoolLevel?.includes("primaria") || schoolLevel === "alunno");
+  const isElementary =
+    (profile?.age != null && profile.age >= 6 && profile.age <= 11) ||
+    schoolLevel?.includes("primaria") ||
+    schoolLevel?.includes("elementar") ||
+    schoolLevel === "alunno" ||
+    schoolLevel === "medie" ||
+    !schoolLevel;
+  
+  console.log('MathGame debug:', { isElementary, profileAge: profile?.age, schoolLevel, topic, mathGame, messagesCount: messages.length });
 
   // SVG reveal state from coach markers (connected to ColumnOperation via exerciseSteps in ChatShell)
   const [svgElements, setSvgElements] = useState<Array<{element: string; value: string; color: string}>>([]);
