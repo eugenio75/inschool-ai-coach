@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { COACH_RULES } from "./coach_rules.ts";
 
 // Mr. Ranedeer AI Tutor v2.7 - Full framework inlined for Edge Runtime compatibility
 const MR_RANEDEER_RAW = `===
@@ -1858,14 +1859,25 @@ Regole benessere: mai linguaggio diagnostico, mai minimizzare, mai drammatizzare
             lang: lang || "it",
           });
 
+          // Build student context from loaded DB data
+          const studentContext = `
+DATI STUDENTE DAL DATABASE:
+Nome: ${prof.name || 'non disponibile'}
+Età: ${prof.age || 'non disponibile'}
+Livello: ${prof.school_level || 'non disponibile'}
+Materie preferite: ${(prof.favorite_subjects || []).join(', ') || 'nessuna'}
+Materie difficili: ${(prof.difficult_subjects || []).join(', ') || 'nessuna'}
+Sessioni precedenti: ${sessionHistory}
+`;
+
           finalSystemPrompt = clientSystemPrompt
-            ? `${enhancedPrompt}
+            ? `${COACH_RULES}\n\n${studentContext}\n\n${enhancedPrompt}
 
 ═══════════════════════════════════════
 CONTESTO SESSIONE SPECIFICO (prioritario)
 ═══════════════════════════════════════
 ${clientSystemPrompt}`
-            : enhancedPrompt;
+            : `${COACH_RULES}\n\n${studentContext}\n\n${enhancedPrompt}`;
 
           if (isProceduralMathSession({ messages, systemPrompt: clientSystemPrompt, subject: chatSubject })) {
             finalSystemPrompt += `\n\n${buildProceduralMathUniversalPrompt(lang || "it")}`;
