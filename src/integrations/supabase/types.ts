@@ -275,6 +275,50 @@ export type Database = {
           },
         ]
       }
+      coach_progress: {
+        Row: {
+          completed_at: string
+          created_at: string
+          id: string
+          learned: string[] | null
+          score: number | null
+          struggled: string[] | null
+          subject: string
+          topic: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          learned?: string[] | null
+          score?: number | null
+          struggled?: string[] | null
+          subject: string
+          topic?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          learned?: string[] | null
+          score?: number | null
+          struggled?: string[] | null
+          subject?: string
+          topic?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_sessions: {
         Row: {
           created_at: string | null
