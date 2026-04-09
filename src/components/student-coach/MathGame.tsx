@@ -1,8 +1,6 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   DndContext,
-  DragEndEvent,
-  DragStartEvent,
   DragOverlay,
   useDraggable,
   useDroppable,
@@ -11,99 +9,107 @@ import {
   useSensors,
   useSensor,
 } from "@dnd-kit/core";
+import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { fireConfetti, playCorrectSound } from "@/lib/confetti";
+import confetti from "canvas-confetti";
 
-/* ───────── types ───────── */
-type MathOp = "divisione" | "moltiplicazione" | "addizione" | "sottrazione";
-
+/* ─── Types ─── */
+export type MathOperation = "divisione" | "moltiplicazione" | "addizione" | "sottrazione";
 interface MathGameProps {
-  operation: MathOp;
-  a: number; // first operand
-  b: number; // second operand
-  onAnswer: (answer: number) => void;
+  operation: MathOperation;
+  a: number;
+  b: number;
+  onAnswer: (result: number) => void;
   onClose: () => void;
 }
 
-/* ───────── emoji sets ───────── */
-const EMOJI_SETS = ["🍬", "🍎", "⭐", "⚽"];
+/* ─── Emoji sets ─── */
+const EMOJI_SETS = ["🍬", "🍎", "⭐", "⚽", "🍕", "📚", "🎈", "🍪"];
 function pickEmoji() {
   return EMOJI_SETS[Math.floor(Math.random() * EMOJI_SETS.length)];
 }
 
-/* ───────── sounds ───────── */
+/* ─── Sounds via Web Audio API ─── */
 function playDropSound() {
   try {
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+    osc.connect(gain); gain.connect(ctx.destination);
     osc.type = "sine";
-    osc.frequency.setValueAtTime(440, ctx.currentTime);
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    osc.frequency.setValueAtTime(520, ctx.currentTime);
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.15);
+    osc.start(); osc.stop(ctx.currentTime + 0.15);
   } catch {}
 }
+function playCorrectSound() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    [440, 550, 660].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.1);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime + i * 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.2);
+      osc.start(ctx.currentTime + i * 0.1);
+      osc.stop(ctx.currentTime + i * 0.1 + 0.2);
+    });
+  } catch {}
+}
+function fireConfetti() {
+  confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+}
 
-/* ───────── DraggableItem ───────── */
+/* ─── DraggableItem ─── */
 function DraggableItem({ id, emoji, isDragging }: { id: string; emoji: string; isDragging: boolean }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id });
-  const style: React.CSSProperties = {
-    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-    opacity: isDragging ? 0.3 : 1,
-    touchAction: "none",
-  };
-
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      {...listeners}
       {...attributes}
-      className="w-11 h-11 flex items-center justify-center text-2xl cursor-grab active:cursor-grabbing select-none rounded-xl bg-white/80 dark:bg-slate-800/80 shadow-sm border border-border/40 transition-transform"
+      {...listeners}
+      style={{
+        transform: transform ? `translate3d(${transform.x}px,${transform.y}px,0)` : undefined,
+        opacity: isDragging ? 0.3 : 1,
+        touchAction: "none",
+        cursor: "grab",
+      }}
+      className="w-12 h-12 rounded-xl border-2 border-border bg-background flex items-center justify-center text-2xl select-none"
     >
       {emoji}
     </div>
   );
 }
 
-/* ───────── DroppableBucket ───────── */
+/* ─── DroppableBucket ─── */
 function DroppableBucket({ id, items, emoji, label }: { id: string; items: string[]; emoji: string; label: string }) {
   const { isOver, setNodeRef } = useDroppable({ id });
-
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col items-center gap-1 p-3 min-w-[80px] min-h-[100px] rounded-2xl border-2 border-dashed transition-colors ${
-        isOver ? "border-primary bg-primary/10" : "border-muted-foreground/30 bg-muted/30"
+      className={`flex flex-col items-center gap-1 rounded-2xl border-2 p-3 min-w-[80px] min-h-[100px] transition-colors ${
+        isOver ? "border-primary bg-primary/10" : "border-dashed border-muted-foreground/40 bg-muted/20"
       }`}
     >
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <div className="flex flex-wrap gap-1 justify-center flex-1 items-center">
+      <div className="flex flex-wrap gap-1 justify-center">
         {items.map((itemId) => (
-          <motion.span
-            key={itemId}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="text-2xl"
-          >
-            {emoji}
-          </motion.span>
+          <span key={itemId} className="text-xl">{emoji}</span>
         ))}
       </div>
-      <span className="text-sm font-bold text-foreground">{items.length}</span>
+      <span className="text-lg font-bold text-primary mt-auto">{items.length}</span>
     </div>
   );
 }
 
-/* ───────── ClickableGrid (for multiplication) ───────── */
-function ClickableGrid({ rows, cols, emoji, onComplete }: { rows: number; cols: number; emoji: string; onComplete: (total: number) => void }) {
-  const [filled, setFilled] = useState<boolean[][]>(
+/* ─── MultiplicationGrid ─── */
+function MultiplicationGrid({ rows, cols, emoji, onComplete }: {
+  rows: number; cols: number; emoji: string; onComplete: (total: number) => void;
+}) {
+  const [filled, setFilled] = useState(() =>
     Array.from({ length: rows }, () => Array(cols).fill(false))
   );
   const total = filled.flat().filter(Boolean).length;
@@ -111,39 +117,33 @@ function ClickableGrid({ rows, cols, emoji, onComplete }: { rows: number; cols: 
 
   useEffect(() => {
     if (allFilled) {
-      playCorrectSound();
-      fireConfetti();
-      const timer = setTimeout(() => onComplete(rows * cols), 800);
-      return () => clearTimeout(timer);
+      playCorrectSound(); fireConfetti();
+      setTimeout(() => onComplete(rows * cols), 800);
     }
   }, [allFilled, rows, cols, onComplete]);
 
-  const handleClick = (r: number, c: number) => {
-    if (filled[r][c]) return;
-    playDropSound();
-    setFilled((prev) => {
-      const next = prev.map((row) => [...row]);
-      next[r][c] = true;
-      return next;
-    });
-  };
-
   return (
-    <div className="flex flex-col items-center gap-2">
-      <p className="text-sm text-muted-foreground font-medium">
-        Clicca per riempire {rows} righe da {cols} — Totale: <span className="font-bold text-foreground">{total}</span>
+    <div className="flex flex-col gap-2">
+      <p className="text-sm text-muted-foreground text-center">
+        Clicca per riempire {rows} righe da {cols} — Totale: {total}
       </p>
       <div className="flex flex-col gap-1">
         {filled.map((row, r) => (
-          <div key={r} className="flex gap-1">
+          <div key={r} className="flex gap-1 justify-center">
             {row.map((on, c) => (
               <button
                 key={c}
-                onClick={() => handleClick(r, c)}
+                onClick={() => {
+                  if (on) return;
+                  playDropSound();
+                  setFilled(prev => {
+                    const next = prev.map(row => [...row]);
+                    next[r][c] = true;
+                    return next;
+                  });
+                }}
                 className={`w-11 h-11 rounded-xl border-2 text-2xl flex items-center justify-center transition-all ${
-                  on
-                    ? "bg-primary/10 border-primary scale-100"
-                    : "bg-muted/30 border-dashed border-muted-foreground/30 hover:border-primary/50"
+                  on ? "bg-primary/10 border-primary" : "bg-muted/30 border-dashed border-muted-foreground/30 hover:border-primary/50"
                 }`}
               >
                 {on ? emoji : ""}
@@ -153,127 +153,100 @@ function ClickableGrid({ rows, cols, emoji, onComplete }: { rows: number; cols: 
         ))}
       </div>
       {allFilled && (
-        <motion.p initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-lg font-bold text-primary">
-          {rows} × {cols} = {rows * cols} ✅
-        </motion.p>
+        <p className="text-center font-bold text-primary">{rows} × {cols} = {rows * cols} ✅</p>
       )}
     </div>
   );
 }
 
-/* ───────── AdditionMerge ───────── */
-function AdditionMerge({ a, b, emoji, onComplete }: { a: number; b: number; emoji: string; onComplete: (total: number) => void }) {
+/* ─── AdditionGame ─── */
+function AdditionGame({ a, b, emoji, onComplete }: { a: number; b: number; emoji: string; onComplete: (total: number) => void }) {
   const [merged, setMerged] = useState(false);
-
   const handleMerge = () => {
     if (merged) return;
-    setMerged(true);
-    playCorrectSound();
-    fireConfetti();
+    setMerged(true); playCorrectSound(); fireConfetti();
     setTimeout(() => onComplete(a + b), 800);
   };
-
   return (
-    <div className="flex flex-col items-center gap-4">
-      <p className="text-sm text-muted-foreground font-medium">
-        Unisci i due gruppi: quanti sono in totale?
-      </p>
-      <div className="flex gap-4 items-end">
+    <div className="flex flex-col gap-3 items-center">
+      <p className="text-sm text-muted-foreground">Unisci i due gruppi!</p>
+      <div className="flex items-center gap-4">
         <div className="flex flex-col items-center gap-1">
-          <div className="flex flex-wrap gap-1 justify-center max-w-[140px]">
-            {Array.from({ length: a }, (_, i) => (
-              <span key={`a-${i}`} className="text-2xl">{emoji}</span>
-            ))}
+          <div className="flex flex-wrap gap-1 justify-center max-w-[120px]">
+            {Array.from({ length: a }, (_, i) => <span key={i} className="text-2xl">{emoji}</span>)}
           </div>
-          <span className="text-sm font-bold">{a}</span>
+          <span className="font-bold">{a}</span>
         </div>
-        <span className="text-2xl font-bold text-muted-foreground mb-4">+</span>
+        <span className="text-2xl font-bold text-primary">+</span>
         <div className="flex flex-col items-center gap-1">
-          <div className="flex flex-wrap gap-1 justify-center max-w-[140px]">
-            {Array.from({ length: b }, (_, i) => (
-              <span key={`b-${i}`} className="text-2xl">{emoji}</span>
-            ))}
+          <div className="flex flex-wrap gap-1 justify-center max-w-[120px]">
+            {Array.from({ length: b }, (_, i) => <span key={i} className="text-2xl">{emoji}</span>)}
           </div>
-          <span className="text-sm font-bold">{b}</span>
+          <span className="font-bold">{b}</span>
         </div>
       </div>
       {!merged ? (
-        <Button onClick={handleMerge} className="mt-2">
+        <button onClick={handleMerge} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground font-medium">
           Unisci i gruppi! 🤝
-        </Button>
+        </button>
       ) : (
-        <motion.p initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-lg font-bold text-primary">
-          {a} + {b} = {a + b} ✅
-        </motion.p>
+        <p className="text-center font-bold text-primary text-lg">{a} + {b} = {a + b} ✅</p>
       )}
     </div>
   );
 }
 
-/* ───────── SubtractionGame ───────── */
+/* ─── SubtractionGame ─── */
 function SubtractionGame({ a, b, emoji, onComplete }: { a: number; b: number; emoji: string; onComplete: (total: number) => void }) {
   const [removed, setRemoved] = useState<Set<number>>(new Set());
-  const remaining = a - removed.size;
   const done = removed.size === b;
 
   useEffect(() => {
     if (done) {
-      playCorrectSound();
-      fireConfetti();
-      const timer = setTimeout(() => onComplete(a - b), 800);
-      return () => clearTimeout(timer);
+      playCorrectSound(); fireConfetti();
+      setTimeout(() => onComplete(a - b), 800);
     }
   }, [done, a, b, onComplete]);
 
-  const handleRemove = (idx: number) => {
-    if (removed.has(idx) || done) return;
-    playDropSound();
-    setRemoved((prev) => new Set(prev).add(idx));
-  };
-
   return (
-    <div className="flex flex-col items-center gap-3">
-      <p className="text-sm text-muted-foreground font-medium">
-        Togli {b} oggetti! Toccali per rimuoverli. Rimasti: <span className="font-bold text-foreground">{remaining}</span>
-      </p>
-      <div className="flex flex-wrap gap-1 justify-center max-w-[280px]">
+    <div className="flex flex-col gap-2 items-center">
+      <p className="text-sm text-muted-foreground">Tocca {b} oggetti per rimuoverli! Rimasti: {a - removed.size}</p>
+      <div className="flex flex-wrap gap-2 justify-center max-w-[300px]">
         {Array.from({ length: a }, (_, i) => (
           <motion.button
             key={i}
-            onClick={() => handleRemove(i)}
+            onClick={() => {
+              if (removed.has(i) || done) return;
+              playDropSound();
+              setRemoved(prev => new Set(prev).add(i));
+            }}
             animate={{ scale: removed.has(i) ? 0 : 1, opacity: removed.has(i) ? 0 : 1 }}
-            className="w-11 h-11 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-border/40 text-2xl flex items-center justify-center"
+            className="w-11 h-11 rounded-xl border border-border bg-background text-2xl flex items-center justify-center"
           >
             {emoji}
           </motion.button>
         ))}
       </div>
-      {done && (
-        <motion.p initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-lg font-bold text-primary">
-          {a} - {b} = {a - b} ✅
-        </motion.p>
-      )}
+      {done && <p className="font-bold text-primary">{a} - {b} = {a - b} ✅</p>}
     </div>
   );
 }
 
 /* ═══════════════════════════════════
    MAIN COMPONENT
-   ═══════════════════════════════════ */
+═══════════════════════════════════ */
 export function MathGame({ operation, a, b, onAnswer, onClose }: MathGameProps) {
   const emoji = useMemo(pickEmoji, []);
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  // Division state
-  const totalItems = operation === "divisione" ? a : 0;
-  const numBuckets = operation === "divisione" ? b : 0;
+  /* Division state */
   const [buckets, setBuckets] = useState<Record<string, string[]>>(() => {
     const bk: Record<string, string[]> = {};
-    for (let i = 0; i < numBuckets; i++) bk[`bucket-${i}`] = [];
+    for (let i = 0; i < b; i++) bk[`bucket-${i}`] = [];
     return bk;
   });
-  const [availableItems, setAvailableItems] = useState<string[]>(() =>
-    Array.from({ length: totalItems }, (_, i) => `item-${i}`)
+  const [availableItems, setAvailableItems] = useState(() =>
+    Array.from({ length: a }, (_, i) => `item-${i}`)
   );
   const [divisionDone, setDivisionDone] = useState(false);
 
@@ -282,126 +255,87 @@ export function MathGame({ operation, a, b, onAnswer, onClose }: MathGameProps) 
     useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 5 } })
   );
 
-  // Check division completion
   useEffect(() => {
     if (operation !== "divisione" || divisionDone) return;
-    if (availableItems.length === 0 && totalItems > 0) {
+    if (availableItems.length === 0 && a > 0) {
       setDivisionDone(true);
-      playCorrectSound();
-      fireConfetti();
-      const perBucket = Math.floor(a / b);
-      setTimeout(() => onAnswer(perBucket), 800);
+      playCorrectSound(); fireConfetti();
+      setTimeout(() => onAnswer(Math.floor(a / b)), 800);
     }
-  }, [availableItems, operation, divisionDone, a, b, totalItems, onAnswer]);
+  }, [availableItems, operation, divisionDone, a, b, onAnswer]);
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-  };
-
+  const handleDragStart = (event: DragStartEvent) => setActiveId(event.active.id as string);
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveId(null);
     const { active, over } = event;
-    if (!over) return;
-    const itemId = active.id as string;
-    const bucketId = over.id as string;
-    if (!buckets[bucketId]) return;
-
+    if (!over || !buckets[over.id as string]) return;
     playDropSound();
-    setAvailableItems((prev) => prev.filter((id) => id !== itemId));
-    setBuckets((prev) => ({
-      ...prev,
-      [bucketId]: [...prev[bucketId], itemId],
-    }));
+    setAvailableItems(prev => prev.filter(id => id !== active.id));
+    setBuckets(prev => ({ ...prev, [over.id as string]: [...prev[over.id as string], active.id as string] }));
   };
 
-  const handleAnswer = useCallback((ans: number) => {
-    onAnswer(ans);
-  }, [onAnswer]);
-
-  const operationLabel = {
-    divisione: `${a} ÷ ${b}`,
-    moltiplicazione: `${a} × ${b}`,
-    addizione: `${a} + ${b}`,
-    sottrazione: `${a} - ${b}`,
-  }[operation];
+  const label = { divisione: `${a} ÷ ${b}`, moltiplicazione: `${a} × ${b}`, addizione: `${a} + ${b}`, sottrazione: `${a} - ${b}` }[operation];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      className="relative bg-card border border-border rounded-2xl p-4 shadow-lg"
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-bold text-foreground">
-          🎮 Gioco: {operationLabel}
-        </h3>
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 20 }}
+        className="rounded-2xl border border-border bg-background shadow-lg p-4 mx-2 mb-2"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="font-semibold text-sm">🎮 Gioco: {label}</span>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-lg leading-none">✕</button>
+        </div>
 
-      {/* Division game */}
-      {operation === "divisione" && (
-        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className="flex flex-col gap-4">
-            {/* Available items */}
-            <div className="flex flex-col items-center gap-2">
-              <p className="text-sm text-muted-foreground font-medium">
-                Trascina le {emoji} nei cestini ({availableItems.length} rimaste)
-              </p>
-              <div className="flex flex-wrap gap-1 justify-center max-w-[300px]">
-                {availableItems.map((id) => (
-                  <DraggableItem key={id} id={id} emoji={emoji} isDragging={activeId === id} />
+        {/* Division */}
+        {operation === "divisione" && (
+          <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+            <div className="flex flex-col gap-3">
+              <div className="rounded-xl border border-border bg-muted/20 p-3">
+                <p className="text-xs text-muted-foreground mb-2 text-center">
+                  Trascina le {emoji} nei cestini ({availableItems.length} rimaste)
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center min-h-[52px]">
+                  {availableItems.map(id => (
+                    <DraggableItem key={id} id={id} emoji={emoji} isDragging={activeId === id} />
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2 justify-center flex-wrap">
+                {Object.entries(buckets).map(([bucketId, items], idx) => (
+                  <DroppableBucket key={bucketId} id={bucketId} items={items} emoji={emoji} label={`Gruppo ${idx + 1}`} />
                 ))}
               </div>
+              {divisionDone && (
+                <p className="text-center font-bold text-primary">
+                  {Math.floor(a / b)} {emoji} per gruppo! ✅
+                </p>
+              )}
             </div>
+            <DragOverlay>
+              {activeId ? <span className="text-3xl">{emoji}</span> : null}
+            </DragOverlay>
+          </DndContext>
+        )}
 
-            {/* Buckets */}
-            <div className="flex gap-2 justify-center flex-wrap">
-              {Object.entries(buckets).map(([bucketId, items], idx) => (
-                <DroppableBucket
-                  key={bucketId}
-                  id={bucketId}
-                  items={items}
-                  emoji={emoji}
-                  label={`Cesto ${idx + 1}`}
-                />
-              ))}
-            </div>
+        {/* Multiplication */}
+        {operation === "moltiplicazione" && (
+          <MultiplicationGrid rows={a} cols={b} emoji={emoji} onComplete={onAnswer} />
+        )}
 
-            {divisionDone && (
-              <motion.p initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-center text-lg font-bold text-primary">
-                {Math.floor(a / b)} {emoji} per cesto! ✅
-              </motion.p>
-            )}
-          </div>
+        {/* Addition */}
+        {operation === "addizione" && (
+          <AdditionGame a={a} b={b} emoji={emoji} onComplete={onAnswer} />
+        )}
 
-          <DragOverlay>
-            {activeId ? (
-              <div className="w-11 h-11 flex items-center justify-center text-2xl scale-125 rounded-xl bg-white shadow-lg border-2 border-primary">
-                {emoji}
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-      )}
-
-      {/* Multiplication game */}
-      {operation === "moltiplicazione" && (
-        <ClickableGrid rows={a} cols={b} emoji={emoji} onComplete={handleAnswer} />
-      )}
-
-      {/* Addition game */}
-      {operation === "addizione" && (
-        <AdditionMerge a={a} b={b} emoji={emoji} onComplete={handleAnswer} />
-      )}
-
-      {/* Subtraction game */}
-      {operation === "sottrazione" && (
-        <SubtractionGame a={a} b={b} emoji={emoji} onComplete={handleAnswer} />
-      )}
-    </motion.div>
+        {/* Subtraction */}
+        {operation === "sottrazione" && (
+          <SubtractionGame a={a} b={b} emoji={emoji} onComplete={onAnswer} />
+        )}
+      </motion.div>
+    </AnimatePresence>
   );
 }
