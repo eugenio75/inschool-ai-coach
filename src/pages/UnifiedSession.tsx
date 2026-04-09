@@ -143,6 +143,38 @@ export default function UnifiedSession() {
   const [studyFamiliarityDone, setStudyFamiliarityDone] = useState(false);
   const sessionStartRef = useRef<number>(Date.now());
 
+  // MathGame state for elementary students
+  const [mathGame, setMathGame] = useState<{ operation: "divisione" | "moltiplicazione" | "addizione" | "sottrazione"; a: number; b: number } | null>(null);
+  const isElementary = profile?.age ? (profile.age >= 6 && profile.age <= 11) : (schoolLevel?.includes("primaria") || schoolLevel === "alunno");
+
+  // Detect math operations from coach messages to show MathGame
+  useEffect(() => {
+    if (!isElementary || messages.length === 0) return;
+    const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
+    if (!lastAssistant) return;
+    const text = lastAssistant.content.toLowerCase();
+    // Only trigger game when coach asks a division/mult/add/sub question with small numbers
+    const divMatch = text.match(/(\d+)\s*(?:÷|diviso|:)\s*(\d+)/);
+    const mulMatch = text.match(/(\d+)\s*(?:×|x|per)\s*(\d+)/);
+    const addMatch = text.match(/(\d+)\s*\+\s*(\d+)/);
+    const subMatch = text.match(/(\d+)\s*(?:-|meno)\s*(\d+)/);
+
+    let detected: typeof mathGame = null;
+    if (divMatch && parseInt(divMatch[1]) <= 20 && parseInt(divMatch[2]) <= 10) {
+      detected = { operation: "divisione", a: parseInt(divMatch[1]), b: parseInt(divMatch[2]) };
+    } else if (mulMatch && parseInt(mulMatch[1]) <= 10 && parseInt(mulMatch[2]) <= 10) {
+      detected = { operation: "moltiplicazione", a: parseInt(mulMatch[1]), b: parseInt(mulMatch[2]) };
+    } else if (addMatch && parseInt(addMatch[1]) <= 20 && parseInt(addMatch[2]) <= 20) {
+      detected = { operation: "addizione", a: parseInt(addMatch[1]), b: parseInt(addMatch[2]) };
+    } else if (subMatch && parseInt(subMatch[1]) <= 20 && parseInt(subMatch[2]) <= 20) {
+      detected = { operation: "sottrazione", a: parseInt(subMatch[1]), b: parseInt(subMatch[2]) };
+    }
+
+    if (detected && detected.a > 0 && detected.b > 0) {
+      setMathGame(detected);
+    }
+  }, [messages, isElementary]);
+
   // Load coach name from preferences
   useEffect(() => {
     const loadCoachName = async () => {
