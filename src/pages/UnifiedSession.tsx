@@ -223,12 +223,27 @@ export default function UnifiedSession() {
       if (fromTopic) { setMathGame(fromTopic); return; }
     }
 
-    // Then try from last assistant message
-    if (messages.length > 0) {
-      const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
-      if (lastAssistant) {
-        const detected = detectFromText(lastAssistant.content);
-        if (detected && !mathGame) setMathGame(detected);
+    // Then try from any assistant message (check all, not just last)
+    if (messages.length > 0 && !mathGame) {
+      for (const msg of messages) {
+        if (msg.role !== "assistant") continue;
+        // Also check COLONNA tags for numbers
+        const colonnaMatch = msg.content.match(/\[COLONNA:\s*tipo=(\w+),\s*numeri=(\d+),(\d+)/i);
+        if (colonnaMatch) {
+          const tipoMap: Record<string, typeof mathGame extends null ? never : NonNullable<typeof mathGame>["operation"]> = {
+            divisione: "divisione", moltiplicazione: "moltiplicazione",
+            addizione: "addizione", sottrazione: "sottrazione",
+          };
+          const op = tipoMap[colonnaMatch[1].toLowerCase()];
+          const a = parseInt(colonnaMatch[2]);
+          const b = parseInt(colonnaMatch[3]);
+          if (op && a <= 30 && b <= 10) {
+            setMathGame({ operation: op, a, b });
+            return;
+          }
+        }
+        const detected = detectFromText(msg.content);
+        if (detected) { setMathGame(detected); return; }
       }
     }
   }, [messages, isElementary, topic]);
