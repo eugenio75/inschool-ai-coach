@@ -1715,7 +1715,8 @@ serve(async (req) => {
 
     // Build enhanced system prompt if profileId is provided
     const clientSystemPrompt = systemPrompt || "";
-    let finalSystemPrompt = clientSystemPrompt;
+    // ALWAYS start with COACH_RULES — no bypass possible
+    let finalSystemPrompt = `${COACH_RULES}\n\n${clientSystemPrompt}`;
 
     if (profileId) {
       try {
@@ -1896,6 +1897,9 @@ CONTESTO SESSIONE SPECIFICO (prioritario)
 ═══════════════════════════════════════
 ${clientSystemPrompt}`
             : `${COACH_RULES}\n\n${studentContext}\n\n${enhancedPrompt}`;
+          
+          // Verify COACH_RULES are present
+          console.log('COACH_RULES present in final prompt:', finalSystemPrompt.startsWith(COACH_RULES.substring(0, 50)));
 
           if (isProceduralMathSession({ messages, systemPrompt: clientSystemPrompt, subject: chatSubject })) {
             finalSystemPrompt += `\n\n${buildProceduralMathUniversalPrompt(lang || "it")}`;
@@ -1903,12 +1907,12 @@ ${clientSystemPrompt}`
 
           // Debug logging for coach rules verification
           console.log('=== COACH SYSTEM PROMPT PREVIEW ===');
-          console.log('RULES loaded:', finalSystemPrompt.includes('REGOLA 1'));
-          console.log('Anti-spoiler loaded:', finalSystemPrompt.includes('ANTI-SPOILER'));
+          console.log('COACH_RULES loaded:', finalSystemPrompt.includes('ABSOLUTE OVERRIDE'));
+          console.log('NEVER give answer loaded:', finalSystemPrompt.includes('NEVER give the answer'));
           console.log('Student context:', studentContext.substring(0, 300));
           console.log('Total prompt length:', finalSystemPrompt.length);
-          console.log('Prompt order check - RULES position:', finalSystemPrompt.indexOf('ANTI-SPOILER'));
-          console.log('Prompt order check - Mr Ranedeer position:', finalSystemPrompt.indexOf('Mr. Ranedeer'));
+          console.log('COACH_RULES position:', finalSystemPrompt.indexOf('ABSOLUTE OVERRIDE'));
+          console.log('Mr Ranedeer position:', finalSystemPrompt.indexOf('Mr. Ranedeer'));
           console.log('===================================');
         }
       } catch (e) {
