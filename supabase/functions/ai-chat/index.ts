@@ -1889,14 +1889,58 @@ Sessioni precedenti: ${sessionHistory}
 Progressi coach (ultimi argomenti): ${progressSummary}
 `;
 
+          // Pre-calculate math if topic contains a division/operation
+          let mathContext = '';
+          const allText = (clientSystemPrompt || '') + ' ' + messages.map((m: any) => typeof m.content === 'string' ? m.content : '').join(' ');
+          const mathMatch = allText.match(/(\d+)\s*(?:diviso|÷|:)\s*(\d+)/i);
+          if (mathMatch) {
+            const dividendo = parseInt(mathMatch[1]);
+            const divisore = parseInt(mathMatch[2]);
+            const dividendoStr = String(dividendo);
+            let resto = 0;
+            const passi: Array<{cifra_dividendo: number; quoziente_parziale: number; prodotto: number; resto_parziale: number}> = [];
+            let quoziente = 0;
+            for (let i = 0; i < dividendoStr.length; i++) {
+              const cifra = parseInt(dividendoStr[i]);
+              const corrente = resto * 10 + cifra;
+              const q = Math.floor(corrente / divisore);
+              const p = q * divisore;
+              const r = corrente - p;
+              passi.push({ cifra_dividendo: corrente, quoziente_parziale: q, prodotto: p, resto_parziale: r });
+              quoziente = quoziente * 10 + q;
+              resto = r;
+            }
+            mathContext = `
+VERITÀ MATEMATICA PRECALCOLATA (USA QUESTI VALORI ESATTI — NON CALCOLARE MAI DA SOLO):
+Operazione: ${dividendo} ÷ ${divisore}
+Quoziente: ${quoziente}
+Resto: ${resto}
+Passi:
+${passi.map((p, i) => `Passo ${i+1}: considero ${p.cifra_dividendo}, ci sta ${p.quoziente_parziale} volte, ${p.quoziente_parziale}×${divisore}=${p.prodotto}, resto ${p.resto_parziale}`).join('\n')}
+IMPORTANTE: Usa SOLO questi valori nei tuoi messaggi. Non calcolare mai da solo — usa questa tabella.
+`;
+            console.log('Math pre-calculation:', mathContext);
+          }
+
+          // Check for multiplication
+          const mulMatch = !mathMatch && allText.match(/(\d+)\s*(?:per|×|x)\s*(\d+)/i);
+          if (mulMatch) {
+            const a = parseInt(mulMatch[1]);
+            const b = parseInt(mulMatch[2]);
+            mathContext = `
+VERITÀ MATEMATICA PRECALCOLATA: ${a} × ${b} = ${a * b}
+USA SOLO questo valore. Non calcolare mai da solo.
+`;
+          }
+
           finalSystemPrompt = clientSystemPrompt
-            ? `${COACH_RULES}\n\n${studentContext}\n\n${enhancedPrompt}
+            ? `${COACH_RULES}\n\n${mathContext}\n\n${studentContext}\n\n${enhancedPrompt}
 
 ═══════════════════════════════════════
 CONTESTO SESSIONE SPECIFICO (prioritario)
 ═══════════════════════════════════════
 ${clientSystemPrompt}`
-            : `${COACH_RULES}\n\n${studentContext}\n\n${enhancedPrompt}`;
+            : `${COACH_RULES}\n\n${mathContext}\n\n${studentContext}\n\n${enhancedPrompt}`;
           
           // Verify COACH_RULES are present
           console.log('COACH_RULES present in final prompt:', finalSystemPrompt.startsWith(COACH_RULES.substring(0, 50)));
