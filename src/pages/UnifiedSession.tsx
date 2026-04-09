@@ -147,7 +147,7 @@ export default function UnifiedSession() {
   const [mathGame, setMathGame] = useState<{ operation: "divisione" | "moltiplicazione" | "addizione" | "sottrazione"; a: number; b: number } | null>(null);
   const isElementary = profile?.age ? (profile.age >= 6 && profile.age <= 11) : (schoolLevel?.includes("primaria") || schoolLevel === "alunno");
 
-  // SVG reveal state from coach markers
+  // SVG reveal state from coach markers (connected to ColumnOperation via exerciseSteps in ChatShell)
   const [svgElements, setSvgElements] = useState<Array<{element: string; value: string; color: string}>>([]);
   useEffect(() => {
     const handler = (e: Event) => {
@@ -157,6 +157,14 @@ export default function UnifiedSession() {
     window.addEventListener('svgReveal', handler);
     return () => window.removeEventListener('svgReveal', handler);
   }, []);
+
+  // Reset svgElements when session starts or new exercise detected
+  useEffect(() => {
+    if (!setupDone) {
+      setSvgElements([]);
+      setMathGame(null);
+    }
+  }, [setupDone]);
 
   // Detect math operations from TOPIC first, then from coach messages
   useEffect(() => {
@@ -224,6 +232,18 @@ export default function UnifiedSession() {
       }
     }
   }, [messages, isElementary, topic]);
+
+  // Reset svgElements when coach starts a new exercise
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
+    if (!lastAssistant) return;
+    const text = lastAssistant.content.toLowerCase();
+    if (/altro esercizio|prossimo esercizio|nuovo problema|adesso prova|proviamo un altro|ora prova questo/i.test(text)) {
+      setSvgElements([]);
+      setMathGame(null);
+    }
+  }, [messages]);
 
   // Load coach name from preferences
   useEffect(() => {
