@@ -33,6 +33,8 @@ import { Button } from "@/components/ui/button";
 import { PageBackButton } from "@/components/shared/PageBackButton";
 import { ChallengeSession } from "@/components/study/ChallengeSession";
 import { GameSession } from "@/components/study/GameSession";
+import { MathGame } from "@/components/student-coach/MathGame";
+import { AnimatePresence } from "framer-motion";
 
 import { getSubjectsByLevel } from "@/lib/subjectsByLevel";
 import {
