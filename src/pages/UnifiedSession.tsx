@@ -153,15 +153,62 @@ export default function UnifiedSession() {
     const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
     if (!lastAssistant) return;
     const text = lastAssistant.content.toLowerCase();
-    // Only trigger game when coach asks a division/mult/add/sub question with small numbers
-    const divMatch = text.match(/(\d+)\s*(?:÷|diviso|:)\s*(\d+)/);
-    const mulMatch = text.match(/(\d+)\s*(?:×|x|per)\s*(\d+)/);
-    const addMatch = text.match(/(\d+)\s*\+\s*(\d+)/);
-    const subMatch = text.match(/(\d+)\s*(?:-|meno)\s*(\d+)/);
+
+    // Try to parse JSON responses first (coach may respond in JSON format)
+    let parsedText = text;
+    try {
+      const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      const json = JSON.parse(cleaned);
+      parsedText = [json.socratic_question, json.hint_if_needed, json.confirm_if_correct].filter(Boolean).join(' ').toLowerCase();
+    } catch { /* not JSON, use raw text */ }
+
+    // Multiple patterns for each operation (symbol + natural language Italian)
+    const divPatterns = [
+      /(\d+)\s*(?:÷|diviso|:)\s*(\d+)/,
+      /dividere\s+(\d+)\s+(?:per|in)\s+(\d+)/,
+      /(\d+)\s+diviso\s+(\d+)/,
+      /quante volte.+?(\d+).+?nel.+?(\d+)/,
+      /(\d+)\s+(?:caramelle|oggetti|palloni|stelle|mele).+?(\d+)\s+(?:cest|grupp|part)/,
+    ];
+    const mulPatterns = [
+      /(\d+)\s*(?:×|x|per)\s*(\d+)/,
+      /moltiplicare?\s+(\d+)\s+per\s+(\d+)/,
+      /(\d+)\s+per\s+(\d+)/,
+      /(\d+)\s+righe?\s+(?:da|di)\s+(\d+)/,
+    ];
+    const addPatterns = [
+      /(\d+)\s*\+\s*(\d+)/,
+      /(\d+)\s+più\s+(\d+)/,
+      /sommare?\s+(\d+)\s+(?:e|a|con)\s+(\d+)/,
+    ];
+    const subPatterns = [
+      /(\d+)\s*(?:-|meno)\s*(\d+)/,
+      /(\d+)\s+meno\s+(\d+)/,
+      /sottrarre?\s+(\d+)\s+(?:da|a)\s+(\d+)/,
+      /togli(?:ere?)?\s+(\d+)\s+(?:da|a)\s+(\d+)/,
+    ];
+
+    function tryMatch(patterns: RegExp[], txt: string): RegExpMatchArray | null {
+      for (const p of patterns) {
+        const m = txt.match(p);
+        if (m) return m;
+      }
+      return null;
+    }
+
+    const divMatch = tryMatch(divPatterns, parsedText);
+    const mulMatch = tryMatch(mulPatterns, parsedText);
+    const addMatch = tryMatch(addPatterns, parsedText);
+    const subMatch = tryMatch(subPatterns, parsedText);
 
     let detected: typeof mathGame = null;
-    if (divMatch && parseInt(divMatch[1]) <= 20 && parseInt(divMatch[2]) <= 10) {
-      detected = { operation: "divisione", a: parseInt(divMatch[1]), b: parseInt(divMatch[2]) };
+    // For "quante volte X nel Y" pattern, the numbers are reversed (divisor first, then dividend)
+    if (divMatch) {
+      let a = parseInt(divMatch[2] || divMatch[1]);
+      let b = parseInt(divMatch[1] || divMatch[2]);
+      // Ensure a > b (dividend > divisor)
+      if (a < b) [a, b] = [b, a];
+      if (a <= 20 && b <= 10) detected = { operation: "divisione", a, b };
     } else if (mulMatch && parseInt(mulMatch[1]) <= 10 && parseInt(mulMatch[2]) <= 10) {
       detected = { operation: "moltiplicazione", a: parseInt(mulMatch[1]), b: parseInt(mulMatch[2]) };
     } else if (addMatch && parseInt(addMatch[1]) <= 20 && parseInt(addMatch[2]) <= 20) {
