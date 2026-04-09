@@ -33,22 +33,8 @@ function parseCoachJsonResponse(raw: string): string {
     } catch { /* not JSON */ }
   }
 
-  // Parse and emit SVG_REVEAL marker, then strip it from displayed text
-  const svgMarker = text.match(
-    /\[SVG_REVEAL:\s*element=(\w+)\s+value=([\d.]+)\s+color=(#[A-Fa-f0-9]+)\]/
-  );
-  if (svgMarker) {
-    text = text.replace(svgMarker[0], '').trim();
-    try {
-      window.dispatchEvent(new CustomEvent('svgReveal', {
-        detail: {
-          element: svgMarker[1],
-          value: svgMarker[2],
-          color: svgMarker[3],
-        }
-      }));
-    } catch {}
-  }
+  // Strip SVG_REVEAL markers (dead code — reveal is handled by exerciseSteps + celle_compilate override)
+  text = text.replace(/\[SVG_REVEAL:\s*element=\w+\s+value=[\d.]+\s+color=#[A-Fa-f0-9]+\]/g, '').trim();
 
   return text;
 }
@@ -213,10 +199,11 @@ export function ChatShell({
       }
       const text = msg.content || "";
       const hasColonna = /\[COLONNA:/i.test(text);
+      const hasParziale = /parziale\s*=\s*true/i.test(text);
 
       if (!inExercise) {
-        // Detect exercise start: COLONNA tag + question to student
-        if (hasColonna && /prova tu|tocca a te|quanto fa|quante volte|calcola/i.test(text.toLowerCase())) {
+        // Detect exercise start: COLONNA with parziale=true, or COLONNA + question
+        if (hasColonna && (hasParziale || /prova tu|tocca a te|quanto fa|quante volte|calcola|come inizieresti/i.test(text.toLowerCase()))) {
           inExercise = true;
           step = 0;
           steps.push(step);
@@ -563,9 +550,30 @@ export function ChatShell({
       {/* Messages */}
       <div ref={scrollRef} className={`flex-1 overflow-y-auto px-4 py-4 space-y-4 ${shaking ? "animate-shake" : ""}`}>
         <AnimatePresence initial={false}>
-          {messages.map((msg, i) => {
+        {messages.map((msg, i) => {
             // Parse JSON coach responses before any other processing
-            const rawContent = msg.role === "assistant" ? parseCoachJsonResponse(msg.content || "") : (msg.content || "");
+            let rawContent = msg.role === "assistant" ? parseCoachJsonResponse(msg.content || "") : (msg.content || "");
+            // CRITICAL: Override celle_compilate with frontend-computed value
+            // This prevents the AI from revealing future steps in the SVG
+            if (msg.role === "assistant" && exerciseSteps[i] !== undefined && /\[COLONNA:/i.test(rawContent)) {
+              const step = exerciseSteps[i]!;
+              // Force parziale=true if not present
+              if (!/parziale\s*=\s*true/i.test(rawContent)) {
+                rawContent = rawContent.replace(
+                  /(\[COLONNA:\s*tipo\s*=\s*\w+\s*,\s*numeri\s*=\s*[\d,]+)/gi,
+                  '$1, parziale=true'
+                );
+              }
+              // Override celle_compilate with our computed value
+              if (/celle_compilate\s*=\s*\d+/i.test(rawContent)) {
+                rawContent = rawContent.replace(/celle_compilate\s*=\s*\d+/gi, `celle_compilate=${step}`);
+              } else {
+                rawContent = rawContent.replace(
+                  /(parziale\s*=\s*true)/gi,
+                  `$1, celle_compilate=${step}`
+                );
+              }
+            }
             const msgMood: CoachAvatarMood = msg.role === "assistant" ? detectMoodFromText(rawContent) : "default";
             const isLastAssistant = msg.role === "assistant" && i === messages.length - 1;
             // Parse inline options (👉) from assistant messages
