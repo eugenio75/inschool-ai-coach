@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { COACH_RULES } from "./coach_rules.ts";
+import { validateTutorResponse, buildRetryPrompt } from "./response_validator.ts";
+import { parseSessionState, extractExpectedAnswer } from "./step_tracker.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
