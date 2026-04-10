@@ -555,8 +555,177 @@ Inizia con la prima domanda.`;
     setSending(false);
   }
 
+  // ── Helper: get AI feedback phrase only (no numbers) ──
+  const getAiFeedback = useCallback(async (feedbackType: "correct" | "wrong" | "reveal", stepDesc: string): Promise<string> => {
+    const feedbackPrompts: Record<string, string> = {
+      correct: `Lo studente ha risposto correttamente a: "${stepDesc}". Rispondi con UNA frase breve di incoraggiamento (max 10 parole). NON menzionare numeri. Solo entusiasmo.`,
+      wrong: `Lo studente ha sbagliato la risposta a: "${stepDesc}". Rispondi con UNA frase breve di incoraggiamento a riprovare (max 10 parole). NON menzionare numeri, NON dare la risposta. Solo "Quasi! Riprova" o simile.`,
+      reveal: `Lo studente ha sbagliato più volte. Rispondi con UNA frase comprensiva tipo "Non preoccuparti, andiamo avanti!" (max 10 parole). NON menzionare numeri.`,
+    };
+    try {
+      const res = await streamChat({
+        messages: [{ role: "user", content: feedbackPrompts[feedbackType] }],
+        onDelta: () => {},
+        onDone: () => {},
+        extraBody: { profileId, maxTokens: 50, stream: false },
+      });
+      // Strip any numbers from AI feedback as safety net
+      return res.replace(/\d+/g, "").trim() || (feedbackType === "correct" ? "Esatto! ✅" : feedbackType === "wrong" ? "Quasi! Riprova 💪" : "Non preoccuparti, andiamo avanti! 💪");
+    } catch {
+      return feedbackType === "correct" ? "Esatto! ✅" : feedbackType === "wrong" ? "Quasi! Riprova 💪" : "Non preoccuparti, andiamo avanti! 💪";
+    }
+  }, [profileId]);
+
+  // ── Deterministic division step handler ──
+  const handleDivisionAnswer = useCallback(async (text: string) => {
+    if (!divExercise) return;
+    const step = divExercise.passi[divStepIndex];
+    if (!step) return;
+
+    const userMsg: ChatMsg = { role: "user", content: text };
+    setMessages(prev => [...prev, userMsg]);
+    setSending(true);
+
+    // Determine expected answer based on sub-step
+    let expected: number;
+    let stepDesc: string;
+    switch (divSubStep) {
+      case "domanda":
+        expected = step.risposta;
+        stepDesc = step.domanda;
+        break;
+      case "verifica":
+        expected = step.rispostaVerifica;
+        stepDesc = step.verifica;
+        break;
+      case "sottrazione":
+        expected = step.rispostaSottrazione;
+        stepDesc = step.sottrazione;
+        break;
+      case "abbassa":
+        expected = parseInt(String(divExercise.dividendo).split("")[divStepIndex + 1]);
+        stepDesc = step.abbassa || "";
+        break;
+      default:
+        expected = step.risposta;
+        stepDesc = step.domanda;
+    }
+
+    const isCorrect = verificaRisposta(text, expected);
+
+    if (isCorrect) {
+      const feedback = await getAiFeedback("correct", stepDesc);
+      setDivAttemptCount(0);
+
+      // Advance to next sub-step or next step
+      if (divSubStep === "domanda") {
+        setDivSubStep("verifica");
+        setMessages(prev => [...prev, { role: "assistant", content: `${feedback}\n\nOra: ${step.verifica}` }]);
+      } else if (divSubStep === "verifica") {
+        setDivSubStep("sottrazione");
+        setMessages(prev => [...prev, { role: "assistant", content: `${feedback}\n\nOra: ${step.sottrazione}` }]);
+      } else if (divSubStep === "sottrazione") {
+        if (step.abbassa) {
+          setDivSubStep("abbassa");
+          setMessages(prev => [...prev, { role: "assistant", content: `${feedback}\n\n${step.abbassa}` }]);
+        } else {
+          // Last step - show final result
+          const isLastStep = divStepIndex >= divExercise.passi.length - 1;
+          if (isLastStep) {
+            const finalMsg = `${feedback}\n\n🎉 **Abbiamo finito!**\n\n${divExercise.dividendo} ÷ ${divExercise.divisore} = **${divExercise.quoziente}**${divExercise.resto > 0 ? ` con resto **${divExercise.resto}**` : ""}\n\nBravissimo! 🌟`;
+            setMessages(prev => [...prev, { role: "assistant", content: finalMsg }]);
+            setDivExercise(null);
+          } else {
+            setDivStepIndex(prev => prev + 1);
+            setDivSubStep("domanda");
+            const nextStep = divExercise.passi[divStepIndex + 1];
+            setMessages(prev => [...prev, { role: "assistant", content: `${feedback}\n\nPasso ${divStepIndex + 2}: ${nextStep.domanda}` }]);
+          }
+        }
+      } else if (divSubStep === "abbassa") {
+        // Move to next step
+        const isLastStep = divStepIndex >= divExercise.passi.length - 1;
+        if (isLastStep) {
+          const finalMsg = `${feedback}\n\n🎉 **Abbiamo finito!**\n\n${divExercise.dividendo} ÷ ${divExercise.divisore} = **${divExercise.quoziente}**${divExercise.resto > 0 ? ` con resto **${divExercise.resto}**` : ""}\n\nBravissimo! 🌟`;
+          setMessages(prev => [...prev, { role: "assistant", content: finalMsg }]);
+          setDivExercise(null);
+        } else {
+          setDivStepIndex(prev => prev + 1);
+          setDivSubStep("domanda");
+          const nextStep = divExercise.passi[divStepIndex + 1];
+          setMessages(prev => [...prev, { role: "assistant", content: `${feedback}\n\nPasso ${divStepIndex + 2}: ${nextStep.domanda}` }]);
+        }
+      }
+    } else {
+      const newAttempts = divAttemptCount + 1;
+      setDivAttemptCount(newAttempts);
+
+      if (newAttempts >= maxDivAttempts) {
+        // Reveal answer after max attempts
+        const feedback = await getAiFeedback("reveal", stepDesc);
+        setDivAttemptCount(0);
+        setMessages(prev => [...prev, { role: "assistant", content: `${feedback}\n\nLa risposta era **${expected}**.` }]);
+        
+        // Auto-advance to next sub-step
+        if (divSubStep === "domanda") {
+          setDivSubStep("verifica");
+          setTimeout(() => {
+            setMessages(prev => [...prev, { role: "assistant", content: `Ora: ${step.verifica}` }]);
+          }, 1000);
+        } else if (divSubStep === "verifica") {
+          setDivSubStep("sottrazione");
+          setTimeout(() => {
+            setMessages(prev => [...prev, { role: "assistant", content: `Ora: ${step.sottrazione}` }]);
+          }, 1000);
+        } else if (divSubStep === "sottrazione") {
+          if (step.abbassa) {
+            setDivSubStep("abbassa");
+            setTimeout(() => {
+              setMessages(prev => [...prev, { role: "assistant", content: `${step.abbassa}` }]);
+            }, 1000);
+          } else {
+            advanceDivStep();
+          }
+        } else {
+          advanceDivStep();
+        }
+      } else {
+        const feedback = await getAiFeedback("wrong", stepDesc);
+        const hintMsg = newAttempts >= 2 ? `\n\n💡 Suggerimento: pensa a quale numero moltiplicato per ${divExercise.divisore} si avvicina di più a ${step.cifraConsiderata}...` : "";
+        setMessages(prev => [...prev, { role: "assistant", content: `${feedback}${hintMsg}` }]);
+      }
+    }
+
+    setSending(false);
+  }, [divExercise, divStepIndex, divSubStep, divAttemptCount, getAiFeedback, profileId]);
+
+  // Helper to advance to next division step
+  const advanceDivStep = useCallback(() => {
+    if (!divExercise) return;
+    const isLastStep = divStepIndex >= divExercise.passi.length - 1;
+    if (isLastStep) {
+      const finalMsg = `🎉 **Abbiamo finito!**\n\n${divExercise.dividendo} ÷ ${divExercise.divisore} = **${divExercise.quoziente}**${divExercise.resto > 0 ? ` con resto **${divExercise.resto}**` : ""}\n\nBravissimo! 🌟`;
+      setMessages(prev => [...prev, { role: "assistant", content: finalMsg }]);
+      setDivExercise(null);
+    } else {
+      setDivStepIndex(prev => prev + 1);
+      setDivSubStep("domanda");
+      const nextStep = divExercise.passi[divStepIndex + 1];
+      setTimeout(() => {
+        setMessages(prev => [...prev, { role: "assistant", content: `Passo ${divStepIndex + 2}: ${nextStep.domanda}` }]);
+      }, 1000);
+    }
+  }, [divExercise, divStepIndex]);
+
   const handleSend = useCallback((text: string) => {
     if (sending) return;
+
+    // If deterministic division is active, handle it locally
+    if (divExercise) {
+      handleDivisionAnswer(text);
+      return;
+    }
+
     const userMsg: ChatMsg = { role: "user", content: text };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
@@ -592,7 +761,7 @@ Inizia con la prima domanda.`;
       setStreamingText("");
       setSending(false);
     });
-  }, [messages, sending, profileId, subject]);
+  }, [messages, sending, profileId, subject, divExercise, handleDivisionAnswer]);
 
   async function handleEndStudySession() {
     setShowEndConfirm(false);
