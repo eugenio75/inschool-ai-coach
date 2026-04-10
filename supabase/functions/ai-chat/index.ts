@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { COACH_RULES } from "./coach_rules.ts";
+import { validateTutorResponse, buildRetryPrompt } from "./response_validator.ts";
+import { parseSessionState, extractExpectedAnswer } from "./step_tracker.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -292,8 +294,17 @@ Se lo studente esprime riferimenti a farsi del male o sparire:
 NON CHIUDERE LA CONVERSAZIONE. Rimani presente.`;
     }
 
+    // ── Analyze session state for validation ──
+    const sessionState = parseSessionState(messages);
+    const expectedAnswer = sessionState.currentStep
+      ? sessionState.currentStep.expectedAnswer || extractExpectedAnswer(mathContext, sessionState.completedSteps.length)
+      : extractExpectedAnswer(mathContext, sessionState.completedSteps.length);
+
+    const needsValidation = sessionState.inExercise && !!expectedAnswer;
+
     // ── Send to OpenAI ──
-    const shouldStream = stream !== false;
+    // If we need validation, force non-streaming to intercept the response
+    const shouldStream = !needsValidation && stream !== false;
     const allMessages = [
       ...(finalSystemPrompt ? [{ role: "system", content: finalSystemPrompt }] : []),
       ...messages,
@@ -332,6 +343,52 @@ NON CHIUDERE LA CONVERSAZIONE. Rimani presente.`;
       } catch (_) {}
     }
 
+    // ── Response validation path (non-streaming) ──
+    if (needsValidation) {
+      const data = await response.json();
+      let fullResponse = data.choices?.[0]?.message?.content || "";
+
+      const validation = validateTutorResponse(fullResponse, {
+        expectedAnswer,
+        attemptCount: sessionState.currentStep?.attemptCount || 0,
+        maxAttempts: 4,
+      });
+
+      if (!validation.valid) {
+        console.log("Response blocked:", validation.reason);
+
+        const retryPrompt = buildRetryPrompt(
+          finalSystemPrompt,
+          fullResponse,
+          String(expectedAnswer),
+          sessionState.currentStep?.attemptCount || 0
+        );
+
+        const retryResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "gpt-4o",
+            messages: [{ role: "system", content: retryPrompt }, ...messages],
+            stream: false,
+            max_tokens: 500,
+          }),
+        });
+
+        if (retryResponse.ok) {
+          const retryData = await retryResponse.json();
+          fullResponse = retryData.choices?.[0]?.message?.content || fullResponse;
+        }
+      }
+
+      // Return validated response as a complete JSON (client will simulate streaming)
+      return new Response(JSON.stringify({
+        validated: true,
+        choices: [{ message: { role: "assistant", content: fullResponse } }],
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── Normal path ──
     if (shouldStream) {
       return new Response(response.body, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
     } else {

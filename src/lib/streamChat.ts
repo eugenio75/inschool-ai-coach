@@ -15,6 +15,28 @@ export interface ChatMsg {
 }
 
 /**
+ * Simulate streaming by revealing text character by character.
+ */
+function streamSimulated(
+  text: string,
+  onChunk: (partial: string) => void,
+  onComplete: () => void,
+  msPerChar = 15
+) {
+  let i = 0;
+  const interval = setInterval(() => {
+    i += Math.floor(Math.random() * 3) + 1;
+    if (i >= text.length) {
+      onChunk(text);
+      onComplete();
+      clearInterval(interval);
+    } else {
+      onChunk(text.substring(0, i));
+    }
+  }, msPerChar);
+}
+
+/**
  * Stream a chat response from ai-chat edge function.
  * Returns the full assembled text.
  */
@@ -58,6 +80,32 @@ export async function streamChat({
     }
   }
 
+  // Check if this is a validated (non-streaming) response
+  const contentType = res.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    const data = await res.json();
+    if (data.validated && data.choices?.[0]?.message?.content) {
+      const fullText = data.choices[0].message.content;
+      // Simulate streaming with typewriter effect
+      return new Promise<string>((resolve) => {
+        streamSimulated(
+          fullText,
+          onDelta,
+          () => {
+            onDone(fullText);
+            resolve(fullText);
+          }
+        );
+      });
+    }
+    // Regular non-streaming response
+    const fullText = data.choices?.[0]?.message?.content || "";
+    onDelta(fullText);
+    onDone(fullText);
+    return fullText;
+  }
+
+  // Normal SSE streaming path
   const reader = res.body?.getReader();
   const decoder = new TextDecoder();
   let fullText = "";
