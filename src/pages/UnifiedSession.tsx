@@ -299,6 +299,7 @@ export default function UnifiedSession() {
       setDivStepIndex(0);
       setDivSubStep("domanda");
       setDivAttemptCount(0);
+      setDivCelleCompilate(0);
     }
   }, [messages]);
 
