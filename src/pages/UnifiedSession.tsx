@@ -668,44 +668,46 @@ Inizia con la prima domanda.`;
     if (isCorrect) {
       const feedback = await getAiFeedback("correct", stepDesc);
       setDivAttemptCount(0);
+      const newCelle = divCelleCompilate + 1;
+      setDivCelleCompilate(newCelle);
 
       // Advance to next sub-step or next step
       if (divSubStep === "domanda") {
         setDivSubStep("verifica");
-        setMessages(prev => [...prev, { role: "assistant", content: `${feedback}\n\nOra: ${step.verifica}` }]);
+        setMessages(prev => [...prev, { role: "assistant", content: buildCoachMsg(feedback, `Ora: ${step.verifica}`, divExercise.dividendo, divExercise.divisore, newCelle) }]);
       } else if (divSubStep === "verifica") {
         setDivSubStep("sottrazione");
-        setMessages(prev => [...prev, { role: "assistant", content: `${feedback}\n\nOra: ${step.sottrazione}` }]);
+        setMessages(prev => [...prev, { role: "assistant", content: buildCoachMsg(feedback, `Ora: ${step.sottrazione}`, divExercise.dividendo, divExercise.divisore, newCelle) }]);
       } else if (divSubStep === "sottrazione") {
         if (step.abbassa) {
           setDivSubStep("abbassa");
-          setMessages(prev => [...prev, { role: "assistant", content: `${feedback}\n\n${step.abbassa}` }]);
+          setMessages(prev => [...prev, { role: "assistant", content: buildCoachMsg(feedback, step.abbassa, divExercise.dividendo, divExercise.divisore, newCelle) }]);
         } else {
-          // Last step - show final result
           const isLastStep = divStepIndex >= divExercise.passi.length - 1;
           if (isLastStep) {
-            const finalMsg = `${feedback}\n\n🎉 **Abbiamo finito!**\n\n${divExercise.dividendo} ÷ ${divExercise.divisore} = **${divExercise.quoziente}**${divExercise.resto > 0 ? ` con resto **${divExercise.resto}**` : ""}\n\nBravissimo! 🌟`;
+            const colonna = `[COLONNA: tipo=divisione, numeri=${divExercise.dividendo},${divExercise.divisore}, parziale=true, celle_compilate=${newCelle}]`;
+            const finalMsg = `${feedback}\n\n${colonna}\n\n🎉 **Abbiamo finito!**\n\n${divExercise.dividendo} ÷ ${divExercise.divisore} = **${divExercise.quoziente}**${divExercise.resto > 0 ? ` con resto **${divExercise.resto}**` : ""}\n\nBravissimo! 🌟`;
             setMessages(prev => [...prev, { role: "assistant", content: finalMsg }]);
             setDivExercise(null);
           } else {
             setDivStepIndex(prev => prev + 1);
             setDivSubStep("domanda");
             const nextStep = divExercise.passi[divStepIndex + 1];
-            setMessages(prev => [...prev, { role: "assistant", content: `${feedback}\n\nPasso ${divStepIndex + 2}: ${nextStep.domanda}` }]);
+            setMessages(prev => [...prev, { role: "assistant", content: buildCoachMsg(feedback, `Passo ${divStepIndex + 2}: ${nextStep.domanda}`, divExercise.dividendo, divExercise.divisore, newCelle) }]);
           }
         }
       } else if (divSubStep === "abbassa") {
-        // Move to next step
         const isLastStep = divStepIndex >= divExercise.passi.length - 1;
         if (isLastStep) {
-          const finalMsg = `${feedback}\n\n🎉 **Abbiamo finito!**\n\n${divExercise.dividendo} ÷ ${divExercise.divisore} = **${divExercise.quoziente}**${divExercise.resto > 0 ? ` con resto **${divExercise.resto}**` : ""}\n\nBravissimo! 🌟`;
+          const colonna = `[COLONNA: tipo=divisione, numeri=${divExercise.dividendo},${divExercise.divisore}, parziale=true, celle_compilate=${newCelle}]`;
+          const finalMsg = `${feedback}\n\n${colonna}\n\n🎉 **Abbiamo finito!**\n\n${divExercise.dividendo} ÷ ${divExercise.divisore} = **${divExercise.quoziente}**${divExercise.resto > 0 ? ` con resto **${divExercise.resto}**` : ""}\n\nBravissimo! 🌟`;
           setMessages(prev => [...prev, { role: "assistant", content: finalMsg }]);
           setDivExercise(null);
         } else {
           setDivStepIndex(prev => prev + 1);
           setDivSubStep("domanda");
           const nextStep = divExercise.passi[divStepIndex + 1];
-          setMessages(prev => [...prev, { role: "assistant", content: `${feedback}\n\nPasso ${divStepIndex + 2}: ${nextStep.domanda}` }]);
+          setMessages(prev => [...prev, { role: "assistant", content: buildCoachMsg(feedback, `Passo ${divStepIndex + 2}: ${nextStep.domanda}`, divExercise.dividendo, divExercise.divisore, newCelle) }]);
         }
       }
     } else {
@@ -713,27 +715,28 @@ Inizia con la prima domanda.`;
       setDivAttemptCount(newAttempts);
 
       if (newAttempts >= maxDivAttempts) {
-        // Reveal answer after max attempts
         const feedback = await getAiFeedback("reveal", stepDesc);
         setDivAttemptCount(0);
-        setMessages(prev => [...prev, { role: "assistant", content: `${feedback}\n\nLa risposta era **${expected}**.` }]);
+        const newCelle = divCelleCompilate + 1;
+        setDivCelleCompilate(newCelle);
+        setMessages(prev => [...prev, { role: "assistant", content: buildCoachMsg(`${feedback}\n\nLa risposta era **${expected}**.`, "", divExercise.dividendo, divExercise.divisore, newCelle) }]);
         
         // Auto-advance to next sub-step
         if (divSubStep === "domanda") {
           setDivSubStep("verifica");
           setTimeout(() => {
-            setMessages(prev => [...prev, { role: "assistant", content: `Ora: ${step.verifica}` }]);
+            setMessages(prev => [...prev, { role: "assistant", content: buildCoachMsg("", `Ora: ${step.verifica}`, divExercise.dividendo, divExercise.divisore, newCelle) }]);
           }, 1000);
         } else if (divSubStep === "verifica") {
           setDivSubStep("sottrazione");
           setTimeout(() => {
-            setMessages(prev => [...prev, { role: "assistant", content: `Ora: ${step.sottrazione}` }]);
+            setMessages(prev => [...prev, { role: "assistant", content: buildCoachMsg("", `Ora: ${step.sottrazione}`, divExercise.dividendo, divExercise.divisore, newCelle) }]);
           }, 1000);
         } else if (divSubStep === "sottrazione") {
           if (step.abbassa) {
             setDivSubStep("abbassa");
             setTimeout(() => {
-              setMessages(prev => [...prev, { role: "assistant", content: `${step.abbassa}` }]);
+              setMessages(prev => [...prev, { role: "assistant", content: buildCoachMsg("", step.abbassa || "", divExercise.dividendo, divExercise.divisore, newCelle) }]);
             }, 1000);
           } else {
             advanceDivStep();
@@ -744,19 +747,20 @@ Inizia con la prima domanda.`;
       } else {
         const feedback = await getAiFeedback("wrong", stepDesc);
         const hintMsg = newAttempts >= 2 ? `\n\n💡 Suggerimento: pensa a quale numero moltiplicato per ${divExercise.divisore} si avvicina di più a ${step.cifraConsiderata}...` : "";
-        setMessages(prev => [...prev, { role: "assistant", content: `${feedback}${hintMsg}` }]);
+        setMessages(prev => [...prev, { role: "assistant", content: buildCoachMsg(`${feedback}${hintMsg}`, "", divExercise.dividendo, divExercise.divisore, divCelleCompilate) }]);
       }
     }
 
     setSending(false);
-  }, [divExercise, divStepIndex, divSubStep, divAttemptCount, getAiFeedback, profileId]);
+  }, [divExercise, divStepIndex, divSubStep, divAttemptCount, divCelleCompilate, getAiFeedback, profileId, buildCoachMsg]);
 
   // Helper to advance to next division step
   const advanceDivStep = useCallback(() => {
     if (!divExercise) return;
     const isLastStep = divStepIndex >= divExercise.passi.length - 1;
     if (isLastStep) {
-      const finalMsg = `🎉 **Abbiamo finito!**\n\n${divExercise.dividendo} ÷ ${divExercise.divisore} = **${divExercise.quoziente}**${divExercise.resto > 0 ? ` con resto **${divExercise.resto}**` : ""}\n\nBravissimo! 🌟`;
+      const colonna = `[COLONNA: tipo=divisione, numeri=${divExercise.dividendo},${divExercise.divisore}, parziale=true, celle_compilate=${divCelleCompilate}]`;
+      const finalMsg = `${colonna}\n\n🎉 **Abbiamo finito!**\n\n${divExercise.dividendo} ÷ ${divExercise.divisore} = **${divExercise.quoziente}**${divExercise.resto > 0 ? ` con resto **${divExercise.resto}**` : ""}\n\nBravissimo! 🌟`;
       setMessages(prev => [...prev, { role: "assistant", content: finalMsg }]);
       setDivExercise(null);
     } else {
@@ -764,10 +768,10 @@ Inizia con la prima domanda.`;
       setDivSubStep("domanda");
       const nextStep = divExercise.passi[divStepIndex + 1];
       setTimeout(() => {
-        setMessages(prev => [...prev, { role: "assistant", content: `Passo ${divStepIndex + 2}: ${nextStep.domanda}` }]);
+        setMessages(prev => [...prev, { role: "assistant", content: buildCoachMsg("", `Passo ${divStepIndex + 2}: ${nextStep.domanda}`, divExercise.dividendo, divExercise.divisore, divCelleCompilate) }]);
       }, 1000);
     }
-  }, [divExercise, divStepIndex]);
+  }, [divExercise, divStepIndex, divCelleCompilate, buildCoachMsg]);
 
   const handleSend = useCallback((text: string) => {
     if (sending) return;
