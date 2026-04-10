@@ -35,6 +35,7 @@ import { ChallengeSession } from "@/components/study/ChallengeSession";
 import { GameSession } from "@/components/study/GameSession";
 import { MathGame } from "@/components/student-coach/MathGame";
 import { AnimatePresence } from "framer-motion";
+import { calcolaDivisione, verificaRisposta, type DivisionResult, type DivisionStep } from "@/lib/mathEngine";
 
 import { getSubjectsByLevel } from "@/lib/subjectsByLevel";
 import {
