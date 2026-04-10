@@ -604,6 +604,8 @@ export function ChatShell({
             const isFirstAssistantMsg = msg.role === "assistant" && messages.filter((m, idx) => m.role === "assistant" && idx <= i).length === 1;
             const showParsedOptions = isLastAssistant && isFirstAssistantMsg && parsedOptions.length > 0 && !msg.actions?.length;
             const displayContent = cleanContent((showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent);
+            // Keep raw content WITH [COLONNA:] tags for MathText/ProgressiveMessage SVG rendering
+            const mathContent = (showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent;
 
             return (
             <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
