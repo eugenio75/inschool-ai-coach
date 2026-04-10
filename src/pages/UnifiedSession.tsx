@@ -156,7 +156,14 @@ export default function UnifiedSession() {
   const [divStepIndex, setDivStepIndex] = useState(0);
   const [divSubStep, setDivSubStep] = useState<"domanda" | "verifica" | "sottrazione" | "abbassa">("domanda");
   const [divAttemptCount, setDivAttemptCount] = useState(0);
+  const [divCelleCompilate, setDivCelleCompilate] = useState(0);
   const maxDivAttempts = 4;
+
+  // Helper: build coach message with [COLONNA:] tag for SVG rendering
+  const buildCoachMsg = useCallback((feedback: string, question: string, dividendo: number, divisore: number, celleCompilate: number): string => {
+    const colonna = `[COLONNA: tipo=divisione, numeri=${dividendo},${divisore}, parziale=true, celle_compilate=${celleCompilate}]`;
+    return `${feedback}\n\n${colonna}\n\n${question}`;
+  }, []);
   
   console.log('MathGame debug:', { isElementary, profileAge: profile?.age, schoolLevel, topic, mathGame, messagesCount: messages.length, divExercise: !!divExercise });
 
