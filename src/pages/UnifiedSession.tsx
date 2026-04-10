@@ -272,12 +272,14 @@ export default function UnifiedSession() {
         setDivStepIndex(0);
         setDivSubStep("domanda");
         setDivAttemptCount(0);
+        setDivCelleCompilate(0);
         
-        // Add the first question
+        // Add the first question with [COLONNA:] tag
         const firstStep = result.passi[0];
+        const colonna = `[COLONNA: tipo=divisione, numeri=${a},${b}, parziale=true, celle_compilate=0]`;
         setMessages(prev => [...prev, {
           role: "assistant",
-          content: `Perfetto! 🎯 Ora facciamo **${a} ÷ ${b}** passo per passo.\n\n**Passo 1:** ${firstStep.domanda}`,
+          content: `Perfetto! 🎯 Ora facciamo **${a} ÷ ${b}** passo per passo.\n\n${colonna}\n\n**Passo 1:** ${firstStep.domanda}`,
         }]);
         return;
       }
