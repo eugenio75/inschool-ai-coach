@@ -150,8 +150,15 @@ export default function UnifiedSession() {
   const [manualA, setManualA] = useState("");
   const [manualB, setManualB] = useState("");
   const isElementary = true; // mostra il gioco per tutti gli studenti
+
+  // ── Deterministic Math Engine state ──
+  const [divExercise, setDivExercise] = useState<DivisionResult | null>(null);
+  const [divStepIndex, setDivStepIndex] = useState(0);
+  const [divSubStep, setDivSubStep] = useState<"domanda" | "verifica" | "sottrazione" | "abbassa">("domanda");
+  const [divAttemptCount, setDivAttemptCount] = useState(0);
+  const maxDivAttempts = 4;
   
-  console.log('MathGame debug:', { isElementary, profileAge: profile?.age, schoolLevel, topic, mathGame, messagesCount: messages.length });
+  console.log('MathGame debug:', { isElementary, profileAge: profile?.age, schoolLevel, topic, mathGame, messagesCount: messages.length, divExercise: !!divExercise });
 
   // SVG reveal state from coach markers (connected to ColumnOperation via exerciseSteps in ChatShell)
   const [svgElements, setSvgElements] = useState<Array<{element: string; value: string; color: string}>>([]);
