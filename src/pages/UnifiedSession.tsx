@@ -263,11 +263,7 @@ export default function UnifiedSession() {
     const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
     const aiStarted = lastAssistant && /iniziamo con|facciamo l'esercizio|proviamo insieme|ecco l'esercizio/i.test(lastAssistant.content.toLowerCase());
     
-    // Path 3: topic has division numbers + AI has replied at least once
-    const aiReplied = messages.filter(m => m.role === "assistant").length >= 1;
-    const autoActivate = aiReplied && messages.length >= 3;
-    
-    if (!userReady && !aiStarted && !autoActivate) return;
+    if (!userReady && !aiStarted) return;
     
     let a = parseInt(divMatch[1]);
     let b = parseInt(divMatch[2]);
