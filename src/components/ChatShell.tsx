@@ -604,6 +604,8 @@ export function ChatShell({
             const isFirstAssistantMsg = msg.role === "assistant" && messages.filter((m, idx) => m.role === "assistant" && idx <= i).length === 1;
             const showParsedOptions = isLastAssistant && isFirstAssistantMsg && parsedOptions.length > 0 && !msg.actions?.length;
             const displayContent = cleanContent((showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent);
+            // Keep raw content WITH [COLONNA:] tags for MathText/ProgressiveMessage SVG rendering
+            const mathContent = (showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent;
 
             return (
             <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -624,10 +626,10 @@ export function ChatShell({
                       <div className="flex items-center gap-1 mb-1 opacity-60">
                         <WritingPen writing={false} />
                       </div>
-                      <ProgressiveMessage content={displayContent || ""} charDelay={35} blockPause={800} onComplete={() => setProgressiveComplete(true)} exerciseStep={exerciseSteps[i]} />
+                      <ProgressiveMessage content={mathContent || ""} charDelay={35} blockPause={800} onComplete={() => setProgressiveComplete(true)} exerciseStep={exerciseSteps[i]} />
                     </div>
                   ) : (
-                    <MathText exerciseStep={exerciseSteps[i]}>{displayContent || ""}</MathText>
+                    <MathText exerciseStep={exerciseSteps[i]}>{mathContent || ""}</MathText>
                   )}
                 </div>
                 {/* Parsed inline options as vertical buttons — only show AFTER progressive message finishes */}

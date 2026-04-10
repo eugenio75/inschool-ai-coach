@@ -245,44 +245,47 @@ export default function UnifiedSession() {
     }
   }, [topic, messages, mathGame]);
 
-  // ── Activate deterministic math engine when user says "pronto" or AI asks to start exercise ──
+  // ── Activate deterministic math engine ──
+  // Triggers when: user says "pronto"/ok/sì OR AI says "iniziamo con" OR topic has division + AI replied
   useEffect(() => {
-    if (divExercise) return; // already active
-    if (messages.length < 3) return; // need at least: welcome, familiarity answer, AI explanation
+    if (divExercise) return;
     
-    const lastUser = [...messages].reverse().find(m => m.role === "user");
-    if (!lastUser) return;
-    const userText = lastUser.content.toLowerCase();
-    
-    // Check if user said "pronto" or similar
-    const isReady = /pronto|sono pronto|iniziamo|proviamo|ok|sì|si|vai/i.test(userText);
-    if (!isReady) return;
-    
-    // Detect division numbers from topic
     const topicLower = (topic || "").toLowerCase();
     const divMatch = topicLower.match(/(\d+)\s*(?:÷|diviso|:)\s*(\d+)/) ||
                      topicLower.match(/numeri=(\d+),(\d+)/);
-    if (divMatch) {
-      let a = parseInt(divMatch[1]);
-      let b = parseInt(divMatch[2]);
-      if (a < b) [a, b] = [b, a];
-      if (a > 0 && b > 0) {
-        const result = calcolaDivisione(a, b);
-        setDivExercise(result);
-        setDivStepIndex(0);
-        setDivSubStep("domanda");
-        setDivAttemptCount(0);
-        setDivCelleCompilate(0);
-        
-        // Add the first question with [COLONNA:] tag
-        const firstStep = result.passi[0];
-        const colonna = `[COLONNA: tipo=divisione, numeri=${a},${b}, parziale=true, celle_compilate=0]`;
-        setMessages(prev => [...prev, {
-          role: "assistant",
-          content: `Perfetto! 🎯 Ora facciamo **${a} ÷ ${b}** passo per passo.\n\n${colonna}\n\n**Passo 1:** ${firstStep.domanda}`,
-        }]);
-        return;
-      }
+    if (!divMatch) return;
+    
+    // Path 1: user said "pronto" or similar
+    const lastUser = [...messages].reverse().find(m => m.role === "user");
+    const userReady = lastUser && /pronto|sono pronto|iniziamo|proviamo|ok|sì|si|vai/i.test(lastUser.content.toLowerCase());
+    
+    // Path 2: AI said "iniziamo con" or similar (and at least 2 messages exist)
+    const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
+    const aiStarted = lastAssistant && /iniziamo con|facciamo l'esercizio|proviamo insieme|ecco l'esercizio/i.test(lastAssistant.content.toLowerCase());
+    
+    // Path 3: topic has division numbers + AI has replied at least once
+    const aiReplied = messages.filter(m => m.role === "assistant").length >= 1;
+    const autoActivate = aiReplied && messages.length >= 3;
+    
+    if (!userReady && !aiStarted && !autoActivate) return;
+    
+    let a = parseInt(divMatch[1]);
+    let b = parseInt(divMatch[2]);
+    if (a < b) [a, b] = [b, a];
+    if (a > 0 && b > 0) {
+      const result = calcolaDivisione(a, b);
+      setDivExercise(result);
+      setDivStepIndex(0);
+      setDivSubStep("domanda");
+      setDivAttemptCount(0);
+      setDivCelleCompilate(0);
+      
+      const firstStep = result.passi[0];
+      const colonna = `[COLONNA: tipo=divisione, numeri=${a},${b}, parziale=true, celle_compilate=0]`;
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: `Perfetto! 🎯 Ora facciamo **${a} ÷ ${b}** passo per passo.\n\n${colonna}\n\n**Passo 1:** ${firstStep.domanda}`,
+      }]);
     }
   }, [messages, divExercise, topic]);
 
