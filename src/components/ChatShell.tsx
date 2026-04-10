@@ -16,6 +16,14 @@ import { Whiteboard } from "@/components/study/Whiteboard";
 import { fireConfetti, playCorrectSound } from "@/lib/confetti";
 import { useTranslation } from "react-i18next";
 
+/** Strip [COLONNA:] and [SVG_REVEAL:] tags so they never appear in the chat bubble */
+const cleanContent = (text: string): string => {
+  return text
+    .replace(/\[COLONNA:[^\]]*\]/gi, '')
+    .replace(/\[SVG_REVEAL:[^\]]*\]/gi, '')
+    .trim();
+};
+
 /** Parse coach JSON responses (socratic_question format) into display text */
 function parseCoachJsonResponse(raw: string): string {
   // First try JSON parsing
@@ -595,7 +603,7 @@ export function ChatShell({
             // Only show parsed inline options on the FIRST assistant message (familiarity check), not on every message
             const isFirstAssistantMsg = msg.role === "assistant" && messages.filter((m, idx) => m.role === "assistant" && idx <= i).length === 1;
             const showParsedOptions = isLastAssistant && isFirstAssistantMsg && parsedOptions.length > 0 && !msg.actions?.length;
-            const displayContent = (showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent;
+            const displayContent = cleanContent((showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent);
 
             return (
             <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
