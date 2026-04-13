@@ -146,13 +146,43 @@ export async function getTask(taskId: string) {
     return childApi("get-task", { taskId });
   }
 
+  // First try homework_tasks
   const { data, error } = await supabase
     .from("homework_tasks")
     .select("*")
     .eq("id", taskId)
     .single();
+  
+  if (data) return data;
+
+  // Fallback: check if taskId is a teacher_assignments id
+  const { data: assignment, error: assignErr } = await supabase
+    .from("teacher_assignments")
+    .select("*")
+    .eq("id", taskId)
+    .single();
+
+  if (assignment) {
+    // Map teacher_assignment to homework_task shape for compatibility
+    return {
+      id: assignment.id,
+      title: assignment.title,
+      description: assignment.description || "",
+      subject: assignment.subject || "",
+      task_type: assignment.type || "exercise",
+      child_profile_id: assignment.student_id,
+      due_date: assignment.due_date,
+      completed: false,
+      difficulty: 1,
+      estimated_minutes: 15,
+      source_type: "teacher",
+      _is_teacher_assignment: true,
+      _assignment_id: assignment.id,
+    };
+  }
+
   if (error) console.error("getTask error:", error);
-  return data;
+  return null;
 }
 
 export async function createTask(task: {
