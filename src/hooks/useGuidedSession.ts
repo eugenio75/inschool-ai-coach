@@ -1265,6 +1265,28 @@ Tono caldo e incoraggiante.`;
       const isExercise = homework?.task_type !== "study" && !isOralStudyTask(homework?.task_type || "", homework?.title || "");
       const isOral = isOralStudyTask(homework?.task_type || "", homework?.title || "");
 
+      // ⚠️ FIX 1: Absolute priority rule — coach MUST work on assigned content only
+      const assignmentFidelityRule = homework?.description
+        ? `⚠️ REGOLA ASSOLUTA — PRIORITÀ MASSIMA:
+Lavora ESCLUSIVAMENTE sul contenuto del compito assegnato.
+Il contenuto esatto del compito è fornito nel campo COMPITO qui sotto.
+NON inventare esercizi diversi.
+NON aggiungere argomenti non presenti nel compito.
+NON anticipare o sostituire gli esercizi con esempi tuoi.
+NON cambiare i numeri, le operazioni o il testo degli esercizi.
+
+Se il compito contiene "esercizi sui decimali" → lavora SUI DECIMALI di quel compito.
+Se il compito contiene "754 × 27" → lavora su "754 × 27" — non su altri numeri.
+
+L'unica eccezione: se lo studente completa TUTTI gli esercizi del compito e chiede di continuare,
+ALLORA puoi proporre esercizi aggiuntivi dello stesso argomento.
+Ma solo dopo aver completato tutto il compito assegnato.
+
+COMPITO:
+${homework.description}
+`
+        : "";
+
       let coachBehavior: string;
 
       if (isExercise) {
