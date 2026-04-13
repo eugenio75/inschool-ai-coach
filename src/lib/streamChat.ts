@@ -209,3 +209,4 @@ export async function streamChat({
 
   onDone(fullText);
   return fullText;
+}
