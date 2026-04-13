@@ -1457,12 +1457,14 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
       let displayText = fullText;
       const stepComplete = fullText.match(/\[STEP_COMPLETATO:\s*(\d+)\]/);
       const sessionComplete = fullText.includes("[SESSIONE_COMPLETATA]");
+      const terminateSession = fullText.includes("[TERMINA_SESSIONE]");
       const difficultySignal = fullText.match(/\[SEGNALA_DIFFICOLTÀ:\s*(.+?)\]/);
 
       displayText = displayText
-        .replace(/\[STEP_COMPLETATO:\s*\d+\]/, "")
-        .replace("[SESSIONE_COMPLETATA]", "")
-        .replace(/\[SEGNALA_DIFFICOLTÀ:\s*.+?\]/, "")
+        .replace(/\[STEP_COMPLETATO:\s*\d+\]/g, "")
+        .replace(/\[SESSIONE_COMPLETATA\]/g, "")
+        .replace(/\[TERMINA_SESSIONE\]/g, "")
+        .replace(/\[SEGNALA_DIFFICOLTÀ:\s*.+?\]/g, "")
         .trim();
 
       // Mic reminder removed — handled once-ever by the UI on session start
