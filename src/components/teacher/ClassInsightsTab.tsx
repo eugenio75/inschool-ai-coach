@@ -167,7 +167,7 @@ export default function ClassInsightsTab({ classId, onGenerateRecovery }: ClassI
 
         {Object.keys(data.formatDistribution).length === 0 && (
           <p className="text-xs text-muted-foreground italic">
-            Non ci sono ancora dati sufficienti per calcolare la distribuzione.
+            Gli insights si attivano dopo almeno 5 sessioni completate dagli studenti.
           </p>
         )}
       </section>
@@ -279,18 +279,7 @@ export default function ClassInsightsTab({ classId, onGenerateRecovery }: ClassI
         </section>
       )}
 
-      {/* ── No alerts state ── */}
-      {!hasAlerts && data.hardTopics.length === 0 && (
-        <section className="bg-card border border-border rounded-2xl p-6 text-center">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-            <BarChart2 className="w-5 h-5 text-primary" />
-          </div>
-          <p className="text-sm font-medium text-foreground mb-1">Nessuna segnalazione</p>
-          <p className="text-xs text-muted-foreground">
-            La classe procede regolarmente. Non ci sono situazioni che richiedono attenzione immediata.
-          </p>
-        </section>
-      )}
+      {/* No alerts state removed — already shown in "La classe" tab */}
 
       {/* ── Footer note ── */}
       <p className="text-[10px] text-muted-foreground text-center px-4">

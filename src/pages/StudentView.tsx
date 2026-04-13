@@ -3,7 +3,7 @@ import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, BarChart2, AlertTriangle, CheckCircle2,
-  Flame, Brain, Mail, MessageSquare, Send,
+  Flame, Brain, Mail, Send,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
@@ -56,7 +56,6 @@ export default function StudentView() {
   const [totalSessions, setTotalSessions] = useState(0);
   const [streakDays, setStreakDays] = useState(0);
   const [lastAccess, setLastAccess] = useState<string | null>(null);
-  const [errorsByType, setErrorsByType] = useState<Record<string, number>>({});
   const [signals, setSignals] = useState<string[]>([]);
 
   // Communication dialog
@@ -92,6 +91,7 @@ export default function StudentView() {
       const allResults = data.assignmentResults || [];
       const myAssignments: any[] = [];
       const myScores: number[] = [];
+      const errorsByType: Record<string, number> = {};
 
       allResults.forEach((a: any) => {
         const myResult = (a.results || []).find((r: any) => (r.student_id || r.id) === studentId);
@@ -108,20 +108,57 @@ export default function StudentView() {
           });
           if (myResult.score != null) myScores.push(myResult.score);
 
-          // Aggregate errors
           if (myResult.errors_summary && typeof myResult.errors_summary === "object") {
             Object.keys(myResult.errors_summary).forEach(k => {
-              setErrorsByType(prev => ({ ...prev, [k]: (prev[k] || 0) + 1 }));
+              errorsByType[k] = (errorsByType[k] || 0) + 1;
             });
           }
         }
       });
 
+      // If no results found from assignmentResults, try loading directly from DB
+      if (myAssignments.length === 0 && studentId) {
+        const { data: directResults } = await supabase
+          .from("assignment_results")
+          .select("*, teacher_assignments!assignment_results_assignment_id_fkey(title, type, subject, due_date, assigned_at)")
+          .eq("student_id", studentId);
+
+        if (directResults && directResults.length > 0) {
+          directResults.forEach((r: any) => {
+            const assignment = r.teacher_assignments;
+            myAssignments.push({
+              title: assignment?.title || "Attività",
+              type: assignment?.type || "",
+              subject: assignment?.subject || "",
+              due_date: assignment?.due_date,
+              assigned_at: assignment?.assigned_at,
+              score: r.score,
+              status: r.status,
+              errors_summary: r.errors_summary,
+            });
+            if (r.score != null) myScores.push(r.score);
+
+            if (r.errors_summary && typeof r.errors_summary === "object") {
+              Object.keys(r.errors_summary as Record<string, any>).forEach(k => {
+                errorsByType[k] = (errorsByType[k] || 0) + 1;
+              });
+            }
+          });
+        }
+      }
+
       setStudentAssignments(myAssignments);
       setStudentScores(myScores);
 
-      // Compute signals
+      // Compute signals (merged: difficulties + attention signals)
       const sigs: string[] = [];
+
+      // Add error-based signals
+      const topErrors = Object.entries(errorsByType).sort(([, a], [, b]) => b - a).slice(0, 5);
+      topErrors.forEach(([type, count]) => {
+        sigs.push(`Difficoltà su "${type}" (${count} volta${count > 1 ? "e" : ""})`);
+      });
+
       if (myScores.length >= 2) {
         const avg = myScores.reduce((a, b) => a + b, 0) / myScores.length;
         if (avg < 50) sigs.push("Media sotto soglia — potrebbe aver bisogno di supporto aggiuntivo.");
@@ -134,7 +171,7 @@ export default function StudentView() {
       if (lateCount >= 2) sigs.push(`${lateCount} attività in ritardo — verificare eventuali difficoltà.`);
       setSignals(sigs);
 
-      // Session count & streak (from assignment completions as proxy)
+      // Session count & streak
       setTotalSessions(myAssignments.filter(a => a.status === "completed").length);
       const completedDates = myAssignments
         .filter(a => a.status === "completed")
@@ -280,48 +317,36 @@ export default function StudentView() {
           )}
         </motion.div>
 
-        {/* Difficoltà rilevate */}
+        {/* Continuità */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="bg-card border border-border rounded-2xl p-5">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Difficoltà rilevate</p>
-          {Object.keys(errorsByType).length === 0 ? (
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Continuità</p>
+          {streakDays === 0 ? (
             <div className="flex flex-col items-center py-6">
-              <Brain className="w-8 h-8 text-muted-foreground/30 mb-2" />
-              <p className="text-sm text-muted-foreground">Nessuna difficoltà rilevata</p>
+              <Flame className="w-8 h-8 text-muted-foreground/30 mb-2" />
+              <p className="text-sm text-muted-foreground">Nessuna sessione registrata</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {Object.entries(errorsByType).sort(([, a], [, b]) => b - a).slice(0, 5).map(([type, count]) => (
-                <div key={type} className="flex items-center justify-between py-1.5">
-                  <span className="text-sm text-foreground capitalize">{type}</span>
-                  <Badge variant="secondary" className="text-xs">{count} volta{count > 1 ? "e" : ""}</Badge>
+            <>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-1.5">
+                  <Flame className="w-5 h-5 text-orange-500" />
+                  <span className="text-2xl font-bold text-foreground">{streakDays}</span>
+                  <span className="text-xs text-muted-foreground">giorni attivi</span>
                 </div>
-              ))}
-            </div>
+                {streakDays >= 3 && (
+                  <Badge variant="secondary" className="text-xs">Costante</Badge>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {lastAccess ? `Ultimo accesso: ${lastAccess}` : ""}
+              </p>
+            </>
           )}
         </motion.div>
 
-        {/* Continuità */}
+        {/* Segnali da osservare (merged: difficulties + signals) */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-          className="bg-card border border-border rounded-2xl p-5">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Continuità</p>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="flex items-center gap-1.5">
-              <Flame className="w-5 h-5 text-orange-500" />
-              <span className="text-2xl font-bold text-foreground">{streakDays}</span>
-              <span className="text-xs text-muted-foreground">giorni attivi</span>
-            </div>
-            <Badge variant="secondary" className="text-xs">
-              {streakDays === 0 ? "In sviluppo" : streakDays < 3 ? "In sviluppo" : "Costante"}
-            </Badge>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {lastAccess ? `Ultimo accesso: ${lastAccess}` : "Nessuna sessione registrata"}
-          </p>
-        </motion.div>
-
-        {/* Segnali da osservare */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
           className="bg-card border border-border rounded-2xl p-5">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Segnali da osservare</p>
           {signals.length === 0 ? (
@@ -343,26 +368,28 @@ export default function StudentView() {
           )}
         </motion.div>
 
-        {/* Azioni suggerite */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-          className="bg-card border border-border rounded-2xl p-5">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Azioni suggerite</p>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { label: "Prepara recupero", route: `/classe/${classId}?tab=materiali` },
-              { label: "Esercizio differenziato", route: `/classe/${classId}?tab=materiali` },
-              { label: "Materiale semplificato", route: `/classe/${classId}?tab=materiali` },
-            ].map(action => (
-              <button
-                key={action.label}
-                onClick={() => navigate(action.route)}
-                className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-              >
-                {action.label}
-              </button>
-            ))}
-          </div>
-        </motion.div>
+        {/* Azioni suggerite — only when there are signals */}
+        {signals.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="bg-card border border-border rounded-2xl p-5">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Azioni suggerite</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: "Prepara recupero", route: `/classe/${classId}?tab=materiali` },
+                { label: "Esercizio differenziato", route: `/classe/${classId}?tab=materiali` },
+                { label: "Materiale semplificato", route: `/classe/${classId}?tab=materiali` },
+              ].map(action => (
+                <button
+                  key={action.label}
+                  onClick={() => navigate(action.route)}
+                  className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Communication Dialog */}
