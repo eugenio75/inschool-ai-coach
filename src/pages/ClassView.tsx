@@ -3,11 +3,12 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Users, BookOpen, MessageSquare,
   Copy, ChevronRight, ChevronDown, AlertTriangle,
-  BarChart2, Send, Lightbulb,
+  BarChart2, Send, Lightbulb, Info, PenLine,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import TeacherMaterialsTab, { type PrefilledMaterial } from "@/components/teacher/TeacherMaterialsTab";
 import ClassInsightsTab from "@/components/teacher/ClassInsightsTab";
+import ManualGradeModal from "@/components/teacher/ManualGradeModal";
 import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,6 +19,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { ReportTeacherButton } from "@/components/shared/ReportTeacherButton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -66,7 +68,6 @@ function computeClassStats(students: any[], assignmentResults: any[]) {
   const avg = totalAssigned > 0 ? Math.round(totalScore / totalAssigned) : 0;
   const completion = totalAssigned > 0 ? Math.round((totalCompleted / totalAssigned) * 100) : 0;
 
-  // Students below 60% avg → "da seguire"
   let toFollow = 0;
   Object.values(studentScores).forEach(scores => {
     if (scores.length > 0) {
@@ -89,7 +90,6 @@ function getStudentBadge(studentId: string, studentScores: Record<string, number
   if (!scores || scores.length === 0) return null;
   const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
 
-  // Check late assignments
   let lateCount = 0;
   assignmentResults.forEach((a: any) => {
     (a.results || []).forEach((r: any) => {
@@ -128,6 +128,28 @@ function computeTopicMastery(assignmentResults: any[]) {
   }));
 }
 
+/* ─── KPI with tooltip ─── */
+function KpiCard({ label, value, tooltip }: { label: string; value: string | number; tooltip: string }) {
+  return (
+    <TooltipProvider>
+      <div className="bg-card border border-border rounded-xl p-4 text-center relative">
+        <p className="text-xl font-bold text-foreground">{value}</p>
+        <div className="flex items-center justify-center gap-1 mt-1">
+          <p className="text-[10px] text-muted-foreground leading-tight">{label}</p>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="w-3 h-3 text-muted-foreground/50 cursor-help shrink-0" />
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-[200px] text-xs">
+              {tooltip}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </div>
+    </TooltipProvider>
+  );
+}
+
 export default function ClassView() {
   const { classId } = useParams();
   const navigate = useNavigate();
@@ -139,16 +161,17 @@ export default function ClassView() {
   const [students, setStudents] = useState<any[]>([]);
   const [materials, setMaterials] = useState<any[]>([]);
   const [assignmentResults, setAssignmentResults] = useState<any[]>([]);
+  const [manualGrades, setManualGrades] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "classe";
   const [activeTab, setActiveTab] = useState(initialTab);
   const [prefilledMaterial, setPrefilledMaterial] = useState<PrefilledMaterial | null>(null);
   const [verificheOpen, setVerificheOpen] = useState(false);
+  const [showGradeModal, setShowGradeModal] = useState(false);
 
   useEffect(() => {
     if (!classId) return;
-    // Wait for auth user to be available for teachers (avoid race condition)
     if (!profileId && !user) return;
     loadClass();
   }, [classId, profileId, user?.id]);
@@ -156,7 +179,6 @@ export default function ClassView() {
   async function loadClass() {
     setLoading(true);
     try {
-      // Always try the edge function first for authenticated users
       const { data: { session: authSession } } = await supabase.auth.getSession();
       if (authSession?.access_token) {
         const data = await fetchTeacherClassData(classId!);
@@ -171,6 +193,14 @@ export default function ClassView() {
           .eq("class_id", classId)
           .order("created_at", { ascending: false });
         setMaterials(mats || []);
+
+        // Load manual grades for this class
+        const { data: grades } = await (supabase as any)
+          .from("manual_grades")
+          .select("*")
+          .eq("class_id", classId)
+          .order("graded_at", { ascending: false });
+        setManualGrades(grades || []);
       } else {
         const { data: cl } = await (supabase as any)
           .from("classi").select("*").eq("id", classId).single();
@@ -192,6 +222,7 @@ export default function ClassView() {
         }
         setAssignmentResults([]);
         setMaterials([]);
+        setManualGrades([]);
       }
     } catch (error) {
       console.error("loadClass error:", error);
@@ -223,7 +254,6 @@ export default function ClassView() {
   const stats = computeClassStats(students, assignmentResults);
   const topics = computeTopicMastery(assignmentResults);
 
-  // Feedback loop alerts — now structured for recovery button
   const feedbackAlertData: Array<{ msg: string; subject: string; topic: string; count: number }> = [];
   assignmentResults.forEach((a: any) => {
     const results = a.results || [];
@@ -234,8 +264,6 @@ export default function ClassView() {
       topic: a.title || "",
       count: notCompleted,
     });
-
-    // Common errors
     const errorCounts: Record<string, number> = {};
     results.forEach((r: any) => {
       const summary = r.errors_summary;
@@ -263,9 +291,19 @@ export default function ClassView() {
     setActiveTab("materiali");
   }
 
+  // Student list for manual grade modal
+  const studentList = students.map((s: any) => {
+    const firstName = s.profile?.name || s.student_name || "Studente";
+    const lastName = s.profile?.last_name || "";
+    return { id: s.student_id || s.id, name: lastName ? `${firstName} ${lastName}` : firstName };
+  });
+
+  // Assignment list for manual grade modal
+  const assignmentList = assignmentResults.map((a: any) => ({ id: a.id, title: a.title }));
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 pb-24">
-      {/* ─── Header — solid color, no gradient ─── */}
+      {/* ─── Header ─── */}
       <div className="mb-6">
         <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="rounded-xl mb-4">
           <ArrowLeft className="w-4 h-4 mr-1" /> Home
@@ -290,12 +328,10 @@ export default function ClassView() {
                 <span className="text-sm text-primary-foreground/50">{classe.ordine_scolastico}</span>
               )}
             </div>
-            {/* Student report button — only visible to enrolled students */}
             {profileId && !user && (
               <ReportTeacherButton teacherId={classe.docente_profile_id} className="mt-2 text-primary-foreground/40 hover:text-primary-foreground/70" />
             )}
           </div>
-          {/* Code — small, bottom-right */}
           <div className="absolute bottom-3 right-5 flex items-center gap-1.5">
             <span className="text-[10px] text-primary-foreground/40 uppercase tracking-wider">Codice:</span>
             <span className="font-mono text-xs font-semibold text-primary-foreground/60 tracking-widest">{classe.codice_invito}</span>
@@ -309,7 +345,7 @@ export default function ClassView() {
         </div>
       </div>
 
-      {/* ─── Tabs — 4 voci ─── */}
+      {/* ─── Tabs ─── */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full grid grid-cols-4 rounded-xl">
           <TabsTrigger value="classe" className="text-xs rounded-lg">
@@ -357,26 +393,38 @@ export default function ClassView() {
                 <p className="text-sm font-medium text-foreground">{stats.statusMsg}</p>
               </div>
 
-              {/* BLOCK 2 — KPI */}
+              {/* BLOCK 2 — KPI with tooltips */}
               <div className="grid grid-cols-4 gap-3">
-                {[
-                  { label: "Media classe", value: `${stats.avg}%` },
-                  { label: "Completamento", value: `${stats.completion}%` },
-                  { label: "Continuità regolare", value: stats.regular },
-                  { label: "Da seguire", value: stats.toFollow },
-                ].map((kpi, i) => (
-                  <div key={i} className="bg-card border border-border rounded-xl p-4 text-center">
-                    <p className="text-xl font-bold text-foreground">{kpi.value}</p>
-                    <p className="text-[10px] text-muted-foreground mt-1 leading-tight">{kpi.label}</p>
-                  </div>
-                ))}
+                <KpiCard
+                  label="Risultati attività"
+                  value={`${stats.avg}%`}
+                  tooltip="Punteggio medio ottenuto dagli studenti nelle attività completate su SarAI"
+                />
+                <KpiCard
+                  label="Attività completate"
+                  value={`${stats.completion}%`}
+                  tooltip="Percentuale di attività assegnate completate dagli studenti"
+                />
+                <KpiCard
+                  label="Studenti attivi"
+                  value={stats.regular}
+                  tooltip="Studenti che hanno usato SarAI almeno 3 volte negli ultimi 14 giorni"
+                />
+                <KpiCard
+                  label="Da seguire"
+                  value={stats.toFollow}
+                  tooltip="Studenti con difficoltà rilevate o attività non completate"
+                />
               </div>
 
-              {/* BLOCK 3 — Andamento per argomento */}
+              {/* BLOCK 3 — Risultati per materia */}
               {topics.length > 0 && (
                 <div className="bg-card border border-border rounded-xl p-5">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-                    Andamento per argomento
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                    Risultati per materia
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mb-4">
+                    Punteggio medio nelle attività completate per ogni materia
                   </p>
                   <div className="space-y-3">
                     {topics.map((t, i) => (
@@ -388,6 +436,11 @@ export default function ClassView() {
                         <Progress value={t.mastery} className="h-2" />
                       </div>
                     ))}
+                    {topics.every(t => t.mastery < 20) && (
+                      <p className="text-[10px] text-muted-foreground italic mt-2">
+                        I dati crescono man mano che gli studenti completano più attività
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -431,25 +484,37 @@ export default function ClassView() {
                 </div>
               </div>
 
-              {/* BLOCK 5 — Risultati verifiche (collapsible, default closed) */}
+              {/* BLOCK 5 — Attività assegnate (collapsible, default closed) */}
               {assignmentResults.length > 0 && (
                 <div className="bg-card border border-border rounded-xl">
                   <button
                     onClick={() => setVerificheOpen(!verificheOpen)}
                     className="w-full flex items-center justify-between p-4 text-left"
                   >
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                      <BarChart2 className="w-3.5 h-3.5" />
-                      Risultati verifiche ({assignmentResults.length})
-                    </span>
+                    <div>
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                        <BarChart2 className="w-3.5 h-3.5" />
+                        Attività assegnate ({assignmentResults.length})
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Compiti e verifiche assegnati — clicca su uno studente per vedere il dettaglio
+                      </p>
+                    </div>
                     <ChevronDown className={cn(
-                      "w-4 h-4 text-muted-foreground transition-transform",
+                      "w-4 h-4 text-muted-foreground transition-transform shrink-0",
                       verificheOpen && "rotate-180"
                     )} />
                   </button>
 
                   {verificheOpen && (
                     <div className="px-4 pb-4 space-y-3">
+                      {/* Manual grade button */}
+                      <div className="flex justify-end">
+                        <Button variant="outline" size="sm" className="rounded-xl text-xs h-7" onClick={() => setShowGradeModal(true)}>
+                          <PenLine className="w-3 h-3 mr-1" /> Inserisci voto manuale
+                        </Button>
+                      </div>
+
                       {assignmentResults.map((a: any) => {
                         const results = a.results || [];
                         const avgScore = results.length > 0
@@ -464,12 +529,13 @@ export default function ClassView() {
                                 <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
                                 <p className="text-xs text-muted-foreground mt-0.5">
                                   {a.subject} · {a.type === "verifica" ? "Verifica" : "Compito"}
+                                  {a.assigned_at && ` · ${new Date(a.assigned_at).toLocaleDateString("it-IT")}`}
                                 </p>
                               </div>
                               <div className="flex items-center gap-4 shrink-0">
                                 <div className="text-center">
                                   <p className="text-lg font-bold text-foreground">{avgScore}%</p>
-                                  <p className="text-[10px] text-muted-foreground">media</p>
+                                  <p className="text-[10px] text-muted-foreground">punteggio SarAI</p>
                                 </div>
                                 <div className="text-center">
                                   <p className="text-lg font-bold text-foreground">{completed}/{results.length}</p>
@@ -482,31 +548,54 @@ export default function ClassView() {
                                 const rName = r.student_name || "Studente";
                                 const rScore = r.score != null ? Math.round(r.score) : null;
                                 const belowThreshold = rScore != null && rScore < 50;
-                                let statusLabel = "Non iniziato";
+                                let statusLabel = "🕐 In attesa";
                                 let statusVariant: "default" | "secondary" | "destructive" | "outline" = "outline";
-                                if (r.status === "completed") { statusLabel = "Completato"; statusVariant = "default"; }
+                                if (r.status === "completed") { statusLabel = "✅ Completato"; statusVariant = "default"; }
                                 else if (r.status === "in_progress") { statusLabel = "In corso"; statusVariant = "secondary"; }
                                 else if (r.status === "assigned" && a.due_date && new Date(a.due_date) < new Date()) {
                                   statusLabel = "In ritardo"; statusVariant = "destructive";
                                 }
 
                                 return (
-                                  <div key={r.id} className="flex items-center gap-2 text-xs">
+                                  <button
+                                    key={r.id}
+                                    onClick={() => navigate(`/studente/${r.student_id || r.id}?classId=${classId}`)}
+                                    className="w-full flex items-center gap-2 text-xs hover:bg-muted/50 rounded-lg p-1.5 transition-colors"
+                                  >
                                     <AvatarInitials name={rName} size="sm" />
-                                    <span className="flex-1 text-foreground truncate">{rName}</span>
+                                    <span className="flex-1 text-foreground truncate text-left">{rName}</span>
                                     {belowThreshold && <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />}
                                     <span className="font-semibold text-foreground">
                                       {rScore != null ? `${rScore}%` : "—"}
                                     </span>
+                                    {r.completed_at && (
+                                      <span className="text-muted-foreground text-[10px]">
+                                        {new Date(r.completed_at).toLocaleDateString("it-IT")}
+                                      </span>
+                                    )}
                                     <Badge variant={statusVariant} className="text-[10px]">
                                       {statusLabel}
                                     </Badge>
-                                  </div>
+                                  </button>
                                 );
                               })}
                             </div>
 
-                            {/* Feedback loop alerts for this assignment */}
+                            {/* Manual grades for this assignment */}
+                            {manualGrades.filter(g => g.assignment_id === a.id).map((g: any) => (
+                              <div key={g.id} className="flex items-center gap-2 text-xs mt-1.5 p-1.5">
+                                <span>📝</span>
+                                <span className="flex-1 text-foreground">{g.student_name}</span>
+                                <span className="font-semibold text-foreground">
+                                  {g.grade}{g.grade_scale !== "giudizio" ? g.grade_scale : ""}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {new Date(g.graded_at).toLocaleDateString("it-IT")}
+                                </span>
+                              </div>
+                            ))}
+
+                            {/* Feedback loop alerts */}
                             {(() => {
                               const notDone = results.filter((r: any) => r.status !== "completed").length;
                               const alertItems: Array<{ msg: string; topic: string; count: number }> = [];
@@ -543,12 +632,45 @@ export default function ClassView() {
                           </div>
                         );
                       })}
+
+                      {/* Unlinked manual grades */}
+                      {manualGrades.filter(g => !g.assignment_id).length > 0 && (
+                        <div className="border border-border rounded-xl p-4 bg-muted/30">
+                          <p className="text-sm font-medium text-foreground mb-2">📝 Voti manuali</p>
+                          <div className="space-y-1.5">
+                            {manualGrades.filter(g => !g.assignment_id).map((g: any) => (
+                              <div key={g.id} className="flex items-center gap-2 text-xs p-1.5">
+                                <span>📝</span>
+                                <span className="flex-1 text-foreground">{g.student_name}</span>
+                                <span className="text-muted-foreground">{g.assignment_title || "—"}</span>
+                                <span className="font-semibold text-foreground">
+                                  {g.grade}{g.grade_scale !== "giudizio" ? g.grade_scale : ""}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {new Date(g.graded_at).toLocaleDateString("it-IT")}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               )}
 
-              {/* BLOCK 6 — Disclaimer */}
+              {/* BLOCK 6 — Legend */}
+              <div className="bg-muted/50 rounded-xl p-4">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Legenda</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] text-muted-foreground">
+                  <span>⚠ = punteggio SarAI sotto il 50% — potrebbe necessitare recupero</span>
+                  <span>✅ Completato = attività completata</span>
+                  <span>🕐 In attesa = attività non ancora completata</span>
+                  <span>📝 = voto inserito manualmente dal docente</span>
+                </div>
+              </div>
+
+              {/* BLOCK 7 — Disclaimer */}
               <p className="text-xs text-muted-foreground text-center pt-2 pb-4">
                 I segnali di attenzione sono aggregati anonimi. Per i dettagli individuali clicca sul nome dello studente.
               </p>
@@ -587,6 +709,17 @@ export default function ClassView() {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Manual Grade Modal */}
+      <ManualGradeModal
+        open={showGradeModal}
+        onOpenChange={setShowGradeModal}
+        classId={classId!}
+        userId={user!.id}
+        students={studentList}
+        assignments={assignmentList}
+        onSaved={loadClass}
+      />
     </div>
   );
 }
@@ -701,7 +834,6 @@ REGOLE:
 
   return (
     <div className="bg-card border border-border rounded-2xl overflow-hidden flex flex-col" style={{ height: "500px" }}>
-      {/* Header */}
       <div className="px-5 py-3 border-b border-border bg-muted/30">
         <div className="flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-primary" />
@@ -710,7 +842,6 @@ REGOLE:
         <p className="text-xs text-muted-foreground mt-0.5">Il coach conosce già la tua classe. Chiedigli quello che vuoi.</p>
       </div>
 
-      {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 && (
           <div className="text-center py-8">
@@ -750,7 +881,6 @@ REGOLE:
         )}
       </div>
 
-      {/* Input */}
       <div className="px-4 py-3 border-t border-border">
         <form onSubmit={(e) => { e.preventDefault(); sendMessage(input); }} className="flex gap-2">
           <Input

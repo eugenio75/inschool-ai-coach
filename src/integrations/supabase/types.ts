@@ -876,6 +876,66 @@ export type Database = {
         }
         Relationships: []
       }
+      manual_grades: {
+        Row: {
+          assignment_id: string | null
+          assignment_title: string | null
+          class_id: string
+          created_at: string
+          grade: string
+          grade_scale: string
+          graded_at: string
+          id: string
+          notes: string | null
+          student_id: string | null
+          student_name: string
+          teacher_id: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          assignment_title?: string | null
+          class_id: string
+          created_at?: string
+          grade: string
+          grade_scale?: string
+          graded_at?: string
+          id?: string
+          notes?: string | null
+          student_id?: string | null
+          student_name: string
+          teacher_id: string
+        }
+        Update: {
+          assignment_id?: string | null
+          assignment_title?: string | null
+          class_id?: string
+          created_at?: string
+          grade?: string
+          grade_scale?: string
+          graded_at?: string
+          id?: string
+          notes?: string | null
+          student_id?: string | null
+          student_name?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_grades_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_grades_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classi"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       material_favorites: {
         Row: {
           created_at: string
