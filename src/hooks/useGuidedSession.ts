@@ -852,6 +852,15 @@ Tono caldo e incoraggiante.`;
   async function createAndStartSession(emotion: string, fam: Familiarity | null) {
     setLoading(true);
 
+    // FIX 3: Check that assignment content exists before starting
+    if (!homework?.description && !homework?.title) {
+      console.error("[useGuidedSession] Cannot start session: homework content is missing");
+      setMessages(prev => [...prev, { role: "assistant" as const, content: "Ops! Non riesco a leggere il contenuto del compito. Riprova o contatta il tuo docente." }]);
+      setSetupDone(true);
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data: { session: authSession } } = await supabase.auth.getSession();
       const res = await fetch(
