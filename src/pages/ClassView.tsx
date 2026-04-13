@@ -6,7 +6,7 @@ import {
   BarChart2, Send, Lightbulb,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import TeacherMaterialsTab from "@/components/teacher/TeacherMaterialsTab";
+import TeacherMaterialsTab, { type PrefilledMaterial } from "@/components/teacher/TeacherMaterialsTab";
 import ClassInsightsTab from "@/components/teacher/ClassInsightsTab";
 import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
