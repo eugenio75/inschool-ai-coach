@@ -509,8 +509,8 @@ export default function ClassView() {
                             {/* Feedback loop alerts for this assignment */}
                             {(() => {
                               const notDone = results.filter((r: any) => r.status !== "completed").length;
-                              const alerts: string[] = [];
-                              if (notDone >= 6) alerts.push(`${notDone} studenti non hanno completato — considera un follow-up.`);
+                              const alertItems: Array<{ msg: string; topic: string; count: number }> = [];
+                              if (notDone >= 6) alertItems.push({ msg: `${notDone} studenti non hanno completato — considera un follow-up.`, topic: a.title || "", count: notDone });
                               const errCounts: Record<string, number> = {};
                               results.forEach((r: any) => {
                                 if (r.errors_summary && typeof r.errors_summary === "object") {
@@ -518,15 +518,23 @@ export default function ClassView() {
                                 }
                               });
                               Object.entries(errCounts).forEach(([err, cnt]) => {
-                                if (cnt >= 4) alerts.push(`${cnt} studenti con errore su "${err}" — suggerisci recupero mirato.`);
+                                if (cnt >= 4) alertItems.push({ msg: `${cnt} studenti con errore su "${err}" — suggerisci recupero mirato.`, topic: err, count: cnt });
                               });
-                              if (alerts.length === 0) return null;
+                              if (alertItems.length === 0) return null;
                               return (
                                 <div className="mt-3 pt-3 border-t border-border space-y-1.5">
-                                  {alerts.map((msg, i) => (
-                                    <div key={i} className="flex items-start gap-2 text-xs text-amber-600 bg-amber-500/10 rounded-lg p-2">
-                                      <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                                      <span>{msg}</span>
+                                  {alertItems.map((item, i) => (
+                                    <div key={i} className="flex items-center gap-2 text-xs text-amber-600 bg-amber-500/10 rounded-lg p-2">
+                                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                                      <span className="flex-1">{item.msg}</span>
+                                      <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        className="h-6 text-[10px] px-2 shrink-0"
+                                        onClick={(e) => { e.stopPropagation(); handleGenerateRecovery(a.subject || classe?.materia || "", item.topic, item.count); }}
+                                      >
+                                        🔧 Genera recupero
+                                      </Button>
                                     </div>
                                   ))}
                                 </div>
@@ -550,7 +558,7 @@ export default function ClassView() {
 
         {/* ━━━ TAB: INSIGHTS ━━━ */}
         <TabsContent value="insights" className="mt-6">
-          <ClassInsightsTab classId={classId!} />
+          <ClassInsightsTab classId={classId!} onGenerateRecovery={handleGenerateRecovery} />
         </TabsContent>
 
         {/* ━━━ TAB: MATERIALI ━━━ */}
