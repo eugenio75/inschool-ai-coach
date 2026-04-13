@@ -1287,6 +1287,20 @@ Tono caldo e incoraggiante.`;
     recordInteraction();
     resetInactivityTimer();
 
+    // If session is already completed and student wants to finish — show button immediately
+    if (sessionCompleted) {
+      const lowerText = text.trim().toLowerCase();
+      const wantsToFinish = ["termina", "basta", "finisco", "no grazie", "ho finito", "no", "fine", "esci", "stop"].some(k => lowerText.includes(k));
+      if (wantsToFinish) {
+        setMessages(prev => [
+          ...prev.map(m => ({ ...m, actions: undefined })),
+          { role: "user" as const, content: text },
+          { role: "assistant" as const, content: "Ok, ottimo lavoro! 🎉", actions: [{ label: "🎉  Fine — Vedi il risultato", value: "finish_session", primary: true }] },
+        ]);
+        return;
+      }
+    }
+
     // Check if this is a hint request
     const isHintRequest = text.includes("Dammi un indizio") || text.includes("indizio") || text.includes("Sono bloccato");
     let currentHintCount = hintCountPerStep[currentStep] || 0;
