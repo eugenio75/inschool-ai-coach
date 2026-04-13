@@ -1512,7 +1512,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
         }
       }
 
-      if (sessionComplete && sessionId) {
+      if ((sessionComplete || terminateSession) && sessionId) {
         // Save conversation history
         const chatToSave = newMessages
           .filter((m: ChatMsg) => m.content?.trim())
@@ -1521,7 +1521,6 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
         if (isChild) {
           await childApi("complete-session", { sessionId, homeworkId, chatMessages: chatToSave });
         } else {
-          // Update existing conversation_sessions with final messages, or create if missing
           if (conversationId) {
             await supabase.from("conversation_sessions").update({
               messaggi: chatToSave as any,
@@ -1559,7 +1558,6 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           };
 
-          // Flashcards
           fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-flashcards`, {
             method: "POST",
             headers,
@@ -1586,7 +1584,6 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
             }
           }).catch(() => {});
 
-          // Extract concepts → memory_items (for "Ripasso di oggi")
           const chatForExtract = newMessages
             .filter((m: ChatMsg) => m.content?.trim())
             .map((m: ChatMsg) => ({ role: m.role === "assistant" ? "coach" : "student", text: m.content }));
@@ -1606,7 +1603,6 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
           }).catch(() => {});
         } catch {}
 
-        // Mark session as completed — add "Fine" button instead of auto-celebration
         setSessionCompleted(true);
 
         // Complete relevant daily missions
@@ -1622,19 +1618,37 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
         } catch (err) {
           console.error("Mission completion error:", err);
         }
-        // Append the finish action to the last message
-        setMessages(prev => {
-          const updated = [...prev];
-          const last = updated[updated.length - 1];
-          if (last && last.role === "assistant") {
-            updated[updated.length - 1] = {
-              ...last,
-              content: last.content + "\n\n✅ **Ottimo lavoro! Hai completato tutti gli step.**\nQuando hai finito di leggere, premi il pulsante qui sotto.",
-              actions: [{ label: "🎉  Fine — Vedi il risultato", value: "finish_session", primary: true }],
-            };
-          }
-          return updated;
-        });
+
+        if (terminateSession) {
+          // Student already said they want to finish — show finish button immediately
+          setMessages(prev => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last && last.role === "assistant") {
+              updated[updated.length - 1] = {
+                ...last,
+                actions: [{ label: "🎉  Fine — Vedi il risultato", value: "finish_session", primary: true }],
+              };
+            }
+            return updated;
+          });
+        } else {
+          // Exercises done — ask if they want more or to finish
+          setMessages(prev => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last && last.role === "assistant") {
+              updated[updated.length - 1] = {
+                ...last,
+                actions: [
+                  { label: "🔄  Voglio altri esercizi", value: "continue_exercises", icon: "🔄" },
+                  { label: "🎉  Termina sessione", value: "finish_session", primary: true, icon: "🎉" },
+                ],
+              };
+            }
+            return updated;
+          });
+        }
       }
     } catch (err) {
       console.error("sendMessage error:", err);
