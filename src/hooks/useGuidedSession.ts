@@ -1596,7 +1596,96 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
             conversation_id: conversationId,
             duration_seconds: activeStudySeconds.current,
           } as any).eq("id", sessionId);
-          await supabase.from("homework_tasks").update({ completed: true, updated_at: new Date().toISOString() }).eq("id", homeworkId);
+          
+          // Update homework_tasks only if it's a real homework (not a teacher_assignment mapped object)
+          if (!homework?._is_teacher_assignment) {
+            await supabase.from("homework_tasks").update({ completed: true, updated_at: new Date().toISOString() }).eq("id", homeworkId);
+          }
+
+          // ── Write to assignment_results ──
+          try {
+            const assignmentId = homework?._assignment_id || null;
+            let resolvedAssignmentId = assignmentId;
+
+            // If homeworkId is not already a known teacher_assignment, check if one exists
+            if (!resolvedAssignmentId && homeworkId) {
+              const { data: matchedAssignment } = await supabase
+                .from("teacher_assignments")
+                .select("id")
+                .eq("id", homeworkId)
+                .maybeSingle();
+              if (matchedAssignment) resolvedAssignmentId = matchedAssignment.id;
+            }
+
+            if (resolvedAssignmentId) {
+              // Calculate score from steps
+              const { data: sessionSteps } = await supabase
+                .from("study_steps")
+                .select("*")
+                .eq("session_id", sessionId)
+                .order("step_number", { ascending: true });
+
+              const completedSteps = (sessionSteps || []).filter(s => s.status === "completed");
+              const totalSessionSteps = (sessionSteps || []).length || 1;
+              const score = Math.round((completedSteps.length / totalSessionSteps) * 100);
+
+              // Calculate errors from hint counts and difficulty signals
+              const totalHintsUsed = Object.values(hintCountPerStep).reduce((sum, c) => sum + c, 0);
+              const difficultyTopics = newMessages
+                .filter(m => m.role === "assistant" && m.content?.includes("[SEGNALA_DIFFICOLTÀ:"))
+                .map(m => {
+                  const match = m.content?.match(/\[SEGNALA_DIFFICOLTÀ:\s*(.+?)\]/);
+                  return match ? match[1] : null;
+                })
+                .filter(Boolean);
+
+              const errorsSummary = {
+                totalErrors: totalHintsUsed,
+                hintUsed: totalHintsUsed,
+                givenByCoach: (sessionSteps || []).filter(s => s.hint_count && s.hint_count >= 3).length,
+                argomenti: difficultyTopics,
+              };
+
+              const answers = (sessionSteps || []).map(s => ({
+                step: s.step_number,
+                correct: s.status === "completed" && (!s.hint_count || s.hint_count === 0),
+                attempts: 1 + (s.hint_count || 0),
+              }));
+
+              // Upsert into assignment_results
+              const { error: upsertErr } = await supabase
+                .from("assignment_results")
+                .upsert({
+                  assignment_id: resolvedAssignmentId,
+                  student_id: userId,
+                  session_id: sessionId,
+                  status: "completed",
+                  score,
+                  completed_at: new Date().toISOString(),
+                  errors_summary: errorsSummary as any,
+                  answers: answers as any,
+                }, { onConflict: "assignment_id,student_id" } as any);
+
+              if (upsertErr) {
+                console.error("[useGuidedSession] assignment_results upsert error:", upsertErr);
+                // Fallback: try insert if upsert fails (no unique constraint yet)
+                await supabase.from("assignment_results").insert({
+                  assignment_id: resolvedAssignmentId,
+                  student_id: userId,
+                  session_id: sessionId,
+                  status: "completed",
+                  score,
+                  completed_at: new Date().toISOString(),
+                  errors_summary: errorsSummary as any,
+                  answers: answers as any,
+                });
+              }
+
+              console.log("[useGuidedSession] ✅ assignment_results written for assignment:", resolvedAssignmentId, "score:", score);
+            }
+          } catch (arErr) {
+            console.error("[useGuidedSession] Failed to write assignment_results:", arErr);
+          }
         }
 
         // Generate flashcards + extract concepts in background
