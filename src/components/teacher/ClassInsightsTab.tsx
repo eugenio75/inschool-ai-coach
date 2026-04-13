@@ -5,9 +5,11 @@ import {
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface ClassInsightsProps {
   classId: string;
+  onGenerateRecovery?: (subject: string, topic: string, count: number) => void;
 }
 
 interface InsightsData {
@@ -48,7 +50,7 @@ const FORMAT_COLORS: Record<string, string> = {
   "non definito": "bg-muted",
 };
 
-export default function ClassInsightsTab({ classId }: ClassInsightsProps) {
+export default function ClassInsightsTab({ classId, onGenerateRecovery }: ClassInsightsProps) {
   const [data, setData] = useState<InsightsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -194,6 +196,16 @@ export default function ClassInsightsTab({ classId }: ClassInsightsProps) {
                   <Badge variant="secondary" className="text-[10px]">
                     {ht.affectedStudents}/{data.totalStudents} ({ht.percentage}%)
                   </Badge>
+                  {onGenerateRecovery && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="h-6 text-[10px] px-2 shrink-0"
+                      onClick={() => onGenerateRecovery("", ht.topic, ht.affectedStudents)}
+                    >
+                      🔧 Genera recupero
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
