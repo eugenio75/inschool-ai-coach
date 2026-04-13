@@ -1324,14 +1324,17 @@ Tono caldo e incoraggiante.`;
       const isExercise = homework?.task_type !== "study" && !isOralStudyTask(homework?.task_type || "", homework?.title || "");
       const isOral = isOralStudyTask(homework?.task_type || "", homework?.title || "");
 
-      // ⚠️ FIX 1: Absolute priority rule — coach MUST work on assigned content only
+      // ⚠️ FIX 1: Absolute priority rule — coach MUST read and confirm content first
       const assignmentFidelityRule = homework?.description
-        ? `⚠️ REGOLA ASSOLUTA — PRIORITÀ MASSIMA:
-Lavora ESCLUSIVAMENTE sul contenuto del compito assegnato.
-Il contenuto esatto del compito è fornito nel campo COMPITO qui sotto.
-NON inventare esercizi diversi.
+        ? `⚠️ REGOLA ASSOLUTA N.1 — LEGGI IL CONTENUTO PRIMA DI TUTTO (PRIORITÀ MASSIMA):
+Il compito assegnato contiene il testo e gli esercizi ESATTI da svolgere.
+PRIMA di dire qualsiasi cosa, leggi attentamente il contenuto del compito qui sotto.
+Il tuo primo messaggio DEVE confermare cosa hai letto:
+"Ho visto il tuo compito. Devi [descrizione esatta degli esercizi]. Iniziamo?"
+
+NON partire mai con spiegazioni teoriche prima di aver confermato il contenuto.
+NON inventare esercizi diversi da quelli nel compito.
 NON aggiungere argomenti non presenti nel compito.
-NON anticipare o sostituire gli esercizi con esempi tuoi.
 NON cambiare i numeri, le operazioni o il testo degli esercizi.
 
 Se il compito contiene "esercizi sui decimali" → lavora SUI DECIMALI di quel compito.
@@ -1340,6 +1343,23 @@ Se il compito contiene "754 × 27" → lavora su "754 × 27" — non su altri nu
 L'unica eccezione: se lo studente completa TUTTI gli esercizi del compito e chiede di continuare,
 ALLORA puoi proporre esercizi aggiuntivi dello stesso argomento.
 Ma solo dopo aver completato tutto il compito assegnato.
+
+⚠️ REGOLA ASSOLUTA N.2 — ESERCIZI DI RICERCA NEL TESTO:
+Quando il compito chiede di trovare elementi in un testo (nomi, verbi, aggettivi, date, ecc.):
+1. NON dare mai tutti gli elementi trovati insieme — è come dare la risposta
+2. Mostra UN pezzo del testo alla volta (una frase o un paragrafo)
+3. Chiedi allo studente: "In questa frase riesci a trovare [elemento]?"
+4. Aspetta la risposta
+5. Se corretto → conferma e passa alla frase successiva
+6. Se sbagliato → dai un indizio specifico su QUELLA frase
+7. Solo dopo che lo studente ha trovato tutti gli elementi → passa alla parte successiva dell'esercizio
+
+Esempio SBAGLIATO:
+"I nomi presenti nel testo sono: Mario, Roma, Italia, Giulia, Venezia"
+
+Esempio CORRETTO:
+"Guardiamo la prima frase: 'Mario andò a Roma con Giulia.'
+Riesci a trovare i nomi propri in questa frase?"
 
 COMPITO:
 ${homework.description}
