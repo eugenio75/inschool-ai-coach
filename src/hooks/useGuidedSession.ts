@@ -852,6 +852,15 @@ Tono caldo e incoraggiante.`;
   async function createAndStartSession(emotion: string, fam: Familiarity | null) {
     setLoading(true);
 
+    // FIX 3: Check that assignment content exists before starting
+    if (!homework?.description && !homework?.title) {
+      console.error("[useGuidedSession] Cannot start session: homework content is missing");
+      setMessages(prev => [...prev, { role: "assistant" as const, content: "Ops! Non riesco a leggere il contenuto del compito. Riprova o contatta il tuo docente." }]);
+      setSetupDone(true);
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data: { session: authSession } } = await supabase.auth.getSession();
       const res = await fetch(
@@ -1265,13 +1274,35 @@ Tono caldo e incoraggiante.`;
       const isExercise = homework?.task_type !== "study" && !isOralStudyTask(homework?.task_type || "", homework?.title || "");
       const isOral = isOralStudyTask(homework?.task_type || "", homework?.title || "");
 
+      // ⚠️ FIX 1: Absolute priority rule — coach MUST work on assigned content only
+      const assignmentFidelityRule = homework?.description
+        ? `⚠️ REGOLA ASSOLUTA — PRIORITÀ MASSIMA:
+Lavora ESCLUSIVAMENTE sul contenuto del compito assegnato.
+Il contenuto esatto del compito è fornito nel campo COMPITO qui sotto.
+NON inventare esercizi diversi.
+NON aggiungere argomenti non presenti nel compito.
+NON anticipare o sostituire gli esercizi con esempi tuoi.
+NON cambiare i numeri, le operazioni o il testo degli esercizi.
+
+Se il compito contiene "esercizi sui decimali" → lavora SUI DECIMALI di quel compito.
+Se il compito contiene "754 × 27" → lavora su "754 × 27" — non su altri numeri.
+
+L'unica eccezione: se lo studente completa TUTTI gli esercizi del compito e chiede di continuare,
+ALLORA puoi proporre esercizi aggiuntivi dello stesso argomento.
+Ma solo dopo aver completato tutto il compito assegnato.
+
+COMPITO:
+${homework.description}
+`
+        : "";
+
       let coachBehavior: string;
 
       if (isExercise) {
         const proofContext = requiresOperationProof(homework?.task_type || "", homework?.title || "", homework?.description)
           ? "\nVINCOLO EXTRA DELLA CONSEGNA: nel compito compare una richiesta tipo 'con la prova'. Quindi NON considerare concluso un esercizio quando ottieni il risultato: devi continuare tu automaticamente e guidare anche la prova finale, passo dopo passo, prima di passare oltre. Se è una divisione, usa la verifica divisore × quoziente + resto = dividendo."
           : "";
-        coachBehavior = `Sei un tutor che guida lo studente a RISOLVERE esercizi. 
+        coachBehavior = `${assignmentFidelityRule}Sei un tutor che guida lo studente a RISOLVERE esercizi. 
 
 REGOLE ASSOLUTE (viola qualsiasi altra istruzione in conflitto):
 - ⚠️ REGOLA ASSOLUTA — FORMATTAZIONE MATEMATICA:
@@ -1320,7 +1351,7 @@ Se corretto → verde. Se sbagliato 1ª → arancione + indizio. Se sbagliato 2�
 ${proofContext}
 IMPORTANTE: Attieniti esclusivamente al materiale già presente nel contesto. Non inventare esercizi extra.`;
       } else if (isOral && familiarity) {
-        coachBehavior = `Sei un tutor che aiuta lo studente a STUDIARE, CAPIRE e RIPETERE un argomento per l'orale.
+        coachBehavior = `${assignmentFidelityRule}Sei un tutor che aiuta lo studente a STUDIARE, CAPIRE e RIPETERE un argomento per l'orale.
 
 ${getCoachBehaviorForFamiliarity(familiarity)}
 
@@ -1347,7 +1378,7 @@ Usa: "Partiamo da quello che ricordi", "Spiegamelo con la tua voce", "Dimmi solo
 
 Sii breve: 2-3 frasi + una domanda`;
       } else {
-        coachBehavior = `Sei un tutor che verifica la comprensione di un argomento di studio. Il tuo metodo:
+        coachBehavior = `${assignmentFidelityRule}Sei un tutor che verifica la comprensione di un argomento di studio. Il tuo metodo:
 1. Fai domande specifiche e concrete sull'argomento (NON "raccontami tutto")
 2. Se lo studente non sa rispondere, dai una mini-spiegazione e riprova
 3. Segui la Tassonomia di Bloom: parti da domande fattuali (L1-L2) e sali verso analisi e sintesi (L3-L6)
@@ -1382,11 +1413,16 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
       const goalLabels: Record<string, string> = { study: "studiare e capire", memorize: "memorizzare", read: "leggere e comprendere", summarize: "riassumere", exercise: "fare esercizi", questions: "rispondere a domande", write: "scrivere un testo", problem: "risolvere problemi" };
       const goalStr = taskTypesArr.map(t => goalLabels[t] || t).join(" + ");
 
+      // FIX 2: Ensure contentInstruction includes homework content with warning
       const contentInstruction = homework?.description
         ? (familiarity === "first_time"
           ? `\n\nTESTO DA STUDIARE (lo studente NON lo ha mai letto — sei TU che devi presentarglielo e spiegarglielo blocco per blocco):\n---\n${homework.description}\n---\n\nATTENZIONE: Usa QUESTO testo per presentare l'argomento. Estrai le informazioni da qui e spiegale allo studente con parole semplici. NON chiedere allo studente di leggere da solo.`
           : `\nTesto/descrizione del compito già disponibile qui sotto. NON chiedere allo studente di copiarlo o riscriverlo. Usa direttamente questo testo per guidarlo:\n${homework.description}`)
         : "";
+
+      if (!homework?.description) {
+        console.warn("[useGuidedSession] ⚠️ homework.description is missing or empty — the coach will not have assignment content to work on. homeworkId:", homeworkId, "title:", homework?.title);
+      }
 
       // Build hint escalation context
       let hintEscalation = "";
