@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import TeacherMaterialsTab, { type PrefilledMaterial } from "@/components/teacher/TeacherMaterialsTab";
 import ClassInsightsTab from "@/components/teacher/ClassInsightsTab";
 import ManualGradeModal from "@/components/teacher/ManualGradeModal";
+import OcrGradeModal from "@/components/teacher/OcrGradeModal";
 import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -169,6 +170,7 @@ export default function ClassView() {
   const [prefilledMaterial, setPrefilledMaterial] = useState<PrefilledMaterial | null>(null);
   const [verificheOpen, setVerificheOpen] = useState(false);
   const [showGradeModal, setShowGradeModal] = useState(false);
+  const [ocrAssignment, setOcrAssignment] = useState<any>(null);
 
   useEffect(() => {
     if (!classId) return;
@@ -508,12 +510,12 @@ export default function ClassView() {
 
                   {verificheOpen && (
                     <div className="px-4 pb-4 space-y-3">
-                      {/* Manual grade button */}
-                      <div className="flex justify-end">
-                        <Button variant="outline" size="sm" className="rounded-xl text-xs h-7" onClick={() => setShowGradeModal(true)}>
-                          <PenLine className="w-3 h-3 mr-1" /> Inserisci voto manuale
-                        </Button>
-                      </div>
+                      {/* Action buttons */}
+                       <div className="flex justify-end gap-2">
+                         <Button variant="outline" size="sm" className="rounded-xl text-xs h-7" onClick={() => setShowGradeModal(true)}>
+                           <PenLine className="w-3 h-3 mr-1" /> Inserisci voto manuale
+                         </Button>
+                       </div>
 
                       {assignmentResults.map((a: any) => {
                         const results = a.results || [];
@@ -532,16 +534,24 @@ export default function ClassView() {
                                   {a.assigned_at && ` · ${new Date(a.assigned_at).toLocaleDateString("it-IT")}`}
                                 </p>
                               </div>
-                              <div className="flex items-center gap-4 shrink-0">
-                                <div className="text-center">
-                                  <p className="text-lg font-bold text-foreground">{avgScore}%</p>
-                                  <p className="text-[10px] text-muted-foreground">punteggio SarAI</p>
-                                </div>
-                                <div className="text-center">
-                                  <p className="text-lg font-bold text-foreground">{completed}/{results.length}</p>
-                                  <p className="text-[10px] text-muted-foreground">completati</p>
-                                </div>
-                              </div>
+                              <div className="flex items-center gap-3 shrink-0">
+                                 <Button
+                                   variant="outline"
+                                   size="sm"
+                                   className="rounded-xl text-[10px] h-7 px-2"
+                                   onClick={(e) => { e.stopPropagation(); setOcrAssignment(a); }}
+                                 >
+                                   📸 Carica e correggi
+                                 </Button>
+                                 <div className="text-center">
+                                   <p className="text-lg font-bold text-foreground">{avgScore}%</p>
+                                   <p className="text-[10px] text-muted-foreground">punteggio SarAI</p>
+                                 </div>
+                                 <div className="text-center">
+                                   <p className="text-lg font-bold text-foreground">{completed}/{results.length}</p>
+                                   <p className="text-[10px] text-muted-foreground">completati</p>
+                                 </div>
+                               </div>
                             </div>
                             <div className="space-y-1.5 pt-3 border-t border-border">
                               {results.map((r: any) => {
@@ -582,18 +592,36 @@ export default function ClassView() {
                             </div>
 
                             {/* Manual grades for this assignment */}
-                            {manualGrades.filter(g => g.assignment_id === a.id).map((g: any) => (
-                              <div key={g.id} className="flex items-center gap-2 text-xs mt-1.5 p-1.5">
-                                <span>📝</span>
-                                <span className="flex-1 text-foreground">{g.student_name}</span>
-                                <span className="font-semibold text-foreground">
-                                  {g.grade}{g.grade_scale !== "giudizio" ? g.grade_scale : ""}
-                                </span>
-                                <span className="text-[10px] text-muted-foreground">
-                                  {new Date(g.graded_at).toLocaleDateString("it-IT")}
-                                </span>
-                              </div>
-                            ))}
+                            {manualGrades.filter(g => g.assignment_id === a.id).map((g: any) => {
+                              const isOcr = g.source === "ocr_corrected";
+                              const icon = isOcr && g.teacher_confirmed ? "🤖" : "📝";
+                              return (
+                                <div key={g.id} className="flex items-center gap-2 text-xs mt-1.5 p-1.5">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="cursor-help">{icon}</span>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="text-xs">
+                                      {isOcr
+                                        ? g.teacher_confirmed
+                                          ? "Punteggio proposto da SarAI e confermato"
+                                          : "Punteggio proposto da SarAI, modificato dal docente"
+                                        : "Voto inserito manualmente"}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  <span className="flex-1 text-foreground">{g.student_name}</span>
+                                  <span className="font-semibold text-foreground">
+                                    {g.grade}{g.grade_scale !== "giudizio" ? g.grade_scale : ""}
+                                  </span>
+                                  {isOcr && g.ai_proposed_grade && !g.teacher_confirmed && (
+                                    <span className="text-[10px] text-muted-foreground">(SarAI: {g.ai_proposed_grade})</span>
+                                  )}
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {new Date(g.graded_at).toLocaleDateString("it-IT")}
+                                  </span>
+                                </div>
+                              );
+                            })}
 
                             {/* Feedback loop alerts */}
                             {(() => {
@@ -666,9 +694,10 @@ export default function ClassView() {
                   <span>⚠ = punteggio SarAI sotto il 50% — potrebbe necessitare recupero</span>
                   <span>✅ Completato = attività completata</span>
                   <span>🕐 In attesa = attività non ancora completata</span>
-                  <span>📝 = voto inserito manualmente dal docente</span>
-                </div>
-              </div>
+                   <span>📝 = voto inserito manualmente dal docente</span>
+                   <span>🤖 = punteggio proposto da SarAI e confermato dal docente</span>
+                 </div>
+               </div>
 
               {/* BLOCK 7 — Disclaimer */}
               <p className="text-xs text-muted-foreground text-center pt-2 pb-4">
@@ -720,6 +749,19 @@ export default function ClassView() {
         assignments={assignmentList}
         onSaved={loadClass}
       />
+
+      {/* OCR Grade Modal */}
+      {ocrAssignment && (
+        <OcrGradeModal
+          open={!!ocrAssignment}
+          onOpenChange={(open) => { if (!open) setOcrAssignment(null); }}
+          classId={classId!}
+          userId={user!.id}
+          assignment={ocrAssignment}
+          students={studentList}
+          onSaved={loadClass}
+        />
+      )}
     </div>
   );
 }
