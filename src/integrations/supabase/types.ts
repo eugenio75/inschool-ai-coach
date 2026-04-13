@@ -878,6 +878,7 @@ export type Database = {
       }
       manual_grades: {
         Row: {
+          ai_proposed_grade: string | null
           assignment_id: string | null
           assignment_title: string | null
           class_id: string
@@ -887,11 +888,14 @@ export type Database = {
           graded_at: string
           id: string
           notes: string | null
+          source: string | null
           student_id: string | null
           student_name: string
+          teacher_confirmed: boolean | null
           teacher_id: string
         }
         Insert: {
+          ai_proposed_grade?: string | null
           assignment_id?: string | null
           assignment_title?: string | null
           class_id: string
@@ -901,11 +905,14 @@ export type Database = {
           graded_at?: string
           id?: string
           notes?: string | null
+          source?: string | null
           student_id?: string | null
           student_name: string
+          teacher_confirmed?: boolean | null
           teacher_id: string
         }
         Update: {
+          ai_proposed_grade?: string | null
           assignment_id?: string | null
           assignment_title?: string | null
           class_id?: string
@@ -915,8 +922,10 @@ export type Database = {
           graded_at?: string
           id?: string
           notes?: string | null
+          source?: string | null
           student_id?: string | null
           student_name?: string
+          teacher_confirmed?: boolean | null
           teacher_id?: string
         }
         Relationships: [
