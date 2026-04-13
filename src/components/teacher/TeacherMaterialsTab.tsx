@@ -510,6 +510,28 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   const [aiContextUploading, setAiContextUploading] = useState(false);
   const aiFileRef = useRef<HTMLInputElement>(null);
 
+  // === Type-specific fields ===
+  // Verifica
+  const [numDomande, setNumDomande] = useState("10");
+  const [numDomandeCustom, setNumDomandeCustom] = useState("");
+  const [struttura, setStruttura] = useState("Mista aperte+chiuse");
+  const [punteggioTotale, setPunteggioTotale] = useState("10");
+  const [punteggioCustom, setPunteggioCustom] = useState("");
+  const [tempoDisponibile, setTempoDisponibile] = useState("45 min");
+  // Compito
+  const [tipoConsegna, setTipoConsegna] = useState("Misto");
+  const [tempoStimato, setTempoStimato] = useState("30 min");
+  // Esercizi
+  const [numEsercizi, setNumEsercizi] = useState("10");
+  const [numEserciziCustom, setNumEserciziCustom] = useState("");
+  const [difficolta, setDifficolta] = useState("Normale");
+  const [includiSoluzioni, setIncludiSoluzioni] = useState("Sì");
+  // Recupero
+  const [modalitaRecupero, setModalitaRecupero] = useState("Spiegazione + esercizi");
+  const [livelloPartenza, setLivelloPartenza] = useState("Argomento specifico");
+  // Potenziamento
+  const [obiettivoPotenziamento, setObiettivoPotenziamento] = useState("Approfondimento teorico");
+
   // Inline refinement state
   const [aiRefinePrompt, setAiRefinePrompt] = useState("");
   const [aiRefining, setAiRefining] = useState(false);
