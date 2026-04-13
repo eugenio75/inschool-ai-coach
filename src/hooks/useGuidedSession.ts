@@ -660,6 +660,42 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   }
 
   async function handleMethodAction(value: string) {
+    // Handle "continue with more exercises" after completion
+    if (value === "continue_exercises") {
+      setMessages(prev => [
+        ...prev.map(m => ({ ...m, actions: undefined })),
+        { role: "user" as const, content: "Voglio altri esercizi" },
+      ]);
+      setSessionCompleted(false);
+      setSending(true);
+      setStreamingText("");
+      try {
+        const lang = getCurrentLang();
+        await streamChat({
+          messages: [
+            ...messages.map(m => ({ ...m, actions: undefined })),
+            { role: "user" as const, content: "Voglio altri esercizi simili per allenarmi" },
+          ],
+          onDelta: () => {},
+          onDone: (full: string) => {
+            setMessages(prev => [...prev, { role: "assistant" as const, content: full }]);
+            setStreamingText("");
+            setSending(false);
+          },
+          extraBody: {
+            profileId: isChild ? getChildSession()?.profileId : homework?.child_profile_id || userId,
+            subject: homework?.subject || undefined,
+            sessionFormat: "guided",
+            systemPrompt: `Lo studente ha completato tutti gli esercizi del compito e vuole continuare ad allenarsi. Proponi esercizi SIMILI (stesso tipo, stessa difficoltà) ma con numeri diversi. Quando lo studente dice di voler terminare, scrivi [TERMINA_SESSIONE].`,
+            lang,
+          },
+        });
+      } catch {
+        setSending(false);
+      }
+      return;
+    }
+
     // Handle finish session action
     if (value === "finish_session") {
       setMessages(prev => prev.map(m => ({ ...m, actions: undefined })));
@@ -1251,6 +1287,20 @@ Tono caldo e incoraggiante.`;
     recordInteraction();
     resetInactivityTimer();
 
+    // If session is already completed and student wants to finish — show button immediately
+    if (sessionCompleted) {
+      const lowerText = text.trim().toLowerCase();
+      const wantsToFinish = ["termina", "basta", "finisco", "no grazie", "ho finito", "no", "fine", "esci", "stop"].some(k => lowerText.includes(k));
+      if (wantsToFinish) {
+        setMessages(prev => [
+          ...prev.map(m => ({ ...m, actions: undefined })),
+          { role: "user" as const, content: text },
+          { role: "assistant" as const, content: "Ok, ottimo lavoro! 🎉", actions: [{ label: "🎉  Fine — Vedi il risultato", value: "finish_session", primary: true }] },
+        ]);
+        return;
+      }
+    }
+
     // Check if this is a hint request
     const isHintRequest = text.includes("Dammi un indizio") || text.includes("indizio") || text.includes("Sono bloccato");
     let currentHintCount = hintCountPerStep[currentStep] || 0;
@@ -1447,7 +1497,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
         onDelta: () => {},
         onDone: () => {},
         extraBody: {
-          systemPrompt: `${coachBehavior}\n\nCONSEGNA DELLO STUDENTE (scritta da lui nel campo "Cosa devi fare?"): "${homework?.title}"\nQuesta consegna è VINCOLANTE: ogni parola conta. Se lo studente ha scritto "con la prova", "fai la verifica", "spiega il metodo", ecc., DEVI seguire TUTTE le indicazioni fino alla fine. Non considerare il compito concluso finché non hai coperto tutto ciò che la consegna richiede.\n\nMateria: ${homework?.subject}. Livello: ${schoolLevel}.\nOBIETTIVO: ${goalStr}.${contentInstruction}${systemAddition}${emotionContext}${hintEscalation}${markDifficult}\n\nSe lo studente completa lo step correttamente, scrivi [STEP_COMPLETATO: ${currentStep}]. Se tutti gli step sono completati, scrivi [SESSIONE_COMPLETATA]. Se lo studente mostra una difficoltà specifica, scrivi [SEGNALA_DIFFICOLTÀ: descrizione].`,
+          systemPrompt: `${coachBehavior}\n\nCONSEGNA DELLO STUDENTE (scritta da lui nel campo "Cosa devi fare?"): "${homework?.title}"\nQuesta consegna è VINCOLANTE: ogni parola conta. Se lo studente ha scritto "con la prova", "fai la verifica", "spiega il metodo", ecc., DEVI seguire TUTTE le indicazioni fino alla fine. Non considerare il compito concluso finché non hai coperto tutto ciò che la consegna richiede.\n\nMateria: ${homework?.subject}. Livello: ${schoolLevel}.\nOBIETTIVO: ${goalStr}.${contentInstruction}${systemAddition}${emotionContext}${hintEscalation}${markDifficult}\n\nSe lo studente completa lo step correttamente, scrivi [STEP_COMPLETATO: ${currentStep}]. Se TUTTI gli esercizi del compito sono stati completati, scrivi [SESSIONE_COMPLETATA]. Se lo studente mostra una difficoltà specifica, scrivi [SEGNALA_DIFFICOLTÀ: descrizione].\n\nQUANDO TUTTI GLI ESERCIZI SONO FINITI:\n- Scrivi [SESSIONE_COMPLETATA] nel messaggio\n- Poi chiedi brevemente: "Vuoi fare qualche altro esercizio simile per allenarti, o preferisci terminare?"\n- NON fare altre domande, NON aggiungere commenti lunghi.\n- Se lo studente dice "termina", "basta", "finisco", "no grazie", "ho finito" → rispondi SOLO "Ok, ottimo lavoro! 🎉" e scrivi [TERMINA_SESSIONE].\n- NON insistere, NON fare domande di follow-up dopo che lo studente ha detto di voler terminare.`,
           sessionFormat: "guided",
           subject: homework?.subject || undefined,
         },
@@ -1457,12 +1507,14 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
       let displayText = fullText;
       const stepComplete = fullText.match(/\[STEP_COMPLETATO:\s*(\d+)\]/);
       const sessionComplete = fullText.includes("[SESSIONE_COMPLETATA]");
+      const terminateSession = fullText.includes("[TERMINA_SESSIONE]");
       const difficultySignal = fullText.match(/\[SEGNALA_DIFFICOLTÀ:\s*(.+?)\]/);
 
       displayText = displayText
-        .replace(/\[STEP_COMPLETATO:\s*\d+\]/, "")
-        .replace("[SESSIONE_COMPLETATA]", "")
-        .replace(/\[SEGNALA_DIFFICOLTÀ:\s*.+?\]/, "")
+        .replace(/\[STEP_COMPLETATO:\s*\d+\]/g, "")
+        .replace(/\[SESSIONE_COMPLETATA\]/g, "")
+        .replace(/\[TERMINA_SESSIONE\]/g, "")
+        .replace(/\[SEGNALA_DIFFICOLTÀ:\s*.+?\]/g, "")
         .trim();
 
       // Mic reminder removed — handled once-ever by the UI on session start
@@ -1510,7 +1562,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
         }
       }
 
-      if (sessionComplete && sessionId) {
+      if ((sessionComplete || terminateSession) && sessionId) {
         // Save conversation history
         const chatToSave = newMessages
           .filter((m: ChatMsg) => m.content?.trim())
@@ -1519,7 +1571,6 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
         if (isChild) {
           await childApi("complete-session", { sessionId, homeworkId, chatMessages: chatToSave });
         } else {
-          // Update existing conversation_sessions with final messages, or create if missing
           if (conversationId) {
             await supabase.from("conversation_sessions").update({
               messaggi: chatToSave as any,
@@ -1557,7 +1608,6 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           };
 
-          // Flashcards
           fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-flashcards`, {
             method: "POST",
             headers,
@@ -1584,7 +1634,6 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
             }
           }).catch(() => {});
 
-          // Extract concepts → memory_items (for "Ripasso di oggi")
           const chatForExtract = newMessages
             .filter((m: ChatMsg) => m.content?.trim())
             .map((m: ChatMsg) => ({ role: m.role === "assistant" ? "coach" : "student", text: m.content }));
@@ -1604,7 +1653,6 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
           }).catch(() => {});
         } catch {}
 
-        // Mark session as completed — add "Fine" button instead of auto-celebration
         setSessionCompleted(true);
 
         // Complete relevant daily missions
@@ -1620,19 +1668,37 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
         } catch (err) {
           console.error("Mission completion error:", err);
         }
-        // Append the finish action to the last message
-        setMessages(prev => {
-          const updated = [...prev];
-          const last = updated[updated.length - 1];
-          if (last && last.role === "assistant") {
-            updated[updated.length - 1] = {
-              ...last,
-              content: last.content + "\n\n✅ **Ottimo lavoro! Hai completato tutti gli step.**\nQuando hai finito di leggere, premi il pulsante qui sotto.",
-              actions: [{ label: "🎉  Fine — Vedi il risultato", value: "finish_session", primary: true }],
-            };
-          }
-          return updated;
-        });
+
+        if (terminateSession) {
+          // Student already said they want to finish — show finish button immediately
+          setMessages(prev => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last && last.role === "assistant") {
+              updated[updated.length - 1] = {
+                ...last,
+                actions: [{ label: "🎉  Fine — Vedi il risultato", value: "finish_session", primary: true }],
+              };
+            }
+            return updated;
+          });
+        } else {
+          // Exercises done — ask if they want more or to finish
+          setMessages(prev => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last && last.role === "assistant") {
+              updated[updated.length - 1] = {
+                ...last,
+                actions: [
+                  { label: "🔄  Voglio altri esercizi", value: "continue_exercises", icon: "🔄" },
+                  { label: "🎉  Termina sessione", value: "finish_session", primary: true, icon: "🎉" },
+                ],
+              };
+            }
+            return updated;
+          });
+        }
       }
     } catch (err) {
       console.error("sendMessage error:", err);
