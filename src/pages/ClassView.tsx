@@ -592,18 +592,36 @@ export default function ClassView() {
                             </div>
 
                             {/* Manual grades for this assignment */}
-                            {manualGrades.filter(g => g.assignment_id === a.id).map((g: any) => (
-                              <div key={g.id} className="flex items-center gap-2 text-xs mt-1.5 p-1.5">
-                                <span>📝</span>
-                                <span className="flex-1 text-foreground">{g.student_name}</span>
-                                <span className="font-semibold text-foreground">
-                                  {g.grade}{g.grade_scale !== "giudizio" ? g.grade_scale : ""}
-                                </span>
-                                <span className="text-[10px] text-muted-foreground">
-                                  {new Date(g.graded_at).toLocaleDateString("it-IT")}
-                                </span>
-                              </div>
-                            ))}
+                            {manualGrades.filter(g => g.assignment_id === a.id).map((g: any) => {
+                              const isOcr = g.source === "ocr_corrected";
+                              const icon = isOcr && g.teacher_confirmed ? "🤖" : "📝";
+                              return (
+                                <div key={g.id} className="flex items-center gap-2 text-xs mt-1.5 p-1.5">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="cursor-help">{icon}</span>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="text-xs">
+                                      {isOcr
+                                        ? g.teacher_confirmed
+                                          ? "Punteggio proposto da SarAI e confermato"
+                                          : "Punteggio proposto da SarAI, modificato dal docente"
+                                        : "Voto inserito manualmente"}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  <span className="flex-1 text-foreground">{g.student_name}</span>
+                                  <span className="font-semibold text-foreground">
+                                    {g.grade}{g.grade_scale !== "giudizio" ? g.grade_scale : ""}
+                                  </span>
+                                  {isOcr && g.ai_proposed_grade && !g.teacher_confirmed && (
+                                    <span className="text-[10px] text-muted-foreground">(SarAI: {g.ai_proposed_grade})</span>
+                                  )}
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {new Date(g.graded_at).toLocaleDateString("it-IT")}
+                                  </span>
+                                </div>
+                              );
+                            })}
 
                             {/* Feedback loop alerts */}
                             {(() => {
