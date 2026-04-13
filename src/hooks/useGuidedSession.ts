@@ -660,6 +660,42 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   }
 
   async function handleMethodAction(value: string) {
+    // Handle "continue with more exercises" after completion
+    if (value === "continue_exercises") {
+      setMessages(prev => [
+        ...prev.map(m => ({ ...m, actions: undefined })),
+        { role: "user" as const, content: "Voglio altri esercizi" },
+      ]);
+      setSessionCompleted(false);
+      setSending(true);
+      setStreamingText("");
+      try {
+        const lang = getCurrentLang();
+        await streamChat({
+          messages: [
+            ...messages.map(m => ({ ...m, actions: undefined })),
+            { role: "user" as const, content: "Voglio altri esercizi simili per allenarmi" },
+          ],
+          onDelta: () => {},
+          onDone: (full: string) => {
+            setMessages(prev => [...prev, { role: "assistant" as const, content: full }]);
+            setStreamingText("");
+            setSending(false);
+          },
+          extraBody: {
+            profileId: isChild ? getChildSession()?.profileId : homework?.child_profile_id || userId,
+            subject: homework?.subject || undefined,
+            sessionFormat: "guided",
+            systemPrompt: `Lo studente ha completato tutti gli esercizi del compito e vuole continuare ad allenarsi. Proponi esercizi SIMILI (stesso tipo, stessa difficoltà) ma con numeri diversi. Quando lo studente dice di voler terminare, scrivi [TERMINA_SESSIONE].`,
+            lang,
+          },
+        });
+      } catch {
+        setSending(false);
+      }
+      return;
+    }
+
     // Handle finish session action
     if (value === "finish_session") {
       setMessages(prev => prev.map(m => ({ ...m, actions: undefined })));
