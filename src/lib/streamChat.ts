@@ -198,6 +198,14 @@ export async function streamChat({
     }
   }
 
+  // Guard against empty streaming result
+  if (!fullText.trim()) {
+    console.warn("[streamChat] Empty AI response (SSE path)");
+    const fallback = "Mi scuso, ho avuto un momento di distrazione! 😅 Puoi ripetere o riformulare la tua risposta?";
+    onDelta(fallback);
+    onDone(fallback);
+    return fallback;
+  }
+
   onDone(fullText);
   return fullText;
-}
