@@ -223,12 +223,17 @@ export default function ClassView() {
   const stats = computeClassStats(students, assignmentResults);
   const topics = computeTopicMastery(assignmentResults);
 
-  // Feedback loop alerts
-  const feedbackAlerts: string[] = [];
+  // Feedback loop alerts — now structured for recovery button
+  const feedbackAlertData: Array<{ msg: string; subject: string; topic: string; count: number }> = [];
   assignmentResults.forEach((a: any) => {
     const results = a.results || [];
     const notCompleted = results.filter((r: any) => r.status !== "completed").length;
-    if (notCompleted >= 6) feedbackAlerts.push(`"${a.title}": ${notCompleted} studenti non hanno completato — proponi un follow-up.`);
+    if (notCompleted >= 6) feedbackAlertData.push({
+      msg: `"${a.title}": ${notCompleted} studenti non hanno completato — proponi un follow-up.`,
+      subject: a.subject || classe?.materia || "",
+      topic: a.title || "",
+      count: notCompleted,
+    });
 
     // Common errors
     const errorCounts: Record<string, number> = {};
@@ -239,9 +244,24 @@ export default function ClassView() {
       }
     });
     Object.entries(errorCounts).forEach(([err, count]) => {
-      if (count >= 4) feedbackAlerts.push(`"${a.title}": ${count} studenti con errore su "${err}" — suggerisci recupero mirato.`);
+      if (count >= 4) feedbackAlertData.push({
+        msg: `"${a.title}": ${count} studenti con errore su "${err}" — suggerisci recupero mirato.`,
+        subject: a.subject || classe?.materia || "",
+        topic: err,
+        count,
+      });
     });
   });
+
+  function handleGenerateRecovery(subject: string, topic: string, count: number) {
+    setPrefilledMaterial({
+      tipo_attivita: "recupero",
+      materia: subject,
+      argomento: topic,
+      descrizione: `Esercizio di recupero mirato sull'argomento "${topic}" per ${count} studenti che mostrano difficoltà specifiche su questo punto.`,
+    });
+    setActiveTab("materiali");
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 pb-24">
@@ -543,6 +563,7 @@ export default function ClassView() {
             userId={user!.id}
             onReload={loadClass}
             autoCreate={searchParams.get("create") === "true"}
+            prefilledMaterial={prefilledMaterial}
           />
         </TabsContent>
 
