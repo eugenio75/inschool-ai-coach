@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.teacher-behavior-data]
 verify_jwt = false
+
+[functions.ocr-grade]
+verify_jwt = false

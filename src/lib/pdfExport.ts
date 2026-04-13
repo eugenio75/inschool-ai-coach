@@ -42,6 +42,7 @@ interface PdfMeta {
 export function buildPdfHtml(htmlContent: string, meta: PdfMeta): string {
   const isVerifica = meta.type === "verifica";
   const isTeacherOnly = meta.isTeacherOnly === true;
+  const showStudentFields = !isTeacherOnly;
   const adapted = meta.adaptedVersion;
   const adaptedColors: Record<string, { bg: string; color: string; label: string }> = {
     BES: { bg: "#FFF8E1", color: "#F9A825", label: "🟡 Versione BES" },
@@ -63,8 +64,8 @@ export function buildPdfHtml(htmlContent: string, meta: PdfMeta): string {
   .header .meta { font-size: 11px; color: #888; }
   ${isTeacherOnly ? `.header .badge { display:inline-block; background:#2E7D3220; color:#2E7D32; padding:2px 12px; border-radius:12px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }` : ""}
   ${adaptedMeta ? `.header .adapted-badge { display:inline-block; background:${adaptedMeta.bg}; color:${adaptedMeta.color}; padding:4px 16px; border-radius:12px; font-size:12px; font-weight:700; letter-spacing:0.03em; margin-bottom:10px; border:1px solid ${adaptedMeta.color}30; }` : ""}
-  ${isVerifica && !isTeacherOnly ? `.student-fields { margin: 16px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
-  .student-fields p { margin: 4px 0; font-size: 12px; }` : ""}
+  .student-fields { margin: 16px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+  .student-fields p { margin: 4px 0; font-size: 12px; }
   .content { margin-top: 16px; }
   @media print { body { -webkit-print-color-adjust: exact; } }
 </style></head><body>
@@ -74,7 +75,7 @@ export function buildPdfHtml(htmlContent: string, meta: PdfMeta): string {
   <h1>${meta.title}${isTeacherOnly ? " — Soluzioni" : ""}</h1>
   <div class="meta">${[typeLabel, meta.subject, meta.className, dateStr].filter(Boolean).join(" · ")}</div>
 </div>
-${isVerifica && !isTeacherOnly ? `<div class="student-fields"><p><strong>Nome:</strong> _________________________ <strong>Classe:</strong> _______ <strong>Data:</strong> _____________</p></div>` : ""}
+${showStudentFields ? `<div class="student-fields"><p><strong>Nome e Cognome:</strong> _______________________________________ <strong>Classe:</strong> _____________ <strong>Data:</strong> _____________</p></div>` : ""}
 <div class="content">${htmlContent}</div>
 </body></html>`;
 }
