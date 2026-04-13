@@ -599,6 +599,16 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     setPreviewAiEditMode(false);
     setPreviewAiPrompt("");
     setPreviewAiRefining(false);
+    // Reset type-specific fields
+    setNumDomande("10"); setNumDomandeCustom("");
+    setStruttura("Mista aperte+chiuse");
+    setPunteggioTotale("10"); setPunteggioCustom("");
+    setTempoDisponibile("45 min");
+    setTipoConsegna("Misto"); setTempoStimato("30 min");
+    setNumEsercizi("10"); setNumEserciziCustom("");
+    setDifficolta("Normale"); setIncludiSoluzioni("Sì");
+    setModalitaRecupero("Spiegazione + esercizi"); setLivelloPartenza("Argomento specifico");
+    setObiettivoPotenziamento("Approfondimento teorico");
   }
 
   function getPreviewContent(): string {
