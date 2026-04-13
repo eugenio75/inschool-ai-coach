@@ -363,6 +363,14 @@ function resolveDefaultSubjects(classSubjects: string[], teacherSubjects: string
 type FormMode = null | "write" | "ai" | "file";
 type DestinationType = "all" | "selected" | "pdf";
 
+export interface PrefilledMaterial {
+  tipo_attivita: string;
+  materia: string;
+  argomento: string;
+  descrizione: string;
+  studentIds?: string[];
+}
+
 interface Props {
   classId: string;
   classe: any;
@@ -371,6 +379,7 @@ interface Props {
   userId: string;
   onReload: () => void;
   autoCreate?: boolean;
+  prefilledMaterial?: PrefilledMaterial | null;
 }
 
 const MATERIE_OPTIONS_BASE = [
@@ -380,7 +389,7 @@ const MATERIE_OPTIONS_BASE = [
   "Informatica", "Latino", "Greco", "Diritto", "Economia",
 ];
 
-export default function TeacherMaterialsTab({ classId, classe, students, materials: propMaterials, userId, onReload, autoCreate }: Props) {
+export default function TeacherMaterialsTab({ classId, classe, students, materials: propMaterials, userId, onReload, autoCreate, prefilledMaterial }: Props) {
   // Local materials state + adapted map for SharedMaterialsList
   const [localMaterials, setLocalMaterials] = useState<any[]>([]);
   const [adaptedMap, setAdaptedMap] = useState<Record<string, Record<string, any>>>({});
