@@ -143,6 +143,7 @@ export default function ClassView() {
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "classe";
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [prefilledMaterial, setPrefilledMaterial] = useState<PrefilledMaterial | null>(null);
   const [verificheOpen, setVerificheOpen] = useState(false);
 
   useEffect(() => {
