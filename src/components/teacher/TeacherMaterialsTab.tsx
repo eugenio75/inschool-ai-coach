@@ -723,11 +723,17 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     setAiTitle(null);
     try {
       const subjectStr = selectedSubjects.join(", ") || classe?.materia || "";
+      const levelContext = classe?.ordine_scolastico ? `Livello scolastico: ${classe.ordine_scolastico}.` : "";
+      const studentsContext = students?.length ? `La classe ha ${students.length} studenti.` : "";
 
-      const isLezione = activityType === "lezione";
+      const resolvedNumDomande = numDomande === "Personalizzato" ? (numDomandeCustom || "10") : numDomande;
+      const resolvedPunteggio = punteggioTotale === "Personalizzato" ? (punteggioCustom || "10") : punteggioTotale;
+      const resolvedNumEsercizi = numEsercizi === "Personalizzato" ? (numEserciziCustom || "10") : numEsercizi;
 
-      let systemPrompt = isLezione
-        ? `Sei un docente esperto con anni di esperienza in aula. Genera un PIANO DI LEZIONE COMPLETO E DETTAGLIATO. Classe: ${classe?.nome || ""}. Materia: ${subjectStr}.
+      let systemPrompt: string;
+
+      if (activityType === "lezione") {
+        systemPrompt = `Sei un docente esperto con anni di esperienza in aula. Genera un PIANO DI LEZIONE COMPLETO E DETTAGLIATO. Classe: ${classe?.nome || ""}. Materia: ${subjectStr}. ${levelContext} ${studentsContext}
 
 REGOLE IMPORTANTI:
 1. La PRIMA RIGA del tuo output DEVE essere: TITOLO: [titolo contestuale della lezione, es. "Lezione di Storia — La Rivoluzione Francese"]
@@ -766,16 +772,103 @@ Breve consolidamento — non una nuova verifica, solo rinforzo
    - Differenziazione per studenti in difficoltà o avanzati
    Questa parte sarà visibile SOLO al docente.
 
-5. Genera contenuto LUNGO e DETTAGLIATO. Il corpo della lezione deve essere esaustivo, pronto per l'uso in aula.`
-        : `Sei un docente esperto. Genera materiale didattico di tipo "${activityType}". Classe: ${classe?.nome || ""}. Materia: ${subjectStr}.
+5. Genera contenuto LUNGO e DETTAGLIATO. Il corpo della lezione deve essere esaustivo, pronto per l'uso in aula.`;
+
+      } else if (activityType === "verifica") {
+        systemPrompt = `Sei un docente esperto. Genera una VERIFICA COMPLETA per ${classe?.nome || "la classe"}.
+Materia: ${subjectStr}. ${levelContext} ${studentsContext}
+
+PARAMETRI:
+- Numero domande: ${resolvedNumDomande}
+- Struttura: ${struttura}
+- Punteggio totale: ${resolvedPunteggio} punti
+- Tempo disponibile: ${tempoDisponibile}
+
+REGOLE:
+1. La PRIMA RIGA DEVE essere: TITOLO: [titolo verifica]
+2. Organizza in sezioni chiare (Sezione A, B, C...) in base alla struttura scelta
+3. Ogni domanda riporta il punteggio assegnato
+4. Distribuzione difficoltà: 30% facile, 50% medio, 20% difficile
+5. Inserisci ===SOLUZIONI=== dopo il contenuto studente
+6. Dopo il separatore: risposte corrette, griglia di valutazione con fascia voto, note docente`;
+
+      } else if (activityType === "compito") {
+        systemPrompt = `Sei un docente esperto. Genera un COMPITO DA CASA per ${classe?.nome || "la classe"}.
+Materia: ${subjectStr}. ${levelContext}
+
+PARAMETRI:
+- Tipo consegna: ${tipoConsegna}
+- Tempo stimato: ${tempoStimato}
+
+REGOLE:
+1. La PRIMA RIGA DEVE essere: TITOLO: [titolo compito]
+2. Consegna chiara e comprensibile per gli studenti
+3. Esercizi o domande numerati
+4. Inserisci ===SOLUZIONI=== dopo il contenuto studente
+5. Dopo il separatore: soluzioni commentate, criteri di correzione, note docente`;
+
+      } else if (activityType === "esercizi") {
+        systemPrompt = `Sei un docente esperto. Genera una SERIE DI ESERCIZI per ${classe?.nome || "la classe"}.
+Materia: ${subjectStr}. ${levelContext}
+
+PARAMETRI:
+- Numero esercizi: ${resolvedNumEsercizi}
+- Difficoltà: ${difficolta}
+
+REGOLE:
+1. La PRIMA RIGA DEVE essere: TITOLO: [titolo esercizi]
+2. Esercizi numerati — difficoltà ${difficolta === "Progressiva (dal facile al difficile)" ? "crescente dal primo all'ultimo" : "uniforme"}
+3. Ogni esercizio con spazio per la risposta
+4. Inserisci ===SOLUZIONI=== dopo il contenuto studente
+5. Dopo il separatore: soluzioni dettagliate passo per passo`;
+
+      } else if (activityType === "recupero") {
+        systemPrompt = `Sei un docente esperto. Genera un MATERIALE DI RECUPERO per ${classe?.nome || "la classe"}.
+Materia: ${subjectStr}. ${levelContext}
+
+MODALITÀ: ${modalitaRecupero}
+LIVELLO PARTENZA: ${livelloPartenza}
+ARGOMENTO SPECIFICO: ${aiPrompt}
+
+REGOLE:
+1. La PRIMA RIGA DEVE essere: TITOLO: Recupero — [argomento]
+2. Spiegazione semplice e diretta del concetto base (solo se modalità include spiegazione)
+3. Esercizi guidati dal più semplice al più complesso
+4. Linguaggio chiaro e diretto — per studenti già in difficoltà
+5. Inserisci ===SOLUZIONI=== dopo il contenuto studente
+6. Dopo il separatore: soluzioni commentate, suggerimenti per il docente su come usare il materiale in classe`;
+
+      } else if (activityType === "potenziamento") {
+        systemPrompt = `Sei un docente esperto. Genera un MATERIALE DI POTENZIAMENTO per ${classe?.nome || "la classe"}.
+Materia: ${subjectStr}. ${levelContext}
+
+OBIETTIVO: ${obiettivoPotenziamento}
+
+REGOLE:
+1. La PRIMA RIGA DEVE essere: TITOLO: Potenziamento — [argomento]
+2. Contenuto che va oltre il programma base — sfidante e stimolante
+3. Domande aperte che richiedono ragionamento critico, non solo memoria
+4. Inserisci ===SOLUZIONI=== dopo il contenuto studente
+5. Dopo il separatore: soluzioni commentate, spunti per discussione in classe, risorse per approfondire`;
+
+      } else {
+        systemPrompt = `Sei un docente esperto. Genera materiale didattico di tipo "${activityType}". Classe: ${classe?.nome || ""}. Materia: ${subjectStr}. ${levelContext} ${studentsContext}
 
 REGOLE IMPORTANTI:
 1. La PRIMA RIGA del tuo output DEVE essere: TITOLO: [titolo contestuale del materiale]
-   Il titolo deve descrivere il contenuto (es. "Verifica di Storia — Le Guerre Puniche", "Esercizi di Matematica — Equazioni di secondo grado"), NON la richiesta usata per generarlo.
-2. Se il contenuto include una griglia di valutazione, risposte corrette, soluzioni, chiave di correzione o note riservate al docente, il materiale per lo studente NON deve MAI contenerle.
-3. In quel caso, DOPO il contenuto per lo studente, inserisci una riga con ESATTAMENTE: ===SOLUZIONI===
-4. DOPO il separatore, scrivi le risposte corrette, la griglia di valutazione e/o le note per il docente. Questa parte sarà visibile SOLO al docente.
-5. Questa regola vale per TUTTI i tipi di attività (verifica, compito, progetto, laboratorio, esercizi, recupero, potenziamento).`;
+2. Se il contenuto include soluzioni o note docente, inserisci ===SOLUZIONI=== dopo il contenuto studente.
+3. Dopo il separatore: risposte corrette, griglia di valutazione e/o note per il docente.`;
+      }
+
+      const maxTokensMap: Record<string, number> = {
+        lezione: 6000,
+        verifica: 4000,
+        recupero: 3500,
+        potenziamento: 3500,
+        compito: 3000,
+        esercizi: 3000,
+      };
+      const maxTokens = maxTokensMap[activityType] || 3000;
 
       let userMessage = aiPrompt;
       if (aiContextText) {
@@ -791,7 +884,7 @@ REGOLE IMPORTANTI:
           },
           body: JSON.stringify({
             stream: false,
-            maxTokens: isLezione ? 6000 : 3000,
+            maxTokens,
             systemPrompt,
             messages: [{ role: "user", content: userMessage }],
           }),
