@@ -483,6 +483,22 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     }
   }, [defaultSubjects, didCustomizeSubjects]);
 
+  // Handle prefilled material from lacune alerts
+  useEffect(() => {
+    if (!prefilledMaterial) return;
+    setMode("ai");
+    setActivityType((prefilledMaterial.tipo_attivita || "recupero") as ActivityType);
+    if (prefilledMaterial.materia) {
+      setSelectedSubjects([prefilledMaterial.materia]);
+      setDidCustomizeSubjects(true);
+    }
+    setAiPrompt(prefilledMaterial.descrizione || "");
+    if (prefilledMaterial.studentIds && prefilledMaterial.studentIds.length > 0) {
+      setDestination("selected");
+      setSelectedStudents(prefilledMaterial.studentIds);
+    }
+  }, [prefilledMaterial]);
+
   // AI state
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
