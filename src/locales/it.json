@@ -1378,5 +1378,6 @@
   "session_fam_math_no": "📖 No, devo ancora leggerlo",
   "session_fam_oral_yes": "✅ Sì, lo conosco bene",
   "session_fam_oral_partial": "🔶 Lo so in parte",
-  "session_fam_oral_no": "📖 No, prima volta"
+  "session_fam_oral_no": "📖 No, prima volta",
+  "insights_min_sessions": "Gli insights si attivano dopo almeno 5 sessioni completate dagli studenti."
 }

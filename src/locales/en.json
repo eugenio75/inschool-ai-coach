@@ -1363,5 +1363,6 @@
   "session_fam_math_no": "📖 No, I haven't read it yet",
   "session_fam_oral_yes": "✅ Yes, I know it well",
   "session_fam_oral_partial": "🔶 I know it partially",
-  "session_fam_oral_no": "📖 No, first time"
+  "session_fam_oral_no": "📖 No, first time",
+  "insights_min_sessions": "Insights are generated after at least 5 completed sessions from students."
 }
