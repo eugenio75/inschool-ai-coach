@@ -1760,7 +1760,218 @@ Return only the three versions with no commentary, separated exactly by ===BES==
               />
             </div>
 
-            {/* Model upload */}
+            {/* === Dynamic type-specific fields === */}
+            <AnimatePresence mode="wait">
+              {activityType === "verifica" && (
+                <motion.div
+                  key="verifica-fields"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-3 overflow-hidden rounded-xl border border-border bg-muted/30 p-4"
+                >
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Parametri verifica</p>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Numero domande</Label>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {["5", "10", "15", "Personalizzato"].map(v => (
+                        <button key={v} onClick={() => setNumDomande(v)}
+                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                            numDomande === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
+                          )}>{v}</button>
+                      ))}
+                    </div>
+                    {numDomande === "Personalizzato" && (
+                      <Input type="number" min={1} max={50} value={numDomandeCustom} onChange={e => setNumDomandeCustom(e.target.value)}
+                        placeholder="Numero" className="mt-1.5 rounded-lg w-24 h-8 text-xs" />
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Struttura</Label>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {["Solo aperte", "Solo chiuse (scelta multipla/V-F)", "Mista aperte+chiuse", "Solo esercizi pratici"].map(v => (
+                        <button key={v} onClick={() => setStruttura(v)}
+                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                            struttura === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
+                          )}>{v}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Punteggio totale</Label>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {["10", "15", "20", "30", "Personalizzato"].map(v => (
+                        <button key={v} onClick={() => setPunteggioTotale(v)}
+                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                            punteggioTotale === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
+                          )}>{v}</button>
+                      ))}
+                    </div>
+                    {punteggioTotale === "Personalizzato" && (
+                      <Input type="number" min={1} max={100} value={punteggioCustom} onChange={e => setPunteggioCustom(e.target.value)}
+                        placeholder="Punti" className="mt-1.5 rounded-lg w-24 h-8 text-xs" />
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Tempo disponibile</Label>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {["30 min", "45 min", "60 min", "90 min"].map(v => (
+                        <button key={v} onClick={() => setTempoDisponibile(v)}
+                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                            tempoDisponibile === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
+                          )}>{v}</button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {activityType === "compito" && (
+                <motion.div
+                  key="compito-fields"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-3 overflow-hidden rounded-xl border border-border bg-muted/30 p-4"
+                >
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Parametri compito</p>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Tipo consegna</Label>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {["Esercizi pratici", "Domande aperte", "Riassunto/tema", "Ricerca", "Misto"].map(v => (
+                        <button key={v} onClick={() => setTipoConsegna(v)}
+                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                            tipoConsegna === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
+                          )}>{v}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Tempo stimato</Label>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {["15 min", "30 min", "45 min", "60 min"].map(v => (
+                        <button key={v} onClick={() => setTempoStimato(v)}
+                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                            tempoStimato === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
+                          )}>{v}</button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {activityType === "esercizi" && (
+                <motion.div
+                  key="esercizi-fields"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-3 overflow-hidden rounded-xl border border-border bg-muted/30 p-4"
+                >
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Parametri esercizi</p>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Numero esercizi</Label>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {["5", "10", "15", "Personalizzato"].map(v => (
+                        <button key={v} onClick={() => setNumEsercizi(v)}
+                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                            numEsercizi === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
+                          )}>{v}</button>
+                      ))}
+                    </div>
+                    {numEsercizi === "Personalizzato" && (
+                      <Input type="number" min={1} max={50} value={numEserciziCustom} onChange={e => setNumEserciziCustom(e.target.value)}
+                        placeholder="Numero" className="mt-1.5 rounded-lg w-24 h-8 text-xs" />
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Difficoltà</Label>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {["Base", "Normale", "Avanzato", "Progressiva (dal facile al difficile)"].map(v => (
+                        <button key={v} onClick={() => setDifficolta(v)}
+                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                            difficolta === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
+                          )}>{v}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Includi soluzioni per il docente</Label>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {["Sì", "No"].map(v => (
+                        <button key={v} onClick={() => setIncludiSoluzioni(v)}
+                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                            includiSoluzioni === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
+                          )}>{v}</button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {activityType === "recupero" && (
+                <motion.div
+                  key="recupero-fields"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-3 overflow-hidden rounded-xl border border-border bg-muted/30 p-4"
+                >
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Parametri recupero</p>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Modalità</Label>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {["Spiegazione + esercizi", "Solo esercizi", "Solo spiegazione"].map(v => (
+                        <button key={v} onClick={() => setModalitaRecupero(v)}
+                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                            modalitaRecupero === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
+                          )}>{v}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Livello partenza</Label>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {["Dalle basi", "Argomento specifico"].map(v => (
+                        <button key={v} onClick={() => setLivelloPartenza(v)}
+                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                            livelloPartenza === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
+                          )}>{v}</button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {activityType === "potenziamento" && (
+                <motion.div
+                  key="potenziamento-fields"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-3 overflow-hidden rounded-xl border border-border bg-muted/30 p-4"
+                >
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Parametri potenziamento</p>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Obiettivo</Label>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {["Approfondimento teorico", "Problemi complessi", "Collegamento con altri argomenti", "Ricerca autonoma"].map(v => (
+                        <button key={v} onClick={() => setObiettivoPotenziamento(v)}
+                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                            obiettivoPotenziamento === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
+                          )}>{v}</button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div>
               <Label className="text-xs text-muted-foreground mb-1.5 block">Carica modello (opzionale)</Label>
               <input
