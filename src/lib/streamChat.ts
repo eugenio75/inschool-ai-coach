@@ -100,6 +100,41 @@ export async function streamChat({
     }
     // Regular non-streaming response
     const fullText = data.choices?.[0]?.message?.content || "";
+    if (!fullText.trim()) {
+      console.warn("[streamChat] Empty AI response (JSON path), retrying once...");
+      // Retry once
+      const retryRes = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            messages: messages.map(m => ({ role: m.role, content: m.content })),
+            stream: false,
+            lang: i18n.language || "it",
+            ...extraBody,
+          }),
+        }
+      );
+      if (retryRes.ok) {
+        const retryData = await retryRes.json();
+        const retryText = retryData.choices?.[0]?.message?.content || "";
+        if (retryText.trim()) {
+          onDelta(retryText);
+          onDone(retryText);
+          return retryText;
+        }
+      }
+      // Still empty — return a fallback message
+      const fallback = "Mi scuso, ho avuto un momento di distrazione! 😅 Puoi ripetere o riformulare la tua risposta?";
+      onDelta(fallback);
+      onDone(fallback);
+      return fallback;
+    }
     onDelta(fullText);
     onDone(fullText);
     return fullText;
@@ -161,6 +196,15 @@ export async function streamChat({
         }
       }
     }
+  }
+
+  // Guard against empty streaming result
+  if (!fullText.trim()) {
+    console.warn("[streamChat] Empty AI response (SSE path)");
+    const fallback = "Mi scuso, ho avuto un momento di distrazione! 😅 Puoi ripetere o riformulare la tua risposta?";
+    onDelta(fallback);
+    onDone(fallback);
+    return fallback;
   }
 
   onDone(fullText);
