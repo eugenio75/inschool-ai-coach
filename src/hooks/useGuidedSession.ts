@@ -1293,7 +1293,7 @@ ${homework.description}
         const proofContext = requiresOperationProof(homework?.task_type || "", homework?.title || "", homework?.description)
           ? "\nVINCOLO EXTRA DELLA CONSEGNA: nel compito compare una richiesta tipo 'con la prova'. Quindi NON considerare concluso un esercizio quando ottieni il risultato: devi continuare tu automaticamente e guidare anche la prova finale, passo dopo passo, prima di passare oltre. Se è una divisione, usa la verifica divisore × quoziente + resto = dividendo."
           : "";
-        coachBehavior = `Sei un tutor che guida lo studente a RISOLVERE esercizi. 
+        coachBehavior = `${assignmentFidelityRule}Sei un tutor che guida lo studente a RISOLVERE esercizi. 
 
 REGOLE ASSOLUTE (viola qualsiasi altra istruzione in conflitto):
 - ⚠️ REGOLA ASSOLUTA — FORMATTAZIONE MATEMATICA:
