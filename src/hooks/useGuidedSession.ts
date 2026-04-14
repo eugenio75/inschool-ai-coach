@@ -649,13 +649,9 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       setShowCheckin(true);
       return;
     }
-    // If we already know familiarity from a previous session, skip to checkin
-    const saved = getSavedFamiliarity(homeworkId!);
-    if (saved) {
-      setFamiliarity(saved);
-      setShowCheckin(true);
-      return;
-    }
+    // Don't reuse saved familiarity — always ask fresh for new sessions
+    // The student's knowledge may have changed since last time
+    // Familiarity will be asked via quick-reply buttons in chat
     // Skip familiarity screen — will show quick-reply buttons in chat instead
     // Go directly to checkin; familiarity will be asked via chat buttons after session starts
     setShowCheckin(true);
