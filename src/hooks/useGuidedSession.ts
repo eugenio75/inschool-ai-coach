@@ -1501,6 +1501,12 @@ Se il compito fa riferimento a un testo (es. "Vero o Falso", "Rispondi alle doma
 il testo si trova QUI SOPRA. NON dire che non hai il testo. NON inventare risposte.
 ═══════════════════════════════════════════════`;
           }
+          if (firstFile?.student_instruction) {
+            parentContextBlock += `\n\nISTRUZIONE DELLO STUDENTE:
+Lo studente ha specificato cosa vuole fare con questo materiale:
+"${firstFile.student_instruction}"
+Il coach DEVE seguire questa istruzione — non inventare un'attività diversa.`;
+          }
         }
       } catch (e) {
         console.warn("[useGuidedSession] Failed to parse source_files for parent context:", e);
