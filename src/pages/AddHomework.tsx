@@ -118,6 +118,7 @@ const AddHomework = () => {
         .join("\n\n---\n\n");
 
       const batchId = crypto.randomUUID();
+      const combinedNote = [...photoTags, photoNote.trim()].filter(Boolean).join(". ") || null;
 
       for (const task of selected) {
         await createTask({
@@ -130,7 +131,7 @@ const AddHomework = () => {
           due_date: dueDate,
           task_type: task.task_types.join(", "),
           // Always store full parent context so coach can access source material
-          source_files: [JSON.stringify({ batch_id: batchId, full_ocr_text: fullParentContext })],
+          source_files: [JSON.stringify({ batch_id: batchId, full_ocr_text: fullParentContext, student_instruction: combinedNote })],
         });
       }
       toast({ title: `${selected.length} ${selected.length === 1 ? "compito aggiunto" : "compiti aggiunti"}! ✨` });
