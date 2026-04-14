@@ -760,6 +760,39 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
         console.error("Points calculation error:", err);
       }
 
+      // ── Mark homework task as completed ──
+      try {
+        if (homeworkId) {
+          if (isChild) {
+            await childApi("complete-session", {
+              sessionId,
+              homeworkId,
+              chatMessages: messages
+                .filter((m: ChatMsg) => m.content?.trim())
+                .map((m: ChatMsg) => ({ role: m.role, text: m.content })),
+            });
+          } else {
+            // Mark guided_session as completed
+            if (sessionId) {
+              await supabase.from("guided_sessions").update({
+                status: "completed",
+                completed_at: new Date().toISOString(),
+                duration_seconds: activeStudySeconds.current,
+              } as any).eq("id", sessionId);
+            }
+            // Mark homework_tasks as completed (unless it's a teacher_assignment)
+            if (!homework?._is_teacher_assignment) {
+              await supabase.from("homework_tasks").update({
+                completed: true,
+                updated_at: new Date().toISOString(),
+              }).eq("id", homeworkId);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error marking task completed:", err);
+      }
+
       setShowCelebration(true);
       return;
     }
