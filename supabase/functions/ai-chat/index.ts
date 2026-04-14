@@ -246,6 +246,7 @@ ${prof.gender === "M" ? 'GENERE: maschio. Usa "Bravo!", "sei stato", "concentrat
     console.log("COACH_RULES active:", finalSystemPrompt.includes("MAI DARE LA RISPOSTA"));
     console.log("Student context loaded:", studentContext.length > 0);
     console.log("Math context:", mathContext.substring(0, 100));
+    console.log("Student instruction (top-level):", studentInstruction || "none");
     console.log("Total prompt length:", finalSystemPrompt.length);
 
     // ── STATO ROSSO — crisis detection ──
