@@ -806,14 +806,16 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       let systemCtx: string;
       if (isExerciseFam) {
         const familiarityContext = famKey === "first_time"
-          ? "\nLo studente ha risposto che NON ha ancora letto l'esercizio. Fai spiegazione teorica completa del metodo con esempio concreto della vita reale adatto all'età, mostra un esempio semplice risolto completamente, poi parti con l'esercizio reale seguendo il flusso colonna progressiva."
+          ? "\nLo studente ha risposto che NON ha ancora letto l'esercizio. Fai spiegazione teorica completa del metodo con esempio concreto della vita reale adatto all'età, mostra un esempio semplice risolto completamente, poi parti con l'esercizio reale."
           : famKey === "partial"
           ? "\nLo studente ha risposto che ha GIÀ LETTO l'esercizio ma ha difficoltà. Fai una spiegazione mirata SOLO sui punti deboli specifici. Non ripetere quello che lo studente sa già. Poi parti con l'esercizio."
           : "\nLo studente ha risposto che ha GIÀ LETTO l'esercizio. Ripetizione brevissima del metodo (2-3 righe max). Vai direttamente all'esercizio.";
         const proofContext = requiresOperationProof(homework.task_type, homework.title, homework.description)
           ? "\nVINCOLO EXTRA DELLA CONSEGNA: nel compito compare 'con la prova'. Dopo il risultato guida anche la prova finale."
           : "";
-        systemCtx = `Sei un tutor che guida lo studente a RISOLVERE esercizi.
+
+        if (isMathSubject(homework.subject, homework.title)) {
+          systemCtx = `Sei un tutor che guida lo studente a RISOLVERE esercizi.
 
 REGOLE ASSOLUTE:
 ⚠️ Per qualsiasi operazione in colonna usa ESCLUSIVAMENTE il tag [COLONNA:] — MAI pipe, trattini, o spazi.
@@ -841,6 +843,22 @@ CONTESTO INTERNO DI LAVORO:
 ${firstStepText}
 
 Tono caldo e incoraggiante.`;
+        } else {
+          // Non-math exercise (storia, scienze, grammatica, etc.)
+          systemCtx = `Sei un tutor che guida lo studente a svolgere un esercizio.
+
+REGOLE:
+- Guida lo studente passo-passo: proponi una domanda o un frammento, chiedi la risposta, poi conferma o correggi.
+- NON dare le risposte in anticipo. Chiedi SEMPRE allo studente prima.
+- Se lo studente sbaglia, dai un indizio. Se sbaglia di nuovo, spiega e dai la risposta corretta.
+- NON usare tag [COLONNA:] — non è un esercizio di matematica.
+${familiarityContext}${proofContext}
+
+CONTESTO INTERNO DI LAVORO:
+${firstStepText}
+
+Tono caldo e incoraggiante.`;
+        }
       } else {
         const familiarityContext = getCoachBehaviorForFamiliarity(famKey);
         systemCtx = `\n\nCONTESTO INTERNO DI LAVORO:\n${firstStepText}\n\n${familiarityContext}`;
