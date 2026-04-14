@@ -661,7 +661,7 @@ export function ChatShell({
                     </button>
                   </motion.div>
                 )}
-                {msg.actions && msg.actions.length > 0 && i === messages.length - 1 && (
+                {msg.actions && msg.actions.length > 0 && i === messages.length - 1 && (!isLastAssistant || progressiveComplete) && (
                   <div className="flex flex-col gap-2 mt-3">
                     {msg.actions.map((action, ai) => (
                       <button
