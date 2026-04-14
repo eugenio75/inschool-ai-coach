@@ -1058,7 +1058,19 @@ Tono caldo e incoraggiante.`;
       setSteps(generatedSteps);
       setCurrentStep(1);
 
-      const isExercise = !isOralStudyTask(homework.task_type, homework.title) && !isMixedWritingTask(homework.task_type, homework.title);
+      // Extract student_instruction early — needed for button logic
+      let earlyStudentInstruction = "";
+      try {
+        const sf = homework?.source_files;
+        if (Array.isArray(sf) && sf.length > 0) {
+          const f = typeof sf[0] === "string" ? JSON.parse(sf[0]) : sf[0];
+          if (f?.student_instruction) earlyStudentInstruction = f.student_instruction;
+        }
+      } catch (_) {}
+
+      // If student_instruction exists, treat as exercise (not oral)
+      const hasStudentInstructionEarly = !!earlyStudentInstruction;
+      const isExercise = hasStudentInstructionEarly || (!isOralStudyTask(homework.task_type, homework.title) && !isMixedWritingTask(homework.task_type, homework.title));
 
       // Mic suggestion: show only once EVER per student profile
       const isOral = isOralStudyTask(homework.task_type, homework.title);
