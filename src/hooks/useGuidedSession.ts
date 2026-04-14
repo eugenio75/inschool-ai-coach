@@ -1076,8 +1076,8 @@ Tono caldo e incoraggiante.`;
       const isExercise = hasStudentInstructionEarly || (!isOralStudyTask(homework.task_type, homework.title) && !isMixedWritingTask(homework.task_type, homework.title));
       console.log("[useGuidedSession] isExercise:", isExercise, "| hasStudentInstruction:", hasStudentInstructionEarly, "| task_type:", homework.task_type, "| isOral:", isOralStudyTask(homework.task_type, homework.title));
 
-      // Mic suggestion: show only once EVER per student profile
-      const isOral = isOralStudyTask(homework.task_type, homework.title);
+      // Mic suggestion: show only once EVER per student profile — but NOT for exercise tasks with student_instruction
+      const isOral = isOralStudyTask(homework.task_type, homework.title) && !hasStudentInstructionEarly;
       let voicePrompt = "";
       if (isOral) {
         const micAlreadySuggested = await checkMicSuggested(userId, isChild);
