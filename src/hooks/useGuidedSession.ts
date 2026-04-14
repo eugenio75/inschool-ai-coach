@@ -972,6 +972,8 @@ Tono caldo e incoraggiante.`;
   }
 
   async function createAndStartSession(emotion: string, fam: Familiarity | null) {
+    // Use emotion param directly — sessionEmotion state may not be flushed yet
+    const activeEmotion = emotion;
     setLoading(true);
 
     // FIX 3: Check that assignment content exists before starting
