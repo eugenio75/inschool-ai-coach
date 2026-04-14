@@ -1076,8 +1076,8 @@ Tono caldo e incoraggiante.`;
       const isExercise = hasStudentInstructionEarly || (!isOralStudyTask(homework.task_type, homework.title) && !isMixedWritingTask(homework.task_type, homework.title));
       console.log("[useGuidedSession] isExercise:", isExercise, "| hasStudentInstruction:", hasStudentInstructionEarly, "| task_type:", homework.task_type, "| isOral:", isOralStudyTask(homework.task_type, homework.title));
 
-      // Mic suggestion: show only once EVER per student profile
-      const isOral = isOralStudyTask(homework.task_type, homework.title);
+      // Mic suggestion: show only once EVER per student profile — but NOT for exercise tasks with student_instruction
+      const isOral = isOralStudyTask(homework.task_type, homework.title) && !hasStudentInstructionEarly;
       let voicePrompt = "";
       if (isOral) {
         const micAlreadySuggested = await checkMicSuggested(userId, isChild);
@@ -1152,7 +1152,31 @@ FASE 3: Parti con l'esercizio reale usando [COLONNA: ..., parziale=true, celle_c
   ⚠️ Ogni cifra/risultato si svela SOLO DOPO che lo studente ha risposto correttamente.
 SE lo studente risponde correttamente ai primi passi → riduci spiegazioni, vai spedito.`;
 
-        const systemCtx = `Sei un tutor che guida lo studente a RISOLVERE esercizi.
+        // Build system context: use student_instruction-aware prompt for non-math exercises
+        let systemCtx: string;
+        if (earlyStudentInstruction) {
+          // Generic exercise prompt driven by student_instruction (grammar, comprehension, etc.)
+          systemCtx = `Sei un tutor che guida lo studente a svolgere un esercizio specifico.
+
+CONSEGNA DELLO STUDENTE: "${earlyStudentInstruction}"
+MATERIALE: il testo su cui lavorare è fornito nel contesto.
+NON trattare questo come una lezione di ${homework?.subject}. Esegui SOLO l'istruzione indicata usando il testo come materiale.
+
+REGOLE:
+- Lavora sul testo fornito, frase per frase o paragrafo per paragrafo.
+- Guida lo studente passo-passo: proponi un frammento, chiedi la risposta, poi conferma o correggi.
+- NON dare le risposte in anticipo. Chiedi SEMPRE allo studente prima.
+- Se lo studente sbaglia, dai un indizio. Se sbaglia di nuovo, spiega e dai la risposta corretta.
+- Usa un tono caldo e incoraggiante.
+${adaptiveContext}
+
+CONTESTO INTERNO DI LAVORO:
+${firstStepText}
+
+Tono caldo e incoraggiante.`;
+        } else {
+          // Math-specific exercise prompt with COLONNA tags
+          systemCtx = `Sei un tutor che guida lo studente a RISOLVERE esercizi.
 
 REGOLE ASSOLUTE:
 ⚠️ Per qualsiasi operazione in colonna usa ESCLUSIVAMENTE il tag [COLONNA:] — MAI pipe, trattini, o spazi.
@@ -1201,6 +1225,7 @@ CONTESTO INTERNO DI LAVORO:
 ${firstStepText}
 
 Tono caldo e incoraggiante.`;
+        }
 
         try {
           const lang = getCurrentLang();
