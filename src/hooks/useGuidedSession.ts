@@ -77,6 +77,13 @@ function isOralStudyTask(taskType: string, title: string): boolean {
   return ["studia", "ripeti", "memorizza", "prepara", "ripasso", "interrogazione", "esame", "riassumi"].some(k => lowerTitle.includes(k));
 }
 
+function isMathSubject(subject?: string | null, title?: string): boolean {
+  const mathKeywords = ["matematica", "math", "aritmetica", "geometria", "algebra", "calcolo"];
+  const s = (subject || "").toLowerCase();
+  const t = (title || "").toLowerCase();
+  return mathKeywords.some(k => s.includes(k) || t.includes(k));
+}
+
 type MethodPhase = "none" | "propose_method" | "ready";
 type Familiarity = "first_time" | "already_know" | "partial";
 
