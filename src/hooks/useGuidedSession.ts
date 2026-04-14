@@ -1484,13 +1484,35 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
       const goalStr = taskTypesArr.map(t => goalLabels[t] || t).join(" + ");
 
       // FIX 2: Ensure contentInstruction includes homework content with warning
+      // Also inject parent context from source_files if this is a sub-task from an image upload
+      let parentContextBlock = "";
+      try {
+        const sourceFiles = homework?.source_files;
+        if (Array.isArray(sourceFiles) && sourceFiles.length > 0) {
+          const firstFile = typeof sourceFiles[0] === "string" ? JSON.parse(sourceFiles[0]) : sourceFiles[0];
+          if (firstFile?.full_ocr_text) {
+            parentContextBlock = `\n\n═══ CONTESTO COMPLETO DELL'IMMAGINE ORIGINALE ═══
+Questo compito è stato estratto da un'immagine caricata che conteneva più elementi (testo + esercizi).
+Ecco il TESTO COMPLETO estratto dall'immagine originale — USALO come riferimento per rispondere a domande di comprensione, Vero/Falso, ecc.:
+---
+${firstFile.full_ocr_text}
+---
+Se il compito fa riferimento a un testo (es. "Vero o Falso", "Rispondi alle domande", "Trova i nomi nel testo"), 
+il testo si trova QUI SOPRA. NON dire che non hai il testo. NON inventare risposte.
+═══════════════════════════════════════════════`;
+          }
+        }
+      } catch (e) {
+        console.warn("[useGuidedSession] Failed to parse source_files for parent context:", e);
+      }
+
       const contentInstruction = homework?.description
         ? (familiarity === "first_time"
-          ? `\n\nTESTO DA STUDIARE (lo studente NON lo ha mai letto — sei TU che devi presentarglielo e spiegarglielo blocco per blocco):\n---\n${homework.description}\n---\n\nATTENZIONE: Usa QUESTO testo per presentare l'argomento. Estrai le informazioni da qui e spiegale allo studente con parole semplici. NON chiedere allo studente di leggere da solo.`
-          : `\nTesto/descrizione del compito già disponibile qui sotto. NON chiedere allo studente di copiarlo o riscriverlo. Usa direttamente questo testo per guidarlo:\n${homework.description}`)
-        : "";
+          ? `\n\nTESTO DA STUDIARE (lo studente NON lo ha mai letto — sei TU che devi presentarglielo e spiegarglielo blocco per blocco):\n---\n${homework.description}\n---\n\nATTENZIONE: Usa QUESTO testo per presentare l'argomento. Estrai le informazioni da qui e spiegale allo studente con parole semplici. NON chiedere allo studente di leggere da solo.${parentContextBlock}`
+          : `\nTesto/descrizione del compito già disponibile qui sotto. NON chiedere allo studente di copiarlo o riscriverlo. Usa direttamente questo testo per guidarlo:\n${homework.description}${parentContextBlock}`)
+        : (parentContextBlock || "");
 
-      if (!homework?.description) {
+      if (!homework?.description && !parentContextBlock) {
         console.warn("[useGuidedSession] ⚠️ homework.description is missing or empty — the coach will not have assignment content to work on. homeworkId:", homeworkId, "title:", homework?.title);
       }
 
