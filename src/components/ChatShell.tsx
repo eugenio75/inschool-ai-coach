@@ -600,9 +600,8 @@ export function ChatShell({
             const isLastAssistant = msg.role === "assistant" && i === messages.length - 1;
             // Parse inline options (👉) from assistant messages
             const { cleanText: parsedCleanText, options: parsedOptions, hasLinkPrep } = msg.role === "assistant" ? parseInlineOptions(rawContent) : { cleanText: rawContent, options: [], hasLinkPrep: false };
-            // Only show parsed inline options on the FIRST assistant message (familiarity check), not on every message
-            const isFirstAssistantMsg = msg.role === "assistant" && messages.filter((m, idx) => m.role === "assistant" && idx <= i).length === 1;
-            const showParsedOptions = isLastAssistant && isFirstAssistantMsg && parsedOptions.length > 0 && !msg.actions?.length;
+            // Show parsed inline options on the LAST assistant message whenever 👉 options are present
+            const showParsedOptions = isLastAssistant && parsedOptions.length > 0 && !msg.actions?.length;
             const displayContent = cleanContent((showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent);
             // Keep raw content WITH [COLONNA:] tags for MathText/ProgressiveMessage SVG rendering
             const mathContent = (showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent;

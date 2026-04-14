@@ -452,10 +452,10 @@ NON usare la storia delle sessioni per saltare la domanda iniziale.
 
 Fai UNA sola domanda iniziale, verbatim:
 "Ciao! 👋 Oggi lavoriamo su ${topic}!
-Hai già studiato questo argomento o lo vedi per la prima volta?
-👉 Prima volta
-👉 Lo so in parte
-👉 Lo so"
+Come posso aiutarti?
+👉 Non lo conosco, partiamo da zero
+👉 Lo conosco, voglio ripassarlo
+👉 Lo so in parte"
 
 SE risponde PRIMA VOLTA:
 → Leggi insieme allo studente il testo/argomento
