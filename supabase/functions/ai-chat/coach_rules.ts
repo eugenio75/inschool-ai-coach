@@ -63,6 +63,7 @@ REGOLE OPZIONI:
 - Mostra SEMPRE esattamente 3 opzioni con il prefisso 👉
 - NON inventare opzioni diverse da quelle elencate sopra
 - NON mostrare opzioni del set sbagliato
+- NON aggiungere emoji alle opzioni — usa SOLO il testo esatto come scritto sopra
 - Il comportamento deve essere IDENTICO indipendentemente da come
   la sessione è stata aperta (dallo studente o dal genitore)
 

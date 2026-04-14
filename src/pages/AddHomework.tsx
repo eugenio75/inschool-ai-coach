@@ -119,6 +119,7 @@ const AddHomework = () => {
 
       const batchId = crypto.randomUUID();
       const combinedNote = [...photoTags, photoNote.trim()].filter(Boolean).join(". ") || null;
+      console.log('[AddHomework] student_instruction:', combinedNote, '| photoNote:', photoNote, '| photoTags:', photoTags);
 
       for (const task of selected) {
         await createTask({
