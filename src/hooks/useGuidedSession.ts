@@ -1074,6 +1074,7 @@ Tono caldo e incoraggiante.`;
       // If student_instruction exists, treat as exercise (not oral)
       const hasStudentInstructionEarly = !!earlyStudentInstruction;
       const isExercise = hasStudentInstructionEarly || (!isOralStudyTask(homework.task_type, homework.title) && !isMixedWritingTask(homework.task_type, homework.title));
+      console.log("[useGuidedSession] isExercise:", isExercise, "| hasStudentInstruction:", hasStudentInstructionEarly, "| task_type:", homework.task_type, "| isOral:", isOralStudyTask(homework.task_type, homework.title));
 
       // Mic suggestion: show only once EVER per student profile
       const isOral = isOralStudyTask(homework.task_type, homework.title);
