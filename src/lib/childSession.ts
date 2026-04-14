@@ -134,7 +134,8 @@ export async function childApi(action: string, payload?: any): Promise<any> {
       case "save-checkin":
       case "get-paused-session":
       case "create-session":
-      case "update-session": {
+      case "update-session":
+      case "complete-session": {
         return callChildApiEdge();
       }
       case "insert-steps":
