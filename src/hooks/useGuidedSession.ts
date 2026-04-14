@@ -1199,7 +1199,7 @@ CONTESTO INTERNO DI LAVORO:
 ${firstStepText}
 
 Tono caldo e incoraggiante.`;
-        } else {
+        } else if (isMathSubject(homework?.subject, homework?.title)) {
           // Math-specific exercise prompt with COLONNA tags
           systemCtx = `Sei un tutor che guida lo studente a RISOLVERE esercizi.
 
@@ -1245,6 +1245,21 @@ NON chiedere MAI "Quali sono i dati?" — TU HAI GIÀ TUTTI I DATI.
 ${adaptiveContext}${proofContext}
 
 TEORIA SU RICHIESTA: Se lo studente dice "non ricordo come si fa" o "puoi spiegarmi" → spiega il metodo al momento, poi riprendi l'esercizio. La teoria su richiesta è SEMPRE disponibile.
+
+CONTESTO INTERNO DI LAVORO:
+${firstStepText}
+
+Tono caldo e incoraggiante.`;
+        } else {
+          // Non-math exercise (storia, scienze, grammatica, etc.) — NO COLONNA tags
+          systemCtx = `Sei un tutor che guida lo studente a svolgere un esercizio.
+
+REGOLE:
+- Guida lo studente passo-passo: proponi una domanda o un frammento, chiedi la risposta, poi conferma o correggi.
+- NON dare le risposte in anticipo. Chiedi SEMPRE allo studente prima.
+- Se lo studente sbaglia, dai un indizio. Se sbaglia di nuovo, spiega e dai la risposta corretta.
+- NON usare tag [COLONNA:] — non è un esercizio di matematica.
+${adaptiveContext}${proofContext}
 
 CONTESTO INTERNO DI LAVORO:
 ${firstStepText}
