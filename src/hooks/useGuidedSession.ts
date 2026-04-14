@@ -58,18 +58,6 @@ async function markMicSuggested(userId: string | undefined, isChild: boolean): P
   } catch (e) { console.error("Failed to mark mic_suggested:", e); }
 }
 
-// Familiarity memory — persist per homework so we don't ask twice
-function getSavedFamiliarity(homeworkId: string): Familiarity | null {
-  try {
-    const stored = localStorage.getItem(`inschool-familiarity-${homeworkId}`);
-    return stored as Familiarity | null;
-  } catch { return null; }
-}
-
-function saveFamiliarity(homeworkId: string, fam: Familiarity) {
-  try { localStorage.setItem(`inschool-familiarity-${homeworkId}`, fam); } catch {}
-}
-
 function isOralStudyTask(taskType: string, title: string): boolean {
   const types = taskType.split(",").map(t => t.trim().toLowerCase());
   if (types.some(t => ORAL_STUDY_TYPES.has(t))) return true;
@@ -476,13 +464,12 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       if (!hw) { navigate("/dashboard"); return; }
       setHomework(hw);
 
-      // Check if we already know familiarity for this homework
+      // New sessions must always ask familiarity fresh.
+      // Only recovery tasks force a default familiarity.
       if (isRecoveryTask(hw.task_type, hw.title)) {
         setFamiliarity("first_time");
-        saveFamiliarity(homeworkId, "first_time");
       } else {
-        const saved = getSavedFamiliarity(homeworkId);
-        if (saved) setFamiliarity(saved);
+        setFamiliarity(null);
       }
 
       if (isChild) {
@@ -515,7 +502,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
             setSessionId(sess.id);
             setCurrentStep(sess.current_step || 1);
             setTotalSteps(sess.total_steps || 0);
-            const sanitizedSteps = sanitizeExerciseSteps(result.steps || [], hw.task_type, hw.title, hw.description, getSavedFamiliarity(homeworkId) || familiarity);
+            const sanitizedSteps = sanitizeExerciseSteps(result.steps || [], hw.task_type, hw.title, hw.description, familiarity);
             setSteps(sanitizedSteps);
             const stepInfo = sanitizedSteps[sess.current_step - 1];
             const visibleContent = getVisibleLoadedContent(hw.task_type, hw.title, hw.description, stepInfo?.step_text || stepInfo?.text);
@@ -563,7 +550,7 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
               .select("*")
               .eq("session_id", sess.id)
               .order("step_number", { ascending: true });
-            const sanitizedSteps = sanitizeExerciseSteps(savedSteps || [], hw.task_type, hw.title, hw.description, getSavedFamiliarity(homeworkId) || familiarity);
+            const sanitizedSteps = sanitizeExerciseSteps(savedSteps || [], hw.task_type, hw.title, hw.description, familiarity);
             setSteps(sanitizedSteps);
 
             // Try to restore conversation messages from incremental save
@@ -645,10 +632,10 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     // Recovery tasks skip familiarity (always first_time)
     if (isRecoveryTask(hw.task_type, hw.title)) {
       setFamiliarity("first_time");
-      saveFamiliarity(homeworkId!, "first_time");
       setShowCheckin(true);
       return;
     }
+    setFamiliarity(null);
     // Don't reuse saved familiarity — always ask fresh for new sessions
     // The student's knowledge may have changed since last time
     // Familiarity will be asked via quick-reply buttons in chat
@@ -660,7 +647,6 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
   // Called from familiarity UI (legacy) — stores choice then shows checkin
   function selectFamiliarity(fam: Familiarity) {
     setFamiliarity(fam);
-    saveFamiliarity(homeworkId!, fam);
     setShowFamiliarity(false);
     setShowCheckin(true);
   }
@@ -670,8 +656,8 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     setShowCheckin(false);
     setSessionEmotion(emotion);
 
-    // Use saved familiarity if available, otherwise null → will show quick-reply buttons
-    const fam = familiarity; // DO NOT default to "first_time" — null means "not yet chosen"
+    // DO NOT default to "first_time" — null means "not yet chosen"
+    const fam = familiarity;
     setPendingEmotion(emotion);
     setMethodPhase("propose_method");
     setSetupDone(true);
@@ -817,7 +803,6 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
     if (value.startsWith("familiarity:")) {
       const famKey = value.replace("familiarity:", "") as Familiarity;
       setFamiliarity(famKey);
-      saveFamiliarity(homeworkId!, famKey);
 
       // Map to user-facing label
       const labelMap: Record<string, string> = {
@@ -1163,9 +1148,40 @@ Tono caldo e incoraggiante.`;
         }
       }
 
-      // For EXERCISES: skip familiarity buttons entirely — use adaptive flow
-      // For ORAL tasks: show familiarity buttons only if fam is not already known
-      if (isExercise) {
+      const isWritingTask = isMixedWritingTask(homework.task_type, homework.title);
+
+      // Every new session must show familiarity choices first.
+      if (!fam) {
+        const openingMsg = `${emotionGreeting(activeEmotion, profileName, homework.title)}${voicePrompt ? voicePrompt + "\n\n" : ""}Come posso aiutarti?`;
+
+        const familiarityActions: ChatAction[] = isExercise
+          ? [
+              { label: "Non ho capito come si fa", value: "familiarity:first_time", icon: "👉" },
+              { label: "So il metodo, voglio esercitarmi", value: "familiarity:already_know", icon: "👉" },
+              { label: "So farlo ma faccio errori", value: "familiarity:partial", icon: "👉" },
+            ]
+          : isWritingTask
+            ? [
+                { label: "Non ho ancora letto il testo", value: "familiarity:first_time", icon: "👉" },
+                { label: "Ho letto, iniziamo le domande", value: "familiarity:already_know", icon: "👉" },
+                { label: "Ho capito in parte", value: "familiarity:partial", icon: "👉" },
+              ]
+            : [
+                { label: "Non lo conosco, partiamo da zero", value: "familiarity:first_time", icon: "👉" },
+                { label: "Lo conosco, voglio ripassarlo", value: "familiarity:already_know", icon: "👉" },
+                { label: "Lo so in parte", value: "familiarity:partial", icon: "👉" },
+              ];
+
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: openingMsg,
+          actions: familiarityActions,
+        }]);
+        setSetupDone(true);
+        lastInteractionTime.current = Date.now();
+        activeStudySeconds.current = 0;
+        resetInactivityTimer();
+      } else if (isExercise) {
         // Always start exercises directly with adaptive AI prompt
         const introMsg = `${emotionGreeting(activeEmotion, profileName, homework.title)}${voicePrompt ? voicePrompt + "\n\n" : ""}Partiamo! 🚀`;
         setMessages(prev => [
@@ -1342,9 +1358,9 @@ Tono caldo e incoraggiante.`;
         } catch {
           setSending(false);
         }
-      } else if (fam) {
-        // ORAL tasks with known familiarity — skip buttons
-        const isWriting = isMixedWritingTask(homework.task_type, homework.title);
+      } else {
+        // Study/reading tasks with known familiarity — skip buttons
+        const isWriting = isWritingTask;
         const familiarityLabel = fam === "first_time"
           ? (isWriting ? "Non ho ancora letto il testo" : "Non lo conosco, partiamo da zero")
           : fam === "partial"
@@ -1394,32 +1410,6 @@ Tono caldo e incoraggiante.`;
         } catch {
           setSending(false);
         }
-      } else {
-        // ORAL tasks — no familiarity known — show quick-reply buttons in chat
-        const isWritingTask = isMixedWritingTask(homework.task_type, homework.title);
-        const openingMsg = `${emotionGreeting(activeEmotion, profileName, homework.title)}${voicePrompt ? voicePrompt + "\n\n" : ""}Come posso aiutarti?`;
-
-        const familiarityActions: ChatAction[] = [
-          ...(isWritingTask ? [
-            { label: "Non ho ancora letto il testo", value: "familiarity:first_time", icon: "👉" },
-            { label: "Ho letto, iniziamo le domande", value: "familiarity:already_know", icon: "👉" },
-            { label: "Ho capito in parte", value: "familiarity:partial", icon: "👉" },
-          ] : [
-            { label: "Non lo conosco, partiamo da zero", value: "familiarity:first_time", icon: "👉" },
-            { label: "Lo conosco, voglio ripassarlo", value: "familiarity:already_know", icon: "👉" },
-            { label: "Lo so in parte", value: "familiarity:partial", icon: "👉" },
-          ]),
-        ];
-
-        setMessages(prev => [...prev, {
-          role: "assistant",
-          content: openingMsg,
-          actions: familiarityActions,
-        }]);
-        setSetupDone(true);
-        lastInteractionTime.current = Date.now();
-        activeStudySeconds.current = 0;
-        resetInactivityTimer();
       }
     } catch (err) {
       console.error("startNewSession error:", err);
