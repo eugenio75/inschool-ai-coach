@@ -129,10 +129,8 @@ const AddHomework = () => {
           source_type: extractedSourceType || "photo",
           due_date: dueDate,
           task_type: task.task_types.join(", "),
-          // Store full parent context so coach can access sibling content
-          source_files: selected.length > 1
-            ? [JSON.stringify({ batch_id: batchId, full_ocr_text: fullParentContext })]
-            : undefined,
+          // Always store full parent context so coach can access source material
+          source_files: [JSON.stringify({ batch_id: batchId, full_ocr_text: fullParentContext })],
         });
       }
       toast({ title: `${selected.length} ${selected.length === 1 ? "compito aggiunto" : "compiti aggiunti"}! ✨` });
