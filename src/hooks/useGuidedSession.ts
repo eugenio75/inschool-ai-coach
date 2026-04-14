@@ -766,12 +766,20 @@ export function useGuidedSession({ homeworkId, userId, schoolLevel, profileName 
       // Map to user-facing label
       const labelMap: Record<string, string> = {
         already_know: homework && !isOralStudyTask(homework.task_type, homework.title) && !isMixedWritingTask(homework.task_type, homework.title)
-          ? "Sì, ho letto l'esercizio"
-          : "Sì, lo conosco bene",
-        partial: "Lo so in parte",
+          ? "So il metodo, voglio esercitarmi"
+          : isMixedWritingTask(homework.task_type, homework.title)
+            ? "Ho letto, iniziamo le domande"
+            : "Lo conosco, voglio ripassarlo",
+        partial: homework && !isOralStudyTask(homework.task_type, homework.title) && !isMixedWritingTask(homework.task_type, homework.title)
+          ? "So farlo ma faccio errori"
+          : isMixedWritingTask(homework.task_type, homework.title)
+            ? "Ho capito in parte"
+            : "Lo so in parte",
         first_time: homework && !isOralStudyTask(homework.task_type, homework.title) && !isMixedWritingTask(homework.task_type, homework.title)
-          ? "No, devo ancora leggerlo"
-          : "No, prima volta",
+          ? "Non ho capito come si fa"
+          : isMixedWritingTask(homework.task_type, homework.title)
+            ? "Non ho ancora letto il testo"
+            : "Non lo conosco, partiamo da zero",
       };
       const userLabel = labelMap[famKey] || value;
 
@@ -1204,7 +1212,12 @@ Tono caldo e incoraggiante.`;
         }
       } else if (fam) {
         // ORAL tasks with known familiarity — skip buttons
-        const familiarityLabel = fam === "first_time" ? "No, prima volta" : fam === "partial" ? "Lo so in parte" : "Sì, lo conosco";
+        const isWriting = isMixedWritingTask(homework.task_type, homework.title);
+        const familiarityLabel = fam === "first_time"
+          ? (isWriting ? "Non ho ancora letto il testo" : "Non lo conosco, partiamo da zero")
+          : fam === "partial"
+            ? (isWriting ? "Ho capito in parte" : "Lo so in parte")
+            : (isWriting ? "Ho letto, iniziamo le domande" : "Lo conosco, voglio ripassarlo");
         const introMsg = `Ciao! 👋 Oggi lavoriamo su "${homework.title}"!${voicePrompt}\n\nPartiamo! 🚀`;
         setMessages(prev => [
           ...prev,
@@ -1251,12 +1264,19 @@ Tono caldo e incoraggiante.`;
         }
       } else {
         // ORAL tasks — no familiarity known — show quick-reply buttons in chat
-        const openingMsg = `Ciao! 👋 Oggi lavoriamo su "${homework.title}"!${voicePrompt}\n\nHai già studiato questo argomento o lo vedi per la prima volta?`;
+        const isWritingTask = isMixedWritingTask(homework.task_type, homework.title);
+        const openingMsg = `Ciao! 👋 Oggi lavoriamo su "${homework.title}"!${voicePrompt}\n\nCome posso aiutarti?`;
 
         const familiarityActions: ChatAction[] = [
-          { label: "✅ Sì, lo conosco bene", value: "familiarity:already_know", icon: "✅" },
-          { label: "🔶 Lo so in parte", value: "familiarity:partial", icon: "🔶" },
-          { label: "📖 No, prima volta", value: "familiarity:first_time", icon: "📖" },
+          ...(isWritingTask ? [
+            { label: "👉 Non ho ancora letto il testo", value: "familiarity:first_time", icon: "👉" },
+            { label: "👉 Ho letto, iniziamo le domande", value: "familiarity:already_know", icon: "👉" },
+            { label: "👉 Ho capito in parte", value: "familiarity:partial", icon: "👉" },
+          ] : [
+            { label: "👉 Non lo conosco, partiamo da zero", value: "familiarity:first_time", icon: "👉" },
+            { label: "👉 Lo conosco, voglio ripassarlo", value: "familiarity:already_know", icon: "👉" },
+            { label: "👉 Lo so in parte", value: "familiarity:partial", icon: "👉" },
+          ]),
         ];
 
         setMessages(prev => [...prev, {
@@ -1502,10 +1522,12 @@ il testo si trova QUI SOPRA. NON dire che non hai il testo. NON inventare rispos
 ═══════════════════════════════════════════════`;
           }
           if (firstFile?.student_instruction) {
-            parentContextBlock += `\n\nISTRUZIONE DELLO STUDENTE:
-Lo studente ha specificato cosa vuole fare con questo materiale:
+            parentContextBlock += `\n\nISTRUZIONE DELLO STUDENTE — OBBLIGATORIA:
+Lo studente ha richiesto specificamente:
 "${firstFile.student_instruction}"
-Il coach DEVE seguire questa istruzione — non inventare un'attività diversa.`;
+Ignora qualsiasi altra attività predefinita e segui SOLO questa istruzione.
+NON inventare un'attività diversa. NON proporre esercizi generici.
+Il coach DEVE eseguire ESATTAMENTE quello che lo studente ha chiesto.`;
           }
         }
       } catch (e) {
