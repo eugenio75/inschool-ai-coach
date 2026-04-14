@@ -1062,11 +1062,14 @@ Tono caldo e incoraggiante.`;
       let earlyStudentInstruction = "";
       try {
         const sf = homework?.source_files;
+        console.log("[useGuidedSession] source_files raw:", JSON.stringify(sf));
         if (Array.isArray(sf) && sf.length > 0) {
           const f = typeof sf[0] === "string" ? JSON.parse(sf[0]) : sf[0];
+          console.log("[useGuidedSession] parsed first file:", JSON.stringify(f));
           if (f?.student_instruction) earlyStudentInstruction = f.student_instruction;
         }
-      } catch (_) {}
+      } catch (e) { console.error("[useGuidedSession] source_files parse error:", e); }
+      console.log("[useGuidedSession] earlyStudentInstruction:", earlyStudentInstruction);
 
       // If student_instruction exists, treat as exercise (not oral)
       const hasStudentInstructionEarly = !!earlyStudentInstruction;
