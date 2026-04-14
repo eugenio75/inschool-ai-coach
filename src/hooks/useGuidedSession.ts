@@ -1310,13 +1310,13 @@ Tono caldo e incoraggiante.`;
 
         const familiarityActions: ChatAction[] = [
           ...(isWritingTask ? [
-            { label: "👉 Non ho ancora letto il testo", value: "familiarity:first_time", icon: "👉" },
-            { label: "👉 Ho letto, iniziamo le domande", value: "familiarity:already_know", icon: "👉" },
-            { label: "👉 Ho capito in parte", value: "familiarity:partial", icon: "👉" },
+            { label: "Non ho ancora letto il testo", value: "familiarity:first_time", icon: "👉" },
+            { label: "Ho letto, iniziamo le domande", value: "familiarity:already_know", icon: "👉" },
+            { label: "Ho capito in parte", value: "familiarity:partial", icon: "👉" },
           ] : [
-            { label: "👉 Non lo conosco, partiamo da zero", value: "familiarity:first_time", icon: "👉" },
-            { label: "👉 Lo conosco, voglio ripassarlo", value: "familiarity:already_know", icon: "👉" },
-            { label: "👉 Lo so in parte", value: "familiarity:partial", icon: "👉" },
+            { label: "Non lo conosco, partiamo da zero", value: "familiarity:first_time", icon: "👉" },
+            { label: "Lo conosco, voglio ripassarlo", value: "familiarity:already_know", icon: "👉" },
+            { label: "Lo so in parte", value: "familiarity:partial", icon: "👉" },
           ]),
         ];
 
