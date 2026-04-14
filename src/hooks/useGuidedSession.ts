@@ -1506,6 +1506,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
       // FIX 2: Ensure contentInstruction includes homework content with warning
       // Also inject parent context from source_files if this is a sub-task from an image upload
       let parentContextBlock = "";
+      let extractedStudentInstruction = "";
       try {
         const sourceFiles = homework?.source_files;
         if (Array.isArray(sourceFiles) && sourceFiles.length > 0) {
@@ -1522,12 +1523,7 @@ il testo si trova QUI SOPRA. NON dire che non hai il testo. NON inventare rispos
 ═══════════════════════════════════════════════`;
           }
           if (firstFile?.student_instruction) {
-            parentContextBlock += `\n\nISTRUZIONE DELLO STUDENTE — OBBLIGATORIA:
-Lo studente ha richiesto specificamente:
-"${firstFile.student_instruction}"
-Ignora qualsiasi altra attività predefinita e segui SOLO questa istruzione.
-NON inventare un'attività diversa. NON proporre esercizi generici.
-Il coach DEVE eseguire ESATTAMENTE quello che lo studente ha chiesto.`;
+            extractedStudentInstruction = firstFile.student_instruction;
           }
         }
       } catch (e) {
@@ -1570,6 +1566,7 @@ Il coach DEVE eseguire ESATTAMENTE quello che lo studente ha chiesto.`;
           systemPrompt: `${coachBehavior}\n\nCONSEGNA DELLO STUDENTE (scritta da lui nel campo "Cosa devi fare?"): "${homework?.title}"\nQuesta consegna è VINCOLANTE: ogni parola conta. Se lo studente ha scritto "con la prova", "fai la verifica", "spiega il metodo", ecc., DEVI seguire TUTTE le indicazioni fino alla fine. Non considerare il compito concluso finché non hai coperto tutto ciò che la consegna richiede.\n\nMateria: ${homework?.subject}. Livello: ${schoolLevel}.\nOBIETTIVO: ${goalStr}.${contentInstruction}${systemAddition}${emotionContext}${hintEscalation}${markDifficult}\n\nSe lo studente completa lo step correttamente, scrivi [STEP_COMPLETATO: ${currentStep}]. Se TUTTI gli esercizi del compito sono stati completati, scrivi [SESSIONE_COMPLETATA]. Se lo studente mostra una difficoltà specifica, scrivi [SEGNALA_DIFFICOLTÀ: descrizione].\n\nQUANDO TUTTI GLI ESERCIZI SONO FINITI:\n- Scrivi [SESSIONE_COMPLETATA] nel messaggio\n- Poi chiedi brevemente: "Vuoi fare qualche altro esercizio simile per allenarti, o preferisci terminare?"\n- NON fare altre domande, NON aggiungere commenti lunghi.\n- Se lo studente dice "termina", "basta", "finisco", "no grazie", "ho finito" → rispondi SOLO "Ok, ottimo lavoro! 🎉" e scrivi [TERMINA_SESSIONE].\n- NON insistere, NON fare domande di follow-up dopo che lo studente ha detto di voler terminare.`,
           sessionFormat: "guided",
           subject: homework?.subject || undefined,
+          studentInstruction: extractedStudentInstruction || undefined,
         },
       });
 
