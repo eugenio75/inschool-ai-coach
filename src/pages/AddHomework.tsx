@@ -135,7 +135,7 @@ const AddHomework = () => {
           source_type: extractedSourceType || "photo",
           due_date: dueDate,
           task_type: task.task_types.join(", "),
-          source_files: [JSON.stringify({ batch_id: batchId, full_ocr_text: fullParentContext, student_instruction: combinedNote })],
+          source_files: [{ batch_id: batchId, full_ocr_text: fullParentContext, student_instruction: combinedNote }],
         });
       }
       toast({ title: `${selected.length} ${selected.length === 1 ? "compito aggiunto" : "compiti aggiunti"}! ✨` });

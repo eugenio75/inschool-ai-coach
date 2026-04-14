@@ -196,7 +196,7 @@ export async function createTask(task: {
   recall_questions?: string[];
   source_type?: string;
   source_image_url?: string;
-  source_files?: string[];
+  source_files?: any[];
   due_date?: string;
   task_type?: string;
 }) {
