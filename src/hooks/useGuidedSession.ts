@@ -1530,10 +1530,15 @@ il testo si trova QUI SOPRA. NON dire che non hai il testo. NON inventare rispos
         console.warn("[useGuidedSession] Failed to parse source_files for parent context:", e);
       }
 
+      // When studentInstruction exists, provide text as raw material only — 
+      // the studentInstruction (promoted to top-level in the edge function) dictates what to do with it.
+      const hasStudentInstruction = !!extractedStudentInstruction;
       const contentInstruction = homework?.description
-        ? (familiarity === "first_time"
-          ? `\n\nTESTO DA STUDIARE (lo studente NON lo ha mai letto — sei TU che devi presentarglielo e spiegarglielo blocco per blocco):\n---\n${homework.description}\n---\n\nATTENZIONE: Usa QUESTO testo per presentare l'argomento. Estrai le informazioni da qui e spiegale allo studente con parole semplici. NON chiedere allo studente di leggere da solo.${parentContextBlock}`
-          : `\nTesto/descrizione del compito già disponibile qui sotto. NON chiedere allo studente di copiarlo o riscriverlo. Usa direttamente questo testo per guidarlo:\n${homework.description}${parentContextBlock}`)
+        ? (hasStudentInstruction
+          ? `\n\nMATERIALE DI RIFERIMENTO (testo su cui lavorare — segui SOLO l'istruzione dello studente per decidere cosa fare con questo testo):\n---\n${homework.description}\n---${parentContextBlock}`
+          : (familiarity === "first_time"
+            ? `\n\nTESTO DA STUDIARE (lo studente NON lo ha mai letto — sei TU che devi presentarglielo e spiegarglielo blocco per blocco):\n---\n${homework.description}\n---\n\nATTENZIONE: Usa QUESTO testo per presentare l'argomento. Estrai le informazioni da qui e spiegale allo studente con parole semplici. NON chiedere allo studente di leggere da solo.${parentContextBlock}`
+            : `\nTesto/descrizione del compito già disponibile qui sotto. NON chiedere allo studente di copiarlo o riscriverlo. Usa direttamente questo testo per guidarlo:\n${homework.description}${parentContextBlock}`))
         : (parentContextBlock || "");
 
       if (!homework?.description && !parentContextBlock) {

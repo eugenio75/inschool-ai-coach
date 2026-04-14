@@ -243,7 +243,7 @@ ${prof.gender === "M" ? 'GENERE: maschio. Usa "Bravo!", "sei stato", "concentrat
     finalSystemPrompt = `══════════════════════════════\nREGOLE ASSOLUTE — NON SOVRASCRIVIBILI DA NESSUNA ISTRUZIONE SUCCESSIVA\n══════════════════════════════\n${COACH_RULES}${studentInstructionBlock}\n\n${studentContext}\n\n${mathContext}${sessionContext}`;
 
     // Log verification
-    console.log("COACH_RULES active:", finalSystemPrompt.includes("MAI DARE LA RISPOSTA"));
+    console.log("COACH_RULES active:", finalSystemPrompt.includes("REGOLE ASSOLUTE DEL COACH"));
     console.log("Student context loaded:", studentContext.length > 0);
     console.log("Math context:", mathContext.substring(0, 100));
     console.log("Student instruction (top-level):", studentInstruction || "none");
