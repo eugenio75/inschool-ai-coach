@@ -111,6 +111,14 @@ const AddHomework = () => {
     if (selected.length === 0) return;
     setSaving(true);
     try {
+      // Build full parent context: all extracted tasks' descriptions combined
+      // This allows the coach to access the full OCR context (e.g. reading text + exercises)
+      const fullParentContext = extractedTasks
+        .map((t, i) => `[Parte ${i + 1}: ${t.title}]\n${t.description}`)
+        .join("\n\n---\n\n");
+
+      const batchId = crypto.randomUUID();
+
       for (const task of selected) {
         await createTask({
           subject: task.subject,
@@ -121,6 +129,10 @@ const AddHomework = () => {
           source_type: extractedSourceType || "photo",
           due_date: dueDate,
           task_type: task.task_types.join(", "),
+          // Store full parent context so coach can access sibling content
+          source_files: selected.length > 1
+            ? [JSON.stringify({ batch_id: batchId, full_ocr_text: fullParentContext })]
+            : undefined,
         });
       }
       toast({ title: `${selected.length} ${selected.length === 1 ? "compito aggiunto" : "compiti aggiunti"}! ✨` });
