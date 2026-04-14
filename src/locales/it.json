@@ -1379,6 +1379,9 @@
   "session_fam_oral_yes": "✅ Sì, lo conosco bene",
   "session_fam_oral_partial": "🔶 Lo so in parte",
   "session_fam_oral_no": "📖 No, prima volta",
+  "session_fam_exercise_nomethod": "👉 Non ho capito come si fa",
+  "session_fam_exercise_method": "👉 So il metodo, voglio esercitarmi",
+  "session_fam_exercise_errors": "👉 So farlo ma faccio errori",
   "insights_min_sessions": "Gli insights si attivano dopo almeno 5 sessioni completate dagli studenti."
   ,"kpi_activity_results": "Risultati attività",
   "kpi_activity_results_tooltip": "Punteggio medio ottenuto dagli studenti nelle attività completate su SarAI",

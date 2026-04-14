@@ -1058,7 +1058,19 @@ Tono caldo e incoraggiante.`;
       setSteps(generatedSteps);
       setCurrentStep(1);
 
-      const isExercise = !isOralStudyTask(homework.task_type, homework.title) && !isMixedWritingTask(homework.task_type, homework.title);
+      // Extract student_instruction early — needed for button logic
+      let earlyStudentInstruction = "";
+      try {
+        const sf = homework?.source_files;
+        if (Array.isArray(sf) && sf.length > 0) {
+          const f = typeof sf[0] === "string" ? JSON.parse(sf[0]) : sf[0];
+          if (f?.student_instruction) earlyStudentInstruction = f.student_instruction;
+        }
+      } catch (_) {}
+
+      // If student_instruction exists, treat as exercise (not oral)
+      const hasStudentInstructionEarly = !!earlyStudentInstruction;
+      const isExercise = hasStudentInstructionEarly || (!isOralStudyTask(homework.task_type, homework.title) && !isMixedWritingTask(homework.task_type, homework.title));
 
       // Mic suggestion: show only once EVER per student profile
       const isOral = isOralStudyTask(homework.task_type, homework.title);
@@ -1568,7 +1580,9 @@ il testo si trova QUI SOPRA. NON dire che non hai il testo. NON inventare rispos
         onDelta: () => {},
         onDone: () => {},
         extraBody: {
-          systemPrompt: `${coachBehavior}\n\nCONSEGNA DELLO STUDENTE (scritta da lui nel campo "Cosa devi fare?"): "${homework?.title}"\nQuesta consegna è VINCOLANTE: ogni parola conta. Se lo studente ha scritto "con la prova", "fai la verifica", "spiega il metodo", ecc., DEVI seguire TUTTE le indicazioni fino alla fine. Non considerare il compito concluso finché non hai coperto tutto ciò che la consegna richiede.\n\nMateria: ${homework?.subject}. Livello: ${schoolLevel}.\nOBIETTIVO: ${goalStr}.${contentInstruction}${systemAddition}${emotionContext}${hintEscalation}${markDifficult}\n\nSe lo studente completa lo step correttamente, scrivi [STEP_COMPLETATO: ${currentStep}]. Se TUTTI gli esercizi del compito sono stati completati, scrivi [SESSIONE_COMPLETATA]. Se lo studente mostra una difficoltà specifica, scrivi [SEGNALA_DIFFICOLTÀ: descrizione].\n\nQUANDO TUTTI GLI ESERCIZI SONO FINITI:\n- Scrivi [SESSIONE_COMPLETATA] nel messaggio\n- Poi chiedi brevemente: "Vuoi fare qualche altro esercizio simile per allenarti, o preferisci terminare?"\n- NON fare altre domande, NON aggiungere commenti lunghi.\n- Se lo studente dice "termina", "basta", "finisco", "no grazie", "ho finito" → rispondi SOLO "Ok, ottimo lavoro! 🎉" e scrivi [TERMINA_SESSIONE].\n- NON insistere, NON fare domande di follow-up dopo che lo studente ha detto di voler terminare.`,
+          systemPrompt: `${coachBehavior}\n\n${extractedStudentInstruction
+            ? `CONSEGNA DELLO STUDENTE: "${extractedStudentInstruction}"\nMATERIALE: il testo su cui lavorare è fornito nel contesto.\nNON trattare questo come una lezione di ${homework?.subject}.\nEsegui SOLO l'istruzione indicata usando il testo come materiale.`
+            : `CONSEGNA DELLO STUDENTE (scritta da lui nel campo "Cosa devi fare?"): "${homework?.title}"\nQuesta consegna è VINCOLANTE: ogni parola conta. Se lo studente ha scritto "con la prova", "fai la verifica", "spiega il metodo", ecc., DEVI seguire TUTTE le indicazioni fino alla fine. Non considerare il compito concluso finché non hai coperto tutto ciò che la consegna richiede.`}\n\nMateria: ${homework?.subject}. Livello: ${schoolLevel}.\nOBIETTIVO: ${goalStr}.${contentInstruction}${systemAddition}${emotionContext}${hintEscalation}${markDifficult}\n\nSe lo studente completa lo step correttamente, scrivi [STEP_COMPLETATO: ${currentStep}]. Se TUTTI gli esercizi del compito sono stati completati, scrivi [SESSIONE_COMPLETATA]. Se lo studente mostra una difficoltà specifica, scrivi [SEGNALA_DIFFICOLTÀ: descrizione].\n\nQUANDO TUTTI GLI ESERCIZI SONO FINITI:\n- Scrivi [SESSIONE_COMPLETATA] nel messaggio\n- Poi chiedi brevemente: "Vuoi fare qualche altro esercizio simile per allenarti, o preferisci terminare?"\n- NON fare altre domande, NON aggiungere commenti lunghi.\n- Se lo studente dice "termina", "basta", "finisco", "no grazie", "ho finito" → rispondi SOLO "Ok, ottimo lavoro! 🎉" e scrivi [TERMINA_SESSIONE].\n- NON insistere, NON fare domande di follow-up dopo che lo studente ha detto di voler terminare.`,
           sessionFormat: "guided",
           subject: homework?.subject || undefined,
           studentInstruction: extractedStudentInstruction || undefined,
