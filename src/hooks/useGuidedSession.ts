@@ -77,6 +77,26 @@ function isOralStudyTask(taskType: string, title: string): boolean {
   return ["studia", "ripeti", "memorizza", "prepara", "ripasso", "interrogazione", "esame", "riassumi"].some(k => lowerTitle.includes(k));
 }
 
+/** Build an emotion-aware greeting prefix based on the check-in response */
+function emotionGreeting(emotion: string, name: string, title: string): string {
+  const e = emotion.toLowerCase();
+  if (["stanco", "tired"].includes(e))
+    return `Ciao ${name}! 👋 Vedo che oggi sei un po' stanco — nessun problema, andiamo con calma su "${title}".\n\n`;
+  if (["bloccato", "stuck", "confused"].includes(e))
+    return `Ciao ${name}! 👋 Capisco che ti senti un po' bloccato — facciamo un passo alla volta su "${title}", sono qui per aiutarti!\n\n`;
+  if (["agitato", "sotto pressione", "anxious"].includes(e))
+    return `Ciao ${name}! 👋 Tranquillo, facciamo tutto con calma. Oggi lavoriamo su "${title}" senza fretta.\n\n`;
+  if (["confuso", "distratto"].includes(e))
+    return `Ciao ${name}! 👋 Nessun problema se ti senti un po' distratto — partiamo piano con "${title}".\n\n`;
+  if (["concentrato", "carico", "curioso", "pronto"].includes(e))
+    return `Ciao ${name}! 👋 Ottimo, sei carico! Oggi lavoriamo su "${title}".\n\n`;
+  // Custom free-text emotion
+  if (e.length > 0)
+    return `Ciao ${name}! 👋 Grazie per avermelo detto — oggi lavoriamo su "${title}" e ci adattiamo al tuo ritmo.\n\n`;
+  // Fallback — no emotion
+  return `Ciao! 👋 Oggi lavoriamo su "${title}"!\n\n`;
+}
+
 function isMathSubject(subject?: string | null, title?: string): boolean {
   const mathKeywords = ["matematica", "math", "aritmetica", "geometria", "algebra", "calcolo"];
   const s = (subject || "").toLowerCase();
