@@ -1506,6 +1506,7 @@ ADATTAMENTO TONO: Energia positiva! Puoi alzare leggermente il ritmo e proporre 
       // FIX 2: Ensure contentInstruction includes homework content with warning
       // Also inject parent context from source_files if this is a sub-task from an image upload
       let parentContextBlock = "";
+      let extractedStudentInstruction = "";
       try {
         const sourceFiles = homework?.source_files;
         if (Array.isArray(sourceFiles) && sourceFiles.length > 0) {
@@ -1522,12 +1523,7 @@ il testo si trova QUI SOPRA. NON dire che non hai il testo. NON inventare rispos
 ═══════════════════════════════════════════════`;
           }
           if (firstFile?.student_instruction) {
-            parentContextBlock += `\n\nISTRUZIONE DELLO STUDENTE — OBBLIGATORIA:
-Lo studente ha richiesto specificamente:
-"${firstFile.student_instruction}"
-Ignora qualsiasi altra attività predefinita e segui SOLO questa istruzione.
-NON inventare un'attività diversa. NON proporre esercizi generici.
-Il coach DEVE eseguire ESATTAMENTE quello che lo studente ha chiesto.`;
+            extractedStudentInstruction = firstFile.student_instruction;
           }
         }
       } catch (e) {
