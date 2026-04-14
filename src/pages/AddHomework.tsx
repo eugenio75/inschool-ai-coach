@@ -121,9 +121,13 @@ const AddHomework = () => {
       const combinedNote = [...photoTags, photoNote.trim()].filter(Boolean).join(". ") || null;
       console.log('[AddHomework] student_instruction:', combinedNote, '| photoNote:', photoNote, '| photoTags:', photoTags);
 
+      // Override subject to Italiano when student_instruction contains grammar keywords
+      const grammarKeywords = /\b(nomi|aggettivi|verbi|avverbi|pronomi|articoli|preposizioni|congiunzioni|analisi grammaticale|analisi logica|analisi del periodo|soggetto|predicato|complemento)\b/i;
+      const subjectOverride = combinedNote && grammarKeywords.test(combinedNote) ? "Italiano" : null;
+
       for (const task of selected) {
         await createTask({
-          subject: task.subject,
+          subject: subjectOverride || task.subject,
           title: task.title,
           description: task.description,
           estimated_minutes: task.estimatedMinutes,
@@ -131,7 +135,6 @@ const AddHomework = () => {
           source_type: extractedSourceType || "photo",
           due_date: dueDate,
           task_type: task.task_types.join(", "),
-          // Always store full parent context so coach can access source material
           source_files: [JSON.stringify({ batch_id: batchId, full_ocr_text: fullParentContext, student_instruction: combinedNote })],
         });
       }
