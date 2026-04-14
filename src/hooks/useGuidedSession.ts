@@ -972,6 +972,8 @@ Tono caldo e incoraggiante.`;
   }
 
   async function createAndStartSession(emotion: string, fam: Familiarity | null) {
+    // Use emotion param directly — sessionEmotion state may not be flushed yet
+    const activeEmotion = emotion;
     setLoading(true);
 
     // FIX 3: Check that assignment content exists before starting
@@ -1169,7 +1171,7 @@ Tono caldo e incoraggiante.`;
       // For ORAL tasks: show familiarity buttons only if fam is not already known
       if (isExercise) {
         // Always start exercises directly with adaptive AI prompt
-        const introMsg = `${emotionGreeting(sessionEmotion, profileName, homework.title)}${voicePrompt ? voicePrompt + "\n\n" : ""}Partiamo! 🚀`;
+        const introMsg = `${emotionGreeting(activeEmotion, profileName, homework.title)}${voicePrompt ? voicePrompt + "\n\n" : ""}Partiamo! 🚀`;
         setMessages(prev => [
           ...prev,
           { role: "assistant", content: introMsg },
@@ -1352,7 +1354,7 @@ Tono caldo e incoraggiante.`;
           : fam === "partial"
             ? (isWriting ? "Ho capito in parte" : "Lo so in parte")
             : (isWriting ? "Ho letto, iniziamo le domande" : "Lo conosco, voglio ripassarlo");
-        const introMsg = `${emotionGreeting(sessionEmotion, profileName, homework.title)}${voicePrompt ? voicePrompt + "\n\n" : ""}Partiamo! 🚀`;
+        const introMsg = `${emotionGreeting(activeEmotion, profileName, homework.title)}${voicePrompt ? voicePrompt + "\n\n" : ""}Partiamo! 🚀`;
         setMessages(prev => [
           ...prev,
           { role: "assistant", content: introMsg },
@@ -1399,7 +1401,7 @@ Tono caldo e incoraggiante.`;
       } else {
         // ORAL tasks — no familiarity known — show quick-reply buttons in chat
         const isWritingTask = isMixedWritingTask(homework.task_type, homework.title);
-        const openingMsg = `${emotionGreeting(sessionEmotion, profileName, homework.title)}${voicePrompt ? voicePrompt + "\n\n" : ""}Come posso aiutarti?`;
+        const openingMsg = `${emotionGreeting(activeEmotion, profileName, homework.title)}${voicePrompt ? voicePrompt + "\n\n" : ""}Come posso aiutarti?`;
 
         const familiarityActions: ChatAction[] = [
           ...(isWritingTask ? [
