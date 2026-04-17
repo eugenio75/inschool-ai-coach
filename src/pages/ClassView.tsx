@@ -468,17 +468,9 @@ export default function ClassView() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <div className="max-w-[880px] mx-auto px-4 sm:px-8 py-5 sm:py-8 pb-24">
-        {/* ─── Back link ─── */}
-        <button
-          onClick={() => navigate("/dashboard")}
-          className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
-        >
-          ← Torna alle classi
-        </button>
-
+      <div className="max-w-[880px] mx-auto px-4 sm:px-8 py-3 sm:py-4 pb-24">
         {/* ─── Header card (white) ─── */}
-        <header className="mt-4 mb-5 sm:mb-6 rounded-[24px] border border-border/60 bg-card p-5 sm:p-7">
+        <header className="mb-5 sm:mb-6 rounded-[24px] border border-border/60 bg-card p-5 sm:p-7">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80">
