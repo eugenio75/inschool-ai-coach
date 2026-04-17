@@ -586,7 +586,7 @@ export default function DashboardDocente() {
                 return (
                   <div
                     key={c.id}
-                    className="bg-card border border-border rounded-xl p-4 text-left hover:shadow-md hover:border-primary/30 transition-all group relative"
+                    className="bg-card/95 backdrop-blur border border-border/60 rounded-2xl p-5 text-left shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)] hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)] hover:border-primary/30 transition-all group relative"
                   >
                     <div className="absolute top-2 right-2 z-10">
                       <DropdownMenu>
@@ -609,10 +609,10 @@ export default function DashboardDocente() {
                       </DropdownMenu>
                     </div>
                     <button onClick={() => navigate(`/classe/${c.id}`)} className="w-full text-left">
-                      <div className="flex items-center justify-between mb-1 pr-6">
+                      <div className="flex items-center justify-between mb-2 pr-6">
                         <div className="flex items-center gap-2">
                           <div className={`w-2.5 h-2.5 rounded-full ${hasAlert ? "bg-amber-400" : "bg-emerald-400"}`} />
-                          <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">{c.nome}</span>
+                          <span className="font-bold text-foreground text-[18px] tracking-tight group-hover:text-primary transition-colors">{c.nome}</span>
                           {c.is_sample && (
                             <span className="text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 px-1.5 py-0.5 rounded-full">
                               ✨ Esempio
@@ -626,8 +626,8 @@ export default function DashboardDocente() {
                         )}
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">{c.materia || "–"}</span>
-                        <span className="text-xs text-muted-foreground">{c.num_studenti || 0} studenti</span>
+                        <span className="text-[13px] text-muted-foreground">{c.materia || "–"}</span>
+                        <span className="text-[13px] text-muted-foreground">{c.num_studenti || 0} studenti</span>
                       </div>
                     </button>
                   </div>
