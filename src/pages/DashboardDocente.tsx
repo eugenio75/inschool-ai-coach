@@ -510,49 +510,6 @@ export default function DashboardDocente() {
               ))}
             </div>
 
-            {/* Emotional heart row — OUTSIDE the text field */}
-            <div className="mt-5 flex items-center gap-3 relative" ref={moodRef}>
-              <button
-                onClick={() => setShowMood(!showMood)}
-                className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[14px] font-medium transition-colors ${
-                  showMood
-                    ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
-                    : "border-border bg-muted/40 text-muted-foreground hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 dark:hover:bg-rose-500/10"
-                }`}
-                title="Come ti senti?"
-              >
-                <Heart className={`w-4 h-4 ${showMood ? "fill-rose-500 text-rose-500" : "text-rose-400"}`} />
-                Come ti senti oggi?
-              </button>
-
-              <AnimatePresence>
-                {showMood && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-full left-0 mt-2 bg-card border border-border rounded-2xl shadow-lg p-2 min-w-[260px] z-20"
-                  >
-                    {[
-                      { label: "Sono sopraffatto/a", icon: CloudRain, msg: "Mi sento sopraffatto/a dal carico di lavoro, ho bisogno di supporto", color: "text-blue-600 dark:text-blue-400" },
-                      { label: "Sono stanco/a", icon: BatteryLow, msg: "Mi sento stanco/a e senza energie oggi", color: "text-amber-600 dark:text-amber-400" },
-                      { label: "Ho bisogno di una pausa", icon: Coffee, msg: "Sento di aver bisogno di staccare un momento e ricaricarmi", color: "text-orange-600 dark:text-orange-400" },
-                      { label: "Ho bisogno di parlare", icon: Heart, msg: "Ho bisogno di parlare con qualcuno di come mi sento come docente", color: "text-rose-600 dark:text-rose-400" },
-                    ].map((opt) => (
-                      <button
-                        key={opt.label}
-                        onClick={() => { setShowMood(false); navigateToCoach(opt.msg); }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-muted transition-colors"
-                      >
-                        <opt.icon className={`w-4 h-4 shrink-0 ${opt.color}`} />
-                        <span className="text-[14px] font-medium text-foreground">{opt.label}</span>
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
           </div>
 
           {/* Fused input — bottom band */}
