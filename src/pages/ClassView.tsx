@@ -788,36 +788,38 @@ export default function ClassView() {
                   { key: "consistency", label: "Continuità", value: consistency },
                 ];
 
-                /* ─── Section: Studenti da seguire (open by default if any) ─── */
-                const SectionFollow = followReasons.length === 0 ? null : (
-                  <CollapsibleSection
-                    title="Studenti da seguire"
-                    accent="amber"
-                    defaultOpen={true}
-                    badge={
-                      <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-amber-100 text-amber-700 text-[11px] font-semibold">
-                        {followReasons.length}
-                      </span>
-                    }
-                  >
-                    <div className="divide-y divide-border">
-                      {followReasons.map((fr) => (
-                        <button
-                          key={fr.studentId}
-                          onClick={() => navigate(`/studente/${fr.studentId}?classId=${classId}`)}
-                          className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-muted/40 transition-colors"
-                        >
-                          <AvatarInitials name={fr.studentName} size="sm" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{fr.studentName}</p>
-                            <p className="text-[12px] text-muted-foreground truncate mt-0.5">{fr.reason}</p>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                        </button>
-                      ))}
-                    </div>
-                  </CollapsibleSection>
-                );
+                /* ─── Map followReasons → FollowStudent (inline cards in Coach Console) ─── */
+                const followStudents: FollowStudent[] = followReasons.map((fr) => {
+                  let primaryAction: CoachAction | undefined;
+                  if (fr.actions.includes("recovery")) {
+                    primaryAction = {
+                      id: `rec-${fr.studentId}`, label: "Recupero", icon: "recovery",
+                      onClick: () => handleGenerateRecovery(
+                        fr.subject || classe?.materia || "",
+                        fr.topic || fr.reason,
+                        1,
+                      ),
+                    };
+                  } else if (fr.actions.includes("contact_parents")) {
+                    primaryAction = {
+                      id: `par-${fr.studentId}`, label: "Genitori", icon: "parents",
+                      onClick: () => {
+                        setParentEmailTarget({ studentId: fr.studentId, studentName: fr.studentName });
+                        setParentEmailSubject(`Aggiornamento su ${fr.studentName}`);
+                        setParentEmailBody(
+                          `Buongiorno,\n\nle scrivo a proposito di ${fr.studentName}: ${fr.reason.toLowerCase()}.\n\nVi propongo un breve confronto per condividere strategie utili a casa.\n\nCordiali saluti.`,
+                        );
+                      },
+                    };
+                  }
+                  return {
+                    studentId: fr.studentId,
+                    studentName: fr.studentName,
+                    reason: fr.reason,
+                    primaryAction,
+                    onOpen: () => navigate(`/studente/${fr.studentId}?classId=${classId}`),
+                  };
+                });
 
                 /* ─── Section: Studenti (collapsible) ─── */
                 const SectionStudents = (
