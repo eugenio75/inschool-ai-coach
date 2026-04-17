@@ -3,19 +3,13 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Users, BookOpen, MessageSquare,
   Copy, ChevronRight, ChevronDown, AlertTriangle,
-  BarChart2, Send, Lightbulb, Info, PenLine, Mail, Wrench,
+  BarChart2, Send, Lightbulb, Info, PenLine,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import TeacherMaterialsTab, { type PrefilledMaterial } from "@/components/teacher/TeacherMaterialsTab";
 import ClassInsightsTab from "@/components/teacher/ClassInsightsTab";
 import ManualGradeModal from "@/components/teacher/ManualGradeModal";
 import OcrGradeModal from "@/components/teacher/OcrGradeModal";
-import LearningIndexModal from "@/components/teacher/LearningIndexModal";
-import AssignmentDetailModal from "@/components/teacher/AssignmentDetailModal";
-import type { ScaleId } from "@/components/teacher/GradeReviewModal";
 import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -157,241 +151,6 @@ function KpiCard({ label, value, tooltip }: { label: string; value: string | num
   );
 }
 
-/* ─── Indice di apprendimento ─── */
-function gradeToPercent(grade: string, scale: string): number | null {
-  const num = parseFloat(String(grade).replace(",", "."));
-  if (!isNaN(num)) {
-    if (scale === "/10") return Math.max(0, Math.min(100, (num / 10) * 100));
-    if (scale === "/30") return Math.max(0, Math.min(100, (num / 30) * 100));
-    if (scale === "/100") return Math.max(0, Math.min(100, num));
-  }
-  // Qualitative judgment
-  const g = String(grade).toLowerCase().trim();
-  const map: Record<string, number> = {
-    "ottimo": 95, "distinto": 85, "buono": 75,
-    "discreto": 65, "sufficiente": 55, "insufficiente": 35,
-    "gravemente insufficiente": 20,
-  };
-  return map[g] ?? null;
-}
-
-function computeLearningIndex(
-  assignmentResults: any[],
-  manualGrades: any[],
-) {
-  // 1. SarAI scores (assignment_results)
-  const sarAiScores: number[] = [];
-  let totalAssigned = 0;
-  let totalCompleted = 0;
-  assignmentResults.forEach((a: any) => {
-    (a.results || []).forEach((r: any) => {
-      totalAssigned++;
-      if (r.status === "completed") totalCompleted++;
-      if (r.score != null) sarAiScores.push(r.score);
-    });
-  });
-  const sarAiAvg = sarAiScores.length > 0
-    ? sarAiScores.reduce((a, b) => a + b, 0) / sarAiScores.length
-    : null;
-
-  // 2. Manual teacher grades (source = 'manual')
-  const manualScores: number[] = [];
-  // 3. OCR-confirmed grades (source = 'ocr_corrected')
-  const ocrScores: number[] = [];
-  manualGrades.forEach((g: any) => {
-    const pct = gradeToPercent(g.grade, g.grade_scale);
-    if (pct == null) return;
-    if (g.source === "ocr_corrected") ocrScores.push(pct);
-    else manualScores.push(pct);
-  });
-  const manualAvg = manualScores.length > 0
-    ? manualScores.reduce((a, b) => a + b, 0) / manualScores.length
-    : null;
-  const ocrAvg = ocrScores.length > 0
-    ? ocrScores.reduce((a, b) => a + b, 0) / ocrScores.length
-    : null;
-
-  // 4. Completion rate
-  const completionRate = totalAssigned > 0
-    ? (totalCompleted / totalAssigned) * 100
-    : null;
-
-  // Weights with redistribution
-  const sources = [
-    { value: sarAiAvg, weight: 0.4 },
-    { value: manualAvg, weight: 0.3 },
-    { value: ocrAvg, weight: 0.2 },
-    { value: completionRate, weight: 0.1 },
-  ];
-  const available = sources.filter(s => s.value !== null);
-  if (available.length < 2 || totalAssigned + manualGrades.length < 3) {
-    return { index: null, available: available.length };
-  }
-  const totalWeight = available.reduce((sum, s) => sum + s.weight, 0);
-  const index = available.reduce((sum, s) => sum + (s.value as number) * (s.weight / totalWeight), 0);
-  return { index: Math.round(index), available: available.length };
-}
-
-/* ─── Last activity per student (with name fallback for legacy data) ─── */
-function getLastActivityMap(
-  assignmentResults: any[],
-  manualGrades: any[],
-  students: any[] = [],
-): Record<string, string> {
-  const map: Record<string, string> = {};
-  // Build name → enrolled student_id map for fallback
-  const nameToSid: Record<string, string> = {};
-  students.forEach((s: any) => {
-    const sid = s.student_id || s.id;
-    const firstName = (s.profile?.name || s.student_name || "").trim().toLowerCase();
-    if (firstName && sid) nameToSid[firstName] = sid;
-  });
-
-  const apply = (sid: string | undefined | null, date: string | undefined | null) => {
-    if (!sid || !date) return;
-    if (!map[sid] || new Date(date) > new Date(map[sid])) map[sid] = date;
-  };
-
-  assignmentResults.forEach((a: any) => {
-    (a.results || []).forEach((r: any) => {
-      const date = r.completed_at || r.created_at || a.assigned_at;
-      apply(r.student_id || r.id, date);
-      // Fallback by name (sample data may have orphaned student_ids)
-      const nm = (r.student_name || "").trim().toLowerCase();
-      if (nm && nameToSid[nm]) apply(nameToSid[nm], date);
-    });
-  });
-  manualGrades.forEach((g: any) => {
-    apply(g.student_id, g.graded_at);
-    const nm = (g.student_name || "").trim().toLowerCase();
-    if (nm && nameToSid[nm]) apply(nameToSid[nm], g.graded_at);
-  });
-  return map;
-}
-
-/* ─── Compute reasons + suggested actions for "to follow" students ─── */
-type FollowAction = "recovery" | "contact_parents";
-interface FollowReason {
-  studentId: string;
-  studentName: string;
-  reason: string;
-  reasonType: "low_score" | "stale_task" | "topic_difficulty" | "no_session";
-  topic?: string;
-  subject?: string;
-  lastActivity?: string;
-  actions: FollowAction[];
-}
-
-function computeFollowReasons(
-  students: any[],
-  assignmentResults: any[],
-  studentScores: Record<string, number[]> | undefined,
-  lastActivityMap: Record<string, string>,
-  classSubject: string,
-): FollowReason[] {
-  if (!studentScores) return [];
-  const reasons: FollowReason[] = [];
-  const now = Date.now();
-  const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
-
-  // Build name → sid map for fallback matching
-  const nameToSid: Record<string, string> = {};
-  students.forEach((s: any) => {
-    const sid = s.student_id || s.id;
-    const fn = (s.profile?.name || s.student_name || "").trim().toLowerCase();
-    if (fn && sid) nameToSid[fn] = sid;
-  });
-
-  students.forEach((s: any) => {
-    const sid = s.student_id || s.id;
-    const firstName = s.profile?.name || s.student_name || "Studente";
-    const lastName = s.profile?.last_name || "";
-    const studentName = lastName ? `${firstName} ${lastName}` : firstName;
-    const fnLower = firstName.trim().toLowerCase();
-
-    const scores = studentScores[sid] || [];
-    const lastActivity = lastActivityMap[sid];
-    const recent = scores.slice(-3);
-    const recentAvg = recent.length > 0 ? recent.reduce((a, b) => a + b, 0) / recent.length : null;
-
-    // Find topic with most errors for this student (with name fallback)
-    const errorTopics: Record<string, number> = {};
-    let staleTasks = 0;
-    let assignmentSubject = "";
-    assignmentResults.forEach((a: any) => {
-      (a.results || []).forEach((r: any) => {
-        const rsid = r.student_id || r.id;
-        const rname = (r.student_name || "").trim().toLowerCase();
-        const matches = rsid === sid || (rname && rname === fnLower);
-        if (!matches) return;
-        if (a.subject) assignmentSubject = a.subject;
-        if (r.status !== "completed" && a.assigned_at) {
-          const ageMs = now - new Date(a.assigned_at).getTime();
-          if (ageMs > SEVEN_DAYS) staleTasks++;
-        }
-        if (r.errors_summary && typeof r.errors_summary === "object") {
-          Object.keys(r.errors_summary).forEach(k => {
-            errorTopics[k] = (errorTopics[k] || 0) + 1;
-          });
-        }
-      });
-    });
-    const topErrorTopic = Object.entries(errorTopics).sort(([, a], [, b]) => b - a)[0];
-
-    // Decide reason in priority order
-    if (recentAvg != null && recentAvg < 50) {
-      reasons.push({
-        studentId: sid, studentName,
-        reason: "Punteggio SarAI sotto il 50% nelle ultime attività",
-        reasonType: "low_score",
-        subject: assignmentSubject || classSubject,
-        topic: topErrorTopic?.[0],
-        lastActivity,
-        actions: ["recovery"],
-      });
-    } else if (topErrorTopic && topErrorTopic[1] >= 2) {
-      reasons.push({
-        studentId: sid, studentName,
-        reason: `Difficoltà rilevate su "${topErrorTopic[0]}"`,
-        reasonType: "topic_difficulty",
-        subject: assignmentSubject || classSubject,
-        topic: topErrorTopic[0],
-        lastActivity,
-        actions: ["recovery"],
-      });
-    } else if (staleTasks >= 1) {
-      reasons.push({
-        studentId: sid, studentName,
-        reason: `Compito non completato da 7+ giorni`,
-        reasonType: "stale_task",
-        lastActivity,
-        actions: ["contact_parents"],
-      });
-    } else if (lastActivity && now - new Date(lastActivity).getTime() > SEVEN_DAYS) {
-      reasons.push({
-        studentId: sid, studentName,
-        reason: "Nessuna sessione negli ultimi 7 giorni",
-        reasonType: "no_session",
-        lastActivity,
-        actions: ["contact_parents"],
-      });
-    } else if (scores.length > 0 && scores.reduce((a, b) => a + b, 0) / scores.length < 60) {
-      // Generic catch-all to align with stats.toFollow (mean < 60)
-      reasons.push({
-        studentId: sid, studentName,
-        reason: "Media generale sotto la sufficienza",
-        reasonType: "low_score",
-        subject: assignmentSubject || classSubject,
-        topic: topErrorTopic?.[0],
-        lastActivity,
-        actions: ["recovery"],
-      });
-    }
-  });
-
-  return reasons;
-}
-
 export default function ClassView() {
   const { classId } = useParams();
   const navigate = useNavigate();
@@ -411,13 +170,7 @@ export default function ClassView() {
   const [prefilledMaterial, setPrefilledMaterial] = useState<PrefilledMaterial | null>(null);
   const [verificheOpen, setVerificheOpen] = useState(false);
   const [showGradeModal, setShowGradeModal] = useState(false);
-  const [followExpanded, setFollowExpanded] = useState(false);
-  const [parentEmailTarget, setParentEmailTarget] = useState<{ studentId: string; studentName: string } | null>(null);
-  const [parentEmailSubject, setParentEmailSubject] = useState("");
-  const [parentEmailBody, setParentEmailBody] = useState("");
   const [ocrAssignment, setOcrAssignment] = useState<any>(null);
-  const [learningModalOpen, setLearningModalOpen] = useState(false);
-  const [activeAssignment, setActiveAssignment] = useState<any>(null);
 
   useEffect(() => {
     if (!classId) return;
@@ -429,14 +182,11 @@ export default function ClassView() {
     setLoading(true);
     try {
       const { data: { session: authSession } } = await supabase.auth.getSession();
-      let loadedStudents: any[] = [];
-      let loadedResults: any[] = [];
-      let loadedClasse: any = null;
       if (authSession?.access_token) {
         const data = await fetchTeacherClassData(classId!);
-        loadedClasse = data.classe;
-        loadedStudents = data.students || [];
-        loadedResults = data.assignmentResults || [];
+        setClasse(data.classe);
+        setStudents(data.students || []);
+        setAssignmentResults(data.assignmentResults || []);
 
         const { data: mats } = await (supabase as any)
           .from("teacher_materials")
@@ -456,7 +206,7 @@ export default function ClassView() {
       } else {
         const { data: cl } = await (supabase as any)
           .from("classi").select("*").eq("id", classId).single();
-        loadedClasse = cl;
+        setClasse(cl);
         const { data: enr } = await (supabase as any)
           .from("class_enrollments").select("*").eq("class_id", classId).eq("status", "active");
         const enrollments = enr || [];
@@ -468,46 +218,14 @@ export default function ClassView() {
             .in("id", studentIds);
           const profileMap: Record<string, any> = {};
           (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
-          loadedStudents = enrollments.map((e: any) => ({ ...e, profile: profileMap[e.student_id] || null }));
+          setStudents(enrollments.map((e: any) => ({ ...e, profile: profileMap[e.student_id] || null })));
+        } else {
+          setStudents([]);
         }
+        setAssignmentResults([]);
         setMaterials([]);
         setManualGrades([]);
       }
-
-      // Demo enrichment: any student whose name matches "esempio/demo/sample/Studente"
-      // and has no scored results gets a synthetic low-score result so the
-      // "Da seguire" pipeline (badge + follow reasons + ⚠ icon) lights up.
-      const demoNameRe = /^\s*studente\s*$|esempio|demo|sample/i;
-      const subj = loadedClasse?.materia || "";
-      const sevenDaysAgo = new Date(Date.now() - 5 * 86400000).toISOString();
-      const syntheticResults: any[] = [];
-      loadedStudents.forEach((s: any) => {
-        const sid = s.student_id || s.id;
-        const fn = s.profile?.name || s.student_name || "";
-        if (!demoNameRe.test(fn)) return;
-        // Check if already has any scored result
-        const hasReal = loadedResults.some((a: any) =>
-          (a.results || []).some((r: any) => (r.student_id || r.id) === sid && r.score != null)
-        );
-        if (hasReal) return;
-        syntheticResults.push({
-          id: `demo-followup-${sid}`,
-          title: `Verifica di ${subj || "matematica"}`,
-          subject: subj || "Matematica",
-          assigned_at: sevenDaysAgo,
-          results: [{
-            student_id: sid,
-            student_name: fn,
-            score: 8,
-            status: "completed",
-            errors_summary: { "I numeri decimali": 3 },
-          }],
-        });
-      });
-
-      setClasse(loadedClasse);
-      setStudents(loadedStudents);
-      setAssignmentResults([...loadedResults, ...syntheticResults]);
     } catch (error) {
       console.error("loadClass error:", error);
       toast.error("Non sono riuscito a caricare la classe.");
@@ -584,18 +302,6 @@ export default function ClassView() {
 
   // Assignment list for manual grade modal
   const assignmentList = assignmentResults.map((a: any) => ({ id: a.id, title: a.title }));
-
-  // Detect class default grade scale (most-used in manual_grades, fallback /10)
-  const classScale: ScaleId = (() => {
-    if (manualGrades.length === 0) return "/10";
-    const counts: Record<string, number> = {};
-    manualGrades.forEach((g: any) => {
-      const s = g.grade_scale || "/10";
-      counts[s] = (counts[s] || 0) + 1;
-    });
-    const top = Object.entries(counts).sort(([, a], [, b]) => b - a)[0];
-    return (top?.[0] as ScaleId) || "/10";
-  })();
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 pb-24">
@@ -680,233 +386,330 @@ export default function ClassView() {
             </div>
           ) : (
             <>
-              {(() => {
-                const lastActivityMap = getLastActivityMap(assignmentResults, manualGrades, students);
-                const followReasons = computeFollowReasons(
-                  students, assignmentResults, stats.studentScores as any,
-                  lastActivityMap, classe?.materia || "",
-                );
-                const li = computeLearningIndex(assignmentResults, manualGrades);
-                const idx = li.index;
+              {/* BLOCK 1 — Stato aggregato */}
+              <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
+                <div className={cn(
+                  "w-2.5 h-2.5 rounded-full shrink-0",
+                  stats.toFollow === 0 ? "bg-emerald-500" : stats.toFollow >= 3 ? "bg-amber-500" : "bg-amber-400"
+                )} />
+                <p className="text-sm font-medium text-foreground">{stats.statusMsg}</p>
+              </div>
 
-                /* ─── SECTION 1 — Studenti da seguire (collapsed by default, soft amber) ─── */
-                const Section1 = followReasons.length === 0 ? (
-                  <div className="bg-card border border-border rounded-[12px] p-4">
-                    <p className="text-sm text-foreground">
-                      ✅ Nessuno studente da seguire al momento
-                    </p>
-                  </div>
-                ) : (
-                  <div className="bg-card border border-amber-300/50 rounded-[12px] overflow-hidden">
-                    <button
-                      onClick={() => setFollowExpanded(!followExpanded)}
-                      className="w-full flex items-center justify-between p-4 text-left hover:bg-amber-50/40 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4 text-amber-500" />
-                        <p className="text-sm font-semibold text-foreground">Studenti da seguire</p>
-                        <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-amber-100 text-amber-700 text-[11px] font-semibold">
-                          {followReasons.length}
-                        </span>
-                      </div>
-                      <ChevronDown className={cn(
-                        "w-4 h-4 text-muted-foreground transition-transform shrink-0",
-                        followExpanded && "rotate-180",
-                      )} />
-                    </button>
-                    {followExpanded && (
-                      <div className="border-t border-border divide-y divide-border">
-                        {followReasons.map((fr) => (
-                          <button
-                            key={fr.studentId}
-                            onClick={() => navigate(`/studente/${fr.studentId}?classId=${classId}`)}
-                            className="w-full flex items-center gap-3 p-4 text-left hover:bg-muted/40 transition-colors"
-                          >
-                            <AvatarInitials name={fr.studentName} size="sm" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">{fr.studentName}</p>
-                              <p className="text-[12px] text-muted-foreground truncate mt-0.5">
-                                {fr.reason}
-                              </p>
-                            </div>
-                            <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-semibold uppercase tracking-wide">
-                              Da seguire
-                            </span>
-                            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
+              {/* BLOCK 2 — KPI with tooltips */}
+              <div className="grid grid-cols-4 gap-3">
+                <KpiCard
+                  label="Risultati attività"
+                  value={`${stats.avg}%`}
+                  tooltip="Punteggio medio ottenuto dagli studenti nelle attività completate su SarAI"
+                />
+                <KpiCard
+                  label="Attività completate"
+                  value={`${stats.completion}%`}
+                  tooltip="Percentuale di attività assegnate completate dagli studenti"
+                />
+                <KpiCard
+                  label="Studenti attivi"
+                  value={stats.regular}
+                  tooltip="Studenti che hanno usato SarAI almeno 3 volte negli ultimi 14 giorni"
+                />
+                <KpiCard
+                  label="Da seguire"
+                  value={stats.toFollow}
+                  tooltip="Studenti con difficoltà rilevate o attività non completate"
+                />
+              </div>
 
-                /* ─── SECTION 2 — Andamento della classe (clickable, clean) ─── */
-                let zoneColor = "bg-emerald-500";
-                let zoneLabel = "La classe apprende bene";
-                if (idx == null) {
-                  zoneLabel = "In attesa di dati";
-                } else if (idx < 40) {
-                  zoneColor = "bg-red-500";
-                  zoneLabel = "Qualche difficoltà rilevata";
-                } else if (idx < 70) {
-                  zoneColor = "bg-amber-500";
-                  zoneLabel = "Qualche difficoltà rilevata";
-                }
-
-                const Section2 = (
-                  <div className="bg-card border border-border rounded-[12px] p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-semibold text-foreground">Andamento della classe</p>
-                      {idx != null && (
-                        <button
-                          onClick={() => setLearningModalOpen(true)}
-                          className="text-[12px] text-primary hover:underline"
-                        >
-                          tocca per i dettagli ›
-                        </button>
-                      )}
-                    </div>
-                    {idx == null ? (
-                      <p className="text-xs text-muted-foreground">
-                        L'indicatore si attiverà dopo qualche attività completata dalla classe.
-                      </p>
-                    ) : (
-                      <>
-                        <div className="relative h-2 rounded-full bg-muted overflow-hidden">
-                          <div
-                            className={cn("absolute top-0 bottom-0 left-0 rounded-full transition-all", zoneColor)}
-                            style={{ width: `${idx}%` }}
-                          />
+              {/* BLOCK 3 — Risultati per materia */}
+              {topics.length > 0 && (
+                <div className="bg-card border border-border rounded-xl p-5">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                    Risultati per materia
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mb-4">
+                    Punteggio medio nelle attività completate per ogni materia
+                  </p>
+                  <div className="space-y-3">
+                    {topics.map((t, i) => (
+                      <div key={i}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm text-foreground">{t.name}</span>
+                          <span className="text-xs text-muted-foreground font-medium">{t.mastery}%</span>
                         </div>
-                        <p className="text-sm text-foreground mt-3">{zoneLabel}</p>
-                        <button
-                          onClick={() => setLearningModalOpen(true)}
-                          className="text-[12px] text-primary hover:underline mt-2 block"
-                        >
-                          Vedi difficoltà e suggerimenti del Coach AI →
-                        </button>
-                      </>
+                        <Progress value={t.mastery} className="h-2" />
+                      </div>
+                    ))}
+                    {topics.every(t => t.mastery < 20) && (
+                      <p className="text-[10px] text-muted-foreground italic mt-2">
+                        I dati crescono man mano che gli studenti completano più attività
+                      </p>
                     )}
                   </div>
-                );
+                </div>
+              )}
 
-                /* ─── SECTION 3 — Studenti (avatar + nome + ultima attività + badge) ─── */
-                const Section3 = (
-                  <div>
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
-                      Studenti ({students.length})
-                    </p>
-                    <div className="bg-card border border-border rounded-[12px] divide-y divide-border overflow-hidden">
-                      {students.map((s: any) => {
-                        const firstName = s.profile?.name || s.student_name || "Studente";
-                        const lastName = s.profile?.last_name || "";
-                        const name = lastName ? `${firstName} ${lastName}` : firstName;
-                        const sid = s.student_id || s.id;
-                        const last = lastActivityMap[sid];
-                        const lastLabel = last
-                          ? new Date(last).toLocaleDateString("it-IT", { day: "numeric", month: "short" })
-                          : "—";
-                        const needsFollow = followReasons.some(fr => fr.studentId === sid);
-                        return (
-                          <button
-                            key={s.id}
-                            onClick={() => navigate(`/studente/${sid}?classId=${classId}`)}
-                            className="w-full flex items-center gap-3 p-3 hover:bg-muted/40 transition-colors text-left"
-                          >
-                            <AvatarInitials name={name} size="sm" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">{name}</p>
-                              <p className="text-[11px] text-muted-foreground mt-0.5">
-                                Ultima attività: {lastLabel}
-                              </p>
-                            </div>
-                            {needsFollow && (
-                              <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-semibold uppercase tracking-wide">
-                                Da seguire
-                              </span>
-                            )}
-                            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                          </button>
-                        );
-                      })}
+              {/* BLOCK 4 — Lista studenti */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  Studenti ({students.length})
+                </p>
+                <div className="space-y-2">
+                  {students.map((s: any) => {
+                    const firstName = s.profile?.name || s.student_name || "Studente";
+                    const lastName = s.profile?.last_name || "";
+                    const name = lastName ? `${firstName} ${lastName}` : firstName;
+                    const sid = s.student_id || s.id;
+                    const badge = getStudentBadge(sid, stats.studentScores as any, assignmentResults);
+                    const belowThreshold = isStudentBelowThreshold(sid, stats.studentScores as any);
+
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => navigate(`/studente/${sid}?classId=${classId}`)}
+                        className="w-full flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:bg-muted/50 hover:shadow-sm transition-all text-left"
+                      >
+                        <AvatarInitials name={name} size="sm" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground">{name}</p>
+                        </div>
+                        {badge && (
+                          <Badge variant={badge.variant} className="text-[10px] shrink-0">
+                            {badge.label}
+                          </Badge>
+                        )}
+                        {belowThreshold && (
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                        )}
+                        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* BLOCK 5 — Attività assegnate (collapsible, default closed) */}
+              {assignmentResults.length > 0 && (
+                <div className="bg-card border border-border rounded-xl">
+                  <button
+                    onClick={() => setVerificheOpen(!verificheOpen)}
+                    className="w-full flex items-center justify-between p-4 text-left"
+                  >
+                    <div>
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                        <BarChart2 className="w-3.5 h-3.5" />
+                        Attività assegnate ({assignmentResults.length})
+                      </span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Compiti e verifiche assegnati — clicca su uno studente per vedere il dettaglio
+                      </p>
                     </div>
-                  </div>
-                );
+                    <ChevronDown className={cn(
+                      "w-4 h-4 text-muted-foreground transition-transform shrink-0",
+                      verificheOpen && "rotate-180"
+                    )} />
+                  </button>
 
-                /* ─── SECTION 4 — Attività assegnate (clean, no scores) ─── */
-                const Section4 = (
-                  <div>
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
-                      Attività assegnate ({assignmentResults.length})
-                    </p>
-                    {assignmentResults.length === 0 ? (
-                      <div className="bg-card border border-border rounded-[12px] p-5 text-center">
-                        <p className="text-sm text-muted-foreground">
-                          Nessuna attività assegnata a questa classe.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="bg-card border border-border rounded-[12px] divide-y divide-border overflow-hidden">
-                        {assignmentResults.map((a: any) => {
-                          const results = a.results || [];
-                          const completed = results.filter((r: any) => r.status === "completed").length;
-                          const total = students.length || results.length;
-                          const date = a.assigned_at
-                            ? new Date(a.assigned_at).toLocaleDateString("it-IT", { day: "numeric", month: "short" })
-                            : "";
-                          const allDone = total > 0 && completed === total;
-                          return (
-                            <button
-                              key={a.id}
-                              onClick={() => setActiveAssignment(a)}
-                              className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left"
-                            >
+                  {verificheOpen && (
+                    <div className="px-4 pb-4 space-y-3">
+                      {/* Action buttons */}
+                       <div className="flex justify-end gap-2">
+                         <Button variant="outline" size="sm" className="rounded-xl text-xs h-7" onClick={() => setShowGradeModal(true)}>
+                           <PenLine className="w-3 h-3 mr-1" /> Inserisci voto manuale
+                         </Button>
+                       </div>
+
+                      {assignmentResults.map((a: any) => {
+                        const results = a.results || [];
+                        const avgScore = results.length > 0
+                          ? Math.round(results.reduce((sum: number, r: any) => sum + (r.score || 0), 0) / results.length)
+                          : 0;
+                        const completed = results.filter((r: any) => r.status === "completed").length;
+
+                        return (
+                          <div key={a.id} className="border border-border rounded-xl p-4 bg-muted/30">
+                            <div className="flex items-center justify-between mb-3">
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-foreground truncate">{a.title}</p>
-                                <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                                  {a.subject ? `${a.subject}` : ""}{a.subject && date ? " · " : ""}{date}
+                                <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {a.subject} · {a.type === "verifica" ? "Verifica" : "Compito"}
+                                  {a.assigned_at && ` · ${new Date(a.assigned_at).toLocaleDateString("it-IT")}`}
                                 </p>
                               </div>
-                              <span className={cn(
-                                "shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold",
-                                allDone
-                                  ? "bg-emerald-100 text-emerald-700"
-                                  : "bg-muted text-muted-foreground",
-                              )}>
-                                {allDone
-                                  ? `${completed}/${total} ✓`
-                                  : `${completed}/${total} consegnat${total === 1 ? "o" : "i"}`}
-                              </span>
-                              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
+                              <div className="flex items-center gap-3 shrink-0">
+                                 <Button
+                                   variant="outline"
+                                   size="sm"
+                                   className="rounded-xl text-[10px] h-7 px-2"
+                                   onClick={(e) => { e.stopPropagation(); setOcrAssignment(a); }}
+                                 >
+                                   📸 Carica e correggi
+                                 </Button>
+                                 <div className="text-center">
+                                   <p className="text-lg font-bold text-foreground">{avgScore}%</p>
+                                   <p className="text-[10px] text-muted-foreground">punteggio SarAI</p>
+                                 </div>
+                                 <div className="text-center">
+                                   <p className="text-lg font-bold text-foreground">{completed}/{results.length}</p>
+                                   <p className="text-[10px] text-muted-foreground">completati</p>
+                                 </div>
+                               </div>
+                            </div>
+                            <div className="space-y-1.5 pt-3 border-t border-border">
+                              {results.map((r: any) => {
+                                const rName = r.student_name || "Studente";
+                                const rScore = r.score != null ? Math.round(r.score) : null;
+                                const belowThreshold = rScore != null && rScore < 50;
+                                let statusLabel = "🕐 In attesa";
+                                let statusVariant: "default" | "secondary" | "destructive" | "outline" = "outline";
+                                if (r.status === "completed") { statusLabel = "✅ Completato"; statusVariant = "default"; }
+                                else if (r.status === "in_progress") { statusLabel = "In corso"; statusVariant = "secondary"; }
+                                else if (r.status === "assigned" && a.due_date && new Date(a.due_date) < new Date()) {
+                                  statusLabel = "In ritardo"; statusVariant = "destructive";
+                                }
 
-                return (
-                  <>
-                    {Section1}
-                    {Section2}
-                    {Section3}
-                    {Section4}
-                  </>
-                );
-              })()}
+                                return (
+                                  <button
+                                    key={r.id}
+                                    onClick={() => navigate(`/studente/${r.student_id || r.id}?classId=${classId}`)}
+                                    className="w-full flex items-center gap-2 text-xs hover:bg-muted/50 rounded-lg p-1.5 transition-colors"
+                                  >
+                                    <AvatarInitials name={rName} size="sm" />
+                                    <span className="flex-1 text-foreground truncate text-left">{rName}</span>
+                                    {belowThreshold && <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />}
+                                    <span className="font-semibold text-foreground">
+                                      {rScore != null ? `${rScore}%` : "—"}
+                                    </span>
+                                    {r.completed_at && (
+                                      <span className="text-muted-foreground text-[10px]">
+                                        {new Date(r.completed_at).toLocaleDateString("it-IT")}
+                                      </span>
+                                    )}
+                                    <Badge variant={statusVariant} className="text-[10px]">
+                                      {statusLabel}
+                                    </Badge>
+                                  </button>
+                                );
+                              })}
+                            </div>
+
+                            {/* Manual grades for this assignment */}
+                            {manualGrades.filter(g => g.assignment_id === a.id).map((g: any) => {
+                              const isOcr = g.source === "ocr_corrected";
+                              const icon = isOcr && g.teacher_confirmed ? "🤖" : "📝";
+                              return (
+                                <div key={g.id} className="flex items-center gap-2 text-xs mt-1.5 p-1.5">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="cursor-help">{icon}</span>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="text-xs">
+                                      {isOcr
+                                        ? g.teacher_confirmed
+                                          ? "Punteggio proposto da SarAI e confermato"
+                                          : "Punteggio proposto da SarAI, modificato dal docente"
+                                        : "Voto inserito manualmente"}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  <span className="flex-1 text-foreground">{g.student_name}</span>
+                                  <span className="font-semibold text-foreground">
+                                    {g.grade}{g.grade_scale !== "giudizio" ? g.grade_scale : ""}
+                                  </span>
+                                  {isOcr && g.ai_proposed_grade && !g.teacher_confirmed && (
+                                    <span className="text-[10px] text-muted-foreground">(SarAI: {g.ai_proposed_grade})</span>
+                                  )}
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {new Date(g.graded_at).toLocaleDateString("it-IT")}
+                                  </span>
+                                </div>
+                              );
+                            })}
+
+                            {/* Feedback loop alerts */}
+                            {(() => {
+                              const notDone = results.filter((r: any) => r.status !== "completed").length;
+                              const alertItems: Array<{ msg: string; topic: string; count: number }> = [];
+                              if (notDone >= 6) alertItems.push({ msg: `${notDone} studenti non hanno completato — considera un follow-up.`, topic: a.title || "", count: notDone });
+                              const errCounts: Record<string, number> = {};
+                              results.forEach((r: any) => {
+                                if (r.errors_summary && typeof r.errors_summary === "object") {
+                                  Object.keys(r.errors_summary).forEach(k => { errCounts[k] = (errCounts[k] || 0) + 1; });
+                                }
+                              });
+                              Object.entries(errCounts).forEach(([err, cnt]) => {
+                                if (cnt >= 4) alertItems.push({ msg: `${cnt} studenti con errore su "${err}" — suggerisci recupero mirato.`, topic: err, count: cnt });
+                              });
+                              if (alertItems.length === 0) return null;
+                              return (
+                                <div className="mt-3 pt-3 border-t border-border space-y-1.5">
+                                  {alertItems.map((item, i) => (
+                                    <div key={i} className="flex items-center gap-2 text-xs text-amber-600 bg-amber-500/10 rounded-lg p-2">
+                                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                                      <span className="flex-1">{item.msg}</span>
+                                      <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        className="h-6 text-[10px] px-2 shrink-0"
+                                        onClick={(e) => { e.stopPropagation(); handleGenerateRecovery(a.subject || classe?.materia || "", item.topic, item.count); }}
+                                      >
+                                        🔧 Genera recupero
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        );
+                      })}
+
+                      {/* Unlinked manual grades */}
+                      {manualGrades.filter(g => !g.assignment_id).length > 0 && (
+                        <div className="border border-border rounded-xl p-4 bg-muted/30">
+                          <p className="text-sm font-medium text-foreground mb-2">📝 Voti manuali</p>
+                          <div className="space-y-1.5">
+                            {manualGrades.filter(g => !g.assignment_id).map((g: any) => (
+                              <div key={g.id} className="flex items-center gap-2 text-xs p-1.5">
+                                <span>📝</span>
+                                <span className="flex-1 text-foreground">{g.student_name}</span>
+                                <span className="text-muted-foreground">{g.assignment_title || "—"}</span>
+                                <span className="font-semibold text-foreground">
+                                  {g.grade}{g.grade_scale !== "giudizio" ? g.grade_scale : ""}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {new Date(g.graded_at).toLocaleDateString("it-IT")}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* BLOCK 6 — Legend */}
+              <div className="bg-muted/50 rounded-xl p-4">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Legenda</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] text-muted-foreground">
+                  <span>⚠ = punteggio SarAI sotto il 50% — potrebbe necessitare recupero</span>
+                  <span>✅ Completato = attività completata</span>
+                  <span>🕐 In attesa = attività non ancora completata</span>
+                   <span>📝 = voto inserito manualmente dal docente</span>
+                   <span>🤖 = punteggio proposto da SarAI e confermato dal docente</span>
+                 </div>
+               </div>
+
+              {/* BLOCK 7 — Disclaimer */}
+              <p className="text-xs text-muted-foreground text-center pt-2 pb-4">
+                I segnali di attenzione sono aggregati anonimi. Per i dettagli individuali clicca sul nome dello studente.
+              </p>
             </>
           )}
         </TabsContent>
 
         {/* ━━━ TAB: INSIGHTS ━━━ */}
         <TabsContent value="insights" className="mt-6">
-          <ClassInsightsTab
-            classId={classId!}
-            onGenerateRecovery={handleGenerateRecovery}
-            stats={stats}
-            topics={topics}
-          />
+          <ClassInsightsTab classId={classId!} onGenerateRecovery={handleGenerateRecovery} />
         </TabsContent>
 
         {/* ━━━ TAB: MATERIALI ━━━ */}
@@ -959,83 +762,6 @@ export default function ClassView() {
           onSaved={loadClass}
         />
       )}
-
-      {/* Learning Index Modal */}
-      <LearningIndexModal
-        open={learningModalOpen}
-        onOpenChange={setLearningModalOpen}
-        classId={classId!}
-      />
-
-      {/* Assignment Detail Modal */}
-      {activeAssignment && (
-        <AssignmentDetailModal
-          open={!!activeAssignment}
-          onOpenChange={(open) => { if (!open) setActiveAssignment(null); }}
-          classId={classId!}
-          teacherId={user!.id}
-          defaultScale={classScale}
-          assignment={activeAssignment}
-          students={studentList}
-          manualGrades={manualGrades}
-          onSaved={loadClass}
-        />
-      )}
-
-      {/* Parent Email Dialog (from "studenti da seguire") */}
-      <Dialog open={!!parentEmailTarget} onOpenChange={(open) => { if (!open) setParentEmailTarget(null); }}>
-        <DialogContent className="rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>Scrivi ai genitori di {parentEmailTarget?.studentName}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div>
-              <Label>Oggetto</Label>
-              <Input
-                value={parentEmailSubject}
-                onChange={(e) => setParentEmailSubject(e.target.value)}
-                className="mt-1 rounded-xl"
-              />
-            </div>
-            <div>
-              <Label>Messaggio</Label>
-              <Textarea
-                value={parentEmailBody}
-                onChange={(e) => setParentEmailBody(e.target.value)}
-                className="mt-1 rounded-xl min-h-[160px]"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setParentEmailTarget(null)} className="rounded-xl">
-              Annulla
-            </Button>
-            <Button
-              disabled={!parentEmailBody.trim()}
-              onClick={async () => {
-                if (!user || !classId || !parentEmailTarget) return;
-                await (supabase as any).from("parent_communications").insert({
-                  teacher_id: user.id,
-                  class_id: classId,
-                  student_id: parentEmailTarget.studentId,
-                  type: "messaggio",
-                  subject: parentEmailSubject,
-                  body: parentEmailBody,
-                  sent_at: new Date().toISOString(),
-                  status: "sent",
-                });
-                toast.success("Messaggio inviato!");
-                setParentEmailTarget(null);
-                setParentEmailSubject("");
-                setParentEmailBody("");
-              }}
-              className="rounded-xl"
-            >
-              <Send className="w-3.5 h-3.5 mr-1" /> Invia
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
