@@ -112,30 +112,102 @@ export default function ClassInsightsTab({ classId, onGenerateRecovery, stats, t
     }
   }
 
+  const kpiSection = stats ? (
+    <>
+      <div className="grid grid-cols-4 gap-3">
+        <KpiCard
+          label="Risultati attività"
+          value={`${stats.avg}%`}
+          tooltip="Punteggio medio ottenuto dagli studenti nelle attività completate su SarAI"
+        />
+        <KpiCard
+          label="Attività completate"
+          value={`${stats.completion}%`}
+          tooltip="Percentuale di attività assegnate completate dagli studenti"
+        />
+        <KpiCard
+          label="Studenti attivi"
+          value={stats.regular}
+          tooltip="Studenti che hanno usato SarAI almeno 3 volte negli ultimi 14 giorni"
+        />
+        <KpiCard
+          label="Da seguire"
+          value={stats.toFollow}
+          tooltip="Studenti con difficoltà rilevate o attività non completate"
+        />
+      </div>
+
+      {topics && topics.length > 0 && (
+        <div className="bg-card border border-border rounded-xl p-5">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+            Risultati per materia
+          </p>
+          <p className="text-[10px] text-muted-foreground mb-4">
+            Punteggio medio nelle attività completate per ogni materia
+          </p>
+          <div className="space-y-3">
+            {topics.map((t, i) => (
+              <div key={i}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm text-foreground">{t.name}</span>
+                  <span className="text-xs text-muted-foreground font-medium">{t.mastery}%</span>
+                </div>
+                <Progress value={t.mastery} className="h-2" />
+              </div>
+            ))}
+            <p className="text-[10px] text-muted-foreground italic mt-2">
+              I dati crescono man mano che gli studenti completano più attività
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-muted/50 rounded-xl p-4">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Legenda</p>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] text-muted-foreground">
+          <span>⚠ = punteggio SarAI sotto il 50% — potrebbe necessitare recupero</span>
+          <span>✅ Completato = attività completata</span>
+          <span>🕐 In attesa = attività non ancora completata</span>
+          <span>📝 = voto inserito manualmente dal docente</span>
+          <span>🤖 = punteggio proposto da SarAI e confermato dal docente</span>
+        </div>
+      </div>
+    </>
+  ) : null;
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+      <div className="space-y-6">
+        {kpiSection}
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-6 text-center">
-        <p className="text-sm text-destructive">{error}</p>
+      <div className="space-y-6">
+        {kpiSection}
+        <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-6 text-center">
+          <p className="text-sm text-destructive">{error}</p>
+        </div>
       </div>
     );
   }
 
   if (!data || data.totalStudents === 0) {
     return (
-      <div className="bg-card border border-border rounded-2xl p-8 text-center">
-        <Users className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-        <p className="font-medium text-foreground mb-1">Nessun dato disponibile</p>
-        <p className="text-sm text-muted-foreground">
-          Gli insights appariranno quando gli studenti inizieranno a studiare con SarAI.
-        </p>
+      <div className="space-y-6">
+        {kpiSection}
+        <div className="bg-card border border-border rounded-2xl p-8 text-center">
+          <Users className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+          <p className="font-medium text-foreground mb-1">Nessun dato disponibile</p>
+          <p className="text-sm text-muted-foreground">
+            Gli insights appariranno quando gli studenti inizieranno a studiare con SarAI.
+          </p>
+        </div>
       </div>
     );
   }
@@ -144,6 +216,7 @@ export default function ClassInsightsTab({ classId, onGenerateRecovery, stats, t
 
   return (
     <div className="space-y-6">
+      {kpiSection}
       {/* ── Format Distribution ── */}
       <section className="bg-card border border-border rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-4">
