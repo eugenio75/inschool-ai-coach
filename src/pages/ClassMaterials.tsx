@@ -231,7 +231,7 @@ export default function ClassMaterials() {
                           {m.type && <span className="capitalize">{m.type}</span>}
                           {m.subject && <><span>·</span><span>{m.subject}</span></>}
                           <span>·</span>
-                          <span className="text-amber-600 dark:text-amber-400">Bozza</span>
+                          <span className="text-muted-foreground/80 italic">Bozza</span>
                         </p>
                       </button>
                       <Button
