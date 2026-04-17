@@ -824,29 +824,19 @@ export default function ClassView() {
                 </div>
               )}
 
-              {/* BLOCK 6 — Legend */}
-              <div className="bg-muted/50 rounded-xl p-4">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Legenda</p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] text-muted-foreground">
-                  <span>⚠ = punteggio SarAI sotto il 50% — potrebbe necessitare recupero</span>
-                  <span>✅ Completato = attività completata</span>
-                  <span>🕐 In attesa = attività non ancora completata</span>
-                   <span>📝 = voto inserito manualmente dal docente</span>
-                   <span>🤖 = punteggio proposto da SarAI e confermato dal docente</span>
-                 </div>
-               </div>
-
-              {/* BLOCK 7 — Disclaimer */}
-              <p className="text-xs text-muted-foreground text-center pt-2 pb-4">
-                I segnali di attenzione sono aggregati anonimi. Per i dettagli individuali clicca sul nome dello studente.
-              </p>
             </>
           )}
         </TabsContent>
 
         {/* ━━━ TAB: INSIGHTS ━━━ */}
         <TabsContent value="insights" className="mt-6">
-          <ClassInsightsTab classId={classId!} onGenerateRecovery={handleGenerateRecovery} />
+          <ClassInsightsTab
+            classId={classId!}
+            onGenerateRecovery={handleGenerateRecovery}
+            stats={stats}
+            topics={topics}
+          />
+        </TabsContent>
         </TabsContent>
 
         {/* ━━━ TAB: MATERIALI ━━━ */}
