@@ -109,6 +109,8 @@ export default function StudentView() {
       (results || []).forEach((r: any) => {
         const assignment = r.teacher_assignments;
         const subj = assignment?.subject || "";
+        // Filter: teacher only sees activities of their class subject
+        if (!subjectMatches(subj)) return;
         activityList.push({
           title: assignment?.title || "Attività",
           type: assignment?.type || "",
