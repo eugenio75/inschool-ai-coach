@@ -59,6 +59,8 @@ const TeacherNotifications = lazy(() => import("./pages/TeacherNotifications"));
 const CoachDocente = lazy(() => import("./pages/CoachDocente"));
 const AdminEmailPreview = lazy(() => import("./pages/AdminEmailPreview"));
 const BlockchainTest = lazy(() => import("./pages/BlockchainTest"));
+const ClassMaterials = lazy(() => import("./pages/ClassMaterials"));
+const ClassGrading = lazy(() => import("./pages/ClassGrading"));
 
 const queryClient = new QueryClient();
 
