@@ -163,6 +163,7 @@ export default function StudentView() {
   const [lastAccess, setLastAccess] = useState<string | null>(null);
   const [subjectProgress, setSubjectProgress] = useState<SubjectStat[]>([]);
   const [classAvg, setClassAvg] = useState<number | null>(null);
+  const [classScale, setClassScale] = useState<ScaleId>("/10");
 
   // Communication dialog
   const [showComm, setShowComm] = useState(false);
@@ -170,9 +171,12 @@ export default function StudentView() {
   const [commBody, setCommBody] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Manual grade modal
+  // Manual grade modal (free entry)
   const [showGradeModal, setShowGradeModal] = useState(false);
   const [assignments, setAssignments] = useState<Array<{ id: string; title: string }>>([]);
+
+  // AI grade review modal
+  const [reviewActivity, setReviewActivity] = useState<Activity | null>(null);
 
   useEffect(() => {
     if (!studentId || !classId || !user) return;
