@@ -1382,8 +1382,8 @@
   "session_fam_exercise_nomethod": "👉 Non ho capito come si fa",
   "session_fam_exercise_method": "👉 So il metodo, voglio esercitarmi",
   "session_fam_exercise_errors": "👉 So farlo ma faccio errori",
-  "insights_min_sessions": "Gli insights si attivano dopo almeno 5 sessioni completate dagli studenti."
-  ,"kpi_activity_results": "Risultati attività",
+  "insights_min_sessions": "Gli insights si attivano dopo almeno 5 sessioni completate dagli studenti.",
+  "kpi_activity_results": "Risultati attività",
   "kpi_activity_results_tooltip": "Punteggio medio ottenuto dagli studenti nelle attività completate su SarAI",
   "kpi_activities_completed": "Attività completate",
   "kpi_activities_completed_tooltip": "Percentuale di attività assegnate completate dagli studenti",
@@ -1450,5 +1450,15 @@
   "ocr_files": "compiti",
   "ocr_notes": "Note",
   "ocr_select_student": "Seleziona studente...",
-  "legend_ai_confirmed": "🤖 = punteggio proposto da SarAI e confermato dal docente"
+  "legend_ai_confirmed": "🤖 = punteggio proposto da SarAI e confermato dal docente",
+  "ocr": {
+    "title": "📸 Carica e correggi",
+    "batchMode": "Più studenti",
+    "singleMode": "Uno studente",
+    "batchInfo": "Carica più foto insieme",
+    "batchInfoDesc": "SarAI legge il nome dal foglio e abbina automaticamente ogni foto allo studente corretto",
+    "uploadPhotos": "Carica foto",
+    "clickToUpload": "Clicca per caricare o trascina qui le foto",
+    "correctWithSarAI": "Correggi con SarAI"
+  }
 }
