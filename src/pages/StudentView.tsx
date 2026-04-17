@@ -47,7 +47,14 @@ type SignalAction = {
   onClick: () => void;
 };
 
-type Signal = { text: string; severity: "critical" | "warning" | "info" };
+type Signal = {
+  text: string;
+  severity: "critical" | "warning" | "info";
+  /** Optional inline actions: 'recovery' | 'material' | 'message' | 'session' */
+  actions?: Array<"recovery" | "material" | "message" | "session">;
+  /** Optional topic to inject in recovery action */
+  topic?: string;
+};
 type SubjectStat = { subject: string; avg: number; count: number; delta: number };
 
 // Match topic to a coherent subject (fixes "decimali" → Italiano bug for demo)
