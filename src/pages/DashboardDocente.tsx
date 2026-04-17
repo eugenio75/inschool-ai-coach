@@ -399,65 +399,83 @@ export default function DashboardDocente() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-7">
 
         {/* ━━━ BLOCK 1 — HEADER ━━━ */}
-        <div className="flex items-end justify-between gap-3">
+        <section className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
-            <p className="text-[13px] text-muted-foreground/70 mb-2">
-              {new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
-            </p>
-            <h1 className="font-display text-[28px] sm:text-[32px] font-extrabold tracking-tight text-foreground leading-tight">
+            <h1 className="font-display text-[32px] sm:text-4xl font-extrabold tracking-tight text-foreground leading-tight">
               {getGreeting()}, {getTeacherTitle(teacherGender)} {cognome} 👋
             </h1>
+            <p className="mt-2 text-[17px] sm:text-lg text-muted-foreground">
+              {new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
+            </p>
           </div>
-          <Button onClick={() => setShowClasseModal(true)} className="gap-2 rounded-full px-5 py-2.5 shrink-0">
+          <button
+            onClick={() => setShowClasseModal(true)}
+            className="shrink-0 inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-[14px] font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+          >
             <Plus className="w-4 h-4" />
             Nuova classe
-          </Button>
-        </div>
+          </button>
+        </section>
 
-        {/* ━━━ BLOCK 2 — COACH (compact — single message) ━━━ */}
-        <div className="bg-card/95 backdrop-blur border border-border/60 rounded-[28px] p-6 sm:p-7 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.08)]">
-          <div className="flex items-start gap-3 mb-4">
-            <div className="shrink-0 mt-0.5">
-              <CoachAvatar mood="default" size={32} />
+        {/* ━━━ BLOCK 2 — COACH CARD (headline + emotional heart row + fused input) ━━━ */}
+        <section className="rounded-[32px] border border-border/60 bg-card/95 backdrop-blur overflow-hidden shadow-[0_10px_30px_-15px_hsl(var(--foreground)/0.08)]">
+          <div className="px-6 pt-6 pb-5 sm:px-7 sm:pt-7">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="h-11 w-11 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-sm">
+                <CoachAvatar mood="default" size={22} />
+              </div>
+              <div>
+                <p className="text-[14px] font-semibold text-foreground/80 leading-tight">{coachName || "Coach"}</p>
+                <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">Centro di regia della giornata</p>
+              </div>
             </div>
-            <div className="flex-1">
-              {coachName && (
-                <p className="text-xs font-semibold text-primary mb-1">{coachName}</p>
-              )}
-              {isLoadingCoachMsg ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                </div>
-              ) : (
-                <>
-                  <p className="text-sm leading-relaxed text-foreground font-medium line-clamp-2">
-                    {coachLastMsg || "Bentornato. Pronto per una nuova giornata di lavoro?"}
-                  </p>
-                  {/* Inline CTA for welcome message */}
-                  {classi.length === 0 && !loadingClassi && (
-                    <div className="mt-2">
-                      <Button size="sm" onClick={() => setShowClasseModal(true)} className="gap-1.5">
-                        <Plus className="w-3.5 h-3.5" /> Crea la prima classe
-                      </Button>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
 
-          <div className="flex gap-2 items-center">
-            {/* Mood toggle for teachers */}
-            <div className="relative" ref={moodRef}>
+            {isLoadingCoachMsg ? (
+              <div className="space-y-3 max-w-3xl">
+                <Skeleton className="h-7 w-11/12" />
+                <Skeleton className="h-7 w-9/12" />
+                <Skeleton className="h-5 w-8/12 mt-2" />
+              </div>
+            ) : (
+              <>
+                <h2 className="max-w-3xl text-[26px] sm:text-[30px] leading-tight font-extrabold tracking-tight text-foreground">
+                  {coachLastMsg || "Bentornato. Pronto per una nuova giornata di lavoro?"}
+                </h2>
+                {classi.length === 0 && !loadingClassi && (
+                  <div className="mt-5">
+                    <Button onClick={() => setShowClasseModal(true)} className="gap-1.5 rounded-full">
+                      <Plus className="w-3.5 h-3.5" /> Crea la prima classe
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              {["Organizza il lavoro", "Rivedi le priorità", "Chiedi un suggerimento"].map((label) => (
+                <button
+                  key={label}
+                  onClick={() => navigateToCoach(label)}
+                  className="rounded-full border border-border bg-muted/50 px-4 py-2.5 text-[14px] font-semibold text-foreground/80 hover:bg-muted transition-colors"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Emotional heart row — OUTSIDE the text field */}
+            <div className="mt-5 flex items-center gap-3 relative" ref={moodRef}>
               <button
                 onClick={() => setShowMood(!showMood)}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors shrink-0 ${
-                  showMood ? "bg-red-50 dark:bg-red-500/10" : "bg-muted/50 hover:bg-red-50 dark:hover:bg-red-500/10"
+                className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[14px] font-medium transition-colors ${
+                  showMood
+                    ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
+                    : "border-border bg-muted/40 text-muted-foreground hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 dark:hover:bg-rose-500/10"
                 }`}
                 title="Come ti senti?"
               >
-                <Heart className={`w-5 h-5 ${showMood ? "text-red-500 fill-red-500" : "text-red-500 hover:text-red-600"}`} />
+                <Heart className={`w-4 h-4 ${showMood ? "fill-rose-500 text-rose-500" : "text-rose-400"}`} />
+                Come ti senti oggi?
               </button>
 
               <AnimatePresence>
@@ -467,9 +485,8 @@ export default function DashboardDocente() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.95 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute bottom-full left-0 mb-2 bg-card border border-border rounded-xl shadow-lg p-1.5 min-w-[220px] z-10"
+                    className="absolute top-full left-0 mt-2 bg-card border border-border rounded-2xl shadow-lg p-2 min-w-[260px] z-20"
                   >
-                    <p className="text-[10px] text-muted-foreground font-medium px-2 pt-1 pb-1.5">Come ti senti oggi?</p>
                     {[
                       { label: "Sono sopraffatto/a", icon: CloudRain, msg: "Mi sento sopraffatto/a dal carico di lavoro, ho bisogno di supporto", color: "text-blue-600 dark:text-blue-400" },
                       { label: "Sono stanco/a", icon: BatteryLow, msg: "Mi sento stanco/a e senza energie oggi", color: "text-amber-600 dark:text-amber-400" },
@@ -478,122 +495,121 @@ export default function DashboardDocente() {
                     ].map((opt) => (
                       <button
                         key={opt.label}
-                        onClick={() => {
-                          setShowMood(false);
-                          navigateToCoach(opt.msg);
-                        }}
-                        className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left hover:bg-muted transition-colors"
+                        onClick={() => { setShowMood(false); navigateToCoach(opt.msg); }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-muted transition-colors"
                       >
                         <opt.icon className={`w-4 h-4 shrink-0 ${opt.color}`} />
-                        <span className="text-xs font-medium text-foreground">{opt.label}</span>
+                        <span className="text-[14px] font-medium text-foreground">{opt.label}</span>
                       </button>
                     ))}
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
+          </div>
 
-            <input
-              type="text"
-              value={coachInput}
-              onChange={(e) => setCoachInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && navigateToCoach()}
-              placeholder={coachName ? `Scrivi a ${coachName}...` : "Scrivi al coach..."}
-              className="flex-1 text-sm border border-input rounded-lg px-3 py-2.5 bg-background focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 transition-colors"
-            />
-            <button
-              onClick={() => navigateToCoach()}
-              disabled={!coachInput.trim()}
-              className="bg-primary hover:bg-primary/90 disabled:opacity-40 text-primary-foreground px-4 py-2.5 rounded-lg transition-colors"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-2 mt-3">
-            {["Organizza il lavoro", "Chiedi un suggerimento", "Rivedi le priorità"].map((label) => (
+          {/* Fused input — bottom band */}
+          <div className="border-t border-border/50 bg-muted/30 px-6 py-4 sm:px-7">
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-2.5">
+              <input
+                type="text"
+                value={coachInput}
+                onChange={(e) => setCoachInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && navigateToCoach()}
+                placeholder={coachName ? `Scrivi a ${coachName}...` : "Scrivi al coach..."}
+                className="w-full bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none"
+              />
               <button
-                key={label}
-                onClick={() => navigateToCoach(label)}
-                className="text-xs border border-border hover:border-primary hover:text-primary text-muted-foreground px-3 py-1.5 rounded-lg transition-colors bg-card"
+                onClick={() => navigateToCoach()}
+                disabled={!coachInput.trim()}
+                className="h-11 w-11 rounded-full bg-primary/15 text-primary flex items-center justify-center hover:bg-primary/25 disabled:opacity-40 transition-colors shrink-0"
+                aria-label="Invia"
               >
-                {label}
+                <Send className="w-4 h-4" />
               </button>
-            ))}
+            </div>
           </div>
-        </div>
+        </section>
 
         {/* ━━━ SAMPLE BANNER ━━━ */}
         {showSampleBanner && classi.some((c: any) => c.is_sample) && (
-          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-start gap-3">
-            <span className="text-lg shrink-0 mt-0.5">✨</span>
-            <div className="flex-1">
-              <p className="text-sm text-foreground leading-relaxed">
-                Abbiamo creato una classe di esempio per mostrarti come funziona SarAI. Esplorala liberamente — puoi modificarla o eliminarla quando vuoi.
-              </p>
+          <section className="rounded-[28px] border border-amber-200 bg-amber-50/70 dark:border-amber-500/30 dark:bg-amber-500/10 px-5 py-4 text-[15px] text-foreground/80">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 text-amber-500 text-lg">✦</span>
+                <p>Abbiamo creato una classe di esempio per mostrarti come funziona SarAI. Esplorala liberamente — puoi modificarla o eliminarla quando vuoi.</p>
+              </div>
+              <button
+                onClick={() => { setShowSampleBanner(false); localStorage.setItem("sample_banner_dismissed", "true"); }}
+                className="shrink-0 text-[14px] font-semibold text-amber-700 dark:text-amber-300 hover:text-amber-800"
+              >
+                Ho capito
+              </button>
             </div>
-            <button
-              onClick={() => { setShowSampleBanner(false); localStorage.setItem("sample_banner_dismissed", "true"); }}
-              className="text-xs font-medium text-amber-700 dark:text-amber-300 hover:underline shrink-0 mt-0.5"
-            >
-              Ho capito
-            </button>
-          </div>
+          </section>
         )}
 
-        {/* ━━━ BLOCK 3 — KPI ━━━ */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { label: "Classi attive", value: classi.length, icon: LayoutDashboard, color: "text-primary bg-primary/10" },
-            { label: "Studenti totali", value: studentiCount, icon: Users, color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950" },
-            { label: "Materiali creati", value: materialiCount, icon: FileText, color: "text-violet-600 bg-violet-50 dark:bg-violet-950" },
-            { label: "Da seguire", value: daSegurireCount, icon: AlertCircle, color: daSegurireCount > 0 ? "text-amber-600 bg-amber-50 dark:bg-amber-950" : "text-emerald-600 bg-emerald-50 dark:bg-emerald-950" },
-          ].map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-card/95 backdrop-blur border border-border/60 rounded-2xl p-4 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)]">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground">{label}</span>
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${color}`}>
-                  <Icon className="w-4 h-4" />
-                </div>
-              </div>
-              <p className="font-display text-[28px] font-extrabold tracking-tight text-foreground">{loadingClassi ? "–" : value}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* ━━━ BLOCK 4 — LE TUE CLASSI ━━━ */}
-        <div>
+        {/* ━━━ BLOCK 3 — KPI PANORAMICA ━━━ */}
+        <section>
           <div className="mb-4 flex items-center gap-2">
             <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
-            <h2 className="text-[13px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Le tue classi</h2>
+            <h3 className="text-[13px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Panoramica</h3>
+          </div>
+
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+            {[
+              { label: "Classi attive", value: classi.length, icon: LayoutDashboard, bg: "bg-sky-50 dark:bg-sky-500/10", fg: "text-sky-600 dark:text-sky-400" },
+              { label: "Studenti", value: studentiCount, icon: Users, bg: "bg-emerald-50 dark:bg-emerald-500/10", fg: "text-emerald-600 dark:text-emerald-400" },
+              { label: "Materiali creati", value: materialiCount, icon: FileText, bg: "bg-violet-50 dark:bg-violet-500/10", fg: "text-violet-600 dark:text-violet-400" },
+              { label: "Da seguire", value: daSegurireCount, icon: AlertCircle, bg: daSegurireCount > 0 ? "bg-amber-50 dark:bg-amber-500/10" : "bg-emerald-50 dark:bg-emerald-500/10", fg: daSegurireCount > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400" },
+            ].map(({ label, value, icon: Icon, bg, fg }) => (
+              <div key={label} className="rounded-[26px] border border-border/60 bg-card/95 backdrop-blur p-5 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)]">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+                <div className="mt-4 flex items-end justify-between">
+                  <p className="font-display text-4xl font-extrabold tracking-tight text-foreground">{loadingClassi ? "–" : value}</p>
+                  <div className={`h-11 w-11 rounded-2xl flex items-center justify-center ${bg} ${fg}`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ━━━ BLOCK 4 — LE TUE CLASSI ━━━ */}
+        <section>
+          <div className="mb-4 flex items-center gap-2">
+            <div className="h-2.5 w-2.5 rounded-full bg-sky-300" />
+            <h3 className="text-[13px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Le tue classi</h3>
           </div>
           {loadingClassi ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[1, 2].map(i => <Skeleton key={i} className="h-24 rounded-[28px]" />)}
             </div>
           ) : classi.length === 0 ? (
-            <div className="bg-card border border-border rounded-xl p-8 text-center">
+            <div className="rounded-[28px] border border-border/60 bg-card/95 backdrop-blur p-8 text-center shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)]">
               <Users className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Nessuna classe ancora</p>
+              <p className="text-[15px] text-muted-foreground">Nessuna classe ancora</p>
               <Button variant="outline" size="sm" className="mt-3" onClick={() => setShowClasseModal(true)}>
                 <Plus className="w-3.5 h-3.5 mr-1" /> Crea la prima classe
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="space-y-3">
               {classi.map(c => {
                 const alertCount = classFeedMap.get(c.id) || 0;
                 const hasAlert = alertCount > 0;
                 return (
                   <div
                     key={c.id}
-                    className="bg-card/95 backdrop-blur border border-border/60 rounded-2xl p-5 text-left shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)] hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)] hover:border-primary/30 transition-all group relative"
+                    className="rounded-[28px] border border-border/60 bg-card/95 backdrop-blur p-5 sm:p-6 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)] hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)] transition-all group relative"
                   >
-                    <div className="absolute top-2 right-2 z-10">
+                    <div className="absolute top-3 right-3 z-10">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button
                             onClick={e => e.stopPropagation()}
-                            className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors opacity-0 group-hover:opacity-100"
+                            className="w-8 h-8 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors opacity-0 group-hover:opacity-100"
                           >
                             <MoreVertical className="w-4 h-4" />
                           </button>
@@ -608,52 +624,57 @@ export default function DashboardDocente() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                    <button onClick={() => navigate(`/classe/${c.id}`)} className="w-full text-left">
-                      <div className="flex items-center justify-between mb-2 pr-6">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2.5 h-2.5 rounded-full ${hasAlert ? "bg-amber-400" : "bg-emerald-400"}`} />
-                          <span className="font-bold text-foreground text-[18px] tracking-tight group-hover:text-primary transition-colors">{c.nome}</span>
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-3 flex-wrap pr-8">
+                          <div className={`h-3 w-3 rounded-full ${hasAlert ? "bg-amber-400 shadow-[0_0_0_5px_rgba(251,191,36,0.15)]" : "bg-emerald-400 shadow-[0_0_0_5px_rgba(52,211,153,0.15)]"}`} />
+                          <p className="text-[22px] sm:text-2xl font-bold tracking-tight text-foreground">{c.nome}</p>
                           {c.is_sample && (
-                            <span className="text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 px-1.5 py-0.5 rounded-full">
+                            <span className="rounded-full bg-amber-50 dark:bg-amber-500/15 px-3 py-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
                               ✨ Esempio
                             </span>
                           )}
+                          {hasAlert && (
+                            <span className="bg-destructive text-destructive-foreground text-[11px] font-bold px-2 py-0.5 rounded-full">
+                              {alertCount}
+                            </span>
+                          )}
                         </div>
-                        {hasAlert && (
-                          <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                            {alertCount}
-                          </span>
-                        )}
+                        <p className="mt-3 text-[15px] text-muted-foreground">
+                          {c.materia || "–"} · {c.num_studenti || 0} {(c.num_studenti || 0) === 1 ? "studente" : "studenti"}
+                        </p>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[13px] text-muted-foreground">{c.materia || "–"}</span>
-                        <span className="text-[13px] text-muted-foreground">{c.num_studenti || 0} studenti</span>
-                      </div>
-                    </button>
+                      <button
+                        onClick={() => navigate(`/classe/${c.id}`)}
+                        className="shrink-0 self-start md:self-auto inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-5 py-3 text-[14px] font-semibold text-foreground hover:bg-muted transition-colors"
+                      >
+                        Apri classe <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
             </div>
           )}
-        </div>
+        </section>
 
-        {/* ━━━ BLOCK 5 — AZIONI RAPIDE ━━━ */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* ━━━ BLOCK 5 — AZIONI PRINCIPALI ━━━ */}
+        <section className="grid gap-4 md:grid-cols-2">
           <button
             onClick={() => setShowMaterialClassPicker(true)}
-            className="flex items-center justify-center gap-2 bg-primary text-primary-foreground font-medium text-sm py-3.5 rounded-xl hover:bg-primary/90 transition-colors"
+            className="rounded-[26px] bg-primary px-5 py-5 text-left text-primary-foreground shadow-sm transition hover:bg-primary/90"
           >
-            <Plus className="w-4 h-4" />
-            Crea materiale
+            <div className="text-[13px] font-semibold text-primary-foreground/80">Azione principale</div>
+            <div className="mt-2 text-2xl font-bold tracking-tight">Crea materiale</div>
           </button>
           <button
             onClick={() => navigate("/materiali-docente")}
-            className="flex items-center justify-center gap-2 bg-card border border-border text-foreground font-medium text-sm py-3.5 rounded-xl hover:bg-accent transition-colors"
+            className="rounded-[26px] border border-border/60 bg-card/95 backdrop-blur px-5 py-5 text-left shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)] hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)] transition-all"
           >
-            <FolderOpen className="w-4 h-4" />
-            I miei materiali
+            <div className="text-[13px] font-semibold text-muted-foreground">Archivio</div>
+            <div className="mt-2 text-2xl font-bold tracking-tight text-foreground">I miei materiali</div>
           </button>
-        </div>
+        </section>
 
         {/* ━━━ BLOCK 6 — TWO COLUMNS ━━━ */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
