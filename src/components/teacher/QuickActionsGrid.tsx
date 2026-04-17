@@ -38,15 +38,15 @@ export default function QuickActionsGrid({ actions }: Props) {
             <button
               key={a.id}
               onClick={a.onClick}
-              className="group rounded-[28px] border border-border/60 bg-card/95 backdrop-blur p-5 sm:p-6 text-left shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.08)] transition-all hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)]"
+              className="group rounded-[26px] border border-border/60 bg-card/95 backdrop-blur p-5 text-left shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.08)] transition-all hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)]"
             >
               <div className="mb-5 h-12 w-12 rounded-2xl bg-muted flex items-center justify-center text-foreground/70 group-hover:bg-foreground group-hover:text-background transition-colors">
                 <Icon className="h-5 w-5" />
               </div>
-              <p className="text-[24px] sm:text-[28px] font-bold tracking-tight text-foreground leading-tight">
+              <p className="text-[26px] sm:text-[30px] font-bold tracking-tight text-foreground leading-tight">
                 {a.label}
               </p>
-              <p className="mt-2 text-[14px] sm:text-[15px] text-muted-foreground">
+              <p className="mt-2 text-[15px] text-muted-foreground">
                 {a.sublabel}
               </p>
             </button>
