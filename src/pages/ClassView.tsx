@@ -223,13 +223,13 @@ export default function ClassView() {
   function handleEvidenceAction(ev: typeof insight.evidences[number]) {
     switch (ev.actionType) {
       case "recovery":
-        navigate(`/classe/${classId}/materiali?tipo=recupero&materia=${encodeURIComponent(ev.targetSubject || classe.materia || "")}&argomento=${encodeURIComponent(ev.targetTopic || "")}`);
+        navigate(`/materiali-docente?classId=${classId}&tipo=recupero&materia=${encodeURIComponent(ev.targetSubject || classe.materia || "")}&argomento=${encodeURIComponent(ev.targetTopic || "")}`);
         break;
       case "alternative":
-        navigate(`/classe/${classId}/materiali?tipo=lezione&materia=${encodeURIComponent(ev.targetSubject || classe.materia || "")}&argomento=${encodeURIComponent(ev.targetTopic || "")}`);
+        navigate(`/materiali-docente?classId=${classId}&tipo=lezione&materia=${encodeURIComponent(ev.targetSubject || classe.materia || "")}&argomento=${encodeURIComponent(ev.targetTopic || "")}`);
         break;
       case "create":
-        navigate(`/classe/${classId}/materiali?create=true${ev.targetTopic ? `&argomento=${encodeURIComponent(ev.targetTopic)}` : ""}`);
+        navigate(`/materiali-docente?classId=${classId}&create=true${ev.targetTopic ? `&argomento=${encodeURIComponent(ev.targetTopic)}` : ""}`);
         break;
       case "trend":
         if (ev.targetStudentId) {
@@ -299,7 +299,7 @@ export default function ClassView() {
       icon: "create",
       label: "Crea compito",
       sublabel: "AI o manuale",
-      onClick: () => navigate(`/classe/${classId}/materiali?create=true`),
+      onClick: () => navigate(`/materiali-docente?classId=${classId}&create=true`),
     },
     {
       id: "grade",
@@ -327,7 +327,7 @@ export default function ClassView() {
       icon: "library",
       label: "Materiali",
       sublabel: "Apri libreria",
-      onClick: () => navigate(`/classe/${classId}/materiali`),
+      onClick: () => navigate(`/materiali-docente?classId=${classId}`),
     },
   ];
 
