@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft, AlertTriangle, CheckCircle2, Flame, Mail, Send, PenLine,
+  ArrowLeft, AlertTriangle, CheckCircle2, Flame, Mail, Send, PenLine, TrendingUp,
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
