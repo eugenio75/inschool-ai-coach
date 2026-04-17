@@ -116,24 +116,6 @@ function isStudentBelowThreshold(studentId: string, studentScores: Record<string
   return mean < 50;
 }
 
-/* ─── topics from assignments ─── */
-function computeTopicMastery(assignmentResults: any[]) {
-  const topicMap: Record<string, { total: number; sum: number }> = {};
-  assignmentResults.forEach((a: any) => {
-    const topic = a.subject || a.title || "Generale";
-    if (!topicMap[topic]) topicMap[topic] = { total: 0, sum: 0 };
-    (a.results || []).forEach((r: any) => {
-      topicMap[topic].total++;
-      topicMap[topic].sum += r.score || 0;
-    });
-  });
-  return Object.entries(topicMap).map(([name, d]) => ({
-    name,
-    mastery: d.total > 0 ? Math.round(d.sum / d.total) : 0,
-  }));
-}
-
-
 /* ─── Indice di apprendimento ─── */
 function gradeToPercent(grade: string, scale: string): number | null {
   const num = parseFloat(String(grade).replace(",", "."));
