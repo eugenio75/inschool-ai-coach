@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Users, BookOpen, MessageSquare,
-  Copy, ChevronRight, ChevronDown, AlertTriangle,
-  BarChart2, Send, Lightbulb, Info, PenLine, Mail, Wrench,
+  Copy, ChevronRight, Send,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,13 +21,10 @@ import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { ReportTeacherButton } from "@/components/shared/ReportTeacherButton";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -118,45 +114,6 @@ function isStudentBelowThreshold(studentId: string, studentScores: Record<string
   if (!scores || scores.length === 0) return false;
   const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
   return mean < 50;
-}
-
-/* ─── topics from assignments ─── */
-function computeTopicMastery(assignmentResults: any[]) {
-  const topicMap: Record<string, { total: number; sum: number }> = {};
-  assignmentResults.forEach((a: any) => {
-    const topic = a.subject || a.title || "Generale";
-    if (!topicMap[topic]) topicMap[topic] = { total: 0, sum: 0 };
-    (a.results || []).forEach((r: any) => {
-      topicMap[topic].total++;
-      topicMap[topic].sum += r.score || 0;
-    });
-  });
-  return Object.entries(topicMap).map(([name, d]) => ({
-    name,
-    mastery: d.total > 0 ? Math.round(d.sum / d.total) : 0,
-  }));
-}
-
-/* ─── KPI with tooltip ─── */
-function KpiCard({ label, value, tooltip }: { label: string; value: string | number; tooltip: string }) {
-  return (
-    <TooltipProvider>
-      <div className="bg-card border border-border rounded-xl p-4 text-center relative">
-        <p className="text-xl font-bold text-foreground">{value}</p>
-        <div className="flex items-center justify-center gap-1 mt-1">
-          <p className="text-[10px] text-muted-foreground leading-tight">{label}</p>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="w-3 h-3 text-muted-foreground/50 cursor-help shrink-0" />
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-[200px] text-xs">
-              {tooltip}
-            </TooltipContent>
-          </Tooltip>
-        </div>
-      </div>
-    </TooltipProvider>
-  );
 }
 
 /* ─── Indice di apprendimento ─── */
@@ -538,34 +495,7 @@ export default function ClassView() {
   }
 
   const stats = computeClassStats(students, assignmentResults);
-  const topics = computeTopicMastery(assignmentResults);
 
-  const feedbackAlertData: Array<{ msg: string; subject: string; topic: string; count: number }> = [];
-  assignmentResults.forEach((a: any) => {
-    const results = a.results || [];
-    const notCompleted = results.filter((r: any) => r.status !== "completed").length;
-    if (notCompleted >= 6) feedbackAlertData.push({
-      msg: `"${a.title}": ${notCompleted} studenti non hanno completato — proponi un follow-up.`,
-      subject: a.subject || classe?.materia || "",
-      topic: a.title || "",
-      count: notCompleted,
-    });
-    const errorCounts: Record<string, number> = {};
-    results.forEach((r: any) => {
-      const summary = r.errors_summary;
-      if (summary && typeof summary === "object") {
-        Object.keys(summary).forEach(k => { errorCounts[k] = (errorCounts[k] || 0) + 1; });
-      }
-    });
-    Object.entries(errorCounts).forEach(([err, count]) => {
-      if (count >= 4) feedbackAlertData.push({
-        msg: `"${a.title}": ${count} studenti con errore su "${err}" — suggerisci recupero mirato.`,
-        subject: a.subject || classe?.materia || "",
-        topic: err,
-        count,
-      });
-    });
-  });
 
   function handleGenerateRecovery(subject: string, topic: string, count: number) {
     setPrefilledMaterial({
