@@ -463,6 +463,7 @@ export default function StudentView() {
         defaultStudentName={studentName}
         onSaved={loadStudentData}
       />
+      </div>
     </div>
   );
 }
