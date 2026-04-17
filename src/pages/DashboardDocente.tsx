@@ -550,29 +550,27 @@ export default function DashboardDocente() {
           </section>
         )}
 
-        {/* ━━━ BLOCK 3 — KPI PANORAMICA ━━━ */}
+        {/* ━━━ BLOCK 3 — 3 MICRO-CARD: Scadenze · Attività · Da seguire ━━━ */}
         <section>
-          <div className="mb-4 flex items-center gap-2">
-            <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
-            <h3 className="text-[13px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Panoramica</h3>
-          </div>
-
-          <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
             {[
-              { label: "Classi attive", value: classi.length, icon: LayoutDashboard, bg: "bg-sky-50 dark:bg-sky-500/10", fg: "text-sky-600 dark:text-sky-400" },
-              { label: "Studenti", value: studentiCount, icon: Users, bg: "bg-emerald-50 dark:bg-emerald-500/10", fg: "text-emerald-600 dark:text-emerald-400" },
-              { label: "Materiali creati", value: materialiCount, icon: FileText, bg: "bg-violet-50 dark:bg-violet-500/10", fg: "text-violet-600 dark:text-violet-400" },
-              { label: "Da seguire", value: daSegurireCount, icon: AlertCircle, bg: daSegurireCount > 0 ? "bg-amber-50 dark:bg-amber-500/10" : "bg-emerald-50 dark:bg-emerald-500/10", fg: daSegurireCount > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400" },
-            ].map(({ label, value, icon: Icon, bg, fg }) => (
-              <div key={label} className="rounded-[26px] border border-border/60 bg-card/95 backdrop-blur p-5 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)]">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-                <div className="mt-4 flex items-end justify-between">
-                  <p className="font-display text-4xl font-extrabold tracking-tight text-foreground">{loadingClassi ? "–" : value}</p>
-                  <div className={`h-11 w-11 rounded-2xl flex items-center justify-center ${bg} ${fg}`}>
-                    <Icon className="w-5 h-5" />
+              { label: "Scadenze", value: upcomingDeadlines.length, icon: Calendar, bg: "bg-sky-50 dark:bg-sky-500/10", fg: "text-sky-600 dark:text-sky-400", onClick: () => navigate("/agenda-docente") },
+              { label: "Attività recenti", value: feedItems.length, icon: Clock, bg: "bg-violet-50 dark:bg-violet-500/10", fg: "text-violet-600 dark:text-violet-400", onClick: () => navigate("/notifiche-docente") },
+              { label: "Da seguire", value: daSegurireCount, icon: AlertCircle, bg: daSegurireCount > 0 ? "bg-amber-50 dark:bg-amber-500/10" : "bg-emerald-50 dark:bg-emerald-500/10", fg: daSegurireCount > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400", onClick: () => navigate("/notifiche-docente") },
+            ].map(({ label, value, icon: Icon, bg, fg, onClick }) => (
+              <button
+                key={label}
+                onClick={onClick}
+                className="text-left rounded-[26px] border border-border/60 bg-card/95 backdrop-blur p-5 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)] hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)] transition-all"
+              >
+                <div className="flex items-start justify-between">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+                  <div className={`h-9 w-9 rounded-2xl flex items-center justify-center ${bg} ${fg}`}>
+                    <Icon className="w-4 h-4" />
                   </div>
                 </div>
-              </div>
+                <p className="mt-3 font-display text-4xl font-extrabold tracking-tight text-foreground">{loadingClassi ? "–" : value}</p>
+              </button>
             ))}
           </div>
         </section>
