@@ -82,8 +82,17 @@ export default function ClassMaterials() {
       if (c.materia) draftsQ = draftsQ.eq("subject", c.materia);
       const { data: draftsData } = await draftsQ;
 
+      // Students enrolled (light fetch, used by TeacherMaterialsTab)
+      const { data: enrolls } = await supabase
+        .from("class_enrollments")
+        .select("student_id, child_profiles:student_id(id, name, last_name)")
+        .eq("class_id", classId!)
+        .eq("status", "active");
+      const studentList = (enrolls || []).map((e: any) => e.child_profiles).filter(Boolean);
+
       setAssigned((assignedData || []) as MaterialRow[]);
       setDrafts((draftsData || []) as MaterialRow[]);
+      setStudents(studentList);
     } catch (err) {
       console.error("ClassMaterials.load", err);
       toast.error("Errore nel caricamento dei materiali");
