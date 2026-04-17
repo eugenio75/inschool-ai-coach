@@ -26,27 +26,27 @@ const ICONS: Record<NotificationLevel, LucideIcon> = {
 const STYLES: Record<NotificationLevel, { dot: string; iconBg: string; iconText: string; pill: string }> = {
   attention: {
     dot: "bg-amber-300",
-    iconBg: "bg-amber-100 dark:bg-amber-500/15",
+    iconBg: "bg-amber-50 dark:bg-amber-500/10",
     iconText: "text-amber-600 dark:text-amber-400",
-    pill: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+    pill: "bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
   },
   completed: {
     dot: "bg-emerald-300",
-    iconBg: "bg-emerald-100 dark:bg-emerald-500/15",
+    iconBg: "bg-emerald-50 dark:bg-emerald-500/10",
     iconText: "text-emerald-600 dark:text-emerald-400",
-    pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+    pill: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
   },
   urgent: {
     dot: "bg-red-300",
-    iconBg: "bg-red-100 dark:bg-red-500/15",
+    iconBg: "bg-red-50 dark:bg-red-500/10",
     iconText: "text-red-600 dark:text-red-400",
-    pill: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
+    pill: "bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300",
   },
   info: {
-    dot: "bg-blue-300",
-    iconBg: "bg-blue-100 dark:bg-blue-500/15",
-    iconText: "text-blue-600 dark:text-blue-400",
-    pill: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
+    dot: "bg-sky-300",
+    iconBg: "bg-sky-50 dark:bg-sky-500/10",
+    iconText: "text-sky-600 dark:text-sky-400",
+    pill: "bg-sky-50 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300",
   },
 };
 
@@ -85,10 +85,10 @@ export default function ClassNotificationsCard({ notifications }: Props) {
                   <Icon className={cn("h-6 w-6", styles.iconText)} />
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[18px] sm:text-[22px] font-bold tracking-tight text-foreground leading-tight">
+                  <p className="text-2xl font-bold tracking-tight text-foreground leading-tight">
                     {n.title}
                   </p>
-                  <p className="mt-1 text-[14px] sm:text-[15px] text-muted-foreground">
+                  <p className="mt-1 text-[15px] text-muted-foreground">
                     {n.subtitle}
                   </p>
                 </div>
