@@ -51,17 +51,26 @@ export default function ClassMaterials() {
   async function load() {
     setLoading(true);
     try {
-      const { data: c } = await supabase
-        .from("classi")
-        .select("id, nome, materia")
-        .eq("id", classId!)
-        .maybeSingle();
+      // Use teacher-class-data edge function (same as ClassView) to bypass RLS edge cases
+      const { data: { session } } = await supabase.auth.getSession();
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/teacher-class-data`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ classId }),
+      });
+      if (!resp.ok) throw new Error("class_not_found");
+      const data = await resp.json();
+      const c = data.classe;
       if (!c) {
         toast.error("Classe non trovata");
         navigate("/dashboard");
         return;
       }
-      setClasse(c as ClassInfo);
+      setClasse({ id: c.id, nome: c.nome, materia: c.materia });
 
       // Materials assigned to this class
       const { data: assignedData } = await supabase
@@ -82,13 +91,8 @@ export default function ClassMaterials() {
       if (c.materia) draftsQ = draftsQ.eq("subject", c.materia);
       const { data: draftsData } = await draftsQ;
 
-      // Students enrolled (light fetch, used by TeacherMaterialsTab)
-      const { data: enrolls } = await supabase
-        .from("class_enrollments")
-        .select("student_id, child_profiles:student_id(id, name, last_name)")
-        .eq("class_id", classId!)
-        .eq("status", "active");
-      const studentList = (enrolls || []).map((e: any) => e.child_profiles).filter(Boolean);
+      // Students from edge function payload
+      const studentList = (data.students || []).map((s: any) => s.profile || s).filter(Boolean);
 
       setAssigned((assignedData || []) as MaterialRow[]);
       setDrafts((draftsData || []) as MaterialRow[]);
@@ -96,6 +100,7 @@ export default function ClassMaterials() {
     } catch (err) {
       console.error("ClassMaterials.load", err);
       toast.error("Errore nel caricamento dei materiali");
+      navigate("/dashboard");
     } finally {
       setLoading(false);
     }
