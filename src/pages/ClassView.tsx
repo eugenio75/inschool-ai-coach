@@ -339,7 +339,7 @@ export default function ClassView() {
       id: "students",
       icon: "students",
       label: "Studenti",
-      sublabel: `Vedi tutti i ${students.length}`,
+      sublabel: "Vedi tutti i partecipanti alla classe",
       onClick: () => setStudentsOpen(true),
     },
     {
