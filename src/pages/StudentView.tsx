@@ -646,7 +646,13 @@ export default function StudentView() {
                 <div className="space-y-2">
                   {activities.map((a, i) => {
                     const score = a.score != null ? Math.round(a.score) : null;
+                    const aiGrade = score != null ? percentToGrade(score, classScale) : null;
+                    const classGrade = classAvg != null ? percentToGrade(classAvg, classScale) : null;
                     const belowThreshold = score != null && score < 50;
+                    // Has the teacher already confirmed a grade for this assignment?
+                    const confirmedGrade = manualGrades.find(
+                      (g: any) => a.assignment_id && g.assignment_id === a.assignment_id
+                    );
                     let statusLabel = "In attesa";
                     let statusVariant: "default" | "secondary" | "destructive" | "outline" = "outline";
                     if (a.status === "completed") { statusLabel = "Completato"; statusVariant = "default"; }
@@ -659,27 +665,50 @@ export default function StudentView() {
                           <p className="text-xs text-muted-foreground">
                             {a.subject}
                             {a.completed_at ? ` · ${new Date(a.completed_at).toLocaleDateString("it-IT")}` : ""}
-                            {classAvg !== null && score !== null && ` · classe ${classAvg}%`}
+                            {classGrade && score !== null && ` · classe ${classGrade}${classScale !== "giudizio" ? classScale : ""}`}
                           </p>
                         </div>
-                        {belowThreshold && <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
-                        {score != null && <span className="text-sm font-semibold text-foreground">{score}%</span>}
+                        {belowThreshold && !confirmedGrade && <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
+                        {/* Grade display: confirmed (📝) or AI proposed (🤖) */}
+                        {confirmedGrade ? (
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <PenLine className="w-3 h-3 text-foreground" aria-label="Voto confermato dal docente" />
+                            <span className="text-sm font-semibold text-foreground">
+                              {confirmedGrade.grade}{confirmedGrade.grade_scale !== "giudizio" ? confirmedGrade.grade_scale : ""}
+                            </span>
+                          </div>
+                        ) : aiGrade ? (
+                          <button
+                            onClick={() => setReviewActivity(a)}
+                            className="flex items-center gap-1.5 shrink-0 rounded-lg px-2 py-1 hover:bg-primary/10 transition-colors group/grade"
+                            title="Rivedi e conferma voto"
+                          >
+                            <Bot className="w-3 h-3 text-primary" aria-label="Voto proposto dall'AI" />
+                            <span className="text-sm font-semibold text-foreground">
+                              {aiGrade}{classScale !== "giudizio" ? classScale : ""}
+                            </span>
+                            <PenLine className="w-3 h-3 text-muted-foreground opacity-0 group-hover/grade:opacity-100 transition-opacity" />
+                          </button>
+                        ) : null}
                         <Badge variant={statusVariant} className="text-[10px] shrink-0">{statusLabel}</Badge>
                       </div>
                     );
                   })}
-                  {manualGrades.map((g: any) => (
-                    <div key={g.id} className="flex items-center gap-3 p-3 bg-muted/40 border border-border rounded-xl">
-                      <span className="text-base shrink-0">📝</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{g.assignment_title || "Voto manuale"}</p>
-                        <p className="text-xs text-muted-foreground">Voto docente · {new Date(g.graded_at).toLocaleDateString("it-IT")}</p>
+                  {/* Manual grades not linked to an activity (standalone teacher entries) */}
+                  {manualGrades
+                    .filter((g: any) => !g.assignment_id || !activities.some(a => a.assignment_id === g.assignment_id))
+                    .map((g: any) => (
+                      <div key={g.id} className="flex items-center gap-3 p-3 bg-muted/40 border border-border rounded-xl">
+                        <PenLine className="w-3.5 h-3.5 text-foreground shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{g.assignment_title || "Voto manuale"}</p>
+                          <p className="text-xs text-muted-foreground">Voto docente · {new Date(g.graded_at).toLocaleDateString("it-IT")}</p>
+                        </div>
+                        <span className="text-sm font-semibold text-foreground">
+                          {g.grade}{g.grade_scale !== "giudizio" ? g.grade_scale : ""}
+                        </span>
                       </div>
-                      <span className="text-sm font-semibold text-foreground">
-                        {g.grade}{g.grade_scale !== "giudizio" ? g.grade_scale : ""}
-                      </span>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               )}
             </div>
@@ -710,10 +739,57 @@ export default function StudentView() {
                       warning: { Icon: AlertTriangle, cls: "text-amber-600 bg-amber-500/10 border-amber-500/20" },
                       info: { Icon: Info, cls: "text-sky-600 bg-sky-500/10 border-sky-500/20" },
                     }[sig.severity];
+                    const actionTopic = sig.topic || recoveryTopic;
+                    const actionMap: Record<string, { label: string; Icon: typeof Wrench; onClick: () => void }> = {
+                      recovery: {
+                        label: "Genera recupero",
+                        Icon: Wrench,
+                        onClick: () => navigate(`/classe/${classId}?tab=materiali&recovery_topic=${encodeURIComponent(actionTopic)}&recovery_subject=${encodeURIComponent(classSubject || "")}`),
+                      },
+                      material: {
+                        label: "Materiale semplificato",
+                        Icon: FileText,
+                        onClick: () => navigate(`/classe/${classId}?tab=materiali`),
+                      },
+                      message: {
+                        label: "Scrivi ai genitori",
+                        Icon: Users,
+                        onClick: () => {
+                          setCommSubject(`Aggiornamento su ${studentName.split(" ")[0]}`);
+                          setCommBody(`Gentili genitori,\n\nvi scrivo per condividere alcune osservazioni su ${studentName}: ${sig.text.toLowerCase()}\n\nResto a disposizione per parlarne.\n\nCordiali saluti.`);
+                          setShowComm(true);
+                        },
+                      },
+                      session: {
+                        label: "Programma sessione",
+                        Icon: CalendarClock,
+                        onClick: () => navigate(`/agenda-docente`),
+                      },
+                    };
                     return (
-                      <div key={i} className={`flex items-start gap-2 text-xs rounded-lg p-3 border ${map.cls}`}>
-                        <map.Icon className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                        <span>{sig.text}</span>
+                      <div key={i} className={`rounded-lg border ${map.cls}`}>
+                        <div className="flex items-start gap-2 p-3">
+                          <map.Icon className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                          <span className="text-xs flex-1">{sig.text}</span>
+                        </div>
+                        {sig.actions && sig.actions.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 px-3 pb-3 pt-0">
+                            {sig.actions.map((actionKey) => {
+                              const action = actionMap[actionKey];
+                              if (!action) return null;
+                              return (
+                                <button
+                                  key={actionKey}
+                                  onClick={action.onClick}
+                                  className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-md bg-card border border-border hover:bg-accent transition-colors text-foreground"
+                                >
+                                  <action.Icon className="w-3 h-3" />
+                                  {action.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
