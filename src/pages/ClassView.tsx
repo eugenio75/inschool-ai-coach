@@ -483,105 +483,145 @@ export default function ClassView() {
             </div>
           ) : (
             <>
-              {/* BLOCK 1 — Stato aggregato */}
-              <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
-                <div className={cn(
-                  "w-2.5 h-2.5 rounded-full shrink-0",
-                  stats.toFollow === 0 ? "bg-emerald-500" : stats.toFollow >= 3 ? "bg-amber-500" : "bg-amber-400"
-                )} />
-                <p className="text-sm font-medium text-foreground">{stats.statusMsg}</p>
-              </div>
-
-              {/* BLOCK 2 — KPI with tooltips */}
-              <div className="grid grid-cols-4 gap-3">
-                <KpiCard
-                  label="Risultati attività"
-                  value={`${stats.avg}%`}
-                  tooltip="Punteggio medio ottenuto dagli studenti nelle attività completate su SarAI"
-                />
-                <KpiCard
-                  label="Attività completate"
-                  value={`${stats.completion}%`}
-                  tooltip="Percentuale di attività assegnate completate dagli studenti"
-                />
-                <KpiCard
-                  label="Studenti attivi"
-                  value={stats.regular}
-                  tooltip="Studenti che hanno usato SarAI almeno 3 volte negli ultimi 14 giorni"
-                />
-                <KpiCard
-                  label="Da seguire"
-                  value={stats.toFollow}
-                  tooltip="Studenti con difficoltà rilevate o attività non completate"
-                />
-              </div>
-
-              {/* BLOCK 3 — Risultati per materia */}
-              {topics.length > 0 && (
-                <div className="bg-card border border-border rounded-xl p-5">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                    Risultati per materia
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mb-4">
-                    Punteggio medio nelle attività completate per ogni materia
-                  </p>
-                  <div className="space-y-3">
-                    {topics.map((t, i) => (
-                      <div key={i}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm text-foreground">{t.name}</span>
-                          <span className="text-xs text-muted-foreground font-medium">{t.mastery}%</span>
-                        </div>
-                        <Progress value={t.mastery} className="h-2" />
-                      </div>
-                    ))}
-                    {topics.every(t => t.mastery < 20) && (
-                      <p className="text-[10px] text-muted-foreground italic mt-2">
-                        I dati crescono man mano che gli studenti completano più attività
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* BLOCK 4 — Lista studenti */}
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                  Studenti ({students.length})
+              {/* BLOCK 1 — Stato classe */}
+              <div className="bg-card border border-border rounded-xl p-4">
+                <p className="text-sm font-medium text-foreground">
+                  {stats.toFollow === 0
+                    ? "✅ La classe procede regolarmente"
+                    : `⚠️ ${stats.toFollow} ${stats.toFollow === 1 ? "studente" : "studenti"} da seguire`}
                 </p>
-                <div className="space-y-2">
-                  {students.map((s: any) => {
-                    const firstName = s.profile?.name || s.student_name || "Studente";
-                    const lastName = s.profile?.last_name || "";
-                    const name = lastName ? `${firstName} ${lastName}` : firstName;
-                    const sid = s.student_id || s.id;
-                    const badge = getStudentBadge(sid, stats.studentScores as any, assignmentResults);
-                    const belowThreshold = isStudentBelowThreshold(sid, stats.studentScores as any);
-
-                    return (
-                      <button
-                        key={s.id}
-                        onClick={() => navigate(`/studente/${sid}?classId=${classId}`)}
-                        className="w-full flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:bg-muted/50 hover:shadow-sm transition-all text-left"
-                      >
-                        <AvatarInitials name={name} size="sm" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground">{name}</p>
-                        </div>
-                        {badge && (
-                          <Badge variant={badge.variant} className="text-[10px] shrink-0">
-                            {badge.label}
-                          </Badge>
-                        )}
-                        {belowThreshold && (
-                          <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                        )}
-                        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                      </button>
-                    );
-                  })}
-                </div>
               </div>
+
+              {/* BLOCK 2 — Indice di apprendimento */}
+              {(() => {
+                const li = computeLearningIndex(assignmentResults, manualGrades);
+                if (li.index === null) {
+                  return (
+                    <div className="bg-card border border-border rounded-xl p-5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-sm font-semibold text-foreground">Indice di apprendimento</p>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="max-w-[260px] text-xs">
+                              Calcolato da: punteggi SarAI, voti inseriti dal docente, correzioni compiti su carta, completamento attività
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        📊 Dati insufficienti — l'indice si attiva dopo almeno 3 attività completate dalla classe
+                      </p>
+                    </div>
+                  );
+                }
+                const idx = li.index;
+                let zoneLabel = "";
+                let zoneDesc = "";
+                let zoneColor = "";
+                if (idx >= 70) {
+                  zoneLabel = "La classe apprende bene";
+                  zoneDesc = "La classe risponde bene — continua così";
+                  zoneColor = "bg-emerald-500";
+                } else if (idx >= 40) {
+                  zoneLabel = "Qualche difficoltà da monitorare";
+                  zoneDesc = "Alcune difficoltà emergono — considera un ripasso";
+                  zoneColor = "bg-amber-500";
+                } else {
+                  zoneLabel = "La classe ha difficoltà evidenti";
+                  zoneDesc = "La classe fatica — potrebbe servire un cambio di approccio";
+                  zoneColor = "bg-red-500";
+                }
+                return (
+                  <div className="bg-card border border-border rounded-xl p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold text-foreground">Indice di apprendimento</p>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="max-w-[260px] text-xs">
+                              Calcolato da: punteggi SarAI, voti inseriti dal docente, correzioni compiti su carta, completamento attività
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <span className="text-lg font-bold text-foreground tabular-nums">{idx}%</span>
+                    </div>
+                    {/* Bar with 3 zones */}
+                    <div className="relative h-3 rounded-full overflow-hidden flex">
+                      <div className="bg-red-500/30 flex-1" style={{ flexBasis: "40%" }} />
+                      <div className="bg-amber-500/30 flex-1" style={{ flexBasis: "30%" }} />
+                      <div className="bg-emerald-500/30 flex-1" style={{ flexBasis: "30%" }} />
+                      {/* Indicator */}
+                      <div
+                        className={cn("absolute top-0 bottom-0 w-1 rounded-full", zoneColor)}
+                        style={{ left: `calc(${idx}% - 2px)` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                      <span>0%</span>
+                      <span>40%</span>
+                      <span>70%</span>
+                      <span>100%</span>
+                    </div>
+                    <div className="mt-3">
+                      <p className="text-sm font-medium text-foreground">{zoneLabel}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{zoneDesc}</p>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* BLOCK 3 — Lista studenti */}
+              {(() => {
+                const lastActivityMap = getLastActivityMap(assignmentResults, manualGrades);
+                return (
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                      Studenti ({students.length})
+                    </p>
+                    <div className="space-y-2">
+                      {students.map((s: any) => {
+                        const firstName = s.profile?.name || s.student_name || "Studente";
+                        const lastName = s.profile?.last_name || "";
+                        const name = lastName ? `${firstName} ${lastName}` : firstName;
+                        const sid = s.student_id || s.id;
+                        const badge = getStudentBadge(sid, stats.studentScores as any, assignmentResults);
+                        const lastActivity = lastActivityMap[sid];
+
+                        return (
+                          <button
+                            key={s.id}
+                            onClick={() => navigate(`/studente/${sid}?classId=${classId}`)}
+                            className="w-full flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:bg-muted/50 hover:shadow-sm transition-all text-left"
+                          >
+                            <AvatarInitials name={name} size="sm" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground">{name}</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">
+                                {lastActivity
+                                  ? `Ultima attività: ${new Date(lastActivity).toLocaleDateString("it-IT")}`
+                                  : "Nessuna attività ancora"}
+                              </p>
+                            </div>
+                            {badge && (badge.label === "Da seguire" || badge.label === "In ritardo") && (
+                              <Badge variant={badge.variant} className="text-[10px] shrink-0">
+                                {badge.label}
+                              </Badge>
+                            )}
+                            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* BLOCK 5 — Attività assegnate (collapsible, default closed) */}
               {assignmentResults.length > 0 && (
