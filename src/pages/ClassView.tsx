@@ -151,6 +151,103 @@ function KpiCard({ label, value, tooltip }: { label: string; value: string | num
   );
 }
 
+/* ─── Indice di apprendimento ─── */
+function gradeToPercent(grade: string, scale: string): number | null {
+  const num = parseFloat(String(grade).replace(",", "."));
+  if (!isNaN(num)) {
+    if (scale === "/10") return Math.max(0, Math.min(100, (num / 10) * 100));
+    if (scale === "/30") return Math.max(0, Math.min(100, (num / 30) * 100));
+    if (scale === "/100") return Math.max(0, Math.min(100, num));
+  }
+  // Qualitative judgment
+  const g = String(grade).toLowerCase().trim();
+  const map: Record<string, number> = {
+    "ottimo": 95, "distinto": 85, "buono": 75,
+    "discreto": 65, "sufficiente": 55, "insufficiente": 35,
+    "gravemente insufficiente": 20,
+  };
+  return map[g] ?? null;
+}
+
+function computeLearningIndex(
+  assignmentResults: any[],
+  manualGrades: any[],
+) {
+  // 1. SarAI scores (assignment_results)
+  const sarAiScores: number[] = [];
+  let totalAssigned = 0;
+  let totalCompleted = 0;
+  assignmentResults.forEach((a: any) => {
+    (a.results || []).forEach((r: any) => {
+      totalAssigned++;
+      if (r.status === "completed") totalCompleted++;
+      if (r.score != null) sarAiScores.push(r.score);
+    });
+  });
+  const sarAiAvg = sarAiScores.length > 0
+    ? sarAiScores.reduce((a, b) => a + b, 0) / sarAiScores.length
+    : null;
+
+  // 2. Manual teacher grades (source = 'manual')
+  const manualScores: number[] = [];
+  // 3. OCR-confirmed grades (source = 'ocr_corrected')
+  const ocrScores: number[] = [];
+  manualGrades.forEach((g: any) => {
+    const pct = gradeToPercent(g.grade, g.grade_scale);
+    if (pct == null) return;
+    if (g.source === "ocr_corrected") ocrScores.push(pct);
+    else manualScores.push(pct);
+  });
+  const manualAvg = manualScores.length > 0
+    ? manualScores.reduce((a, b) => a + b, 0) / manualScores.length
+    : null;
+  const ocrAvg = ocrScores.length > 0
+    ? ocrScores.reduce((a, b) => a + b, 0) / ocrScores.length
+    : null;
+
+  // 4. Completion rate
+  const completionRate = totalAssigned > 0
+    ? (totalCompleted / totalAssigned) * 100
+    : null;
+
+  // Weights with redistribution
+  const sources = [
+    { value: sarAiAvg, weight: 0.4 },
+    { value: manualAvg, weight: 0.3 },
+    { value: ocrAvg, weight: 0.2 },
+    { value: completionRate, weight: 0.1 },
+  ];
+  const available = sources.filter(s => s.value !== null);
+  if (available.length < 2 || totalAssigned + manualGrades.length < 3) {
+    return { index: null, available: available.length };
+  }
+  const totalWeight = available.reduce((sum, s) => sum + s.weight, 0);
+  const index = available.reduce((sum, s) => sum + (s.value as number) * (s.weight / totalWeight), 0);
+  return { index: Math.round(index), available: available.length };
+}
+
+/* ─── Last activity per student ─── */
+function getLastActivityMap(assignmentResults: any[], manualGrades: any[]): Record<string, string> {
+  const map: Record<string, string> = {};
+  assignmentResults.forEach((a: any) => {
+    (a.results || []).forEach((r: any) => {
+      const sid = r.student_id || r.id;
+      const date = r.completed_at || r.created_at;
+      if (sid && date && (!map[sid] || new Date(date) > new Date(map[sid]))) {
+        map[sid] = date;
+      }
+    });
+  });
+  manualGrades.forEach((g: any) => {
+    const sid = g.student_id;
+    const date = g.graded_at;
+    if (sid && date && (!map[sid] || new Date(date) > new Date(map[sid]))) {
+      map[sid] = date;
+    }
+  });
+  return map;
+}
+
 export default function ClassView() {
   const { classId } = useParams();
   const navigate = useNavigate();
