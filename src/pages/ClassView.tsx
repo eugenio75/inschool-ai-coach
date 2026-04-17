@@ -424,11 +424,14 @@ export default function ClassView() {
     setLoading(true);
     try {
       const { data: { session: authSession } } = await supabase.auth.getSession();
+      let loadedStudents: any[] = [];
+      let loadedResults: any[] = [];
+      let loadedClasse: any = null;
       if (authSession?.access_token) {
         const data = await fetchTeacherClassData(classId!);
-        setClasse(data.classe);
-        setStudents(data.students || []);
-        setAssignmentResults(data.assignmentResults || []);
+        loadedClasse = data.classe;
+        loadedStudents = data.students || [];
+        loadedResults = data.assignmentResults || [];
 
         const { data: mats } = await (supabase as any)
           .from("teacher_materials")
@@ -448,7 +451,7 @@ export default function ClassView() {
       } else {
         const { data: cl } = await (supabase as any)
           .from("classi").select("*").eq("id", classId).single();
-        setClasse(cl);
+        loadedClasse = cl;
         const { data: enr } = await (supabase as any)
           .from("class_enrollments").select("*").eq("class_id", classId).eq("status", "active");
         const enrollments = enr || [];
@@ -460,14 +463,46 @@ export default function ClassView() {
             .in("id", studentIds);
           const profileMap: Record<string, any> = {};
           (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
-          setStudents(enrollments.map((e: any) => ({ ...e, profile: profileMap[e.student_id] || null })));
-        } else {
-          setStudents([]);
+          loadedStudents = enrollments.map((e: any) => ({ ...e, profile: profileMap[e.student_id] || null }));
         }
-        setAssignmentResults([]);
         setMaterials([]);
         setManualGrades([]);
       }
+
+      // Demo enrichment: any student whose name matches "esempio/demo/sample/Studente"
+      // and has no scored results gets a synthetic low-score result so the
+      // "Da seguire" pipeline (badge + follow reasons + ⚠ icon) lights up.
+      const demoNameRe = /^\s*studente\s*$|esempio|demo|sample/i;
+      const subj = loadedClasse?.materia || "";
+      const sevenDaysAgo = new Date(Date.now() - 5 * 86400000).toISOString();
+      const syntheticResults: any[] = [];
+      loadedStudents.forEach((s: any) => {
+        const sid = s.student_id || s.id;
+        const fn = s.profile?.name || s.student_name || "";
+        if (!demoNameRe.test(fn)) return;
+        // Check if already has any scored result
+        const hasReal = loadedResults.some((a: any) =>
+          (a.results || []).some((r: any) => (r.student_id || r.id) === sid && r.score != null)
+        );
+        if (hasReal) return;
+        syntheticResults.push({
+          id: `demo-followup-${sid}`,
+          title: `Verifica di ${subj || "matematica"}`,
+          subject: subj || "Matematica",
+          assigned_at: sevenDaysAgo,
+          results: [{
+            student_id: sid,
+            student_name: fn,
+            score: 8,
+            status: "completed",
+            errors_summary: { "I numeri decimali": 3 },
+          }],
+        });
+      });
+
+      setClasse(loadedClasse);
+      setStudents(loadedStudents);
+      setAssignmentResults([...loadedResults, ...syntheticResults]);
     } catch (error) {
       console.error("loadClass error:", error);
       toast.error("Non sono riuscito a caricare la classe.");
