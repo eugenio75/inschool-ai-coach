@@ -314,7 +314,7 @@ export default function ClassView() {
       icon: "create",
       label: "Crea compito",
       sublabel: "AI o manuale",
-      onClick: () => navigate(`/materiali-docente?classId=${classId}&create=true`),
+      onClick: () => navigate(`/classe/${classId}/materiali?create=true`),
     },
     {
       id: "grade",
