@@ -1125,6 +1125,61 @@ export default function ClassView() {
           onSaved={loadClass}
         />
       )}
+
+      {/* Parent Email Dialog (from "studenti da seguire") */}
+      <Dialog open={!!parentEmailTarget} onOpenChange={(open) => { if (!open) setParentEmailTarget(null); }}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Scrivi ai genitori di {parentEmailTarget?.studentName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Oggetto</Label>
+              <Input
+                value={parentEmailSubject}
+                onChange={(e) => setParentEmailSubject(e.target.value)}
+                className="mt-1 rounded-xl"
+              />
+            </div>
+            <div>
+              <Label>Messaggio</Label>
+              <Textarea
+                value={parentEmailBody}
+                onChange={(e) => setParentEmailBody(e.target.value)}
+                className="mt-1 rounded-xl min-h-[160px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setParentEmailTarget(null)} className="rounded-xl">
+              Annulla
+            </Button>
+            <Button
+              disabled={!parentEmailBody.trim()}
+              onClick={async () => {
+                if (!user || !classId || !parentEmailTarget) return;
+                await (supabase as any).from("parent_communications").insert({
+                  teacher_id: user.id,
+                  class_id: classId,
+                  student_id: parentEmailTarget.studentId,
+                  type: "messaggio",
+                  subject: parentEmailSubject,
+                  body: parentEmailBody,
+                  sent_at: new Date().toISOString(),
+                  status: "sent",
+                });
+                toast.success("Messaggio inviato!");
+                setParentEmailTarget(null);
+                setParentEmailSubject("");
+                setParentEmailBody("");
+              }}
+              className="rounded-xl"
+            >
+              <Send className="w-3.5 h-3.5 mr-1" /> Invia
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
