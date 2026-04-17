@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Users, BookOpen, MessageSquare,
-  Copy, ChevronRight, ChevronDown, AlertTriangle,
-  BarChart2, Send, Lightbulb, Info, PenLine, Mail, Wrench,
+  Copy, ChevronRight, Send,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,13 +21,10 @@ import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { ReportTeacherButton } from "@/components/shared/ReportTeacherButton";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
