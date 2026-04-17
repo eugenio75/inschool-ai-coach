@@ -932,6 +932,28 @@ export default function ClassView() {
         />
       )}
 
+      {/* Learning Index Modal */}
+      <LearningIndexModal
+        open={learningModalOpen}
+        onOpenChange={setLearningModalOpen}
+        classId={classId!}
+      />
+
+      {/* Assignment Detail Modal */}
+      {activeAssignment && (
+        <AssignmentDetailModal
+          open={!!activeAssignment}
+          onOpenChange={(open) => { if (!open) setActiveAssignment(null); }}
+          classId={classId!}
+          teacherId={user!.id}
+          defaultScale={classScale}
+          assignment={activeAssignment}
+          students={studentList}
+          manualGrades={manualGrades}
+          onSaved={loadClass}
+        />
+      )}
+
       {/* Parent Email Dialog (from "studenti da seguire") */}
       <Dialog open={!!parentEmailTarget} onOpenChange={(open) => { if (!open) setParentEmailTarget(null); }}>
         <DialogContent className="rounded-2xl">
