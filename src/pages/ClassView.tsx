@@ -624,13 +624,23 @@ export default function ClassView() {
                   lastActivityMap, classe?.materia || "",
                 );
                 const count = followReasons.length;
+                // Align status with learning index (same thresholds: 70 / 40)
+                const li = computeLearningIndex(assignmentResults, manualGrades);
+                const idx = li.index;
 
                 if (count === 0) {
+                  let statusText = "✅ La classe procede regolarmente";
+                  if (idx !== null) {
+                    if (idx < 40) statusText = "⚠️ La classe ha difficoltà evidenti";
+                    else if (idx < 70) statusText = "⚠️ Qualche difficoltà da monitorare";
+                  }
+                  const borderClass =
+                    idx !== null && idx < 40 ? "border-red-500/30"
+                    : idx !== null && idx < 70 ? "border-amber-500/30"
+                    : "border-border";
                   return (
-                    <div className="bg-card border border-border rounded-xl p-4">
-                      <p className="text-sm font-medium text-foreground">
-                        ✅ La classe procede regolarmente
-                      </p>
+                    <div className={cn("bg-card border rounded-xl p-4", borderClass)}>
+                      <p className="text-sm font-medium text-foreground">{statusText}</p>
                     </div>
                   );
                 }
