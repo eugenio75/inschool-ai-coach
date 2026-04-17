@@ -889,6 +889,25 @@ export default function StudentView() {
           defaultStudentName={studentName}
           onSaved={loadStudentData}
         />
+
+        {/* AI grade review modal */}
+        {reviewActivity && (
+          <GradeReviewModal
+            open={!!reviewActivity}
+            onOpenChange={(o) => { if (!o) setReviewActivity(null); }}
+            classId={classId!}
+            teacherId={user!.id}
+            studentId={studentId}
+            studentName={studentName}
+            assignmentId={reviewActivity.assignment_id}
+            assignmentTitle={reviewActivity.title}
+            aiScorePercent={reviewActivity.score ?? null}
+            errorsSummary={reviewActivity.errors_summary || {}}
+            answers={reviewActivity.answers || []}
+            defaultScale={classScale}
+            onSaved={() => { setReviewActivity(null); loadStudentData(); }}
+          />
+        )}
       </div>
     </div>
   );
