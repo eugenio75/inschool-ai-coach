@@ -338,26 +338,44 @@ export default function StudentView() {
         .order("assigned_at", { ascending: false });
       setAssignments((assignmentsList || []).map((a: any) => ({ id: a.id, title: a.title })));
 
-      // Compute signals with severity
+      // Compute signals with severity + suggested actions
       const sigs: Signal[] = [];
       const topErrors = Object.entries(errorsByType).sort(([, a], [, b]) => b - a).slice(0, 3);
       topErrors.forEach(([type, count]) => {
         sigs.push({
           text: `Difficoltà su "${type}" — ${count} ricorrenz${count > 1 ? "e" : "a"} nelle ultime attività`,
           severity: count >= 3 ? "critical" : "warning",
+          actions: ["recovery", "material"],
+          topic: type,
         });
       });
       if (scores.length >= 2) {
         const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-        if (avg < 40) sigs.push({ text: "Media molto bassa — consigliato intervento di recupero.", severity: "critical" });
-        else if (avg < 50) sigs.push({ text: "Media sotto soglia — monitorare le prossime verifiche.", severity: "warning" });
+        if (avg < 40) sigs.push({
+          text: "Media molto bassa — consigliato intervento di recupero.",
+          severity: "critical",
+          actions: ["recovery", "message"],
+        });
+        else if (avg < 50) sigs.push({
+          text: "Media sotto soglia — monitorare le prossime verifiche.",
+          severity: "warning",
+          actions: ["material"],
+        });
         const recent = scores.slice(0, 3);
         if (recent.length >= 2 && recent[0] < recent[recent.length - 1] - 15) {
-          sigs.push({ text: "Calo recente nel rendimento.", severity: "warning" });
+          sigs.push({
+            text: "Calo recente nel rendimento.",
+            severity: "warning",
+            actions: ["message", "session"],
+          });
         }
       }
       const lateCount = activityList.filter(a => a.status !== "completed" && a.due_date && new Date(a.due_date) < new Date()).length;
-      if (lateCount >= 2) sigs.push({ text: `${lateCount} attività in ritardo.`, severity: "warning" });
+      if (lateCount >= 2) sigs.push({
+        text: `${lateCount} attività in ritardo.`,
+        severity: "warning",
+        actions: ["message"],
+      });
       setSignals(sigs);
 
       // Continuity
