@@ -816,7 +816,7 @@ export default function ClassView() {
 
               {/* BLOCK 3 — Lista studenti */}
               {(() => {
-                const lastActivityMap = getLastActivityMap(assignmentResults, manualGrades);
+                const lastActivityMap = getLastActivityMap(assignmentResults, manualGrades, students);
                 return (
                   <div>
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
