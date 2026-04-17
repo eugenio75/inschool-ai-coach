@@ -631,7 +631,7 @@ export default function DashboardDocente() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-3 flex-wrap pr-8">
                           <div className={`h-3 w-3 rounded-full ${hasAlert ? "bg-amber-400 shadow-[0_0_0_5px_rgba(251,191,36,0.15)]" : "bg-emerald-400 shadow-[0_0_0_5px_rgba(52,211,153,0.15)]"}`} />
-                          <p className="text-[22px] sm:text-2xl font-bold tracking-tight text-foreground">{c.nome}</p>
+                          <p className="text-2xl font-bold tracking-tight text-foreground">{c.nome}</p>
                           {c.is_sample && (
                             <span className="rounded-full bg-amber-50 dark:bg-amber-500/15 px-3 py-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
                               ✨ Esempio
