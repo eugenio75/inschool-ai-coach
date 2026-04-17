@@ -251,7 +251,7 @@ function getLastActivityMap(
 
   assignmentResults.forEach((a: any) => {
     (a.results || []).forEach((r: any) => {
-      const date = r.completed_at || r.created_at;
+      const date = r.completed_at || r.created_at || a.assigned_at;
       apply(r.student_id || r.id, date);
       // Fallback by name (sample data may have orphaned student_ids)
       const nm = (r.student_name || "").trim().toLowerCase();
