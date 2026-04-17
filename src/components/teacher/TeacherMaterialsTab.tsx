@@ -379,6 +379,7 @@ interface Props {
   userId: string;
   onReload: () => void;
   autoCreate?: boolean;
+  hideSaved?: boolean;
   prefilledMaterial?: PrefilledMaterial | null;
 }
 
@@ -389,7 +390,7 @@ const MATERIE_OPTIONS_BASE = [
   "Informatica", "Latino", "Greco", "Diritto", "Economia",
 ];
 
-export default function TeacherMaterialsTab({ classId, classe, students, materials: propMaterials, userId, onReload, autoCreate, prefilledMaterial }: Props) {
+export default function TeacherMaterialsTab({ classId, classe, students, materials: propMaterials, userId, onReload, autoCreate, hideSaved, prefilledMaterial }: Props) {
   // Local materials state + adapted map for SharedMaterialsList
   const [localMaterials, setLocalMaterials] = useState<any[]>([]);
   const [adaptedMap, setAdaptedMap] = useState<Record<string, Record<string, any>>>({});
@@ -1349,7 +1350,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
         </div>
 
         {/* Saved materials */}
-        {localMaterials.length === 0 ? (
+        {!hideSaved && (localMaterials.length === 0 ? (
           <div className="bg-card border border-border rounded-xl p-6 text-center">
             <BookOpen className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">
@@ -1384,7 +1385,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
               onReload={onReload}
             />
           </div>
-        )}
+        ))}
       </div>
     );
   }
