@@ -921,16 +921,14 @@ export default function ClassView() {
 
                 return (
                   <>
-                    <ClassCoachHero
+                    <ClassCoachConsole
                       message={coachMessage}
                       actions={coachActions}
-                    />
-                    <ClassHealthBar
                       overall={overall}
                       indicators={indicators}
-                      onClick={idx != null ? () => setLearningModalOpen(true) : undefined}
+                      followStudents={followStudents}
+                      onOpenHealthDetails={idx != null ? () => setLearningModalOpen(true) : undefined}
                     />
-                    {SectionFollow}
                     {SectionStudents}
                     {SectionAssignments}
                   </>
