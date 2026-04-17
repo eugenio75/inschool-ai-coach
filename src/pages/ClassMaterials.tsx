@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, FileText, Plus, Send, Loader2, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import TeacherMaterialsTab from "@/components/teacher/TeacherMaterialsTab";
 
 interface ClassInfo {
   id: string;
@@ -29,13 +30,17 @@ interface MaterialRow {
 export default function ClassMaterials() {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [classe, setClasse] = useState<ClassInfo | null>(null);
   const [assigned, setAssigned] = useState<MaterialRow[]>([]);
   const [drafts, setDrafts] = useState<MaterialRow[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  const createMode = searchParams.get("create") === "true";
 
   useEffect(() => {
     if (!classId || !user) return;
@@ -77,8 +82,17 @@ export default function ClassMaterials() {
       if (c.materia) draftsQ = draftsQ.eq("subject", c.materia);
       const { data: draftsData } = await draftsQ;
 
+      // Students enrolled (light fetch, used by TeacherMaterialsTab)
+      const { data: enrolls } = await supabase
+        .from("class_enrollments")
+        .select("student_id, child_profiles:student_id(id, name, last_name)")
+        .eq("class_id", classId!)
+        .eq("status", "active");
+      const studentList = (enrolls || []).map((e: any) => e.child_profiles).filter(Boolean);
+
       setAssigned((assignedData || []) as MaterialRow[]);
       setDrafts((draftsData || []) as MaterialRow[]);
+      setStudents(studentList);
     } catch (err) {
       console.error("ClassMaterials.load", err);
       toast.error("Errore nel caricamento dei materiali");
@@ -110,7 +124,37 @@ export default function ClassMaterials() {
   }
 
   function openCreate() {
-    navigate(`/materiali-docente?classId=${classId}&create=true`);
+    setSearchParams({ create: "true" }, { replace: false });
+  }
+
+  function closeCreate() {
+    setSearchParams({}, { replace: true });
+    void load();
+  }
+
+  // Create mode: render the full material generator inline
+  if (createMode && classe && user) {
+    return (
+      <div className="min-h-screen bg-muted/30">
+        <div className="max-w-[1100px] mx-auto px-4 sm:px-8 py-3 sm:py-4 pb-24">
+          <button
+            onClick={closeCreate}
+            className="inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground transition-colors mb-3"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Torna ai materiali della classe
+          </button>
+          <TeacherMaterialsTab
+            classId={classId!}
+            classe={classe}
+            students={students}
+            materials={[...assigned, ...drafts]}
+            userId={user.id}
+            onReload={load}
+            autoCreate={true}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (
