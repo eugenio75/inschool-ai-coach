@@ -72,13 +72,13 @@ export function StudentActionCards({ hasTasks, schoolLevel = "medie", coachName 
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...spring, delay: 0.08 + i * 0.04 }}
           onClick={card.action}
-          className="flex flex-col items-center text-center p-4 min-h-[130px] rounded-2xl border border-border bg-card shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group"
+          className="flex flex-col items-center text-center p-5 min-h-[150px] rounded-2xl border border-border bg-card shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 group"
         >
-          <div className={`w-12 h-12 rounded-2xl ${card.color} flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform`}>
-            <card.icon className={`w-6 h-6 ${card.iconColor}`} />
+          <div className={`w-14 h-14 rounded-2xl ${card.color} flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
+            <card.icon className={`w-7 h-7 ${card.iconColor}`} />
           </div>
-          <p className="text-sm font-bold text-foreground leading-tight mb-0.5">{card.label}</p>
-          <p className="text-xs text-muted-foreground leading-snug">{card.desc}</p>
+          <p className="text-[15px] font-bold text-foreground leading-tight mb-1">{card.label}</p>
+          <p className="text-[13px] text-foreground/65 leading-snug">{card.desc}</p>
         </motion.button>
       ))}
     </div>
