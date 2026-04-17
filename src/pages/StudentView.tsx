@@ -92,7 +92,7 @@ export default function StudentView() {
         ? (profile.last_name ? `${profile.name} ${profile.last_name}` : profile.name)
         : "Studente";
       setStudentName(name);
-      const isDemo = /esempio|demo|sample/i.test(name);
+      const isDemo = /^\s*studente\s*$|esempio|demo|sample/i.test(name);
 
       // Load assignment_results directly with joined teacher_assignments
       const { data: results } = await (supabase as any)
@@ -190,27 +190,27 @@ export default function StudentView() {
       if (uniqueDays.length > 0) setLastAccess(uniqueDays[0]); // most recent first
 
       // Demo seed: if this is a sample student with no data, populate with example data
-      // (only for the teacher's class subject)
+      // (only for the teacher's class subject) — scenario: student needs attention.
       if (isDemo && activityList.length === 0 && (grades || []).length === 0 && uniqueDays.length === 0) {
-        const demoSubject = classSubject || "Materia";
+        const demoSubject = classSubject || "Matematica";
+        const demoTopic = "I numeri decimali";
         setSubjectProgress([
-          { subject: demoSubject, avg: 76, count: 5 },
+          { subject: demoSubject, avg: 8, count: 4 },
         ]);
         const today = new Date();
         const daysAgo = (n: number) => new Date(today.getTime() - n * 86400000).toISOString();
         setActivities([
-          { title: `Verifica di ${demoSubject}`, type: "verifica", subject: demoSubject, due_date: daysAgo(2), assigned_at: daysAgo(7), completed_at: daysAgo(2), score: 82, status: "completed", errors_summary: {} },
-          { title: `Esercizi di ${demoSubject}`, type: "esercizio", subject: demoSubject, due_date: daysAgo(5), assigned_at: daysAgo(10), completed_at: daysAgo(5), score: 70, status: "completed", errors_summary: {} },
+          { title: `Verifica su ${demoTopic}`, type: "verifica", subject: demoSubject, due_date: daysAgo(2), assigned_at: daysAgo(7), completed_at: daysAgo(2), score: 8, status: "completed", errors_summary: { [demoTopic]: 3 } },
+          { title: `Esercizi di ${demoSubject}`, type: "esercizio", subject: demoSubject, due_date: daysAgo(5), assigned_at: daysAgo(10), completed_at: daysAgo(5), score: 22, status: "completed", errors_summary: { [demoTopic]: 2 } },
           { title: `Compito di ${demoSubject}`, type: "studio", subject: demoSubject, due_date: daysAgo(1), assigned_at: daysAgo(6), completed_at: null, score: null, status: "in_progress", errors_summary: {} },
         ]);
-        setManualGrades([
-          { id: "demo-g1", assignment_title: `Compito in classe — ${demoSubject}`, grade: "7.5", grade_scale: "/10", graded_at: daysAgo(3) },
-        ]);
-        setActiveDays(5);
-        setLastAccess(new Date(today.getTime() - 86400000).toDateString());
+        setManualGrades([]);
+        setActiveDays(2);
+        setLastAccess(new Date(today.getTime() - 6 * 86400000).toDateString());
         setSignals([
-          `Punteggio in calo nelle ultime verifiche di ${demoSubject}`,
-          "Tempo di risposta in aumento — verificare comprensione.",
+          `Difficoltà su "${demoTopic}" — molti errori nelle ultime due verifiche`,
+          "Ha avuto bisogno di molti suggerimenti durante le ultime sessioni",
+          "Calo di continuità nell'ultima settimana — solo 2 sessioni registrate",
         ]);
       }
     } catch (error) {
@@ -262,7 +262,23 @@ export default function StudentView() {
             <AvatarInitials name={studentName} size="lg" />
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{studentName}</h1>
-              {className && <Badge variant="secondary" className="text-xs mt-1">{className}</Badge>}
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                {className && <Badge variant="secondary" className="text-xs">{className}</Badge>}
+                {(() => {
+                  // Activity status: based on most recent completed activity
+                  const lastDate = activities
+                    .filter(a => a.completed_at)
+                    .map(a => new Date(a.completed_at).getTime())
+                    .sort((a, b) => b - a)[0];
+                  if (!lastDate) {
+                    return <Badge variant="outline" className="text-xs">Mai attivo</Badge>;
+                  }
+                  const daysSince = Math.floor((Date.now() - lastDate) / 86400000);
+                  if (daysSince <= 2) return <Badge variant="success" className="text-xs">Attivo</Badge>;
+                  if (daysSince <= 7) return <Badge variant="secondary" className="text-xs">Inattivo da {daysSince} giorni</Badge>;
+                  return <Badge variant="warning" className="text-xs">Inattivo da {daysSince} giorni</Badge>;
+                })()}
+              </div>
             </div>
           </div>
           <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setShowComm(true)}>
@@ -404,30 +420,13 @@ export default function StudentView() {
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Segnali da osservare</h2>
             </div>
             {signals.length > 0 ? (
-              <div>
-                <div className="space-y-2">
-                  {signals.map((sig, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs text-amber-600 bg-amber-500/10 rounded-lg p-2.5">
-                      <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                      <span>{sig}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {[
-                    { label: "Prepara recupero", route: `/classe/${classId}?tab=materiali` },
-                    { label: "Esercizio differenziato", route: `/classe/${classId}?tab=materiali` },
-                    { label: "Materiale semplificato", route: `/classe/${classId}?tab=materiali` },
-                  ].map(action => (
-                    <button
-                      key={action.label}
-                      onClick={() => navigate(action.route)}
-                      className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-                    >
-                      {action.label}
-                    </button>
-                  ))}
-                </div>
+              <div className="space-y-2">
+                {signals.map((sig, i) => (
+                  <div key={i} className="flex items-start gap-2 text-xs text-amber-600 bg-amber-500/10 rounded-lg p-2.5">
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <span>{sig}</span>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-10 text-center">
@@ -437,6 +436,69 @@ export default function StudentView() {
             )}
           </div>
         </div>
+
+        {/* Suggerimenti automatici — actionable cards */}
+        {signals.length > 0 && (() => {
+          // Detect topic from first "Difficoltà su..." signal
+          const topicMatch = signals
+            .map(s => s.match(/"([^"]+)"/))
+            .find(m => m && m[1]);
+          const topic = topicMatch ? topicMatch[1] : (subjectProgress[0]?.subject || "argomento critico");
+          const subj = subjectProgress[0]?.subject || className || "";
+          // Continuity warning
+          const lastDate = activities
+            .filter(a => a.completed_at)
+            .map(a => new Date(a.completed_at).getTime())
+            .sort((a, b) => b - a)[0];
+          const daysSince = lastDate ? Math.floor((Date.now() - lastDate) / 86400000) : null;
+          const showContinuityWarn = daysSince !== null && daysSince >= 5;
+
+          return (
+            <div className="bg-card rounded-2xl shadow-sm p-6">
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4">
+                💡 Suggerimenti automatici
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <button
+                  onClick={() => navigate(`/classe/${classId}?tab=materiali&recovery_topic=${encodeURIComponent(topic)}&recovery_subject=${encodeURIComponent(subj)}`)}
+                  className="flex flex-col items-start gap-2 p-4 rounded-xl border border-border bg-muted/30 hover:bg-muted/60 hover:border-primary/40 transition-all text-left"
+                >
+                  <span className="text-2xl">🔧</span>
+                  <p className="text-sm font-medium text-foreground">Genera recupero su {topic}</p>
+                  <p className="text-xs text-muted-foreground">Crea esercizi mirati sull'argomento critico.</p>
+                </button>
+                <button
+                  onClick={() => navigate(`/classe/${classId}?tab=materiali`)}
+                  className="flex flex-col items-start gap-2 p-4 rounded-xl border border-border bg-muted/30 hover:bg-muted/60 hover:border-primary/40 transition-all text-left"
+                >
+                  <span className="text-2xl">📄</span>
+                  <p className="text-sm font-medium text-foreground">Proponi materiale semplificato</p>
+                  <p className="text-xs text-muted-foreground">Una versione più graduale per ripartire dalle basi.</p>
+                </button>
+                <button
+                  onClick={() => setShowComm(true)}
+                  className={`flex flex-col items-start gap-2 p-4 rounded-xl border transition-all text-left ${
+                    showContinuityWarn
+                      ? "border-amber-500/40 bg-amber-500/5 hover:bg-amber-500/10"
+                      : "border-border bg-muted/30 hover:bg-muted/60 hover:border-primary/40"
+                  }`}
+                >
+                  <span className="text-2xl">👁</span>
+                  <p className="text-sm font-medium text-foreground">
+                    {showContinuityWarn
+                      ? `Calo di continuità (${daysSince} giorni senza attività)`
+                      : "Contatta i genitori"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {showContinuityWarn
+                      ? "Considera di scrivere ai genitori per un confronto."
+                      : "Apri il dialogo per inviare un messaggio dedicato."}
+                  </p>
+                </button>
+              </div>
+            </div>
+          );
+        })()}
 
 
       {/* Communication Dialog */}
