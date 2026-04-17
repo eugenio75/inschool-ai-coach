@@ -916,6 +916,52 @@ export default function ClassView() {
                   </CollapsibleSection>
                 );
 
+                /* ─── Toolbar: azioni quotidiane sempre visibili ─── */
+                const toolbarActions = [
+                  {
+                    id: "create",
+                    label: "Crea compito",
+                    sublabel: "AI o manuale",
+                    icon: "create" as const,
+                    highlight: true,
+                    onClick: () => setActiveTab("materiali"),
+                  },
+                  {
+                    id: "ocr",
+                    label: "Correggi verifica",
+                    sublabel: assignmentResults.length > 0
+                      ? "Carica foto"
+                      : "Crea prima un'attività",
+                    icon: "ocr" as const,
+                    onClick: () => {
+                      if (assignmentResults.length === 0) {
+                        toast.info("Crea prima un'attività per correggerla");
+                        setActiveTab("materiali");
+                        return;
+                      }
+                      // Open OCR on most recent assignment
+                      setOcrAssignment(assignmentResults[0]);
+                    },
+                  },
+                  {
+                    id: "grade",
+                    label: "Voto manuale",
+                    sublabel: "Inserisci ora",
+                    icon: "grade" as const,
+                    onClick: () => setShowGradeModal(true),
+                  },
+                  {
+                    id: "students",
+                    label: "Studenti",
+                    sublabel: `Vedi tutti i ${students.length}`,
+                    icon: "students" as const,
+                    onClick: () => {
+                      const el = document.getElementById("students-section");
+                      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    },
+                  },
+                ];
+
                 return (
                   <>
                     <ClassCoachConsole
@@ -926,8 +972,9 @@ export default function ClassView() {
                       followStudents={followStudents}
                       onOpenHealthDetails={idx != null ? () => setLearningModalOpen(true) : undefined}
                     />
-                    {SectionStudents}
+                    <ClassActionToolbar actions={toolbarActions} />
                     {SectionAssignments}
+                    <div id="students-section">{SectionStudents}</div>
                   </>
                 );
               })()}
