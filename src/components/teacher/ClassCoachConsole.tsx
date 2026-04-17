@@ -81,35 +81,35 @@ export default function ClassCoachConsole({
         onClick={onOpenHealthDetails}
         disabled={!onOpenHealthDetails}
         className={cn(
-          "relative w-full flex items-center justify-between gap-3 px-5 py-3 border-b border-primary/10 text-left transition-colors",
+          "relative w-full flex items-center justify-between gap-4 px-5 py-3 border-b border-primary/10 text-left transition-colors",
           onOpenHealthDetails && "hover:bg-primary/[0.03]",
         )}
       >
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-4 min-w-0 flex-wrap">
           <span className={cn(
-            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold",
+            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold shrink-0",
             overallZone.pill,
           )}>
             <span className={cn("h-1.5 w-1.5 rounded-full", overallZone.dot)} />
             Salute: {overallZone.label}
           </span>
 
-          <span className="hidden sm:flex items-center gap-3 text-[11px] text-muted-foreground">
+          <span className="hidden sm:flex items-center gap-4 text-[11px] text-muted-foreground">
             {indicators.map((ind) => {
               const z = zoneOf(ind.value);
               const Icon = HEALTH_ICONS[ind.key];
               return (
-                <span key={ind.key} className="flex items-center gap-1">
-                  <Icon className={cn("h-3 w-3", z.text)} />
+                <span key={ind.key} className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                  <Icon className={cn("h-3 w-3 shrink-0", z.text)} />
                   <span>{ind.label}</span>
-                  <span className={cn("h-1.5 w-1.5 rounded-full", z.dot)} />
+                  <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", z.dot)} />
                 </span>
               );
             })}
           </span>
         </div>
         {onOpenHealthDetails && (
-          <span className="text-[11px] text-primary shrink-0">dettagli ›</span>
+          <span className="text-[11px] text-primary shrink-0 ml-auto">dettagli ›</span>
         )}
       </button>
 
