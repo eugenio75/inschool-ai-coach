@@ -236,6 +236,7 @@ export default function StudentView() {
         const aSubj = a?.subject || "";
         if (!subjectMatches(aSubj)) return;
         activityList.push({
+          id: r.id,
           title: a?.title || "Attività",
           type: a?.type || "",
           subject: aSubj,
@@ -245,6 +246,8 @@ export default function StudentView() {
           score: r.score,
           status: r.status,
           errors_summary: r.errors_summary || {},
+          answers: Array.isArray(r.answers) ? r.answers : [],
+          assignment_id: r.assignment_id,
         });
         if (r.score != null) {
           scores.push(r.score);
