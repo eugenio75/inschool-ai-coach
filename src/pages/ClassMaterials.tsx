@@ -156,6 +156,7 @@ export default function ClassMaterials() {
             userId={user.id}
             onReload={load}
             autoCreate={true}
+            hideSaved={true}
           />
         </div>
       </div>
