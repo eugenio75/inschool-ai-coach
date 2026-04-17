@@ -416,6 +416,8 @@ export default function ClassView() {
   const [parentEmailSubject, setParentEmailSubject] = useState("");
   const [parentEmailBody, setParentEmailBody] = useState("");
   const [ocrAssignment, setOcrAssignment] = useState<any>(null);
+  const [learningModalOpen, setLearningModalOpen] = useState(false);
+  const [activeAssignment, setActiveAssignment] = useState<any>(null);
 
   useEffect(() => {
     if (!classId) return;
