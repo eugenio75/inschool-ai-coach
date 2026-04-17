@@ -421,9 +421,7 @@ export default function DashboardDocente() {
         <section className="rounded-[32px] border border-border/60 bg-card/95 backdrop-blur overflow-hidden shadow-[0_10px_30px_-15px_hsl(var(--foreground)/0.08)]">
           <div className="px-6 pt-6 pb-5 sm:px-7 sm:pt-7">
             <div className="mb-4 flex items-center gap-3">
-              <div className="h-11 w-11 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-sm">
-                <CoachAvatar mood="default" size={22} />
-              </div>
+              <CoachAvatar mood="default" size={44} />
               <div>
                 <p className="text-[14px] font-semibold text-foreground/80 leading-tight">{coachName || "Coach"}</p>
                 <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">Centro di regia della giornata</p>

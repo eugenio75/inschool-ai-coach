@@ -86,6 +86,7 @@ export default function ClassView() {
   const [emotionalAlerts, setEmotionalAlerts] = useState<any[]>([]);
   const [focusSessions, setFocusSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [coachName, setCoachName] = useState("");
 
   // UI state
   const [studentsOpen, setStudentsOpen] = useState(false);
@@ -100,6 +101,17 @@ export default function ClassView() {
     if (!classId) return;
     if (!profileId && !user) return;
     loadClass();
+    // Load coach name (dynamic — same as the rest of the app)
+    (async () => {
+      try {
+        const { getCoachName } = await import("@/lib/coachPreferences");
+        const id = profileId || user?.id;
+        if (id) {
+          const name = await getCoachName(id, !!profileId);
+          if (name) setCoachName(name);
+        }
+      } catch {}
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId, profileId, user?.id]);
 
@@ -510,6 +522,7 @@ export default function ClassView() {
           paragraph={insight.paragraph}
           evidences={evidences}
           onAsk={handleCoachAsk}
+          coachName={coachName}
         />
 
         {/* SECTION 2: Azioni rapide */}
