@@ -454,7 +454,7 @@ export default function ClassView() {
   return (
     <div className="min-h-screen bg-muted/30">
       {/* ─── Blue class header (full width) ─── */}
-      <div className="w-full bg-[hsl(217_91%_53%)] text-white">
+      <div className="w-full text-white" style={{ backgroundColor: "#1C6BF5" }}>
         <div className="max-w-[720px] mx-auto px-4 sm:px-10 py-4">
           <button
             onClick={() => navigate("/dashboard")}
