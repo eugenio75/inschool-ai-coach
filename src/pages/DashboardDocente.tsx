@@ -436,7 +436,7 @@ export default function DashboardDocente() {
               </div>
             ) : (
               <>
-                <h2 className="max-w-3xl text-[30px] leading-tight font-extrabold tracking-tight text-foreground">
+                <h2 className="max-w-3xl text-[28px] leading-tight font-extrabold tracking-tight text-foreground">
                   {coachLastMsg || "Bentornato. Pronto per una nuova giornata di lavoro?"}
                 </h2>
                 {classi.length === 0 && !loadingClassi && (
