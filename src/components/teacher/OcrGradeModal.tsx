@@ -272,7 +272,7 @@ export default function OcrGradeModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="rounded-2xl max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>📸 {t("ocr.title") || "Carica e correggi"}</DialogTitle>
+          <DialogTitle>{t("ocr.title") || "📸 Carica e correggi"}</DialogTitle>
           <p className="text-xs text-muted-foreground">{assignment.title}</p>
         </DialogHeader>
 
@@ -288,7 +288,7 @@ export default function OcrGradeModal({
                 className="rounded-xl flex-1"
               >
                 <Users className="w-4 h-4 mr-1.5" />
-                {t("ocr.batchMode") || "Tutta la classe"}
+                {t("ocr.batchMode") || "Più studenti"}
               </Button>
               <Button
                 variant={mode === "single" ? "default" : "outline"}
@@ -297,7 +297,7 @@ export default function OcrGradeModal({
                 className="rounded-xl flex-1"
               >
                 <User className="w-4 h-4 mr-1.5" />
-                {t("ocr.singleMode") || "Singolo studente"}
+                {t("ocr.singleMode") || "Uno studente"}
               </Button>
             </div>
 
@@ -320,16 +320,16 @@ export default function OcrGradeModal({
             {mode === "batch" && (
               <div className="bg-muted/50 rounded-xl p-3 text-sm text-muted-foreground">
                 <p className="font-medium text-foreground mb-1">
-                  {t("ocr.batchInfo") || "📷 Carica tutte le foto dei compiti"}
+                  {t("ocr.batchInfo") || "Carica più foto insieme"}
                 </p>
                 <p className="text-xs">
-                  {t("ocr.batchInfoDesc") || "SarAI leggerà il nome di ogni studente dal foglio e abbinerà automaticamente. Assicurati che ogni foglio abbia il campo \"Nome e Cognome\" compilato."}
+                  {t("ocr.batchInfoDesc") || "SarAI legge il nome dal foglio e abbina automaticamente ogni foto allo studente corretto"}
                 </p>
               </div>
             )}
 
             <div>
-              <Label>{mode === "batch" ? (t("ocr.uploadPhotos") || "Carica foto compiti svolti") : (t("ocr.uploadPhoto") || "Carica foto compito svolto")}</Label>
+              <Label>{t("ocr.uploadPhotos") || "Carica foto"}</Label>
               <div
                 onClick={() => fileRef.current?.click()}
                 className="mt-1 border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
@@ -338,7 +338,7 @@ export default function OcrGradeModal({
                 <p className="text-sm text-muted-foreground">
                   {files.length > 0
                     ? `${files.length} file selezionat${files.length > 1 ? "i" : "o"}`
-                    : (t("ocr.clickToUpload") || "Clicca per caricare — JPG, PNG o PDF")}
+                    : (t("ocr.clickToUpload") || "Clicca per caricare o trascina qui le foto")}
                 </p>
                 {files.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2 justify-center">
