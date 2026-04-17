@@ -408,9 +408,22 @@ export default function StudentView() {
         setLastAccess(new Date(today.getTime() - 6 * 86400000).toDateString());
         setClassAvg(65);
         setSignals([
-          { text: `Difficoltà su "${demoTopic}" — 5 ricorrenze nelle ultime due verifiche`, severity: "critical" },
-          { text: "Ha avuto bisogno di molti suggerimenti durante le ultime sessioni", severity: "warning" },
-          { text: "Solo 2 sessioni registrate nell'ultima settimana", severity: "info" },
+          {
+            text: `Difficoltà su "${demoTopic}" — 5 ricorrenze nelle ultime due verifiche`,
+            severity: "critical",
+            actions: ["recovery", "material"],
+            topic: demoTopic,
+          },
+          {
+            text: "Ha avuto bisogno di molti suggerimenti durante le ultime sessioni",
+            severity: "warning",
+            actions: ["material", "session"],
+          },
+          {
+            text: "Solo 2 sessioni registrate nell'ultima settimana",
+            severity: "info",
+            actions: ["message"],
+          },
         ]);
       }
     } catch (error) {
