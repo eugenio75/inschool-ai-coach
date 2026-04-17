@@ -40,6 +40,7 @@ export default function StudentView() {
   const [signals, setSignals] = useState<string[]>([]);
   const [activeDays, setActiveDays] = useState(0);
   const [lastAccess, setLastAccess] = useState<string | null>(null);
+  const [subjectProgress, setSubjectProgress] = useState<Array<{ subject: string; avg: number; count: number }>>([]);
 
   // Communication dialog
   const [showComm, setShowComm] = useState(false);
