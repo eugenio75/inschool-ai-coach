@@ -100,13 +100,15 @@ export default function StudentView() {
       const activityList: any[] = [];
       const scores: number[] = [];
       const errorsByType: Record<string, number> = {};
+      const subjectScores: Record<string, number[]> = {};
 
       (results || []).forEach((r: any) => {
         const assignment = r.teacher_assignments;
+        const subj = assignment?.subject || "";
         activityList.push({
           title: assignment?.title || "Attività",
           type: assignment?.type || "",
-          subject: assignment?.subject || "",
+          subject: subj,
           due_date: assignment?.due_date,
           assigned_at: assignment?.assigned_at,
           completed_at: r.completed_at,
@@ -114,7 +116,13 @@ export default function StudentView() {
           status: r.status,
           errors_summary: r.errors_summary,
         });
-        if (r.score != null) scores.push(r.score);
+        if (r.score != null) {
+          scores.push(r.score);
+          if (subj) {
+            if (!subjectScores[subj]) subjectScores[subj] = [];
+            subjectScores[subj].push(r.score);
+          }
+        }
         if (r.errors_summary && typeof r.errors_summary === "object") {
           Object.keys(r.errors_summary as Record<string, any>).forEach(k => {
             errorsByType[k] = (errorsByType[k] || 0) + 1;
@@ -123,6 +131,14 @@ export default function StudentView() {
       });
 
       setActivities(activityList);
+
+      // Compute per-subject progress
+      const progressArr = Object.entries(subjectScores).map(([subject, arr]) => ({
+        subject,
+        avg: Math.round(arr.reduce((a, b) => a + b, 0) / arr.length),
+        count: arr.length,
+      })).sort((a, b) => b.count - a.count);
+      setSubjectProgress(progressArr);
 
       // Load manual grades
       const { data: grades } = await (supabase as any)
