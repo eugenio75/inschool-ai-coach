@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, AlertTriangle, AlertCircle, Info, CheckCircle2, Flame, Mail, Send, PenLine,
-  TrendingUp, TrendingDown, Minus, Sparkles, ChevronDown,
+  TrendingUp, TrendingDown, Minus, Sparkles, ChevronDown, Bot, Wrench, FileText, Users, CalendarClock,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,8 +24,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import ManualGradeModal from "@/components/teacher/ManualGradeModal";
+import GradeReviewModal, { percentToGrade, type ScaleId } from "@/components/teacher/GradeReviewModal";
 
 type Activity = {
+  id?: string;
   title: string;
   type: string;
   subject: string;
@@ -35,9 +37,24 @@ type Activity = {
   score?: number | null;
   status?: string | null;
   errors_summary?: Record<string, number>;
+  answers?: any[];
+  assignment_id?: string;
 };
 
-type Signal = { text: string; severity: "critical" | "warning" | "info" };
+type SignalAction = {
+  label: string;
+  icon: "wrench" | "doc" | "mail" | "calendar";
+  onClick: () => void;
+};
+
+type Signal = {
+  text: string;
+  severity: "critical" | "warning" | "info";
+  /** Optional inline actions: 'recovery' | 'material' | 'message' | 'session' */
+  actions?: Array<"recovery" | "material" | "message" | "session">;
+  /** Optional topic to inject in recovery action */
+  topic?: string;
+};
 type SubjectStat = { subject: string; avg: number; count: number; delta: number };
 
 // Match topic to a coherent subject (fixes "decimali" → Italiano bug for demo)
@@ -153,6 +170,7 @@ export default function StudentView() {
   const [lastAccess, setLastAccess] = useState<string | null>(null);
   const [subjectProgress, setSubjectProgress] = useState<SubjectStat[]>([]);
   const [classAvg, setClassAvg] = useState<number | null>(null);
+  const [classScale, setClassScale] = useState<ScaleId>("/10");
 
   // Communication dialog
   const [showComm, setShowComm] = useState(false);
@@ -160,9 +178,12 @@ export default function StudentView() {
   const [commBody, setCommBody] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Manual grade modal
+  // Manual grade modal (free entry)
   const [showGradeModal, setShowGradeModal] = useState(false);
   const [assignments, setAssignments] = useState<Array<{ id: string; title: string }>>([]);
+
+  // AI grade review modal
+  const [reviewActivity, setReviewActivity] = useState<Activity | null>(null);
 
   useEffect(() => {
     if (!studentId || !classId || !user) return;
@@ -222,6 +243,7 @@ export default function StudentView() {
         const aSubj = a?.subject || "";
         if (!subjectMatches(aSubj)) return;
         activityList.push({
+          id: r.id,
           title: a?.title || "Attività",
           type: a?.type || "",
           subject: aSubj,
@@ -231,6 +253,8 @@ export default function StudentView() {
           score: r.score,
           status: r.status,
           errors_summary: r.errors_summary || {},
+          answers: Array.isArray(r.answers) ? r.answers : [],
+          assignment_id: r.assignment_id,
         });
         if (r.score != null) {
           scores.push(r.score);
@@ -283,7 +307,7 @@ export default function StudentView() {
         }
       }
 
-      // Manual grades
+      // Manual grades (for this student in this class)
       const { data: grades } = await (supabase as any)
         .from("manual_grades")
         .select("*")
@@ -292,6 +316,21 @@ export default function StudentView() {
         .order("graded_at", { ascending: false });
       setManualGrades(grades || []);
 
+      // Detect class default grade scale (most-used scale across all manual grades for this class)
+      const { data: classGrades } = await (supabase as any)
+        .from("manual_grades")
+        .select("grade_scale")
+        .eq("class_id", classId);
+      if (classGrades && classGrades.length > 0) {
+        const counts: Record<string, number> = {};
+        classGrades.forEach((g: any) => {
+          const s = g.grade_scale || "/10";
+          counts[s] = (counts[s] || 0) + 1;
+        });
+        const top = Object.entries(counts).sort(([, a], [, b]) => b - a)[0];
+        if (top) setClassScale(top[0] as ScaleId);
+      }
+
       const { data: assignmentsList } = await (supabase as any)
         .from("teacher_assignments")
         .select("id, title")
@@ -299,26 +338,44 @@ export default function StudentView() {
         .order("assigned_at", { ascending: false });
       setAssignments((assignmentsList || []).map((a: any) => ({ id: a.id, title: a.title })));
 
-      // Compute signals with severity
+      // Compute signals with severity + suggested actions
       const sigs: Signal[] = [];
       const topErrors = Object.entries(errorsByType).sort(([, a], [, b]) => b - a).slice(0, 3);
       topErrors.forEach(([type, count]) => {
         sigs.push({
           text: `Difficoltà su "${type}" — ${count} ricorrenz${count > 1 ? "e" : "a"} nelle ultime attività`,
           severity: count >= 3 ? "critical" : "warning",
+          actions: ["recovery", "material"],
+          topic: type,
         });
       });
       if (scores.length >= 2) {
         const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-        if (avg < 40) sigs.push({ text: "Media molto bassa — consigliato intervento di recupero.", severity: "critical" });
-        else if (avg < 50) sigs.push({ text: "Media sotto soglia — monitorare le prossime verifiche.", severity: "warning" });
+        if (avg < 40) sigs.push({
+          text: "Media molto bassa — consigliato intervento di recupero.",
+          severity: "critical",
+          actions: ["recovery", "message"],
+        });
+        else if (avg < 50) sigs.push({
+          text: "Media sotto soglia — monitorare le prossime verifiche.",
+          severity: "warning",
+          actions: ["material"],
+        });
         const recent = scores.slice(0, 3);
         if (recent.length >= 2 && recent[0] < recent[recent.length - 1] - 15) {
-          sigs.push({ text: "Calo recente nel rendimento.", severity: "warning" });
+          sigs.push({
+            text: "Calo recente nel rendimento.",
+            severity: "warning",
+            actions: ["message", "session"],
+          });
         }
       }
       const lateCount = activityList.filter(a => a.status !== "completed" && a.due_date && new Date(a.due_date) < new Date()).length;
-      if (lateCount >= 2) sigs.push({ text: `${lateCount} attività in ritardo.`, severity: "warning" });
+      if (lateCount >= 2) sigs.push({
+        text: `${lateCount} attività in ritardo.`,
+        severity: "warning",
+        actions: ["message"],
+      });
       setSignals(sigs);
 
       // Continuity
@@ -351,9 +408,22 @@ export default function StudentView() {
         setLastAccess(new Date(today.getTime() - 6 * 86400000).toDateString());
         setClassAvg(65);
         setSignals([
-          { text: `Difficoltà su "${demoTopic}" — 5 ricorrenze nelle ultime due verifiche`, severity: "critical" },
-          { text: "Ha avuto bisogno di molti suggerimenti durante le ultime sessioni", severity: "warning" },
-          { text: "Solo 2 sessioni registrate nell'ultima settimana", severity: "info" },
+          {
+            text: `Difficoltà su "${demoTopic}" — 5 ricorrenze nelle ultime due verifiche`,
+            severity: "critical",
+            actions: ["recovery", "material"],
+            topic: demoTopic,
+          },
+          {
+            text: "Ha avuto bisogno di molti suggerimenti durante le ultime sessioni",
+            severity: "warning",
+            actions: ["material", "session"],
+          },
+          {
+            text: "Solo 2 sessioni registrate nell'ultima settimana",
+            severity: "info",
+            actions: ["message"],
+          },
         ]);
       }
     } catch (error) {
@@ -576,7 +646,13 @@ export default function StudentView() {
                 <div className="space-y-2">
                   {activities.map((a, i) => {
                     const score = a.score != null ? Math.round(a.score) : null;
+                    const aiGrade = score != null ? percentToGrade(score, classScale) : null;
+                    const classGrade = classAvg != null ? percentToGrade(classAvg, classScale) : null;
                     const belowThreshold = score != null && score < 50;
+                    // Has the teacher already confirmed a grade for this assignment?
+                    const confirmedGrade = manualGrades.find(
+                      (g: any) => a.assignment_id && g.assignment_id === a.assignment_id
+                    );
                     let statusLabel = "In attesa";
                     let statusVariant: "default" | "secondary" | "destructive" | "outline" = "outline";
                     if (a.status === "completed") { statusLabel = "Completato"; statusVariant = "default"; }
@@ -589,27 +665,50 @@ export default function StudentView() {
                           <p className="text-xs text-muted-foreground">
                             {a.subject}
                             {a.completed_at ? ` · ${new Date(a.completed_at).toLocaleDateString("it-IT")}` : ""}
-                            {classAvg !== null && score !== null && ` · classe ${classAvg}%`}
+                            {classGrade && score !== null && ` · classe ${classGrade}${classScale !== "giudizio" ? classScale : ""}`}
                           </p>
                         </div>
-                        {belowThreshold && <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
-                        {score != null && <span className="text-sm font-semibold text-foreground">{score}%</span>}
+                        {belowThreshold && !confirmedGrade && <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
+                        {/* Grade display: confirmed (📝) or AI proposed (🤖) */}
+                        {confirmedGrade ? (
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <PenLine className="w-3 h-3 text-foreground" aria-label="Voto confermato dal docente" />
+                            <span className="text-sm font-semibold text-foreground">
+                              {confirmedGrade.grade}{confirmedGrade.grade_scale !== "giudizio" ? confirmedGrade.grade_scale : ""}
+                            </span>
+                          </div>
+                        ) : aiGrade ? (
+                          <button
+                            onClick={() => setReviewActivity(a)}
+                            className="flex items-center gap-1.5 shrink-0 rounded-lg px-2 py-1 hover:bg-primary/10 transition-colors group/grade"
+                            title="Rivedi e conferma voto"
+                          >
+                            <Bot className="w-3 h-3 text-primary" aria-label="Voto proposto dall'AI" />
+                            <span className="text-sm font-semibold text-foreground">
+                              {aiGrade}{classScale !== "giudizio" ? classScale : ""}
+                            </span>
+                            <PenLine className="w-3 h-3 text-muted-foreground opacity-0 group-hover/grade:opacity-100 transition-opacity" />
+                          </button>
+                        ) : null}
                         <Badge variant={statusVariant} className="text-[10px] shrink-0">{statusLabel}</Badge>
                       </div>
                     );
                   })}
-                  {manualGrades.map((g: any) => (
-                    <div key={g.id} className="flex items-center gap-3 p-3 bg-muted/40 border border-border rounded-xl">
-                      <span className="text-base shrink-0">📝</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{g.assignment_title || "Voto manuale"}</p>
-                        <p className="text-xs text-muted-foreground">Voto docente · {new Date(g.graded_at).toLocaleDateString("it-IT")}</p>
+                  {/* Manual grades not linked to an activity (standalone teacher entries) */}
+                  {manualGrades
+                    .filter((g: any) => !g.assignment_id || !activities.some(a => a.assignment_id === g.assignment_id))
+                    .map((g: any) => (
+                      <div key={g.id} className="flex items-center gap-3 p-3 bg-muted/40 border border-border rounded-xl">
+                        <PenLine className="w-3.5 h-3.5 text-foreground shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{g.assignment_title || "Voto manuale"}</p>
+                          <p className="text-xs text-muted-foreground">Voto docente · {new Date(g.graded_at).toLocaleDateString("it-IT")}</p>
+                        </div>
+                        <span className="text-sm font-semibold text-foreground">
+                          {g.grade}{g.grade_scale !== "giudizio" ? g.grade_scale : ""}
+                        </span>
                       </div>
-                      <span className="text-sm font-semibold text-foreground">
-                        {g.grade}{g.grade_scale !== "giudizio" ? g.grade_scale : ""}
-                      </span>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               )}
             </div>
@@ -640,10 +739,57 @@ export default function StudentView() {
                       warning: { Icon: AlertTriangle, cls: "text-amber-600 bg-amber-500/10 border-amber-500/20" },
                       info: { Icon: Info, cls: "text-sky-600 bg-sky-500/10 border-sky-500/20" },
                     }[sig.severity];
+                    const actionTopic = sig.topic || recoveryTopic;
+                    const actionMap: Record<string, { label: string; Icon: typeof Wrench; onClick: () => void }> = {
+                      recovery: {
+                        label: "Genera recupero",
+                        Icon: Wrench,
+                        onClick: () => navigate(`/classe/${classId}?tab=materiali&recovery_topic=${encodeURIComponent(actionTopic)}&recovery_subject=${encodeURIComponent(classSubject || "")}`),
+                      },
+                      material: {
+                        label: "Materiale semplificato",
+                        Icon: FileText,
+                        onClick: () => navigate(`/classe/${classId}?tab=materiali`),
+                      },
+                      message: {
+                        label: "Scrivi ai genitori",
+                        Icon: Users,
+                        onClick: () => {
+                          setCommSubject(`Aggiornamento su ${studentName.split(" ")[0]}`);
+                          setCommBody(`Gentili genitori,\n\nvi scrivo per condividere alcune osservazioni su ${studentName}: ${sig.text.toLowerCase()}\n\nResto a disposizione per parlarne.\n\nCordiali saluti.`);
+                          setShowComm(true);
+                        },
+                      },
+                      session: {
+                        label: "Programma sessione",
+                        Icon: CalendarClock,
+                        onClick: () => navigate(`/agenda-docente`),
+                      },
+                    };
                     return (
-                      <div key={i} className={`flex items-start gap-2 text-xs rounded-lg p-3 border ${map.cls}`}>
-                        <map.Icon className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                        <span>{sig.text}</span>
+                      <div key={i} className={`rounded-lg border ${map.cls}`}>
+                        <div className="flex items-start gap-2 p-3">
+                          <map.Icon className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                          <span className="text-xs flex-1">{sig.text}</span>
+                        </div>
+                        {sig.actions && sig.actions.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 px-3 pb-3 pt-0">
+                            {sig.actions.map((actionKey) => {
+                              const action = actionMap[actionKey];
+                              if (!action) return null;
+                              return (
+                                <button
+                                  key={actionKey}
+                                  onClick={action.onClick}
+                                  className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-md bg-card border border-border hover:bg-accent transition-colors text-foreground"
+                                >
+                                  <action.Icon className="w-3 h-3" />
+                                  {action.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -743,6 +889,25 @@ export default function StudentView() {
           defaultStudentName={studentName}
           onSaved={loadStudentData}
         />
+
+        {/* AI grade review modal */}
+        {reviewActivity && (
+          <GradeReviewModal
+            open={!!reviewActivity}
+            onOpenChange={(o) => { if (!o) setReviewActivity(null); }}
+            classId={classId!}
+            teacherId={user!.id}
+            studentId={studentId}
+            studentName={studentName}
+            assignmentId={reviewActivity.assignment_id}
+            assignmentTitle={reviewActivity.title}
+            aiScorePercent={reviewActivity.score ?? null}
+            errorsSummary={reviewActivity.errors_summary || {}}
+            answers={reviewActivity.answers || []}
+            defaultScale={classScale}
+            onSaved={() => { setReviewActivity(null); loadStudentData(); }}
+          />
+        )}
       </div>
     </div>
   );
