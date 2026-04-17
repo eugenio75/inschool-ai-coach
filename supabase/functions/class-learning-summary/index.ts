@@ -41,6 +41,19 @@ serve(async (req) => {
     let errorTopics: Record<string, number> = {};
     let totalCompleted = 0;
     let totalAssigned = 0;
+    // Skip technical / placeholder keys that should never reach the teacher.
+    const TECHNICAL_KEYS = new Set([
+      "common_errors", "errors", "error", "summary", "score", "metric",
+      "rate", "percent", "percentage", "total", "count", "n/a", "na", "null",
+      "undefined", "unknown", "generic",
+    ]);
+    const isTechnicalKey = (k: string) => {
+      const low = k.trim().toLowerCase();
+      if (!low) return true;
+      if (TECHNICAL_KEYS.has(low)) return true;
+      if (/^[0-9_\-:.]+$/.test(low)) return true;
+      return false;
+    };
     if (aIds.length > 0) {
       const { data: results } = await sb
         .from("assignment_results").select("status, errors_summary")
@@ -51,6 +64,16 @@ serve(async (req) => {
         const es = r.errors_summary;
         if (es && typeof es === "object") {
           Object.entries(es).forEach(([topic, count]: [string, any]) => {
+            if (isTechnicalKey(topic)) return;
+            // If value is array of strings, treat each as a topic name
+            if (Array.isArray(count)) {
+              count.forEach((t: any) => {
+                if (typeof t === "string" && !isTechnicalKey(t)) {
+                  errorTopics[t] = (errorTopics[t] || 0) + 1;
+                }
+              });
+              return;
+            }
             const c = typeof count === "number" ? count : 1;
             errorTopics[topic] = (errorTopics[topic] || 0) + c;
           });
