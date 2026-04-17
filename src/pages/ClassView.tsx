@@ -692,114 +692,142 @@ export default function ClassView() {
                 const li = computeLearningIndex(assignmentResults, manualGrades);
                 const idx = li.index;
 
-                /* ─── SECTION 1 — Studenti da seguire (collapsed by default, soft amber) ─── */
-                const Section1 = followReasons.length === 0 ? (
-                  <div className="bg-card border border-border rounded-[12px] p-4">
-                    <p className="text-sm text-foreground">
-                      ✅ Nessuno studente da seguire al momento
-                    </p>
-                  </div>
-                ) : (
-                  <div className="bg-card border border-amber-300/50 rounded-[12px] overflow-hidden">
-                    <button
-                      onClick={() => setFollowExpanded(!followExpanded)}
-                      className="w-full flex items-center justify-between p-4 text-left hover:bg-amber-50/40 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4 text-amber-500" />
-                        <p className="text-sm font-semibold text-foreground">Studenti da seguire</p>
-                        <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-amber-100 text-amber-700 text-[11px] font-semibold">
-                          {followReasons.length}
-                        </span>
-                      </div>
-                      <ChevronDown className={cn(
-                        "w-4 h-4 text-muted-foreground transition-transform shrink-0",
-                        followExpanded && "rotate-180",
-                      )} />
-                    </button>
-                    {followExpanded && (
-                      <div className="border-t border-border divide-y divide-border">
-                        {followReasons.map((fr) => (
-                          <button
-                            key={fr.studentId}
-                            onClick={() => navigate(`/studente/${fr.studentId}?classId=${classId}`)}
-                            className="w-full flex items-center gap-3 p-4 text-left hover:bg-muted/40 transition-colors"
-                          >
-                            <AvatarInitials name={fr.studentName} size="sm" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">{fr.studentName}</p>
-                              <p className="text-[12px] text-muted-foreground truncate mt-0.5">
-                                {fr.reason}
-                              </p>
-                            </div>
-                            <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-semibold uppercase tracking-wide">
-                              Da seguire
-                            </span>
-                            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
+                /* ─── Coach hero: contextual message + 2-3 actions ─── */
+                const firstFollow = followReasons[0];
+                const stalest = (() => {
+                  const now = Date.now();
+                  const SEVEN_DAYS = 7 * 86400000;
+                  return assignmentResults.find((a: any) => {
+                    const ageMs = now - new Date(a.assigned_at || 0).getTime();
+                    if (ageMs < SEVEN_DAYS) return false;
+                    const r = a.results || [];
+                    const completed = r.filter((x: any) => x.status === "completed").length;
+                    return completed < students.length;
+                  });
+                })();
 
-                /* ─── SECTION 2 — Andamento della classe (clickable, clean) ─── */
-                let zoneColor = "bg-emerald-500";
-                let zoneLabel = "La classe apprende bene";
-                if (idx == null) {
-                  zoneLabel = "In attesa di dati";
-                } else if (idx < 40) {
-                  zoneColor = "bg-red-500";
-                  zoneLabel = "Qualche difficoltà rilevata";
-                } else if (idx < 70) {
-                  zoneColor = "bg-amber-500";
-                  zoneLabel = "Qualche difficoltà rilevata";
+                let coachMessage: string;
+                const coachActions: CoachAction[] = [];
+
+                if (followReasons.length === 0 && assignmentResults.length === 0) {
+                  coachMessage = "La classe è pronta a partire. Vuoi assegnare la prima attività o creare un materiale di benvenuto?";
+                  coachActions.push({
+                    id: "create-mat", label: "Crea materiale", icon: "next",
+                    onClick: () => setActiveTab("materiali"),
+                  });
+                } else if (followReasons.length === 0) {
+                  coachMessage = `Tutto sotto controllo: ${students.length} studenti procedono regolarmente. Vuoi proporre una nuova sfida o un ripasso?`;
+                  coachActions.push({
+                    id: "new-mat", label: "Nuovo materiale", icon: "next",
+                    onClick: () => setActiveTab("materiali"),
+                  });
+                } else if (followReasons.length === 1 && firstFollow) {
+                  const topic = firstFollow.topic ? ` su "${firstFollow.topic}"` : "";
+                  coachMessage = `${firstFollow.studentName} sta facendo fatica${topic}. Posso preparare un recupero mirato o aiutarti a scrivere ai genitori.`;
+                  if (firstFollow.actions.includes("recovery")) {
+                    coachActions.push({
+                      id: "rec", label: "Genera recupero", icon: "recovery",
+                      onClick: () => handleGenerateRecovery(
+                        firstFollow.subject || classe?.materia || "",
+                        firstFollow.topic || firstFollow.reason,
+                        1,
+                      ),
+                    });
+                  }
+                  if (firstFollow.actions.includes("contact_parents") || firstFollow.reasonType === "low_score") {
+                    coachActions.push({
+                      id: "par", label: "Scrivi ai genitori", icon: "parents", variant: "ghost",
+                      onClick: () => {
+                        setParentEmailTarget({ studentId: firstFollow.studentId, studentName: firstFollow.studentName });
+                        setParentEmailSubject(`Aggiornamento su ${firstFollow.studentName}`);
+                        setParentEmailBody(
+                          `Buongiorno,\n\nle scrivo a proposito di ${firstFollow.studentName}: ${firstFollow.reason.toLowerCase()}.\n\nVi propongo un breve confronto per condividere strategie utili a casa.\n\nCordiali saluti.`,
+                        );
+                      },
+                    });
+                  }
+                } else {
+                  coachMessage = `${followReasons.length} studenti hanno bisogno di attenzione questa settimana. Vuoi che prepari un'attività di recupero condivisa per la classe?`;
+                  coachActions.push({
+                    id: "rec-class", label: "Recupero per la classe", icon: "recovery",
+                    onClick: () => handleGenerateRecovery(
+                      classe?.materia || "",
+                      firstFollow?.topic || "argomenti recenti",
+                      followReasons.length,
+                    ),
+                  });
+                  if (stalest) {
+                    coachActions.push({
+                      id: "stale", label: `Sollecita "${stalest.title}"`, icon: "next", variant: "ghost",
+                      onClick: () => setActiveAssignment(stalest),
+                    });
+                  }
                 }
 
-                const Section2 = (
-                  <div className="bg-card border border-border rounded-[12px] p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-semibold text-foreground">Andamento della classe</p>
-                      {idx != null && (
+                /* ─── Health indicators ─── */
+                const now = Date.now();
+                const SEVEN = 7 * 86400000;
+                const activeRecently = students.filter((s: any) => {
+                  const sid = s.student_id || s.id;
+                  const last = lastActivityMap[sid];
+                  return last && now - new Date(last).getTime() < SEVEN;
+                }).length;
+                const consistency = students.length > 0
+                  ? Math.round((activeRecently / students.length) * 100)
+                  : null;
+                const method = stats.completion > 0 ? Math.min(100, stats.completion) : null;
+                const learning = idx;
+                const overall = (() => {
+                  const vals = [method, learning, consistency].filter((v): v is number => v != null);
+                  if (vals.length === 0) return null;
+                  return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+                })();
+
+                const indicators: HealthIndicator[] = [
+                  { key: "method", label: "Metodo", value: method },
+                  { key: "learning", label: "Apprendimento", value: learning },
+                  { key: "consistency", label: "Continuità", value: consistency },
+                ];
+
+                /* ─── Section: Studenti da seguire (open by default if any) ─── */
+                const SectionFollow = followReasons.length === 0 ? null : (
+                  <CollapsibleSection
+                    title="Studenti da seguire"
+                    accent="amber"
+                    defaultOpen={true}
+                    badge={
+                      <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-amber-100 text-amber-700 text-[11px] font-semibold">
+                        {followReasons.length}
+                      </span>
+                    }
+                  >
+                    <div className="divide-y divide-border">
+                      {followReasons.map((fr) => (
                         <button
-                          onClick={() => setLearningModalOpen(true)}
-                          className="text-[12px] text-primary hover:underline"
+                          key={fr.studentId}
+                          onClick={() => navigate(`/studente/${fr.studentId}?classId=${classId}`)}
+                          className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-muted/40 transition-colors"
                         >
-                          tocca per i dettagli ›
+                          <AvatarInitials name={fr.studentName} size="sm" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{fr.studentName}</p>
+                            <p className="text-[12px] text-muted-foreground truncate mt-0.5">{fr.reason}</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                         </button>
-                      )}
+                      ))}
                     </div>
-                    {idx == null ? (
-                      <p className="text-xs text-muted-foreground">
-                        L'indicatore si attiverà dopo qualche attività completata dalla classe.
-                      </p>
-                    ) : (
-                      <>
-                        <div className="relative h-2 rounded-full bg-muted overflow-hidden">
-                          <div
-                            className={cn("absolute top-0 bottom-0 left-0 rounded-full transition-all", zoneColor)}
-                            style={{ width: `${idx}%` }}
-                          />
-                        </div>
-                        <p className="text-sm text-foreground mt-3">{zoneLabel}</p>
-                        <button
-                          onClick={() => setLearningModalOpen(true)}
-                          className="text-[12px] text-primary hover:underline mt-2 block"
-                        >
-                          Vedi difficoltà e suggerimenti del Coach AI →
-                        </button>
-                      </>
-                    )}
-                  </div>
+                  </CollapsibleSection>
                 );
 
-                /* ─── SECTION 3 — Studenti (avatar + nome + ultima attività + badge) ─── */
-                const Section3 = (
-                  <div>
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
-                      Studenti ({students.length})
-                    </p>
-                    <div className="bg-card border border-border rounded-[12px] divide-y divide-border overflow-hidden">
+                /* ─── Section: Studenti (collapsible) ─── */
+                const SectionStudents = (
+                  <CollapsibleSection
+                    title="Studenti"
+                    defaultOpen={followReasons.length === 0}
+                    meta={`${students.length}`}
+                  >
+                    <div className="divide-y divide-border">
                       {students.map((s: any) => {
                         const firstName = s.profile?.name || s.student_name || "Studente";
                         const lastName = s.profile?.last_name || "";
@@ -814,7 +842,7 @@ export default function ClassView() {
                           <button
                             key={s.id}
                             onClick={() => navigate(`/studente/${sid}?classId=${classId}`)}
-                            className="w-full flex items-center gap-3 p-3 hover:bg-muted/40 transition-colors text-left"
+                            className="w-full flex items-center gap-3 px-5 py-3 hover:bg-muted/40 transition-colors text-left"
                           >
                             <AvatarInitials name={name} size="sm" />
                             <div className="flex-1 min-w-0">
@@ -833,23 +861,24 @@ export default function ClassView() {
                         );
                       })}
                     </div>
-                  </div>
+                  </CollapsibleSection>
                 );
 
-                /* ─── SECTION 4 — Attività assegnate (clean, no scores) ─── */
-                const Section4 = (
-                  <div>
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
-                      Attività assegnate ({assignmentResults.length})
-                    </p>
+                /* ─── Section: Attività assegnate (collapsible) ─── */
+                const SectionAssignments = (
+                  <CollapsibleSection
+                    title="Attività assegnate"
+                    defaultOpen={followReasons.length === 0 && assignmentResults.length <= 4}
+                    meta={`${assignmentResults.length}`}
+                  >
                     {assignmentResults.length === 0 ? (
-                      <div className="bg-card border border-border rounded-[12px] p-5 text-center">
+                      <div className="px-5 py-4 text-center">
                         <p className="text-sm text-muted-foreground">
                           Nessuna attività assegnata a questa classe.
                         </p>
                       </div>
                     ) : (
-                      <div className="bg-card border border-border rounded-[12px] divide-y divide-border overflow-hidden">
+                      <div className="divide-y divide-border">
                         {assignmentResults.map((a: any) => {
                           const results = a.results || [];
                           const completed = results.filter((r: any) => r.status === "completed").length;
@@ -862,7 +891,7 @@ export default function ClassView() {
                             <button
                               key={a.id}
                               onClick={() => setActiveAssignment(a)}
-                              className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left"
+                              className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition-colors text-left"
                             >
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-foreground truncate">{a.title}</p>
@@ -886,15 +915,23 @@ export default function ClassView() {
                         })}
                       </div>
                     )}
-                  </div>
+                  </CollapsibleSection>
                 );
 
                 return (
                   <>
-                    {Section1}
-                    {Section2}
-                    {Section3}
-                    {Section4}
+                    <ClassCoachHero
+                      message={coachMessage}
+                      actions={coachActions}
+                    />
+                    <ClassHealthBar
+                      overall={overall}
+                      indicators={indicators}
+                      onClick={idx != null ? () => setLearningModalOpen(true) : undefined}
+                    />
+                    {SectionFollow}
+                    {SectionStudents}
+                    {SectionAssignments}
                   </>
                 );
               })()}
