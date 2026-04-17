@@ -46,27 +46,11 @@ serve(async (req) => {
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
 
-    const { data: teacherProfiles, error: teacherProfilesError } = await admin
-      .from("child_profiles")
-      .select("id")
-      .eq("parent_id", user.id)
-      .eq("school_level", "docente");
-
-    if (teacherProfilesError) throw teacherProfilesError;
-
-    const teacherProfileIds = (teacherProfiles || []).map((profile) => profile.id);
-    if (teacherProfileIds.length === 0) {
-      return new Response(JSON.stringify({ error: "Classe non trovata" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
+    // Fetch the class first, then verify the requester owns it via the linked teacher profile.
     const { data: classe, error: classeError } = await admin
       .from("classi")
       .select("*")
       .eq("id", classId)
-      .in("docente_profile_id", teacherProfileIds)
       .maybeSingle();
 
     if (classeError) throw classeError;
@@ -75,6 +59,20 @@ serve(async (req) => {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    const { data: teacherProfile, error: teacherProfileError } = await admin
+      .from("child_profiles")
+      .select("id, parent_id")
+      .eq("id", classe.docente_profile_id)
+      .maybeSingle();
+
+    if (teacherProfileError) throw teacherProfileError;
+    if (!teacherProfile || teacherProfile.parent_id !== user.id) {
+      return new Response(
+        JSON.stringify({ error: "Non sei autorizzato ad accedere a questa classe" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     const { data: enrollments, error: enrollmentsError } = await admin
