@@ -190,27 +190,27 @@ export default function StudentView() {
       if (uniqueDays.length > 0) setLastAccess(uniqueDays[0]); // most recent first
 
       // Demo seed: if this is a sample student with no data, populate with example data
-      // (only for the teacher's class subject)
+      // (only for the teacher's class subject) — scenario: student needs attention.
       if (isDemo && activityList.length === 0 && (grades || []).length === 0 && uniqueDays.length === 0) {
-        const demoSubject = classSubject || "Materia";
+        const demoSubject = classSubject || "Matematica";
+        const demoTopic = "I numeri decimali";
         setSubjectProgress([
-          { subject: demoSubject, avg: 76, count: 5 },
+          { subject: demoSubject, avg: 8, count: 4 },
         ]);
         const today = new Date();
         const daysAgo = (n: number) => new Date(today.getTime() - n * 86400000).toISOString();
         setActivities([
-          { title: `Verifica di ${demoSubject}`, type: "verifica", subject: demoSubject, due_date: daysAgo(2), assigned_at: daysAgo(7), completed_at: daysAgo(2), score: 82, status: "completed", errors_summary: {} },
-          { title: `Esercizi di ${demoSubject}`, type: "esercizio", subject: demoSubject, due_date: daysAgo(5), assigned_at: daysAgo(10), completed_at: daysAgo(5), score: 70, status: "completed", errors_summary: {} },
+          { title: `Verifica su ${demoTopic}`, type: "verifica", subject: demoSubject, due_date: daysAgo(2), assigned_at: daysAgo(7), completed_at: daysAgo(2), score: 8, status: "completed", errors_summary: { [demoTopic]: 3 } },
+          { title: `Esercizi di ${demoSubject}`, type: "esercizio", subject: demoSubject, due_date: daysAgo(5), assigned_at: daysAgo(10), completed_at: daysAgo(5), score: 22, status: "completed", errors_summary: { [demoTopic]: 2 } },
           { title: `Compito di ${demoSubject}`, type: "studio", subject: demoSubject, due_date: daysAgo(1), assigned_at: daysAgo(6), completed_at: null, score: null, status: "in_progress", errors_summary: {} },
         ]);
-        setManualGrades([
-          { id: "demo-g1", assignment_title: `Compito in classe — ${demoSubject}`, grade: "7.5", grade_scale: "/10", graded_at: daysAgo(3) },
-        ]);
-        setActiveDays(5);
-        setLastAccess(new Date(today.getTime() - 86400000).toDateString());
+        setManualGrades([]);
+        setActiveDays(2);
+        setLastAccess(new Date(today.getTime() - 6 * 86400000).toDateString());
         setSignals([
-          `Punteggio in calo nelle ultime verifiche di ${demoSubject}`,
-          "Tempo di risposta in aumento — verificare comprensione.",
+          `Difficoltà su "${demoTopic}" — molti errori nelle ultime due verifiche`,
+          "Ha avuto bisogno di molti suggerimenti durante le ultime sessioni",
+          "Calo di continuità nell'ultima settimana — solo 2 sessioni registrate",
         ]);
       }
     } catch (error) {
