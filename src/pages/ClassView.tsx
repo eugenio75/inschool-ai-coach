@@ -818,11 +818,11 @@ export default function ClassView() {
                   };
                 });
 
-                /* ─── Section: Studenti (collapsible) ─── */
+                /* ─── Section: Studenti (collapsible, compact) ─── */
                 const SectionStudents = (
                   <CollapsibleSection
-                    title="Studenti"
-                    defaultOpen={followReasons.length === 0}
+                    title="Tutti gli studenti"
+                    defaultOpen={false}
                     meta={`${students.length}`}
                   >
                     <div className="divide-y divide-border">
@@ -933,16 +933,6 @@ export default function ClassView() {
               })()}
             </>
           )}
-        </TabsContent>
-
-        {/* ━━━ TAB: INSIGHTS ━━━ */}
-        <TabsContent value="insights" className="mt-6">
-          <ClassInsightsTab
-            classId={classId!}
-            onGenerateRecovery={handleGenerateRecovery}
-            stats={stats}
-            topics={topics}
-          />
         </TabsContent>
 
         {/* ━━━ TAB: MATERIALI ━━━ */}
