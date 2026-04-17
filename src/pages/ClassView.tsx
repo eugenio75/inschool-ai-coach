@@ -251,7 +251,7 @@ function getLastActivityMap(
 
   assignmentResults.forEach((a: any) => {
     (a.results || []).forEach((r: any) => {
-      const date = r.completed_at || r.created_at;
+      const date = r.completed_at || r.created_at || a.assigned_at;
       apply(r.student_id || r.id, date);
       // Fallback by name (sample data may have orphaned student_ids)
       const nm = (r.student_name || "").trim().toLowerCase();
@@ -291,24 +291,36 @@ function computeFollowReasons(
   const now = Date.now();
   const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
 
+  // Build name → sid map for fallback matching
+  const nameToSid: Record<string, string> = {};
+  students.forEach((s: any) => {
+    const sid = s.student_id || s.id;
+    const fn = (s.profile?.name || s.student_name || "").trim().toLowerCase();
+    if (fn && sid) nameToSid[fn] = sid;
+  });
+
   students.forEach((s: any) => {
     const sid = s.student_id || s.id;
     const firstName = s.profile?.name || s.student_name || "Studente";
     const lastName = s.profile?.last_name || "";
     const studentName = lastName ? `${firstName} ${lastName}` : firstName;
+    const fnLower = firstName.trim().toLowerCase();
 
     const scores = studentScores[sid] || [];
     const lastActivity = lastActivityMap[sid];
     const recent = scores.slice(-3);
     const recentAvg = recent.length > 0 ? recent.reduce((a, b) => a + b, 0) / recent.length : null;
 
-    // Find topic with most errors for this student
+    // Find topic with most errors for this student (with name fallback)
     const errorTopics: Record<string, number> = {};
     let staleTasks = 0;
     let assignmentSubject = "";
     assignmentResults.forEach((a: any) => {
       (a.results || []).forEach((r: any) => {
-        if ((r.student_id || r.id) !== sid) return;
+        const rsid = r.student_id || r.id;
+        const rname = (r.student_name || "").trim().toLowerCase();
+        const matches = rsid === sid || (rname && rname === fnLower);
+        if (!matches) return;
         if (a.subject) assignmentSubject = a.subject;
         if (r.status !== "completed" && a.assigned_at) {
           const ageMs = now - new Date(a.assigned_at).getTime();
@@ -624,13 +636,23 @@ export default function ClassView() {
                   lastActivityMap, classe?.materia || "",
                 );
                 const count = followReasons.length;
+                // Align status with learning index (same thresholds: 70 / 40)
+                const li = computeLearningIndex(assignmentResults, manualGrades);
+                const idx = li.index;
 
                 if (count === 0) {
+                  let statusText = "✅ La classe procede regolarmente";
+                  if (idx !== null) {
+                    if (idx < 40) statusText = "⚠️ La classe ha difficoltà evidenti";
+                    else if (idx < 70) statusText = "⚠️ Qualche difficoltà da monitorare";
+                  }
+                  const borderClass =
+                    idx !== null && idx < 40 ? "border-red-500/30"
+                    : idx !== null && idx < 70 ? "border-amber-500/30"
+                    : "border-border";
                   return (
-                    <div className="bg-card border border-border rounded-xl p-4">
-                      <p className="text-sm font-medium text-foreground">
-                        ✅ La classe procede regolarmente
-                      </p>
+                    <div className={cn("bg-card border rounded-xl p-4", borderClass)}>
+                      <p className="text-sm font-medium text-foreground">{statusText}</p>
                     </div>
                   );
                 }
