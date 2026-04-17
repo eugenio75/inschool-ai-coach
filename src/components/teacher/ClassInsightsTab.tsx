@@ -1,15 +1,39 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  BarChart2, AlertTriangle, BookOpen, Heart, Loader2, Users,
+  BarChart2, AlertTriangle, BookOpen, Heart, Loader2, Users, Info,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ClassInsightsProps {
   classId: string;
   onGenerateRecovery?: (subject: string, topic: string, count: number) => void;
+  stats?: { avg: number; completion: number; regular: number; toFollow: number; statusMsg?: string };
+  topics?: Array<{ name: string; mastery: number }>;
+}
+
+function KpiCard({ label, value, tooltip }: { label: string; value: string | number; tooltip: string }) {
+  return (
+    <TooltipProvider>
+      <div className="bg-card border border-border rounded-xl p-4 text-center relative">
+        <p className="text-xl font-bold text-foreground">{value}</p>
+        <div className="flex items-center justify-center gap-1 mt-1">
+          <p className="text-[10px] text-muted-foreground leading-tight">{label}</p>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="w-3 h-3 text-muted-foreground/50 cursor-help shrink-0" />
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-[200px] text-xs">
+              {tooltip}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </div>
+    </TooltipProvider>
+  );
 }
 
 interface InsightsData {
