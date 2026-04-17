@@ -74,7 +74,7 @@ const FORMAT_COLORS: Record<string, string> = {
   "non definito": "bg-muted",
 };
 
-export default function ClassInsightsTab({ classId, onGenerateRecovery }: ClassInsightsProps) {
+export default function ClassInsightsTab({ classId, onGenerateRecovery, stats, topics }: ClassInsightsProps) {
   const [data, setData] = useState<InsightsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
