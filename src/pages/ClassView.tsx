@@ -465,7 +465,7 @@ export default function ClassView() {
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <h1 className="text-[20px] font-bold leading-tight flex items-center gap-2">
-                <span className="inline-block h-2 w-2 rounded-full bg-yellow-300 shrink-0" />
+                <span className="inline-block h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: "#FACC15" }} />
                 <span className="truncate">{classe.nome}</span>
               </h1>
               <p className="text-[13px] text-white/75 mt-1 truncate">
