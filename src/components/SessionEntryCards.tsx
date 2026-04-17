@@ -100,20 +100,20 @@ export function SessionEntryCards({ hasTasks }: SessionEntryCardsProps) {
           transition={{ ...spring, delay: 0.1 + i * 0.05 }}
           onClick={s.action}
           disabled={s.disabled}
-          className="flex flex-col items-start p-3.5 rounded-2xl border border-border/60 bg-card hover:shadow-soft transition-all text-left group disabled:opacity-40"
+          className="flex flex-col items-start p-4 rounded-2xl border border-border/60 bg-card hover:shadow-soft transition-all text-left group disabled:opacity-40"
         >
-          <div className={`w-9 h-9 rounded-xl ${s.color} flex items-center justify-center mb-2.5`}>
-            <s.icon className={`w-4.5 h-4.5 ${s.iconColor}`} />
+          <div className={`w-11 h-11 rounded-xl ${s.color} flex items-center justify-center mb-3`}>
+            <s.icon className={`w-5 h-5 ${s.iconColor}`} />
           </div>
-          <p className="text-sm font-semibold text-foreground leading-tight mb-0.5">{s.label}</p>
-          <p className="text-[11px] text-muted-foreground leading-snug">{s.desc}</p>
+          <p className="text-[15px] font-semibold text-foreground leading-tight mb-1">{s.label}</p>
+          <p className="text-[13px] text-foreground/65 leading-snug">{s.desc}</p>
 
           {s.extraAction ? (
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="mt-3 rounded-xl text-[11px]"
+              className="mt-3 rounded-xl text-[12px]"
               onClick={(event) => {
                 event.stopPropagation();
                 s.extraAction?.onClick();
