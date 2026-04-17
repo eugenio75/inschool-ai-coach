@@ -1,32 +1,26 @@
-import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import {
-  ArrowLeft, Users, BookOpen, MessageSquare,
-  Copy, ChevronRight, Send,
-} from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft, Copy, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import TeacherMaterialsTab, { type PrefilledMaterial } from "@/components/teacher/TeacherMaterialsTab";
-import ManualGradeModal from "@/components/teacher/ManualGradeModal";
-import OcrGradeModal from "@/components/teacher/OcrGradeModal";
-import LearningIndexModal from "@/components/teacher/LearningIndexModal";
-import AssignmentDetailModal from "@/components/teacher/AssignmentDetailModal";
-import ClassCoachConsole, { type CoachAction, type FollowStudent, type HealthIndicator } from "@/components/teacher/ClassCoachConsole";
-import ClassActionToolbar from "@/components/teacher/ClassActionToolbar";
-import CollapsibleSection from "@/components/teacher/CollapsibleSection";
-import type { ScaleId } from "@/components/teacher/GradeReviewModal";
-import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getChildSession } from "@/lib/childSession";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { AvatarInitials } from "@/components/shared/AvatarInitials";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ReportTeacherButton } from "@/components/shared/ReportTeacherButton";
+import ClassCoachCard, { type CoachEvidence } from "@/components/teacher/ClassCoachCard";
+import QuickActionsGrid, { type QuickAction } from "@/components/teacher/QuickActionsGrid";
+import ClassNotificationsCard, { type ClassNotification } from "@/components/teacher/ClassNotificationsCard";
+import StudentsListSheet from "@/components/teacher/StudentsListSheet";
+import ManualGradeModal from "@/components/teacher/ManualGradeModal";
+import OcrGradeModal from "@/components/teacher/OcrGradeModal";
+import AssignmentDetailModal from "@/components/teacher/AssignmentDetailModal";
+import type { ScaleId } from "@/components/teacher/GradeReviewModal";
+import { analyzeClass } from "@/lib/classCoachAnalysis";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 async function fetchTeacherClassData(classId: string) {
   const { data: { session } } = await supabase.auth.getSession();
@@ -46,164 +40,13 @@ async function fetchTeacherClassData(classId: string) {
   return response.json();
 }
 
-/* ─── helpers ─── */
-function computeClassStats(students: any[], assignmentResults: any[]) {
-  const totalStudents = students.length;
-  if (totalStudents === 0) return { avg: 0, completion: 0, regular: 0, toFollow: 0, statusMsg: "Nessuno studente iscritto" };
-
-  let totalScore = 0;
-  let totalCompleted = 0;
-  let totalAssigned = 0;
-
-  const studentScores: Record<string, number[]> = {};
-
-  assignmentResults.forEach((a: any) => {
-    (a.results || []).forEach((r: any) => {
-      const sid = r.student_id || r.id;
-      if (!studentScores[sid]) studentScores[sid] = [];
-      if (r.score != null) {
-        totalScore += r.score;
-        studentScores[sid].push(r.score);
-      }
-      totalAssigned++;
-      if (r.status === "completed") totalCompleted++;
-    });
-  });
-
-  const avg = totalAssigned > 0 ? Math.round(totalScore / totalAssigned) : 0;
-  const completion = totalAssigned > 0 ? Math.round((totalCompleted / totalAssigned) * 100) : 0;
-
-  let toFollow = 0;
-  Object.values(studentScores).forEach(scores => {
-    if (scores.length > 0) {
-      const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
-      if (mean < 60) toFollow++;
-    }
-  });
-
-  const regular = totalStudents - toFollow;
-  let statusMsg = "La classe procede regolarmente";
-  if (toFollow >= 3) statusMsg = `${toFollow} studenti da seguire`;
-  else if (toFollow > 0) statusMsg = `${toFollow} student${toFollow === 1 ? "e" : "i"} da seguire`;
-
-  return { avg, completion, regular, toFollow, statusMsg, studentScores };
-}
-
-function getStudentBadge(studentId: string, studentScores: Record<string, number[]> | undefined, assignmentResults: any[]) {
-  if (!studentScores) return null;
-  const scores = studentScores[studentId];
-  if (!scores || scores.length === 0) return null;
-  const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
-
-  let lateCount = 0;
-  assignmentResults.forEach((a: any) => {
-    (a.results || []).forEach((r: any) => {
-      if ((r.student_id || r.id) === studentId && r.status !== "completed") lateCount++;
-    });
-  });
-
-  if (mean < 50 || lateCount >= 3) return { label: "Da seguire", variant: "destructive" as const };
-  if (lateCount >= 2) return { label: "In ritardo", variant: "secondary" as const };
-  if (scores.length >= 2 && scores[scores.length - 1] > scores[scores.length - 2] + 10) return { label: "In miglioramento", variant: "default" as const };
-  return null;
-}
-
-function isStudentBelowThreshold(studentId: string, studentScores: Record<string, number[]> | undefined) {
-  if (!studentScores) return false;
-  const scores = studentScores[studentId];
-  if (!scores || scores.length === 0) return false;
-  const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
-  return mean < 50;
-}
-
-/* ─── Indice di apprendimento ─── */
-function gradeToPercent(grade: string, scale: string): number | null {
-  const num = parseFloat(String(grade).replace(",", "."));
-  if (!isNaN(num)) {
-    if (scale === "/10") return Math.max(0, Math.min(100, (num / 10) * 100));
-    if (scale === "/30") return Math.max(0, Math.min(100, (num / 30) * 100));
-    if (scale === "/100") return Math.max(0, Math.min(100, num));
-  }
-  // Qualitative judgment
-  const g = String(grade).toLowerCase().trim();
-  const map: Record<string, number> = {
-    "ottimo": 95, "distinto": 85, "buono": 75,
-    "discreto": 65, "sufficiente": 55, "insufficiente": 35,
-    "gravemente insufficiente": 20,
-  };
-  return map[g] ?? null;
-}
-
-function computeLearningIndex(
-  assignmentResults: any[],
-  manualGrades: any[],
-) {
-  // 1. SarAI scores (assignment_results)
-  const sarAiScores: number[] = [];
-  let totalAssigned = 0;
-  let totalCompleted = 0;
-  assignmentResults.forEach((a: any) => {
-    (a.results || []).forEach((r: any) => {
-      totalAssigned++;
-      if (r.status === "completed") totalCompleted++;
-      if (r.score != null) sarAiScores.push(r.score);
-    });
-  });
-  const sarAiAvg = sarAiScores.length > 0
-    ? sarAiScores.reduce((a, b) => a + b, 0) / sarAiScores.length
-    : null;
-
-  // 2. Manual teacher grades (source = 'manual')
-  const manualScores: number[] = [];
-  // 3. OCR-confirmed grades (source = 'ocr_corrected')
-  const ocrScores: number[] = [];
-  manualGrades.forEach((g: any) => {
-    const pct = gradeToPercent(g.grade, g.grade_scale);
-    if (pct == null) return;
-    if (g.source === "ocr_corrected") ocrScores.push(pct);
-    else manualScores.push(pct);
-  });
-  const manualAvg = manualScores.length > 0
-    ? manualScores.reduce((a, b) => a + b, 0) / manualScores.length
-    : null;
-  const ocrAvg = ocrScores.length > 0
-    ? ocrScores.reduce((a, b) => a + b, 0) / ocrScores.length
-    : null;
-
-  // 4. Completion rate
-  const completionRate = totalAssigned > 0
-    ? (totalCompleted / totalAssigned) * 100
-    : null;
-
-  // Weights with redistribution
-  const sources = [
-    { value: sarAiAvg, weight: 0.4 },
-    { value: manualAvg, weight: 0.3 },
-    { value: ocrAvg, weight: 0.2 },
-    { value: completionRate, weight: 0.1 },
-  ];
-  const available = sources.filter(s => s.value !== null);
-  if (available.length < 2 || totalAssigned + manualGrades.length < 3) {
-    return { index: null, available: available.length };
-  }
-  const totalWeight = available.reduce((sum, s) => sum + s.weight, 0);
-  const index = available.reduce((sum, s) => sum + (s.value as number) * (s.weight / totalWeight), 0);
-  return { index: Math.round(index), available: available.length };
-}
-
-/* ─── Last activity per student (with name fallback for legacy data) ─── */
-function getLastActivityMap(
-  assignmentResults: any[],
-  manualGrades: any[],
-  students: any[] = [],
-): Record<string, string> {
+function getLastActivityMap(assignmentResults: any[], manualGrades: any[], students: any[]): Record<string, string> {
   const map: Record<string, string> = {};
-  // Build name → enrolled student_id map for fallback
   const nameToSid: Record<string, string> = {};
   students.forEach((s: any) => {
     const sid = s.student_id || s.id;
-    const firstName = (s.profile?.name || s.student_name || "").trim().toLowerCase();
-    if (firstName && sid) nameToSid[firstName] = sid;
+    const fn = (s.profile?.name || s.student_name || "").trim().toLowerCase();
+    if (fn && sid) nameToSid[fn] = sid;
   });
 
   const apply = (sid: string | undefined | null, date: string | undefined | null) => {
@@ -215,7 +58,6 @@ function getLastActivityMap(
     (a.results || []).forEach((r: any) => {
       const date = r.completed_at || r.created_at || a.assigned_at;
       apply(r.student_id || r.id, date);
-      // Fallback by name (sample data may have orphaned student_ids)
       const nm = (r.student_name || "").trim().toLowerCase();
       if (nm && nameToSid[nm]) apply(nameToSid[nm], date);
     });
@@ -228,129 +70,6 @@ function getLastActivityMap(
   return map;
 }
 
-/* ─── Compute reasons + suggested actions for "to follow" students ─── */
-type FollowAction = "recovery" | "contact_parents";
-interface FollowReason {
-  studentId: string;
-  studentName: string;
-  reason: string;
-  reasonType: "low_score" | "stale_task" | "topic_difficulty" | "no_session";
-  topic?: string;
-  subject?: string;
-  lastActivity?: string;
-  actions: FollowAction[];
-}
-
-function computeFollowReasons(
-  students: any[],
-  assignmentResults: any[],
-  studentScores: Record<string, number[]> | undefined,
-  lastActivityMap: Record<string, string>,
-  classSubject: string,
-): FollowReason[] {
-  if (!studentScores) return [];
-  const reasons: FollowReason[] = [];
-  const now = Date.now();
-  const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
-
-  // Build name → sid map for fallback matching
-  const nameToSid: Record<string, string> = {};
-  students.forEach((s: any) => {
-    const sid = s.student_id || s.id;
-    const fn = (s.profile?.name || s.student_name || "").trim().toLowerCase();
-    if (fn && sid) nameToSid[fn] = sid;
-  });
-
-  students.forEach((s: any) => {
-    const sid = s.student_id || s.id;
-    const firstName = s.profile?.name || s.student_name || "Studente";
-    const lastName = s.profile?.last_name || "";
-    const studentName = lastName ? `${firstName} ${lastName}` : firstName;
-    const fnLower = firstName.trim().toLowerCase();
-
-    const scores = studentScores[sid] || [];
-    const lastActivity = lastActivityMap[sid];
-    const recent = scores.slice(-3);
-    const recentAvg = recent.length > 0 ? recent.reduce((a, b) => a + b, 0) / recent.length : null;
-
-    // Find topic with most errors for this student (with name fallback)
-    const errorTopics: Record<string, number> = {};
-    let staleTasks = 0;
-    let assignmentSubject = "";
-    assignmentResults.forEach((a: any) => {
-      (a.results || []).forEach((r: any) => {
-        const rsid = r.student_id || r.id;
-        const rname = (r.student_name || "").trim().toLowerCase();
-        const matches = rsid === sid || (rname && rname === fnLower);
-        if (!matches) return;
-        if (a.subject) assignmentSubject = a.subject;
-        if (r.status !== "completed" && a.assigned_at) {
-          const ageMs = now - new Date(a.assigned_at).getTime();
-          if (ageMs > SEVEN_DAYS) staleTasks++;
-        }
-        if (r.errors_summary && typeof r.errors_summary === "object") {
-          Object.keys(r.errors_summary).forEach(k => {
-            errorTopics[k] = (errorTopics[k] || 0) + 1;
-          });
-        }
-      });
-    });
-    const topErrorTopic = Object.entries(errorTopics).sort(([, a], [, b]) => b - a)[0];
-
-    // Decide reason in priority order
-    if (recentAvg != null && recentAvg < 50) {
-      reasons.push({
-        studentId: sid, studentName,
-        reason: "Punteggio SarAI sotto il 50% nelle ultime attività",
-        reasonType: "low_score",
-        subject: assignmentSubject || classSubject,
-        topic: topErrorTopic?.[0],
-        lastActivity,
-        actions: ["recovery"],
-      });
-    } else if (topErrorTopic && topErrorTopic[1] >= 2) {
-      reasons.push({
-        studentId: sid, studentName,
-        reason: `Difficoltà rilevate su "${topErrorTopic[0]}"`,
-        reasonType: "topic_difficulty",
-        subject: assignmentSubject || classSubject,
-        topic: topErrorTopic[0],
-        lastActivity,
-        actions: ["recovery"],
-      });
-    } else if (staleTasks >= 1) {
-      reasons.push({
-        studentId: sid, studentName,
-        reason: `Compito non completato da 7+ giorni`,
-        reasonType: "stale_task",
-        lastActivity,
-        actions: ["contact_parents"],
-      });
-    } else if (lastActivity && now - new Date(lastActivity).getTime() > SEVEN_DAYS) {
-      reasons.push({
-        studentId: sid, studentName,
-        reason: "Nessuna sessione negli ultimi 7 giorni",
-        reasonType: "no_session",
-        lastActivity,
-        actions: ["contact_parents"],
-      });
-    } else if (scores.length > 0 && scores.reduce((a, b) => a + b, 0) / scores.length < 60) {
-      // Generic catch-all to align with stats.toFollow (mean < 60)
-      reasons.push({
-        studentId: sid, studentName,
-        reason: "Media generale sotto la sufficienza",
-        reasonType: "low_score",
-        subject: assignmentSubject || classSubject,
-        topic: topErrorTopic?.[0],
-        lastActivity,
-        actions: ["recovery"],
-      });
-    }
-  });
-
-  return reasons;
-}
-
 export default function ClassView() {
   const { classId } = useParams();
   const navigate = useNavigate();
@@ -360,28 +79,25 @@ export default function ClassView() {
 
   const [classe, setClasse] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
-  const [materials, setMaterials] = useState<any[]>([]);
   const [assignmentResults, setAssignmentResults] = useState<any[]>([]);
   const [manualGrades, setManualGrades] = useState<any[]>([]);
+  const [feed, setFeed] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get("tab") || "classe";
-  const [activeTab, setActiveTab] = useState(initialTab);
-  const [prefilledMaterial, setPrefilledMaterial] = useState<PrefilledMaterial | null>(null);
-  const [verificheOpen, setVerificheOpen] = useState(false);
+
+  // UI state
+  const [studentsOpen, setStudentsOpen] = useState(false);
   const [showGradeModal, setShowGradeModal] = useState(false);
-  const [followExpanded, setFollowExpanded] = useState(false);
+  const [ocrAssignment, setOcrAssignment] = useState<any>(null);
+  const [activeAssignment, setActiveAssignment] = useState<any>(null);
   const [parentEmailTarget, setParentEmailTarget] = useState<{ studentId: string; studentName: string } | null>(null);
   const [parentEmailSubject, setParentEmailSubject] = useState("");
   const [parentEmailBody, setParentEmailBody] = useState("");
-  const [ocrAssignment, setOcrAssignment] = useState<any>(null);
-  const [learningModalOpen, setLearningModalOpen] = useState(false);
-  const [activeAssignment, setActiveAssignment] = useState<any>(null);
 
   useEffect(() => {
     if (!classId) return;
     if (!profileId && !user) return;
     loadClass();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId, profileId, user?.id]);
 
   async function loadClass() {
@@ -391,27 +107,28 @@ export default function ClassView() {
       let loadedStudents: any[] = [];
       let loadedResults: any[] = [];
       let loadedClasse: any = null;
+
       if (authSession?.access_token) {
         const data = await fetchTeacherClassData(classId!);
         loadedClasse = data.classe;
         loadedStudents = data.students || [];
         loadedResults = data.assignmentResults || [];
 
-        const { data: mats } = await (supabase as any)
-          .from("teacher_materials")
-          .select("*")
-          .eq("teacher_id", authSession.user.id)
-          .eq("class_id", classId)
-          .order("created_at", { ascending: false });
-        setMaterials(mats || []);
-
-        // Load manual grades for this class
         const { data: grades } = await (supabase as any)
           .from("manual_grades")
           .select("*")
           .eq("class_id", classId)
           .order("graded_at", { ascending: false });
         setManualGrades(grades || []);
+
+        const { data: feedData } = await (supabase as any)
+          .from("teacher_activity_feed")
+          .select("*")
+          .eq("teacher_id", authSession.user.id)
+          .eq("class_id", classId)
+          .order("created_at", { ascending: false })
+          .limit(10);
+        setFeed(feedData || []);
       } else {
         const { data: cl } = await (supabase as any)
           .from("classi").select("*").eq("id", classId).single();
@@ -429,22 +146,19 @@ export default function ClassView() {
           (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
           loadedStudents = enrollments.map((e: any) => ({ ...e, profile: profileMap[e.student_id] || null }));
         }
-        setMaterials([]);
         setManualGrades([]);
+        setFeed([]);
       }
 
-      // Demo enrichment: any student whose name matches "esempio/demo/sample/Studente"
-      // and has no scored results gets a synthetic low-score result so the
-      // "Da seguire" pipeline (badge + follow reasons + ⚠ icon) lights up.
+      // Demo enrichment for sample students
       const demoNameRe = /^\s*studente\s*$|esempio|demo|sample/i;
       const subj = loadedClasse?.materia || "";
-      const sevenDaysAgo = new Date(Date.now() - 5 * 86400000).toISOString();
+      const fiveDaysAgo = new Date(Date.now() - 5 * 86400000).toISOString();
       const syntheticResults: any[] = [];
       loadedStudents.forEach((s: any) => {
         const sid = s.student_id || s.id;
         const fn = s.profile?.name || s.student_name || "";
         if (!demoNameRe.test(fn)) return;
-        // Check if already has any scored result
         const hasReal = loadedResults.some((a: any) =>
           (a.results || []).some((r: any) => (r.student_id || r.id) === sid && r.score != null)
         );
@@ -453,7 +167,7 @@ export default function ClassView() {
           id: `demo-followup-${sid}`,
           title: `Verifica di ${subj || "matematica"}`,
           subject: subj || "Matematica",
-          assigned_at: sevenDaysAgo,
+          assigned_at: fiveDaysAgo,
           results: [{
             student_id: sid,
             student_name: fn,
@@ -478,46 +192,227 @@ export default function ClassView() {
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-8 space-y-4">
+      <div className="max-w-2xl mx-auto px-4 py-8 space-y-4">
         <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-40 w-full rounded-2xl" />
+        <Skeleton className="h-64 w-full rounded-[22px]" />
+        <Skeleton className="h-32 w-full rounded-[18px]" />
       </div>
     );
   }
 
   if (!classe) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-8 text-center">
+      <div className="max-w-2xl mx-auto px-4 py-8 text-center">
         <p className="text-muted-foreground">Classe non trovata.</p>
         <Button variant="outline" onClick={() => navigate("/dashboard")} className="mt-4">Torna alla dashboard</Button>
       </div>
     );
   }
 
-  const stats = computeClassStats(students, assignmentResults);
+  // ─── Coach analysis (proactive) ────────────────────────────────
+  const lastActivityMap = getLastActivityMap(assignmentResults, manualGrades, students);
+  const insight = analyzeClass({
+    students,
+    assignmentResults,
+    manualGrades,
+    classSubject: classe.materia || "",
+    lastActivityMap,
+  });
 
-
-  function handleGenerateRecovery(subject: string, topic: string, count: number) {
-    setPrefilledMaterial({
-      tipo_attivita: "recupero",
-      materia: subject,
-      argomento: topic,
-      descrizione: `Esercizio di recupero mirato sull'argomento "${topic}" per ${count} studenti che mostrano difficoltà specifiche su questo punto.`,
-    });
-    setActiveTab("materiali");
+  // ─── Map evidence actions to handlers ──────────────────────────
+  function handleEvidenceAction(ev: typeof insight.evidences[number]) {
+    switch (ev.actionType) {
+      case "recovery":
+        navigate(`/materiali-docente?classId=${classId}&tipo=recupero&materia=${encodeURIComponent(ev.targetSubject || classe.materia || "")}&argomento=${encodeURIComponent(ev.targetTopic || "")}`);
+        break;
+      case "alternative":
+        navigate(`/materiali-docente?classId=${classId}&tipo=lezione&materia=${encodeURIComponent(ev.targetSubject || classe.materia || "")}&argomento=${encodeURIComponent(ev.targetTopic || "")}`);
+        break;
+      case "create":
+        navigate(`/materiali-docente?classId=${classId}&create=true${ev.targetTopic ? `&argomento=${encodeURIComponent(ev.targetTopic)}` : ""}`);
+        break;
+      case "trend":
+        if (ev.targetStudentId) {
+          navigate(`/studente/${ev.targetStudentId}?classId=${classId}`);
+        } else {
+          setStudentsOpen(true);
+        }
+        break;
+      case "contact":
+        if (ev.targetStudentId && ev.targetStudentName) {
+          setParentEmailTarget({ studentId: ev.targetStudentId, studentName: ev.targetStudentName });
+          setParentEmailSubject(`Aggiornamento su ${ev.targetStudentName}`);
+          setParentEmailBody(
+            `Buongiorno,\n\nle scrivo a proposito di ${ev.targetStudentName}: vorrei condividere con voi alcune osservazioni recenti e proporre un breve confronto per allineare il sostegno a casa.\n\nCordiali saluti.`,
+          );
+        }
+        break;
+    }
   }
 
-  // Student list for manual grade modal
+  const evidences: CoachEvidence[] = insight.evidences.map((ev) => ({
+    id: ev.id,
+    text: ev.text,
+    actionLabel: ev.actionLabel,
+    onAction: () => handleEvidenceAction(ev),
+  }));
+
+  // ─── Coach input → /coach-docente with class context ───────────
+  async function handleCoachAsk(question: string) {
+    if (!user) {
+      toast.error("Funzione disponibile solo per docenti");
+      return;
+    }
+    try {
+      // Find or create a class-scoped chat
+      const { data: existing } = await (supabase as any)
+        .from("teacher_chats")
+        .select("id")
+        .eq("teacher_id", user.id)
+        .eq("class_id", classId)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      let chatId = existing?.id;
+      if (!chatId) {
+        const { data: created, error } = await (supabase as any)
+          .from("teacher_chats")
+          .insert({ teacher_id: user.id, class_id: classId, name: classe.nome })
+          .select("id")
+          .single();
+        if (error) throw error;
+        chatId = created.id;
+      }
+
+      navigate(`/coach-docente?chat=${chatId}&q=${encodeURIComponent(question)}`);
+    } catch (err) {
+      console.error("handleCoachAsk error:", err);
+      toast.error("Non sono riuscito ad aprire la chat con il coach.");
+    }
+  }
+
+  // ─── Quick actions ─────────────────────────────────────────────
+  const quickActions: QuickAction[] = [
+    {
+      id: "create",
+      icon: "create",
+      label: "Crea compito",
+      sublabel: "AI o manuale",
+      onClick: () => navigate(`/materiali-docente?classId=${classId}&create=true`),
+    },
+    {
+      id: "grade",
+      icon: "grade",
+      label: "Correggi verifica",
+      sublabel: "Carica o inserisci voto",
+      onClick: () => {
+        if (assignmentResults.length > 0) {
+          // Prefer OCR on most recent if available, otherwise manual
+          setOcrAssignment(assignmentResults[0]);
+        } else {
+          setShowGradeModal(true);
+        }
+      },
+    },
+    {
+      id: "students",
+      icon: "students",
+      label: "Studenti",
+      sublabel: `Vedi tutti i ${students.length}`,
+      onClick: () => setStudentsOpen(true),
+    },
+    {
+      id: "library",
+      icon: "library",
+      label: "Materiali",
+      sublabel: "Apri libreria",
+      onClick: () => navigate(`/materiali-docente?classId=${classId}`),
+    },
+  ];
+
+  // ─── Notifications ─────────────────────────────────────────────
+  const notifications: ClassNotification[] = [];
+  const now = Date.now();
+  const SEVEN_DAYS = 7 * 86400000;
+
+  // From teacher_activity_feed
+  feed.slice(0, 4).forEach((n: any) => {
+    const isUrgent = n.severity === "urgent" || n.type === "urgent";
+    const isWarn = n.severity === "warning" || n.type === "warning" || n.type === "wellbeing";
+    const isPositive = n.type === "positive";
+    const level: ClassNotification["level"] = isUrgent ? "urgent" : isWarn ? "attention" : isPositive ? "completed" : "info";
+    notifications.push({
+      id: n.id,
+      level,
+      title: n.message,
+      subtitle: n.action_label || timeAgo(n.created_at),
+      badgeLabel: level === "urgent" ? "Urgente" : level === "attention" ? "Attenzione" : level === "completed" ? "Positivo" : "Info",
+      onClick: () => {
+        if (n.action_route) navigate(n.action_route);
+      },
+    });
+  });
+
+  // Aggregated assignment status
+  let pendingCount = 0;
+  let completedAllCount = 0;
+  assignmentResults.forEach((a: any) => {
+    const results = a.results || [];
+    const completed = results.filter((r: any) => r.status === "completed").length;
+    const total = students.length || results.length;
+    if (total > 0 && completed === total) completedAllCount++;
+    else {
+      const ageMs = now - new Date(a.assigned_at || 0).getTime();
+      if (ageMs > SEVEN_DAYS && completed < total) pendingCount++;
+    }
+  });
+
+  if (pendingCount > 0) {
+    notifications.push({
+      id: "agg-pending",
+      level: "urgent",
+      title: `${pendingCount} ${pendingCount === 1 ? "attività non consegnata" : "attività non consegnate"}`,
+      subtitle: "Da più di una settimana",
+      badgeLabel: "In ritardo",
+      onClick: () => {
+        const stale = assignmentResults.find((a: any) => {
+          const r = a.results || [];
+          const completed = r.filter((x: any) => x.status === "completed").length;
+          const total = students.length || r.length;
+          return total > 0 && completed < total && now - new Date(a.assigned_at || 0).getTime() > SEVEN_DAYS;
+        });
+        if (stale) setActiveAssignment(stale);
+      },
+    });
+  }
+
+  if (completedAllCount > 0 && notifications.length < 5) {
+    notifications.push({
+      id: "agg-completed",
+      level: "completed",
+      title: `${completedAllCount} ${completedAllCount === 1 ? "attività completata" : "attività completate"} da tutti`,
+      subtitle: "Bel lavoro della classe",
+      badgeLabel: "Fatto",
+      onClick: () => {
+        const done = assignmentResults.find((a: any) => {
+          const r = a.results || [];
+          const completed = r.filter((x: any) => x.status === "completed").length;
+          const total = students.length || r.length;
+          return total > 0 && completed === total;
+        });
+        if (done) setActiveAssignment(done);
+      },
+    });
+  }
+
+  // Students for sheet + modals
   const studentList = students.map((s: any) => {
     const firstName = s.profile?.name || s.student_name || "Studente";
     const lastName = s.profile?.last_name || "";
     return { id: s.student_id || s.id, name: lastName ? `${firstName} ${lastName}` : firstName };
   });
-
-  // Assignment list for manual grade modal
   const assignmentList = assignmentResults.map((a: any) => ({ id: a.id, title: a.title }));
-
-  // Detect class default grade scale (most-used in manual_grades, fallback /10)
   const classScale: ScaleId = (() => {
     if (manualGrades.length === 0) return "/10";
     const counts: Record<string, number> = {};
@@ -529,454 +424,116 @@ export default function ClassView() {
     return (top?.[0] as ScaleId) || "/10";
   })();
 
-  return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 pb-24">
-      {/* ─── Header ─── */}
-      <div className="mb-6">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="rounded-xl mb-4">
-          <ArrowLeft className="w-4 h-4 mr-1" /> Home
-        </Button>
+  // For students sheet
+  const studentsForSheet = students.map((s: any) => {
+    const firstName = s.profile?.name || s.student_name || "Studente";
+    const lastName = s.profile?.last_name || "";
+    const sid = s.student_id || s.id;
+    const last = lastActivityMap[sid];
+    const lastLabel = last
+      ? new Date(last).toLocaleDateString("it-IT", { day: "numeric", month: "short" })
+      : undefined;
+    // Detect "needs follow" via low score average
+    const allScores: number[] = [];
+    assignmentResults.forEach((a: any) => {
+      (a.results || []).forEach((r: any) => {
+        if ((r.student_id || r.id) === sid && r.score != null) allScores.push(r.score);
+      });
+    });
+    const mean = allScores.length > 0 ? allScores.reduce((a, b) => a + b, 0) / allScores.length : null;
+    return {
+      id: sid,
+      name: lastName ? `${firstName} ${lastName}` : firstName,
+      lastActivity: lastLabel,
+      needsFollow: mean != null && mean < 60,
+    };
+  });
 
-        <div className="bg-[hsl(var(--primary))] rounded-2xl p-4 text-primary-foreground relative">
-          <div>
-            <p className="text-primary-foreground/60 text-xs font-medium uppercase tracking-wider mb-1">Classe</p>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold">{classe.nome}</h1>
-              <span className={cn(
-                "w-3 h-3 rounded-full shrink-0",
-                stats.toFollow > 0 ? "bg-amber-400" : "bg-green-400"
-              )} />
+  return (
+    <div className="min-h-screen bg-muted/30">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-5 pb-24 space-y-5">
+        {/* ─── Minimal header ─── */}
+        <div>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="rounded-xl mb-3 -ml-2">
+            <ArrowLeft className="w-4 h-4 mr-1" /> Home
+          </Button>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-[22px] font-bold text-foreground truncate">{classe.nome}</h1>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                {classe.materia && (
+                  <span className="text-[12px] bg-muted px-2.5 py-0.5 rounded-full font-medium text-foreground">{classe.materia}</span>
+                )}
+                <span className="text-[12px] text-muted-foreground">{students.length} studenti</span>
+              </div>
             </div>
-            <div className="flex items-center gap-3 mt-1.5">
-              {classe.materia && (
-                <span className="text-sm bg-primary-foreground/20 px-3 py-0.5 rounded-full font-medium">{classe.materia}</span>
-              )}
-              <span className="text-sm text-primary-foreground/70">{students.length} studenti</span>
-              {classe.ordine_scolastico && (
-                <span className="text-sm text-primary-foreground/50">{classe.ordine_scolastico}</span>
-              )}
-            </div>
-            {profileId && !user && (
-              <ReportTeacherButton teacherId={classe.docente_profile_id} className="mt-2 text-primary-foreground/40 hover:text-primary-foreground/70" />
-            )}
-          </div>
-          <div className="absolute bottom-3 right-5 flex items-center gap-1.5">
-            <span className="text-[10px] text-primary-foreground/40 uppercase tracking-wider">Codice:</span>
-            <span className="font-mono text-xs font-semibold text-primary-foreground/60 tracking-widest">{classe.codice_invito}</span>
             <button
-              onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(classe.codice_invito); toast.success("Codice copiato!"); }}
-              className="bg-primary-foreground/10 hover:bg-primary-foreground/20 p-1 rounded transition-colors"
+              onClick={() => { navigator.clipboard.writeText(classe.codice_invito); toast.success("Codice copiato!"); }}
+              className="shrink-0 inline-flex items-center gap-1.5 bg-card border border-border/60 px-3 py-1.5 rounded-full hover:bg-muted/40 transition-colors"
             >
-              <Copy className="w-3 h-3 text-primary-foreground/50" />
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Codice</span>
+              <span className="font-mono text-[12px] font-semibold text-foreground tracking-widest">{classe.codice_invito}</span>
+              <Copy className="w-3 h-3 text-muted-foreground" />
             </button>
           </div>
+          {profileId && !user && (
+            <ReportTeacherButton teacherId={classe.docente_profile_id} className="mt-2 text-muted-foreground/60 hover:text-foreground" />
+          )}
         </div>
+
+        {/* ─── SECTION 1: Coach SarAI ─── */}
+        <ClassCoachCard
+          headline={insight.headline}
+          paragraph={insight.paragraph}
+          evidences={evidences}
+          onAsk={handleCoachAsk}
+        />
+
+        {/* ─── SECTION 2: Azioni rapide ─── */}
+        <QuickActionsGrid actions={quickActions} />
+
+        {/* ─── SECTION 3: Notifiche ─── */}
+        <ClassNotificationsCard notifications={notifications} />
       </div>
 
-      {/* ─── Tabs ─── */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full grid grid-cols-3 rounded-xl">
-          <TabsTrigger value="classe" className="text-xs rounded-lg">
-            <Users className="w-3.5 h-3.5 mr-1" /> La classe
-          </TabsTrigger>
-          <TabsTrigger value="materiali" className="text-xs rounded-lg">
-            <BookOpen className="w-3.5 h-3.5 mr-1" /> Materiali
-          </TabsTrigger>
-          <TabsTrigger value="coach" className="text-xs rounded-lg">
-            <MessageSquare className="w-3.5 h-3.5 mr-1" /> Coach AI
-          </TabsTrigger>
-        </TabsList>
-
-        {/* ━━━ TAB: LA CLASSE ━━━ */}
-        <TabsContent value="classe" className="mt-6 space-y-5">
-          {students.length === 0 ? (
-            <div className="bg-card border border-border rounded-2xl p-8 text-center">
-              <Users className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="font-medium text-foreground mb-1">Nessuno studente ancora</p>
-              <p className="text-sm text-muted-foreground mb-4">
-                Condividi il codice classe per invitare gli studenti
-              </p>
-              <div className="bg-muted rounded-xl py-3 px-4 inline-block mb-3">
-                <span className="font-mono font-bold text-2xl tracking-widest text-foreground">
-                  {classe.codice_invito}
-                </span>
-              </div>
-              <br />
-              <Button variant="outline" size="sm" className="rounded-xl"
-                onClick={() => { navigator.clipboard.writeText(classe.codice_invito); toast.success("Codice copiato!"); }}>
-                <Copy className="w-3.5 h-3.5 mr-1" /> Copia codice
-              </Button>
-            </div>
-          ) : (
-            <>
-              {(() => {
-                const lastActivityMap = getLastActivityMap(assignmentResults, manualGrades, students);
-                const followReasons = computeFollowReasons(
-                  students, assignmentResults, stats.studentScores as any,
-                  lastActivityMap, classe?.materia || "",
-                );
-                const li = computeLearningIndex(assignmentResults, manualGrades);
-                const idx = li.index;
-
-                /* ─── Coach hero: contextual message + 2-3 actions ─── */
-                const firstFollow = followReasons[0];
-                const stalest = (() => {
-                  const now = Date.now();
-                  const SEVEN_DAYS = 7 * 86400000;
-                  return assignmentResults.find((a: any) => {
-                    const ageMs = now - new Date(a.assigned_at || 0).getTime();
-                    if (ageMs < SEVEN_DAYS) return false;
-                    const r = a.results || [];
-                    const completed = r.filter((x: any) => x.status === "completed").length;
-                    return completed < students.length;
-                  });
-                })();
-
-                let coachMessage: string;
-                const coachActions: CoachAction[] = [];
-
-                if (followReasons.length === 0 && assignmentResults.length === 0) {
-                  coachMessage = "La classe è pronta a partire. Vuoi assegnare la prima attività o creare un materiale di benvenuto?";
-                  coachActions.push({
-                    id: "create-mat", label: "Crea materiale", icon: "next",
-                    onClick: () => setActiveTab("materiali"),
-                  });
-                } else if (followReasons.length === 0) {
-                  coachMessage = `Tutto sotto controllo: ${students.length} studenti procedono regolarmente. Vuoi proporre una nuova sfida o un ripasso?`;
-                  coachActions.push({
-                    id: "new-mat", label: "Nuovo materiale", icon: "next",
-                    onClick: () => setActiveTab("materiali"),
-                  });
-                } else if (followReasons.length === 1 && firstFollow) {
-                  const topic = firstFollow.topic ? ` su "${firstFollow.topic}"` : "";
-                  coachMessage = `${firstFollow.studentName} sta facendo fatica${topic}. Posso preparare un recupero mirato o aiutarti a scrivere ai genitori.`;
-                  if (firstFollow.actions.includes("recovery")) {
-                    coachActions.push({
-                      id: "rec", label: "Genera recupero", icon: "recovery",
-                      onClick: () => handleGenerateRecovery(
-                        firstFollow.subject || classe?.materia || "",
-                        firstFollow.topic || firstFollow.reason,
-                        1,
-                      ),
-                    });
-                  }
-                  if (firstFollow.actions.includes("contact_parents") || firstFollow.reasonType === "low_score") {
-                    coachActions.push({
-                      id: "par", label: "Scrivi ai genitori", icon: "parents", variant: "ghost",
-                      onClick: () => {
-                        setParentEmailTarget({ studentId: firstFollow.studentId, studentName: firstFollow.studentName });
-                        setParentEmailSubject(`Aggiornamento su ${firstFollow.studentName}`);
-                        setParentEmailBody(
-                          `Buongiorno,\n\nle scrivo a proposito di ${firstFollow.studentName}: ${firstFollow.reason.toLowerCase()}.\n\nVi propongo un breve confronto per condividere strategie utili a casa.\n\nCordiali saluti.`,
-                        );
-                      },
-                    });
-                  }
-                } else {
-                  coachMessage = `${followReasons.length} studenti hanno bisogno di attenzione questa settimana. Vuoi che prepari un'attività di recupero condivisa per la classe?`;
-                  coachActions.push({
-                    id: "rec-class", label: "Recupero per la classe", icon: "recovery",
-                    onClick: () => handleGenerateRecovery(
-                      classe?.materia || "",
-                      firstFollow?.topic || "argomenti recenti",
-                      followReasons.length,
-                    ),
-                  });
-                  if (stalest) {
-                    coachActions.push({
-                      id: "stale", label: `Sollecita "${stalest.title}"`, icon: "next", variant: "ghost",
-                      onClick: () => setActiveAssignment(stalest),
-                    });
-                  }
-                }
-
-                /* ─── Health indicators ─── */
-                const now = Date.now();
-                const SEVEN = 7 * 86400000;
-                const activeRecently = students.filter((s: any) => {
-                  const sid = s.student_id || s.id;
-                  const last = lastActivityMap[sid];
-                  return last && now - new Date(last).getTime() < SEVEN;
-                }).length;
-                const consistency = students.length > 0
-                  ? Math.round((activeRecently / students.length) * 100)
-                  : null;
-                const method = stats.completion > 0 ? Math.min(100, stats.completion) : null;
-                const learning = idx;
-                const overall = (() => {
-                  const vals = [method, learning, consistency].filter((v): v is number => v != null);
-                  if (vals.length === 0) return null;
-                  return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
-                })();
-
-                const indicators: HealthIndicator[] = [
-                  { key: "method", label: "Metodo", value: method },
-                  { key: "learning", label: "Apprendimento", value: learning },
-                  { key: "consistency", label: "Continuità", value: consistency },
-                ];
-
-                /* ─── Map followReasons → FollowStudent (inline cards in Coach Console) ─── */
-                const followStudents: FollowStudent[] = followReasons.map((fr) => {
-                  let primaryAction: CoachAction | undefined;
-                  if (fr.actions.includes("recovery")) {
-                    primaryAction = {
-                      id: `rec-${fr.studentId}`, label: "Recupero", icon: "recovery",
-                      onClick: () => handleGenerateRecovery(
-                        fr.subject || classe?.materia || "",
-                        fr.topic || fr.reason,
-                        1,
-                      ),
-                    };
-                  } else if (fr.actions.includes("contact_parents")) {
-                    primaryAction = {
-                      id: `par-${fr.studentId}`, label: "Genitori", icon: "parents",
-                      onClick: () => {
-                        setParentEmailTarget({ studentId: fr.studentId, studentName: fr.studentName });
-                        setParentEmailSubject(`Aggiornamento su ${fr.studentName}`);
-                        setParentEmailBody(
-                          `Buongiorno,\n\nle scrivo a proposito di ${fr.studentName}: ${fr.reason.toLowerCase()}.\n\nVi propongo un breve confronto per condividere strategie utili a casa.\n\nCordiali saluti.`,
-                        );
-                      },
-                    };
-                  }
-                  return {
-                    studentId: fr.studentId,
-                    studentName: fr.studentName,
-                    reason: fr.reason,
-                    primaryAction,
-                    onOpen: () => navigate(`/studente/${fr.studentId}?classId=${classId}`),
-                  };
-                });
-
-                /* ─── Section: Studenti (collapsible, compact) ─── */
-                const SectionStudents = (
-                  <CollapsibleSection
-                    title="Tutti gli studenti"
-                    defaultOpen={false}
-                    meta={`${students.length}`}
-                  >
-                    <div className="divide-y divide-border">
-                      {students.map((s: any) => {
-                        const firstName = s.profile?.name || s.student_name || "Studente";
-                        const lastName = s.profile?.last_name || "";
-                        const name = lastName ? `${firstName} ${lastName}` : firstName;
-                        const sid = s.student_id || s.id;
-                        const last = lastActivityMap[sid];
-                        const lastLabel = last
-                          ? new Date(last).toLocaleDateString("it-IT", { day: "numeric", month: "short" })
-                          : "—";
-                        const needsFollow = followReasons.some(fr => fr.studentId === sid);
-                        return (
-                          <button
-                            key={s.id}
-                            onClick={() => navigate(`/studente/${sid}?classId=${classId}`)}
-                            className="w-full flex items-center gap-3 px-5 py-3 hover:bg-muted/40 transition-colors text-left"
-                          >
-                            <AvatarInitials name={name} size="sm" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">{name}</p>
-                              <p className="text-[11px] text-muted-foreground mt-0.5">
-                                Ultima attività: {lastLabel}
-                              </p>
-                            </div>
-                            {needsFollow && (
-                              <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-semibold uppercase tracking-wide">
-                                Da seguire
-                              </span>
-                            )}
-                            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </CollapsibleSection>
-                );
-
-                /* ─── Section: Attività assegnate (collapsible) ─── */
-                const SectionAssignments = (
-                  <CollapsibleSection
-                    title="Attività assegnate"
-                    defaultOpen={followReasons.length === 0 && assignmentResults.length <= 4}
-                    meta={`${assignmentResults.length}`}
-                  >
-                    {assignmentResults.length === 0 ? (
-                      <div className="px-5 py-4 text-center">
-                        <p className="text-sm text-muted-foreground">
-                          Nessuna attività assegnata a questa classe.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-border">
-                        {assignmentResults.map((a: any) => {
-                          const results = a.results || [];
-                          const completed = results.filter((r: any) => r.status === "completed").length;
-                          const total = students.length || results.length;
-                          const date = a.assigned_at
-                            ? new Date(a.assigned_at).toLocaleDateString("it-IT", { day: "numeric", month: "short" })
-                            : "";
-                          const allDone = total > 0 && completed === total;
-                          return (
-                            <button
-                              key={a.id}
-                              onClick={() => setActiveAssignment(a)}
-                              className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition-colors text-left"
-                            >
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-foreground truncate">{a.title}</p>
-                                <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                                  {a.subject ? `${a.subject}` : ""}{a.subject && date ? " · " : ""}{date}
-                                </p>
-                              </div>
-                              <span className={cn(
-                                "shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold",
-                                allDone
-                                  ? "bg-emerald-100 text-emerald-700"
-                                  : "bg-muted text-muted-foreground",
-                              )}>
-                                {allDone
-                                  ? `${completed}/${total} ✓`
-                                  : `${completed}/${total} consegnat${total === 1 ? "o" : "i"}`}
-                              </span>
-                              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </CollapsibleSection>
-                );
-
-                /* ─── Toolbar: azioni quotidiane sempre visibili ─── */
-                const toolbarActions = [
-                  {
-                    id: "create",
-                    label: "Crea compito",
-                    sublabel: "AI o manuale",
-                    icon: "create" as const,
-                    highlight: true,
-                    onClick: () => setActiveTab("materiali"),
-                  },
-                  {
-                    id: "ocr",
-                    label: "Correggi verifica",
-                    sublabel: assignmentResults.length > 0
-                      ? "Carica foto"
-                      : "Crea prima un'attività",
-                    icon: "ocr" as const,
-                    onClick: () => {
-                      if (assignmentResults.length === 0) {
-                        toast.info("Crea prima un'attività per correggerla");
-                        setActiveTab("materiali");
-                        return;
-                      }
-                      // Open OCR on most recent assignment
-                      setOcrAssignment(assignmentResults[0]);
-                    },
-                  },
-                  {
-                    id: "grade",
-                    label: "Voto manuale",
-                    sublabel: "Inserisci ora",
-                    icon: "grade" as const,
-                    onClick: () => setShowGradeModal(true),
-                  },
-                  {
-                    id: "students",
-                    label: "Studenti",
-                    sublabel: `Vedi tutti i ${students.length}`,
-                    icon: "students" as const,
-                    onClick: () => {
-                      const el = document.getElementById("students-section");
-                      el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                    },
-                  },
-                ];
-
-                return (
-                  <>
-                    <ClassCoachConsole
-                      message={coachMessage}
-                      actions={coachActions}
-                      overall={overall}
-                      indicators={indicators}
-                      followStudents={followStudents}
-                      onOpenHealthDetails={idx != null ? () => setLearningModalOpen(true) : undefined}
-                    />
-                    <ClassActionToolbar actions={toolbarActions} />
-                    {SectionAssignments}
-                    <div id="students-section">{SectionStudents}</div>
-                  </>
-                );
-              })()}
-            </>
-          )}
-        </TabsContent>
-
-        {/* ━━━ TAB: MATERIALI ━━━ */}
-        <TabsContent value="materiali" className="mt-6">
-          <TeacherMaterialsTab
-            classId={classId!}
-            classe={classe}
-            students={students}
-            materials={materials}
-            userId={user!.id}
-            onReload={loadClass}
-            autoCreate={searchParams.get("create") === "true"}
-            prefilledMaterial={prefilledMaterial}
-          />
-        </TabsContent>
-
-        {/* ━━━ TAB: COACH AI ━━━ */}
-        <TabsContent value="coach" className="mt-6">
-          <ClassCoachChat
-            classe={classe}
-            students={students}
-            materials={materials}
-            assignmentResults={assignmentResults}
-            stats={stats}
-            userId={user!.id}
-          />
-        </TabsContent>
-      </Tabs>
-
-      {/* Manual Grade Modal */}
-      <ManualGradeModal
-        open={showGradeModal}
-        onOpenChange={setShowGradeModal}
+      {/* Modals & sheets */}
+      <StudentsListSheet
+        open={studentsOpen}
+        onOpenChange={setStudentsOpen}
         classId={classId!}
-        userId={user!.id}
-        students={studentList}
-        assignments={assignmentList}
-        onSaved={loadClass}
+        students={studentsForSheet}
       />
 
-      {/* OCR Grade Modal */}
-      {ocrAssignment && (
+      {user && (
+        <ManualGradeModal
+          open={showGradeModal}
+          onOpenChange={setShowGradeModal}
+          classId={classId!}
+          userId={user.id}
+          students={studentList}
+          assignments={assignmentList}
+          onSaved={loadClass}
+        />
+      )}
+
+      {ocrAssignment && user && (
         <OcrGradeModal
           open={!!ocrAssignment}
           onOpenChange={(open) => { if (!open) setOcrAssignment(null); }}
           classId={classId!}
-          userId={user!.id}
+          userId={user.id}
           assignment={ocrAssignment}
           students={studentList}
           onSaved={loadClass}
         />
       )}
 
-      {/* Learning Index Modal */}
-      <LearningIndexModal
-        open={learningModalOpen}
-        onOpenChange={setLearningModalOpen}
-        classId={classId!}
-      />
-
-      {/* Assignment Detail Modal */}
-      {activeAssignment && (
+      {activeAssignment && user && (
         <AssignmentDetailModal
           open={!!activeAssignment}
           onOpenChange={(open) => { if (!open) setActiveAssignment(null); }}
           classId={classId!}
-          teacherId={user!.id}
+          teacherId={user.id}
           defaultScale={classScale}
           assignment={activeAssignment}
           students={studentList}
@@ -985,7 +542,6 @@ export default function ClassView() {
         />
       )}
 
-      {/* Parent Email Dialog (from "studenti da seguire") */}
       <Dialog open={!!parentEmailTarget} onOpenChange={(open) => { if (!open) setParentEmailTarget(null); }}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
@@ -1043,177 +599,14 @@ export default function ClassView() {
   );
 }
 
-/* ─── Coach AI Chat Component ─── */
-function ClassCoachChat({ classe, students, materials, assignmentResults, stats, userId }: {
-  classe: any;
-  students: any[];
-  materials: any[];
-  assignmentResults: any[];
-  stats: any;
-  userId: string;
-}) {
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  function buildClassContext() {
-    const studentsSummary = students.map(s => {
-      const name = s.profile?.last_name ? `${s.profile?.name || "Studente"} ${s.profile.last_name}` : (s.profile?.name || s.student_name || "Studente");
-      const sid = s.student_id || s.id;
-      const badge = getStudentBadge(sid, stats.studentScores, assignmentResults);
-      return `- ${name}: ${badge ? badge.label : "Regolare"}`;
-    }).join("\n");
-
-    const materialsSummary = materials.slice(0, 10).map(m =>
-      `- ${m.title} (${m.type || "materiale"}, ${m.status || "draft"})`
-    ).join("\n");
-
-    const verificationsSummary = assignmentResults.slice(0, 5).map((a: any) => {
-      const completed = (a.results || []).filter((r: any) => r.status === "completed").length;
-      const total = (a.results || []).length;
-      return `- ${a.title}: ${completed}/${total} completati`;
-    }).join("\n");
-
-    return `CONTESTO CLASSE "${classe.nome}":
-Materia: ${classe.materia || "Non specificata"}
-Ordine scolastico: ${classe.ordine_scolastico || "Non specificato"}
-Studenti totali: ${students.length}
-Media classe: ${stats.avg}%
-Completamento: ${stats.completion}%
-Da seguire: ${stats.toFollow}
-
-STUDENTI E STATO:
-${studentsSummary || "Nessuno studente iscritto"}
-
-MATERIALI RECENTI:
-${materialsSummary || "Nessun materiale"}
-
-VERIFICHE IN CORSO:
-${verificationsSummary || "Nessuna verifica"}`;
-  }
-
-  async function sendMessage(text: string) {
-    if (!text.trim()) return;
-    const userMsg = { role: "user", content: text };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
-    setInput("");
-    setLoading(true);
-
-    try {
-      const classContext = buildClassContext();
-      const systemPrompt = `Sei il Coach AI di SarAI per la classe "${classe.nome}". Il docente ti chiede aiuto.
-
-${classContext}
-
-REGOLE:
-- Rispondi SEMPRE con dati specifici della classe — nomi, numeri, verifiche reali.
-- Se ti chiedono chi ha bisogno di attenzione, usa i dati reali degli studenti.
-- Max 3-4 frasi per risposta, chiare e operative.
-- Tono: collegiale, professionale, concreto.
-- MAI risposte generiche. Usa i dati che hai.
-- Quando suggerisci azioni, sii specifico (es. "Potresti creare un esercizio di recupero su X per Y e Z").`;
-
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        },
-        body: JSON.stringify({
-          stream: false,
-          maxTokens: 500,
-          systemPrompt,
-          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-        }),
-      });
-      const data = await res.json();
-      const aiContent = data.choices?.[0]?.message?.content?.trim() || "Mi dispiace, non sono riuscito a rispondere. Riprova.";
-      setMessages(prev => [...prev, { role: "assistant", content: aiContent }]);
-    } catch {
-      setMessages(prev => [...prev, { role: "assistant", content: "Errore nella comunicazione. Riprova." }]);
-    }
-    setLoading(false);
-  }
-
-  const quickActions = [
-    "Chi ha bisogno di più attenzione questa settimana?",
-    "Suggeriscimi un'attività di recupero per la classe",
-    "Come posso aiutare gli studenti in difficoltà?",
-  ];
-
-  return (
-    <div className="bg-card border border-border rounded-2xl overflow-hidden flex flex-col" style={{ height: "500px" }}>
-      <div className="px-5 py-3 border-b border-border bg-muted/30">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="w-4 h-4 text-primary" />
-          <p className="font-semibold text-sm text-foreground">Coach AI — {classe.nome}</p>
-        </div>
-        <p className="text-xs text-muted-foreground mt-0.5">Il coach conosce già la tua classe. Chiedigli quello che vuoi.</p>
-      </div>
-
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.length === 0 && (
-          <div className="text-center py-8">
-            <MessageSquare className="w-8 h-8 text-muted-foreground/20 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground mb-4">Inizia una conversazione</p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {quickActions.map((q, i) => (
-                <button
-                  key={i}
-                  onClick={() => sendMessage(q)}
-                  className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        {messages.map((msg, i) => (
-          <div key={i} className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
-            <div className={cn(
-              "max-w-[80%] rounded-xl px-4 py-2.5 text-sm",
-              msg.role === "user"
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-foreground"
-            )}>
-              {msg.content}
-            </div>
-          </div>
-        ))}
-        {loading && (
-          <div className="flex justify-start">
-            <div className="bg-muted rounded-xl px-4 py-2.5 text-sm text-muted-foreground animate-pulse">
-              Sto pensando...
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="px-4 py-3 border-t border-border">
-        <form onSubmit={(e) => { e.preventDefault(); sendMessage(input); }} className="flex gap-2">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Scrivi al coach..."
-            className="rounded-xl flex-1"
-            disabled={loading}
-          />
-          <Button type="submit" size="sm" className="rounded-xl" disabled={loading || !input.trim()}>
-            <Send className="w-4 h-4" />
-          </Button>
-        </form>
-      </div>
-    </div>
-  );
+function timeAgo(dateStr: string) {
+  if (!dateStr) return "";
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const min = Math.floor(diffMs / 60000);
+  if (min < 1) return "Ora";
+  if (min < 60) return `${min}min fa`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h}h fa`;
+  const d = Math.floor(h / 24);
+  return d === 1 ? "Ieri" : `${d}g fa`;
 }
