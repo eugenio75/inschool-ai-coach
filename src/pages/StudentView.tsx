@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, AlertTriangle, AlertCircle, Info, CheckCircle2, Flame, Mail, Send, PenLine,
-  TrendingUp, TrendingDown, Minus, Sparkles, ChevronDown,
+  TrendingUp, TrendingDown, Minus, Sparkles, ChevronDown, Bot, Wrench, FileText, Users, CalendarClock,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,8 +24,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import ManualGradeModal from "@/components/teacher/ManualGradeModal";
+import GradeReviewModal, { percentToGrade, type ScaleId } from "@/components/teacher/GradeReviewModal";
 
 type Activity = {
+  id?: string;
   title: string;
   type: string;
   subject: string;
@@ -35,6 +37,14 @@ type Activity = {
   score?: number | null;
   status?: string | null;
   errors_summary?: Record<string, number>;
+  answers?: any[];
+  assignment_id?: string;
+};
+
+type SignalAction = {
+  label: string;
+  icon: "wrench" | "doc" | "mail" | "calendar";
+  onClick: () => void;
 };
 
 type Signal = { text: string; severity: "critical" | "warning" | "info" };
