@@ -208,6 +208,7 @@ export default function StudentView() {
           "Calo recente in Storia — monitorare le prossime verifiche.",
         ]);
       }
+    } catch (error) {
       console.error("StudentView load error:", error);
       toast.error("Errore nel caricamento dei dati.");
       navigate(`/classe/${classId}`);
