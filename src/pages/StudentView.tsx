@@ -63,10 +63,13 @@ export default function StudentView() {
     if (!profileId) { navigate("/dashboard"); return; }
 
     try {
-      // Load class info
+      // Load class info (incl. materia for filtering)
       const { data: classeData } = await (supabase as any)
-        .from("classi").select("nome").eq("id", classId).single();
+        .from("classi").select("nome, materia").eq("id", classId).single();
       setClassName(classeData?.nome || "");
+      const classSubject: string | null = classeData?.materia || null;
+      const subjectMatches = (s: string | null | undefined) =>
+        !classSubject || (s || "").trim().toLowerCase() === classSubject.trim().toLowerCase();
 
       // Load student profile name from enrollment
       const { data: enrollment } = await (supabase as any)
