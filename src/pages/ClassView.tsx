@@ -154,6 +154,9 @@ export default function ClassView() {
         }
         setManualGrades([]);
         setFeed([]);
+        setEmotionalCheckins([]);
+        setEmotionalAlerts([]);
+        setFocusSessions([]);
       }
 
       // Demo enrichment for sample students
