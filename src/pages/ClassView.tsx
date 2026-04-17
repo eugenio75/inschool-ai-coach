@@ -455,20 +455,20 @@ export default function ClassView() {
     <div className="min-h-screen bg-muted/30">
       {/* ─── Blue class header (full width) ─── */}
       <div className="w-full text-white" style={{ backgroundColor: "#1C6BF5" }}>
-        <div className="max-w-[720px] mx-auto px-4 sm:px-10 py-4">
+        <div className="max-w-[880px] mx-auto px-4 sm:px-10 py-4 sm:py-6">
           <button
             onClick={() => navigate("/dashboard")}
-            className="text-[11px] text-white/70 hover:text-white inline-flex items-center gap-1 mb-2 transition-colors"
+            className="text-[11px] sm:text-[12px] text-white/70 hover:text-white inline-flex items-center gap-1 mb-2 transition-colors"
           >
             Home <span className="opacity-60">›</span> <span className="text-white/90 truncate max-w-[200px]">{classe.nome}</span>
           </button>
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <h1 className="text-[20px] font-bold leading-tight flex items-center gap-2">
-                <span className="inline-block h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: "#FACC15" }} />
+              <h1 className="text-[20px] sm:text-[26px] font-bold leading-tight flex items-center gap-2">
+                <span className="inline-block h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full shrink-0" style={{ backgroundColor: "#FACC15" }} />
                 <span className="truncate">{classe.nome}</span>
               </h1>
-              <p className="text-[13px] text-white/75 mt-1 truncate">
+              <p className="text-[13px] sm:text-[14px] text-white/75 mt-1 truncate">
                 {[classe.materia, `${students.length} ${students.length === 1 ? "studente" : "studenti"}`, schoolType]
                   .filter(Boolean)
                   .join(" · ")}
@@ -479,8 +479,8 @@ export default function ClassView() {
               className="shrink-0 inline-flex items-center gap-1.5 text-white/80 hover:text-white transition-colors"
               title="Copia codice classe"
             >
-              <span className="font-mono text-[12px] tracking-widest">{classe.codice_invito}</span>
-              <Copy className="w-3 h-3" />
+              <span className="font-mono text-[12px] sm:text-[13px] tracking-widest">{classe.codice_invito}</span>
+              <Copy className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             </button>
           </div>
           {profileId && !user && (
@@ -490,7 +490,7 @@ export default function ClassView() {
       </div>
 
       {/* ─── Centered content ─── */}
-      <div className="max-w-[720px] mx-auto px-4 sm:px-10 py-6 pb-24 space-y-5">
+      <div className="max-w-[880px] mx-auto px-4 sm:px-10 py-6 sm:py-8 pb-24 space-y-5 sm:space-y-6">
         {/* SECTION 1: Coach SarAI */}
         <ClassCoachCard
           headline={insight.headline}
