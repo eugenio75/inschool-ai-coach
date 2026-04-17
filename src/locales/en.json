@@ -1367,8 +1367,8 @@
   "session_fam_exercise_nomethod": "👉 I don't understand how to do it",
   "session_fam_exercise_method": "👉 I know the method, I want to practice",
   "session_fam_exercise_errors": "👉 I can do it but I make mistakes",
-  "insights_min_sessions": "Insights are generated after at least 5 completed sessions from students."
-  ,"kpi_activity_results": "Activity results",
+  "insights_min_sessions": "Insights are generated after at least 5 completed sessions from students.",
+  "kpi_activity_results": "Activity results",
   "kpi_activity_results_tooltip": "Average score obtained by students on completed SarAI activities",
   "kpi_activities_completed": "Activities completed",
   "kpi_activities_completed_tooltip": "Percentage of assigned activities completed by students",
@@ -1435,5 +1435,15 @@
   "ocr_files": "tests",
   "ocr_notes": "Notes",
   "ocr_select_student": "Select student...",
-  "legend_ai_confirmed": "🤖 = score proposed by SarAI and confirmed by teacher"
+  "legend_ai_confirmed": "🤖 = score proposed by SarAI and confirmed by teacher",
+  "ocr": {
+    "title": "📸 Upload and grade",
+    "batchMode": "Multiple students",
+    "singleMode": "One student",
+    "batchInfo": "Upload multiple photos together",
+    "batchInfoDesc": "SarAI reads the name from each sheet and automatically matches every photo to the correct student",
+    "uploadPhotos": "Upload photos",
+    "clickToUpload": "Click to upload or drag the photos here",
+    "correctWithSarAI": "Grade with SarAI"
+  }
 }
