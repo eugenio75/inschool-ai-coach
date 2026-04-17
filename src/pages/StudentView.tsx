@@ -300,7 +300,7 @@ export default function StudentView() {
         }
       }
 
-      // Manual grades
+      // Manual grades (for this student in this class)
       const { data: grades } = await (supabase as any)
         .from("manual_grades")
         .select("*")
@@ -308,6 +308,21 @@ export default function StudentView() {
         .eq("student_id", studentId)
         .order("graded_at", { ascending: false });
       setManualGrades(grades || []);
+
+      // Detect class default grade scale (most-used scale across all manual grades for this class)
+      const { data: classGrades } = await (supabase as any)
+        .from("manual_grades")
+        .select("grade_scale")
+        .eq("class_id", classId);
+      if (classGrades && classGrades.length > 0) {
+        const counts: Record<string, number> = {};
+        classGrades.forEach((g: any) => {
+          const s = g.grade_scale || "/10";
+          counts[s] = (counts[s] || 0) + 1;
+        });
+        const top = Object.entries(counts).sort(([, a], [, b]) => b - a)[0];
+        if (top) setClassScale(top[0] as ScaleId);
+      }
 
       const { data: assignmentsList } = await (supabase as any)
         .from("teacher_assignments")
