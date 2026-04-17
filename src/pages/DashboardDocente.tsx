@@ -395,27 +395,27 @@ export default function DashboardDocente() {
   });
 
   return (
-    <div className="pb-24 sm:pb-12">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="pb-24 sm:pb-12 bg-gradient-to-b from-muted/40 to-muted/20 min-h-screen">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-7">
 
         {/* ━━━ BLOCK 1 — HEADER ━━━ */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-bold text-foreground">
-              {getGreeting()}, {getTeacherTitle(teacherGender)} {cognome} 👋
-            </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[13px] text-muted-foreground/70 mb-2">
               {new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
             </p>
+            <h1 className="font-display text-[28px] sm:text-[32px] font-extrabold tracking-tight text-foreground leading-tight">
+              {getGreeting()}, {getTeacherTitle(teacherGender)} {cognome} 👋
+            </h1>
           </div>
-          <Button onClick={() => setShowClasseModal(true)} className="gap-2">
+          <Button onClick={() => setShowClasseModal(true)} className="gap-2 rounded-full px-5 py-2.5 shrink-0">
             <Plus className="w-4 h-4" />
             Nuova classe
           </Button>
         </div>
 
         {/* ━━━ BLOCK 2 — COACH (compact — single message) ━━━ */}
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="bg-card/95 backdrop-blur border border-border/60 rounded-[28px] p-6 sm:p-7 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.08)]">
           <div className="flex items-start gap-3 mb-4">
             <div className="shrink-0 mt-0.5">
               <CoachAvatar mood="default" size={32} />
@@ -548,21 +548,24 @@ export default function DashboardDocente() {
             { label: "Materiali creati", value: materialiCount, icon: FileText, color: "text-violet-600 bg-violet-50 dark:bg-violet-950" },
             { label: "Da seguire", value: daSegurireCount, icon: AlertCircle, color: daSegurireCount > 0 ? "text-amber-600 bg-amber-50 dark:bg-amber-950" : "text-emerald-600 bg-emerald-50 dark:bg-emerald-950" },
           ].map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-card border border-border rounded-xl p-4">
+            <div key={label} className="bg-card/95 backdrop-blur border border-border/60 rounded-2xl p-4 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground">{label}</span>
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${color}`}>
-                  <Icon className="w-3.5 h-3.5" />
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${color}`}>
+                  <Icon className="w-4 h-4" />
                 </div>
               </div>
-              <p className="font-display text-2xl font-bold text-foreground">{loadingClassi ? "–" : value}</p>
+              <p className="font-display text-[28px] font-extrabold tracking-tight text-foreground">{loadingClassi ? "–" : value}</p>
             </div>
           ))}
         </div>
 
         {/* ━━━ BLOCK 4 — LE TUE CLASSI ━━━ */}
         <div>
-          <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-3">Le tue classi</h2>
+          <div className="mb-4 flex items-center gap-2">
+            <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+            <h2 className="text-[13px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Le tue classi</h2>
+          </div>
           {loadingClassi ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
