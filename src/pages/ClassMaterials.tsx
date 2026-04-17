@@ -30,13 +30,17 @@ interface MaterialRow {
 export default function ClassMaterials() {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [classe, setClasse] = useState<ClassInfo | null>(null);
   const [assigned, setAssigned] = useState<MaterialRow[]>([]);
   const [drafts, setDrafts] = useState<MaterialRow[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  const createMode = searchParams.get("create") === "true";
 
   useEffect(() => {
     if (!classId || !user) return;
