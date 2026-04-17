@@ -81,20 +81,21 @@ export default function ClassCoachConsole({
         onClick={onOpenHealthDetails}
         disabled={!onOpenHealthDetails}
         className={cn(
-          "relative w-full flex items-center justify-between gap-4 px-5 py-3 border-b border-primary/10 text-left transition-colors",
+          "relative w-full flex items-center justify-between gap-3 px-5 py-3 border-b border-primary/10 text-left transition-colors",
           onOpenHealthDetails && "hover:bg-primary/[0.03]",
         )}
       >
-        <div className="flex items-center gap-4 min-w-0 flex-wrap">
+        <div className="flex items-center gap-x-5 gap-y-2 min-w-0 flex-wrap">
           <span className={cn(
             "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold shrink-0",
             overallZone.pill,
           )}>
             <span className={cn("h-1.5 w-1.5 rounded-full", overallZone.dot)} />
-            Salute: {overallZone.label}
+            <span>Salute:</span>
+            <span>{overallZone.label}</span>
           </span>
 
-          <span className="hidden sm:flex items-center gap-4 text-[11px] text-muted-foreground">
+          <span className="hidden sm:inline-flex items-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground flex-wrap">
             {indicators.map((ind) => {
               const z = zoneOf(ind.value);
               const Icon = HEALTH_ICONS[ind.key];
@@ -109,7 +110,7 @@ export default function ClassCoachConsole({
           </span>
         </div>
         {onOpenHealthDetails && (
-          <span className="text-[11px] text-primary shrink-0 ml-auto">dettagli ›</span>
+          <span className="text-[11px] text-primary shrink-0 ml-2">dettagli ›</span>
         )}
       </button>
 
