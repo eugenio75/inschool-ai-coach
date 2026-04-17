@@ -124,7 +124,37 @@ export default function ClassMaterials() {
   }
 
   function openCreate() {
-    navigate(`/materiali-docente?classId=${classId}&create=true`);
+    setSearchParams({ create: "true" }, { replace: false });
+  }
+
+  function closeCreate() {
+    setSearchParams({}, { replace: true });
+    void load();
+  }
+
+  // Create mode: render the full material generator inline
+  if (createMode && classe && user) {
+    return (
+      <div className="min-h-screen bg-muted/30">
+        <div className="max-w-[1100px] mx-auto px-4 sm:px-8 py-3 sm:py-4 pb-24">
+          <button
+            onClick={closeCreate}
+            className="inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground transition-colors mb-3"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Torna ai materiali della classe
+          </button>
+          <TeacherMaterialsTab
+            classId={classId!}
+            classe={classe}
+            students={students}
+            materials={[...assigned, ...drafts]}
+            userId={user.id}
+            onReload={load}
+            autoCreate={true}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (
