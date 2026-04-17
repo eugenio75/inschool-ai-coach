@@ -420,30 +420,13 @@ export default function StudentView() {
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Segnali da osservare</h2>
             </div>
             {signals.length > 0 ? (
-              <div>
-                <div className="space-y-2">
-                  {signals.map((sig, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs text-amber-600 bg-amber-500/10 rounded-lg p-2.5">
-                      <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                      <span>{sig}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {[
-                    { label: "Prepara recupero", route: `/classe/${classId}?tab=materiali` },
-                    { label: "Esercizio differenziato", route: `/classe/${classId}?tab=materiali` },
-                    { label: "Materiale semplificato", route: `/classe/${classId}?tab=materiali` },
-                  ].map(action => (
-                    <button
-                      key={action.label}
-                      onClick={() => navigate(action.route)}
-                      className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-                    >
-                      {action.label}
-                    </button>
-                  ))}
-                </div>
+              <div className="space-y-2">
+                {signals.map((sig, i) => (
+                  <div key={i} className="flex items-start gap-2 text-xs text-amber-600 bg-amber-500/10 rounded-lg p-2.5">
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <span>{sig}</span>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-10 text-center">
@@ -453,6 +436,69 @@ export default function StudentView() {
             )}
           </div>
         </div>
+
+        {/* Suggerimenti automatici — actionable cards */}
+        {signals.length > 0 && (() => {
+          // Detect topic from first "Difficoltà su..." signal
+          const topicMatch = signals
+            .map(s => s.match(/"([^"]+)"/))
+            .find(m => m && m[1]);
+          const topic = topicMatch ? topicMatch[1] : (subjectProgress[0]?.subject || "argomento critico");
+          const subj = subjectProgress[0]?.subject || className || "";
+          // Continuity warning
+          const lastDate = activities
+            .filter(a => a.completed_at)
+            .map(a => new Date(a.completed_at).getTime())
+            .sort((a, b) => b - a)[0];
+          const daysSince = lastDate ? Math.floor((Date.now() - lastDate) / 86400000) : null;
+          const showContinuityWarn = daysSince !== null && daysSince >= 5;
+
+          return (
+            <div className="bg-card rounded-2xl shadow-sm p-6">
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4">
+                💡 Suggerimenti automatici
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <button
+                  onClick={() => navigate(`/classe/${classId}?tab=materiali&recovery_topic=${encodeURIComponent(topic)}&recovery_subject=${encodeURIComponent(subj)}`)}
+                  className="flex flex-col items-start gap-2 p-4 rounded-xl border border-border bg-muted/30 hover:bg-muted/60 hover:border-primary/40 transition-all text-left"
+                >
+                  <span className="text-2xl">🔧</span>
+                  <p className="text-sm font-medium text-foreground">Genera recupero su {topic}</p>
+                  <p className="text-xs text-muted-foreground">Crea esercizi mirati sull'argomento critico.</p>
+                </button>
+                <button
+                  onClick={() => navigate(`/classe/${classId}?tab=materiali`)}
+                  className="flex flex-col items-start gap-2 p-4 rounded-xl border border-border bg-muted/30 hover:bg-muted/60 hover:border-primary/40 transition-all text-left"
+                >
+                  <span className="text-2xl">📄</span>
+                  <p className="text-sm font-medium text-foreground">Proponi materiale semplificato</p>
+                  <p className="text-xs text-muted-foreground">Una versione più graduale per ripartire dalle basi.</p>
+                </button>
+                <button
+                  onClick={() => setShowComm(true)}
+                  className={`flex flex-col items-start gap-2 p-4 rounded-xl border transition-all text-left ${
+                    showContinuityWarn
+                      ? "border-amber-500/40 bg-amber-500/5 hover:bg-amber-500/10"
+                      : "border-border bg-muted/30 hover:bg-muted/60 hover:border-primary/40"
+                  }`}
+                >
+                  <span className="text-2xl">👁</span>
+                  <p className="text-sm font-medium text-foreground">
+                    {showContinuityWarn
+                      ? `Calo di continuità (${daysSince} giorni senza attività)`
+                      : "Contatta i genitori"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {showContinuityWarn
+                      ? "Considera di scrivere ai genitori per un confronto."
+                      : "Apri il dialogo per inviare un messaggio dedicato."}
+                  </p>
+                </button>
+              </div>
+            </div>
+          );
+        })()}
 
 
       {/* Communication Dialog */}
