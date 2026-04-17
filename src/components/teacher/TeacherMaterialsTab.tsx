@@ -379,6 +379,7 @@ interface Props {
   userId: string;
   onReload: () => void;
   autoCreate?: boolean;
+  hideSaved?: boolean;
   prefilledMaterial?: PrefilledMaterial | null;
 }
 
