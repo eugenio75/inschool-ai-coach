@@ -226,6 +226,9 @@ export default function ClassView() {
     manualGrades,
     classSubject: classe.materia || "",
     lastActivityMap,
+    emotionalCheckins,
+    emotionalAlerts,
+    focusSessions,
   });
 
   // ─── Map evidence actions to handlers ──────────────────────────
