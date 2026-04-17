@@ -36,11 +36,9 @@ export default function ClassCoachCard({ headline, paragraph, evidences, onAsk, 
       {/* Header + headline */}
       <div className="border-b border-border/50 px-6 sm:px-7 pt-6 sm:pt-7 pb-5">
         <div className="mb-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center text-[14px] font-bold shadow-sm">
-            S
-          </div>
+          <CoachAvatar mood="default" size={44} />
           <div>
-            <p className="text-[14px] font-semibold text-foreground/80 leading-tight">Coach SarAI · oggi</p>
+            <p className="text-[14px] font-semibold text-foreground/80 leading-tight">{coachName || "Coach"} · oggi</p>
             <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">Sintesi operativa della classe</p>
           </div>
         </div>
