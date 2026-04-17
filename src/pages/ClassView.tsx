@@ -449,39 +449,49 @@ export default function ClassView() {
     };
   });
 
+  const schoolType = classe.ordine_scolastico || classe.school_name || "";
+
   return (
     <div className="min-h-screen bg-muted/30">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-5 pb-24 space-y-5">
-        {/* ─── Minimal header ─── */}
-        <div>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="rounded-xl mb-3 -ml-2">
-            <ArrowLeft className="w-4 h-4 mr-1" /> Home
-          </Button>
-          <div className="flex items-start justify-between gap-3">
+      {/* ─── Blue class header (full width) ─── */}
+      <div className="w-full bg-[hsl(217_91%_53%)] text-white">
+        <div className="max-w-[720px] mx-auto px-4 sm:px-10 py-4">
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="text-[11px] text-white/70 hover:text-white inline-flex items-center gap-1 mb-2 transition-colors"
+          >
+            Home <span className="opacity-60">›</span> <span className="text-white/90 truncate max-w-[200px]">{classe.nome}</span>
+          </button>
+          <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <h1 className="text-[22px] font-bold text-foreground truncate">{classe.nome}</h1>
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                {classe.materia && (
-                  <span className="text-[12px] bg-muted px-2.5 py-0.5 rounded-full font-medium text-foreground">{classe.materia}</span>
-                )}
-                <span className="text-[12px] text-muted-foreground">{students.length} studenti</span>
-              </div>
+              <h1 className="text-[20px] font-bold leading-tight flex items-center gap-2">
+                <span className="inline-block h-2 w-2 rounded-full bg-yellow-300 shrink-0" />
+                <span className="truncate">{classe.nome}</span>
+              </h1>
+              <p className="text-[13px] text-white/75 mt-1 truncate">
+                {[classe.materia, `${students.length} ${students.length === 1 ? "studente" : "studenti"}`, schoolType]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
             </div>
             <button
               onClick={() => { navigator.clipboard.writeText(classe.codice_invito); toast.success("Codice copiato!"); }}
-              className="shrink-0 inline-flex items-center gap-1.5 bg-card border border-border/60 px-3 py-1.5 rounded-full hover:bg-muted/40 transition-colors"
+              className="shrink-0 inline-flex items-center gap-1.5 text-white/80 hover:text-white transition-colors"
+              title="Copia codice classe"
             >
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Codice</span>
-              <span className="font-mono text-[12px] font-semibold text-foreground tracking-widest">{classe.codice_invito}</span>
-              <Copy className="w-3 h-3 text-muted-foreground" />
+              <span className="font-mono text-[12px] tracking-widest">{classe.codice_invito}</span>
+              <Copy className="w-3 h-3" />
             </button>
           </div>
           {profileId && !user && (
-            <ReportTeacherButton teacherId={classe.docente_profile_id} className="mt-2 text-muted-foreground/60 hover:text-foreground" />
+            <ReportTeacherButton teacherId={classe.docente_profile_id} className="mt-2 text-white/60 hover:text-white" />
           )}
         </div>
+      </div>
 
-        {/* ─── SECTION 1: Coach SarAI ─── */}
+      {/* ─── Centered content ─── */}
+      <div className="max-w-[720px] mx-auto px-4 sm:px-10 py-6 pb-24 space-y-5">
+        {/* SECTION 1: Coach SarAI */}
         <ClassCoachCard
           headline={insight.headline}
           paragraph={insight.paragraph}
@@ -489,10 +499,10 @@ export default function ClassView() {
           onAsk={handleCoachAsk}
         />
 
-        {/* ─── SECTION 2: Azioni rapide ─── */}
+        {/* SECTION 2: Azioni rapide */}
         <QuickActionsGrid actions={quickActions} />
 
-        {/* ─── SECTION 3: Notifiche ─── */}
+        {/* SECTION 3: Notifiche */}
         <ClassNotificationsCard notifications={notifications} />
       </div>
 
