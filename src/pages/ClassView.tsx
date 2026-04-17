@@ -10,12 +10,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import TeacherMaterialsTab, { type PrefilledMaterial } from "@/components/teacher/TeacherMaterialsTab";
-import ClassInsightsTab from "@/components/teacher/ClassInsightsTab";
 import ManualGradeModal from "@/components/teacher/ManualGradeModal";
 import OcrGradeModal from "@/components/teacher/OcrGradeModal";
 import LearningIndexModal from "@/components/teacher/LearningIndexModal";
 import AssignmentDetailModal from "@/components/teacher/AssignmentDetailModal";
 import ClassCoachConsole, { type CoachAction, type FollowStudent, type HealthIndicator } from "@/components/teacher/ClassCoachConsole";
+import ClassActionToolbar from "@/components/teacher/ClassActionToolbar";
 import CollapsibleSection from "@/components/teacher/CollapsibleSection";
 import type { ScaleId } from "@/components/teacher/GradeReviewModal";
 import { getChildSession } from "@/lib/childSession";
@@ -645,12 +645,9 @@ export default function ClassView() {
 
       {/* ─── Tabs ─── */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full grid grid-cols-4 rounded-xl">
+        <TabsList className="w-full grid grid-cols-3 rounded-xl">
           <TabsTrigger value="classe" className="text-xs rounded-lg">
             <Users className="w-3.5 h-3.5 mr-1" /> La classe
-          </TabsTrigger>
-          <TabsTrigger value="insights" className="text-xs rounded-lg">
-            <Lightbulb className="w-3.5 h-3.5 mr-1" /> Insights
           </TabsTrigger>
           <TabsTrigger value="materiali" className="text-xs rounded-lg">
             <BookOpen className="w-3.5 h-3.5 mr-1" /> Materiali
@@ -821,11 +818,11 @@ export default function ClassView() {
                   };
                 });
 
-                /* ─── Section: Studenti (collapsible) ─── */
+                /* ─── Section: Studenti (collapsible, compact) ─── */
                 const SectionStudents = (
                   <CollapsibleSection
-                    title="Studenti"
-                    defaultOpen={followReasons.length === 0}
+                    title="Tutti gli studenti"
+                    defaultOpen={false}
                     meta={`${students.length}`}
                   >
                     <div className="divide-y divide-border">
@@ -919,6 +916,52 @@ export default function ClassView() {
                   </CollapsibleSection>
                 );
 
+                /* ─── Toolbar: azioni quotidiane sempre visibili ─── */
+                const toolbarActions = [
+                  {
+                    id: "create",
+                    label: "Crea compito",
+                    sublabel: "AI o manuale",
+                    icon: "create" as const,
+                    highlight: true,
+                    onClick: () => setActiveTab("materiali"),
+                  },
+                  {
+                    id: "ocr",
+                    label: "Correggi verifica",
+                    sublabel: assignmentResults.length > 0
+                      ? "Carica foto"
+                      : "Crea prima un'attività",
+                    icon: "ocr" as const,
+                    onClick: () => {
+                      if (assignmentResults.length === 0) {
+                        toast.info("Crea prima un'attività per correggerla");
+                        setActiveTab("materiali");
+                        return;
+                      }
+                      // Open OCR on most recent assignment
+                      setOcrAssignment(assignmentResults[0]);
+                    },
+                  },
+                  {
+                    id: "grade",
+                    label: "Voto manuale",
+                    sublabel: "Inserisci ora",
+                    icon: "grade" as const,
+                    onClick: () => setShowGradeModal(true),
+                  },
+                  {
+                    id: "students",
+                    label: "Studenti",
+                    sublabel: `Vedi tutti i ${students.length}`,
+                    icon: "students" as const,
+                    onClick: () => {
+                      const el = document.getElementById("students-section");
+                      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    },
+                  },
+                ];
+
                 return (
                   <>
                     <ClassCoachConsole
@@ -929,23 +972,14 @@ export default function ClassView() {
                       followStudents={followStudents}
                       onOpenHealthDetails={idx != null ? () => setLearningModalOpen(true) : undefined}
                     />
-                    {SectionStudents}
+                    <ClassActionToolbar actions={toolbarActions} />
                     {SectionAssignments}
+                    <div id="students-section">{SectionStudents}</div>
                   </>
                 );
               })()}
             </>
           )}
-        </TabsContent>
-
-        {/* ━━━ TAB: INSIGHTS ━━━ */}
-        <TabsContent value="insights" className="mt-6">
-          <ClassInsightsTab
-            classId={classId!}
-            onGenerateRecovery={handleGenerateRecovery}
-            stats={stats}
-            topics={topics}
-          />
         </TabsContent>
 
         {/* ━━━ TAB: MATERIALI ━━━ */}
