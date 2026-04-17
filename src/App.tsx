@@ -211,6 +211,8 @@ const AppRoutes = () => (
         <Route path="/coach-docente" element={<AccessibleRoute><MaybeAdultLayout><CoachDocente /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/student-profile" element={<AccessibleRoute><StudentProfile /></AccessibleRoute>} />
         <Route path="/classe/:classId" element={<AccessibleRoute><MaybeAdultLayout><ClassView /></MaybeAdultLayout></AccessibleRoute>} />
+        <Route path="/classe/:classId/materiali" element={<AccessibleRoute><MaybeAdultLayout><ClassMaterials /></MaybeAdultLayout></AccessibleRoute>} />
+        <Route path="/classe/:classId/correggi" element={<AccessibleRoute><MaybeAdultLayout><ClassGrading /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/studente/:studentId" element={<AccessibleRoute><MaybeAdultLayout><StudentView /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/settings" element={<AccessibleRoute><MaybeAdultLayout><Settings /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/admin/email-preview" element={<ProtectedRoute><AdminEmailPreview /></ProtectedRoute>} />
