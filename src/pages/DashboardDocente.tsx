@@ -401,10 +401,10 @@ export default function DashboardDocente() {
         {/* ━━━ BLOCK 1 — HEADER ━━━ */}
         <section className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
-            <h1 className="font-display text-[32px] sm:text-4xl font-extrabold tracking-tight text-foreground leading-tight">
+            <h1 className="font-display text-4xl font-extrabold tracking-tight text-foreground leading-tight">
               {getGreeting()}, {getTeacherTitle(teacherGender)} {cognome} 👋
             </h1>
-            <p className="mt-2 text-[17px] sm:text-lg text-muted-foreground">
+            <p className="mt-2 text-lg text-muted-foreground">
               {new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
             </p>
           </div>
@@ -438,7 +438,7 @@ export default function DashboardDocente() {
               </div>
             ) : (
               <>
-                <h2 className="max-w-3xl text-[26px] sm:text-[30px] leading-tight font-extrabold tracking-tight text-foreground">
+                <h2 className="max-w-3xl text-[30px] leading-tight font-extrabold tracking-tight text-foreground">
                   {coachLastMsg || "Bentornato. Pronto per una nuova giornata di lavoro?"}
                 </h2>
                 {classi.length === 0 && !loadingClassi && (
@@ -631,7 +631,7 @@ export default function DashboardDocente() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-3 flex-wrap pr-8">
                           <div className={`h-3 w-3 rounded-full ${hasAlert ? "bg-amber-400 shadow-[0_0_0_5px_rgba(251,191,36,0.15)]" : "bg-emerald-400 shadow-[0_0_0_5px_rgba(52,211,153,0.15)]"}`} />
-                          <p className="text-[22px] sm:text-2xl font-bold tracking-tight text-foreground">{c.nome}</p>
+                          <p className="text-2xl font-bold tracking-tight text-foreground">{c.nome}</p>
                           {c.is_sample && (
                             <span className="rounded-full bg-amber-50 dark:bg-amber-500/15 px-3 py-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
                               ✨ Esempio
