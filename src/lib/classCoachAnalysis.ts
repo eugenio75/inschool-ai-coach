@@ -85,7 +85,14 @@ export function analyzeClass(input: AnalysisInput): CoachInsight {
       else lateByStudent[sid] = (lateByStudent[sid] || 0) + 1;
       if (r.errors_summary && typeof r.errors_summary === "object") {
         Object.entries(r.errors_summary).forEach(([topic, count]: [string, any]) => {
-          errorTopics[topic] = (errorTopics[topic] || 0) + (typeof count === "number" ? count : 1);
+          // Skip raw field names / metadata keys — never surface them in UI
+          const BLOCKED = new Set([
+            "common_errors", "errors", "error", "summary", "score", "metric",
+            "metrics", "total", "count", "details", "data", "meta", "info",
+          ]);
+          const t = (topic || "").trim();
+          if (!t || BLOCKED.has(t.toLowerCase()) || /^[a-z_]+$/.test(t)) return;
+          errorTopics[t] = (errorTopics[t] || 0) + (typeof count === "number" ? count : 1);
         });
       }
     });
