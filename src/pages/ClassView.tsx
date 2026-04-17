@@ -680,213 +680,115 @@ export default function ClassView() {
             </div>
           ) : (
             <>
-              {/* BLOCK 1 — Stato classe / studenti da seguire */}
               {(() => {
                 const lastActivityMap = getLastActivityMap(assignmentResults, manualGrades, students);
                 const followReasons = computeFollowReasons(
                   students, assignmentResults, stats.studentScores as any,
                   lastActivityMap, classe?.materia || "",
                 );
-                const count = followReasons.length;
-                // Align status with learning index (same thresholds: 70 / 40)
                 const li = computeLearningIndex(assignmentResults, manualGrades);
                 const idx = li.index;
 
-                if (count === 0) {
-                  // No students need attention. Don't duplicate the learning-index judgment here —
-                  // the "Indice di apprendimento" card below already shows the aggregate status.
-                  return (
-                    <div className="bg-card border border-border rounded-xl p-4">
-                      <p className="text-sm font-medium text-foreground">
-                        ✅ Nessuno studente da seguire al momento
-                      </p>
-                    </div>
-                  );
-                }
-
-                const isExpanded = count === 1 ? true : followExpanded;
-                return (
-                  <div className="bg-card border border-amber-500/30 rounded-xl overflow-hidden">
-                    <button
-                      onClick={() => count > 1 && setFollowExpanded(!followExpanded)}
-                      className={cn(
-                        "w-full flex items-center justify-between p-4 text-left",
-                        count > 1 && "hover:bg-muted/30 transition-colors"
-                      )}
-                      disabled={count === 1}
-                    >
-                      <p className="text-sm font-medium text-foreground">
-                        ⚠️ {count} {count === 1 ? "studente" : "studenti"} da seguire
-                      </p>
-                      {count > 1 && (
-                        <ChevronDown className={cn(
-                          "w-4 h-4 text-muted-foreground transition-transform shrink-0",
-                          isExpanded && "rotate-180"
-                        )} />
-                      )}
-                    </button>
-
-                    {isExpanded && (
-                      <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
-                        {followReasons.map((fr) => (
-                          <div key={fr.studentId} className="bg-muted/40 rounded-xl p-3">
-                            <div className="flex items-start gap-3">
-                              <AvatarInitials name={fr.studentName} size="sm" />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-foreground">{fr.studentName}</p>
-                                <p className="text-xs text-amber-600 mt-0.5 flex items-start gap-1.5">
-                                  <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
-                                  <span>{fr.reason}</span>
-                                </p>
-                                {fr.lastActivity && (
-                                  <p className="text-[11px] text-muted-foreground mt-1">
-                                    Ultima attività: {new Date(fr.lastActivity).toLocaleDateString("it-IT")}
-                                  </p>
-                                )}
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                  {fr.actions.includes("recovery") && (
-                                    <Button
-                                      variant="secondary"
-                                      size="sm"
-                                      className="h-7 text-[11px] px-2.5 rounded-lg"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleGenerateRecovery(
-                                          fr.subject || "",
-                                          fr.topic || fr.studentName,
-                                          1,
-                                        );
-                                      }}
-                                    >
-                                      <Wrench className="w-3 h-3 mr-1" /> Genera recupero
-                                    </Button>
-                                  )}
-                                  {fr.actions.includes("contact_parents") && (
-                                    <Button
-                                      variant="secondary"
-                                      size="sm"
-                                      className="h-7 text-[11px] px-2.5 rounded-lg"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setParentEmailTarget({ studentId: fr.studentId, studentName: fr.studentName });
-                                        setParentEmailSubject(`Aggiornamento su ${fr.studentName}`);
-                                        setParentEmailBody(`Buongiorno,\n\nLe scrivo per condividere un aggiornamento su ${fr.studentName}: ${fr.reason.toLowerCase()}.\n\nResto a disposizione per un confronto.\n\nCordiali saluti.`);
-                                      }}
-                                    >
-                                      <Mail className="w-3 h-3 mr-1" /> Scrivi ai genitori
-                                    </Button>
-                                  )}
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 text-[11px] px-2.5 rounded-lg"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      navigate(`/studente/${fr.studentId}?classId=${classId}`);
-                                    }}
-                                  >
-                                    Vedi dettaglio <ChevronRight className="w-3 h-3 ml-0.5" />
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                /* ─── SECTION 1 — Studenti da seguire (collapsed) ─── */
+                const Section1 = (
+                  <div className={cn(
+                    "bg-card border rounded-xl overflow-hidden",
+                    followReasons.length > 0 ? "border-amber-500/30" : "border-border",
+                  )}>
+                    {followReasons.length === 0 ? (
+                      <div className="p-4">
+                        <p className="text-sm font-medium text-foreground">
+                          ✅ Nessuno studente da seguire al momento
+                        </p>
                       </div>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => setFollowExpanded(!followExpanded)}
+                          className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-colors"
+                        >
+                          <p className="text-sm font-medium text-foreground">
+                            ⚠️ {followReasons.length} {followReasons.length === 1 ? "studente da seguire" : "studenti da seguire"}
+                          </p>
+                          <ChevronDown className={cn(
+                            "w-4 h-4 text-muted-foreground transition-transform shrink-0",
+                            followExpanded && "rotate-180",
+                          )} />
+                        </button>
+                        {followExpanded && (
+                          <div className="px-2 pb-2 border-t border-border">
+                            {followReasons.map((fr) => (
+                              <button
+                                key={fr.studentId}
+                                onClick={() => navigate(`/studente/${fr.studentId}?classId=${classId}`)}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/40 rounded-lg transition-colors"
+                              >
+                                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                                <span className="flex-1 text-sm text-foreground">{fr.studentName}</span>
+                                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 );
-              })()}
 
-              {/* BLOCK 2 — Indice di apprendimento */}
-              {(() => {
-                const li = computeLearningIndex(assignmentResults, manualGrades);
-                if (li.index === null) {
-                  return (
-                    <div className="bg-card border border-border rounded-xl p-5">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-semibold text-foreground">Indice di apprendimento</p>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Info className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom" className="max-w-[260px] text-xs">
-                              Calcolato da: punteggi SarAI, voti inseriti dal docente, correzioni compiti su carta, completamento attività
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        📊 Dati insufficienti — l'indice si attiva dopo almeno 3 attività completate dalla classe
-                      </p>
-                    </div>
-                  );
-                }
-                const idx = li.index;
-                let zoneLabel = "";
-                let zoneDesc = "";
-                let zoneColor = "";
-                if (idx >= 70) {
-                  zoneLabel = "La classe apprende bene";
-                  zoneDesc = "La classe risponde bene — continua così";
-                  zoneColor = "bg-emerald-500";
-                } else if (idx >= 40) {
-                  zoneLabel = "Qualche difficoltà da monitorare";
-                  zoneDesc = "Alcune difficoltà emergono — considera un ripasso";
-                  zoneColor = "bg-amber-500";
-                } else {
-                  zoneLabel = "La classe ha difficoltà evidenti";
-                  zoneDesc = "La classe fatica — potrebbe servire un cambio di approccio";
+                /* ─── SECTION 2 — Indice di apprendimento (clickable) ─── */
+                let zoneColor = "bg-emerald-500";
+                let zoneLabel = "La classe apprende bene";
+                if (idx == null) {
+                  zoneLabel = "In attesa di dati";
+                } else if (idx < 40) {
                   zoneColor = "bg-red-500";
+                  zoneLabel = "Qualche difficoltà — apri per vedere";
+                } else if (idx < 70) {
+                  zoneColor = "bg-amber-500";
+                  zoneLabel = "Qualche difficoltà da monitorare";
                 }
-                return (
-                  <div className="bg-card border border-border rounded-xl p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold text-foreground">Indice di apprendimento</p>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Info className="w-3.5 h-3.5 text-muted-foreground/60 cursor-help" />
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom" className="max-w-[260px] text-xs">
-                              Calcolato da: punteggi SarAI, voti inseriti dal docente, correzioni compiti su carta, completamento attività
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                      <span className="text-lg font-bold text-foreground tabular-nums">{idx}%</span>
-                    </div>
-                    {/* Bar with 3 zones */}
-                    <div className="relative h-3 rounded-full overflow-hidden flex">
-                      <div className="bg-red-500/30 flex-1" style={{ flexBasis: "40%" }} />
-                      <div className="bg-amber-500/30 flex-1" style={{ flexBasis: "30%" }} />
-                      <div className="bg-emerald-500/30 flex-1" style={{ flexBasis: "30%" }} />
-                      {/* Indicator */}
-                      <div
-                        className={cn("absolute top-0 bottom-0 w-1 rounded-full", zoneColor)}
-                        style={{ left: `calc(${idx}% - 2px)` }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                      <span>0%</span>
-                      <span>40%</span>
-                      <span>70%</span>
-                      <span>100%</span>
-                    </div>
-                    <div className="mt-3">
-                      <p className="text-sm font-medium text-foreground">{zoneLabel}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{zoneDesc}</p>
-                    </div>
-                  </div>
-                );
-              })()}
 
-              {/* BLOCK 3 — Lista studenti */}
-              {(() => {
-                const lastActivityMap = getLastActivityMap(assignmentResults, manualGrades, students);
-                return (
+                const Section2 = (
+                  <button
+                    onClick={() => setLearningModalOpen(true)}
+                    disabled={idx == null}
+                    className={cn(
+                      "w-full text-left bg-card border border-border rounded-xl p-5 transition-colors",
+                      idx != null && "hover:bg-muted/30 cursor-pointer",
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm font-semibold text-foreground">Indice di apprendimento</p>
+                      {idx != null && (
+                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    {idx == null ? (
+                      <p className="text-xs text-muted-foreground">
+                        L'indice si attiverà dopo qualche attività completata dalla classe.
+                      </p>
+                    ) : (
+                      <>
+                        <div className="relative h-3 rounded-full overflow-hidden flex">
+                          <div className="bg-red-500/30" style={{ flexBasis: "40%" }} />
+                          <div className="bg-amber-500/30" style={{ flexBasis: "30%" }} />
+                          <div className="bg-emerald-500/30" style={{ flexBasis: "30%" }} />
+                          <div
+                            className={cn("absolute top-0 bottom-0 w-1 rounded-full", zoneColor)}
+                            style={{ left: `calc(${idx}% - 2px)` }}
+                          />
+                        </div>
+                        <p className="text-sm text-foreground mt-3">{zoneLabel}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Tocca per vedere le difficoltà e i suggerimenti del Coach AI.
+                        </p>
+                      </>
+                    )}
+                  </button>
+                );
+
+                /* ─── SECTION 3 — Studenti (avatar + nome) ─── */
+                const Section3 = (
                   <div>
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                       Studenti ({students.length})
@@ -897,9 +799,6 @@ export default function ClassView() {
                         const lastName = s.profile?.last_name || "";
                         const name = lastName ? `${firstName} ${lastName}` : firstName;
                         const sid = s.student_id || s.id;
-                        const badge = getStudentBadge(sid, stats.studentScores as any, assignmentResults);
-                        const lastActivity = lastActivityMap[sid];
-
                         return (
                           <button
                             key={s.id}
@@ -907,22 +806,7 @@ export default function ClassView() {
                             className="w-full flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:bg-muted/50 hover:shadow-sm transition-all text-left"
                           >
                             <AvatarInitials name={name} size="sm" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground">{name}</p>
-                              <p className="text-[11px] text-muted-foreground mt-0.5">
-                                {lastActivity
-                                  ? `Ultima attività: ${new Date(lastActivity).toLocaleDateString("it-IT")}`
-                                  : "Nessuna attività ancora"}
-                              </p>
-                            </div>
-                            {badge && (badge.label === "Da seguire" || badge.label === "In ritardo") && (
-                              <>
-                                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                                <Badge variant={badge.variant} className="text-[10px] shrink-0">
-                                  {badge.label}
-                                </Badge>
-                              </>
-                            )}
+                            <span className="flex-1 text-sm font-medium text-foreground truncate">{name}</span>
                             <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                           </button>
                         );
@@ -930,209 +814,59 @@ export default function ClassView() {
                     </div>
                   </div>
                 );
-              })()}
 
-              {/* BLOCK 5 — Attività assegnate (collapsible, default closed) */}
-              {assignmentResults.length > 0 && (
-                <div className="bg-card border border-border rounded-xl">
-                  <button
-                    onClick={() => setVerificheOpen(!verificheOpen)}
-                    className="w-full flex items-center justify-between p-4 text-left"
-                  >
-                    <div>
-                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                        <BarChart2 className="w-3.5 h-3.5" />
-                        Attività assegnate ({assignmentResults.length})
-                      </span>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        Compiti e verifiche assegnati — clicca su uno studente per vedere il dettaglio
-                      </p>
-                    </div>
-                    <ChevronDown className={cn(
-                      "w-4 h-4 text-muted-foreground transition-transform shrink-0",
-                      verificheOpen && "rotate-180"
-                    )} />
-                  </button>
-
-                  {verificheOpen && (
-                    <div className="px-4 pb-4 space-y-3">
-                      {/* Action buttons */}
-                       <div className="flex justify-end gap-2">
-                         <Button variant="outline" size="sm" className="rounded-xl text-xs h-7" onClick={() => setShowGradeModal(true)}>
-                           <PenLine className="w-3 h-3 mr-1" /> Inserisci voto manuale
-                         </Button>
-                       </div>
-
-                      {assignmentResults.map((a: any) => {
-                        const results = a.results || [];
-                        const avgScore = results.length > 0
-                          ? Math.round(results.reduce((sum: number, r: any) => sum + (r.score || 0), 0) / results.length)
-                          : 0;
-                        const completed = results.filter((r: any) => r.status === "completed").length;
-
-                        return (
-                          <div key={a.id} className="border border-border rounded-xl p-4 bg-muted/30">
-                            <div className="flex items-center justify-between mb-3">
+                /* ─── SECTION 4 — Attività assegnate (clean cards) ─── */
+                const Section4 = (
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                      Attività assegnate ({assignmentResults.length})
+                    </p>
+                    {assignmentResults.length === 0 ? (
+                      <div className="bg-card border border-border rounded-xl p-5 text-center">
+                        <p className="text-sm text-muted-foreground">
+                          Nessuna attività assegnata a questa classe.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {assignmentResults.map((a: any) => {
+                          const results = a.results || [];
+                          const completed = results.filter((r: any) => r.status === "completed").length;
+                          const total = students.length || results.length;
+                          const date = a.assigned_at
+                            ? new Date(a.assigned_at).toLocaleDateString("it-IT", { day: "numeric", month: "short" })
+                            : "";
+                          return (
+                            <button
+                              key={a.id}
+                              onClick={() => setActiveAssignment(a)}
+                              className="w-full flex items-center gap-3 p-4 bg-card border border-border rounded-xl hover:bg-muted/50 hover:shadow-sm transition-all text-left"
+                            >
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                  {a.subject} · {a.type === "verifica" ? "Verifica" : "Compito"}
-                                  {a.assigned_at && ` · ${new Date(a.assigned_at).toLocaleDateString("it-IT")}`}
+                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                  {date && <>{date} · </>}
+                                  {completed}/{total} {completed === 1 && total === 1 ? "ha completato" : "hanno completato"}
                                 </p>
                               </div>
-                              <div className="flex items-center gap-3 shrink-0">
-                                 <Button
-                                   variant="outline"
-                                   size="sm"
-                                   className="rounded-xl text-[10px] h-7 px-2"
-                                   onClick={(e) => { e.stopPropagation(); setOcrAssignment(a); }}
-                                 >
-                                   📸 Carica e correggi
-                                 </Button>
-                                 <div className="text-center">
-                                   <p className="text-lg font-bold text-foreground">{avgScore}%</p>
-                                   <p className="text-[10px] text-muted-foreground">punteggio SarAI</p>
-                                 </div>
-                                 <div className="text-center">
-                                   <p className="text-lg font-bold text-foreground">{completed}/{results.length}</p>
-                                   <p className="text-[10px] text-muted-foreground">completati</p>
-                                 </div>
-                               </div>
-                            </div>
-                            <div className="space-y-1.5 pt-3 border-t border-border">
-                              {results.map((r: any) => {
-                                const rName = r.student_name || "Studente";
-                                const rScore = r.score != null ? Math.round(r.score) : null;
-                                const belowThreshold = rScore != null && rScore < 50;
-                                let statusLabel = "🕐 In attesa";
-                                let statusVariant: "default" | "secondary" | "destructive" | "outline" = "outline";
-                                if (r.status === "completed") { statusLabel = "✅ Completato"; statusVariant = "default"; }
-                                else if (r.status === "in_progress") { statusLabel = "In corso"; statusVariant = "secondary"; }
-                                else if (r.status === "assigned" && a.due_date && new Date(a.due_date) < new Date()) {
-                                  statusLabel = "In ritardo"; statusVariant = "destructive";
-                                }
+                              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
 
-                                return (
-                                  <button
-                                    key={r.id}
-                                    onClick={() => navigate(`/studente/${r.student_id || r.id}?classId=${classId}`)}
-                                    className="w-full flex items-center gap-2 text-xs hover:bg-muted/50 rounded-lg p-1.5 transition-colors"
-                                  >
-                                    <AvatarInitials name={rName} size="sm" />
-                                    <span className="flex-1 text-foreground truncate text-left">{rName}</span>
-                                    {belowThreshold && <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0" />}
-                                    <span className="font-semibold text-foreground">
-                                      {rScore != null ? `${rScore}%` : "—"}
-                                    </span>
-                                    {r.completed_at && (
-                                      <span className="text-muted-foreground text-[10px]">
-                                        {new Date(r.completed_at).toLocaleDateString("it-IT")}
-                                      </span>
-                                    )}
-                                    <Badge variant={statusVariant} className="text-[10px]">
-                                      {statusLabel}
-                                    </Badge>
-                                  </button>
-                                );
-                              })}
-                            </div>
-
-                            {/* Manual grades for this assignment */}
-                            {manualGrades.filter(g => g.assignment_id === a.id).map((g: any) => {
-                              const isOcr = g.source === "ocr_corrected";
-                              const icon = isOcr && g.teacher_confirmed ? "🤖" : "📝";
-                              return (
-                                <div key={g.id} className="flex items-center gap-2 text-xs mt-1.5 p-1.5">
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <span className="cursor-help">{icon}</span>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="text-xs">
-                                      {isOcr
-                                        ? g.teacher_confirmed
-                                          ? "Punteggio proposto da SarAI e confermato"
-                                          : "Punteggio proposto da SarAI, modificato dal docente"
-                                        : "Voto inserito manualmente"}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                  <span className="flex-1 text-foreground">{g.student_name}</span>
-                                  <span className="font-semibold text-foreground">
-                                    {g.grade}{g.grade_scale !== "giudizio" ? g.grade_scale : ""}
-                                  </span>
-                                  {isOcr && g.ai_proposed_grade && !g.teacher_confirmed && (
-                                    <span className="text-[10px] text-muted-foreground">(SarAI: {g.ai_proposed_grade})</span>
-                                  )}
-                                  <span className="text-[10px] text-muted-foreground">
-                                    {new Date(g.graded_at).toLocaleDateString("it-IT")}
-                                  </span>
-                                </div>
-                              );
-                            })}
-
-                            {/* Feedback loop alerts */}
-                            {(() => {
-                              const notDone = results.filter((r: any) => r.status !== "completed").length;
-                              const alertItems: Array<{ msg: string; topic: string; count: number }> = [];
-                              if (notDone >= 6) alertItems.push({ msg: `${notDone} studenti non hanno completato — considera un follow-up.`, topic: a.title || "", count: notDone });
-                              const errCounts: Record<string, number> = {};
-                              results.forEach((r: any) => {
-                                if (r.errors_summary && typeof r.errors_summary === "object") {
-                                  Object.keys(r.errors_summary).forEach(k => { errCounts[k] = (errCounts[k] || 0) + 1; });
-                                }
-                              });
-                              Object.entries(errCounts).forEach(([err, cnt]) => {
-                                if (cnt >= 4) alertItems.push({ msg: `${cnt} studenti con errore su "${err}" — suggerisci recupero mirato.`, topic: err, count: cnt });
-                              });
-                              if (alertItems.length === 0) return null;
-                              return (
-                                <div className="mt-3 pt-3 border-t border-border space-y-1.5">
-                                  {alertItems.map((item, i) => (
-                                    <div key={i} className="flex items-center gap-2 text-xs text-amber-600 bg-amber-500/10 rounded-lg p-2">
-                                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                                      <span className="flex-1">{item.msg}</span>
-                                      <Button
-                                        variant="secondary"
-                                        size="sm"
-                                        className="h-6 text-[10px] px-2 shrink-0"
-                                        onClick={(e) => { e.stopPropagation(); handleGenerateRecovery(a.subject || classe?.materia || "", item.topic, item.count); }}
-                                      >
-                                        🔧 Genera recupero
-                                      </Button>
-                                    </div>
-                                  ))}
-                                </div>
-                              );
-                            })()}
-                          </div>
-                        );
-                      })}
-
-                      {/* Unlinked manual grades */}
-                      {manualGrades.filter(g => !g.assignment_id).length > 0 && (
-                        <div className="border border-border rounded-xl p-4 bg-muted/30">
-                          <p className="text-sm font-medium text-foreground mb-2">📝 Voti manuali</p>
-                          <div className="space-y-1.5">
-                            {manualGrades.filter(g => !g.assignment_id).map((g: any) => (
-                              <div key={g.id} className="flex items-center gap-2 text-xs p-1.5">
-                                <span>📝</span>
-                                <span className="flex-1 text-foreground">{g.student_name}</span>
-                                <span className="text-muted-foreground">{g.assignment_title || "—"}</span>
-                                <span className="font-semibold text-foreground">
-                                  {g.grade}{g.grade_scale !== "giudizio" ? g.grade_scale : ""}
-                                </span>
-                                <span className="text-[10px] text-muted-foreground">
-                                  {new Date(g.graded_at).toLocaleDateString("it-IT")}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
+                return (
+                  <>
+                    {Section1}
+                    {Section2}
+                    {Section3}
+                    {Section4}
+                  </>
+                );
+              })()}
             </>
           )}
         </TabsContent>
