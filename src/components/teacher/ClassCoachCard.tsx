@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ArrowRight, Send } from "lucide-react";
+import { CoachAvatar } from "@/components/shared/CoachAvatar";
 
 export interface CoachEvidence {
   id: string;
@@ -13,13 +14,14 @@ interface Props {
   paragraph: string;
   evidences: CoachEvidence[];
   onAsk: (question: string) => void;
+  coachName?: string;
 }
 
 /**
- * Coach SarAI card — large headline, soft evidence rows with pill buttons,
+ * Coach card — large headline, soft evidence rows with pill buttons,
  * fused input at bottom. Refined "soft-card" design system.
  */
-export default function ClassCoachCard({ headline, paragraph, evidences, onAsk }: Props) {
+export default function ClassCoachCard({ headline, paragraph, evidences, onAsk, coachName }: Props) {
   const [value, setValue] = useState("");
 
   function submit() {
