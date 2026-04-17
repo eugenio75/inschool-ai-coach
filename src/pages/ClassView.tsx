@@ -101,6 +101,17 @@ export default function ClassView() {
     if (!classId) return;
     if (!profileId && !user) return;
     loadClass();
+    // Load coach name (dynamic — same as the rest of the app)
+    (async () => {
+      try {
+        const { getCoachName } = await import("@/lib/coachPreferences");
+        const id = profileId || user?.id;
+        if (id) {
+          const name = await getCoachName(id, !!profileId);
+          if (name) setCoachName(name);
+        }
+      } catch {}
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId, profileId, user?.id]);
 
