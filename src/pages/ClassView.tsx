@@ -495,34 +495,7 @@ export default function ClassView() {
   }
 
   const stats = computeClassStats(students, assignmentResults);
-  const topics = computeTopicMastery(assignmentResults);
 
-  const feedbackAlertData: Array<{ msg: string; subject: string; topic: string; count: number }> = [];
-  assignmentResults.forEach((a: any) => {
-    const results = a.results || [];
-    const notCompleted = results.filter((r: any) => r.status !== "completed").length;
-    if (notCompleted >= 6) feedbackAlertData.push({
-      msg: `"${a.title}": ${notCompleted} studenti non hanno completato — proponi un follow-up.`,
-      subject: a.subject || classe?.materia || "",
-      topic: a.title || "",
-      count: notCompleted,
-    });
-    const errorCounts: Record<string, number> = {};
-    results.forEach((r: any) => {
-      const summary = r.errors_summary;
-      if (summary && typeof summary === "object") {
-        Object.keys(summary).forEach(k => { errorCounts[k] = (errorCounts[k] || 0) + 1; });
-      }
-    });
-    Object.entries(errorCounts).forEach(([err, count]) => {
-      if (count >= 4) feedbackAlertData.push({
-        msg: `"${a.title}": ${count} studenti con errore su "${err}" — suggerisci recupero mirato.`,
-        subject: a.subject || classe?.materia || "",
-        topic: err,
-        count,
-      });
-    });
-  });
 
   function handleGenerateRecovery(subject: string, topic: string, count: number) {
     setPrefilledMaterial({
