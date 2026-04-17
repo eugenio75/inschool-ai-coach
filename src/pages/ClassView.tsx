@@ -321,14 +321,7 @@ export default function ClassView() {
       icon: "grade",
       label: "Correggi verifica",
       sublabel: "Carica o inserisci voto",
-      onClick: () => {
-        if (assignmentResults.length > 0) {
-          // Prefer OCR on most recent if available, otherwise manual
-          setOcrAssignment(assignmentResults[0]);
-        } else {
-          setShowGradeModal(true);
-        }
-      },
+      onClick: () => navigate(`/classe/${classId}/correggi`),
     },
     {
       id: "students",
@@ -341,8 +334,8 @@ export default function ClassView() {
       id: "library",
       icon: "library",
       label: "Materiali",
-      sublabel: "Apri libreria",
-      onClick: () => navigate(`/materiali-docente?classId=${classId}`),
+      sublabel: "Solo di questa classe",
+      onClick: () => navigate(`/classe/${classId}/materiali`),
     },
   ];
 
