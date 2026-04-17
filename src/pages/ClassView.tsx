@@ -396,6 +396,10 @@ export default function ClassView() {
   const [prefilledMaterial, setPrefilledMaterial] = useState<PrefilledMaterial | null>(null);
   const [verificheOpen, setVerificheOpen] = useState(false);
   const [showGradeModal, setShowGradeModal] = useState(false);
+  const [followExpanded, setFollowExpanded] = useState(true);
+  const [parentEmailTarget, setParentEmailTarget] = useState<{ studentId: string; studentName: string } | null>(null);
+  const [parentEmailSubject, setParentEmailSubject] = useState("");
+  const [parentEmailBody, setParentEmailBody] = useState("");
   const [ocrAssignment, setOcrAssignment] = useState<any>(null);
 
   useEffect(() => {
