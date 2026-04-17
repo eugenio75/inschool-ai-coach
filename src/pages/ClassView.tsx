@@ -645,12 +645,9 @@ export default function ClassView() {
 
       {/* ─── Tabs ─── */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full grid grid-cols-4 rounded-xl">
+        <TabsList className="w-full grid grid-cols-3 rounded-xl">
           <TabsTrigger value="classe" className="text-xs rounded-lg">
             <Users className="w-3.5 h-3.5 mr-1" /> La classe
-          </TabsTrigger>
-          <TabsTrigger value="insights" className="text-xs rounded-lg">
-            <Lightbulb className="w-3.5 h-3.5 mr-1" /> Insights
           </TabsTrigger>
           <TabsTrigger value="materiali" className="text-xs rounded-lg">
             <BookOpen className="w-3.5 h-3.5 mr-1" /> Materiali
