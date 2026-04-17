@@ -229,26 +229,152 @@ function computeLearningIndex(
   return { index: Math.round(index), available: available.length };
 }
 
-/* ─── Last activity per student ─── */
-function getLastActivityMap(assignmentResults: any[], manualGrades: any[]): Record<string, string> {
+/* ─── Last activity per student (with name fallback for legacy data) ─── */
+function getLastActivityMap(
+  assignmentResults: any[],
+  manualGrades: any[],
+  students: any[] = [],
+): Record<string, string> {
   const map: Record<string, string> = {};
+  // Build name → enrolled student_id map for fallback
+  const nameToSid: Record<string, string> = {};
+  students.forEach((s: any) => {
+    const sid = s.student_id || s.id;
+    const firstName = (s.profile?.name || s.student_name || "").trim().toLowerCase();
+    if (firstName && sid) nameToSid[firstName] = sid;
+  });
+
+  const apply = (sid: string | undefined | null, date: string | undefined | null) => {
+    if (!sid || !date) return;
+    if (!map[sid] || new Date(date) > new Date(map[sid])) map[sid] = date;
+  };
+
   assignmentResults.forEach((a: any) => {
     (a.results || []).forEach((r: any) => {
-      const sid = r.student_id || r.id;
       const date = r.completed_at || r.created_at;
-      if (sid && date && (!map[sid] || new Date(date) > new Date(map[sid]))) {
-        map[sid] = date;
-      }
+      apply(r.student_id || r.id, date);
+      // Fallback by name (sample data may have orphaned student_ids)
+      const nm = (r.student_name || "").trim().toLowerCase();
+      if (nm && nameToSid[nm]) apply(nameToSid[nm], date);
     });
   });
   manualGrades.forEach((g: any) => {
-    const sid = g.student_id;
-    const date = g.graded_at;
-    if (sid && date && (!map[sid] || new Date(date) > new Date(map[sid]))) {
-      map[sid] = date;
-    }
+    apply(g.student_id, g.graded_at);
+    const nm = (g.student_name || "").trim().toLowerCase();
+    if (nm && nameToSid[nm]) apply(nameToSid[nm], g.graded_at);
   });
   return map;
+}
+
+/* ─── Compute reasons + suggested actions for "to follow" students ─── */
+type FollowAction = "recovery" | "contact_parents";
+interface FollowReason {
+  studentId: string;
+  studentName: string;
+  reason: string;
+  reasonType: "low_score" | "stale_task" | "topic_difficulty" | "no_session";
+  topic?: string;
+  subject?: string;
+  lastActivity?: string;
+  actions: FollowAction[];
+}
+
+function computeFollowReasons(
+  students: any[],
+  assignmentResults: any[],
+  studentScores: Record<string, number[]> | undefined,
+  lastActivityMap: Record<string, string>,
+  classSubject: string,
+): FollowReason[] {
+  if (!studentScores) return [];
+  const reasons: FollowReason[] = [];
+  const now = Date.now();
+  const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+
+  students.forEach((s: any) => {
+    const sid = s.student_id || s.id;
+    const firstName = s.profile?.name || s.student_name || "Studente";
+    const lastName = s.profile?.last_name || "";
+    const studentName = lastName ? `${firstName} ${lastName}` : firstName;
+
+    const scores = studentScores[sid] || [];
+    const lastActivity = lastActivityMap[sid];
+    const recent = scores.slice(-3);
+    const recentAvg = recent.length > 0 ? recent.reduce((a, b) => a + b, 0) / recent.length : null;
+
+    // Find topic with most errors for this student
+    const errorTopics: Record<string, number> = {};
+    let staleTasks = 0;
+    let assignmentSubject = "";
+    assignmentResults.forEach((a: any) => {
+      (a.results || []).forEach((r: any) => {
+        if ((r.student_id || r.id) !== sid) return;
+        if (a.subject) assignmentSubject = a.subject;
+        if (r.status !== "completed" && a.assigned_at) {
+          const ageMs = now - new Date(a.assigned_at).getTime();
+          if (ageMs > SEVEN_DAYS) staleTasks++;
+        }
+        if (r.errors_summary && typeof r.errors_summary === "object") {
+          Object.keys(r.errors_summary).forEach(k => {
+            errorTopics[k] = (errorTopics[k] || 0) + 1;
+          });
+        }
+      });
+    });
+    const topErrorTopic = Object.entries(errorTopics).sort(([, a], [, b]) => b - a)[0];
+
+    // Decide reason in priority order
+    if (recentAvg != null && recentAvg < 50) {
+      reasons.push({
+        studentId: sid, studentName,
+        reason: "Punteggio SarAI sotto il 50% nelle ultime attività",
+        reasonType: "low_score",
+        subject: assignmentSubject || classSubject,
+        topic: topErrorTopic?.[0],
+        lastActivity,
+        actions: ["recovery"],
+      });
+    } else if (topErrorTopic && topErrorTopic[1] >= 2) {
+      reasons.push({
+        studentId: sid, studentName,
+        reason: `Difficoltà rilevate su "${topErrorTopic[0]}"`,
+        reasonType: "topic_difficulty",
+        subject: assignmentSubject || classSubject,
+        topic: topErrorTopic[0],
+        lastActivity,
+        actions: ["recovery"],
+      });
+    } else if (staleTasks >= 1) {
+      reasons.push({
+        studentId: sid, studentName,
+        reason: `Compito non completato da 7+ giorni`,
+        reasonType: "stale_task",
+        lastActivity,
+        actions: ["contact_parents"],
+      });
+    } else if (lastActivity && now - new Date(lastActivity).getTime() > SEVEN_DAYS) {
+      reasons.push({
+        studentId: sid, studentName,
+        reason: "Nessuna sessione negli ultimi 7 giorni",
+        reasonType: "no_session",
+        lastActivity,
+        actions: ["contact_parents"],
+      });
+    } else if (scores.length > 0 && scores.reduce((a, b) => a + b, 0) / scores.length < 60) {
+      // Generic catch-all to align with stats.toFollow (mean < 60)
+      reasons.push({
+        studentId: sid, studentName,
+        reason: "Media generale sotto la sufficienza",
+        reasonType: "low_score",
+        subject: assignmentSubject || classSubject,
+        topic: topErrorTopic?.[0],
+        lastActivity,
+        actions: ["recovery"],
+      });
+    }
+  });
+
+  return reasons;
 }
 
 export default function ClassView() {
