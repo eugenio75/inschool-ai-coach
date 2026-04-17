@@ -301,60 +301,94 @@ export default function StudentView() {
         )}
       </section>
 
-      {/* SECTION 2 — Segnali da osservare (only if signals exist) */}
-      {signals.length > 0 && (
+      {/* SECTION 2 — Progressi per materia (hidden if no data) */}
+      {subjectProgress.length > 0 && (
         <section>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Segnali da osservare</p>
-          <div className="space-y-2">
-            {signals.map((sig, i) => (
-              <div key={i} className="flex items-start gap-2 text-xs text-amber-600 bg-amber-500/10 rounded-lg p-2.5">
-                <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                <span>{sig}</span>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Progressi</p>
+          <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+            {subjectProgress.map((p) => (
+              <div key={p.subject}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <TrendingUp className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    <span className="text-sm font-medium text-foreground truncate">{p.subject}</span>
+                    <span className="text-xs text-muted-foreground">({p.count})</span>
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">{p.avg}%</span>
+                </div>
+                <Progress value={p.avg} className="h-1.5" />
               </div>
-            ))}
-          </div>
-          {/* Suggested actions */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            {[
-              { label: "Prepara recupero", route: `/classe/${classId}?tab=materiali` },
-              { label: "Esercizio differenziato", route: `/classe/${classId}?tab=materiali` },
-              { label: "Materiale semplificato", route: `/classe/${classId}?tab=materiali` },
-            ].map(action => (
-              <button
-                key={action.label}
-                onClick={() => navigate(action.route)}
-                className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-              >
-                {action.label}
-              </button>
             ))}
           </div>
         </section>
       )}
 
-      {/* SECTION 3 — Continuità (only if data exists) */}
-      {activeDays > 0 && (
-        <section>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Continuità</p>
-          <div className="bg-card border border-border rounded-xl p-4">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5">
-                <Flame className="w-5 h-5 text-orange-500" />
-                <span className="text-2xl font-bold text-foreground">{activeDays}</span>
-                <span className="text-xs text-muted-foreground">giorni attivi</span>
+      {/* SECTION 3 — Continuità (always shown) */}
+      <section>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Continuità</p>
+        <div className="bg-card border border-border rounded-xl p-4">
+          {activeDays > 0 ? (
+            <>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1.5">
+                  <Flame className="w-5 h-5 text-orange-500" />
+                  <span className="text-2xl font-bold text-foreground">{activeDays}</span>
+                  <span className="text-xs text-muted-foreground">giorni attivi</span>
+                </div>
+                {activeDays >= 3 && (
+                  <Badge variant="secondary" className="text-xs">Costante</Badge>
+                )}
               </div>
-              {activeDays >= 3 && (
-                <Badge variant="secondary" className="text-xs">Costante</Badge>
+              {lastAccess && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Ultima sessione: {lastAccess}
+                </p>
               )}
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center">Nessuna sessione registrata</p>
+          )}
+        </div>
+      </section>
+
+      {/* SECTION 4 — Segnali da osservare (always shown) */}
+      <section>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Segnali da osservare</p>
+        {signals.length > 0 ? (
+          <>
+            <div className="space-y-2">
+              {signals.map((sig, i) => (
+                <div key={i} className="flex items-start gap-2 text-xs text-amber-600 bg-amber-500/10 rounded-lg p-2.5">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <span>{sig}</span>
+                </div>
+              ))}
             </div>
-            {lastAccess && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Ultimo accesso: {lastAccess}
-              </p>
-            )}
+            {/* Suggested actions */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {[
+                { label: "Prepara recupero", route: `/classe/${classId}?tab=materiali` },
+                { label: "Esercizio differenziato", route: `/classe/${classId}?tab=materiali` },
+                { label: "Materiale semplificato", route: `/classe/${classId}?tab=materiali` },
+              ].map(action => (
+                <button
+                  key={action.label}
+                  onClick={() => navigate(action.route)}
+                  className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-2 justify-center">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            <p className="text-sm text-muted-foreground">Nessun segnale da osservare</p>
           </div>
-        </section>
-      )}
+        )}
+      </section>
+
 
       {/* Communication Dialog */}
       <Dialog open={showComm} onOpenChange={setShowComm}>
