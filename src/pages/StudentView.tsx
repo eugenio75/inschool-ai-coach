@@ -220,174 +220,192 @@ export default function StudentView() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-24 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate(`/classe/${classId}`)} className="rounded-xl">
-            <ArrowLeft className="w-4 h-4 mr-1" /> {className}
-          </Button>
-          <AvatarInitials name={studentName} size="md" />
-          <div>
-            <h1 className="text-xl font-bold text-foreground">{studentName}</h1>
-            {className && <Badge variant="secondary" className="text-xs mt-0.5">{className}</Badge>}
+    <div className="min-h-screen bg-muted/40">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 pb-24 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/classe/${classId}`)} className="rounded-xl">
+              <ArrowLeft className="w-4 h-4 mr-1" /> {className}
+            </Button>
+            <AvatarInitials name={studentName} size="lg" />
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{studentName}</h1>
+              {className && <Badge variant="secondary" className="text-xs mt-1">{className}</Badge>}
+            </div>
           </div>
-        </div>
-        <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setShowComm(true)}>
-          <Mail className="w-3.5 h-3.5 mr-1" /> Scrivi ai genitori
-        </Button>
-      </div>
-
-      {/* SECTION 1 — Attività completate */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Attività completate</p>
-          <Button variant="outline" size="sm" className="rounded-xl text-xs h-7" onClick={() => setShowGradeModal(true)}>
-            <PenLine className="w-3 h-3 mr-1" /> Inserisci voto manuale
+          <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setShowComm(true)}>
+            <Mail className="w-3.5 h-3.5 mr-1" /> Scrivi ai genitori
           </Button>
         </div>
 
-        {activities.length === 0 && manualGrades.length === 0 ? (
-          <div className="bg-card border border-border rounded-xl p-6 text-center">
-            <p className="text-sm text-muted-foreground">Nessuna attività completata ancora</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {/* SarAI activity results */}
-            {activities.map((a, i) => {
-              const score = a.score != null ? Math.round(a.score) : null;
-              const belowThreshold = score != null && score < 50;
-              let statusLabel = "In attesa";
-              let statusVariant: "default" | "secondary" | "destructive" | "outline" = "outline";
-              if (a.status === "completed") { statusLabel = "Completato"; statusVariant = "default"; }
-              else if (a.status === "in_progress") { statusLabel = "In corso"; statusVariant = "secondary"; }
-              else if (a.due_date && new Date(a.due_date) < new Date()) { statusLabel = "In ritardo"; statusVariant = "destructive"; }
-
-              return (
-                <div key={`activity-${i}`} className="flex items-center gap-3 p-3 bg-card border border-border rounded-xl">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {a.subject}{a.completed_at ? ` · ${new Date(a.completed_at).toLocaleDateString("it-IT")}` : ""}
-                    </p>
+        {/* 4-card grid 2x2 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* CARD 1 — PROGRESSI */}
+          <div className="bg-card rounded-2xl shadow-sm p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xl">📊</span>
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Progressi</h2>
+            </div>
+            {subjectProgress.length > 0 ? (
+              <div className="space-y-3">
+                {subjectProgress.map((p) => (
+                  <div key={p.subject}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <TrendingUp className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                        <span className="text-sm font-medium text-foreground truncate">{p.subject}</span>
+                        <span className="text-xs text-muted-foreground">({p.count})</span>
+                      </div>
+                      <span className="text-sm font-semibold text-foreground">{p.avg}%</span>
+                    </div>
+                    <Progress value={p.avg} className="h-1.5" />
                   </div>
-                  {belowThreshold && <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
-                  {score != null && (
-                    <span className="text-sm font-semibold text-foreground">{score}%</span>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <span className="text-5xl mb-3 opacity-40">📊</span>
+                <p className="text-sm text-muted-foreground">Nessuna sessione ancora</p>
+              </div>
+            )}
+          </div>
+
+          {/* CARD 2 — VERIFICHE */}
+          <div className="bg-card rounded-2xl shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">✅</span>
+                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Verifiche</h2>
+              </div>
+              <Button variant="outline" size="sm" className="rounded-xl text-xs h-7" onClick={() => setShowGradeModal(true)}>
+                <PenLine className="w-3 h-3 mr-1" /> Inserisci voto manuale
+              </Button>
+            </div>
+            {activities.length === 0 && manualGrades.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <span className="text-5xl mb-3 opacity-40">✅</span>
+                <p className="text-sm text-muted-foreground">Nessuna verifica ancora</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {activities.map((a, i) => {
+                  const score = a.score != null ? Math.round(a.score) : null;
+                  const belowThreshold = score != null && score < 50;
+                  let statusLabel = "In attesa";
+                  let statusVariant: "default" | "secondary" | "destructive" | "outline" = "outline";
+                  if (a.status === "completed") { statusLabel = "Completato"; statusVariant = "default"; }
+                  else if (a.status === "in_progress") { statusLabel = "In corso"; statusVariant = "secondary"; }
+                  else if (a.due_date && new Date(a.due_date) < new Date()) { statusLabel = "In ritardo"; statusVariant = "destructive"; }
+
+                  return (
+                    <div key={`activity-${i}`} className="flex items-center gap-3 p-3 bg-muted/40 border border-border rounded-xl">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {a.subject}{a.completed_at ? ` · ${new Date(a.completed_at).toLocaleDateString("it-IT")}` : ""}
+                        </p>
+                      </div>
+                      {belowThreshold && <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
+                      {score != null && (
+                        <span className="text-sm font-semibold text-foreground">{score}%</span>
+                      )}
+                      <Badge variant={statusVariant} className="text-[10px] shrink-0">{statusLabel}</Badge>
+                    </div>
+                  );
+                })}
+                {manualGrades.map((g: any) => (
+                  <div key={g.id} className="flex items-center gap-3 p-3 bg-muted/40 border border-border rounded-xl">
+                    <span className="text-base shrink-0">📝</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {g.assignment_title || "Voto manuale"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Voto docente · {new Date(g.graded_at).toLocaleDateString("it-IT")}
+                      </p>
+                    </div>
+                    <span className="text-sm font-semibold text-foreground">
+                      {g.grade}{g.grade_scale !== "giudizio" ? g.grade_scale : ""}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* CARD 3 — CONTINUITÀ */}
+          <div className="bg-card rounded-2xl shadow-sm p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xl">🔥</span>
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Continuità</h2>
+            </div>
+            {activeDays > 0 ? (
+              <div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5">
+                    <Flame className="w-6 h-6 text-orange-500" />
+                    <span className="text-3xl font-bold text-foreground">{activeDays}</span>
+                    <span className="text-xs text-muted-foreground">giorni attivi</span>
+                  </div>
+                  {activeDays >= 3 && (
+                    <Badge variant="secondary" className="text-xs">Costante</Badge>
                   )}
-                  <Badge variant={statusVariant} className="text-[10px] shrink-0">{statusLabel}</Badge>
                 </div>
-              );
-            })}
-
-            {/* Manual grades — separate rows with 📝 icon */}
-            {manualGrades.map((g: any) => (
-              <div key={g.id} className="flex items-center gap-3 p-3 bg-card border border-border rounded-xl">
-                <span className="text-base shrink-0">📝</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {g.assignment_title || "Voto manuale"}
+                {lastAccess && (
+                  <p className="text-xs text-muted-foreground mt-3">
+                    Ultima sessione: {lastAccess}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    Voto docente · {new Date(g.graded_at).toLocaleDateString("it-IT")}
-                  </p>
-                </div>
-                <span className="text-sm font-semibold text-foreground">
-                  {g.grade}{g.grade_scale !== "giudizio" ? g.grade_scale : ""}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* SECTION 2 — Progressi per materia (hidden if no data) */}
-      {subjectProgress.length > 0 && (
-        <section>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Progressi</p>
-          <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-            {subjectProgress.map((p) => (
-              <div key={p.subject}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <TrendingUp className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                    <span className="text-sm font-medium text-foreground truncate">{p.subject}</span>
-                    <span className="text-xs text-muted-foreground">({p.count})</span>
-                  </div>
-                  <span className="text-sm font-semibold text-foreground">{p.avg}%</span>
-                </div>
-                <Progress value={p.avg} className="h-1.5" />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* SECTION 3 — Continuità (always shown) */}
-      <section>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Continuità</p>
-        <div className="bg-card border border-border rounded-xl p-4">
-          {activeDays > 0 ? (
-            <>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5">
-                  <Flame className="w-5 h-5 text-orange-500" />
-                  <span className="text-2xl font-bold text-foreground">{activeDays}</span>
-                  <span className="text-xs text-muted-foreground">giorni attivi</span>
-                </div>
-                {activeDays >= 3 && (
-                  <Badge variant="secondary" className="text-xs">Costante</Badge>
                 )}
               </div>
-              {lastAccess && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Ultima sessione: {lastAccess}
-                </p>
-              )}
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center">Nessuna sessione registrata</p>
-          )}
-        </div>
-      </section>
-
-      {/* SECTION 4 — Segnali da osservare (always shown) */}
-      <section>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Segnali da osservare</p>
-        {signals.length > 0 ? (
-          <>
-            <div className="space-y-2">
-              {signals.map((sig, i) => (
-                <div key={i} className="flex items-start gap-2 text-xs text-amber-600 bg-amber-500/10 rounded-lg p-2.5">
-                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                  <span>{sig}</span>
-                </div>
-              ))}
-            </div>
-            {/* Suggested actions */}
-            <div className="flex flex-wrap gap-2 mt-3">
-              {[
-                { label: "Prepara recupero", route: `/classe/${classId}?tab=materiali` },
-                { label: "Esercizio differenziato", route: `/classe/${classId}?tab=materiali` },
-                { label: "Materiale semplificato", route: `/classe/${classId}?tab=materiali` },
-              ].map(action => (
-                <button
-                  key={action.label}
-                  onClick={() => navigate(action.route)}
-                  className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
-                >
-                  {action.label}
-                </button>
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-2 justify-center">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-            <p className="text-sm text-muted-foreground">Nessun segnale da osservare</p>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <span className="text-5xl mb-3 opacity-40">🔥</span>
+                <p className="text-sm text-muted-foreground">Nessuna sessione registrata</p>
+              </div>
+            )}
           </div>
-        )}
-      </section>
+
+          {/* CARD 4 — SEGNALI DA OSSERVARE */}
+          <div className="bg-card rounded-2xl shadow-sm p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xl">🔍</span>
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Segnali da osservare</h2>
+            </div>
+            {signals.length > 0 ? (
+              <div>
+                <div className="space-y-2">
+                  {signals.map((sig, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-amber-600 bg-amber-500/10 rounded-lg p-2.5">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                      <span>{sig}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {[
+                    { label: "Prepara recupero", route: `/classe/${classId}?tab=materiali` },
+                    { label: "Esercizio differenziato", route: `/classe/${classId}?tab=materiali` },
+                    { label: "Materiale semplificato", route: `/classe/${classId}?tab=materiali` },
+                  ].map(action => (
+                    <button
+                      key={action.label}
+                      onClick={() => navigate(action.route)}
+                      className="text-xs px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                    >
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <CheckCircle2 className="w-12 h-12 text-emerald-500 mb-3" />
+                <p className="text-sm text-muted-foreground">Nessun segnale da osservare</p>
+              </div>
+            )}
+          </div>
+        </div>
 
 
       {/* Communication Dialog */}
@@ -445,6 +463,7 @@ export default function StudentView() {
         defaultStudentName={studentName}
         onSaved={loadStudentData}
       />
+      </div>
     </div>
   );
 }
