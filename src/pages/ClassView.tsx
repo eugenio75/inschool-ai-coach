@@ -13,6 +13,9 @@ import TeacherMaterialsTab, { type PrefilledMaterial } from "@/components/teache
 import ClassInsightsTab from "@/components/teacher/ClassInsightsTab";
 import ManualGradeModal from "@/components/teacher/ManualGradeModal";
 import OcrGradeModal from "@/components/teacher/OcrGradeModal";
+import LearningIndexModal from "@/components/teacher/LearningIndexModal";
+import AssignmentDetailModal from "@/components/teacher/AssignmentDetailModal";
+import type { ScaleId } from "@/components/teacher/GradeReviewModal";
 import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
