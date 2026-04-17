@@ -420,60 +420,13 @@ export default function DashboardDocente() {
         {/* ━━━ BLOCK 2 — COACH CARD (headline + emotional heart row + fused input) ━━━ */}
         <section className="rounded-[32px] border border-border/60 bg-card/95 backdrop-blur overflow-hidden shadow-[0_10px_30px_-15px_hsl(var(--foreground)/0.08)]">
           <div className="px-6 pt-6 pb-5 sm:px-7 sm:pt-7">
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="h-11 w-11 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-sm">
-                  <CoachAvatar mood="default" size={22} />
-                </div>
-                <div>
-                  <p className="text-[14px] font-semibold text-foreground/80 leading-tight">{coachName || "Coach"}</p>
-                  <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">Centro di regia della giornata</p>
-                </div>
+            <div className="mb-4 flex items-center gap-3">
+              <div className="h-11 w-11 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-sm">
+                <CoachAvatar mood="default" size={22} />
               </div>
-
-              {/* Emotional heart — TOP-LEFT area (right of header row) */}
-              <div className="relative shrink-0" ref={moodRef}>
-                <button
-                  onClick={() => setShowMood(!showMood)}
-                  className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-[13px] font-medium transition-colors ${
-                    showMood
-                      ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
-                      : "border-border bg-muted/40 text-muted-foreground hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 dark:hover:bg-rose-500/10"
-                  }`}
-                  title="Come ti senti?"
-                  aria-label="Come ti senti oggi?"
-                >
-                  <Heart className={`w-4 h-4 ${showMood ? "fill-rose-500 text-rose-500" : "text-rose-400"}`} />
-                  <span className="hidden sm:inline">Come ti senti oggi?</span>
-                </button>
-
-                <AnimatePresence>
-                  {showMood && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute top-full right-0 mt-2 bg-card border border-border rounded-2xl shadow-lg p-2 min-w-[260px] z-20"
-                    >
-                      {[
-                        { label: "Sono sopraffatto/a", icon: CloudRain, msg: "Mi sento sopraffatto/a dal carico di lavoro, ho bisogno di supporto", color: "text-blue-600 dark:text-blue-400" },
-                        { label: "Sono stanco/a", icon: BatteryLow, msg: "Mi sento stanco/a e senza energie oggi", color: "text-amber-600 dark:text-amber-400" },
-                        { label: "Ho bisogno di una pausa", icon: Coffee, msg: "Sento di aver bisogno di staccare un momento e ricaricarmi", color: "text-orange-600 dark:text-orange-400" },
-                        { label: "Ho bisogno di parlare", icon: Heart, msg: "Ho bisogno di parlare con qualcuno di come mi sento come docente", color: "text-rose-600 dark:text-rose-400" },
-                      ].map((opt) => (
-                        <button
-                          key={opt.label}
-                          onClick={() => { setShowMood(false); navigateToCoach(opt.msg); }}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-muted transition-colors"
-                        >
-                          <opt.icon className={`w-4 h-4 shrink-0 ${opt.color}`} />
-                          <span className="text-[14px] font-medium text-foreground">{opt.label}</span>
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+              <div>
+                <p className="text-[14px] font-semibold text-foreground/80 leading-tight">{coachName || "Coach"}</p>
+                <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">Centro di regia della giornata</p>
               </div>
             </div>
 
@@ -512,25 +465,71 @@ export default function DashboardDocente() {
 
           </div>
 
-          {/* Fused input — bottom band */}
+          {/* Fused input — bottom band with emotional heart on the LEFT */}
           <div className="border-t border-border/50 bg-muted/30 px-6 py-4 sm:px-7">
-            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-2.5">
-              <input
-                type="text"
-                value={coachInput}
-                onChange={(e) => setCoachInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && navigateToCoach()}
-                placeholder={coachName ? `Scrivi a ${coachName}...` : "Scrivi al coach..."}
-                className="w-full bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none"
-              />
-              <button
-                onClick={() => navigateToCoach()}
-                disabled={!coachInput.trim()}
-                className="h-11 w-11 rounded-full bg-primary/15 text-primary flex items-center justify-center hover:bg-primary/25 disabled:opacity-40 transition-colors shrink-0"
-                aria-label="Invia"
-              >
-                <Send className="w-4 h-4" />
-              </button>
+            <div className="flex items-center gap-2.5">
+              {/* Emotional heart — LEFT of the text field, same row */}
+              <div className="relative shrink-0" ref={moodRef}>
+                <button
+                  onClick={() => setShowMood(!showMood)}
+                  className={`h-11 w-11 rounded-full border flex items-center justify-center transition-colors ${
+                    showMood
+                      ? "border-rose-200 bg-rose-50 text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10"
+                      : "border-border bg-card hover:bg-rose-50 hover:border-rose-200 dark:hover:bg-rose-500/10"
+                  }`}
+                  title="Come ti senti oggi?"
+                  aria-label="Come ti senti oggi?"
+                >
+                  <Heart className={`w-5 h-5 ${showMood ? "fill-rose-500 text-rose-500" : "text-rose-400"}`} />
+                </button>
+
+                <AnimatePresence>
+                  {showMood && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute bottom-full left-0 mb-2 bg-card border border-border rounded-2xl shadow-lg p-2 min-w-[260px] z-20"
+                    >
+                      {[
+                        { label: "Sono sopraffatto/a", icon: CloudRain, msg: "Mi sento sopraffatto/a dal carico di lavoro, ho bisogno di supporto", color: "text-blue-600 dark:text-blue-400" },
+                        { label: "Sono stanco/a", icon: BatteryLow, msg: "Mi sento stanco/a e senza energie oggi", color: "text-amber-600 dark:text-amber-400" },
+                        { label: "Ho bisogno di una pausa", icon: Coffee, msg: "Sento di aver bisogno di staccare un momento e ricaricarmi", color: "text-orange-600 dark:text-orange-400" },
+                        { label: "Ho bisogno di parlare", icon: Heart, msg: "Ho bisogno di parlare con qualcuno di come mi sento come docente", color: "text-rose-600 dark:text-rose-400" },
+                      ].map((opt) => (
+                        <button
+                          key={opt.label}
+                          onClick={() => { setShowMood(false); navigateToCoach(opt.msg); }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-muted transition-colors"
+                        >
+                          <opt.icon className={`w-4 h-4 shrink-0 ${opt.color}`} />
+                          <span className="text-[14px] font-medium text-foreground">{opt.label}</span>
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <div className="flex-1 flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-2.5">
+                <input
+                  type="text"
+                  value={coachInput}
+                  onChange={(e) => setCoachInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && navigateToCoach()}
+                  placeholder={coachName ? `Scrivi a ${coachName}...` : "Scrivi al coach..."}
+                  className="w-full bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none"
+                />
+                <button
+                  onClick={() => navigateToCoach()}
+                  disabled={!coachInput.trim()}
+                  className="h-11 w-11 rounded-full bg-primary/15 text-primary flex items-center justify-center hover:bg-primary/25 disabled:opacity-40 transition-colors shrink-0"
+                  aria-label="Invia"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </section>
