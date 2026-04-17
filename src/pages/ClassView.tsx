@@ -241,7 +241,7 @@ export default function ClassView() {
         navigate(`/materiali-docente?classId=${classId}&tipo=lezione&materia=${encodeURIComponent(ev.targetSubject || classe.materia || "")}&argomento=${encodeURIComponent(ev.targetTopic || "")}`);
         break;
       case "create":
-        navigate(`/materiali-docente?classId=${classId}&create=true${ev.targetTopic ? `&argomento=${encodeURIComponent(ev.targetTopic)}` : ""}`);
+        navigate(`/classe/${classId}/materiali?create=true${ev.targetTopic ? `&argomento=${encodeURIComponent(ev.targetTopic)}` : ""}`);
         break;
       case "trend":
         if (ev.targetStudentId) {
