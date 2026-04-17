@@ -550,29 +550,27 @@ export default function DashboardDocente() {
           </section>
         )}
 
-        {/* ━━━ BLOCK 3 — KPI PANORAMICA ━━━ */}
+        {/* ━━━ BLOCK 3 — 3 MICRO-CARD: Scadenze · Attività · Da seguire ━━━ */}
         <section>
-          <div className="mb-4 flex items-center gap-2">
-            <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
-            <h3 className="text-[13px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Panoramica</h3>
-          </div>
-
-          <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
             {[
-              { label: "Classi attive", value: classi.length, icon: LayoutDashboard, bg: "bg-sky-50 dark:bg-sky-500/10", fg: "text-sky-600 dark:text-sky-400" },
-              { label: "Studenti", value: studentiCount, icon: Users, bg: "bg-emerald-50 dark:bg-emerald-500/10", fg: "text-emerald-600 dark:text-emerald-400" },
-              { label: "Materiali creati", value: materialiCount, icon: FileText, bg: "bg-violet-50 dark:bg-violet-500/10", fg: "text-violet-600 dark:text-violet-400" },
-              { label: "Da seguire", value: daSegurireCount, icon: AlertCircle, bg: daSegurireCount > 0 ? "bg-amber-50 dark:bg-amber-500/10" : "bg-emerald-50 dark:bg-emerald-500/10", fg: daSegurireCount > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400" },
-            ].map(({ label, value, icon: Icon, bg, fg }) => (
-              <div key={label} className="rounded-[26px] border border-border/60 bg-card/95 backdrop-blur p-5 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)]">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-                <div className="mt-4 flex items-end justify-between">
-                  <p className="font-display text-4xl font-extrabold tracking-tight text-foreground">{loadingClassi ? "–" : value}</p>
-                  <div className={`h-11 w-11 rounded-2xl flex items-center justify-center ${bg} ${fg}`}>
-                    <Icon className="w-5 h-5" />
+              { label: "Scadenze", value: upcomingDeadlines.length, icon: Calendar, bg: "bg-sky-50 dark:bg-sky-500/10", fg: "text-sky-600 dark:text-sky-400", onClick: () => navigate("/agenda-docente") },
+              { label: "Attività recenti", value: feedItems.length, icon: Clock, bg: "bg-violet-50 dark:bg-violet-500/10", fg: "text-violet-600 dark:text-violet-400", onClick: () => navigate("/notifiche-docente") },
+              { label: "Da seguire", value: daSegurireCount, icon: AlertCircle, bg: daSegurireCount > 0 ? "bg-amber-50 dark:bg-amber-500/10" : "bg-emerald-50 dark:bg-emerald-500/10", fg: daSegurireCount > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400", onClick: () => navigate("/notifiche-docente") },
+            ].map(({ label, value, icon: Icon, bg, fg, onClick }) => (
+              <button
+                key={label}
+                onClick={onClick}
+                className="text-left rounded-[26px] border border-border/60 bg-card/95 backdrop-blur p-5 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)] hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)] transition-all"
+              >
+                <div className="flex items-start justify-between">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+                  <div className={`h-9 w-9 rounded-2xl flex items-center justify-center ${bg} ${fg}`}>
+                    <Icon className="w-4 h-4" />
                   </div>
                 </div>
-              </div>
+                <p className="mt-3 font-display text-4xl font-extrabold tracking-tight text-foreground">{loadingClassi ? "–" : value}</p>
+              </button>
             ))}
           </div>
         </section>
@@ -659,128 +657,6 @@ export default function DashboardDocente() {
           )}
         </section>
 
-        {/* ━━━ BLOCK 5 — AZIONI PRINCIPALI ━━━ */}
-        <section className="grid gap-4 md:grid-cols-2">
-          <button
-            onClick={() => setShowMaterialClassPicker(true)}
-            className="rounded-[26px] bg-primary px-5 py-5 text-left text-primary-foreground shadow-sm transition hover:bg-primary/90"
-          >
-            <div className="text-[13px] font-semibold text-primary-foreground/80">Azione principale</div>
-            <div className="mt-2 text-2xl font-bold tracking-tight">Crea materiale</div>
-          </button>
-          <button
-            onClick={() => navigate("/materiali-docente")}
-            className="rounded-[26px] border border-border/60 bg-card/95 backdrop-blur px-5 py-5 text-left shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)] hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)] transition-all"
-          >
-            <div className="text-[13px] font-semibold text-muted-foreground">Archivio</div>
-            <div className="mt-2 text-2xl font-bold tracking-tight text-foreground">I miei materiali</div>
-          </button>
-        </section>
-
-        {/* ━━━ BLOCK 6 — TWO COLUMNS ━━━ */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Left — Scadenze imminenti */}
-          <div className="bg-card/95 backdrop-blur border border-border/60 rounded-[24px] p-5 sm:p-6 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)]">
-            <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-              <Calendar className="w-3.5 h-3.5" /> Scadenze imminenti
-            </h2>
-            {upcomingDeadlines.length === 0 ? (
-              <div className="text-center py-6">
-                <Calendar className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
-                <p className="text-xs text-muted-foreground">Nessuna scadenza oggi o domani</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {upcomingDeadlines.slice(0, 4).map(a => {
-                  const dueDate = new Date(a.due_date);
-                  const isToday = dueDate.toDateString() === now.toDateString();
-                  const className = classi.find(cl => cl.id === a.class_id);
-                  return (
-                    <div
-                      key={a.id}
-                      onClick={() => a.class_id && navigate(`/classe/${a.class_id}?tab=materiali`)}
-                      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                        isToday ? "bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800" : "bg-muted/50 border border-border"
-                      } hover:shadow-sm`}
-                    >
-                      <div className="text-center w-10 shrink-0">
-                        <p className={`text-base font-bold ${isToday ? "text-amber-600" : "text-foreground"}`}>{dueDate.getDate()}</p>
-                        <p className="text-[10px] uppercase text-muted-foreground">{format(dueDate, "MMM", { locale: it })}</p>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {a.subject}{className ? ` · ${className.nome}` : ""}
-                        </p>
-                      </div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full capitalize font-medium ${
-                        a.type === "verifica" ? "bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300" : "bg-primary/10 text-primary"
-                      }`}>{a.type}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            {upcomingDeadlines.length > 4 && (
-              <button onClick={() => navigate("/agenda-docente")} className="w-full text-center text-xs text-primary font-medium hover:underline mt-3 py-1">
-                Vedi tutte
-              </button>
-            )}
-          </div>
-
-          {/* Right — Attività recenti */}
-          <div className="bg-card/95 backdrop-blur border border-border/60 rounded-[24px] p-5 sm:p-6 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)]">
-            <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-              <Clock className="w-3.5 h-3.5" /> Attività recenti
-            </h2>
-            {feedItems.length === 0 ? (
-              <div className="text-center py-6">
-                <Clock className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
-                <p className="text-xs text-muted-foreground">Nessuna attività recente</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {feedItems.slice(0, 4).map(item => {
-                  const diffMs = Date.now() - new Date(item.created_at).getTime();
-                  const diffMin = Math.floor(diffMs / 60000);
-                  let timeLabel = "";
-                  if (diffMin < 1) timeLabel = "Ora";
-                  else if (diffMin < 60) timeLabel = `${diffMin}min fa`;
-                  else if (diffMin < 1440) timeLabel = `${Math.floor(diffMin / 60)}h fa`;
-                  else { const d = Math.floor(diffMin / 1440); timeLabel = d === 1 ? "Ieri" : `${d}g fa`; }
-
-                  const relatedClass = classi.find(cl => cl.id === item.class_id);
-                  const severityDot: Record<string, string> = {
-                    urgent: "bg-destructive", warning: "bg-amber-400", positive: "bg-emerald-400", info: "bg-primary/60",
-                  };
-
-                  return (
-                    <div
-                      key={item.id}
-                      onClick={() => item.action_route ? navigate(item.action_route) : (item.class_id && navigate(`/classe/${item.class_id}`))}
-                      className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 border border-border cursor-pointer hover:shadow-sm transition-all"
-                    >
-                      <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${severityDot[item.severity] || severityDot.info}`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-foreground leading-snug">{item.message}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          {relatedClass && <span className="text-[11px] text-muted-foreground font-medium">{relatedClass.nome}</span>}
-                          <span className="text-[11px] text-muted-foreground">{timeLabel}</span>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0 mt-0.5" />
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            {feedItems.length > 4 && (
-              <button onClick={() => navigate("/agenda-docente")} className="w-full text-center text-xs text-primary font-medium hover:underline mt-3 py-1">
-                Vedi tutte
-              </button>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* ═══ DIALOGS ═══ */}
