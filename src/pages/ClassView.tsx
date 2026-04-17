@@ -116,6 +116,9 @@ export default function ClassView() {
         loadedClasse = data.classe;
         loadedStudents = data.students || [];
         loadedResults = data.assignmentResults || [];
+        setEmotionalCheckins(data.emotionalCheckins || []);
+        setEmotionalAlerts(data.emotionalAlerts || []);
+        setFocusSessions(data.focusSessions || []);
 
         const { data: grades } = await (supabase as any)
           .from("manual_grades")
