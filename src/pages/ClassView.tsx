@@ -192,7 +192,7 @@ export default function ClassView() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8 space-y-4">
+      <div className="max-w-[720px] mx-auto px-4 sm:px-10 py-8 space-y-4">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-64 w-full rounded-[22px]" />
         <Skeleton className="h-32 w-full rounded-[18px]" />
@@ -202,7 +202,7 @@ export default function ClassView() {
 
   if (!classe) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8 text-center">
+      <div className="max-w-[720px] mx-auto px-4 sm:px-10 py-8 text-center">
         <p className="text-muted-foreground">Classe non trovata.</p>
         <Button variant="outline" onClick={() => navigate("/dashboard")} className="mt-4">Torna alla dashboard</Button>
       </div>
