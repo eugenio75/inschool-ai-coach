@@ -133,27 +133,6 @@ function computeTopicMastery(assignmentResults: any[]) {
   }));
 }
 
-/* ─── KPI with tooltip ─── */
-function KpiCard({ label, value, tooltip }: { label: string; value: string | number; tooltip: string }) {
-  return (
-    <TooltipProvider>
-      <div className="bg-card border border-border rounded-xl p-4 text-center relative">
-        <p className="text-xl font-bold text-foreground">{value}</p>
-        <div className="flex items-center justify-center gap-1 mt-1">
-          <p className="text-[10px] text-muted-foreground leading-tight">{label}</p>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="w-3 h-3 text-muted-foreground/50 cursor-help shrink-0" />
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-[200px] text-xs">
-              {tooltip}
-            </TooltipContent>
-          </Tooltip>
-        </div>
-      </div>
-    </TooltipProvider>
-  );
-}
 
 /* ─── Indice di apprendimento ─── */
 function gradeToPercent(grade: string, scale: string): number | null {
