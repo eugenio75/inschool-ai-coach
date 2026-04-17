@@ -89,6 +89,7 @@ export default function StudentView() {
         ? (profile.last_name ? `${profile.name} ${profile.last_name}` : profile.name)
         : "Studente";
       setStudentName(name);
+      const isDemo = /esempio|demo|sample/i.test(name);
 
       // Load assignment_results directly with joined teacher_assignments
       const { data: results } = await (supabase as any)
