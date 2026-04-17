@@ -468,22 +468,26 @@ export default function ClassView() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      {/* ─── Blue class header (full width) ─── */}
-      <div className="w-full text-white" style={{ backgroundColor: "#1C6BF5" }}>
-        <div className="max-w-[880px] mx-auto px-4 sm:px-10 py-4 sm:py-6">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="text-[11px] sm:text-[12px] text-white/70 hover:text-white inline-flex items-center gap-1 mb-2 transition-colors"
-          >
-            Home <span className="opacity-60">›</span> <span className="text-white/90 truncate max-w-[200px]">{classe.nome}</span>
-          </button>
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-[20px] sm:text-[26px] font-bold leading-tight flex items-center gap-2">
-                <span className="inline-block h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full shrink-0" style={{ backgroundColor: "#FACC15" }} />
-                <span className="truncate">{classe.nome}</span>
+      <div className="max-w-[880px] mx-auto px-4 sm:px-8 py-5 sm:py-8 pb-24">
+        {/* ─── Back link ─── */}
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+        >
+          ← Torna alle classi
+        </button>
+
+        {/* ─── Header card (white) ─── */}
+        <header className="mt-4 mb-5 sm:mb-6 rounded-[24px] border border-border/60 bg-card p-5 sm:p-7">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80">
+                Classe
+              </p>
+              <h1 className="mt-2 text-[28px] sm:text-[32px] font-bold tracking-tight text-foreground leading-none">
+                {classe.nome}
               </h1>
-              <p className="text-[13px] sm:text-[14px] text-white/75 mt-1 truncate">
+              <p className="mt-2.5 text-[14px] text-muted-foreground">
                 {[classe.materia, `${students.length} ${students.length === 1 ? "studente" : "studenti"}`, schoolType]
                   .filter(Boolean)
                   .join(" · ")}
@@ -491,21 +495,21 @@ export default function ClassView() {
             </div>
             <button
               onClick={() => { navigator.clipboard.writeText(classe.codice_invito); toast.success("Codice copiato!"); }}
-              className="shrink-0 inline-flex items-center gap-1.5 text-white/80 hover:text-white transition-colors"
+              className="shrink-0 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors self-start sm:self-end"
               title="Copia codice classe"
             >
-              <span className="font-mono text-[12px] sm:text-[13px] tracking-widest">{classe.codice_invito}</span>
-              <Copy className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span>Codice classe:</span>
+              <span className="font-mono font-semibold text-foreground tracking-wider">{classe.codice_invito}</span>
+              <Copy className="w-3.5 h-3.5" />
             </button>
           </div>
           {profileId && !user && (
-            <ReportTeacherButton teacherId={classe.docente_profile_id} className="mt-2 text-white/60 hover:text-white" />
+            <ReportTeacherButton teacherId={classe.docente_profile_id} className="mt-3" />
           )}
-        </div>
-      </div>
+        </header>
 
-      {/* ─── Centered content ─── */}
-      <div className="max-w-[880px] mx-auto px-4 sm:px-10 py-6 sm:py-8 pb-24 space-y-5 sm:space-y-6">
+        {/* ─── Sections ─── */}
+        <div className="space-y-5 sm:space-y-6">
         {/* SECTION 1: Coach SarAI */}
         <ClassCoachCard
           headline={insight.headline}
