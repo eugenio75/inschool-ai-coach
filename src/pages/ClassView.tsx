@@ -641,18 +641,13 @@ export default function ClassView() {
                 const idx = li.index;
 
                 if (count === 0) {
-                  let statusText = "✅ La classe procede regolarmente";
-                  if (idx !== null) {
-                    if (idx < 40) statusText = "⚠️ La classe ha difficoltà evidenti";
-                    else if (idx < 70) statusText = "⚠️ Qualche difficoltà da monitorare";
-                  }
-                  const borderClass =
-                    idx !== null && idx < 40 ? "border-red-500/30"
-                    : idx !== null && idx < 70 ? "border-amber-500/30"
-                    : "border-border";
+                  // No students need attention. Don't duplicate the learning-index judgment here —
+                  // the "Indice di apprendimento" card below already shows the aggregate status.
                   return (
-                    <div className={cn("bg-card border rounded-xl p-4", borderClass)}>
-                      <p className="text-sm font-medium text-foreground">{statusText}</p>
+                    <div className="bg-card border border-border rounded-xl p-4">
+                      <p className="text-sm font-medium text-foreground">
+                        ✅ Nessuno studente da seguire al momento
+                      </p>
                     </div>
                   );
                 }
