@@ -616,14 +616,118 @@ export default function ClassView() {
             </div>
           ) : (
             <>
-              {/* BLOCK 1 — Stato classe */}
-              <div className="bg-card border border-border rounded-xl p-4">
-                <p className="text-sm font-medium text-foreground">
-                  {stats.toFollow === 0
-                    ? "✅ La classe procede regolarmente"
-                    : `⚠️ ${stats.toFollow} ${stats.toFollow === 1 ? "studente" : "studenti"} da seguire`}
-                </p>
-              </div>
+              {/* BLOCK 1 — Stato classe / studenti da seguire */}
+              {(() => {
+                const lastActivityMap = getLastActivityMap(assignmentResults, manualGrades, students);
+                const followReasons = computeFollowReasons(
+                  students, assignmentResults, stats.studentScores as any,
+                  lastActivityMap, classe?.materia || "",
+                );
+                const count = followReasons.length;
+
+                if (count === 0) {
+                  return (
+                    <div className="bg-card border border-border rounded-xl p-4">
+                      <p className="text-sm font-medium text-foreground">
+                        ✅ La classe procede regolarmente
+                      </p>
+                    </div>
+                  );
+                }
+
+                const isExpanded = count === 1 ? true : followExpanded;
+                return (
+                  <div className="bg-card border border-amber-500/30 rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => count > 1 && setFollowExpanded(!followExpanded)}
+                      className={cn(
+                        "w-full flex items-center justify-between p-4 text-left",
+                        count > 1 && "hover:bg-muted/30 transition-colors"
+                      )}
+                      disabled={count === 1}
+                    >
+                      <p className="text-sm font-medium text-foreground">
+                        ⚠️ {count} {count === 1 ? "studente" : "studenti"} da seguire
+                      </p>
+                      {count > 1 && (
+                        <ChevronDown className={cn(
+                          "w-4 h-4 text-muted-foreground transition-transform shrink-0",
+                          isExpanded && "rotate-180"
+                        )} />
+                      )}
+                    </button>
+
+                    {isExpanded && (
+                      <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
+                        {followReasons.map((fr) => (
+                          <div key={fr.studentId} className="bg-muted/40 rounded-xl p-3">
+                            <div className="flex items-start gap-3">
+                              <AvatarInitials name={fr.studentName} size="sm" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-foreground">{fr.studentName}</p>
+                                <p className="text-xs text-amber-600 mt-0.5 flex items-start gap-1.5">
+                                  <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
+                                  <span>{fr.reason}</span>
+                                </p>
+                                {fr.lastActivity && (
+                                  <p className="text-[11px] text-muted-foreground mt-1">
+                                    Ultima attività: {new Date(fr.lastActivity).toLocaleDateString("it-IT")}
+                                  </p>
+                                )}
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  {fr.actions.includes("recovery") && (
+                                    <Button
+                                      variant="secondary"
+                                      size="sm"
+                                      className="h-7 text-[11px] px-2.5 rounded-lg"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleGenerateRecovery(
+                                          fr.subject || "",
+                                          fr.topic || fr.studentName,
+                                          1,
+                                        );
+                                      }}
+                                    >
+                                      <Wrench className="w-3 h-3 mr-1" /> Genera recupero
+                                    </Button>
+                                  )}
+                                  {fr.actions.includes("contact_parents") && (
+                                    <Button
+                                      variant="secondary"
+                                      size="sm"
+                                      className="h-7 text-[11px] px-2.5 rounded-lg"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setParentEmailTarget({ studentId: fr.studentId, studentName: fr.studentName });
+                                        setParentEmailSubject(`Aggiornamento su ${fr.studentName}`);
+                                        setParentEmailBody(`Buongiorno,\n\nLe scrivo per condividere un aggiornamento su ${fr.studentName}: ${fr.reason.toLowerCase()}.\n\nResto a disposizione per un confronto.\n\nCordiali saluti.`);
+                                      }}
+                                    >
+                                      <Mail className="w-3 h-3 mr-1" /> Scrivi ai genitori
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-[11px] px-2.5 rounded-lg"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/studente/${fr.studentId}?classId=${classId}`);
+                                    }}
+                                  >
+                                    Vedi dettaglio <ChevronRight className="w-3 h-3 ml-0.5" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* BLOCK 2 — Indice di apprendimento */}
               {(() => {
