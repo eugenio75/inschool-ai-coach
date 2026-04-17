@@ -395,27 +395,27 @@ export default function DashboardDocente() {
   });
 
   return (
-    <div className="pb-24 sm:pb-12">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="pb-24 sm:pb-12 bg-gradient-to-b from-muted/40 to-muted/20 min-h-screen">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-7">
 
         {/* ━━━ BLOCK 1 — HEADER ━━━ */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-bold text-foreground">
-              {getGreeting()}, {getTeacherTitle(teacherGender)} {cognome} 👋
-            </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[13px] text-muted-foreground/70 mb-2">
               {new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
             </p>
+            <h1 className="font-display text-[28px] sm:text-[32px] font-extrabold tracking-tight text-foreground leading-tight">
+              {getGreeting()}, {getTeacherTitle(teacherGender)} {cognome} 👋
+            </h1>
           </div>
-          <Button onClick={() => setShowClasseModal(true)} className="gap-2">
+          <Button onClick={() => setShowClasseModal(true)} className="gap-2 rounded-full px-5 py-2.5 shrink-0">
             <Plus className="w-4 h-4" />
             Nuova classe
           </Button>
         </div>
 
         {/* ━━━ BLOCK 2 — COACH (compact — single message) ━━━ */}
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="bg-card/95 backdrop-blur border border-border/60 rounded-[28px] p-6 sm:p-7 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.08)]">
           <div className="flex items-start gap-3 mb-4">
             <div className="shrink-0 mt-0.5">
               <CoachAvatar mood="default" size={32} />
@@ -548,21 +548,24 @@ export default function DashboardDocente() {
             { label: "Materiali creati", value: materialiCount, icon: FileText, color: "text-violet-600 bg-violet-50 dark:bg-violet-950" },
             { label: "Da seguire", value: daSegurireCount, icon: AlertCircle, color: daSegurireCount > 0 ? "text-amber-600 bg-amber-50 dark:bg-amber-950" : "text-emerald-600 bg-emerald-50 dark:bg-emerald-950" },
           ].map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-card border border-border rounded-xl p-4">
+            <div key={label} className="bg-card/95 backdrop-blur border border-border/60 rounded-2xl p-4 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] uppercase tracking-wide font-semibold text-muted-foreground">{label}</span>
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${color}`}>
-                  <Icon className="w-3.5 h-3.5" />
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${color}`}>
+                  <Icon className="w-4 h-4" />
                 </div>
               </div>
-              <p className="font-display text-2xl font-bold text-foreground">{loadingClassi ? "–" : value}</p>
+              <p className="font-display text-[28px] font-extrabold tracking-tight text-foreground">{loadingClassi ? "–" : value}</p>
             </div>
           ))}
         </div>
 
         {/* ━━━ BLOCK 4 — LE TUE CLASSI ━━━ */}
         <div>
-          <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-3">Le tue classi</h2>
+          <div className="mb-4 flex items-center gap-2">
+            <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+            <h2 className="text-[13px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Le tue classi</h2>
+          </div>
           {loadingClassi ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
@@ -583,7 +586,7 @@ export default function DashboardDocente() {
                 return (
                   <div
                     key={c.id}
-                    className="bg-card border border-border rounded-xl p-4 text-left hover:shadow-md hover:border-primary/30 transition-all group relative"
+                    className="bg-card/95 backdrop-blur border border-border/60 rounded-2xl p-5 text-left shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)] hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)] hover:border-primary/30 transition-all group relative"
                   >
                     <div className="absolute top-2 right-2 z-10">
                       <DropdownMenu>
@@ -606,10 +609,10 @@ export default function DashboardDocente() {
                       </DropdownMenu>
                     </div>
                     <button onClick={() => navigate(`/classe/${c.id}`)} className="w-full text-left">
-                      <div className="flex items-center justify-between mb-1 pr-6">
+                      <div className="flex items-center justify-between mb-2 pr-6">
                         <div className="flex items-center gap-2">
                           <div className={`w-2.5 h-2.5 rounded-full ${hasAlert ? "bg-amber-400" : "bg-emerald-400"}`} />
-                          <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">{c.nome}</span>
+                          <span className="font-bold text-foreground text-[18px] tracking-tight group-hover:text-primary transition-colors">{c.nome}</span>
                           {c.is_sample && (
                             <span className="text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 px-1.5 py-0.5 rounded-full">
                               ✨ Esempio
@@ -623,8 +626,8 @@ export default function DashboardDocente() {
                         )}
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">{c.materia || "–"}</span>
-                        <span className="text-xs text-muted-foreground">{c.num_studenti || 0} studenti</span>
+                        <span className="text-[13px] text-muted-foreground">{c.materia || "–"}</span>
+                        <span className="text-[13px] text-muted-foreground">{c.num_studenti || 0} studenti</span>
                       </div>
                     </button>
                   </div>
@@ -655,7 +658,7 @@ export default function DashboardDocente() {
         {/* ━━━ BLOCK 6 — TWO COLUMNS ━━━ */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Left — Scadenze imminenti */}
-          <div className="bg-card border border-border rounded-xl p-5">
+          <div className="bg-card/95 backdrop-blur border border-border/60 rounded-[24px] p-5 sm:p-6 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)]">
             <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-3 flex items-center gap-2">
               <Calendar className="w-3.5 h-3.5" /> Scadenze imminenti
             </h2>
@@ -704,7 +707,7 @@ export default function DashboardDocente() {
           </div>
 
           {/* Right — Attività recenti */}
-          <div className="bg-card border border-border rounded-xl p-5">
+          <div className="bg-card/95 backdrop-blur border border-border/60 rounded-[24px] p-5 sm:p-6 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)]">
             <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-3 flex items-center gap-2">
               <Clock className="w-3.5 h-3.5" /> Attività recenti
             </h2>

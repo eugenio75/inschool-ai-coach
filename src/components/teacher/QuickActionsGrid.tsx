@@ -23,29 +23,32 @@ interface Props {
 
 export default function QuickActionsGrid({ actions }: Props) {
   return (
-    <section className="rounded-[24px] border border-border/60 bg-card p-5 sm:p-7">
-      <div className="mb-4">
-        <h3 className="text-[17px] sm:text-[18px] font-semibold text-foreground tracking-tight">
+    <section>
+      <div className="mb-4 flex items-center gap-2">
+        <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+        <h3 className="text-[13px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
           Azioni rapide
         </h3>
-        <p className="mt-1 text-[13px] text-muted-foreground">
-          Strumenti puri, separati dalla lettura del Coach.
-        </p>
       </div>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+
+      <div className="grid gap-4 md:grid-cols-2">
         {actions.map((a) => {
           const Icon = ICONS[a.icon];
           return (
             <button
               key={a.id}
               onClick={a.onClick}
-              className="group rounded-2xl border border-border bg-card px-4 py-3 text-left transition-colors hover:bg-muted/50"
+              className="group rounded-[28px] border border-border/60 bg-card/95 backdrop-blur p-5 sm:p-6 text-left shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.08)] transition-all hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)]"
             >
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-foreground/70 mb-2 group-hover:bg-foreground group-hover:text-background transition-colors">
-                <Icon className="h-4 w-4" />
-              </span>
-              <p className="text-[14px] font-semibold text-foreground leading-tight">{a.label}</p>
-              <p className="text-[12px] text-muted-foreground mt-0.5 leading-tight">{a.sublabel}</p>
+              <div className="mb-5 h-12 w-12 rounded-2xl bg-muted flex items-center justify-center text-foreground/70 group-hover:bg-foreground group-hover:text-background transition-colors">
+                <Icon className="h-5 w-5" />
+              </div>
+              <p className="text-[24px] sm:text-[28px] font-bold tracking-tight text-foreground leading-tight">
+                {a.label}
+              </p>
+              <p className="mt-2 text-[14px] sm:text-[15px] text-muted-foreground">
+                {a.sublabel}
+              </p>
             </button>
           );
         })}

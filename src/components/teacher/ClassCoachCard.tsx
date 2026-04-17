@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowRight, Send } from "lucide-react";
 
 export interface CoachEvidence {
   id: string;
@@ -17,8 +16,8 @@ interface Props {
 }
 
 /**
- * Coach SarAI card — clean white card, bordered evidence rows,
- * AI badge top-left, fused input at bottom.
+ * Coach SarAI card — large headline, soft evidence rows with pill buttons,
+ * fused input at bottom. Refined "soft-card" design system.
  */
 export default function ClassCoachCard({ headline, paragraph, evidences, onAsk }: Props) {
   const [value, setValue] = useState("");
@@ -31,68 +30,75 @@ export default function ClassCoachCard({ headline, paragraph, evidences, onAsk }
   }
 
   return (
-    <section className="rounded-[24px] border border-border/60 bg-card p-5 sm:p-7">
-      {/* Header */}
-      <div className="mb-4 sm:mb-5 flex items-center gap-2.5">
-        <div className="h-9 w-9 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-[13px] font-bold">
-          AI
+    <section className="rounded-[32px] border border-border/60 bg-card/95 backdrop-blur overflow-hidden shadow-[0_10px_30px_-15px_hsl(var(--foreground)/0.08)]">
+      {/* Header + headline */}
+      <div className="border-b border-border/50 px-6 sm:px-7 pt-6 sm:pt-7 pb-5">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center text-[14px] font-bold shadow-sm">
+            S
+          </div>
+          <div>
+            <p className="text-[14px] font-semibold text-foreground/80 leading-tight">Coach SarAI · oggi</p>
+            <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">Sintesi operativa della classe</p>
+          </div>
         </div>
-        <div>
-          <p className="text-[14px] font-semibold text-primary leading-tight">Coach SarAI</p>
-          <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">Sintesi della classe</p>
-        </div>
-      </div>
 
-      {/* Headline + paragraph */}
-      <h2 className="text-[20px] sm:text-[22px] font-semibold leading-snug text-foreground tracking-tight">
-        {headline}
-      </h2>
-      <p className="mt-3 text-[14px] sm:text-[15px] leading-[1.65] text-muted-foreground">
-        {paragraph}
-      </p>
+        <h2 className="max-w-3xl text-[26px] sm:text-[32px] leading-tight font-extrabold tracking-tight text-foreground">
+          {headline}
+        </h2>
+        <p className="mt-4 max-w-3xl text-[16px] sm:text-[17px] leading-[1.7] text-muted-foreground">
+          {paragraph}
+        </p>
+      </div>
 
       {/* Evidence rows */}
       {evidences.length > 0 && (
-        <div className="mt-5 space-y-3">
-          {evidences.map((ev, i) => (
+        <div className="px-6 sm:px-7 py-5 space-y-3 bg-muted/30">
+          {evidences.map((ev) => (
             <div
               key={ev.id}
-              className="rounded-[18px] border border-border/70 p-4"
+              className="rounded-2xl border border-border/70 bg-card px-4 py-4 transition-all hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)]"
             >
-              <p className="text-[14px] sm:text-[15px] font-semibold text-foreground leading-snug">
-                {ev.text}
-              </p>
-              <button
-                onClick={ev.onAction}
-                className={cn(
-                  "mt-3 inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-[13px] font-medium transition-colors",
-                  i === 0
-                    ? "bg-foreground text-background hover:bg-foreground/90"
-                    : "border border-border bg-card text-foreground hover:bg-muted/60",
-                )}
-              >
-                {ev.actionLabel}
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <p className="max-w-2xl text-[15px] leading-7 text-foreground/85">
+                  {ev.text}
+                </p>
+                <button
+                  onClick={ev.onAction}
+                  className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/60 px-5 py-2.5 text-[14px] font-semibold text-foreground hover:bg-muted transition-colors"
+                >
+                  {ev.actionLabel}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
 
       {/* Fused input */}
-      <div className="mt-5">
-        <input
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              submit();
-            }
-          }}
-          placeholder="Chiedi altro al Coach su questa classe..."
-          className="w-full rounded-2xl border border-border bg-muted/40 px-4 py-3 text-[14px] text-foreground placeholder:text-muted-foreground/80 outline-none transition-colors focus:border-primary/50 focus:bg-card"
-        />
+      <div className="border-t border-border/50 px-6 sm:px-7 py-4 bg-card">
+        <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/40 px-4 py-2.5">
+          <input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                submit();
+              }
+            }}
+            placeholder="Chiedi qualcosa sulla classe..."
+            className="w-full bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none"
+          />
+          <button
+            onClick={submit}
+            className="h-11 w-11 rounded-full bg-primary/15 text-primary flex items-center justify-center hover:bg-primary/25 transition-colors shrink-0"
+            aria-label="Invia"
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </section>
   );
