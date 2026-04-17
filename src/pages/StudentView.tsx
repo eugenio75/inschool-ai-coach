@@ -262,7 +262,23 @@ export default function StudentView() {
             <AvatarInitials name={studentName} size="lg" />
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{studentName}</h1>
-              {className && <Badge variant="secondary" className="text-xs mt-1">{className}</Badge>}
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                {className && <Badge variant="secondary" className="text-xs">{className}</Badge>}
+                {(() => {
+                  // Activity status: based on most recent completed activity
+                  const lastDate = activities
+                    .filter(a => a.completed_at)
+                    .map(a => new Date(a.completed_at).getTime())
+                    .sort((a, b) => b - a)[0];
+                  if (!lastDate) {
+                    return <Badge variant="outline" className="text-xs">Mai attivo</Badge>;
+                  }
+                  const daysSince = Math.floor((Date.now() - lastDate) / 86400000);
+                  if (daysSince <= 2) return <Badge variant="success" className="text-xs">Attivo</Badge>;
+                  if (daysSince <= 7) return <Badge variant="secondary" className="text-xs">Inattivo da {daysSince} giorni</Badge>;
+                  return <Badge variant="warning" className="text-xs">Inattivo da {daysSince} giorni</Badge>;
+                })()}
+              </div>
             </div>
           </div>
           <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setShowComm(true)}>
