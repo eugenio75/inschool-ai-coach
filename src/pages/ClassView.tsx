@@ -899,9 +899,12 @@ export default function ClassView() {
                               </p>
                             </div>
                             {badge && (badge.label === "Da seguire" || badge.label === "In ritardo") && (
-                              <Badge variant={badge.variant} className="text-[10px] shrink-0">
-                                {badge.label}
-                              </Badge>
+                              <>
+                                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                <Badge variant={badge.variant} className="text-[10px] shrink-0">
+                                  {badge.label}
+                                </Badge>
+                              </>
                             )}
                             <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                           </button>
