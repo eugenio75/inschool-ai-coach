@@ -490,7 +490,7 @@ export default function ClassView() {
               </div>
               <div className="flex items-center gap-3">
                 <span className="h-2.5 w-2.5 rounded-full bg-amber-400 shadow-[0_0_0_5px_hsl(45_93%_58%/0.18)]" />
-                <h1 className="text-3xl font-extrabold tracking-tight text-foreground leading-none">
+                <h1 className="text-[28px] font-extrabold tracking-tight text-foreground leading-none">
                   {classe.nome}
                 </h1>
               </div>
