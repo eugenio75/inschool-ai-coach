@@ -151,9 +151,48 @@ serve(async (req) => {
         .filter((assignment) => assignment.results.length > 0);
     }
 
-    return new Response(JSON.stringify({ classe, students, assignmentResults }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    // ─── Emotional + behavioral signals (last 14 days) ─────────────
+    let emotionalCheckins: any[] = [];
+    let emotionalAlerts: any[] = [];
+    let focusSessions: any[] = [];
+
+    if (studentIds.length > 0) {
+      const fourteenDaysAgo = new Date(Date.now() - 14 * 86400000).toISOString();
+
+      const [checkinsRes, alertsRes, focusRes] = await Promise.all([
+        admin
+          .from("emotional_checkins")
+          .select("child_profile_id, checkin_date, emotional_tone, energy_level, signals, created_at")
+          .in("child_profile_id", studentIds)
+          .gte("created_at", fourteenDaysAgo),
+        admin
+          .from("emotional_alerts")
+          .select("child_profile_id, alert_level, created_at, read")
+          .in("child_profile_id", studentIds)
+          .gte("created_at", fourteenDaysAgo),
+        admin
+          .from("focus_sessions")
+          .select("child_profile_id, emotion, duration_seconds, completed_at")
+          .in("child_profile_id", studentIds)
+          .gte("completed_at", fourteenDaysAgo),
+      ]);
+
+      emotionalCheckins = checkinsRes.data || [];
+      emotionalAlerts = alertsRes.data || [];
+      focusSessions = focusRes.data || [];
+    }
+
+    return new Response(
+      JSON.stringify({
+        classe,
+        students,
+        assignmentResults,
+        emotionalCheckins,
+        emotionalAlerts,
+        focusSessions,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Errore interno";
     return new Response(JSON.stringify({ error: message }), {

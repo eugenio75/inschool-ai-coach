@@ -82,6 +82,9 @@ export default function ClassView() {
   const [assignmentResults, setAssignmentResults] = useState<any[]>([]);
   const [manualGrades, setManualGrades] = useState<any[]>([]);
   const [feed, setFeed] = useState<any[]>([]);
+  const [emotionalCheckins, setEmotionalCheckins] = useState<any[]>([]);
+  const [emotionalAlerts, setEmotionalAlerts] = useState<any[]>([]);
+  const [focusSessions, setFocusSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // UI state
@@ -113,6 +116,9 @@ export default function ClassView() {
         loadedClasse = data.classe;
         loadedStudents = data.students || [];
         loadedResults = data.assignmentResults || [];
+        setEmotionalCheckins(data.emotionalCheckins || []);
+        setEmotionalAlerts(data.emotionalAlerts || []);
+        setFocusSessions(data.focusSessions || []);
 
         const { data: grades } = await (supabase as any)
           .from("manual_grades")
@@ -148,6 +154,9 @@ export default function ClassView() {
         }
         setManualGrades([]);
         setFeed([]);
+        setEmotionalCheckins([]);
+        setEmotionalAlerts([]);
+        setFocusSessions([]);
       }
 
       // Demo enrichment for sample students
@@ -217,6 +226,9 @@ export default function ClassView() {
     manualGrades,
     classSubject: classe.materia || "",
     lastActivityMap,
+    emotionalCheckins,
+    emotionalAlerts,
+    focusSessions,
   });
 
   // ─── Map evidence actions to handlers ──────────────────────────
@@ -246,6 +258,9 @@ export default function ClassView() {
             `Buongiorno,\n\nle scrivo a proposito di ${ev.targetStudentName}: vorrei condividere con voi alcune osservazioni recenti e proporre un breve confronto per allineare il sostegno a casa.\n\nCordiali saluti.`,
           );
         }
+        break;
+      case "checkin":
+        setStudentsOpen(true);
         break;
     }
   }
