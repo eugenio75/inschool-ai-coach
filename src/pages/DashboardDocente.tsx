@@ -658,7 +658,7 @@ export default function DashboardDocente() {
         {/* ━━━ BLOCK 6 — TWO COLUMNS ━━━ */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Left — Scadenze imminenti */}
-          <div className="bg-card border border-border rounded-xl p-5">
+          <div className="bg-card/95 backdrop-blur border border-border/60 rounded-[24px] p-5 sm:p-6 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)]">
             <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-3 flex items-center gap-2">
               <Calendar className="w-3.5 h-3.5" /> Scadenze imminenti
             </h2>
@@ -707,7 +707,7 @@ export default function DashboardDocente() {
           </div>
 
           {/* Right — Attività recenti */}
-          <div className="bg-card border border-border rounded-xl p-5">
+          <div className="bg-card/95 backdrop-blur border border-border/60 rounded-[24px] p-5 sm:p-6 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)]">
             <h2 className="text-xs uppercase tracking-widest font-semibold text-muted-foreground mb-3 flex items-center gap-2">
               <Clock className="w-3.5 h-3.5" /> Attività recenti
             </h2>
