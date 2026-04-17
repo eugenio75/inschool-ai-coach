@@ -82,6 +82,9 @@ export default function ClassView() {
   const [assignmentResults, setAssignmentResults] = useState<any[]>([]);
   const [manualGrades, setManualGrades] = useState<any[]>([]);
   const [feed, setFeed] = useState<any[]>([]);
+  const [emotionalCheckins, setEmotionalCheckins] = useState<any[]>([]);
+  const [emotionalAlerts, setEmotionalAlerts] = useState<any[]>([]);
+  const [focusSessions, setFocusSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // UI state
