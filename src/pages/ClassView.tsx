@@ -522,6 +522,7 @@ export default function ClassView() {
           paragraph={insight.paragraph}
           evidences={evidences}
           onAsk={handleCoachAsk}
+          coachName={coachName}
         />
 
         {/* SECTION 2: Azioni rapide */}
