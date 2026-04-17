@@ -3,8 +3,11 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Users, BookOpen, MessageSquare,
   Copy, ChevronRight, ChevronDown, AlertTriangle,
-  BarChart2, Send, Lightbulb, Info, PenLine,
+  BarChart2, Send, Lightbulb, Info, PenLine, Mail, Wrench,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import TeacherMaterialsTab, { type PrefilledMaterial } from "@/components/teacher/TeacherMaterialsTab";
 import ClassInsightsTab from "@/components/teacher/ClassInsightsTab";
@@ -226,26 +229,152 @@ function computeLearningIndex(
   return { index: Math.round(index), available: available.length };
 }
 
-/* ─── Last activity per student ─── */
-function getLastActivityMap(assignmentResults: any[], manualGrades: any[]): Record<string, string> {
+/* ─── Last activity per student (with name fallback for legacy data) ─── */
+function getLastActivityMap(
+  assignmentResults: any[],
+  manualGrades: any[],
+  students: any[] = [],
+): Record<string, string> {
   const map: Record<string, string> = {};
+  // Build name → enrolled student_id map for fallback
+  const nameToSid: Record<string, string> = {};
+  students.forEach((s: any) => {
+    const sid = s.student_id || s.id;
+    const firstName = (s.profile?.name || s.student_name || "").trim().toLowerCase();
+    if (firstName && sid) nameToSid[firstName] = sid;
+  });
+
+  const apply = (sid: string | undefined | null, date: string | undefined | null) => {
+    if (!sid || !date) return;
+    if (!map[sid] || new Date(date) > new Date(map[sid])) map[sid] = date;
+  };
+
   assignmentResults.forEach((a: any) => {
     (a.results || []).forEach((r: any) => {
-      const sid = r.student_id || r.id;
       const date = r.completed_at || r.created_at;
-      if (sid && date && (!map[sid] || new Date(date) > new Date(map[sid]))) {
-        map[sid] = date;
-      }
+      apply(r.student_id || r.id, date);
+      // Fallback by name (sample data may have orphaned student_ids)
+      const nm = (r.student_name || "").trim().toLowerCase();
+      if (nm && nameToSid[nm]) apply(nameToSid[nm], date);
     });
   });
   manualGrades.forEach((g: any) => {
-    const sid = g.student_id;
-    const date = g.graded_at;
-    if (sid && date && (!map[sid] || new Date(date) > new Date(map[sid]))) {
-      map[sid] = date;
-    }
+    apply(g.student_id, g.graded_at);
+    const nm = (g.student_name || "").trim().toLowerCase();
+    if (nm && nameToSid[nm]) apply(nameToSid[nm], g.graded_at);
   });
   return map;
+}
+
+/* ─── Compute reasons + suggested actions for "to follow" students ─── */
+type FollowAction = "recovery" | "contact_parents";
+interface FollowReason {
+  studentId: string;
+  studentName: string;
+  reason: string;
+  reasonType: "low_score" | "stale_task" | "topic_difficulty" | "no_session";
+  topic?: string;
+  subject?: string;
+  lastActivity?: string;
+  actions: FollowAction[];
+}
+
+function computeFollowReasons(
+  students: any[],
+  assignmentResults: any[],
+  studentScores: Record<string, number[]> | undefined,
+  lastActivityMap: Record<string, string>,
+  classSubject: string,
+): FollowReason[] {
+  if (!studentScores) return [];
+  const reasons: FollowReason[] = [];
+  const now = Date.now();
+  const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+
+  students.forEach((s: any) => {
+    const sid = s.student_id || s.id;
+    const firstName = s.profile?.name || s.student_name || "Studente";
+    const lastName = s.profile?.last_name || "";
+    const studentName = lastName ? `${firstName} ${lastName}` : firstName;
+
+    const scores = studentScores[sid] || [];
+    const lastActivity = lastActivityMap[sid];
+    const recent = scores.slice(-3);
+    const recentAvg = recent.length > 0 ? recent.reduce((a, b) => a + b, 0) / recent.length : null;
+
+    // Find topic with most errors for this student
+    const errorTopics: Record<string, number> = {};
+    let staleTasks = 0;
+    let assignmentSubject = "";
+    assignmentResults.forEach((a: any) => {
+      (a.results || []).forEach((r: any) => {
+        if ((r.student_id || r.id) !== sid) return;
+        if (a.subject) assignmentSubject = a.subject;
+        if (r.status !== "completed" && a.assigned_at) {
+          const ageMs = now - new Date(a.assigned_at).getTime();
+          if (ageMs > SEVEN_DAYS) staleTasks++;
+        }
+        if (r.errors_summary && typeof r.errors_summary === "object") {
+          Object.keys(r.errors_summary).forEach(k => {
+            errorTopics[k] = (errorTopics[k] || 0) + 1;
+          });
+        }
+      });
+    });
+    const topErrorTopic = Object.entries(errorTopics).sort(([, a], [, b]) => b - a)[0];
+
+    // Decide reason in priority order
+    if (recentAvg != null && recentAvg < 50) {
+      reasons.push({
+        studentId: sid, studentName,
+        reason: "Punteggio SarAI sotto il 50% nelle ultime attività",
+        reasonType: "low_score",
+        subject: assignmentSubject || classSubject,
+        topic: topErrorTopic?.[0],
+        lastActivity,
+        actions: ["recovery"],
+      });
+    } else if (topErrorTopic && topErrorTopic[1] >= 2) {
+      reasons.push({
+        studentId: sid, studentName,
+        reason: `Difficoltà rilevate su "${topErrorTopic[0]}"`,
+        reasonType: "topic_difficulty",
+        subject: assignmentSubject || classSubject,
+        topic: topErrorTopic[0],
+        lastActivity,
+        actions: ["recovery"],
+      });
+    } else if (staleTasks >= 1) {
+      reasons.push({
+        studentId: sid, studentName,
+        reason: `Compito non completato da 7+ giorni`,
+        reasonType: "stale_task",
+        lastActivity,
+        actions: ["contact_parents"],
+      });
+    } else if (lastActivity && now - new Date(lastActivity).getTime() > SEVEN_DAYS) {
+      reasons.push({
+        studentId: sid, studentName,
+        reason: "Nessuna sessione negli ultimi 7 giorni",
+        reasonType: "no_session",
+        lastActivity,
+        actions: ["contact_parents"],
+      });
+    } else if (scores.length > 0 && scores.reduce((a, b) => a + b, 0) / scores.length < 60) {
+      // Generic catch-all to align with stats.toFollow (mean < 60)
+      reasons.push({
+        studentId: sid, studentName,
+        reason: "Media generale sotto la sufficienza",
+        reasonType: "low_score",
+        subject: assignmentSubject || classSubject,
+        topic: topErrorTopic?.[0],
+        lastActivity,
+        actions: ["recovery"],
+      });
+    }
+  });
+
+  return reasons;
 }
 
 export default function ClassView() {
@@ -267,6 +396,10 @@ export default function ClassView() {
   const [prefilledMaterial, setPrefilledMaterial] = useState<PrefilledMaterial | null>(null);
   const [verificheOpen, setVerificheOpen] = useState(false);
   const [showGradeModal, setShowGradeModal] = useState(false);
+  const [followExpanded, setFollowExpanded] = useState(true);
+  const [parentEmailTarget, setParentEmailTarget] = useState<{ studentId: string; studentName: string } | null>(null);
+  const [parentEmailSubject, setParentEmailSubject] = useState("");
+  const [parentEmailBody, setParentEmailBody] = useState("");
   const [ocrAssignment, setOcrAssignment] = useState<any>(null);
 
   useEffect(() => {
@@ -483,14 +616,118 @@ export default function ClassView() {
             </div>
           ) : (
             <>
-              {/* BLOCK 1 — Stato classe */}
-              <div className="bg-card border border-border rounded-xl p-4">
-                <p className="text-sm font-medium text-foreground">
-                  {stats.toFollow === 0
-                    ? "✅ La classe procede regolarmente"
-                    : `⚠️ ${stats.toFollow} ${stats.toFollow === 1 ? "studente" : "studenti"} da seguire`}
-                </p>
-              </div>
+              {/* BLOCK 1 — Stato classe / studenti da seguire */}
+              {(() => {
+                const lastActivityMap = getLastActivityMap(assignmentResults, manualGrades, students);
+                const followReasons = computeFollowReasons(
+                  students, assignmentResults, stats.studentScores as any,
+                  lastActivityMap, classe?.materia || "",
+                );
+                const count = followReasons.length;
+
+                if (count === 0) {
+                  return (
+                    <div className="bg-card border border-border rounded-xl p-4">
+                      <p className="text-sm font-medium text-foreground">
+                        ✅ La classe procede regolarmente
+                      </p>
+                    </div>
+                  );
+                }
+
+                const isExpanded = count === 1 ? true : followExpanded;
+                return (
+                  <div className="bg-card border border-amber-500/30 rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => count > 1 && setFollowExpanded(!followExpanded)}
+                      className={cn(
+                        "w-full flex items-center justify-between p-4 text-left",
+                        count > 1 && "hover:bg-muted/30 transition-colors"
+                      )}
+                      disabled={count === 1}
+                    >
+                      <p className="text-sm font-medium text-foreground">
+                        ⚠️ {count} {count === 1 ? "studente" : "studenti"} da seguire
+                      </p>
+                      {count > 1 && (
+                        <ChevronDown className={cn(
+                          "w-4 h-4 text-muted-foreground transition-transform shrink-0",
+                          isExpanded && "rotate-180"
+                        )} />
+                      )}
+                    </button>
+
+                    {isExpanded && (
+                      <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
+                        {followReasons.map((fr) => (
+                          <div key={fr.studentId} className="bg-muted/40 rounded-xl p-3">
+                            <div className="flex items-start gap-3">
+                              <AvatarInitials name={fr.studentName} size="sm" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-foreground">{fr.studentName}</p>
+                                <p className="text-xs text-amber-600 mt-0.5 flex items-start gap-1.5">
+                                  <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
+                                  <span>{fr.reason}</span>
+                                </p>
+                                {fr.lastActivity && (
+                                  <p className="text-[11px] text-muted-foreground mt-1">
+                                    Ultima attività: {new Date(fr.lastActivity).toLocaleDateString("it-IT")}
+                                  </p>
+                                )}
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  {fr.actions.includes("recovery") && (
+                                    <Button
+                                      variant="secondary"
+                                      size="sm"
+                                      className="h-7 text-[11px] px-2.5 rounded-lg"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleGenerateRecovery(
+                                          fr.subject || "",
+                                          fr.topic || fr.studentName,
+                                          1,
+                                        );
+                                      }}
+                                    >
+                                      <Wrench className="w-3 h-3 mr-1" /> Genera recupero
+                                    </Button>
+                                  )}
+                                  {fr.actions.includes("contact_parents") && (
+                                    <Button
+                                      variant="secondary"
+                                      size="sm"
+                                      className="h-7 text-[11px] px-2.5 rounded-lg"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setParentEmailTarget({ studentId: fr.studentId, studentName: fr.studentName });
+                                        setParentEmailSubject(`Aggiornamento su ${fr.studentName}`);
+                                        setParentEmailBody(`Buongiorno,\n\nLe scrivo per condividere un aggiornamento su ${fr.studentName}: ${fr.reason.toLowerCase()}.\n\nResto a disposizione per un confronto.\n\nCordiali saluti.`);
+                                      }}
+                                    >
+                                      <Mail className="w-3 h-3 mr-1" /> Scrivi ai genitori
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-[11px] px-2.5 rounded-lg"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/studente/${fr.studentId}?classId=${classId}`);
+                                    }}
+                                  >
+                                    Vedi dettaglio <ChevronRight className="w-3 h-3 ml-0.5" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* BLOCK 2 — Indice di apprendimento */}
               {(() => {
@@ -579,7 +816,7 @@ export default function ClassView() {
 
               {/* BLOCK 3 — Lista studenti */}
               {(() => {
-                const lastActivityMap = getLastActivityMap(assignmentResults, manualGrades);
+                const lastActivityMap = getLastActivityMap(assignmentResults, manualGrades, students);
                 return (
                   <div>
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
@@ -888,6 +1125,61 @@ export default function ClassView() {
           onSaved={loadClass}
         />
       )}
+
+      {/* Parent Email Dialog (from "studenti da seguire") */}
+      <Dialog open={!!parentEmailTarget} onOpenChange={(open) => { if (!open) setParentEmailTarget(null); }}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Scrivi ai genitori di {parentEmailTarget?.studentName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Oggetto</Label>
+              <Input
+                value={parentEmailSubject}
+                onChange={(e) => setParentEmailSubject(e.target.value)}
+                className="mt-1 rounded-xl"
+              />
+            </div>
+            <div>
+              <Label>Messaggio</Label>
+              <Textarea
+                value={parentEmailBody}
+                onChange={(e) => setParentEmailBody(e.target.value)}
+                className="mt-1 rounded-xl min-h-[160px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setParentEmailTarget(null)} className="rounded-xl">
+              Annulla
+            </Button>
+            <Button
+              disabled={!parentEmailBody.trim()}
+              onClick={async () => {
+                if (!user || !classId || !parentEmailTarget) return;
+                await (supabase as any).from("parent_communications").insert({
+                  teacher_id: user.id,
+                  class_id: classId,
+                  student_id: parentEmailTarget.studentId,
+                  type: "messaggio",
+                  subject: parentEmailSubject,
+                  body: parentEmailBody,
+                  sent_at: new Date().toISOString(),
+                  status: "sent",
+                });
+                toast.success("Messaggio inviato!");
+                setParentEmailTarget(null);
+                setParentEmailSubject("");
+                setParentEmailBody("");
+              }}
+              className="rounded-xl"
+            >
+              <Send className="w-3.5 h-3.5 mr-1" /> Invia
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
