@@ -837,7 +837,6 @@ export default function ClassView() {
             topics={topics}
           />
         </TabsContent>
-        </TabsContent>
 
         {/* ━━━ TAB: MATERIALI ━━━ */}
         <TabsContent value="materiali" className="mt-6">
