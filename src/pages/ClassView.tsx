@@ -259,6 +259,9 @@ export default function ClassView() {
           );
         }
         break;
+      case "checkin":
+        setStudentsOpen(true);
+        break;
     }
   }
 
