@@ -523,6 +523,7 @@ export default function ClassView() {
 
         {/* SECTION 3: Notifiche */}
         <ClassNotificationsCard notifications={notifications} />
+        </div>
       </div>
 
       {/* Modals & sheets */}
