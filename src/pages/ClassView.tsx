@@ -460,19 +460,29 @@ export default function ClassView() {
   const schoolType = classe.ordine_scolastico || classe.school_name || "";
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="max-w-[880px] mx-auto px-4 sm:px-8 py-3 sm:py-4 pb-24">
-        {/* ─── Header card (white) ─── */}
-        <header className="mb-5 sm:mb-6 rounded-[24px] border border-border/60 bg-card p-5 sm:p-7">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="min-h-screen bg-gradient-to-b from-muted/40 to-muted/20">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-24">
+        {/* ─── Header card ─── */}
+        <header className="rounded-[32px] border border-border/60 bg-card/95 backdrop-blur p-6 sm:p-7 shadow-[0_10px_30px_-15px_hsl(var(--foreground)/0.08)]">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80">
-                Classe
-              </p>
-              <h1 className="mt-2 text-[28px] sm:text-[32px] font-bold tracking-tight text-foreground leading-none">
-                {classe.nome}
-              </h1>
-              <p className="mt-2.5 text-[14px] text-muted-foreground">
+              <div className="mb-3 flex items-center gap-2 text-[13px] text-muted-foreground/70">
+                <button
+                  onClick={() => navigate("/dashboard")}
+                  className="hover:text-foreground transition-colors"
+                >
+                  Home
+                </button>
+                <span>•</span>
+                <span className="text-muted-foreground">{classe.nome}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-400 shadow-[0_0_0_5px_hsl(45_93%_58%/0.18)]" />
+                <h1 className="text-[28px] sm:text-[32px] font-extrabold tracking-tight text-foreground leading-none">
+                  {classe.nome}
+                </h1>
+              </div>
+              <p className="mt-3 text-[15px] text-muted-foreground">
                 {[classe.materia, `${students.length} ${students.length === 1 ? "studente" : "studenti"}`, schoolType]
                   .filter(Boolean)
                   .join(" · ")}
@@ -480,11 +490,10 @@ export default function ClassView() {
             </div>
             <button
               onClick={() => { navigator.clipboard.writeText(classe.codice_invito); toast.success("Codice copiato!"); }}
-              className="shrink-0 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors self-start sm:self-end"
+              className="self-start shrink-0 inline-flex items-center gap-2 rounded-2xl border border-border bg-muted/40 px-4 py-2 text-[14px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors"
               title="Copia codice classe"
             >
-              <span>Codice classe:</span>
-              <span className="font-mono font-semibold text-foreground tracking-wider">{classe.codice_invito}</span>
+              <span className="font-mono font-semibold tracking-[0.18em] text-foreground">{classe.codice_invito}</span>
               <Copy className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -494,7 +503,7 @@ export default function ClassView() {
         </header>
 
         {/* ─── Sections ─── */}
-        <div className="space-y-5 sm:space-y-6">
+        <div className="mt-6 space-y-7">
         {/* SECTION 1: Coach SarAI */}
         <ClassCoachCard
           headline={insight.headline}

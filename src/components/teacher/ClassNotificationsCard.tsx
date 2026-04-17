@@ -23,23 +23,27 @@ const ICONS: Record<NotificationLevel, LucideIcon> = {
   info: Info,
 };
 
-const STYLES: Record<NotificationLevel, { iconBg: string; iconText: string; pill: string }> = {
+const STYLES: Record<NotificationLevel, { dot: string; iconBg: string; iconText: string; pill: string }> = {
   attention: {
+    dot: "bg-amber-300",
     iconBg: "bg-amber-100 dark:bg-amber-500/15",
     iconText: "text-amber-600 dark:text-amber-400",
     pill: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
   },
   completed: {
+    dot: "bg-emerald-300",
     iconBg: "bg-emerald-100 dark:bg-emerald-500/15",
     iconText: "text-emerald-600 dark:text-emerald-400",
     pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
   },
   urgent: {
+    dot: "bg-red-300",
     iconBg: "bg-red-100 dark:bg-red-500/15",
     iconText: "text-red-600 dark:text-red-400",
     pill: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
   },
   info: {
+    dot: "bg-blue-300",
     iconBg: "bg-blue-100 dark:bg-blue-500/15",
     iconText: "text-blue-600 dark:text-blue-400",
     pill: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
@@ -47,19 +51,20 @@ const STYLES: Record<NotificationLevel, { iconBg: string; iconText: string; pill
 };
 
 export default function ClassNotificationsCard({ notifications }: Props) {
+  const headerDot = notifications[0] ? STYLES[notifications[0].level].dot : "bg-muted-foreground/30";
+
   return (
-    <section className="rounded-[24px] border border-border/60 bg-card p-5 sm:p-7">
-      <div className="mb-4">
-        <h3 className="text-[17px] sm:text-[18px] font-semibold text-foreground tracking-tight">
-          Attività della classe
+    <section>
+      <div className="mb-4 flex items-center gap-2">
+        <div className={cn("h-2.5 w-2.5 rounded-full", headerDot)} />
+        <h3 className="text-[13px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+          Notifiche
         </h3>
-        <p className="mt-1 text-[13px] text-muted-foreground">
-          Completate, in corso, consigliate. Tutto in una vista sola.
-        </p>
       </div>
+
       {notifications.length === 0 ? (
-        <div className="rounded-2xl border border-border/60 p-6 text-center">
-          <p className="text-[13px] sm:text-[14px] text-muted-foreground">Nessuna notifica al momento.</p>
+        <div className="rounded-[28px] border border-border/60 bg-card/95 backdrop-blur p-6 text-center shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.08)]">
+          <p className="text-[14px] text-muted-foreground">Nessuna notifica al momento.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -72,24 +77,28 @@ export default function ClassNotificationsCard({ notifications }: Props) {
                 onClick={n.onClick}
                 disabled={!n.onClick}
                 className={cn(
-                  "w-full flex items-center gap-3 sm:gap-4 rounded-2xl border border-border/70 p-4 text-left transition-colors",
-                  n.onClick && "hover:bg-muted/40",
+                  "w-full flex items-center gap-4 rounded-[28px] border border-border/60 bg-card/95 backdrop-blur p-5 text-left shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.08)] transition-all",
+                  n.onClick && "hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)]",
                 )}
               >
-                <span className={cn("shrink-0 h-10 w-10 rounded-xl flex items-center justify-center", styles.iconBg)}>
-                  <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5", styles.iconText)} />
+                <span className={cn("shrink-0 h-14 w-14 rounded-2xl flex items-center justify-center", styles.iconBg)}>
+                  <Icon className={cn("h-6 w-6", styles.iconText)} />
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[14px] sm:text-[15px] font-semibold text-foreground leading-tight">{n.title}</p>
-                  <p className="text-[13px] text-muted-foreground mt-1 leading-snug">{n.subtitle}</p>
+                  <p className="text-[18px] sm:text-[22px] font-bold tracking-tight text-foreground leading-tight">
+                    {n.title}
+                  </p>
+                  <p className="mt-1 text-[14px] sm:text-[15px] text-muted-foreground">
+                    {n.subtitle}
+                  </p>
                 </div>
                 <span className={cn(
-                  "shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-[11px] sm:text-[12px] font-semibold",
+                  "shrink-0 inline-flex items-center px-4 py-2 rounded-full text-[13px] font-semibold",
                   styles.pill,
                 )}>
                   {n.badgeLabel}
                 </span>
-                {n.onClick && <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />}
+                {n.onClick && <ChevronRight className="h-5 w-5 text-muted-foreground/40 shrink-0" />}
               </button>
             );
           })}
