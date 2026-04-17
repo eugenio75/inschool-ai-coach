@@ -183,7 +183,31 @@ export default function StudentView() {
       const uniqueDays = [...new Set(completedDates)];
       setActiveDays(uniqueDays.length);
       if (uniqueDays.length > 0) setLastAccess(uniqueDays[0]); // most recent first
-    } catch (error) {
+
+      // Demo seed: if this is a sample student with no data, populate with example data
+      if (isDemo && activityList.length === 0 && (grades || []).length === 0 && uniqueDays.length === 0) {
+        setSubjectProgress([
+          { subject: "Matematica", avg: 78, count: 6 },
+          { subject: "Italiano", avg: 85, count: 4 },
+          { subject: "Storia", avg: 62, count: 3 },
+        ]);
+        const today = new Date();
+        const daysAgo = (n: number) => new Date(today.getTime() - n * 86400000).toISOString();
+        setActivities([
+          { title: "Verifica frazioni", type: "verifica", subject: "Matematica", due_date: daysAgo(2), assigned_at: daysAgo(7), completed_at: daysAgo(2), score: 82, status: "completed", errors_summary: {} },
+          { title: "Analisi grammaticale", type: "esercizio", subject: "Italiano", due_date: daysAgo(5), assigned_at: daysAgo(10), completed_at: daysAgo(5), score: 88, status: "completed", errors_summary: {} },
+          { title: "Risorgimento italiano", type: "studio", subject: "Storia", due_date: daysAgo(1), assigned_at: daysAgo(6), completed_at: null, score: null, status: "in_progress", errors_summary: {} },
+        ]);
+        setManualGrades([
+          { id: "demo-g1", assignment_title: "Compito in classe — Geometria", grade: "7.5", grade_scale: "/10", graded_at: daysAgo(3) },
+        ]);
+        setActiveDays(5);
+        setLastAccess(new Date(today.getTime() - 86400000).toDateString());
+        setSignals([
+          'Difficoltà su "frazioni equivalenti" (3 volte)',
+          "Calo recente in Storia — monitorare le prossime verifiche.",
+        ]);
+      }
       console.error("StudentView load error:", error);
       toast.error("Errore nel caricamento dei dati.");
       navigate(`/classe/${classId}`);
