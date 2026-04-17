@@ -411,7 +411,7 @@ export default function ClassView() {
   const [prefilledMaterial, setPrefilledMaterial] = useState<PrefilledMaterial | null>(null);
   const [verificheOpen, setVerificheOpen] = useState(false);
   const [showGradeModal, setShowGradeModal] = useState(false);
-  const [followExpanded, setFollowExpanded] = useState(true);
+  const [followExpanded, setFollowExpanded] = useState(false);
   const [parentEmailTarget, setParentEmailTarget] = useState<{ studentId: string; studentName: string } | null>(null);
   const [parentEmailSubject, setParentEmailSubject] = useState("");
   const [parentEmailBody, setParentEmailBody] = useState("");
@@ -689,124 +689,142 @@ export default function ClassView() {
                 const li = computeLearningIndex(assignmentResults, manualGrades);
                 const idx = li.index;
 
-                /* ─── SECTION 1 — Studenti da seguire (collapsed) ─── */
-                const Section1 = (
-                  <div className={cn(
-                    "bg-card border rounded-xl overflow-hidden",
-                    followReasons.length > 0 ? "border-amber-500/30" : "border-border",
-                  )}>
-                    {followReasons.length === 0 ? (
-                      <div className="p-4">
-                        <p className="text-sm font-medium text-foreground">
-                          ✅ Nessuno studente da seguire al momento
-                        </p>
+                /* ─── SECTION 1 — Studenti da seguire (collapsed by default, soft amber) ─── */
+                const Section1 = followReasons.length === 0 ? (
+                  <div className="bg-card border border-border rounded-[12px] p-4">
+                    <p className="text-sm text-foreground">
+                      ✅ Nessuno studente da seguire al momento
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-card border border-amber-300/50 rounded-[12px] overflow-hidden">
+                    <button
+                      onClick={() => setFollowExpanded(!followExpanded)}
+                      className="w-full flex items-center justify-between p-4 text-left hover:bg-amber-50/40 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-500" />
+                        <p className="text-sm font-semibold text-foreground">Studenti da seguire</p>
+                        <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-amber-100 text-amber-700 text-[11px] font-semibold">
+                          {followReasons.length}
+                        </span>
                       </div>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => setFollowExpanded(!followExpanded)}
-                          className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-colors"
-                        >
-                          <p className="text-sm font-medium text-foreground">
-                            ⚠️ {followReasons.length} {followReasons.length === 1 ? "studente da seguire" : "studenti da seguire"}
-                          </p>
-                          <ChevronDown className={cn(
-                            "w-4 h-4 text-muted-foreground transition-transform shrink-0",
-                            followExpanded && "rotate-180",
-                          )} />
-                        </button>
-                        {followExpanded && (
-                          <div className="px-2 pb-2 border-t border-border">
-                            {followReasons.map((fr) => (
-                              <button
-                                key={fr.studentId}
-                                onClick={() => navigate(`/studente/${fr.studentId}?classId=${classId}`)}
-                                className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/40 rounded-lg transition-colors"
-                              >
-                                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-                                <span className="flex-1 text-sm text-foreground">{fr.studentName}</span>
-                                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </>
+                      <ChevronDown className={cn(
+                        "w-4 h-4 text-muted-foreground transition-transform shrink-0",
+                        followExpanded && "rotate-180",
+                      )} />
+                    </button>
+                    {followExpanded && (
+                      <div className="border-t border-border divide-y divide-border">
+                        {followReasons.map((fr) => (
+                          <button
+                            key={fr.studentId}
+                            onClick={() => navigate(`/studente/${fr.studentId}?classId=${classId}`)}
+                            className="w-full flex items-center gap-3 p-4 text-left hover:bg-muted/40 transition-colors"
+                          >
+                            <AvatarInitials name={fr.studentName} size="sm" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">{fr.studentName}</p>
+                              <p className="text-[12px] text-muted-foreground truncate mt-0.5">
+                                {fr.reason}
+                              </p>
+                            </div>
+                            <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-semibold uppercase tracking-wide">
+                              Da seguire
+                            </span>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                          </button>
+                        ))}
+                      </div>
                     )}
                   </div>
                 );
 
-                /* ─── SECTION 2 — Indice di apprendimento (clickable) ─── */
+                /* ─── SECTION 2 — Andamento della classe (clickable, clean) ─── */
                 let zoneColor = "bg-emerald-500";
                 let zoneLabel = "La classe apprende bene";
                 if (idx == null) {
                   zoneLabel = "In attesa di dati";
                 } else if (idx < 40) {
                   zoneColor = "bg-red-500";
-                  zoneLabel = "Qualche difficoltà — apri per vedere";
+                  zoneLabel = "Qualche difficoltà rilevata";
                 } else if (idx < 70) {
                   zoneColor = "bg-amber-500";
-                  zoneLabel = "Qualche difficoltà da monitorare";
+                  zoneLabel = "Qualche difficoltà rilevata";
                 }
 
                 const Section2 = (
-                  <button
-                    onClick={() => setLearningModalOpen(true)}
-                    disabled={idx == null}
-                    className={cn(
-                      "w-full text-left bg-card border border-border rounded-xl p-5 transition-colors",
-                      idx != null && "hover:bg-muted/30 cursor-pointer",
-                    )}
-                  >
+                  <div className="bg-card border border-border rounded-[12px] p-5">
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-semibold text-foreground">Indice di apprendimento</p>
+                      <p className="text-sm font-semibold text-foreground">Andamento della classe</p>
                       {idx != null && (
-                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        <button
+                          onClick={() => setLearningModalOpen(true)}
+                          className="text-[12px] text-primary hover:underline"
+                        >
+                          tocca per i dettagli ›
+                        </button>
                       )}
                     </div>
                     {idx == null ? (
                       <p className="text-xs text-muted-foreground">
-                        L'indice si attiverà dopo qualche attività completata dalla classe.
+                        L'indicatore si attiverà dopo qualche attività completata dalla classe.
                       </p>
                     ) : (
                       <>
-                        <div className="relative h-3 rounded-full overflow-hidden flex">
-                          <div className="bg-red-500/30" style={{ flexBasis: "40%" }} />
-                          <div className="bg-amber-500/30" style={{ flexBasis: "30%" }} />
-                          <div className="bg-emerald-500/30" style={{ flexBasis: "30%" }} />
+                        <div className="relative h-2 rounded-full bg-muted overflow-hidden">
                           <div
-                            className={cn("absolute top-0 bottom-0 w-1 rounded-full", zoneColor)}
-                            style={{ left: `calc(${idx}% - 2px)` }}
+                            className={cn("absolute top-0 bottom-0 left-0 rounded-full transition-all", zoneColor)}
+                            style={{ width: `${idx}%` }}
                           />
                         </div>
                         <p className="text-sm text-foreground mt-3">{zoneLabel}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                          Tocca per vedere le difficoltà e i suggerimenti del Coach AI.
-                        </p>
+                        <button
+                          onClick={() => setLearningModalOpen(true)}
+                          className="text-[12px] text-primary hover:underline mt-2 block"
+                        >
+                          Vedi difficoltà e suggerimenti del Coach AI →
+                        </button>
                       </>
                     )}
-                  </button>
+                  </div>
                 );
 
-                /* ─── SECTION 3 — Studenti (avatar + nome) ─── */
+                /* ─── SECTION 3 — Studenti (avatar + nome + ultima attività + badge) ─── */
                 const Section3 = (
                   <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
                       Studenti ({students.length})
                     </p>
-                    <div className="space-y-2">
+                    <div className="bg-card border border-border rounded-[12px] divide-y divide-border overflow-hidden">
                       {students.map((s: any) => {
                         const firstName = s.profile?.name || s.student_name || "Studente";
                         const lastName = s.profile?.last_name || "";
                         const name = lastName ? `${firstName} ${lastName}` : firstName;
                         const sid = s.student_id || s.id;
+                        const last = lastActivityMap[sid];
+                        const lastLabel = last
+                          ? new Date(last).toLocaleDateString("it-IT", { day: "numeric", month: "short" })
+                          : "—";
+                        const needsFollow = followReasons.some(fr => fr.studentId === sid);
                         return (
                           <button
                             key={s.id}
                             onClick={() => navigate(`/studente/${sid}?classId=${classId}`)}
-                            className="w-full flex items-center gap-3 p-3 bg-card border border-border rounded-xl hover:bg-muted/50 hover:shadow-sm transition-all text-left"
+                            className="w-full flex items-center gap-3 p-3 hover:bg-muted/40 transition-colors text-left"
                           >
                             <AvatarInitials name={name} size="sm" />
-                            <span className="flex-1 text-sm font-medium text-foreground truncate">{name}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">{name}</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">
+                                Ultima attività: {lastLabel}
+                              </p>
+                            </div>
+                            {needsFollow && (
+                              <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-semibold uppercase tracking-wide">
+                                Da seguire
+                              </span>
+                            )}
                             <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                           </button>
                         );
@@ -815,20 +833,20 @@ export default function ClassView() {
                   </div>
                 );
 
-                /* ─── SECTION 4 — Attività assegnate (clean cards) ─── */
+                /* ─── SECTION 4 — Attività assegnate (clean, no scores) ─── */
                 const Section4 = (
                   <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
                       Attività assegnate ({assignmentResults.length})
                     </p>
                     {assignmentResults.length === 0 ? (
-                      <div className="bg-card border border-border rounded-xl p-5 text-center">
+                      <div className="bg-card border border-border rounded-[12px] p-5 text-center">
                         <p className="text-sm text-muted-foreground">
                           Nessuna attività assegnata a questa classe.
                         </p>
                       </div>
                     ) : (
-                      <div className="space-y-2">
+                      <div className="bg-card border border-border rounded-[12px] divide-y divide-border overflow-hidden">
                         {assignmentResults.map((a: any) => {
                           const results = a.results || [];
                           const completed = results.filter((r: any) => r.status === "completed").length;
@@ -836,19 +854,29 @@ export default function ClassView() {
                           const date = a.assigned_at
                             ? new Date(a.assigned_at).toLocaleDateString("it-IT", { day: "numeric", month: "short" })
                             : "";
+                          const allDone = total > 0 && completed === total;
                           return (
                             <button
                               key={a.id}
                               onClick={() => setActiveAssignment(a)}
-                              className="w-full flex items-center gap-3 p-4 bg-card border border-border rounded-xl hover:bg-muted/50 hover:shadow-sm transition-all text-left"
+                              className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left"
                             >
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-foreground truncate">{a.title}</p>
-                                <p className="text-[11px] text-muted-foreground mt-0.5">
-                                  {date && <>{date} · </>}
-                                  {completed}/{total} {completed === 1 && total === 1 ? "ha completato" : "hanno completato"}
+                                <p className="text-sm font-semibold text-foreground truncate">{a.title}</p>
+                                <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                                  {a.subject ? `${a.subject}` : ""}{a.subject && date ? " · " : ""}{date}
                                 </p>
                               </div>
+                              <span className={cn(
+                                "shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold",
+                                allDone
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : "bg-muted text-muted-foreground",
+                              )}>
+                                {allDone
+                                  ? `${completed}/${total} ✓`
+                                  : `${completed}/${total} consegnat${total === 1 ? "o" : "i"}`}
+                              </span>
                               <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                             </button>
                           );
