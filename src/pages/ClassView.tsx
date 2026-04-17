@@ -585,6 +585,18 @@ export default function ClassView() {
   // Assignment list for manual grade modal
   const assignmentList = assignmentResults.map((a: any) => ({ id: a.id, title: a.title }));
 
+  // Detect class default grade scale (most-used in manual_grades, fallback /10)
+  const classScale: ScaleId = (() => {
+    if (manualGrades.length === 0) return "/10";
+    const counts: Record<string, number> = {};
+    manualGrades.forEach((g: any) => {
+      const s = g.grade_scale || "/10";
+      counts[s] = (counts[s] || 0) + 1;
+    });
+    const top = Object.entries(counts).sort(([, a], [, b]) => b - a)[0];
+    return (top?.[0] as ScaleId) || "/10";
+  })();
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 pb-24">
       {/* ─── Header ─── */}
