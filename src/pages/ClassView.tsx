@@ -241,9 +241,17 @@ export default function ClassView() {
 
   if (!classe) {
     return (
-      <div className="max-w-[720px] mx-auto px-4 sm:px-10 py-8 text-center">
-        <p className="text-muted-foreground">Classe non trovata.</p>
-        <Button variant="outline" onClick={() => navigate("/dashboard")} className="mt-4">Torna alla dashboard</Button>
+      <div className="max-w-[720px] mx-auto px-4 sm:px-10 py-8 text-center space-y-3">
+        <p className="text-foreground font-medium">{loadError || "Classe non trovata."}</p>
+        {loadError?.toLowerCase().includes("accesso") && (
+          <p className="text-sm text-muted-foreground">
+            Esci e accedi con l'account docente proprietario di questa classe.
+          </p>
+        )}
+        <div className="flex items-center justify-center gap-2 pt-2">
+          <Button variant="outline" onClick={() => navigate("/dashboard")}>Torna alla dashboard</Button>
+          <Button variant="ghost" onClick={() => loadClass()}>Riprova</Button>
+        </div>
       </div>
     );
   }
