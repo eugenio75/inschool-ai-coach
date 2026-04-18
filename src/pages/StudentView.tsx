@@ -64,6 +64,8 @@ export default function StudentView() {
   const [topErrorTopic, setTopErrorTopic] = useState<string | null>(null);
   const [activeDays, setActiveDays] = useState(0);
   const [lastAccess, setLastAccess] = useState<string | null>(null);
+  const [habitsSummary, setHabitsSummary] = useState<string | null>(null);
+  const [habitsOpen, setHabitsOpen] = useState(false);
 
   // Communication dialog
   const [showComm, setShowComm] = useState(false);
