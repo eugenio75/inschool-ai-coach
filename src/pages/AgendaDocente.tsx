@@ -234,13 +234,13 @@ export default function AgendaDocente() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 pb-24">
-      {/* Back link */}
-      <BackLink label="alla home" to="/dashboard" className="mb-3" />
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div>
+    <div className="relative">
+      <BackLink label="alla home" to="/dashboard" />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 pb-24">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div>
             <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
               <CalendarIcon className="w-5 h-5" /> Agenda
             </h1>
@@ -504,6 +504,7 @@ export default function AgendaDocente() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }

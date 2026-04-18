@@ -473,13 +473,13 @@ export default function ClassView() {
   const schoolType = classe.ordine_scolastico || classe.school_name || "";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/40 to-muted/20">
+    <div className="min-h-screen bg-gradient-to-b from-muted/40 to-muted/20 relative">
+      <BackLink label="alla home" to="/dashboard" />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-24">
         {/* ─── Header card ─── */}
         <header className="rounded-[32px] border border-border/60 bg-card/95 backdrop-blur p-6 sm:p-7 shadow-[0_10px_30px_-15px_hsl(var(--foreground)/0.08)]">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
-              <BackLink label="alla home" to="/dashboard" className="mb-3" />
               <div className="flex items-center gap-3">
                 <span className="h-2.5 w-2.5 rounded-full bg-amber-400 shadow-[0_0_0_5px_hsl(45_93%_58%/0.18)]" />
                 <h1 className="text-[28px] font-extrabold tracking-tight text-foreground leading-none">
