@@ -87,6 +87,7 @@ export default function ClassView() {
   const [emotionalAlerts, setEmotionalAlerts] = useState<any[]>([]);
   const [focusSessions, setFocusSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [coachName, setCoachName] = useState("");
 
   // UI state
