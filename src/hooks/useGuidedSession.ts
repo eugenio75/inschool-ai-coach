@@ -5,6 +5,7 @@ import { getTask as fetchTask, getDailyMissions, completeMission, saveFocusSessi
 import type { PointsEarned } from "@/components/SessionCelebration";
 import { isChildSession, childApi, getChildSession } from "@/lib/childSession";
 import { ChatMsg, ChatAction, streamChat } from "@/lib/streamChat";
+import { recordUserTurn, recordError, recordScore } from "@/lib/relationalMoments";
 import { getCurrentLang } from "@/lib/langUtils";
 import { playCelebrationSound } from "@/lib/celebrationSound";
 
@@ -1428,6 +1429,9 @@ Tono caldo e incoraggiante.`;
     // ── Smart time tracking: record active interval ──
     recordInteraction();
     resetInactivityTimer();
+
+    // Relational moments — close the previous response-time window.
+    recordUserTurn();
 
     // If session is already completed and student wants to finish — show button immediately
     if (sessionCompleted) {
