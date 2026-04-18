@@ -218,7 +218,7 @@ export default function ClassGrading() {
                             <div className="flex items-center gap-2 flex-wrap">
                               <p className="text-[17px] font-semibold text-foreground">{a.title}</p>
                               {isOnline && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[11px] font-semibold">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-[11px] font-semibold">
                                   <CheckCircle2 className="h-3 w-3" />
                                   Online · {a.online_completed} consegne
                                 </span>
