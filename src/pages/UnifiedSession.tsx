@@ -22,6 +22,13 @@ import {
 import { motion } from "framer-motion";
 import { ChatShell } from "@/components/ChatShell";
 import { ChatMsg, streamChat } from "@/lib/streamChat";
+import {
+  startRelationalSession,
+  endRelationalSession,
+  recordError,
+  recordUserTurn,
+  recordScore,
+} from "@/lib/relationalMoments";
 import { SessionCelebration } from "@/components/SessionCelebration";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
