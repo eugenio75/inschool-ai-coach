@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowRight, Send } from "lucide-react";
 import { CoachAvatar } from "@/components/shared/CoachAvatar";
+import { useLang } from "@/contexts/LangContext";
 
 export interface CoachEvidence {
   id: string;
