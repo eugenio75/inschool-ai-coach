@@ -1774,6 +1774,39 @@ Return only the three versions with no commentary, separated exactly by ===BES==
 
             {/* === Dynamic type-specific fields === */}
             <AnimatePresence mode="wait">
+              {activityType === "lezione" && (
+                <motion.div
+                  key="lezione-fields"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-3 overflow-hidden rounded-xl border border-border bg-muted/30 p-4"
+                >
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Parametri lezione</p>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Durata</Label>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {["50 min", "60 min", "90 min", "Personalizzato"].map(v => (
+                        <button key={v} onClick={() => setDurataLezione(v)}
+                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                            durataLezione === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
+                          )}>{v}</button>
+                      ))}
+                    </div>
+                    {durataLezione === "Personalizzato" && (
+                      <Input type="text" value={durataLezioneCustom} onChange={e => setDurataLezioneCustom(e.target.value)}
+                        placeholder="Es. 75 min" className="mt-1.5 rounded-lg w-32 h-8 text-xs" />
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Obiettivo principale</Label>
+                    <Input type="text" value={obiettivoLezione} onChange={e => setObiettivoLezione(e.target.value)}
+                      placeholder="Cosa devono saper fare alla fine della lezione" className="mt-1.5 rounded-lg h-9 text-xs" />
+                  </div>
+                </motion.div>
+              )}
+
               {activityType === "verifica" && (
                 <motion.div
                   key="verifica-fields"
