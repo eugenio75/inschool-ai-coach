@@ -142,7 +142,7 @@ export default function ClassMaterials() {
   if (createMode && classe && user) {
     return (
       <div className="min-h-screen bg-muted/30 relative">
-        <BackLink label="ai materiali della classe" to={`/classe/${classId}?tab=materiali`} onClick={closeCreate} />
+        <BackLink label="ai materiali della classe" to={`/classe/${classId}?tab=materiali`} />
         <div className="max-w-[1100px] mx-auto px-4 sm:px-8 py-3 sm:py-4 pb-24">
           <TeacherMaterialsTab
             classId={classId!}
