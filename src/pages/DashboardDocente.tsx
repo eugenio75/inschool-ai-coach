@@ -552,27 +552,113 @@ export default function DashboardDocente() {
 
         {/* ━━━ BLOCK 3 — 3 MICRO-CARD: Scadenze · Attività · Da seguire ━━━ */}
         <section>
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-            {[
-              { label: "Scadenze", value: 2, icon: Calendar, bg: "bg-sky-50 dark:bg-sky-500/10", fg: "text-sky-600 dark:text-sky-400", onClick: () => navigate("/agenda-docente") },
-              { label: "Attività recenti", value: 7, icon: Clock, bg: "bg-violet-50 dark:bg-violet-500/10", fg: "text-violet-600 dark:text-violet-400", onClick: () => navigate("/notifiche-docente") },
-              { label: "Da seguire", value: 1, icon: AlertCircle, bg: "bg-amber-50 dark:bg-amber-500/10", fg: "text-amber-600 dark:text-amber-400", onClick: () => navigate("/notifiche-docente") },
-            ].map(({ label, value, icon: Icon, bg, fg, onClick }) => (
-              <button
-                key={label}
-                onClick={onClick}
-                className="text-left rounded-[26px] border border-border/60 bg-card/95 backdrop-blur p-5 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)] hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)] transition-all"
-              >
-                <div className="flex items-start justify-between">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-                  <div className={`h-9 w-9 rounded-2xl flex items-center justify-center ${bg} ${fg}`}>
-                    <Icon className="w-4 h-4" />
-                  </div>
-                </div>
-                <p className="mt-3 font-display text-4xl font-extrabold tracking-tight text-foreground">{loadingClassi ? "–" : value}</p>
-              </button>
-            ))}
-          </div>
+          {(() => {
+            // Scadenze — next upcoming assignment
+            const nextDeadline = [...assignments]
+              .filter(a => a.due_date && new Date(a.due_date) >= new Date(new Date().toDateString()))
+              .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())[0];
+            const formatDueLabel = (iso: string) => {
+              const d = new Date(iso);
+              const today = new Date(); today.setHours(0,0,0,0);
+              const dd = new Date(d); dd.setHours(0,0,0,0);
+              const diff = Math.round((dd.getTime() - today.getTime()) / 86400000);
+              if (diff <= 0) return "oggi";
+              if (diff === 1) return "domani";
+              if (diff < 7) return `tra ${diff} giorni`;
+              return d.toLocaleDateString("it-IT", { day: "numeric", month: "short" });
+            };
+            const scadenzePrimary = nextDeadline
+              ? `${nextDeadline.title || nextDeadline.subject || "Attività"}`
+              : "Nessuna scadenza imminente";
+            const scadenzeSecondary = nextDeadline ? formatDueLabel(nextDeadline.due_date) : "";
+
+            // Attività recenti — most recent feed item or assignment
+            const recentFeed = [...feedItems].sort((a, b) =>
+              new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+            )[0];
+            const recentAssignment = [...assignments].sort((a, b) =>
+              new Date(b.assigned_at || 0).getTime() - new Date(a.assigned_at || 0).getTime()
+            )[0];
+            const attivitaPrimary = recentFeed?.message
+              || (recentAssignment ? `${recentAssignment.type === "verifica" ? "Verifica" : "Compito"}: ${recentAssignment.title}` : "Nessuna attività recente");
+            const attivitaSecondary = recentFeed
+              ? new Date(recentFeed.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "short" })
+              : recentAssignment ? "assegnato" : "";
+
+            // Da seguire — student needing attention from feed
+            const followAlert = feedItems.find(f =>
+              !f.read_at && (f.severity === "warning" || f.severity === "urgent") && f.student_id
+            );
+            const daSeguirePrimary = followAlert?.message
+              ? followAlert.message.split("·")[0].trim()
+              : "Tutti gli studenti a posto";
+            const daSeguireSecondary = followAlert
+              ? (followAlert.message.includes("·") ? followAlert.message.split("·").slice(1).join("·").trim() : "richiede attenzione")
+              : "";
+            const hasFollow = !!followAlert;
+
+            const cards = [
+              {
+                label: "Scadenze",
+                primary: scadenzePrimary,
+                secondary: scadenzeSecondary,
+                icon: Calendar,
+                bg: "bg-sky-50 dark:bg-sky-500/10",
+                fg: "text-sky-600 dark:text-sky-400",
+                border: "border-border/60",
+                onClick: () => navigate("/agenda-docente"),
+              },
+              {
+                label: "Attività recenti",
+                primary: attivitaPrimary,
+                secondary: attivitaSecondary,
+                icon: Clock,
+                bg: "bg-violet-50 dark:bg-violet-500/10",
+                fg: "text-violet-600 dark:text-violet-400",
+                border: "border-border/60",
+                onClick: () => navigate("/notifiche-docente"),
+              },
+              {
+                label: "Da seguire",
+                primary: daSeguirePrimary,
+                secondary: daSeguireSecondary,
+                icon: AlertCircle,
+                bg: hasFollow ? "bg-amber-100 dark:bg-amber-500/15" : "bg-amber-50 dark:bg-amber-500/10",
+                fg: "text-amber-600 dark:text-amber-400",
+                border: hasFollow ? "border-amber-300/70 dark:border-amber-500/40" : "border-border/60",
+                onClick: () => navigate(followAlert?.student_id ? `/student/${followAlert.student_id}` : "/notifiche-docente"),
+              },
+            ];
+
+            return (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+                {cards.map(({ label, primary, secondary, icon: Icon, bg, fg, border, onClick }) => (
+                  <button
+                    key={label}
+                    onClick={onClick}
+                    className={`text-left rounded-[26px] border ${border} bg-card/95 backdrop-blur p-5 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)] hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)] transition-all`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+                      <div className={`h-9 w-9 rounded-2xl flex items-center justify-center shrink-0 ${bg} ${fg}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="mt-3 min-h-[44px]">
+                      <p className="text-[14px] font-semibold text-foreground leading-snug line-clamp-2">
+                        {loadingClassi ? "—" : primary}
+                      </p>
+                      {secondary && !loadingClassi && (
+                        <p className="mt-1 text-[12px] text-muted-foreground leading-snug line-clamp-1">
+                          {secondary}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
         </section>
 
         {/* ━━━ BLOCK 4 — LE TUE CLASSI ━━━ */}
