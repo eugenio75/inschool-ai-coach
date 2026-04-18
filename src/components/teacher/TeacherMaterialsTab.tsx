@@ -512,6 +512,10 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
   const aiFileRef = useRef<HTMLInputElement>(null);
 
   // === Type-specific fields ===
+  // Lezione
+  const [durataLezione, setDurataLezione] = useState("60 min");
+  const [durataLezioneCustom, setDurataLezioneCustom] = useState("");
+  const [obiettivoLezione, setObiettivoLezione] = useState("");
   // Verifica
   const [numDomande, setNumDomande] = useState("10");
   const [numDomandeCustom, setNumDomandeCustom] = useState("");
@@ -601,6 +605,7 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
     setPreviewAiPrompt("");
     setPreviewAiRefining(false);
     // Reset type-specific fields
+    setDurataLezione("60 min"); setDurataLezioneCustom(""); setObiettivoLezione("");
     setNumDomande("10"); setNumDomandeCustom("");
     setStruttura("Mista aperte+chiuse");
     setPunteggioTotale("10"); setPunteggioCustom("");
