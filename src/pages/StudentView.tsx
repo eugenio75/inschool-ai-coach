@@ -237,6 +237,22 @@ export default function StudentView() {
     setCommBody("");
   }
 
+  async function loadHabitsSummary() {
+    if (habitsLoaded || habitsLoading) return;
+    setHabitsLoading(true);
+    try {
+      const { data, error } = await (supabase as any).functions.invoke("teacher-student-habits", {
+        body: { studentId, classId },
+      });
+      if (!error) setHabitsSummaryAi(typeof data?.summary === "string" ? data.summary : null);
+    } catch (e) {
+      console.error("habits load error", e);
+    } finally {
+      setHabitsLoading(false);
+      setHabitsLoaded(true);
+    }
+  }
+
   // Derived
   const studentAvg = useMemo(() => {
     const scores = activities.filter(a => a.score != null).map(a => a.score!);
