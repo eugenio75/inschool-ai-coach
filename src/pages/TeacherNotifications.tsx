@@ -143,6 +143,7 @@ export default function TeacherNotifications() {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }
