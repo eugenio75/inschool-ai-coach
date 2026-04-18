@@ -22,6 +22,13 @@ import {
 import { motion } from "framer-motion";
 import { ChatShell } from "@/components/ChatShell";
 import { ChatMsg, streamChat } from "@/lib/streamChat";
+import {
+  startRelationalSession,
+  endRelationalSession,
+  recordError,
+  recordUserTurn,
+  recordScore,
+} from "@/lib/relationalMoments";
 import { SessionCelebration } from "@/components/SessionCelebration";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
@@ -116,6 +123,14 @@ export default function UnifiedSession() {
       guided.loadSession();
     }
   }, [type, homeworkId]);
+
+  // Relational moments — start a fresh per-session tracker on mount, clear on unmount.
+  useEffect(() => {
+    const sid = `${type}-${homeworkId || urlSubject || "free"}-${Date.now()}`;
+    startRelationalSession(sid);
+    return () => { endRelationalSession(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [setupDone, setSetupDone] = useState(false);
   const [studyMode, setStudyMode] = useState<null | "coach" | "flashcard" | "games">(null);
@@ -711,6 +726,8 @@ Inizia con la prima domanda.`;
         }
       }
     } else {
+      // Relational: track error on this specific division step.
+      recordError(`div-step-${divStepIndex}-${divSubStep}`);
       const newAttempts = divAttemptCount + 1;
       setDivAttemptCount(newAttempts);
 
@@ -775,6 +792,9 @@ Inizia con la prima domanda.`;
 
   const handleSend = useCallback((text: string) => {
     if (sending) return;
+
+    // Relational: close the response-time window for the previous assistant turn.
+    recordUserTurn();
 
     // If deterministic division is active, handle it locally
     if (divExercise) {

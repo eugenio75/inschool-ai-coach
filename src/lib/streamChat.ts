@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import i18n from "i18next";
 import { getDailyOpeningTone } from "@/lib/dailyOpening";
+import { pullPendingTrigger, markAssistantTurn } from "@/lib/relationalMoments";
 
 export interface ChatAction {
   label: string;
@@ -69,6 +70,9 @@ export async function streamChat({
         // Tono dell'apertura giornaliera (heavy|neutral|positive). Solo runtime,
         // mai persistito. Il Coach lo usa per calibrare il registro della sessione.
         daily_opening_tone: getDailyOpeningTone() || undefined,
+        // Momento relazionale contestuale (max 1 per sessione). Solo etichetta,
+        // mai testo dell'utente. Il Coach lo intreccia naturalmente nella risposta.
+        relational_trigger: pullPendingTrigger() || undefined,
         ...extraBody,
       }),
     }
@@ -97,6 +101,7 @@ export async function streamChat({
           onDelta,
           () => {
             onDone(fullText);
+            markAssistantTurn();
             resolve(fullText);
           }
         );
@@ -130,6 +135,7 @@ export async function streamChat({
         if (retryText.trim()) {
           onDelta(retryText);
           onDone(retryText);
+          markAssistantTurn();
           return retryText;
         }
       }
@@ -137,10 +143,12 @@ export async function streamChat({
       const fallback = "Mi scuso, ho avuto un momento di distrazione! 😅 Puoi ripetere o riformulare la tua risposta?";
       onDelta(fallback);
       onDone(fallback);
+      markAssistantTurn();
       return fallback;
     }
     onDelta(fullText);
     onDone(fullText);
+    markAssistantTurn();
     return fullText;
   }
 
@@ -212,5 +220,6 @@ export async function streamChat({
   }
 
   onDone(fullText);
+  markAssistantTurn();
   return fullText;
 }

@@ -5,6 +5,7 @@ import { getTask as fetchTask, getDailyMissions, completeMission, saveFocusSessi
 import type { PointsEarned } from "@/components/SessionCelebration";
 import { isChildSession, childApi, getChildSession } from "@/lib/childSession";
 import { ChatMsg, ChatAction, streamChat } from "@/lib/streamChat";
+import { recordUserTurn, recordError, recordScore } from "@/lib/relationalMoments";
 import { getCurrentLang } from "@/lib/langUtils";
 import { playCelebrationSound } from "@/lib/celebrationSound";
 
@@ -1429,6 +1430,9 @@ Tono caldo e incoraggiante.`;
     recordInteraction();
     resetInactivityTimer();
 
+    // Relational moments — close the previous response-time window.
+    recordUserTurn();
+
     // If session is already completed and student wants to finish — show button immediately
     if (sessionCompleted) {
       const lowerText = text.trim().toLowerCase();
@@ -1824,6 +1828,9 @@ il testo si trova QUI SOPRA. NON dire che non hai il testo. NON inventare rispos
               const completedSteps = (sessionSteps || []).filter(s => s.status === "completed");
               const totalSessionSteps = (sessionSteps || []).length || 1;
               const score = Math.round((completedSteps.length / totalSessionSteps) * 100);
+
+              // Relational moments — feed score for high-performance trigger.
+              try { recordScore(score); } catch {}
 
               // Calculate errors from hint counts and difficulty signals
               const totalHintsUsed = Object.values(hintCountPerStep).reduce((sum, c) => sum + c, 0);
