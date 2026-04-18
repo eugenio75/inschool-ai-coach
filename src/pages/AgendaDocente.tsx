@@ -504,6 +504,7 @@ export default function AgendaDocente() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }
