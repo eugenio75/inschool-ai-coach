@@ -53,21 +53,25 @@ function getLastActivityMap(assignmentResults: any[], manualGrades: any[], stude
 }
 
 interface SectionCardProps {
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   emoji: string;
   title: string;
+  minHeight?: string;
   children: React.ReactNode;
 }
 
-function SectionCard({ emoji, title, children }: SectionCardProps) {
+function SectionCard({ emoji, title, minHeight = "380px", children }: SectionCardProps) {
   return (
-    <section className="rounded-3xl bg-card border border-border/60 p-7 sm:p-9 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col">
-      <div className="flex items-center gap-3 mb-5">
-        <span className="text-2xl leading-none" aria-hidden>{emoji}</span>
-        <h2 className="text-[18px] font-semibold text-foreground tracking-tight">{title}</h2>
+    <article
+      className="flex flex-col rounded-[28px] border border-border bg-card/95 p-8 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
+      style={{ minHeight }}
+    >
+      <div className="flex items-center gap-3">
+        <div className="text-2xl" aria-hidden>{emoji}</div>
+        <h2 className="text-2xl font-extrabold tracking-tight text-foreground">{title}</h2>
       </div>
-      <div className="flex-1">{children}</div>
-    </section>
+      {children}
+    </article>
   );
 }
 
