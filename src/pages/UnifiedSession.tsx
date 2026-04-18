@@ -718,6 +718,8 @@ Inizia con la prima domanda.`;
         }
       }
     } else {
+      // Relational: track error on this specific division step.
+      recordError(`div-step-${divStepIndex}-${divSubStep}`);
       const newAttempts = divAttemptCount + 1;
       setDivAttemptCount(newAttempts);
 
