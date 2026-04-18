@@ -124,8 +124,8 @@ export default function TeacherMaterialsArchive() {
       <div className="bg-card border-b border-border px-6 pt-6 pb-5">
         <div className="max-w-4xl mx-auto">
           <div>
-              <h1 className="text-2xl font-display font-bold text-foreground">I miei materiali</h1>
-              <p className="text-sm text-muted-foreground mt-1">
+              <h1 className="text-[22px] font-display font-semibold text-foreground">I miei materiali</h1>
+              <p className="text-[14px] font-normal text-muted-foreground mt-1">
                 Tutto quello che hai creato — pronto da riutilizzare, riassegnare o stampare.
               </p>
           </div>
@@ -138,7 +138,7 @@ export default function TeacherMaterialsArchive() {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Cerca per titolo, materia o tipo..."
-              className="w-full pl-10 pr-4 py-2.5 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:border-primary transition-colors"
+              className="w-full pl-10 pr-4 py-2.5 bg-muted/50 border border-border rounded-xl text-[15px] font-normal focus:outline-none focus:border-primary transition-colors"
             />
           </div>
 
@@ -190,16 +190,16 @@ export default function TeacherMaterialsArchive() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-16">
             <FolderOpen className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
-            <p className="font-medium text-foreground">
+            <p className="text-[18px] font-semibold text-foreground">
               {materials.length === 0
                 ? "Non hai ancora creato nessun materiale."
                 : "Nessun materiale corrisponde alla ricerca."}
             </p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-[16px] font-normal text-muted-foreground mt-1">
               {materials.length === 0 ? "Inizia adesso." : "Prova con un termine diverso."}
             </p>
             {materials.length === 0 && (
-              <p className="text-sm text-muted-foreground mt-2">Vai nella Home per creare un nuovo materiale.</p>
+              <p className="text-[16px] font-normal text-muted-foreground mt-2">Vai nella Home per creare un nuovo materiale.</p>
             )}
           </div>
         ) : (

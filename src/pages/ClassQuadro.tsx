@@ -63,7 +63,7 @@ function SectionCard({ emoji, title, children }: SectionCardProps) {
     <section className="rounded-3xl bg-card border border-border/60 p-7 sm:p-9 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col">
       <div className="flex items-center gap-3 mb-5">
         <span className="text-2xl leading-none" aria-hidden>{emoji}</span>
-        <h2 className="text-[20px] sm:text-[22px] font-semibold text-foreground tracking-tight">{title}</h2>
+        <h2 className="text-[18px] font-semibold text-foreground tracking-tight">{title}</h2>
       </div>
       <div className="flex-1">{children}</div>
     </section>
@@ -213,17 +213,17 @@ export default function ClassQuadro() {
         <button
           type="button"
           onClick={() => navigate(`/classe/${classId}`)}
-          className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors mb-5"
+          className="inline-flex items-center gap-1.5 text-[14px] font-medium text-muted-foreground hover:text-foreground transition-colors mb-5"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           <span>Torna alla classe</span>
         </button>
 
         <header className="mb-7">
-          <h1 className="text-[26px] sm:text-[30px] font-bold tracking-tight text-foreground leading-tight">
+          <h1 className="text-[22px] font-semibold tracking-tight text-foreground leading-tight">
             Quadro completo · {classe.nome}
           </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
+          <p className="mt-1.5 text-[14px] font-normal text-muted-foreground">
             Generato da {coachName} · {today}
           </p>
         </header>
@@ -231,14 +231,14 @@ export default function ClassQuadro() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 items-stretch [&>section]:h-full">
           {/* 1. Apprendimento */}
           <SectionCard emoji="📊" icon={<BookOpen className="h-4 w-4" />} title="Come sta andando l'apprendimento">
-            <p className="text-[15px] leading-7 text-foreground/85">
+            <p className="text-[16px] font-normal leading-[1.7] text-foreground/85">
               {insight.learning.paragraph}
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               <Button
                 size="sm"
                 onClick={() => navigate(`/classe/${classId}/materiali?create=true&tipo=esercizio`)}
-                className="rounded-full h-9 text-[13px] font-medium"
+                className="rounded-full h-9 text-[15px] font-medium"
               >
                 Genera esercizi di rinforzo
               </Button>
@@ -246,7 +246,7 @@ export default function ClassQuadro() {
                 size="sm"
                 variant="ghost"
                 onClick={() => navigate(`/classe/${classId}`)}
-                className="rounded-full h-9 text-[13px] font-medium"
+                className="rounded-full h-9 text-[15px] font-medium"
               >
                 Apri risultati attività
               </Button>
@@ -255,14 +255,14 @@ export default function ClassQuadro() {
 
           {/* 2. Metodo */}
           <SectionCard emoji="🔁" icon={<Repeat className="h-4 w-4" />} title="Il metodo sta funzionando?">
-            <p className="text-[15px] leading-7 text-foreground/85">
+            <p className="text-[16px] font-normal leading-[1.7] text-foreground/85">
               {insight.method.paragraph}
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               <Button
                 size="sm"
                 onClick={() => navigate(`/materiali-docente?classId=${classId}&tipo=lezione`)}
-                className="rounded-full h-9 text-[13px] font-medium"
+                className="rounded-full h-9 text-[15px] font-medium"
               >
                 Prepara spiegazione alternativa
               </Button>
@@ -270,7 +270,7 @@ export default function ClassQuadro() {
                 size="sm"
                 variant="ghost"
                 onClick={() => navigate(`/materiali-docente?classId=${classId}&tipo=lezione&approccio=alternativo`)}
-                className="rounded-full h-9 text-[13px] font-medium"
+                className="rounded-full h-9 text-[15px] font-medium"
               >
                 Genera materiale con approccio diverso
               </Button>
@@ -279,7 +279,7 @@ export default function ClassQuadro() {
 
           {/* 3. Clima */}
           <SectionCard emoji="💬" icon={<MessageCircle className="h-4 w-4" />} title="Clima della classe">
-            <p className="text-[15px] leading-7 text-foreground/85">
+            <p className="text-[16px] font-normal leading-[1.7] text-foreground/85">
               {insight.climate.paragraph}
             </p>
             {insight.climate.hasSignals && (
@@ -287,7 +287,7 @@ export default function ClassQuadro() {
                 <Button
                   size="sm"
                   onClick={() => navigate(`/classe/${classId}?action=parent-email`)}
-                  className="rounded-full h-9 text-[13px] font-medium"
+                  className="rounded-full h-9 text-[15px] font-medium"
                 >
                   Scrivi ai genitori
                 </Button>
@@ -295,7 +295,7 @@ export default function ClassQuadro() {
                   size="sm"
                   variant="ghost"
                   onClick={() => navigate(`/agenda-docente?action=create&type=ascolto`)}
-                  className="rounded-full h-9 text-[13px] font-medium"
+                  className="rounded-full h-9 text-[15px] font-medium"
                 >
                   Programma momento di ascolto
                 </Button>
@@ -306,7 +306,7 @@ export default function ClassQuadro() {
           {/* 4. Studenti da seguire */}
           <SectionCard emoji="👤" icon={<User className="h-4 w-4" />} title="Chi ha bisogno di attenzione">
             {insight.followStudents.length === 0 ? (
-              <div className="flex items-center gap-2.5 text-[15px] text-foreground/80">
+              <div className="flex items-center gap-2.5 text-[16px] font-normal text-foreground/80">
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                   <Check className="h-4 w-4" />
                 </span>
@@ -320,8 +320,8 @@ export default function ClassQuadro() {
                     className="rounded-xl border border-border/60 bg-card p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-foreground text-[15px]">{s.studentName}</p>
-                      <p className="text-[13px] text-muted-foreground leading-snug mt-0.5">
+                      <p className="text-[16px] font-semibold text-foreground">{s.studentName}</p>
+                      <p className="text-[14px] font-normal text-muted-foreground leading-snug mt-0.5">
                         {s.reason}
                       </p>
                     </div>
@@ -334,7 +334,7 @@ export default function ClassQuadro() {
                               ? navigate(`/materiali-docente?classId=${classId}&tipo=recupero&studentId=${s.studentId}`)
                               : navigate(`/studente/${s.studentId}?classId=${classId}`)
                           }
-                          className="rounded-full h-8 text-[12px] font-medium px-4"
+                          className="rounded-full h-8 text-[15px] font-medium px-4"
                         >
                           {s.primaryActionLabel}
                         </Button>
@@ -348,7 +348,7 @@ export default function ClassQuadro() {
                               ? navigate(`/materiali-docente?classId=${classId}&tipo=recupero&studentId=${s.studentId}`)
                               : navigate(`/studente/${s.studentId}?classId=${classId}`)
                           }
-                          className="rounded-full h-8 text-[12px] font-medium px-4 inline-flex items-center gap-1"
+                          className="rounded-full h-8 text-[15px] font-medium px-4 inline-flex items-center gap-1"
                         >
                           {s.secondaryActionLabel}
                           <ChevronRight className="h-3 w-3" />

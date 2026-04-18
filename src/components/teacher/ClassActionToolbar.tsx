@@ -49,9 +49,9 @@ export default function ClassActionToolbar({ actions }: Props) {
               <Icon className="h-4 w-4" />
             </span>
             <div className="min-w-0">
-              <p className="text-[13px] font-semibold text-foreground leading-tight">{a.label}</p>
+              <p className="text-[18px] font-semibold text-foreground leading-tight">{a.label}</p>
               {a.sublabel && (
-                <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">{a.sublabel}</p>
+                <p className="text-[14px] font-normal text-muted-foreground mt-0.5 leading-tight">{a.sublabel}</p>
               )}
             </div>
           </button>
