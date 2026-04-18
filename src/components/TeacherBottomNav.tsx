@@ -43,7 +43,7 @@ export function TeacherBottomNav() {
               }`}
             >
               <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} fill={isActive ? "currentColor" : "none"} />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em]">{item.label}</span>
             </button>
           );
         })}

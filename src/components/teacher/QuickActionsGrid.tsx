@@ -53,10 +53,10 @@ export default function QuickActionsGrid({ actions }: Props) {
                 <div className="mb-5 h-12 w-12 rounded-2xl bg-muted flex items-center justify-center text-foreground/70 group-hover:bg-foreground group-hover:text-background transition-colors">
                   <Icon className="h-5 w-5" />
                 </div>
-                <p className="text-2xl font-bold tracking-tight text-foreground leading-tight">
+                <p className="text-[18px] font-semibold tracking-tight text-foreground leading-tight">
                   {a.label}
                 </p>
-                <p className="mt-2 text-[15px] text-muted-foreground">
+                <p className="mt-2 text-[14px] font-normal text-muted-foreground">
                   {a.sublabel}
                 </p>
               </button>

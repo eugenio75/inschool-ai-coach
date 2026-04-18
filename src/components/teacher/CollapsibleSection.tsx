@@ -39,11 +39,11 @@ export default function CollapsibleSection({
         )}
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <p className="text-sm font-semibold text-foreground truncate">{title}</p>
+          <p className="text-[18px] font-semibold text-foreground truncate">{title}</p>
           {badge}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {meta && <span className="text-[11px] text-muted-foreground">{meta}</span>}
+          {meta && <span className="text-[14px] font-normal text-muted-foreground">{meta}</span>}
           <ChevronDown
             className={cn(
               "h-4 w-4 text-muted-foreground transition-transform",

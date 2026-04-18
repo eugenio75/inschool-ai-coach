@@ -57,14 +57,14 @@ export default function ClassNotificationsCard({ notifications }: Props) {
     <section>
       <div className="mb-4 flex items-center gap-2">
         <div className={cn("h-2.5 w-2.5 rounded-full", headerDot)} />
-        <h3 className="text-[13px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           Notifiche
         </h3>
       </div>
 
       {notifications.length === 0 ? (
         <div className="rounded-[28px] border border-border/60 bg-card/95 backdrop-blur p-6 text-center shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.08)]">
-          <p className="text-[14px] text-muted-foreground">Nessuna notifica al momento.</p>
+          <p className="text-[16px] font-normal text-muted-foreground">Nessuna notifica al momento.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -85,15 +85,15 @@ export default function ClassNotificationsCard({ notifications }: Props) {
                   <Icon className={cn("h-6 w-6", styles.iconText)} />
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-2xl font-bold tracking-tight text-foreground leading-tight">
+                  <p className="text-[18px] font-semibold tracking-tight text-foreground leading-tight">
                     {n.title}
                   </p>
-                  <p className="mt-1 text-[15px] text-muted-foreground">
+                  <p className="mt-1 text-[14px] font-normal text-muted-foreground">
                     {n.subtitle}
                   </p>
                 </div>
                 <span className={cn(
-                  "shrink-0 inline-flex items-center px-4 py-2 rounded-full text-[13px] font-semibold",
+                  "shrink-0 inline-flex items-center px-4 py-2 rounded-full text-[11px] font-semibold uppercase tracking-[0.08em]",
                   styles.pill,
                 )}>
                   {n.badgeLabel}
