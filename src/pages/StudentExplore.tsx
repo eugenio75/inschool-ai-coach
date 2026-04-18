@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BackLink } from "@/components/shared/BackLink";
 import { percentToGrade, type ScaleId } from "@/components/teacher/GradeReviewModal";
@@ -32,13 +30,6 @@ type ManualGrade = {
 
 const EMOTION_CHIPS = ["Sereno", "Stanco", "In difficoltà", "Carico"] as const;
 type Emotion = typeof EMOTION_CHIPS[number];
-
-function statusLabel(a: Activity): { label: string; tone: "ok" | "warn" | "wait" | "late" } {
-  if (a.status === "completed") return { label: "Completato", tone: "ok" };
-  if (a.status === "in_progress") return { label: "In corso", tone: "wait" };
-  if (a.due_date && new Date(a.due_date) < new Date()) return { label: "In ritardo", tone: "late" };
-  return { label: "Da fare", tone: "wait" };
-}
 
 function inferEmotion(activities: Activity[], inactiveDays: number | null): Emotion {
   if (inactiveDays !== null && inactiveDays >= 7) return "In difficoltà";
@@ -188,16 +179,9 @@ export default function StudentExplore() {
   const negativeWeeks = weeks.filter(w => w.state === "Fatica" || w.state === "In difficoltà").length;
   const showAlert = negativeWeeks >= 2 || currentEmotion === "In difficoltà";
 
-  // Build verifiche rows: combine activities + standalone manual grades
+  // Verifiche rows
   const verificheRows = useMemo(() => {
-    const rows: Array<{
-      key: string;
-      title: string;
-      subject: string;
-      date: string | null;
-      grade: string;
-      status: { label: string; tone: "ok" | "warn" | "wait" | "late" };
-    }> = [];
+    const rows: Array<{ key: string; title: string; subject: string; date: string | null; grade: string; }> = [];
     activities.forEach((a, i) => {
       const score = a.score != null ? Math.round(a.score) : null;
       const confirmed = manualGrades.find(g => a.assignment_id && g.assignment_id === a.assignment_id);
@@ -213,7 +197,6 @@ export default function StudentExplore() {
         subject: a.subject,
         date: a.completed_at,
         grade,
-        status: statusLabel(a),
       });
     });
     manualGrades
@@ -225,214 +208,194 @@ export default function StudentExplore() {
           subject: "Voto docente",
           date: g.graded_at,
           grade: `${g.grade}${g.grade_scale !== "giudizio" ? g.grade_scale : ""}`,
-          status: { label: "Registrato", tone: "ok" },
         });
       });
-    return rows;
+    return rows.slice(0, 5);
   }, [activities, manualGrades, classScale]);
 
-  // Studio indicators (plain Italian descriptions, no percentages)
-  const studyIndicators = useMemo(() => {
+  // Studio narrative
+  const studyNarrative = useMemo(() => {
     const ritmo =
-      activeDays >= 8 ? "Ritmo costante e regolare"
-      : activeDays >= 4 ? "Ritmo discontinuo"
-      : "Ritmo molto irregolare";
+      activeDays >= 8 ? "ritmo costante e regolare"
+      : activeDays >= 4 ? "ritmo discontinuo"
+      : "ritmo molto irregolare";
     const continuita =
-      inactiveDays === null ? "Pochi dati per valutare"
-      : inactiveDays <= 2 ? "Continuità buona"
-      : inactiveDays <= 5 ? "Lievi interruzioni"
-      : "Lunghe pause tra le sessioni";
+      inactiveDays === null ? "pochi dati di continuità"
+      : inactiveDays <= 2 ? "buona continuità"
+      : inactiveDays <= 5 ? "lievi interruzioni"
+      : "lunghe pause tra le sessioni";
     const recentScores = activities.filter(a => a.score != null).slice(0, 5);
     const avg = recentScores.length > 0
       ? recentScores.reduce((s, a) => s + (a.score || 0), 0) / recentScores.length
       : null;
     const autonomia =
-      avg === null ? "Da osservare"
-      : avg >= 65 ? "Lavora in autonomia"
-      : avg >= 45 ? "Chiede supporto a tratti"
-      : "Ha bisogno di guida frequente";
-    const completed = activities.filter(a => a.status === "completed").length;
-    const modalita =
-      completed === 0 ? "Pochi dati di studio"
-      : completed >= 6 ? "Studio approfondito"
-      : "Studio essenziale";
-    return { ritmo, continuita, autonomia, modalita };
-  }, [activities, activeDays, inactiveDays]);
+      avg === null ? "autonomia da osservare"
+      : avg >= 65 ? "lavora in autonomia"
+      : avg >= 45 ? "chiede supporto a tratti"
+      : "ha bisogno di guida frequente";
+    return `${studentName.split(" ")[0]} mostra ${ritmo} e ${continuita}. Sul fronte del lavoro personale, ${autonomia}.`;
+  }, [activities, activeDays, inactiveDays, studentName]);
+
+  // Verifiche narrative
+  const verificheNarrative = useMemo(() => {
+    if (verificheRows.length === 0) return "Non ci sono ancora verifiche registrate per questo studente. Appena arriveranno i primi voti, qui troverai un quadro chiaro dell'andamento.";
+    const recent = activities.filter(a => a.score != null).slice(0, 4);
+    if (recent.length === 0) return "Le verifiche sono state assegnate ma non ci sono ancora voti consolidati. Vale la pena seguire i prossimi risultati per capire il trend.";
+    const avg = recent.reduce((s, a) => s + (a.score || 0), 0) / recent.length;
+    if (avg < 50) return "Le ultime verifiche raccontano un periodo difficile: i risultati sono sotto la media e il pattern si ripete. Conviene capire dove si bloccano i ragionamenti prima di proporre nuovo carico.";
+    if (avg < 65) return "Le verifiche recenti mostrano un andamento altalenante: alcuni momenti buoni e altri fragili. Un lavoro mirato sui punti deboli può stabilizzare i risultati.";
+    return "Le verifiche recenti raccontano un buon momento: i risultati sono solidi e costanti. È un terreno favorevole per proporre qualche sfida in più.";
+  }, [verificheRows, activities]);
+
+  // Emotività narrative
+  const emotivitaNarrative = useMemo(() => {
+    const first = studentName.split(" ")[0];
+    if (currentEmotion === "In difficoltà") return `Negli ultimi giorni ${first} mostra segnali di fatica: i risultati sono in calo e la presenza nelle attività si è diradata. Un dialogo breve può aiutare a capire cosa sta pesando.`;
+    if (currentEmotion === "Stanco") return `${first} sembra sotto sforzo: i ritmi tengono ma i risultati recenti chiedono attenzione. Vale la pena monitorare la prossima settimana.`;
+    if (currentEmotion === "Carico") return `${first} sta vivendo un buon momento: partecipa con energia e i risultati lo confermano. È un buon momento per proporre un approfondimento.`;
+    return `${first} sta affrontando il lavoro con tono regolare, senza segnali di stress evidenti. Continuare con la routine attuale.`;
+  }, [currentEmotion, studentName]);
 
   if (loading) {
     return (
-      <div className="max-w-[896px] mx-auto px-4 sm:px-6 py-8 space-y-4">
+      <div className="max-w-7xl mx-auto px-6 py-10 space-y-6">
         <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-48 rounded-[26px]" />
-        <Skeleton className="h-48 rounded-[26px]" />
-        <Skeleton className="h-48 rounded-[26px]" />
+        <div className="grid gap-6 md:grid-cols-2">
+          <Skeleton className="h-[380px] rounded-[28px]" />
+          <Skeleton className="h-[380px] rounded-[28px]" />
+          <Skeleton className="h-[320px] rounded-[28px]" />
+          <Skeleton className="h-[320px] rounded-[28px]" />
+        </div>
       </div>
     );
   }
 
+  const today = new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long" });
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/40 to-background relative pb-24">
+    <div className="min-h-screen bg-[hsl(var(--muted))]/30 pb-16">
       <BackLink label="allo studente" to={`/studente/${studentId}?classId=${classId}`} />
 
-      <div className="max-w-[896px] mx-auto px-4 sm:px-6 pt-6 sm:pt-8">
+      <main className="mx-auto max-w-7xl px-6 pt-6 sm:pt-8">
         {/* Header */}
-        <header className="mb-6 sm:mb-8">
-          <h1 className="text-[28px] sm:text-[32px] font-bold text-foreground tracking-tight">Esplora studente</h1>
-          <p className="text-[15px] text-muted-foreground mt-1">Verifiche, emotività e abitudini di studio</p>
-        </header>
-
-        <div className="space-y-4 sm:space-y-5">
-          {/* SECTION 1 — VERIFICHE */}
-          <section className="bg-card border border-border rounded-[26px] shadow-sm p-5 sm:p-7">
-            <div className="flex items-center gap-2 mb-5">
-              <span className="w-2 h-2 rounded-full bg-sky-500" />
-              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Verifiche</span>
-            </div>
-            {verificheRows.length === 0 ? (
-              <p className="text-[15px] text-muted-foreground py-2">Nessuna verifica registrata.</p>
-            ) : (
-              <ul className="divide-y divide-border">
-                {verificheRows.map((row) => (
-                  <li key={row.key} className="flex items-center gap-4 py-3.5 first:pt-0 last:pb-0">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[15px] font-semibold text-foreground truncate">{row.title}</p>
-                      <p className="text-[13px] text-muted-foreground mt-0.5">
-                        {row.subject}
-                        {row.date ? ` · ${new Date(row.date).toLocaleDateString("it-IT")}` : ""}
-                      </p>
-                    </div>
-                    <span className="text-[15px] font-semibold text-foreground tabular-nums shrink-0 w-14 text-right">
-                      {row.grade}
-                    </span>
-                    <span className={[
-                      "text-[11px] font-medium px-2.5 py-1 rounded-full shrink-0",
-                      row.status.tone === "ok" && "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-                      row.status.tone === "warn" && "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-                      row.status.tone === "late" && "bg-rose-500/10 text-rose-700 dark:text-rose-400",
-                      row.status.tone === "wait" && "bg-muted text-muted-foreground",
-                    ].filter(Boolean).join(" ")}>
-                      {row.status.label}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          {/* SECTION 2 — EMOTIVITÀ */}
-          <section className="bg-card border border-border rounded-[26px] shadow-sm p-5 sm:p-7">
-            <div className="flex items-center gap-2 mb-5">
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
-              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Emotività</span>
-            </div>
-
-            <div className="flex flex-wrap gap-2 mb-5">
-              {EMOTION_CHIPS.map((chip) => {
-                const active = chip === currentEmotion;
-                return (
-                  <span
-                    key={chip}
-                    className={[
-                      "px-3.5 py-1.5 rounded-full text-[13px] transition-colors",
-                      active
-                        ? "bg-foreground/10 text-foreground font-semibold"
-                        : "bg-muted/40 text-muted-foreground font-normal",
-                    ].join(" ")}
-                  >
-                    {chip}
-                  </span>
-                );
-              })}
-            </div>
-
-            <div className="space-y-3 mb-6">
-              <p className="text-[15px] text-foreground leading-relaxed">
-                {currentEmotion === "In difficoltà" && `Negli ultimi giorni ${studentName.split(" ")[0]} mostra segnali di fatica: i risultati sono in calo e la presenza nelle attività si è diradata.`}
-                {currentEmotion === "Stanco" && `${studentName.split(" ")[0]} sembra sotto sforzo: i ritmi tengono ma i risultati recenti chiedono attenzione.`}
-                {currentEmotion === "Sereno" && `${studentName.split(" ")[0]} sta affrontando il lavoro con tono regolare, senza segnali di stress evidenti.`}
-                {currentEmotion === "Carico" && `${studentName.split(" ")[0]} sta vivendo un buon momento: partecipa con energia e i risultati lo confermano.`}
-              </p>
-              <p className="text-[15px] text-muted-foreground leading-relaxed">
-                {currentEmotion === "In difficoltà" && "Un dialogo breve in classe può aiutare a capire cosa sta pesando. Anche un compito alleggerito sarebbe un segnale di vicinanza."}
-                {currentEmotion === "Stanco" && "Vale la pena monitorare la prossima settimana e, se serve, proporre un materiale di ripasso più leggero."}
-                {currentEmotion === "Sereno" && "Continuare con la routine attuale: il livello di coinvolgimento è adeguato."}
-                {currentEmotion === "Carico" && "È un buon momento per proporre una sfida in più o un approfondimento."}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4">
-              {weeks.map((w) => (
-                <div key={w.label} className="bg-muted/30 border border-border/60 rounded-2xl px-3 py-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{w.label}</p>
-                  <p className="text-[14px] font-semibold text-foreground mt-1">{w.state}</p>
-                </div>
-              ))}
-            </div>
-
-            <p className="text-[14px] text-muted-foreground leading-relaxed">
-              {negativeWeeks >= 2
-                ? "L'andamento delle ultime settimane suggerisce un periodo di affaticamento prolungato."
-                : negativeWeeks === 1
-                ? "Una settimana di flessione, ma il quadro generale resta sotto controllo."
-                : "Andamento emotivo stabile nelle ultime quattro settimane."}
-            </p>
-
-            {showAlert && (
-              <div className="mt-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 p-4 flex items-start gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-[14px] text-foreground leading-relaxed">
-                    Il quadro emotivo recente di {studentName.split(" ")[0]} merita un confronto con la famiglia.
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="rounded-full text-[13px] shrink-0 bg-card"
-                  onClick={() => navigate(`/studente/${studentId}?classId=${classId}&openComm=1`)}
-                >
-                  <Mail className="w-3.5 h-3.5 mr-1.5" /> Scrivi ai genitori
-                </Button>
-              </div>
-            )}
-          </section>
-
-          {/* SECTION 3 — STUDIO */}
-          <section className="bg-card border border-border rounded-[26px] shadow-sm p-5 sm:p-7">
-            <div className="flex items-center gap-2 mb-5">
-              <span className="w-2 h-2 rounded-full bg-violet-500" />
-              <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Studio</span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5">
-              {[
-                { label: "Ritmo", value: studyIndicators.ritmo },
-                { label: "Continuità", value: studyIndicators.continuita },
-                { label: "Autonomia", value: studyIndicators.autonomia },
-                { label: "Modalità", value: studyIndicators.modalita },
-              ].map((it) => (
-                <div key={it.label} className="bg-muted/30 border border-border/60 rounded-2xl px-3 py-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{it.label}</p>
-                  <p className="text-[14px] font-semibold text-foreground mt-1 leading-snug">{it.value}</p>
-                </div>
-              ))}
-            </div>
-
-            <p className="text-[15px] text-foreground leading-relaxed">
-              {studyIndicators.ritmo.includes("costante")
-                ? `${studentName.split(" ")[0]} mantiene un ritmo regolare e mostra autonomia nell'organizzare il lavoro.`
-                : studyIndicators.ritmo.includes("discontinuo")
-                ? `Lo studio di ${studentName.split(" ")[0]} procede a tratti: alterna momenti di impegno a pause più lunghe.`
-                : `${studentName.split(" ")[0]} fatica a darsi una routine stabile, e questo si riflette sui risultati.`}
-              {" "}
-              {studyIndicators.autonomia.includes("autonomia")
-                ? "L'approccio è autonomo, segno positivo da sostenere."
-                : studyIndicators.autonomia.includes("supporto")
-                ? "Beneficerebbe di una guida puntuale sui passaggi più critici."
-                : "Sarebbe utile un accompagnamento più ravvicinato nelle prossime settimane."}
-            </p>
-          </section>
+        <div className="mb-8">
+          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-foreground">
+            Quadro completo · {studentName}
+          </h1>
+          <p className="mt-2 text-lg text-muted-foreground">Generato dal Coach · {today}</p>
         </div>
-      </div>
+
+        {/* 4 cards uniformi 2x2 */}
+        <section className="grid gap-6 md:grid-cols-2">
+          {/* CARD 1 — Verifiche */}
+          <article className="flex min-h-[380px] flex-col rounded-[28px] border border-border bg-card/95 p-8 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
+            <div className="flex items-center gap-3">
+              <div className="text-2xl">📊</div>
+              <h2 className="text-2xl font-extrabold tracking-tight text-foreground">Come sta andando l'apprendimento</h2>
+            </div>
+            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+              {verificheNarrative}
+            </p>
+            <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
+              <button
+                onClick={() => navigate(`/studente/${studentId}?classId=${classId}&action=recovery`)}
+                className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+              >
+                Genera esercizi di rinforzo
+              </button>
+              <button
+                onClick={() => navigate(`/classe/${classId}/grading`)}
+                className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+              >
+                Vedi risultati attività
+              </button>
+            </div>
+          </article>
+
+          {/* CARD 2 — Metodo */}
+          <article className="flex min-h-[380px] flex-col rounded-[28px] border border-border bg-card/95 p-8 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
+            <div className="flex items-center gap-3">
+              <div className="text-2xl">🔁</div>
+              <h2 className="text-2xl font-extrabold tracking-tight text-foreground">Il metodo sta funzionando?</h2>
+            </div>
+            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+              {studyNarrative} Se i risultati continuano a non corrispondere all'impegno, il canale potrebbe non essere quello giusto: vale la pena provare una spiegazione diversa.
+            </p>
+            <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
+              <button
+                onClick={() => navigate(`/studente/${studentId}?classId=${classId}&action=alternative`)}
+                className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+              >
+                Prepara spiegazione alternativa
+              </button>
+              <button
+                onClick={() => navigate(`/studente/${studentId}?classId=${classId}&action=simplified`)}
+                className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+              >
+                Genera materiale diverso
+              </button>
+            </div>
+          </article>
+
+          {/* CARD 3 — Clima emotivo */}
+          <article className="flex min-h-[320px] flex-col rounded-[28px] border border-border bg-card/95 p-8 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
+            <div className="flex items-center gap-3">
+              <div className="text-2xl">💬</div>
+              <h2 className="text-2xl font-extrabold tracking-tight text-foreground">Clima emotivo</h2>
+            </div>
+            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+              {emotivitaNarrative}
+            </p>
+            <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
+              {showAlert ? (
+                <button
+                  onClick={() => navigate(`/studente/${studentId}?classId=${classId}&openComm=1`)}
+                  className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                >
+                  Scrivi ai genitori
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate(`/classe/${classId}`)}
+                  className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                >
+                  Avvia check-in
+                </button>
+              )}
+              <button className="text-sm font-semibold text-muted-foreground transition hover:text-foreground">
+                Vedi andamento emotivo
+              </button>
+            </div>
+          </article>
+
+          {/* CARD 4 — Attenzione */}
+          <article className="flex min-h-[320px] flex-col rounded-[28px] border border-border bg-card/95 p-8 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
+            <div className="flex items-center gap-3">
+              <div className="text-2xl">👤</div>
+              <h2 className="text-2xl font-extrabold tracking-tight text-foreground">Su cosa intervenire</h2>
+            </div>
+            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+              {negativeWeeks >= 2
+                ? `${studentName.split(" ")[0]} sta restando indietro nelle ultime settimane. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.`
+                : `Il quadro generale di ${studentName.split(" ")[0]} è sotto controllo. Continuare a osservare le prossime attività per cogliere in tempo eventuali segnali di rallentamento.`}
+            </p>
+            <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
+              <button
+                onClick={() => navigate(`/studente/${studentId}?classId=${classId}`)}
+                className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+              >
+                Apri profilo
+              </button>
+              <button
+                onClick={() => navigate(`/studente/${studentId}?classId=${classId}&action=recovery`)}
+                className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+              >
+                Genera recupero
+              </button>
+            </div>
+          </article>
+        </section>
+      </main>
     </div>
   );
 }
