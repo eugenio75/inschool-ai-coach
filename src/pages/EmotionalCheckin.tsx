@@ -32,7 +32,7 @@ import {
 export { shouldShowDailyOpening as shouldShowCheckin, markDailyOpeningDone as markCheckinDone };
 
 const spring = { type: "spring" as const, stiffness: 260, damping: 30 };
-const CLAURIA_URL = "https://clauria.azarlabs.com?return=sarai";
+const CLAURIA_URL = "https://www.clauria.azarlabs.com?return=sarai";
 
 type Turn = { role: "user" | "assistant"; content: string; offerClauria?: boolean };
 
