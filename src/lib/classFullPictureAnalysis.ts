@@ -89,15 +89,15 @@ export function analyzeFullPicture(input: FullPictureInput): FullPictureInsight 
   if (students.length === 0) {
     return {
       learning: {
-        paragraph: "La classe è ancora vuota: non ho dati per leggere come sta andando l'apprendimento. Appena gli studenti entreranno, qui troverai un quadro chiaro di cosa è consolidato e cosa serve riprendere.",
+        paragraph: "Hai impostato la classe e questo è già un primo passo. Per ora però è vuota e non ho dati per leggere come sta andando l'apprendimento. Appena gli studenti entreranno con il codice, qui troverai un quadro chiaro di cosa è consolidato e cosa serve riprendere.",
         consolidated: [],
         unclear: [],
       },
       method: {
-        paragraph: "Non posso ancora valutare il metodo: senza attività degli studenti non ho elementi per dire se sta funzionando.",
+        paragraph: "La classe c'è sulla carta, ma senza attività degli studenti non ho ancora elementi per dirti se il metodo sta funzionando. Appena svolgeranno i primi compiti potrò darti una lettura concreta.",
       },
       climate: {
-        paragraph: "Nessun segnale particolare questa settimana.",
+        paragraph: "Nessun segnale particolare questa settimana — semplicemente perché non ci sono ancora studenti che possano dar vita al clima della classe.",
         hasSignals: false,
       },
       followStudents: [],
@@ -167,13 +167,13 @@ export function analyzeFullPicture(input: FullPictureInput): FullPictureInsight 
   // ─── 1. Apprendimento ─────────────────────────────────────────
   let learningParagraph = "";
   if (totalAssigned === 0 && manualGrades.length === 0) {
-    learningParagraph = "Non ho ancora attività completate da cui leggere il livello reale della classe. Appena consegnano le prime cose, potrò dirti con precisione cosa hanno consolidato e dove serve insistere.";
+    learningParagraph = "La classe è entrata e c'è, ma non ha ancora attività completate da cui leggere il livello reale. Appena consegnano le prime cose, potrò dirti con precisione cosa hanno consolidato e dove serve insistere.";
   } else if (consolidatedList.length === 0 && unclearList.length === 0) {
-    learningParagraph = "La classe sta lavorando, ma per ora non emergono né punti chiaramente consolidati né argomenti particolarmente in difficoltà: il quadro è ancora omogeneo. Servono un paio di attività in più per leggere differenze nette.";
+    learningParagraph = "La classe sta lavorando, ma per ora il quadro è ancora omogeneo: non emergono né punti chiaramente consolidati né argomenti particolarmente in difficoltà. Servono un paio di attività in più per leggere differenze nette.";
   } else if (consolidatedList.length > 0 && unclearList.length > 0) {
-    learningParagraph = `La classe sembra avere a fuoco ${joinList(consolidatedList)}: lì si vedono risultati solidi e pochi errori. Restano invece in sospeso ${joinList(unclearList)}: gli stessi inciampi ritornano in più studenti, segno che la spiegazione iniziale ha lasciato dei buchi che vale la pena chiudere prima di andare avanti.`;
+    learningParagraph = `La classe ha a fuoco ${joinList(consolidatedList)} — lì si vedono risultati solidi e pochi errori. Sta invece incontrando un blocco ricorrente su ${joinList(unclearList)}: gli stessi inciampi tornano in più studenti, segno che la spiegazione iniziale ha lasciato dei buchi che vale la pena chiudere prima di andare avanti.`;
   } else if (unclearList.length > 0) {
-    learningParagraph = `Il punto da chiudere è ${joinList(unclearList)}: lì si concentrano gli errori ricorrenti. Non è un caso isolato — sta toccando più studenti, quindi conviene riprenderlo come classe prima di costruirci sopra altro.`;
+    learningParagraph = `La classe sta provandoci, però c'è un punto da chiudere: ${joinList(unclearList)}. Lì si concentrano gli errori ricorrenti — non è un caso isolato, sta toccando più studenti, quindi conviene riprenderlo come classe prima di costruirci sopra altro.`;
   } else {
     learningParagraph = `Sui temi di ${joinList(consolidatedList)} la classe è in piedi: i risultati tengono e gli errori sono pochi. È un buon momento per consolidare con un ripasso leggero, oppure per spostarsi sul prossimo argomento.`;
   }
@@ -185,13 +185,13 @@ export function analyzeFullPicture(input: FullPictureInput): FullPictureInsight 
     completionRatio < 0.6;
 
   if (totalAssigned === 0) {
-    methodParagraph = "Non ho ancora elementi per dire se il metodo attuale sta funzionando: aspetto le prime attività completate per leggere come la classe risponde.";
+    methodParagraph = "I ragazzi ci sono ma non hanno ancora svolto attività: aspetto le prime consegne per leggere come la classe risponde al metodo che stai usando.";
   } else if (methodNotWorking && strugglingStudents.length >= Math.ceil(students.length / 3)) {
-    methodParagraph = `Il modo in cui stai proponendo l'argomento sta funzionando per buona parte della classe, ma ${strugglingStudents.length} studenti su ${students.length} fanno fatica nello stesso punto. Quando così tante persone inciampano insieme, di solito non è impegno: è il canale che non sta passando. Una spiegazione con un altro angolo — esempio diverso, supporto visivo, attività più concreta — può sbloccare chi ora resta indietro.`;
+    methodParagraph = `Il modo in cui stai proponendo l'argomento sta funzionando per buona parte della classe — la maggior parte dei ragazzi ti sta seguendo. Però ${strugglingStudents.length} studenti su ${students.length} faticano nello stesso punto. Quando così tante persone inciampano insieme di solito non è impegno: è il canale che non sta passando. Una spiegazione con un altro angolo — esempio diverso, supporto visivo, attività più concreta — può sbloccare chi resta indietro.`;
   } else if (methodNotWorking && completionRatio < 0.6) {
-    methodParagraph = "La classe sta consegnando meno del previsto. Quando le consegne calano insieme ai risultati, di solito vuol dire che il modo in cui stai chiedendo le cose è troppo distante da dove sono ora. Vale la pena provare un'attività di formato diverso — più breve, più guidata, o con un'entrata più concreta — per riallinearli.";
+    methodParagraph = "La classe sta provando a stare al passo, ma sta consegnando meno del previsto. Quando le consegne calano insieme ai risultati, di solito vuol dire che il modo in cui stai chiedendo le cose è troppo distante da dove sono ora. Vale la pena provare un'attività di formato diverso — più breve, più guidata, o con un'entrata più concreta — per riallinearli.";
   } else if (strugglingStudents.length > 0) {
-    methodParagraph = `Il metodo che stai usando funziona per la maggior parte della classe. Restano però ${strugglingStudents.length} ${strugglingStudents.length === 1 ? "studente che fatica" : "studenti che faticano"} a tenere il passo: per loro non serve cambiare l'impianto generale, ma offrire un canale diverso in parallelo — un materiale di supporto, una spiegazione più concreta o un piccolo affiancamento.`;
+    methodParagraph = `Il metodo che stai usando sta funzionando per la maggior parte della classe — la rotta generale tiene. Restano però ${strugglingStudents.length} ${strugglingStudents.length === 1 ? "studente che fatica" : "studenti che faticano"} a tenere il passo: per loro non serve cambiare l'impianto generale, ma offrire un canale diverso in parallelo — un materiale di supporto, una spiegazione più concreta o un piccolo affiancamento.`;
   } else {
     methodParagraph = "Il metodo che stai usando sta funzionando: i risultati tengono e nessuno è particolarmente indietro. È il momento giusto per consolidare con qualcosa di un po' più impegnativo, prima che l'attenzione cali per mancanza di stimolo.";
   }
@@ -227,16 +227,16 @@ export function analyzeFullPicture(input: FullPictureInput): FullPictureInsight 
   let hasSignals = false;
 
   if (!hasEnoughEmotionalData) {
-    climateParagraph = "Per ora ho pochi check-in recenti: non ho elementi sufficienti per leggere davvero il clima della classe. Un check-in collettivo, anche breve, aiuta a sentire come stanno — non solo come stanno andando.";
+    climateParagraph = "I ragazzi stanno frequentando la classe, ma ho ancora pochi check-in recenti per leggere davvero il clima. Un check-in collettivo, anche breve, aiuta a sentire come stanno — non solo come stanno andando.";
   } else if (climateLow) {
     hasSignals = true;
     const parts: string[] = [];
     if (negativeRatio >= 0.4) parts.push("nei check-in di questa settimana il tono è più stanco del solito");
     if (recentNegativeFocus >= 3) parts.push("durante le sessioni di studio si è alzata la frustrazione");
     if (openAlerts >= 2) parts.push("ci sono segnali aperti che meritano un'occhiata");
-    climateParagraph = `Qualcosa nel clima sta cambiando: ${parts.join(", ")}. Non è ancora un allarme, ma è il momento di alleggerire il carico e ascoltare. Quando la fatica resta sommersa, di solito si trasforma in disinvestimento qualche settimana dopo.`;
+    climateParagraph = `La classe sta continuando a lavorare, ma qualcosa nel clima sta cambiando: ${parts.join(", ")}. Non è ancora un allarme, è il momento di alleggerire il carico e ascoltare. Quando la fatica resta sommersa, di solito si trasforma in disinvestimento qualche settimana dopo.`;
   } else {
-    climateParagraph = "Nessun segnale particolare questa settimana. La classe sta tenendo bene anche sul piano emotivo: i check-in restano nella norma e non emergono pattern di fatica diffusa.";
+    climateParagraph = "La classe sta tenendo bene anche sul piano emotivo: i check-in restano nella norma e non emergono pattern di fatica diffusa. Nessun segnale particolare questa settimana.";
   }
 
   // ─── 4. Studenti da seguire ───────────────────────────────────
@@ -250,7 +250,7 @@ export function analyzeFullPicture(input: FullPictureInput): FullPictureInsight 
       followStudents.push({
         studentId: s.sid,
         studentName: s.name,
-        reason: "Sta restando indietro rispetto al resto della classe sulle ultime attività.",
+        reason: "Sta provando a stare al passo, ma le ultime attività mostrano un ritmo più lento del resto della classe — un piccolo affiancamento può fare la differenza.",
         primaryActionLabel: "Recupero",
         secondaryActionLabel: "Profilo",
       });
@@ -266,7 +266,7 @@ export function analyzeFullPicture(input: FullPictureInput): FullPictureInsight 
         followStudents.push({
           studentId: sid,
           studentName: nameOf[sid],
-          reason: "Non si fa sentire da più di una settimana — vale la pena un contatto diretto.",
+          reason: "È iscritto alla classe ma non si fa sentire da più di una settimana — vale la pena un contatto diretto per capire cosa sta succedendo.",
           primaryActionLabel: "Recupero",
           secondaryActionLabel: "Profilo",
         });
@@ -289,7 +289,7 @@ export function analyzeFullPicture(input: FullPictureInput): FullPictureInsight 
       followStudents.push({
         studentId: sid,
         studentName: name,
-        reason: "Negli ultimi giorni ha lasciato segnali di fatica nei check-in: vale un momento di ascolto.",
+        reason: "Sta continuando a partecipare, ma negli ultimi check-in ha lasciato segnali di fatica: vale un momento di ascolto.",
         primaryActionLabel: "Profilo",
         secondaryActionLabel: "Recupero",
       });
