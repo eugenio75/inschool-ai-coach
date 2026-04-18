@@ -531,10 +531,10 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
             )}
             <button
               onClick={() => navigate("/dashboard")}
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("coach_back_home")}</span>
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Torna alla home</span>
             </button>
           </div>
 

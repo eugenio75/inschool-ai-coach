@@ -234,12 +234,11 @@ export default function AgendaDocente() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 pb-24">
+      {/* Back link */}
+      <BackLink label="alla home" to="/dashboard" className="mb-3" />
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="rounded-xl">
-            <ArrowLeft className="w-4 h-4 mr-1" /> Home
-          </Button>
           <div>
             <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
               <CalendarIcon className="w-5 h-5" /> Agenda
