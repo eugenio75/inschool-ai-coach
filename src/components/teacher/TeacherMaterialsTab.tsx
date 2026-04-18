@@ -1698,12 +1698,12 @@ Return only the three versions with no commentary, separated exactly by ===BES==
   // --- Form view ---
   return (
     <div className="space-y-4">
-      <Button variant="ghost" size="sm" onClick={() => { resetForm(); }} className="rounded-xl">
-        <ArrowLeft className="w-4 h-4 mr-1" /> Torna alla scelta
+      <Button variant="ghost" onClick={() => { resetForm(); }} className="rounded-xl text-[14px] font-medium h-10">
+        <ArrowLeft className="w-4 h-4 mr-1.5" /> Torna alla scelta
       </Button>
 
-      <div className="bg-card border border-border rounded-2xl p-5 space-y-5">
-        <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+      <div className="bg-card border border-border rounded-[24px] p-6 sm:p-8 space-y-7">
+        <p className="text-[20px] sm:text-[22px] font-bold tracking-tight text-foreground flex items-center gap-2.5">
           {mode === "write" && <><PenLine className="w-4 h-4 text-primary" /> Scrivo io</>}
           {mode === "ai" && <><Sparkles className="w-4 h-4 text-primary" /> {coachGeneratorLabel}</>}
           {mode === "file" && <><Upload className="w-4 h-4 text-primary" /> Carico e assegno</>}
@@ -1711,7 +1711,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
 
         {/* Activity type */}
         <div>
-          <Label className="text-xs text-muted-foreground">Tipo attività</Label>
+          <Label className="text-[14px] font-semibold text-foreground/80">Tipo attività</Label>
           <Select value={activityType} onValueChange={(v) => setActivityType(v as ActivityType)}>
             <SelectTrigger className="mt-1 rounded-xl"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -1724,10 +1724,10 @@ Return only the three versions with no commentary, separated exactly by ===BES==
 
         {/* Subject multi-select */}
         <div>
-          <Label className="text-xs text-muted-foreground">Materia</Label>
+          <Label className="text-[14px] font-semibold text-foreground/80">Materia</Label>
           <div className="mt-1.5 flex flex-wrap gap-1.5 mb-2">
             {selectedSubjects.map(s => (
-              <span key={s} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+              <span key={s} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[13px] font-medium">
                 {s}
                 <button onClick={() => {
                   setDidCustomizeSubjects(true);
@@ -1755,7 +1755,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
             </SelectContent>
           </Select>
           {selectedSubjects.length === 0 && (
-            <p className="text-[10px] text-destructive mt-1">Seleziona almeno una materia</p>
+            <p className="text-[13px] text-destructive mt-2">Seleziona almeno una materia</p>
           )}
         </div>
 
@@ -1763,7 +1763,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
         {mode === "ai" && (
           <div className="space-y-4">
             <div>
-              <Label className="text-xs text-muted-foreground">Descrivi cosa vuoi</Label>
+              <Label className="text-[14px] font-semibold text-foreground/80">Descrivi cosa vuoi</Label>
               <Textarea
                 placeholder={getPlaceholderB(activityType, selectedSubjects, classe?.nome || "")}
                 value={aiPrompt}
@@ -1783,13 +1783,13 @@ Return only the three versions with no commentary, separated exactly by ===BES==
                   transition={{ duration: 0.2 }}
                   className="space-y-3 overflow-hidden rounded-xl border border-border bg-muted/30 p-4"
                 >
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Parametri lezione</p>
+                  <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-[0.16em] mb-1">Parametri lezione</p>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Durata</Label>
+                    <Label className="text-[14px] font-semibold text-foreground/80">Durata</Label>
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {["50 min", "60 min", "90 min", "Personalizzato"].map(v => (
                         <button key={v} onClick={() => setDurataLezione(v)}
-                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                          className={cn("px-3.5 py-2 rounded-lg text-[13px] font-medium border transition-colors",
                             durataLezione === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
                           )}>{v}</button>
                       ))}
@@ -1800,7 +1800,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
                     )}
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Obiettivo principale</Label>
+                    <Label className="text-[14px] font-semibold text-foreground/80">Obiettivo principale</Label>
                     <Input type="text" value={obiettivoLezione} onChange={e => setObiettivoLezione(e.target.value)}
                       placeholder="Cosa devono saper fare alla fine della lezione" className="mt-1.5 rounded-lg h-9 text-xs" />
                   </div>
@@ -1816,13 +1816,13 @@ Return only the three versions with no commentary, separated exactly by ===BES==
                   transition={{ duration: 0.2 }}
                   className="space-y-3 overflow-hidden rounded-xl border border-border bg-muted/30 p-4"
                 >
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Parametri verifica</p>
+                  <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-[0.16em] mb-1">Parametri verifica</p>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Numero domande</Label>
+                    <Label className="text-[14px] font-semibold text-foreground/80">Numero domande</Label>
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {["5", "10", "15", "Personalizzato"].map(v => (
                         <button key={v} onClick={() => setNumDomande(v)}
-                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                          className={cn("px-3.5 py-2 rounded-lg text-[13px] font-medium border transition-colors",
                             numDomande === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
                           )}>{v}</button>
                       ))}
@@ -1833,22 +1833,22 @@ Return only the three versions with no commentary, separated exactly by ===BES==
                     )}
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Struttura</Label>
+                    <Label className="text-[14px] font-semibold text-foreground/80">Struttura</Label>
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {["Solo aperte", "Solo chiuse (scelta multipla/V-F)", "Mista aperte+chiuse", "Solo esercizi pratici"].map(v => (
                         <button key={v} onClick={() => setStruttura(v)}
-                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                          className={cn("px-3.5 py-2 rounded-lg text-[13px] font-medium border transition-colors",
                             struttura === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
                           )}>{v}</button>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Punteggio totale</Label>
+                    <Label className="text-[14px] font-semibold text-foreground/80">Punteggio totale</Label>
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {["10", "15", "20", "30", "Personalizzato"].map(v => (
                         <button key={v} onClick={() => setPunteggioTotale(v)}
-                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                          className={cn("px-3.5 py-2 rounded-lg text-[13px] font-medium border transition-colors",
                             punteggioTotale === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
                           )}>{v}</button>
                       ))}
@@ -1859,11 +1859,11 @@ Return only the three versions with no commentary, separated exactly by ===BES==
                     )}
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Tempo disponibile</Label>
+                    <Label className="text-[14px] font-semibold text-foreground/80">Tempo disponibile</Label>
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {["30 min", "45 min", "60 min", "90 min"].map(v => (
                         <button key={v} onClick={() => setTempoDisponibile(v)}
-                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                          className={cn("px-3.5 py-2 rounded-lg text-[13px] font-medium border transition-colors",
                             tempoDisponibile === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
                           )}>{v}</button>
                       ))}
@@ -1881,24 +1881,24 @@ Return only the three versions with no commentary, separated exactly by ===BES==
                   transition={{ duration: 0.2 }}
                   className="space-y-3 overflow-hidden rounded-xl border border-border bg-muted/30 p-4"
                 >
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Parametri compito</p>
+                  <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-[0.16em] mb-1">Parametri compito</p>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Tipo consegna</Label>
+                    <Label className="text-[14px] font-semibold text-foreground/80">Tipo consegna</Label>
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {["Esercizi pratici", "Domande aperte", "Riassunto/tema", "Ricerca", "Misto"].map(v => (
                         <button key={v} onClick={() => setTipoConsegna(v)}
-                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                          className={cn("px-3.5 py-2 rounded-lg text-[13px] font-medium border transition-colors",
                             tipoConsegna === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
                           )}>{v}</button>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Tempo stimato</Label>
+                    <Label className="text-[14px] font-semibold text-foreground/80">Tempo stimato</Label>
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {["15 min", "30 min", "45 min", "60 min"].map(v => (
                         <button key={v} onClick={() => setTempoStimato(v)}
-                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                          className={cn("px-3.5 py-2 rounded-lg text-[13px] font-medium border transition-colors",
                             tempoStimato === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
                           )}>{v}</button>
                       ))}
@@ -1916,13 +1916,13 @@ Return only the three versions with no commentary, separated exactly by ===BES==
                   transition={{ duration: 0.2 }}
                   className="space-y-3 overflow-hidden rounded-xl border border-border bg-muted/30 p-4"
                 >
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Parametri esercizi</p>
+                  <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-[0.16em] mb-1">Parametri esercizi</p>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Numero esercizi</Label>
+                    <Label className="text-[14px] font-semibold text-foreground/80">Numero esercizi</Label>
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {["5", "10", "15", "Personalizzato"].map(v => (
                         <button key={v} onClick={() => setNumEsercizi(v)}
-                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                          className={cn("px-3.5 py-2 rounded-lg text-[13px] font-medium border transition-colors",
                             numEsercizi === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
                           )}>{v}</button>
                       ))}
@@ -1933,22 +1933,22 @@ Return only the three versions with no commentary, separated exactly by ===BES==
                     )}
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Difficoltà</Label>
+                    <Label className="text-[14px] font-semibold text-foreground/80">Difficoltà</Label>
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {["Base", "Normale", "Avanzato", "Progressiva (dal facile al difficile)"].map(v => (
                         <button key={v} onClick={() => setDifficolta(v)}
-                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                          className={cn("px-3.5 py-2 rounded-lg text-[13px] font-medium border transition-colors",
                             difficolta === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
                           )}>{v}</button>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Includi soluzioni per il docente</Label>
+                    <Label className="text-[14px] font-semibold text-foreground/80">Includi soluzioni per il docente</Label>
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {["Sì", "No"].map(v => (
                         <button key={v} onClick={() => setIncludiSoluzioni(v)}
-                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                          className={cn("px-3.5 py-2 rounded-lg text-[13px] font-medium border transition-colors",
                             includiSoluzioni === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
                           )}>{v}</button>
                       ))}
@@ -1966,24 +1966,24 @@ Return only the three versions with no commentary, separated exactly by ===BES==
                   transition={{ duration: 0.2 }}
                   className="space-y-3 overflow-hidden rounded-xl border border-border bg-muted/30 p-4"
                 >
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Parametri recupero</p>
+                  <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-[0.16em] mb-1">Parametri recupero</p>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Modalità</Label>
+                    <Label className="text-[14px] font-semibold text-foreground/80">Modalità</Label>
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {["Spiegazione + esercizi", "Solo esercizi", "Solo spiegazione"].map(v => (
                         <button key={v} onClick={() => setModalitaRecupero(v)}
-                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                          className={cn("px-3.5 py-2 rounded-lg text-[13px] font-medium border transition-colors",
                             modalitaRecupero === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
                           )}>{v}</button>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Livello partenza</Label>
+                    <Label className="text-[14px] font-semibold text-foreground/80">Livello partenza</Label>
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {["Dalle basi", "Argomento specifico"].map(v => (
                         <button key={v} onClick={() => setLivelloPartenza(v)}
-                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                          className={cn("px-3.5 py-2 rounded-lg text-[13px] font-medium border transition-colors",
                             livelloPartenza === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
                           )}>{v}</button>
                       ))}
@@ -2001,13 +2001,13 @@ Return only the three versions with no commentary, separated exactly by ===BES==
                   transition={{ duration: 0.2 }}
                   className="space-y-3 overflow-hidden rounded-xl border border-border bg-muted/30 p-4"
                 >
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Parametri potenziamento</p>
+                  <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-[0.16em] mb-1">Parametri potenziamento</p>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Obiettivo</Label>
+                    <Label className="text-[14px] font-semibold text-foreground/80">Obiettivo</Label>
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {["Approfondimento teorico", "Problemi complessi", "Collegamento con altri argomenti", "Ricerca autonoma"].map(v => (
                         <button key={v} onClick={() => setObiettivoPotenziamento(v)}
-                          className={cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors",
+                          className={cn("px-3.5 py-2 rounded-lg text-[13px] font-medium border transition-colors",
                             obiettivoPotenziamento === v ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border text-muted-foreground hover:border-primary/20"
                           )}>{v}</button>
                       ))}
@@ -2018,7 +2018,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
             </AnimatePresence>
 
             <div>
-              <Label className="text-xs text-muted-foreground mb-1.5 block">Carica modello (opzionale)</Label>
+              <Label className="text-[14px] font-semibold text-foreground/80 mb-1.5 block">Carica modello (opzionale)</Label>
               <input
                 ref={aiFileRef}
                 type="file"
@@ -2036,7 +2036,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
                   className="w-full border border-dashed border-border rounded-xl p-3 text-center hover:bg-muted/30 transition-colors flex items-center justify-center gap-2"
                 >
                   <Upload className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[14px] text-muted-foreground">
                     {aiContextUploading ? "Analisi in corso..." : "Carica un file come riferimento di formato e livello"}
                   </span>
                 </button>
@@ -2066,7 +2066,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
 
         {/* --- Destination --- */}
         <div>
-          <Label className="text-xs text-muted-foreground mb-2 block">Destinazione</Label>
+          <Label className="text-[14px] font-semibold text-foreground/80 mb-2 block">Destinazione</Label>
           <RadioGroup value={destination} onValueChange={(v) => setDestination(v as DestinationType)} className="flex gap-2 flex-wrap">
             {([
               { value: "all", label: "Tutta la classe" },
@@ -2076,7 +2076,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
               <label
                 key={value}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all text-xs font-medium",
+                  "flex items-center gap-2 px-4 py-2.5 rounded-xl border cursor-pointer transition-all text-[14px] font-medium",
                   destination === value
                     ? "bg-primary/10 border-primary/40 text-primary"
                     : "bg-background border-border text-muted-foreground hover:border-primary/20"
@@ -2109,7 +2109,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
 
         {/* Due date */}
         <div>
-          <Label className="text-xs text-muted-foreground">Scadenza (opzionale)</Label>
+          <Label className="text-[14px] font-semibold text-foreground/80">Scadenza (opzionale)</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className={cn("w-full mt-1 rounded-xl justify-start text-left font-normal", !dueDate && "text-muted-foreground")}>
@@ -2131,7 +2131,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
         {/* --- FORM A: Scrivo io --- */}
         {mode === "write" && (
           <div>
-            <Label className="text-xs text-muted-foreground">Contenuto</Label>
+            <Label className="text-[14px] font-semibold text-foreground/80">Contenuto</Label>
             <Textarea
               placeholder={getPlaceholderA(activityType, selectedSubjects)}
               value={content}
@@ -2144,8 +2144,8 @@ Return only the three versions with no commentary, separated exactly by ===BES==
         {/* --- FORM B: Genera button (AI mode, always last) --- */}
         {mode === "ai" && (
           <div className="space-y-4">
-            <Button onClick={generateAiContent} disabled={aiLoading} variant="outline" className="w-full rounded-xl">
-              <Sparkles className="w-3.5 h-3.5 mr-1" />
+            <Button onClick={generateAiContent} disabled={aiLoading} variant="outline" className="w-full rounded-xl h-12 text-[15px] font-semibold">
+              <Sparkles className="w-4 h-4 mr-1.5" />
               {aiLoading ? "Generazione in corso..." : "Genera contenuto"}
             </Button>
 
@@ -2163,7 +2163,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
         {mode === "file" && (
           <div className="space-y-4">
             <div>
-              <Label className="text-xs text-muted-foreground mb-1.5 block">Carica file</Label>
+              <Label className="text-[14px] font-semibold text-foreground/80 mb-1.5 block">Carica file</Label>
               <input
                 ref={fileRef}
                 type="file"
@@ -2212,7 +2212,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
 
             {ocrText && (
               <div>
-                <Label className="text-xs text-muted-foreground">Anteprima contenuto estratto (modificabile)</Label>
+                <Label className="text-[14px] font-semibold text-foreground/80">Anteprima contenuto estratto (modificabile)</Label>
                 <Textarea
                   value={ocrText}
                   onChange={e => setOcrText(e.target.value)}
@@ -2225,7 +2225,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
 
         {/* CTA */}
         <Button
-          className="w-full rounded-xl"
+          className="w-full rounded-xl h-12 text-[15px] font-semibold"
           onClick={() => {
             const pc = getPreviewContent();
             if (!pc.trim()) {
@@ -2240,7 +2240,7 @@ Return only the three versions with no commentary, separated exactly by ===BES==
             (mode === "file" && !ocrText)
           }
         >
-          <Eye className="w-3.5 h-3.5 mr-1" />
+          <Eye className="w-4 h-4 mr-1.5" />
           Anteprima e conferma
         </Button>
       </div>

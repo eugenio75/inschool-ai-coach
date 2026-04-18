@@ -401,10 +401,10 @@ export default function DashboardDocente() {
         {/* ━━━ BLOCK 1 — HEADER ━━━ */}
         <section className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
-            <h1 className="font-display text-[22px] font-semibold tracking-tight text-foreground leading-tight">
+            <h1 className="font-display text-[28px] sm:text-[30px] font-extrabold tracking-tight text-foreground leading-tight">
               {getGreeting()}, {getTeacherTitle(teacherGender)} {cognome} 👋
             </h1>
-            <p className="mt-2 text-[16px] font-normal text-muted-foreground">
+            <p className="mt-2.5 text-[17px] font-normal text-muted-foreground capitalize">
               {new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
             </p>
           </div>

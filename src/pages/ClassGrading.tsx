@@ -124,11 +124,11 @@ export default function ClassGrading() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80">
                 Correggi verifica
               </p>
-              <h1 className="mt-2 text-[26px] sm:text-[30px] font-bold tracking-tight text-foreground leading-none">
+              <h1 className="mt-2 text-[28px] sm:text-[30px] font-extrabold tracking-tight text-foreground leading-none">
                 {classe?.nome || "Classe"}
               </h1>
               {classe?.materia && (
-                <p className="mt-2.5 text-[14px] text-muted-foreground">{classe.materia}</p>
+                <p className="mt-3 text-[16px] text-muted-foreground">{classe.materia}</p>
               )}
             </div>
             <Button variant="outline" onClick={() => openManual()} className="gap-2">
@@ -146,8 +146,8 @@ export default function ClassGrading() {
         ) : (
           <section className="rounded-[24px] border border-border/60 bg-card p-5 sm:p-7">
             <div className="mb-4">
-              <h2 className="text-[18px] sm:text-[20px] font-semibold text-foreground">Scegli la verifica</h2>
-              <p className="text-[13px] text-muted-foreground mt-0.5">
+              <h2 className="text-[20px] sm:text-[22px] font-bold tracking-tight text-foreground">Scegli la verifica</h2>
+              <p className="text-[15px] text-muted-foreground mt-1.5">
                 Carica le foto degli elaborati per la correzione automatica, oppure inserisci i voti manualmente.
               </p>
             </div>
@@ -155,7 +155,7 @@ export default function ClassGrading() {
             {assignments.length === 0 ? (
               <div className="rounded-[18px] border border-dashed border-border/70 p-6 text-center">
                 <FileCheck className="mx-auto h-8 w-8 text-muted-foreground/60 mb-2" />
-                <p className="text-[14px] text-muted-foreground mb-3">
+                <p className="text-[16px] text-muted-foreground mb-3">
                   Nessuna verifica assegnata a questa classe.
                 </p>
                 <Button onClick={() => openManual()} variant="outline" size="sm" className="gap-2">
@@ -171,8 +171,8 @@ export default function ClassGrading() {
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="text-[15px] font-semibold text-foreground line-clamp-1">{a.title}</p>
-                        <p className="mt-1 text-[12px] text-muted-foreground">
+                        <p className="text-[17px] font-semibold text-foreground line-clamp-1">{a.title}</p>
+                        <p className="mt-1.5 text-[14px] text-muted-foreground">
                           {[a.type, a.subject, a.assigned_at && new Date(a.assigned_at).toLocaleDateString("it-IT")]
                             .filter(Boolean)
                             .join(" · ")}
