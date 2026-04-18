@@ -212,152 +212,141 @@ export default function ClassQuadro() {
   const today = new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long" });
 
   return (
-    <div className="min-h-screen pb-24 relative" style={{ background: "#F2F2F7" }}>
+    <div className="min-h-screen bg-[hsl(var(--muted))]/30 pb-16">
       <BackLink label="alla classe" to={`/classe/${classId}`} />
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-7 sm:py-10">
-        <header className="mb-7">
-          <h1 className="text-[22px] font-semibold tracking-tight text-foreground leading-tight">
+      <main className="mx-auto max-w-7xl px-6 pt-6 sm:pt-10">
+        <header className="mb-8">
+          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-foreground">
             Quadro completo · {classe.nome}
           </h1>
-          <p className="mt-1.5 text-[14px] font-normal text-muted-foreground">
+          <p className="mt-2 text-lg text-muted-foreground">
             Generato da {coachName} · {today}
           </p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 items-stretch [&>section]:h-full">
+        <section className="grid gap-6 md:grid-cols-2">
           {/* 1. Apprendimento */}
-          <SectionCard emoji="📊" icon={<BookOpen className="h-4 w-4" />} title="Come sta andando l'apprendimento">
-            <p className="text-[16px] font-normal leading-[1.7] text-foreground/85">
+          <SectionCard emoji="📊" title="Come sta andando l'apprendimento" minHeight="380px">
+            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
               {insight.learning.paragraph}
             </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Button
-                size="sm"
+            <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
+              <button
                 onClick={() => navigate(`/classe/${classId}/materiali?create=true&tipo=esercizio`)}
-                className="rounded-full h-9 text-[15px] font-medium"
+                className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
               >
                 Genera esercizi di rinforzo
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
+              </button>
+              <button
                 onClick={() => navigate(`/classe/${classId}`)}
-                className="rounded-full h-9 text-[15px] font-medium"
+                className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
               >
-                Apri risultati attività
-              </Button>
+                Vedi risultati attività
+              </button>
             </div>
           </SectionCard>
 
           {/* 2. Metodo */}
-          <SectionCard emoji="🔁" icon={<Repeat className="h-4 w-4" />} title="Il metodo sta funzionando?">
-            <p className="text-[16px] font-normal leading-[1.7] text-foreground/85">
+          <SectionCard emoji="🔁" title="Il metodo sta funzionando?" minHeight="380px">
+            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
               {insight.method.paragraph}
             </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Button
-                size="sm"
+            <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
+              <button
                 onClick={() => navigate(`/materiali-docente?classId=${classId}&tipo=lezione`)}
-                className="rounded-full h-9 text-[15px] font-medium"
+                className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
               >
                 Prepara spiegazione alternativa
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
+              </button>
+              <button
                 onClick={() => navigate(`/materiali-docente?classId=${classId}&tipo=lezione&approccio=alternativo`)}
-                className="rounded-full h-9 text-[15px] font-medium"
+                className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
               >
-                Genera materiale con approccio diverso
-              </Button>
+                Genera materiale diverso
+              </button>
             </div>
           </SectionCard>
 
           {/* 3. Clima */}
-          <SectionCard emoji="💬" icon={<MessageCircle className="h-4 w-4" />} title="Clima della classe">
-            <p className="text-[16px] font-normal leading-[1.7] text-foreground/85">
+          <SectionCard emoji="💬" title="Clima della classe" minHeight="320px">
+            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
               {insight.climate.paragraph}
             </p>
-            {insight.climate.hasSignals && (
-              <div className="mt-5 flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => navigate(`/classe/${classId}?action=parent-email`)}
-                  className="rounded-full h-9 text-[15px] font-medium"
-                >
-                  Scrivi ai genitori
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
+            <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
+              {insight.climate.hasSignals ? (
+                <>
+                  <button
+                    onClick={() => navigate(`/classe/${classId}?action=parent-email`)}
+                    className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                  >
+                    Scrivi ai genitori
+                  </button>
+                  <button
+                    onClick={() => navigate(`/agenda-docente?action=create&type=ascolto`)}
+                    className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+                  >
+                    Programma momento di ascolto
+                  </button>
+                </>
+              ) : (
+                <button
                   onClick={() => navigate(`/agenda-docente?action=create&type=ascolto`)}
-                  className="rounded-full h-9 text-[15px] font-medium"
+                  className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
                 >
-                  Programma momento di ascolto
-                </Button>
-              </div>
-            )}
+                  Avvia check-in di classe
+                </button>
+              )}
+            </div>
           </SectionCard>
 
           {/* 4. Studenti da seguire */}
-          <SectionCard emoji="👤" icon={<User className="h-4 w-4" />} title="Chi ha bisogno di attenzione">
+          <SectionCard emoji="👤" title="Chi ha bisogno di attenzione" minHeight="320px">
             {insight.followStudents.length === 0 ? (
-              <div className="flex items-center gap-2.5 text-[16px] font-normal text-foreground/80">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                  <Check className="h-4 w-4" />
-                </span>
-                <span>Tutti gli studenti stanno procedendo regolarmente.</span>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {insight.followStudents.map((s) => (
-                  <div
-                    key={s.studentId}
-                    className="rounded-xl border border-border/60 bg-card p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+              <>
+                <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+                  Tutti gli studenti stanno procedendo regolarmente. Continuare a osservare le prossime attività per cogliere in tempo eventuali segnali di rallentamento.
+                </p>
+                <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
+                  <button
+                    onClick={() => navigate(`/classe/${classId}`)}
+                    className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[16px] font-semibold text-foreground">{s.studentName}</p>
-                      <p className="text-[14px] font-normal text-muted-foreground leading-snug mt-0.5">
-                        {s.reason}
-                      </p>
-                    </div>
-                    <div className="flex gap-2 shrink-0">
-                      {s.primaryActionLabel && (
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            s.primaryActionLabel === "Recupero"
-                              ? navigate(`/materiali-docente?classId=${classId}&tipo=recupero&studentId=${s.studentId}`)
-                              : navigate(`/studente/${s.studentId}?classId=${classId}`)
-                          }
-                          className="rounded-full h-8 text-[15px] font-medium px-4"
-                        >
-                          {s.primaryActionLabel}
-                        </Button>
-                      )}
-                      {s.secondaryActionLabel && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() =>
-                            s.secondaryActionLabel === "Recupero"
-                              ? navigate(`/materiali-docente?classId=${classId}&tipo=recupero&studentId=${s.studentId}`)
-                              : navigate(`/studente/${s.studentId}?classId=${classId}`)
-                          }
-                          className="rounded-full h-8 text-[15px] font-medium px-4 inline-flex items-center gap-1"
-                        >
-                          {s.secondaryActionLabel}
-                          <ChevronRight className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    Apri classe
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+                  {insight.followStudents.length === 1
+                    ? `1 studente sta restando indietro rispetto al resto della classe nelle ultime attività. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.`
+                    : `${insight.followStudents.length} studenti stanno restando indietro rispetto al resto della classe nelle ultime attività. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.`}
+                </p>
+                <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
+                  <button
+                    onClick={() => {
+                      const first = insight.followStudents[0];
+                      navigate(`/studente/${first.studentId}?classId=${classId}`);
+                    }}
+                    className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                  >
+                    Apri profilo
+                  </button>
+                  <button
+                    onClick={() => {
+                      const first = insight.followStudents[0];
+                      navigate(`/materiali-docente?classId=${classId}&tipo=recupero&studentId=${first.studentId}`);
+                    }}
+                    className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+                  >
+                    Genera recupero
+                  </button>
+                </div>
+              </>
             )}
           </SectionCard>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }
