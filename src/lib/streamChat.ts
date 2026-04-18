@@ -216,5 +216,6 @@ export async function streamChat({
   }
 
   onDone(fullText);
+  markAssistantTurn();
   return fullText;
 }
