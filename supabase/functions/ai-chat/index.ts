@@ -622,6 +622,8 @@ NON CHIUDERE LA CONVERSAZIONE. Rimani presente.`;
     // Fire-and-forget: update adaptive profile
     if (profileId) {
       updateAdaptiveProfile(profileId, messages, chatSubject, sessionFormat).catch(() => {});
+      // Behavioral profile (cumulative, server-side, never raw text)
+      updateBehavioralProfile(profileId, behavioral_snapshot, opening_tone_streak).catch(() => {});
       try {
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
