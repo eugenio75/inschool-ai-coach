@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import i18n from "i18next";
 import { getDailyOpeningTone } from "@/lib/dailyOpening";
 import { pullPendingTrigger, markAssistantTurn } from "@/lib/relationalMoments";
+import { getCurrentSessionSnapshot, getOpeningToneStreak, recordRelationalOffered } from "@/lib/behavioralProfile";
 
 export interface ChatAction {
   label: string;
@@ -72,7 +73,16 @@ export async function streamChat({
         daily_opening_tone: getDailyOpeningTone() || undefined,
         // Momento relazionale contestuale (max 1 per sessione). Solo etichetta,
         // mai testo dell'utente. Il Coach lo intreccia naturalmente nella risposta.
-        relational_trigger: pullPendingTrigger() || undefined,
+        relational_trigger: (() => {
+          const t = pullPendingTrigger() || undefined;
+          if (t) recordRelationalOffered();
+          return t;
+        })(),
+        // Snapshot comportamentale corrente (solo conteggi anonimi, mai testi)
+        // — usato per aggiornare il profilo adattivo a fine sessione.
+        behavioral_snapshot: getCurrentSessionSnapshot() || undefined,
+        // Streak del tono di apertura ultimi 14 giorni (solo conteggi).
+        opening_tone_streak: getOpeningToneStreak(),
         ...extraBody,
       }),
     }
