@@ -53,7 +53,7 @@ export default function ClassCoachCard({ headline, paragraph, evidences, onAsk, 
           </div>
         </div>
 
-        <h2 className="max-w-3xl text-[20px] font-bold leading-snug tracking-tight text-foreground">
+        <h2 className="max-w-3xl text-[19px] font-semibold leading-[1.6] tracking-[-0.005em] text-foreground">
           {headline}
         </h2>
         <p className="mt-4 max-w-3xl text-[16px] font-normal leading-[1.7] text-muted-foreground">
