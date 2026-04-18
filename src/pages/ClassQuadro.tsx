@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Repeat, MessageCircle, User, Check, ChevronRight } from "lucide-react";
+import { BookOpen, Repeat, MessageCircle, User, Check, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildSession } from "@/lib/childSession";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { BackLink } from "@/components/shared/BackLink";
 import { analyzeFullPicture, type FullPictureInsight } from "@/lib/classFullPictureAnalysis";
 
 async function fetchTeacherClassData(classId: string) {
@@ -207,18 +208,9 @@ export default function ClassQuadro() {
   const today = new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long" });
 
   return (
-    <div className="min-h-screen pb-24" style={{ background: "#F2F2F7" }}>
+    <div className="min-h-screen pb-24 relative" style={{ background: "#F2F2F7" }}>
+      <BackLink label="alla classe" to={`/classe/${classId}`} />
       <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-7 sm:py-10">
-        {/* Header */}
-        <button
-          type="button"
-          onClick={() => navigate(`/classe/${classId}`)}
-          className="inline-flex items-center gap-1.5 text-[14px] font-medium text-muted-foreground hover:text-foreground transition-colors mb-5"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          <span>Torna alla classe</span>
-        </button>
-
         <header className="mb-7">
           <h1 className="text-[22px] font-semibold tracking-tight text-foreground leading-tight">
             Quadro completo · {classe.nome}
