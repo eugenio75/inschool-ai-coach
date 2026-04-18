@@ -98,29 +98,34 @@ const EmotionalCheckin = () => {
   if (isParentUser) return null;
 
   return (
-    <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center px-6">
+    <div className="min-h-[100dvh] bg-background flex flex-col items-center sm:justify-center px-6 py-6 sm:py-10">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={spring}
-        className="max-w-md w-full"
+        className="max-w-md w-full flex-1 sm:flex-initial flex flex-col"
       >
-        <div className="bg-card rounded-2xl border border-border p-7 sm:p-8 shadow-sm">
-          <p className="text-base sm:text-lg text-foreground/90 leading-relaxed mb-5 font-medium">
-            {DAILY_OPENING_PROMPT}
-          </p>
+        <div className="bg-card rounded-2xl border border-border shadow-sm flex flex-col flex-1 sm:flex-initial overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-7 sm:p-8 sm:pb-5">
+            <p className="text-base sm:text-lg text-foreground/90 leading-relaxed mb-5 font-medium">
+              {DAILY_OPENING_PROMPT}
+            </p>
 
-          <Textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder=""
-            aria-label={DAILY_OPENING_PROMPT}
-            className="min-h-[120px] resize-none rounded-xl text-base"
-            autoFocus
-            disabled={busy}
-          />
+            <Textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder=""
+              aria-label={DAILY_OPENING_PROMPT}
+              className="min-h-[120px] resize-none rounded-xl text-base"
+              autoFocus
+              disabled={busy}
+            />
+          </div>
 
-          <div className="mt-5 flex items-center justify-end">
+          <div
+            className="sticky bottom-0 bg-card flex items-center justify-end px-7 sm:px-8 pt-3 pb-4 sm:pb-6 border-t border-border/40 sm:border-t-0"
+            style={{ paddingBottom: "max(env(safe-area-inset-bottom, 16px), 16px)" }}
+          >
             <Button
               onClick={handleContinue}
               disabled={busy}
