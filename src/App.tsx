@@ -45,6 +45,7 @@ const LandingDocenti = lazy(() => import("./pages/LandingDocenti"));
 const PrepSession = lazy(() => import("./pages/PrepSession"));
 const ClassView = lazy(() => import("./pages/ClassView"));
 const StudentView = lazy(() => import("./pages/StudentView"));
+const StudentExplore = lazy(() => import("./pages/StudentExplore"));
 const StudentProgress = lazy(() => import("./pages/StudentProgress"));
 const Agenda = lazy(() => import("./pages/Agenda"));
 const AgendaDocente = lazy(() => import("./pages/AgendaDocente"));
@@ -216,6 +217,7 @@ const AppRoutes = () => (
         <Route path="/classe/:classId/correggi" element={<AccessibleRoute><MaybeAdultLayout><ClassGrading /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/classe/:classId/quadro" element={<AccessibleRoute><MaybeAdultLayout><ClassQuadro /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/studente/:studentId" element={<AccessibleRoute><MaybeAdultLayout><StudentView /></MaybeAdultLayout></AccessibleRoute>} />
+        <Route path="/studente/:studentId/esplora" element={<AccessibleRoute><MaybeAdultLayout><StudentExplore /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/settings" element={<AccessibleRoute><MaybeAdultLayout><Settings /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/admin/email-preview" element={<ProtectedRoute><AdminEmailPreview /></ProtectedRoute>} />
         <Route path="/admin/blockchain-test" element={<BlockchainTest />} />
