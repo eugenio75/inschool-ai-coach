@@ -453,6 +453,47 @@ export default function StudentView() {
           </div>
         </article>
 
+        {/* Abitudini di studio — collapsed by default */}
+        <Collapsible
+          open={habitsOpen}
+          onOpenChange={(open) => {
+            setHabitsOpen(open);
+            if (open) loadHabitsSummary();
+          }}
+          className="mt-6"
+        >
+          <CollapsibleTrigger className="w-full text-left bg-card border border-border rounded-[24px] shadow-sm px-6 sm:px-8 py-5 hover:bg-muted/40 transition-colors group">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <h3 className="text-[17px] font-bold text-foreground tracking-tight leading-tight">
+                  Abitudini di studio
+                </h3>
+                {!habitsOpen && (
+                  <p className="text-[13px] text-muted-foreground mt-1.5 leading-snug">
+                    Apri per vedere ritmo, continuità e modalità di apprendimento.
+                  </p>
+                )}
+              </div>
+              <ChevronDown className={`w-5 h-5 text-muted-foreground shrink-0 mt-0.5 transition-transform ${habitsOpen ? "rotate-180" : ""}`} />
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="bg-card border border-t-0 border-border rounded-b-[24px] -mt-px px-6 sm:px-8 pb-6 pt-2">
+              {habitsLoading && (
+                <p className="text-[14px] text-muted-foreground italic">Sto leggendo le abitudini di {firstName}…</p>
+              )}
+              {!habitsLoading && habitsSummaryAi && (
+                <p className="text-[15px] text-foreground leading-[1.7]">{habitsSummaryAi}</p>
+              )}
+              {!habitsLoading && habitsLoaded && !habitsSummaryAi && (
+                <p className="text-[14px] text-muted-foreground leading-[1.6]">
+                  Servono ancora qualche sessione per cogliere uno stile di lavoro stabile.
+                </p>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
         {/* Communication Dialog */}
         <Dialog open={showComm} onOpenChange={setShowComm}>
           <DialogContent className="rounded-2xl">
