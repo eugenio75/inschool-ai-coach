@@ -273,6 +273,8 @@ ${prof.gender === "M" ? 'GENERE: maschio. Usa "Bravo!", "sei stato", "concentrat
     console.log("Student context loaded:", studentContext.length > 0);
     console.log("Math context:", mathContext.substring(0, 100));
     console.log("Student instruction (top-level):", studentInstruction || "none");
+    console.log("Daily opening tone:", daily_opening_tone || "none");
+    console.log("Relational trigger:", relational_trigger || "none");
     console.log("Total prompt length:", finalSystemPrompt.length);
 
     // ── STATO ROSSO — crisis detection ──
