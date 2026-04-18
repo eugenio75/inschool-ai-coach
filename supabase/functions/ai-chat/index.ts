@@ -254,13 +254,29 @@ ${prof.gender === "M" ? 'GENERE: maschio. Usa "Bravo!", "sei stato", "concentrat
     // NON è un check-in. NON è una domanda diretta sullo stato emotivo.
     // Il Coach nota cosa sta accadendo e apre uno spazio breve e naturale.
     // Lo studente può rispondere, ignorare o continuare — tutte risposte valide.
+    // ────────────────────────────────────────────────────────────────────
+    // REGOLE TRASVERSALI di TESSITURA per TUTTI i momenti relazionali:
+    //   • La frase relazionale NON è MAI una bolla separata, MAI un paragrafo
+    //     a sé, MAI un messaggio isolato. È una clausola dentro la frase
+    //     successiva del Coach, integrata nel ritmo della conversazione.
+    //   • VIETATO: aprire il messaggio con la frase relazionale.
+    //   • VIETATO: chiudere il messaggio con la frase relazionale isolata
+    //     su una riga propria.
+    //   • VIETATO: andare a capo prima o dopo la frase relazionale.
+    //   • OBBLIGATORIO: la frase relazionale deve essere preceduta E seguita
+    //     da contenuto didattico/operativo nello STESSO paragrafo.
+    //   • La risposta totale deve sembrare un singolo turno naturale di
+    //     conversazione — mai un check-in, mai un form, mai un'interruzione.
+    // ────────────────────────────────────────────────────────────────────
+    const RELATIONAL_WEAVING_RULES = `\nCOME TESSERLA (regole rigide, NON negoziabili):\n• La frase deve apparire DENTRO un paragrafo che contiene anche aiuto didattico o il prossimo passo. NON da sola.\n• NON usarla come prima frase del messaggio. NON usarla come ultima frase isolata. NON andare a capo prima o dopo.\n• Deve sembrare una clausola naturale del discorso, non un check-in né una domanda separata.\n• ESEMPIO CORRETTO (intrecciata): "Vedo che qui ti blocchi — questo passaggio ti sta dando filo da torcere, è l'argomento o è la giornata? Proviamo insieme: parti da..."\n• ESEMPIO SBAGLIATO (isolata, vietato): "Questo passaggio ti sta dando filo da torcere. È l'argomento o è la giornata?" \\n\\n "Ora proviamo a..."\n• Se lo studente ignora, prosegui come se la frase non fosse mai esistita.`;
+
     let relationalBlock = "";
     if (relational_trigger === "repeated_error") {
-      relationalBlock = `\n\n══════════════════════════════\nMOMENTO RELAZIONALE (UNA SOLA VOLTA in questa sessione)\n══════════════════════════════\nLo studente sta sbagliando ripetutamente sullo stesso punto (3+ volte).\nINTRECCIA in modo NATURALE — NON come check-in, NON come domanda separata — la frase ESATTA:\n"Questo passaggio ti sta dando filo da torcere. È l'argomento o è la giornata?"\nRegole assolute:\n• Inseriscila in modo fluido nel discorso, NON in una bolla a parte.\n• Subito dopo, continua normalmente con il prossimo passaggio o aiuto.\n• Se lo studente ignora la domanda nella sua prossima risposta, NON insistere, NON ripeterla, NON tornarci sopra.\n• Se risponde, accogli con UNA frase breve e prosegui — non chiedere dettagli, non fare seguito emotivo.\n══════════════════════════════`;
+      relationalBlock = `\n\n══════════════════════════════\nMOMENTO RELAZIONALE (UNA SOLA VOLTA in questa sessione)\n══════════════════════════════\nLo studente sta sbagliando ripetutamente sullo stesso punto (3+ volte).\nFrase ESATTA da intrecciare: "Questo passaggio ti sta dando filo da torcere. È l'argomento o è la giornata?"${RELATIONAL_WEAVING_RULES}\n• Subito dopo la frase, nello STESSO paragrafo, offri il prossimo aiuto concreto sul passaggio.\n• Se risponde, accogli con UNA clausola breve dentro la frase successiva e prosegui — non chiedere dettagli, non fare seguito emotivo.\n══════════════════════════════`;
     } else if (relational_trigger === "slowdown") {
-      relationalBlock = `\n\n══════════════════════════════\nMOMENTO RELAZIONALE (UNA SOLA VOLTA in questa sessione)\n══════════════════════════════\nLo studente sta rispondendo molto più lentamente del solito.\nINTRECCIA in modo NATURALE la frase ESATTA:\n"Stai andando più piano del solito. Vuoi continuare o fare una pausa?"\nRegole assolute:\n• Tono leggero, mai allarmato.\n• Se sceglie pausa, accogli con calore breve ("Va bene, prenditi il tempo che ti serve") e fermati lì — NON proporre esercizi.\n• Se ignora o dice di continuare, prosegui normalmente come se nulla fosse — NON tornarci sopra.\n══════════════════════════════`;
+      relationalBlock = `\n\n══════════════════════════════\nMOMENTO RELAZIONALE (UNA SOLA VOLTA in questa sessione)\n══════════════════════════════\nLo studente sta rispondendo molto più lentamente del solito.\nFrase ESATTA da intrecciare: "Stai andando più piano del solito. Vuoi continuare o fare una pausa?"${RELATIONAL_WEAVING_RULES}\n• Tono leggero, mai allarmato. La frase deve sembrare un'osservazione di passaggio dentro il discorso sul compito.\n• Se sceglie pausa, accogli con calore breve ("Va bene, prenditi il tempo che ti serve") e fermati lì — NON proporre esercizi.\n• Se ignora o dice di continuare, prosegui normalmente come se nulla fosse.\n══════════════════════════════`;
     } else if (relational_trigger === "high_performance") {
-      relationalBlock = `\n\n══════════════════════════════\nMOMENTO RELAZIONALE (UNA SOLA VOLTA in questa sessione)\n══════════════════════════════\nLo studente oggi sta andando molto sopra la sua media abituale.\nINTRECCIA in modo NATURALE, BREVE e LEGGERO la frase ESATTA:\n"Oggi vai forte. Stai bene?"\nRegole assolute:\n• Mai intrusivo, mai enfatico, mai una domanda di "controllo".\n• Una sola riga, poi torna subito al compito senza pausa drammatica.\n• Se lo studente ignora, NON ripetere, NON insistere.\n══════════════════════════════`;
+      relationalBlock = `\n\n══════════════════════════════\nMOMENTO RELAZIONALE (UNA SOLA VOLTA in questa sessione)\n══════════════════════════════\nLo studente oggi sta andando molto sopra la sua media abituale.\nFrase ESATTA da intrecciare: "Oggi vai forte. Stai bene?"${RELATIONAL_WEAVING_RULES}\n• Mai intrusivo, mai enfatico, mai una domanda di "controllo".\n• Inseriscila come clausola leggera nel commento al risultato, poi continua subito col prossimo passaggio nello stesso paragrafo.\n• ESEMPIO: "Perfetto, hai centrato anche questa — oggi vai forte, stai bene? Andiamo al prossimo: ..."\n══════════════════════════════`;
     }
 
     const sessionContext = clientSystemPrompt
