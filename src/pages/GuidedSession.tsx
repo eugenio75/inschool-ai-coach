@@ -51,7 +51,6 @@ export default function GuidedSession() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [showPauseDialog, setShowPauseDialog] = useState(false);
   const [emotionalCheckin, setEmotionalCheckin] = useState<string | null>(null);
-  const [showCheckin, setShowCheckin] = useState(false);
   const [showExplainOptions, setShowExplainOptions] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -112,9 +111,8 @@ export default function GuidedSession() {
         setMessages([{ role: "assistant", content: resumeMsg }]);
         setLoading(false);
       } else {
-        // New session - show emotional checkin
-        setShowCheckin(true);
-        setLoading(false);
+        // New session — start directly (daily opening moment is handled at app entry)
+        startNewSession("neutro");
       }
     } catch (err) {
       console.error("loadSession error:", err);
@@ -124,7 +122,6 @@ export default function GuidedSession() {
 
   async function startNewSession(emotion: string) {
     setEmotionalCheckin(emotion);
-    setShowCheckin(false);
     setLoading(true);
 
     try {
@@ -407,42 +404,6 @@ export default function GuidedSession() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-6 h-6 animate-spin text-[var(--color-accent)]" />
-      </div>
-    );
-  }
-
-  // Emotional checkin screen
-  if (showCheckin) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-md w-full bg-card rounded-xl border border-border p-8 text-center"
-        >
-          <h2 className="font-display text-xl font-bold text-foreground mb-2">
-            Come ti senti per iniziare?
-          </h2>
-          <p className="text-sm text-muted-foreground mb-6">
-            {homework?.title}
-          </p>
-          <div className="flex flex-col gap-3">
-            {[
-              { key: "concentrato", label: "Concentrato", icon: "🎯" },
-              { key: "stanco", label: "Un po' stanco", icon: "😴" },
-              { key: "bloccato", label: "Bloccato in partenza", icon: "😕" },
-            ].map(opt => (
-              <button
-                key={opt.key}
-                onClick={() => startNewSession(opt.key)}
-                className="flex items-center gap-3 p-4 rounded-lg border border-border hover:border-primary/30 hover:bg-muted transition-all text-left"
-              >
-                <span className="text-2xl">{opt.icon}</span>
-                <span className="font-medium text-foreground">{opt.label}</span>
-              </button>
-            ))}
-          </div>
-        </motion.div>
       </div>
     );
   }
