@@ -26,6 +26,7 @@ interface Props {
  */
 export default function ClassCoachCard({ headline, paragraph, evidences, onAsk, coachName, onShowFullPicture }: Props) {
   const [value, setValue] = useState("");
+  const { t } = useLang();
 
   function submit() {
     const q = value.trim();
@@ -34,15 +35,21 @@ export default function ClassCoachCard({ headline, paragraph, evidences, onAsk, 
     setValue("");
   }
 
+  // Integrate all evidences into a single natural-prose paragraph
+  const secondaryParagraph = evidences
+    .map((ev) => ev.text.trim().replace(/[.;]+$/, ""))
+    .filter(Boolean)
+    .join(". ") + (evidences.length ? "." : "");
+
   return (
     <section className="rounded-[32px] border border-border/60 bg-card/95 backdrop-blur overflow-hidden shadow-[0_10px_30px_-15px_hsl(var(--foreground)/0.08)]">
-      {/* Header + headline */}
-      <div className="border-b border-border/50 px-6 sm:px-7 pt-6 sm:pt-7 pb-5">
+      {/* Header + headline + paragraphs */}
+      <div className="px-6 sm:px-7 pt-6 sm:pt-7 pb-5">
         <div className="mb-4 flex items-center gap-3">
           <CoachAvatar mood="default" size={44} />
           <div>
-            <p className="text-[14px] font-semibold text-foreground/80 leading-tight">{coachName || "Coach"} · oggi</p>
-            <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">Sintesi operativa della classe</p>
+            <p className="text-[14px] font-semibold text-foreground/80 leading-tight">{coachName || "Coach"} · {t("coach_card_today") || "oggi"}</p>
+            <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">{t("coach_card_subtitle") || "Sintesi operativa della classe"}</p>
           </div>
         </div>
 
@@ -52,36 +59,26 @@ export default function ClassCoachCard({ headline, paragraph, evidences, onAsk, 
         <p className="mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">
           {paragraph}
         </p>
-      </div>
 
-      {/* Evidence rows — descriptive only */}
-      {evidences.length > 0 && (
-        <div className="px-6 sm:px-7 py-5 space-y-2 bg-muted/30">
-          {evidences.map((ev) => (
-            <div
-              key={ev.id}
-              className="rounded-2xl border border-border/70 bg-card px-4 py-4"
+        {secondaryParagraph && (
+          <p className="mt-3 max-w-3xl text-[15px] leading-7 text-muted-foreground/85">
+            {secondaryParagraph}
+          </p>
+        )}
+
+        {onShowFullPicture && (
+          <div className="mt-5">
+            <button
+              type="button"
+              onClick={onShowFullPicture}
+              className="text-[14px] font-medium text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1"
             >
-              <p className="text-[15px] leading-7 text-foreground/85">
-                {ev.text}
-              </p>
-            </div>
-          ))}
-
-          {onShowFullPicture && (
-            <div className="pt-3 flex justify-center">
-              <button
-                type="button"
-                onClick={onShowFullPicture}
-                className="text-[13px] text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
-              >
-                Vedi il quadro completo della classe
-                <ArrowRight className="h-3 w-3" />
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+              {t("coach_card_explore") || "Approfondisci"}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Fused input */}
       <div className="border-t border-border/50 px-6 sm:px-7 py-4 bg-card">
@@ -95,7 +92,7 @@ export default function ClassCoachCard({ headline, paragraph, evidences, onAsk, 
                 submit();
               }
             }}
-            placeholder="Chiedi qualcosa sulla classe..."
+            placeholder={t("coach_card_input_placeholder") || "Chiedi qualcosa sulla classe..."}
             className="w-full bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/70 outline-none"
           />
           <button
