@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getChildSession } from "@/lib/childSession";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BackLink } from "@/components/shared/BackLink";
 
 const typeIcons: Record<string, React.ReactNode> = {
   warning: <AlertTriangle className="w-4 h-4 text-amber-500" />,
@@ -74,7 +75,9 @@ export default function TeacherNotifications() {
   const unreadCount = items.filter(i => !i.read_at).length;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-24">
+    <div className="relative">
+      <BackLink label="alla home" to="/dashboard" />
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-24">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Notifiche</h1>
@@ -140,6 +143,7 @@ export default function TeacherNotifications() {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 }

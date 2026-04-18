@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import SharedMaterialsList from "@/components/teacher/SharedMaterialsList";
+import { BackLink } from "@/components/shared/BackLink";
 
 const TYPE_OPTIONS = [
   { key: "all", label: "Tutti i tipi" },
@@ -117,8 +118,8 @@ export default function TeacherMaterialsArchive() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      
+    <div className="min-h-screen bg-background pb-24 relative">
+      <BackLink label="alla home" to="/dashboard" />
       {/* Header */}
       <div className="bg-card border-b border-border px-6 pt-6 pb-5">
         <div className="max-w-4xl mx-auto">
