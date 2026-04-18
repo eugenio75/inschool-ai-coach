@@ -171,11 +171,11 @@ export default function ClassMaterials() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80">
                 Materiali della classe
               </p>
-              <h1 className="mt-2 text-[26px] sm:text-[30px] font-bold tracking-tight text-foreground leading-none">
+              <h1 className="mt-2 text-[28px] sm:text-[30px] font-extrabold tracking-tight text-foreground leading-none">
                 {classe?.nome || "Classe"}
               </h1>
               {classe?.materia && (
-                <p className="mt-2.5 text-[14px] text-muted-foreground">{classe.materia}</p>
+                <p className="mt-3 text-[16px] text-muted-foreground">{classe.materia}</p>
               )}
             </div>
             <Button onClick={openCreate} className="gap-2">
@@ -196,8 +196,8 @@ export default function ClassMaterials() {
             <section className="rounded-[24px] border border-border/60 bg-card p-5 sm:p-7 mb-5">
               <div className="flex items-baseline justify-between mb-4">
                 <div>
-                  <h2 className="text-[18px] sm:text-[20px] font-semibold text-foreground">Assegnati a questa classe</h2>
-                  <p className="text-[13px] text-muted-foreground mt-0.5">
+                  <h2 className="text-[20px] sm:text-[22px] font-bold tracking-tight text-foreground">Assegnati a questa classe</h2>
+                  <p className="text-[15px] text-muted-foreground mt-1">
                     {assigned.length} {assigned.length === 1 ? "materiale" : "materiali"}
                   </p>
                 </div>
@@ -206,7 +206,7 @@ export default function ClassMaterials() {
               {assigned.length === 0 ? (
                 <div className="rounded-[18px] border border-dashed border-border/70 p-6 text-center">
                   <FileText className="mx-auto h-8 w-8 text-muted-foreground/60 mb-2" />
-                  <p className="text-[14px] text-muted-foreground">
+                  <p className="text-[16px] text-muted-foreground">
                     Nessun materiale assegnato a questa classe.
                   </p>
                   <Button onClick={openCreate} variant="outline" size="sm" className="mt-3 gap-2">
@@ -223,8 +223,8 @@ export default function ClassMaterials() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-[15px] font-semibold text-foreground line-clamp-1">{m.title}</p>
-                          <p className="mt-1 text-[12px] text-muted-foreground flex items-center gap-2 flex-wrap">
+                          <p className="text-[17px] font-semibold text-foreground line-clamp-1">{m.title}</p>
+                          <p className="mt-1.5 text-[14px] text-muted-foreground flex items-center gap-2 flex-wrap">
                             {m.type && <span className="capitalize">{m.type}</span>}
                             {m.subject && <><span>·</span><span>{m.subject}</span></>}
                             {m.assigned_at && (
@@ -249,10 +249,10 @@ export default function ClassMaterials() {
             {drafts.length > 0 && (
               <section className="rounded-[24px] border border-border/60 bg-card p-5 sm:p-7">
                 <div className="mb-4">
-                  <h2 className="text-[18px] sm:text-[20px] font-semibold text-foreground">
+                  <h2 className="text-[20px] sm:text-[22px] font-bold tracking-tight text-foreground">
                     Bozze pertinenti{classe?.materia ? ` · ${classe.materia}` : ""}
                   </h2>
-                  <p className="text-[13px] text-muted-foreground mt-0.5">
+                  <p className="text-[15px] text-muted-foreground mt-1">
                     Materiali non ancora assegnati che puoi riutilizzare per questa classe
                   </p>
                 </div>
@@ -267,8 +267,8 @@ export default function ClassMaterials() {
                         onClick={() => openMaterial(m.id)}
                         className="min-w-0 text-left flex-1"
                       >
-                        <p className="text-[15px] font-semibold text-foreground line-clamp-1">{m.title}</p>
-                        <p className="mt-1 text-[12px] text-muted-foreground flex items-center gap-2 flex-wrap">
+                        <p className="text-[17px] font-semibold text-foreground line-clamp-1">{m.title}</p>
+                        <p className="mt-1.5 text-[14px] text-muted-foreground flex items-center gap-2 flex-wrap">
                           {m.type && <span className="capitalize">{m.type}</span>}
                           {m.subject && <><span>·</span><span>{m.subject}</span></>}
                           <span>·</span>

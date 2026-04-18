@@ -124,8 +124,9 @@ export default function TeacherMaterialsArchive() {
       <div className="bg-card border-b border-border px-6 pt-6 pb-5">
         <div className="max-w-4xl mx-auto">
           <div>
-              <h1 className="text-[22px] font-display font-semibold text-foreground">I miei materiali</h1>
-              <p className="text-[14px] font-normal text-muted-foreground mt-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80 mb-2">Archivio</p>
+              <h1 className="text-[28px] sm:text-[30px] font-display font-extrabold tracking-tight text-foreground leading-none">I miei materiali</h1>
+              <p className="text-[16px] font-normal text-muted-foreground mt-2.5">
                 Tutto quello che hai creato — pronto da riutilizzare, riassegnare o stampare.
               </p>
           </div>

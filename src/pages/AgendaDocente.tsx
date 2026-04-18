@@ -241,10 +241,11 @@ export default function AgendaDocente() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div>
-            <h1 className="text-[22px] font-semibold text-foreground flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5" /> Agenda
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80 mb-2">Calendario</p>
+            <h1 className="text-[28px] sm:text-[30px] font-extrabold tracking-tight text-foreground flex items-center gap-3 leading-none">
+              <CalendarIcon className="w-7 h-7" /> Agenda
             </h1>
-            <p className="text-[14px] font-normal text-muted-foreground capitalize">{headerTitle}</p>
+            <p className="text-[16px] font-normal text-muted-foreground capitalize mt-2.5">{headerTitle}</p>
           </div>
         </div>
         <Button size="sm" className="rounded-xl bg-[#0070C0] hover:bg-[#005fa3]" onClick={() => {

@@ -505,13 +505,16 @@ export default function ClassView() {
         <header className="rounded-[32px] border border-border/60 bg-card/95 backdrop-blur p-6 sm:p-7 shadow-[0_10px_30px_-15px_hsl(var(--foreground)/0.08)]">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80 mb-2">
+                Classe
+              </p>
               <div className="flex items-center gap-3">
                 <span className="h-2.5 w-2.5 rounded-full bg-amber-400 shadow-[0_0_0_5px_hsl(45_93%_58%/0.18)]" />
-                <h1 className="text-[22px] font-semibold tracking-tight text-foreground leading-none">
+                <h1 className="text-[28px] sm:text-[30px] font-extrabold tracking-tight text-foreground leading-none">
                   {classe.nome}
                 </h1>
               </div>
-              <p className="mt-3 text-[14px] font-normal text-muted-foreground">
+              <p className="mt-3 text-[16px] font-normal text-muted-foreground">
                 {[classe.materia, `${students.length} ${students.length === 1 ? "studente" : "studenti"}`, schoolType]
                   .filter(Boolean)
                   .join(" · ")}

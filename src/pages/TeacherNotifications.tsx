@@ -80,9 +80,10 @@ export default function TeacherNotifications() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-24">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display text-[22px] font-semibold text-foreground">Notifiche</h1>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80 mb-2">Centro notifiche</p>
+          <h1 className="font-display text-[28px] sm:text-[30px] font-extrabold tracking-tight text-foreground leading-none">Notifiche</h1>
           {unreadCount > 0 && (
-            <p className="text-[14px] font-normal text-muted-foreground mt-0.5">{unreadCount} non lette</p>
+            <p className="text-[16px] font-normal text-muted-foreground mt-2.5">{unreadCount} non lette</p>
           )}
         </div>
         {unreadCount > 0 && (
