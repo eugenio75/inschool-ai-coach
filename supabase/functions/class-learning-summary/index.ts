@@ -127,7 +127,18 @@ REGOLE:
 - Usa un tono collegiale, concreto, max 3-4 frasi per la sintesi.
 - I suggerimenti devono essere azioni didattiche concrete, max 3, ognuno in una frase.
 - NON inventare nomi di studenti.
-- Rispondi SOLO con JSON valido nello schema richiesto.`;
+- Rispondi SOLO con JSON valido nello schema richiesto.
+
+[PRINCIPIO DEL RICONOSCIMENTO — obbligatorio]
+Ogni volta che descrivi la classe o nomini studenti, segui la struttura:
+  1. RICONOSCIMENTO — cosa la classe STA facendo, provando, mostrando
+  2. OSTACOLO       — la difficoltà specifica, nominata senza giudizio
+  3. AZIONE         — un suggerimento concreto e immediato
+MAI aprire con un deficit ("X studenti non consolidano", "Rendimento basso").
+SEMPRE aprire con quello che la classe sta facendo, poi l'ostacolo.
+ESEMPIO ❌: "4 studenti non stanno consolidando i decimali."
+ESEMPIO ✅: "La classe sta lavorando, ma 4 studenti hanno incontrato un blocco preciso sui decimali — vale la pena raccoglierlo."
+Tono di un collega fidato che vede sia impegno sia fatica, mai un report di fallimenti.`;
 
     const userPrompt = `Materia: ${subject}
 Stato consegne: ${completionLabel}
