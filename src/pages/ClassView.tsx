@@ -87,6 +87,7 @@ export default function ClassView() {
   const [emotionalAlerts, setEmotionalAlerts] = useState<any[]>([]);
   const [focusSessions, setFocusSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [coachName, setCoachName] = useState("");
 
   // UI state
@@ -118,6 +119,7 @@ export default function ClassView() {
 
   async function loadClass() {
     setLoading(true);
+    setLoadError(null);
     try {
       const { data: { session: authSession } } = await supabase.auth.getSession();
       let loadedStudents: any[] = [];
@@ -125,13 +127,25 @@ export default function ClassView() {
       let loadedClasse: any = null;
 
       if (authSession?.access_token) {
-        const data = await fetchTeacherClassData(classId!);
-        loadedClasse = data.classe;
-        loadedStudents = data.students || [];
-        loadedResults = data.assignmentResults || [];
-        setEmotionalCheckins(data.emotionalCheckins || []);
-        setEmotionalAlerts(data.emotionalAlerts || []);
-        setFocusSessions(data.focusSessions || []);
+        try {
+          const data = await fetchTeacherClassData(classId!);
+          loadedClasse = data.classe;
+          loadedStudents = data.students || [];
+          loadedResults = data.assignmentResults || [];
+          setEmotionalCheckins(data.emotionalCheckins || []);
+          setEmotionalAlerts(data.emotionalAlerts || []);
+          setFocusSessions(data.focusSessions || []);
+        } catch (e: any) {
+          const msg = String(e?.message || "");
+          if (/non autorizzato|403|Non sei autorizzato/i.test(msg)) {
+            setLoadError("Non hai accesso a questa classe con l'account attuale.");
+          } else if (/non trovata|404/i.test(msg)) {
+            setLoadError("Questa classe non esiste più.");
+          } else {
+            setLoadError("Non sono riuscito a caricare la classe. Riprova tra qualche secondo.");
+          }
+          throw e;
+        }
 
         const { data: grades } = await (supabase as any)
           .from("manual_grades")
@@ -152,6 +166,9 @@ export default function ClassView() {
         const { data: cl } = await (supabase as any)
           .from("classi").select("*").eq("id", classId).single();
         loadedClasse = cl;
+        if (!cl) {
+          setLoadError("Devi accedere come docente per visualizzare la classe.");
+        }
         const { data: enr } = await (supabase as any)
           .from("class_enrollments").select("*").eq("class_id", classId).eq("status", "active");
         const enrollments = enr || [];
@@ -205,7 +222,7 @@ export default function ClassView() {
       setAssignmentResults([...loadedResults, ...syntheticResults]);
     } catch (error) {
       console.error("loadClass error:", error);
-      toast.error("Non sono riuscito a caricare la classe.");
+      // toast suppressed: we show inline message in UI
       setStudents([]);
       setAssignmentResults([]);
     }
@@ -224,9 +241,17 @@ export default function ClassView() {
 
   if (!classe) {
     return (
-      <div className="max-w-[720px] mx-auto px-4 sm:px-10 py-8 text-center">
-        <p className="text-muted-foreground">Classe non trovata.</p>
-        <Button variant="outline" onClick={() => navigate("/dashboard")} className="mt-4">Torna alla dashboard</Button>
+      <div className="max-w-[720px] mx-auto px-4 sm:px-10 py-8 text-center space-y-3">
+        <p className="text-foreground font-medium">{loadError || "Classe non trovata."}</p>
+        {loadError?.toLowerCase().includes("accesso") && (
+          <p className="text-sm text-muted-foreground">
+            Esci e accedi con l'account docente proprietario di questa classe.
+          </p>
+        )}
+        <div className="flex items-center justify-center gap-2 pt-2">
+          <Button variant="outline" onClick={() => navigate("/dashboard")}>Torna alla dashboard</Button>
+          <Button variant="ghost" onClick={() => loadClass()}>Riprova</Button>
+        </div>
       </div>
     );
   }
