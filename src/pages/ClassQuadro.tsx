@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { BookOpen, Repeat, MessageCircle, User, Check, ChevronRight } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { getChildSession } from "@/lib/childSession";
