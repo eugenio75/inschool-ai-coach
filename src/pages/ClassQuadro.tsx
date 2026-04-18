@@ -60,12 +60,12 @@ interface SectionCardProps {
 
 function SectionCard({ emoji, title, children }: SectionCardProps) {
   return (
-    <section className="rounded-2xl bg-card border border-border/60 p-6 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-      <div className="flex items-center gap-2.5 mb-4">
-        <span className="text-xl leading-none" aria-hidden>{emoji}</span>
-        <h2 className="text-[17px] sm:text-[18px] font-semibold text-foreground tracking-tight">{title}</h2>
+    <section className="rounded-3xl bg-card border border-border/60 p-7 sm:p-9 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col">
+      <div className="flex items-center gap-3 mb-5">
+        <span className="text-2xl leading-none" aria-hidden>{emoji}</span>
+        <h2 className="text-[20px] sm:text-[22px] font-semibold text-foreground tracking-tight">{title}</h2>
       </div>
-      {children}
+      <div className="flex-1">{children}</div>
     </section>
   );
 }
@@ -208,7 +208,7 @@ export default function ClassQuadro() {
 
   return (
     <div className="min-h-screen pb-24" style={{ background: "#F2F2F7" }}>
-      <div className="max-w-[760px] mx-auto px-4 sm:px-6 py-7 sm:py-9">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-7 sm:py-10">
         {/* Header */}
         <button
           type="button"
@@ -228,7 +228,7 @@ export default function ClassQuadro() {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch [&>section]:h-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 items-stretch [&>section]:h-full">
           {/* 1. Apprendimento */}
           <SectionCard emoji="📊" icon={<BookOpen className="h-4 w-4" />} title="Come sta andando l'apprendimento">
             <p className="text-[15px] leading-7 text-foreground/85">
