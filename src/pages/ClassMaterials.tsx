@@ -164,16 +164,11 @@ export default function ClassMaterials() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-muted/30 relative">
+      <BackLink label="alla classe" to={`/classe/${classId}`} />
       <div className="max-w-[880px] mx-auto px-4 sm:px-8 py-3 sm:py-4 pb-24">
         {/* Header */}
         <header className="mb-5 sm:mb-6 rounded-[24px] border border-border/60 bg-card p-5 sm:p-7">
-          <button
-            onClick={() => navigate(`/classe/${classId}`)}
-            className="inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground transition-colors mb-3"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" /> Torna alla classe
-          </button>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
