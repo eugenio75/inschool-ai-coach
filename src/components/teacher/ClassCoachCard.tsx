@@ -53,31 +53,22 @@ export default function ClassCoachCard({ headline, paragraph, evidences, onAsk, 
         </p>
       </div>
 
-      {/* Evidence rows */}
+      {/* Evidence rows — descriptive only */}
       {evidences.length > 0 && (
-        <div className="px-6 sm:px-7 py-5 space-y-3 bg-muted/30">
+        <div className="px-6 sm:px-7 py-5 space-y-2 bg-muted/30">
           {evidences.map((ev) => (
             <div
               key={ev.id}
-              className="rounded-2xl border border-border/70 bg-card px-4 py-4 transition-all hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)]"
+              className="rounded-2xl border border-border/70 bg-card px-4 py-4"
             >
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <p className="max-w-2xl text-[15px] leading-7 text-foreground/85">
-                  {ev.text}
-                </p>
-                <button
-                  onClick={ev.onAction}
-                  className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/60 px-5 py-2.5 text-[14px] font-semibold text-foreground hover:bg-muted transition-colors"
-                >
-                  {ev.actionLabel}
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </button>
-              </div>
+              <p className="text-[15px] leading-7 text-foreground/85">
+                {ev.text}
+              </p>
             </div>
           ))}
 
           {onShowFullPicture && (
-            <div className="pt-2 flex justify-center">
+            <div className="pt-3 flex justify-center">
               <button
                 type="button"
                 onClick={onShowFullPicture}
