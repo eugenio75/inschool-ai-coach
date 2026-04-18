@@ -783,6 +783,9 @@ Inizia con la prima domanda.`;
   const handleSend = useCallback((text: string) => {
     if (sending) return;
 
+    // Relational: close the response-time window for the previous assistant turn.
+    recordUserTurn();
+
     // If deterministic division is active, handle it locally
     if (divExercise) {
       handleDivisionAnswer(text);
