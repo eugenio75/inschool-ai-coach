@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { BackLink } from "@/components/shared/BackLink";
 import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, isToday, addMonths, addWeeks } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -234,12 +235,11 @@ export default function AgendaDocente() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 pb-24">
+      {/* Back link */}
+      <BackLink label="alla home" to="/dashboard" className="mb-3" />
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="rounded-xl">
-            <ArrowLeft className="w-4 h-4 mr-1" /> Home
-          </Button>
           <div>
             <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
               <CalendarIcon className="w-5 h-5" /> Agenda
