@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import i18n from "i18next";
+import { getDailyOpeningTone } from "@/lib/dailyOpening";
 
 export interface ChatAction {
   label: string;
@@ -65,6 +66,9 @@ export async function streamChat({
         messages: messages.map(m => ({ role: m.role, content: m.content })),
         stream: true,
         lang: i18n.language || "it",
+        // Tono dell'apertura giornaliera (heavy|neutral|positive). Solo runtime,
+        // mai persistito. Il Coach lo usa per calibrare il registro della sessione.
+        daily_opening_tone: getDailyOpeningTone() || undefined,
         ...extraBody,
       }),
     }
