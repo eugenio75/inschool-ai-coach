@@ -15,13 +15,15 @@ interface Props {
   evidences: CoachEvidence[];
   onAsk: (question: string) => void;
   coachName?: string;
+  /** Optional: navigate to the "quadro completo" page */
+  onShowFullPicture?: () => void;
 }
 
 /**
  * Coach card — large headline, soft evidence rows with pill buttons,
  * fused input at bottom. Refined "soft-card" design system.
  */
-export default function ClassCoachCard({ headline, paragraph, evidences, onAsk, coachName }: Props) {
+export default function ClassCoachCard({ headline, paragraph, evidences, onAsk, coachName, onShowFullPicture }: Props) {
   const [value, setValue] = useState("");
 
   function submit() {
@@ -73,6 +75,19 @@ export default function ClassCoachCard({ headline, paragraph, evidences, onAsk, 
               </div>
             </div>
           ))}
+
+          {onShowFullPicture && (
+            <div className="pt-2 flex justify-center">
+              <button
+                type="button"
+                onClick={onShowFullPicture}
+                className="text-[13px] text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+              >
+                Vedi il quadro completo della classe
+                <ArrowRight className="h-3 w-3" />
+              </button>
+            </div>
+          )}
         </div>
       )}
 
