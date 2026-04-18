@@ -545,18 +545,22 @@ const Settings = () => {
               <div className="flex items-center gap-3 mb-2">
                 <CoachAvatar mood="default" size={48} />
                 <div>
-                  <p className="font-medium text-foreground">{coachNameSetting || "Coach AI"}</p>
+                  <p className="font-medium text-foreground">{coachNameSetting || "Coach"}</p>
                   <p className="text-xs text-muted-foreground">Il tuo assistente personale</p>
                 </div>
               </div>
-              <Input
-                type="text"
-                placeholder="Nome del coach..."
-                value={coachNameSetting}
-                onChange={(e) => setCoachNameSetting(e.target.value)}
-                maxLength={20}
-                className="rounded-xl"
-              />
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">Nome del tuo coach AI</label>
+                <Input
+                  type="text"
+                  placeholder="Coach"
+                  value={coachNameSetting}
+                  onChange={(e) => setCoachNameSetting(e.target.value)}
+                  maxLength={20}
+                  className="rounded-xl"
+                />
+                <p className="text-xs text-muted-foreground mt-1.5">Lascia vuoto per usare "Coach" come predefinito.</p>
+              </div>
               <Button onClick={handleSaveCoach} disabled={savingCoach} className="rounded-xl w-full">
                 {savingCoach ? "Salvataggio..." : "Salva nome coach"}
               </Button>
