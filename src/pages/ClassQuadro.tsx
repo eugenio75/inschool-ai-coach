@@ -208,7 +208,7 @@ export default function ClassQuadro() {
 
   return (
     <div className="min-h-screen pb-24" style={{ background: "#F2F2F7" }}>
-      <div className="max-w-[760px] mx-auto px-4 sm:px-6 py-7 sm:py-9">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-7 sm:py-10">
         {/* Header */}
         <button
           type="button"
