@@ -1319,10 +1319,10 @@ Return only the three versions with no commentary, separated exactly by ===BES==
       <div className="space-y-8">
         {/* Selection cards */}
         <div>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.18em] mb-5 flex items-center gap-2">
             <Send className="w-3.5 h-3.5" /> Crea e assegna
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {([
               {
                 key: "write" as const,
@@ -1348,13 +1348,13 @@ Return only the three versions with no commentary, separated exactly by ===BES==
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setMode(key)}
-                className="flex flex-col items-center text-center p-6 bg-card border border-border rounded-2xl hover:border-primary/40 hover:shadow-md transition-all group"
+                className="flex flex-col items-start text-left p-7 bg-card border border-border/60 rounded-[24px] hover:border-primary/40 hover:shadow-[0_10px_28px_rgba(15,23,42,0.06)] transition-all group min-h-[220px]"
               >
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
                   <Icon className="w-6 h-6 text-primary" />
                 </div>
-                <p className="font-semibold text-foreground text-sm mb-1">{title}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                <p className="font-bold text-foreground text-[20px] tracking-tight mb-2 leading-tight">{title}</p>
+                <p className="text-[14px] text-muted-foreground leading-relaxed">{desc}</p>
               </motion.button>
             ))}
           </div>
