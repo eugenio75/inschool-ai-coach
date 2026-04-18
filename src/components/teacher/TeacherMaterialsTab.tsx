@@ -738,8 +738,14 @@ export default function TeacherMaterialsTab({ classId, classe, students, materia
 
       let systemPrompt: string;
 
+      const resolvedDurataLezione = durataLezione === "Personalizzato" ? (durataLezioneCustom || "60 min") : durataLezione;
+
       if (activityType === "lezione") {
         systemPrompt = `Sei un docente esperto con anni di esperienza in aula. Genera un PIANO DI LEZIONE COMPLETO E DETTAGLIATO. Classe: ${classe?.nome || ""}. Materia: ${subjectStr}. ${levelContext} ${studentsContext}
+
+PARAMETRI:
+- Durata: ${resolvedDurataLezione}
+${obiettivoLezione ? `- Obiettivo principale: ${obiettivoLezione}` : ""}
 
 REGOLE IMPORTANTI:
 1. La PRIMA RIGA del tuo output DEVE essere: TITOLO: [titolo contestuale della lezione, es. "Lezione di Storia — La Rivoluzione Francese"]
