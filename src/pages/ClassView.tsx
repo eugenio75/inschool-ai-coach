@@ -515,6 +515,7 @@ export default function ClassView() {
           evidences={evidences}
           onAsk={handleCoachAsk}
           coachName={coachName}
+          onShowFullPicture={() => navigate(`/classe/${classId}/quadro`)}
         />
 
         {/* SECTION 2: Azioni rapide */}
