@@ -60,12 +60,12 @@ interface SectionCardProps {
 
 function SectionCard({ emoji, title, children }: SectionCardProps) {
   return (
-    <section className="rounded-2xl bg-card border border-border/60 p-6 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-      <div className="flex items-center gap-2.5 mb-4">
-        <span className="text-xl leading-none" aria-hidden>{emoji}</span>
-        <h2 className="text-[17px] sm:text-[18px] font-semibold text-foreground tracking-tight">{title}</h2>
+    <section className="rounded-3xl bg-card border border-border/60 p-7 sm:p-9 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col">
+      <div className="flex items-center gap-3 mb-5">
+        <span className="text-2xl leading-none" aria-hidden>{emoji}</span>
+        <h2 className="text-[20px] sm:text-[22px] font-semibold text-foreground tracking-tight">{title}</h2>
       </div>
-      {children}
+      <div className="flex-1">{children}</div>
     </section>
   );
 }
