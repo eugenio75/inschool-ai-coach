@@ -67,6 +67,9 @@ export default function StudentView() {
   const [lastAccess, setLastAccess] = useState<string | null>(null);
   const [habitsSummary, setHabitsSummary] = useState<string | null>(null);
   const [habitsOpen, setHabitsOpen] = useState(false);
+  const [habitsSummaryAi, setHabitsSummaryAi] = useState<string | null>(null);
+  const [habitsLoading, setHabitsLoading] = useState(false);
+  const [habitsLoaded, setHabitsLoaded] = useState(false);
 
   // Communication dialog
   const [showComm, setShowComm] = useState(false);
