@@ -401,16 +401,16 @@ export default function DashboardDocente() {
         {/* ━━━ BLOCK 1 — HEADER ━━━ */}
         <section className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
-            <h1 className="font-display text-4xl font-extrabold tracking-tight text-foreground leading-tight">
+            <h1 className="font-display text-[22px] font-semibold tracking-tight text-foreground leading-tight">
               {getGreeting()}, {getTeacherTitle(teacherGender)} {cognome} 👋
             </h1>
-            <p className="mt-2 text-lg text-muted-foreground">
+            <p className="mt-2 text-[16px] font-normal text-muted-foreground">
               {new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
             </p>
           </div>
           <button
             onClick={() => setShowClasseModal(true)}
-            className="shrink-0 inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-[14px] font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+            className="shrink-0 inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-[15px] font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90"
           >
             <Plus className="w-4 h-4" />
             Nuova classe
@@ -423,8 +423,8 @@ export default function DashboardDocente() {
             <div className="mb-4 flex items-center gap-3">
               <CoachAvatar mood="default" size={44} />
               <div>
-                <p className="text-[14px] font-semibold text-foreground/80 leading-tight">{coachName || "Coach"}</p>
-                <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">Centro di regia della giornata</p>
+                <p className="text-[14px] font-medium text-foreground/80 leading-tight">{coachName || "Coach"}</p>
+                <p className="text-[14px] font-normal text-muted-foreground leading-tight mt-0.5">Centro di regia della giornata</p>
               </div>
             </div>
 
@@ -436,7 +436,7 @@ export default function DashboardDocente() {
               </div>
             ) : (
               <>
-                <h2 className="max-w-3xl text-[28px] leading-tight font-extrabold tracking-tight text-foreground">
+                <h2 className="max-w-3xl text-[26px] font-bold leading-tight tracking-tight text-foreground">
                   {coachLastMsg || "Bentornato. Pronto per una nuova giornata di lavoro?"}
                 </h2>
                 {classi.length === 0 && !loadingClassi && (
@@ -454,7 +454,7 @@ export default function DashboardDocente() {
                 <button
                   key={label}
                   onClick={() => navigateToCoach(label)}
-                  className="rounded-full border border-border bg-muted/50 px-4 py-2.5 text-[14px] font-semibold text-foreground/80 hover:bg-muted transition-colors"
+                  className="rounded-full border border-border bg-muted/50 px-4 py-2.5 text-[15px] font-medium text-foreground/80 hover:bg-muted transition-colors"
                 >
                   {label}
                 </button>
@@ -639,17 +639,17 @@ export default function DashboardDocente() {
                     className={`text-left rounded-[26px] border ${border} bg-card/95 backdrop-blur p-5 shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)] hover:-translate-y-px hover:shadow-[0_14px_34px_-20px_hsl(var(--foreground)/0.12)] transition-all`}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
                       <div className={`h-9 w-9 rounded-2xl flex items-center justify-center shrink-0 ${bg} ${fg}`}>
                         <Icon className="w-4 h-4" />
                       </div>
                     </div>
                     <div className="mt-3 min-h-[44px]">
-                      <p className="text-[14px] font-semibold text-foreground leading-snug line-clamp-2">
+                      <p className="text-[16px] font-semibold text-foreground leading-snug line-clamp-2">
                         {loadingClassi ? "—" : primary}
                       </p>
                       {secondary && !loadingClassi && (
-                        <p className="mt-1 text-[12px] text-muted-foreground leading-snug line-clamp-1">
+                        <p className="mt-1 text-[14px] font-normal text-muted-foreground leading-snug line-clamp-1">
                           {secondary}
                         </p>
                       )}
@@ -665,7 +665,7 @@ export default function DashboardDocente() {
         <section>
           <div className="mb-4 flex items-center gap-2">
             <div className="h-2.5 w-2.5 rounded-full bg-sky-300" />
-            <h3 className="text-[13px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Le tue classi</h3>
+            <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Le tue classi</h3>
           </div>
           {loadingClassi ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -674,7 +674,7 @@ export default function DashboardDocente() {
           ) : classi.length === 0 ? (
             <div className="rounded-[28px] border border-border/60 bg-card/95 backdrop-blur p-8 text-center shadow-[0_10px_30px_-20px_hsl(var(--foreground)/0.06)]">
               <Users className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
-              <p className="text-[15px] text-muted-foreground">Nessuna classe ancora</p>
+              <p className="text-[16px] font-normal text-muted-foreground">Nessuna classe ancora</p>
               <Button variant="outline" size="sm" className="mt-3" onClick={() => setShowClasseModal(true)}>
                 <Plus className="w-3.5 h-3.5 mr-1" /> Crea la prima classe
               </Button>
