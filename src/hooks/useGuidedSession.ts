@@ -1829,6 +1829,9 @@ il testo si trova QUI SOPRA. NON dire che non hai il testo. NON inventare rispos
               const totalSessionSteps = (sessionSteps || []).length || 1;
               const score = Math.round((completedSteps.length / totalSessionSteps) * 100);
 
+              // Relational moments — feed score for high-performance trigger.
+              try { recordScore(score); } catch {}
+
               // Calculate errors from hint counts and difficulty signals
               const totalHintsUsed = Object.values(hintCountPerStep).reduce((sum, c) => sum + c, 0);
               const difficultyTopics = newMessages
