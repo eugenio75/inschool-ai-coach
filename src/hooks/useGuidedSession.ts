@@ -1454,6 +1454,9 @@ Tono caldo e incoraggiante.`;
     if (isHintRequest) {
       currentHintCount += 1;
       setHintCountPerStep(prev => ({ ...prev, [currentStep]: currentHintCount }));
+      try { recordHintRequest(); } catch {}
+    } else {
+      try { recordExerciseAttempt(); } catch {}
     }
 
     const userMsg: ChatMsg = { role: "user", content: text };
