@@ -124,6 +124,14 @@ export default function UnifiedSession() {
     }
   }, [type, homeworkId]);
 
+  // Relational moments — start a fresh per-session tracker on mount, clear on unmount.
+  useEffect(() => {
+    const sid = `${type}-${homeworkId || urlSubject || "free"}-${Date.now()}`;
+    startRelationalSession(sid);
+    return () => { endRelationalSession(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [setupDone, setSetupDone] = useState(false);
   const [studyMode, setStudyMode] = useState<null | "coach" | "flashcard" | "games">(null);
   const [showModeSelect, setShowModeSelect] = useState(false);
