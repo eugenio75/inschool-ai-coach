@@ -6,6 +6,7 @@ import type { PointsEarned } from "@/components/SessionCelebration";
 import { isChildSession, childApi, getChildSession } from "@/lib/childSession";
 import { ChatMsg, ChatAction, streamChat } from "@/lib/streamChat";
 import { recordUserTurn, recordError, recordScore } from "@/lib/relationalMoments";
+import { recordHintRequest, recordExerciseAttempt, recordSessionScore } from "@/lib/behavioralProfile";
 import { getCurrentLang } from "@/lib/langUtils";
 import { playCelebrationSound } from "@/lib/celebrationSound";
 
@@ -1453,6 +1454,9 @@ Tono caldo e incoraggiante.`;
     if (isHintRequest) {
       currentHintCount += 1;
       setHintCountPerStep(prev => ({ ...prev, [currentStep]: currentHintCount }));
+      try { recordHintRequest(); } catch {}
+    } else {
+      try { recordExerciseAttempt(); } catch {}
     }
 
     const userMsg: ChatMsg = { role: "user", content: text };
@@ -1830,7 +1834,7 @@ il testo si trova QUI SOPRA. NON dire che non hai il testo. NON inventare rispos
               const score = Math.round((completedSteps.length / totalSessionSteps) * 100);
 
               // Relational moments — feed score for high-performance trigger.
-              try { recordScore(score); } catch {}
+              try { recordScore(score); recordSessionScore(score); } catch {}
 
               // Calculate errors from hint counts and difficulty signals
               const totalHintsUsed = Object.values(hintCountPerStep).reduce((sum, c) => sum + c, 0);

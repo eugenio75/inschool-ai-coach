@@ -124,11 +124,15 @@ export default function UnifiedSession() {
     }
   }, [type, homeworkId]);
 
-  // Relational moments — start a fresh per-session tracker on mount, clear on unmount.
+  // Relational moments + behavioral profile — start fresh trackers on mount, clear on unmount.
   useEffect(() => {
     const sid = `${type}-${homeworkId || urlSubject || "free"}-${Date.now()}`;
     startRelationalSession(sid);
-    return () => { endRelationalSession(); };
+    import("@/lib/behavioralProfile").then(m => m.startBehavioralSession(sid)).catch(() => {});
+    return () => {
+      endRelationalSession();
+      import("@/lib/behavioralProfile").then(m => m.endBehavioralSession()).catch(() => {});
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -36,6 +36,9 @@ export function markDailyOpeningDone() {
 export function setDailyOpeningTone(tone: DailyOpeningTone) {
   try {
     sessionStorage.setItem(TONE_KEY, tone);
+    // Record into 14-day streak (only the label, never the text) — used by
+    // the behavioral profile to derive "stanchezza" / "apertura" trends.
+    import("@/lib/behavioralProfile").then(m => m.recordDailyOpeningToneLocal(tone)).catch(() => {});
   } catch {}
 }
 
