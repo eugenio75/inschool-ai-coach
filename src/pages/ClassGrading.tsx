@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import OcrGradeModal from "@/components/teacher/OcrGradeModal";
 import ManualGradeModal from "@/components/teacher/ManualGradeModal";
 import { toast } from "sonner";
+import { BackLink } from "@/components/shared/BackLink";
 
 interface ClassInfo {
   id: string;

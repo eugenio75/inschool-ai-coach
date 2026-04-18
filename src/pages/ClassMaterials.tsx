@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import TeacherMaterialsTab from "@/components/teacher/TeacherMaterialsTab";
+import { BackLink } from "@/components/shared/BackLink";
 
 interface ClassInfo {
   id: string;
