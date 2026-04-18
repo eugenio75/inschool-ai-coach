@@ -228,7 +228,7 @@ export default function ClassQuadro() {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch [&>section]:h-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 items-stretch [&>section]:h-full">
           {/* 1. Apprendimento */}
           <SectionCard emoji="📊" icon={<BookOpen className="h-4 w-4" />} title="Come sta andando l'apprendimento">
             <p className="text-[15px] leading-7 text-foreground/85">
