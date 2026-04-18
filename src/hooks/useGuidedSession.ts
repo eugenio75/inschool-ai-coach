@@ -6,6 +6,7 @@ import type { PointsEarned } from "@/components/SessionCelebration";
 import { isChildSession, childApi, getChildSession } from "@/lib/childSession";
 import { ChatMsg, ChatAction, streamChat } from "@/lib/streamChat";
 import { recordUserTurn, recordError, recordScore } from "@/lib/relationalMoments";
+import { recordHintRequest, recordExerciseAttempt, recordSessionScore } from "@/lib/behavioralProfile";
 import { getCurrentLang } from "@/lib/langUtils";
 import { playCelebrationSound } from "@/lib/celebrationSound";
 
