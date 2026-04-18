@@ -48,20 +48,20 @@ export default function ClassCoachCard({ headline, paragraph, evidences, onAsk, 
         <div className="mb-4 flex items-center gap-3">
           <CoachAvatar mood="default" size={44} />
           <div>
-            <p className="text-[14px] font-semibold text-foreground/80 leading-tight">{coachName || "Coach"} · {t("coach_card_today") || "oggi"}</p>
-            <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">{t("coach_card_subtitle") || "Sintesi operativa della classe"}</p>
+            <p className="text-[14px] font-medium text-foreground/80 leading-tight">{coachName || "Coach"} · {t("coach_card_today") || "oggi"}</p>
+            <p className="text-[14px] font-normal text-muted-foreground leading-tight mt-0.5">{t("coach_card_subtitle") || "Sintesi operativa della classe"}</p>
           </div>
         </div>
 
-        <h2 className="max-w-3xl text-[34px] leading-tight font-extrabold tracking-tight text-foreground">
+        <h2 className="max-w-3xl text-[26px] font-bold leading-tight tracking-tight text-foreground">
           {headline}
         </h2>
-        <p className="mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">
+        <p className="mt-4 max-w-3xl text-[16px] font-normal leading-[1.7] text-muted-foreground">
           {paragraph}
         </p>
 
         {secondaryParagraph && (
-          <p className="mt-3 max-w-3xl text-[15px] leading-7 text-muted-foreground/85">
+          <p className="mt-3 max-w-3xl text-[16px] font-normal leading-[1.7] text-muted-foreground/85">
             {secondaryParagraph}
           </p>
         )}
