@@ -119,6 +119,7 @@ export default function ClassView() {
 
   async function loadClass() {
     setLoading(true);
+    setLoadError(null);
     try {
       const { data: { session: authSession } } = await supabase.auth.getSession();
       let loadedStudents: any[] = [];
@@ -126,13 +127,25 @@ export default function ClassView() {
       let loadedClasse: any = null;
 
       if (authSession?.access_token) {
-        const data = await fetchTeacherClassData(classId!);
-        loadedClasse = data.classe;
-        loadedStudents = data.students || [];
-        loadedResults = data.assignmentResults || [];
-        setEmotionalCheckins(data.emotionalCheckins || []);
-        setEmotionalAlerts(data.emotionalAlerts || []);
-        setFocusSessions(data.focusSessions || []);
+        try {
+          const data = await fetchTeacherClassData(classId!);
+          loadedClasse = data.classe;
+          loadedStudents = data.students || [];
+          loadedResults = data.assignmentResults || [];
+          setEmotionalCheckins(data.emotionalCheckins || []);
+          setEmotionalAlerts(data.emotionalAlerts || []);
+          setFocusSessions(data.focusSessions || []);
+        } catch (e: any) {
+          const msg = String(e?.message || "");
+          if (/non autorizzato|403|Non sei autorizzato/i.test(msg)) {
+            setLoadError("Non hai accesso a questa classe con l'account attuale.");
+          } else if (/non trovata|404/i.test(msg)) {
+            setLoadError("Questa classe non esiste più.");
+          } else {
+            setLoadError("Non sono riuscito a caricare la classe. Riprova tra qualche secondo.");
+          }
+          throw e;
+        }
 
         const { data: grades } = await (supabase as any)
           .from("manual_grades")
@@ -153,6 +166,9 @@ export default function ClassView() {
         const { data: cl } = await (supabase as any)
           .from("classi").select("*").eq("id", classId).single();
         loadedClasse = cl;
+        if (!cl) {
+          setLoadError("Devi accedere come docente per visualizzare la classe.");
+        }
         const { data: enr } = await (supabase as any)
           .from("class_enrollments").select("*").eq("class_id", classId).eq("status", "active");
         const enrollments = enr || [];
@@ -206,7 +222,7 @@ export default function ClassView() {
       setAssignmentResults([...loadedResults, ...syntheticResults]);
     } catch (error) {
       console.error("loadClass error:", error);
-      toast.error("Non sono riuscito a caricare la classe.");
+      // toast suppressed: we show inline message in UI
       setStudents([]);
       setAssignmentResults([]);
     }
