@@ -503,10 +503,9 @@ export default function StudentView() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/40">
+    <div className="min-h-screen bg-muted/40 relative">
+      <BackLink label={`a ${className || "alla classe"}`} to={`/classe/${classId}`} />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 pb-24 space-y-5">
-        {/* Back link */}
-        <BackLink label={`a ${className || "alla classe"}`} to={`/classe/${classId}`} />
         {/* HEADER */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
