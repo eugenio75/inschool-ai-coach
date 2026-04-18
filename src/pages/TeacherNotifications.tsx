@@ -80,9 +80,9 @@ export default function TeacherNotifications() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-24">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Notifiche</h1>
+          <h1 className="font-display text-[22px] font-semibold text-foreground">Notifiche</h1>
           {unreadCount > 0 && (
-            <p className="text-sm text-muted-foreground mt-0.5">{unreadCount} non lette</p>
+            <p className="text-[14px] font-normal text-muted-foreground mt-0.5">{unreadCount} non lette</p>
           )}
         </div>
         {unreadCount > 0 && (
@@ -99,7 +99,7 @@ export default function TeacherNotifications() {
       ) : items.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center">
           <Bell className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">Nessuna notifica al momento.</p>
+          <p className="text-[16px] font-normal text-muted-foreground">Nessuna notifica al momento.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -126,15 +126,15 @@ export default function TeacherNotifications() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start gap-2">
                     {isUnread && <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5" />}
-                    <p className={`text-sm leading-snug ${isUnread ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                    <p className={`text-[16px] leading-snug ${isUnread ? "text-foreground font-medium" : "text-muted-foreground font-normal"}`}>
                       {item.message}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 mt-1.5">
                     {className && (
-                      <span className="text-[11px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">{className}</span>
+                      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-primary bg-primary/10 px-1.5 py-0.5 rounded">{className}</span>
                     )}
-                    <span className="text-[11px] text-muted-foreground">{timeAgo(item.created_at)}</span>
+                    <span className="text-[14px] font-normal text-muted-foreground">{timeAgo(item.created_at)}</span>
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0 mt-1" />

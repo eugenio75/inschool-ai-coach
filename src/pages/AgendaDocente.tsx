@@ -241,10 +241,10 @@ export default function AgendaDocente() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div>
-            <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
+            <h1 className="text-[22px] font-semibold text-foreground flex items-center gap-2">
               <CalendarIcon className="w-5 h-5" /> Agenda
             </h1>
-            <p className="text-xs text-muted-foreground capitalize">{headerTitle}</p>
+            <p className="text-[14px] font-normal text-muted-foreground capitalize">{headerTitle}</p>
           </div>
         </div>
         <Button size="sm" className="rounded-xl bg-[#0070C0] hover:bg-[#005fa3]" onClick={() => {
@@ -398,20 +398,20 @@ export default function AgendaDocente() {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-medium text-slate-900 text-sm">{e.title}</p>
-                    <Badge variant="outline" className={`text-[10px] capitalize ${typeColors[e.type]}`}>
+                    <p className="font-semibold text-slate-900 text-[18px]">{e.title}</p>
+                    <Badge variant="outline" className={`text-[11px] font-semibold uppercase tracking-[0.08em] capitalize ${typeColors[e.type]}`}>
                       {typeLabels[e.type] || e.type}
                     </Badge>
-                    {e.severity === "overdue" && <Badge className="bg-red-500 text-white text-[10px]">Scaduto</Badge>}
-                    {e.severity === "urgent" && <Badge className="bg-amber-500 text-white text-[10px]">Urgente</Badge>}
+                    {e.severity === "overdue" && <Badge className="bg-red-500 text-white text-[11px] font-semibold">Scaduto</Badge>}
+                    {e.severity === "urgent" && <Badge className="bg-amber-500 text-white text-[11px] font-semibold">Urgente</Badge>}
                   </div>
                   {e.className && (
-                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                    <p className="text-[14px] font-normal text-slate-500 mt-1 flex items-center gap-1">
                       <Users className="w-3 h-3" /> {e.className}
                       {e.subject && <span>· {e.subject}</span>}
                     </p>
                   )}
-                  {e.description && <p className="text-xs text-slate-500 mt-1">{e.description}</p>}
+                  {e.description && <p className="text-[14px] font-normal text-slate-500 mt-1">{e.description}</p>}
                 </div>
 
                 {/* Actions */}
@@ -449,27 +449,27 @@ export default function AgendaDocente() {
           <DialogHeader><DialogTitle>Nuovo evento</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label className="text-xs">Titolo *</Label>
+              <Label className="text-[14px] font-medium">Titolo *</Label>
               <Input placeholder="es. Colloquio genitori, Consiglio di classe..." value={newEvent.title}
-                onChange={e => setNewEvent(p => ({ ...p, title: e.target.value }))} className="mt-1 rounded-xl" />
+                onChange={e => setNewEvent(p => ({ ...p, title: e.target.value }))} className="mt-1 rounded-xl text-[15px]" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs">Data *</Label>
+                <Label className="text-[14px] font-medium">Data *</Label>
                 <Input type="date" value={newEvent.event_date}
-                  onChange={e => setNewEvent(p => ({ ...p, event_date: e.target.value }))} className="mt-1 rounded-xl" />
+                  onChange={e => setNewEvent(p => ({ ...p, event_date: e.target.value }))} className="mt-1 rounded-xl text-[15px]" />
               </div>
               <div>
-                <Label className="text-xs">Ora</Label>
+                <Label className="text-[14px] font-medium">Ora</Label>
                 <Input type="time" value={newEvent.event_time}
-                  onChange={e => setNewEvent(p => ({ ...p, event_time: e.target.value }))} className="mt-1 rounded-xl" />
+                  onChange={e => setNewEvent(p => ({ ...p, event_time: e.target.value }))} className="mt-1 rounded-xl text-[15px]" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs">Tipo</Label>
+                <Label className="text-[14px] font-medium">Tipo</Label>
                 <Select value={newEvent.event_type} onValueChange={v => setNewEvent(p => ({ ...p, event_type: v }))}>
-                  <SelectTrigger className="mt-1 rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="mt-1 rounded-xl text-[15px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="nota">Nota personale</SelectItem>
                     <SelectItem value="ricevimento">Ricevimento</SelectItem>
@@ -480,9 +480,9 @@ export default function AgendaDocente() {
                 </Select>
               </div>
               <div>
-                <Label className="text-xs">Classe</Label>
+                <Label className="text-[14px] font-medium">Classe</Label>
                 <Select value={newEvent.class_id || "none"} onValueChange={v => setNewEvent(p => ({ ...p, class_id: v === "none" ? "" : v }))}>
-                  <SelectTrigger className="mt-1 rounded-xl"><SelectValue placeholder="Nessuna" /></SelectTrigger>
+                  <SelectTrigger className="mt-1 rounded-xl text-[15px]"><SelectValue placeholder="Nessuna" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Nessuna</SelectItem>
                     {classi.map((c: any) => (
@@ -493,9 +493,9 @@ export default function AgendaDocente() {
               </div>
             </div>
             <div>
-              <Label className="text-xs">Note</Label>
+              <Label className="text-[14px] font-medium">Note</Label>
               <Textarea placeholder="Dettagli opzionali..." value={newEvent.description}
-                onChange={e => setNewEvent(p => ({ ...p, description: e.target.value }))} className="mt-1 rounded-xl min-h-[60px]" />
+                onChange={e => setNewEvent(p => ({ ...p, description: e.target.value }))} className="mt-1 rounded-xl min-h-[60px] text-[15px]" />
             </div>
           </div>
           <DialogFooter>
