@@ -80,6 +80,10 @@ REGOLE LINGUAGGIO:
       }
     }
 
+    const recognitionRule = isEN
+      ? `\n\n[RECOGNITION PRINCIPLE — mandatory] When you mention any student or describe the class, lead with RECOGNITION (what they ARE doing/trying), then name the OBSTACLE without judgment, then propose one concrete ACTION. Never open with a deficit, low score, or "X students are struggling". Tone of a trusted colleague who sees both effort and struggle, never a report flagging failures.`
+      : `\n\n[PRINCIPIO DEL RICONOSCIMENTO — obbligatorio] Quando nomini uno studente o descrivi la classe, parti dal RICONOSCIMENTO (cosa STA facendo/provando), poi nomina l'OSTACOLO senza giudizio, poi proponi UNA AZIONE concreta. MAI aprire con un deficit, un voto basso o "X studenti faticano". Tono di un collega fidato che vede sia l'impegno sia la fatica, mai un report che segnala fallimenti.`;
+
     let systemPrompt: string;
 
     if (mode === "class_chat") {
@@ -100,7 +104,8 @@ Rules:
 - Max 2-3 sentences. Always an open-ended question at the end.
 - Tone: collegial, precise, warm but not patronizing.
 - ALWAYS respond in English
-- Reply ONLY with valid JSON: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }`
+- Reply ONLY with valid JSON: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }
+${recognitionRule}`
         : `Sei il coach personale di ${teacherName || "un docente"}, docente su SarAI.
 Stai rispondendo nella chat della classe ${classId ? "selezionata" : ""}.
 
@@ -116,7 +121,8 @@ Regole:
 - Rispondi sempre in contesto con i dati reali della classe
 - Max 2-3 frasi. Sempre una domanda aperta finale.
 - Tono: collegiale, preciso, caldo ma non paternalistico.
-- Rispondi SOLO con JSON valido: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }`;
+- Rispondi SOLO con JSON valido: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }
+${recognitionRule}`;
     } else {
       systemPrompt = isEN
         ? `You are the personal coach of ${teacherName || "a teacher"}, a teacher on SarAI.
@@ -143,7 +149,8 @@ Rules:
 - Tone: collegial, precise, warm but not patronizing.
 - ALWAYS respond in English
 
-Reply ONLY with valid JSON: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }`
+Reply ONLY with valid JSON: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }
+${recognitionRule}`
         : `Sei il coach personale di ${teacherName || "un docente"}, docente su SarAI.
 
 REGOLA FONDAMENTALE: parla per primo con qualcosa di specifico e contestuale.
@@ -167,7 +174,8 @@ Regole:
 - MAI usare 'burnout' o 'esaurimento' — usa 'stanchezza', 'periodo intenso'.
 - Tono: collegiale, preciso, caldo ma non paternalistico.
 
-Rispondi SOLO con JSON valido: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }`;
+Rispondi SOLO con JSON valido: { "message": "...", "suggestedAction": "...", "actionRoute": "..." }
+${recognitionRule}`;
     }
 
     const apiKey = Deno.env.get("OPENAI_API_KEY");
