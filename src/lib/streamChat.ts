@@ -101,6 +101,7 @@ export async function streamChat({
           onDelta,
           () => {
             onDone(fullText);
+            markAssistantTurn();
             resolve(fullText);
           }
         );
@@ -134,6 +135,7 @@ export async function streamChat({
         if (retryText.trim()) {
           onDelta(retryText);
           onDone(retryText);
+          markAssistantTurn();
           return retryText;
         }
       }
@@ -141,10 +143,12 @@ export async function streamChat({
       const fallback = "Mi scuso, ho avuto un momento di distrazione! 😅 Puoi ripetere o riformulare la tua risposta?";
       onDelta(fallback);
       onDone(fallback);
+      markAssistantTurn();
       return fallback;
     }
     onDelta(fullText);
     onDone(fullText);
+    markAssistantTurn();
     return fullText;
   }
 
