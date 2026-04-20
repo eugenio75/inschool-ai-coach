@@ -948,93 +948,13 @@ Inizia con la prima domanda.`;
     // Familiarity is now handled via quick-reply buttons in chat — no separate screen needed
 
     if (guided.showCheckin) {
-      // Age-differentiated emotional check-in
-      const isElementari = schoolLevel === "alunno" || schoolLevel === "elementari";
-      const isMediaLevel = schoolLevel === "medie" || schoolLevel?.startsWith("media-");
-      const isUni = schoolLevel === "universitario";
-
-      let checkinQuestion = "Come ti senti per iniziare?";
-      let guidedEmotionOptions: { key: string; label: string; icon: string }[];
-
-      if (isElementari) {
-        checkinQuestion = "Come ti senti adesso?";
-        guidedEmotionOptions = [
-          { key: "concentrato", label: "Pronto", icon: "😊" },
-          { key: "stanco", label: "Stanco", icon: "😴" },
-          { key: "bloccato", label: "Un po' bloccato", icon: "😕" },
-        ];
-      } else if (isMediaLevel) {
-        checkinQuestion = "Come ti senti per iniziare?";
-        guidedEmotionOptions = [
-          { key: "concentrato", label: "Concentrato", icon: "🎯" },
-          { key: "stanco", label: "Stanco", icon: "😴" },
-          { key: "bloccato", label: "Un po' bloccato", icon: "😕" },
-        ];
-      } else if (isUni) {
-        checkinQuestion = "Come ti senti?";
-        guidedEmotionOptions = [
-          { key: "concentrato", label: "Pronto", icon: "🎯" },
-          { key: "stanco", label: "Stanco", icon: "😴" },
-          { key: "confuso", label: "Distratto", icon: "😵" },
-        ];
-      } else {
-        // superiori
-        checkinQuestion = "Come stai adesso?";
-        guidedEmotionOptions = [
-          { key: "concentrato", label: "Concentrato", icon: "🎯" },
-          { key: "stanco", label: "Stanco", icon: "😴" },
-          { key: "agitato", label: "Sotto pressione", icon: "😬" },
-        ];
-      }
-
-      const submitCustomEmotion = () => {
-        const value = guidedCustomEmotion.trim();
-        if (!value) return;
-        guided.startNewSession(value);
-      };
-
+      // Old chip-based emotional check-in is removed (Fix 3).
+      // Daily opening already happened at app entry — start the session
+      // directly with a neutral register.
+      guided.startNewSession("neutro");
       return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-md w-full bg-card rounded-xl border border-border p-8 text-center"
-          >
-            <h2 className="font-display text-xl font-bold text-foreground mb-2">
-              {checkinQuestion}
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              {guided.homework?.title}
-            </p>
-            <div className={`grid gap-3 mb-4 ${isElementari ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}>
-              {guidedEmotionOptions.map((opt) => (
-                <button
-                  key={opt.key}
-                  onClick={() => guided.startNewSession(opt.key)}
-                  className={`flex items-center gap-3 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all text-left ${
-                    isElementari ? "p-5" : "p-4"
-                  }`}
-                >
-                  <span className={isElementari ? "text-4xl" : "text-2xl"}>{opt.icon}</span>
-                  <span className={`font-medium text-foreground ${isElementari ? "text-lg" : ""}`}>{opt.label}</span>
-                </button>
-              ))}
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Input
-                value={guidedCustomEmotion}
-                onChange={(e) => setGuidedCustomEmotion(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") submitCustomEmotion();
-                }}
-                placeholder="Se non trovi l'opzione giusta, scrivila qui"
-                className="flex-1"
-              />
-              <Button onClick={submitCustomEmotion} disabled={!guidedCustomEmotion.trim()}>
-                Continua
-              </Button>
-            </div>
-          </motion.div>
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
       );
     }
