@@ -12,6 +12,7 @@ import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { percentToGrade, type ScaleId } from "./GradeReviewModal";
+import { formatName } from "@/lib/formatName";
 
 type Student = { id: string; name: string };
 

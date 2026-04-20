@@ -440,10 +440,17 @@ IMPORTANTE: Usa SOLO questi valori. Non calcolare mai da solo.
             else moodToday = "medio";
           }
 
+          // Normalize name: "MARIACLARA" -> "Mariaclara", "D'ANGELO" -> "D'Angelo"
+          const fmtName = (raw: any): string => {
+            if (!raw) return "";
+            return String(raw).trim().toLowerCase()
+              .replace(/(^|[\s\-'’])([\p{L}])/gu, (_m, sep, ch) => sep + ch.toUpperCase());
+          };
+
           studentContext = `
 DATI STUDENTE DAL DATABASE:
-Nome: ${prof.name || "studente"}
-Cognome: ${prof.last_name || ""}
+Nome: ${fmtName(prof.name) || "studente"}
+Cognome: ${fmtName(prof.last_name) || ""}
 Età: ${prof.age || "non disponibile"}
 Livello: ${prof.school_level || "non disponibile"}
 Classe: ${prof.class_section || ""}

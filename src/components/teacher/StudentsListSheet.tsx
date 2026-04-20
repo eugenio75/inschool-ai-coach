@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { ChevronRight } from "lucide-react";
+import { formatName } from "@/lib/formatName";
 
 interface Student {
   id: string;
@@ -42,9 +43,9 @@ export default function StudentsListSheet({ open, onOpenChange, classId, student
                   }}
                   className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition-colors text-left"
                 >
-                  <AvatarInitials name={s.name} size="sm" />
+                  <AvatarInitials name={formatName(s.name)} size="sm" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{formatName(s.name)}</p>
                     {s.lastActivity && (
                       <p className="text-[11px] text-muted-foreground mt-0.5">
                         Ultima attività: {s.lastActivity}

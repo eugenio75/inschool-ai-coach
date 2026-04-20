@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Upload, CheckCircle, Edit3, AlertTriangle, Users, User } from "lucide-react";
 import { toast } from "sonner";
 import { useLang } from "@/contexts/LangContext";
+import { formatName } from "@/lib/formatName";
 
 interface Props {
   open: boolean;
