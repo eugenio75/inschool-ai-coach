@@ -183,8 +183,8 @@ export default function PrepSession() {
   const [coachName, setCoachName] = useState<string | undefined>(undefined);
 
   // Setup fields
-  const [subject, setSubject] = useState(paramSubject || "");
-  const [topic, setTopic] = useState("");
+  const [subject, setSubject] = useState(querySubject || paramSubject || "");
+  const [topic, setTopic] = useState(queryTopic || "");
   const [examDate, setExamDate] = useState("");
   const [tone, setTone] = useState<"normale" | "esigente">("normale");
   const [selectedProve, setSelectedProve] = useState<string[]>([]);
