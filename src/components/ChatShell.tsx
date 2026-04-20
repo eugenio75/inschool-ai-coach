@@ -456,25 +456,40 @@ export function ChatShell({
   const statusInfo = getStatusIndicator(coachStatus, coachName);
 
   // Parse arrow options from assistant messages into action buttons
-  function parseInlineOptions(text: string): { cleanText: string; options: string[]; hasLinkPrep: boolean } {
+  // Also parses [LINK_PREP] tag with optional metadata: [LINK_PREP:subject=Matematica;topic=Divisioni;type=verifica]
+  function parseInlineOptions(text: string): { cleanText: string; options: string[]; hasLinkPrep: boolean; prepParams: Record<string,string> } {
     const lines = text.split("\n");
     const options: string[] = [];
     const cleanLines: string[] = [];
     let hasLinkPrep = false;
+    const prepParams: Record<string, string> = {};
+    const linkPrepRe = /\[LINK_PREP(?::([^\]]*))?\]/g;
     for (const line of lines) {
-      if (line.includes("[LINK_PREP]")) {
+      const matches = [...line.matchAll(linkPrepRe)];
+      if (matches.length > 0) {
         hasLinkPrep = true;
-        cleanLines.push(line.replace(/\[LINK_PREP\]/g, "").trim());
+        for (const m of matches) {
+          const meta = m[1];
+          if (meta) {
+            for (const pair of meta.split(";")) {
+              const [k, ...rest] = pair.split("=");
+              const key = (k || "").trim();
+              const val = rest.join("=").trim();
+              if (key && val) prepParams[key] = val;
+            }
+          }
+        }
+        cleanLines.push(line.replace(linkPrepRe, "").trim());
         continue;
       }
-      const match = line.match(/^\s*(?:👉|•|-)\s+(.+)$/);
-      if (match) {
-        options.push(match[1].trim());
+      const optMatch = line.match(/^\s*(?:👉|•|-)\s+(.+)$/);
+      if (optMatch) {
+        options.push(optMatch[1].trim());
       } else {
         cleanLines.push(line);
       }
     }
-    return { cleanText: cleanLines.join("\n").trim(), options, hasLinkPrep };
+    return { cleanText: cleanLines.join("\n").trim(), options, hasLinkPrep, prepParams };
   }
 
   return (
@@ -602,7 +617,7 @@ export function ChatShell({
             const msgMood: CoachAvatarMood = msg.role === "assistant" ? detectMoodFromText(rawContent) : "default";
             const isLastAssistant = msg.role === "assistant" && i === messages.length - 1;
             // Parse inline options (👉) from assistant messages
-            const { cleanText: parsedCleanText, options: parsedOptions, hasLinkPrep } = msg.role === "assistant" ? parseInlineOptions(rawContent) : { cleanText: rawContent, options: [], hasLinkPrep: false };
+            const { cleanText: parsedCleanText, options: parsedOptions, hasLinkPrep, prepParams } = msg.role === "assistant" ? parseInlineOptions(rawContent) : { cleanText: rawContent, options: [], hasLinkPrep: false, prepParams: {} as Record<string,string> };
             // Show parsed inline options on the LAST assistant message whenever 👉 options are present
             const showParsedOptions = isLastAssistant && parsedOptions.length > 0 && !msg.actions?.length;
             const displayContent = cleanContent((showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent);
