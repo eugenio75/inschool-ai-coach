@@ -662,7 +662,7 @@ export function ChatShell({
                 {hasLinkPrep && progressiveComplete && (
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mt-3">
                     <button
-                      onClick={() => navigate("/session?type=prep" + (msg.content?.match(/materia/i) ? "" : ""))}
+                      onClick={() => navigate("/prep")}
                       className="flex items-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all w-full justify-center"
                     >
                       🎯 {t("coach_cta_go_to_prep")}
