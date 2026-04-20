@@ -21,6 +21,7 @@ import OcrGradeModal from "@/components/teacher/OcrGradeModal";
 import AssignmentDetailModal from "@/components/teacher/AssignmentDetailModal";
 import type { ScaleId } from "@/components/teacher/GradeReviewModal";
 import { analyzeClass } from "@/lib/classCoachAnalysis";
+import { formatName } from "@/lib/formatName";
 import { toast } from "sonner";
 
 async function fetchTeacherClassData(classId: string) {

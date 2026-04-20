@@ -12,6 +12,7 @@ import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { percentToGrade, type ScaleId } from "./GradeReviewModal";
+import { formatName } from "@/lib/formatName";
 
 type Student = { id: string; name: string };
 
@@ -317,9 +318,9 @@ export default function AssignmentDetailModal({
                   key={r.studentId}
                   className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card"
                 >
-                  <AvatarInitials name={r.studentName} size="sm" />
+                  <AvatarInitials name={formatName(r.studentName)} size="sm" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{r.studentName}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{formatName(r.studentName)}</p>
                     <p className="text-[11px] text-muted-foreground">
                       {r.delivered ? "✅ Consegnato" : "🕐 Non ancora consegnato"}
                       {" · "}
