@@ -249,6 +249,17 @@ export default function PrepSession() {
     return true;
   });
 
+  // Auto-skip setup when arriving from Coach with [LINK_PREP:subject=…;topic=…;type=…]
+  useEffect(() => {
+    if (!querySubject && !queryTopic && !queryType) return;
+    const validTypes: ExamType[] = ["verifica", "orale", "terza_media", "maturita", "universitario"];
+    const inferredType: ExamType = (validTypes.includes(queryType as ExamType) ? (queryType as ExamType) : "orale");
+    setExamType(inferredType);
+    // Jump straight to the study mode picker (Coach / Flashcard / Games)
+    setStep("mode-select");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Maturità timer
   useEffect(() => {
     if (maturitaTimerActive && step === "maturita-sim") {
