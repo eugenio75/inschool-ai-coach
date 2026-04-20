@@ -187,7 +187,11 @@ const EmotionalCheckin = () => {
 
             {/* Conversazione mini (mai persistita) */}
             <AnimatePresence initial={false}>
-              {turns.map((t, i) => (
+              {turns.map((t, i) => {
+                const isLastAssistant =
+                  t.role === "assistant" && i === turns.length - 1;
+                const isHeavyAssistant = isLastAssistant && conversationTone === "heavy";
+                return (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 6 }}
@@ -213,8 +217,21 @@ const EmotionalCheckin = () => {
                       </a>
                     </div>
                   )}
+                  {/* Fix 2: heavy-tone explicit Continua hint */}
+                  {isHeavyAssistant && !readyToStart && (
+                    <p className="mt-2 text-foreground/55 text-[13px] leading-relaxed">
+                      Se preferisci, puoi cliccare Continua per iniziare direttamente.
+                    </p>
+                  )}
+                  {/* Fix 1: always-visible Continua hint after every Coach reply */}
+                  {isLastAssistant && !readyToStart && (
+                    <p className="mt-2 text-muted-foreground text-[12px] leading-relaxed">
+                      Quando sei pronto, clicca Continua per iniziare.
+                    </p>
+                  )}
                 </motion.div>
-              ))}
+              );
+              })}
             </AnimatePresence>
 
             {busy && (

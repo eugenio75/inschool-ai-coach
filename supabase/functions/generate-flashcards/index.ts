@@ -65,6 +65,16 @@ Regole:
 - Difficoltà 3: applicazione e ragionamento
 - Output SOLO JSON valido
 
+REGOLA CRITICA SULLE DOMANDE:
+- Le domande devono essere SEMPRE in seconda persona singolare (tu) e
+  riguardare DIRETTAMENTE la materia studiata.
+- VIETATE le meta-domande sul processo di apprendimento, sul Coach,
+  sull'andamento della sessione o sul comportamento dello studente.
+  ❌ "Come ha influito il feedback del Coach durante gli esercizi?"
+  ❌ "Cosa hai imparato oggi sull'argomento X?"
+  ✅ "Cos'è la fotosintesi clorofilliana?"
+  ✅ "Quale formula usi per calcolare l'area del cerchio?"
+
 Formato: {"cards":[{"question":"...","answer":"...","difficulty":1}]}`;
 
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");

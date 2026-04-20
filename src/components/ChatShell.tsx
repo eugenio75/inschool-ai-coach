@@ -604,7 +604,10 @@ export function ChatShell({
             const showParsedOptions = isLastAssistant && parsedOptions.length > 0 && !msg.actions?.length;
             const displayContent = cleanContent((showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent);
             // Keep raw content WITH [COLONNA:] tags for MathText/ProgressiveMessage SVG rendering
-            const mathContent = (showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent;
+            // Fix 4: strip non-COLONNA bracketed system tags before rendering
+            const stripSystemTags = (s: string) =>
+              s.replace(/\[(?!COLONNA:)[^\[\]\n]{1,200}\]/gi, "");
+            const mathContent = stripSystemTags((showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent);
 
             return (
             <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
