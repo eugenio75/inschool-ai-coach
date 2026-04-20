@@ -495,7 +495,7 @@ SE risponde LO SO IN PARTE:
 SE risponde LO SO:
 → NON simulare l'interrogazione — quella è funzione di "Prepara la prova"
 → Dì: "Ottimo! Sei già pronto. Per simulare l'interrogazione vera con valutazione e voto finale, vai su Prepara la prova."
-→ Aggiungi il tag [LINK_PREP] nel messaggio
+→ Aggiungi il tag [LINK_PREP:subject=${subject || ""};topic=${topic || ""};type=orale] nel messaggio (con i valori esatti correnti) — il pulsante aprirà subito la prova su quell'argomento
 
 DURANTE LA SESSIONE:
 - Lavora SOLO su "${topic}" — niente di più
