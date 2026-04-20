@@ -454,8 +454,8 @@ export default function ClassView() {
 
   // Students for sheet + modals
   const studentList = students.map((s: any) => {
-    const firstName = s.profile?.name || s.student_name || "Studente";
-    const lastName = s.profile?.last_name || "";
+    const firstName = formatName(s.profile?.name || s.student_name || "Studente");
+    const lastName = formatName(s.profile?.last_name || "");
     return { id: s.student_id || s.id, name: lastName ? `${firstName} ${lastName}` : firstName };
   });
   const assignmentList = assignmentResults.map((a: any) => ({ id: a.id, title: a.title }));
@@ -472,8 +472,8 @@ export default function ClassView() {
 
   // For students sheet
   const studentsForSheet = students.map((s: any) => {
-    const firstName = s.profile?.name || s.student_name || "Studente";
-    const lastName = s.profile?.last_name || "";
+    const firstName = formatName(s.profile?.name || s.student_name || "Studente");
+    const lastName = formatName(s.profile?.last_name || "");
     const sid = s.student_id || s.id;
     const last = lastActivityMap[sid];
     const lastLabel = last
