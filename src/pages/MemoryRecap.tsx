@@ -1377,15 +1377,27 @@ const MemoryRecap = () => {
                 );
 
                 if (summaryItems.length === 0) {
+                  const isSpecificSearch = wizard.contentType === "specific" && wizard.specificTopic;
                   return (
                     <div className="text-center py-10 px-6">
                       <Brain className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
                       <p className="font-medium text-foreground">
-                        {wizard.section === "rinforza" && items.length === 0
-                          ? t("rafforza_empty_title", "Non hai ancora contenuti da rafforzare")
-                          : t("rafforza_no_content", "Nessun contenuto trovato")}
+                        {isSpecificSearch
+                          ? "Non ho trovato esercizi su questo argomento. Vuoi che ne creiamo di nuovi?"
+                          : wizard.section === "rinforza" && items.length === 0
+                            ? t("rafforza_empty_title", "Non hai ancora contenuti da rafforzare")
+                            : t("rafforza_no_content", "Nessun contenuto trovato")}
                       </p>
-                      {wizard.section === "rinforza" && items.length === 0 ? (
+                      {isSpecificSearch ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-4 rounded-xl"
+                          onClick={() => navigate(`/dashboard?createSession=${encodeURIComponent(wizard.specificTopic!)}`)}
+                        >
+                          Crea nuova sessione
+                        </Button>
+                      ) : wizard.section === "rinforza" && items.length === 0 ? (
                         <>
                           <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">{t("rafforza_empty_desc", "Completa qualche sessione di studio prima.")}</p>
                           <Button variant="outline" size="sm" className="mt-4 rounded-xl" onClick={() => navigate("/dashboard")}>
