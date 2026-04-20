@@ -187,7 +187,10 @@ const EmotionalCheckin = () => {
 
             {/* Conversazione mini (mai persistita) */}
             <AnimatePresence initial={false}>
-              {turns.map((t, i) => (
+              {turns.map((t, i) => {
+                const isLastAssistant =
+                  t.role === "assistant" && i === turns.length - 1;
+                return (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 6 }}
