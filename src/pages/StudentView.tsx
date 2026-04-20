@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { percentToGrade, type ScaleId } from "@/components/teacher/GradeReviewModal";
+import { formatName, formatFullName } from "@/lib/formatName";
 
 type Activity = {
   id?: string;
@@ -115,7 +116,7 @@ export default function StudentView() {
         .eq("id", studentId)
         .single();
       const name = profile
-        ? (profile.last_name ? `${profile.name} ${profile.last_name}` : profile.name)
+        ? (formatFullName(profile.name, profile.last_name) || "Studente")
         : "Studente";
       setStudentName(name);
       const isDemo = /^\s*studente\s*$|esempio|demo|sample/i.test(name);

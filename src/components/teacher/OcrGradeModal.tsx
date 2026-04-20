@@ -486,11 +486,11 @@ export default function OcrGradeModal({
                         <>
                           {r.matched_student ? (
                             <Badge variant="default" className="text-[10px]">
-                              ✅ {r.matched_student.name}
+                              ✅ {formatName(r.matched_student.name)}
                             </Badge>
                           ) : r.detected_student_name && r.detected_student_name !== "NON_RILEVATO" ? (
                             <Badge variant="secondary" className="text-[10px]">
-                              🔍 {r.detected_student_name}
+                              🔍 {formatName(r.detected_student_name)}
                             </Badge>
                           ) : (
                             <Badge variant="outline" className="text-[10px]">
