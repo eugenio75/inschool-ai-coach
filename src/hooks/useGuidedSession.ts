@@ -226,7 +226,12 @@ REGOLE:
 REGOLE:
 - NON simulare l'interrogazione — quella è funzione di "Prepara la prova"
 - Dì: "Ottimo! Sei già pronto. Per simulare l'interrogazione vera con valutazione e voto finale, vai su Prepara la prova."
-- Aggiungi il tag [LINK_PREP:subject=<MATERIA>;topic=<ARGOMENTO>;type=orale] nel messaggio (sostituisci <MATERIA> e <ARGOMENTO> con i valori reali della sessione corrente) — il pulsante aprirà direttamente la prova su quell'argomento
+- Aggiungi il tag [LINK_PREP:subject=<MATERIA>;topic=<ARGOMENTO_SPECIFICO>;type=orale] nel messaggio.
+  ⚠️ REGOLA CRITICA SUL TOPIC:
+  - <ARGOMENTO_SPECIFICO> deve essere l'argomento CONCRETO E PUNTUALE trattato nella conversazione corrente (es. "verbo sentire", "Teorema di Pitagora", "Rivoluzione francese — cause"), NON la categoria generica della sessione (es. "Italiano", "Argomento specifico").
+  - Se l'esercizio iniziale era "ripetere il verbo X", topic = "verbo X".
+  - Se la sessione tratta un capitolo specifico, topic = titolo del capitolo o concetto preciso.
+  - Mai usare "Argomento specifico", "Generico", o solo il nome della materia come topic.
 - NON procedere con domande di verifica — reindirizza a Prepara la prova`;
 
     case "partial":

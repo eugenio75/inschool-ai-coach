@@ -495,7 +495,7 @@ SE risponde LO SO IN PARTE:
 SE risponde LO SO:
 → NON simulare l'interrogazione — quella è funzione di "Prepara la prova"
 → Dì: "Ottimo! Sei già pronto. Per simulare l'interrogazione vera con valutazione e voto finale, vai su Prepara la prova."
-→ Aggiungi il tag [LINK_PREP:subject=${subject || ""};topic=${topic || ""};type=orale] nel messaggio (con i valori esatti correnti) — il pulsante aprirà subito la prova su quell'argomento
+→ Aggiungi il tag [LINK_PREP:subject=${subject || ""};topic=<ARGOMENTO_SPECIFICO>;type=orale] nel messaggio. ⚠️ <ARGOMENTO_SPECIFICO> deve essere l'argomento CONCRETO trattato nella conversazione (es. "verbo sentire", "Teorema di Pitagora"), NON la categoria generica "${topic || subject}". Se l'esercizio era "ripetere il verbo X" → topic="verbo X". Mai usare "Argomento specifico" o solo il nome della materia.
 
 DURANTE LA SESSIONE:
 - Lavora SOLO su "${topic}" — niente di più
@@ -1559,7 +1559,7 @@ Inizia con la prima domanda.`;
       } else {
         familiarityInstruction = isMathSession
           ? "\nLo studente ha GIÀ LETTO l'esercizio. Ripetizione brevissima del metodo (2-3 righe max), poi vai direttamente all'esercizio."
-          : `\nLo studente dice di conoscere l'argomento. Non simulare l'interrogazione. Dì: 'Ottimo! Sei già pronto. Per simulare l'interrogazione vera vai su Prepara la prova.' e aggiungi [LINK_PREP:subject=${subject || ""};topic=${topic || ""};type=orale] (con i valori esatti).`;
+          : `\nLo studente dice di conoscere l'argomento. Non simulare l'interrogazione. Dì: 'Ottimo! Sei già pronto. Per simulare l'interrogazione vera vai su Prepara la prova.' e aggiungi [LINK_PREP:subject=${subject || ""};topic=<ARGOMENTO_SPECIFICO>;type=orale]. ⚠️ <ARGOMENTO_SPECIFICO> = argomento CONCRETO della conversazione (es. "verbo sentire", "Teorema di Pitagora"), NON "${topic || subject}" generico né "Argomento specifico".`;
       }
 
       const sessionSystemPrompt = getSystemPrompt() + familiarityInstruction;
