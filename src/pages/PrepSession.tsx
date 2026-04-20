@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Send, Mic, MicOff, Loader2, CheckCircle, AlertTriangle, Target, Clock, BookOpen,
   MessageCircle, Brain, Gamepad2, Plus, X,
@@ -165,6 +165,10 @@ const MATURITA_PROVE = ["Prima prova (italiano)", "Seconda prova", "Colloquio or
 export default function PrepSession() {
   const navigate = useNavigate();
   const { subject: paramSubject } = useParams();
+  const [searchParams] = useSearchParams();
+  const querySubject = searchParams.get("subject") || "";
+  const queryTopic = searchParams.get("topic") || "";
+  const queryType = (searchParams.get("type") || "") as ExamType | "";
   const { user } = useAuth();
   const { t } = useLang();
   const profile = getProfile();
