@@ -16,12 +16,15 @@ import { Whiteboard } from "@/components/study/Whiteboard";
 import { fireConfetti, playCorrectSound } from "@/lib/confetti";
 import { useTranslation } from "react-i18next";
 
-/** Strip [COLONNA:] and [SVG_REVEAL:] tags so they never appear in the chat bubble */
+/**
+ * Strip any system tag matching [TAG_NAME: ...] where TAG_NAME is uppercase
+ * letters/underscores. Catches [COLONNA:], [SVG_REVEAL:], and any future
+ * system tag following the same convention. Preserves mathematical content
+ * like [1+2] (no colon, mixed/lowercase) and normal text brackets.
+ */
+const SYSTEM_TAG_RE = /\[[A-Z_]+:[^\]]*\]/g;
 const cleanContent = (text: string): string => {
-  return text
-    .replace(/\[COLONNA:[^\]]*\]/gi, '')
-    .replace(/\[SVG_REVEAL:[^\]]*\]/gi, '')
-    .trim();
+  return text.replace(SYSTEM_TAG_RE, '').trim();
 };
 
 /** Parse coach JSON responses (socratic_question format) into display text */
@@ -603,10 +606,12 @@ export function ChatShell({
             // Show parsed inline options on the LAST assistant message whenever 👉 options are present
             const showParsedOptions = isLastAssistant && parsedOptions.length > 0 && !msg.actions?.length;
             const displayContent = cleanContent((showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent);
-            // Keep raw content WITH [COLONNA:] tags for MathText/ProgressiveMessage SVG rendering
-            // Fix 4: strip non-COLONNA bracketed system tags before rendering
+            // Keep raw content WITH [COLONNA:] tags for MathText/ProgressiveMessage SVG rendering.
+            // Fix 4: strip all non-COLONNA system tags ([TAG_NAME: ...] uppercase convention)
+            // before rendering as math content. COLONNA is preserved here because MathText
+            // consumes it directly to render the SVG operation.
             const stripSystemTags = (s: string) =>
-              s.replace(/\[(?!COLONNA:)[^\[\]\n]{1,200}\]/gi, "");
+              s.replace(/\[(?!COLONNA:)[A-Z_]+:[^\]]*\]/g, "");
             const mathContent = stripSystemTags((showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent);
 
             return (
