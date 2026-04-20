@@ -226,7 +226,7 @@ REGOLE:
 REGOLE:
 - NON simulare l'interrogazione — quella è funzione di "Prepara la prova"
 - Dì: "Ottimo! Sei già pronto. Per simulare l'interrogazione vera con valutazione e voto finale, vai su Prepara la prova."
-- Aggiungi il tag [LINK_PREP] nel messaggio per mostrare il pulsante diretto
+- Aggiungi il tag [LINK_PREP:subject=<MATERIA>;topic=<ARGOMENTO>;type=orale] nel messaggio (sostituisci <MATERIA> e <ARGOMENTO> con i valori reali della sessione corrente) — il pulsante aprirà direttamente la prova su quell'argomento
 - NON procedere con domande di verifica — reindirizza a Prepara la prova`;
 
     case "partial":

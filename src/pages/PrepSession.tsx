@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Send, Mic, MicOff, Loader2, CheckCircle, AlertTriangle, Target, Clock, BookOpen,
   MessageCircle, Brain, Gamepad2, Plus, X,
@@ -165,6 +165,10 @@ const MATURITA_PROVE = ["Prima prova (italiano)", "Seconda prova", "Colloquio or
 export default function PrepSession() {
   const navigate = useNavigate();
   const { subject: paramSubject } = useParams();
+  const [searchParams] = useSearchParams();
+  const querySubject = searchParams.get("subject") || "";
+  const queryTopic = searchParams.get("topic") || "";
+  const queryType = (searchParams.get("type") || "") as ExamType | "";
   const { user } = useAuth();
   const { t } = useLang();
   const profile = getProfile();
@@ -179,8 +183,8 @@ export default function PrepSession() {
   const [coachName, setCoachName] = useState<string | undefined>(undefined);
 
   // Setup fields
-  const [subject, setSubject] = useState(paramSubject || "");
-  const [topic, setTopic] = useState("");
+  const [subject, setSubject] = useState(querySubject || paramSubject || "");
+  const [topic, setTopic] = useState(queryTopic || "");
   const [examDate, setExamDate] = useState("");
   const [tone, setTone] = useState<"normale" | "esigente">("normale");
   const [selectedProve, setSelectedProve] = useState<string[]>([]);
@@ -244,6 +248,17 @@ export default function PrepSession() {
     if (et.id === "verifica" || et.id === "orale") return true;
     return true;
   });
+
+  // Auto-skip setup when arriving from Coach with [LINK_PREP:subject=…;topic=…;type=…]
+  useEffect(() => {
+    if (!querySubject && !queryTopic && !queryType) return;
+    const validTypes: ExamType[] = ["verifica", "orale", "terza_media", "maturita", "universitario"];
+    const inferredType: ExamType = (validTypes.includes(queryType as ExamType) ? (queryType as ExamType) : "orale");
+    setExamType(inferredType);
+    // Jump straight to the study mode picker (Coach / Flashcard / Games)
+    setStep("mode-select");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Maturità timer
   useEffect(() => {

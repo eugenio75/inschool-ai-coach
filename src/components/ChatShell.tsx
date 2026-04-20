@@ -456,25 +456,40 @@ export function ChatShell({
   const statusInfo = getStatusIndicator(coachStatus, coachName);
 
   // Parse arrow options from assistant messages into action buttons
-  function parseInlineOptions(text: string): { cleanText: string; options: string[]; hasLinkPrep: boolean } {
+  // Also parses [LINK_PREP] tag with optional metadata: [LINK_PREP:subject=Matematica;topic=Divisioni;type=verifica]
+  function parseInlineOptions(text: string): { cleanText: string; options: string[]; hasLinkPrep: boolean; prepParams: Record<string,string> } {
     const lines = text.split("\n");
     const options: string[] = [];
     const cleanLines: string[] = [];
     let hasLinkPrep = false;
+    const prepParams: Record<string, string> = {};
+    const linkPrepRe = /\[LINK_PREP(?::([^\]]*))?\]/g;
     for (const line of lines) {
-      if (line.includes("[LINK_PREP]")) {
+      const matches = [...line.matchAll(linkPrepRe)];
+      if (matches.length > 0) {
         hasLinkPrep = true;
-        cleanLines.push(line.replace(/\[LINK_PREP\]/g, "").trim());
+        for (const m of matches) {
+          const meta = m[1];
+          if (meta) {
+            for (const pair of meta.split(";")) {
+              const [k, ...rest] = pair.split("=");
+              const key = (k || "").trim();
+              const val = rest.join("=").trim();
+              if (key && val) prepParams[key] = val;
+            }
+          }
+        }
+        cleanLines.push(line.replace(linkPrepRe, "").trim());
         continue;
       }
-      const match = line.match(/^\s*(?:👉|•|-)\s+(.+)$/);
-      if (match) {
-        options.push(match[1].trim());
+      const optMatch = line.match(/^\s*(?:👉|•|-)\s+(.+)$/);
+      if (optMatch) {
+        options.push(optMatch[1].trim());
       } else {
         cleanLines.push(line);
       }
     }
-    return { cleanText: cleanLines.join("\n").trim(), options, hasLinkPrep };
+    return { cleanText: cleanLines.join("\n").trim(), options, hasLinkPrep, prepParams };
   }
 
   return (
@@ -602,7 +617,7 @@ export function ChatShell({
             const msgMood: CoachAvatarMood = msg.role === "assistant" ? detectMoodFromText(rawContent) : "default";
             const isLastAssistant = msg.role === "assistant" && i === messages.length - 1;
             // Parse inline options (👉) from assistant messages
-            const { cleanText: parsedCleanText, options: parsedOptions, hasLinkPrep } = msg.role === "assistant" ? parseInlineOptions(rawContent) : { cleanText: rawContent, options: [], hasLinkPrep: false };
+            const { cleanText: parsedCleanText, options: parsedOptions, hasLinkPrep, prepParams } = msg.role === "assistant" ? parseInlineOptions(rawContent) : { cleanText: rawContent, options: [], hasLinkPrep: false, prepParams: {} as Record<string,string> };
             // Show parsed inline options on the LAST assistant message whenever 👉 options are present
             const showParsedOptions = isLastAssistant && parsedOptions.length > 0 && !msg.actions?.length;
             const displayContent = cleanContent((showParsedOptions || hasLinkPrep) ? parsedCleanText : rawContent);
@@ -662,7 +677,15 @@ export function ChatShell({
                 {hasLinkPrep && progressiveComplete && (
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mt-3">
                     <button
-                      onClick={() => navigate("/prep")}
+                      onClick={() => {
+                        const qs = new URLSearchParams();
+                        if (prepParams.subject) qs.set("subject", prepParams.subject);
+                        if (prepParams.topic) qs.set("topic", prepParams.topic);
+                        if (prepParams.type) qs.set("type", prepParams.type);
+                        const subjectPath = prepParams.subject ? `/${encodeURIComponent(prepParams.subject)}` : "";
+                        const query = qs.toString() ? `?${qs.toString()}` : "";
+                        navigate(`/prep${subjectPath}${query}`);
+                      }}
                       className="flex items-center gap-2 px-5 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all w-full justify-center"
                     >
                       🎯 {t("coach_cta_go_to_prep")}
