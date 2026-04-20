@@ -1559,7 +1559,7 @@ Inizia con la prima domanda.`;
       } else {
         familiarityInstruction = isMathSession
           ? "\nLo studente ha GIÀ LETTO l'esercizio. Ripetizione brevissima del metodo (2-3 righe max), poi vai direttamente all'esercizio."
-          : `\nLo studente dice di conoscere l'argomento. Non simulare l'interrogazione. Dì: 'Ottimo! Sei già pronto. Per simulare l'interrogazione vera vai su Prepara la prova.' e aggiungi [LINK_PREP:subject=${subject || ""};topic=${topic || ""};type=orale] (con i valori esatti).`;
+          : `\nLo studente dice di conoscere l'argomento. Non simulare l'interrogazione. Dì: 'Ottimo! Sei già pronto. Per simulare l'interrogazione vera vai su Prepara la prova.' e aggiungi [LINK_PREP:subject=${subject || ""};topic=<ARGOMENTO_SPECIFICO>;type=orale]. ⚠️ <ARGOMENTO_SPECIFICO> = argomento CONCRETO della conversazione (es. "verbo sentire", "Teorema di Pitagora"), NON "${topic || subject}" generico né "Argomento specifico".`;
       }
 
       const sessionSystemPrompt = getSystemPrompt() + familiarityInstruction;
