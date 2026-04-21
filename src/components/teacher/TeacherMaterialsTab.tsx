@@ -834,7 +834,8 @@ REGOLE:
 2. Esercizi numerati — difficoltà ${difficolta === "Progressiva (dal facile al difficile)" ? "crescente dal primo all'ultimo" : "uniforme"}
 3. Ogni esercizio con spazio per la risposta
 4. Inserisci ===SOLUZIONI=== dopo il contenuto studente
-5. Dopo il separatore: soluzioni dettagliate passo per passo`;
+5. Dopo il separatore: soluzioni dettagliate passo per passo
+6. Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale nella sezione Note Docente o Risorse. NON incorporare immagini nel documento.`;
 
       } else if (activityType === "recupero") {
         systemPrompt = `Sei un docente esperto. Genera un MATERIALE DI RECUPERO per ${classe?.nome || "la classe"}.
