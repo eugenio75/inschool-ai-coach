@@ -865,7 +865,8 @@ REGOLE:
 2. Contenuto che va oltre il programma base — sfidante e stimolante
 3. Domande aperte che richiedono ragionamento critico, non solo memoria
 4. Inserisci ===SOLUZIONI=== dopo il contenuto studente
-5. Dopo il separatore: soluzioni commentate, spunti per discussione in classe, risorse per approfondire`;
+5. Dopo il separatore: soluzioni commentate, spunti per discussione in classe, risorse per approfondire
+6. Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale nella sezione Note Docente o Risorse. NON incorporare immagini nel documento.`;
 
       } else {
         systemPrompt = `Sei un docente esperto. Genera materiale didattico di tipo "${activityType}". Classe: ${classe?.nome || ""}. Materia: ${subjectStr}. ${levelContext} ${studentsContext}
