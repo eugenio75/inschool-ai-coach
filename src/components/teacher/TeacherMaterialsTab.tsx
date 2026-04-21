@@ -819,7 +819,7 @@ REGOLE:
 3. Esercizi o domande numerati
 4. Inserisci ===SOLUZIONI=== dopo il contenuto studente
 5. Dopo il separatore: soluzioni commentate, criteri di correzione, note docente
-6. Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale nella sezione Note Docente o Risorse. NON incorporare immagini nel documento.`;
+6. Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale. I link vanno ESCLUSIVAMENTE nella sezione dopo ===SOLUZIONI=== (Note Docente / Risorse consigliate). NON inserire mai link nella parte studente del documento. NON incorporare immagini nel documento.`;
 
       } else if (activityType === "esercizi") {
         systemPrompt = `Sei un docente esperto. Genera una SERIE DI ESERCIZI per ${classe?.nome || "la classe"}.
