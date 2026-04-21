@@ -5,6 +5,8 @@ import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { ChevronRight } from "lucide-react";
 import { formatName } from "@/lib/formatName";
 
+type Category = "attenzione" | "occhio" | "norma";
+
 interface Student {
   id: string;
   name: string;
@@ -13,6 +15,12 @@ interface Student {
   // Risultati mode (optional)
   topicScore?: number | null;
   topicCompleted?: boolean;
+  // Check-in classification (optional)
+  category?: Category;
+  meanScore?: number | null;
+  pendingCount?: number;
+  moodStreak?: number;
+  sessions7d?: number;
 }
 
 interface Props {
