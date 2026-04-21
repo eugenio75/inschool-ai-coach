@@ -128,8 +128,16 @@ export default function ClassView() {
     const state = (location.state as any) || {};
     if (!classId) return;
     if (state.action === "checkin") {
+      setSheetMode("checkin");
+      setSheetArgomento("");
       setStudentsOpen(true);
-      // Clear the state so it doesn't re-trigger
+      navigate(location.pathname, { replace: true, state: {} });
+      return;
+    }
+    if (state.action === "risultati") {
+      setSheetMode("risultati");
+      setSheetArgomento(typeof state.argomento === "string" ? state.argomento : "");
+      setStudentsOpen(true);
       navigate(location.pathname, { replace: true, state: {} });
       return;
     }
