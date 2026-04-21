@@ -229,7 +229,7 @@ export default function ClassQuadro() {
 
         <section className="grid gap-6 md:grid-cols-2">
           {/* 1. Apprendimento */}
-          <SectionCard emoji="📊" title="Come sta andando l'apprendimento" minHeight="380px">
+          <SectionCard emoji="📊" title="Come sta andando l'apprendimento" minHeight="320px">
             <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
               {insight.learning.paragraph}
             </p>
@@ -250,7 +250,7 @@ export default function ClassQuadro() {
           </SectionCard>
 
           {/* 2. Metodo */}
-          <SectionCard emoji="🔁" title="Il metodo sta funzionando?" minHeight="380px">
+          <SectionCard emoji="🔁" title="Il metodo sta funzionando?" minHeight="320px">
             <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
               {insight.method.paragraph}
             </p>
