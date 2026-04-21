@@ -60,15 +60,15 @@ interface SectionCardProps {
   children: React.ReactNode;
 }
 
-function SectionCard({ emoji, title, minHeight = "380px", children }: SectionCardProps) {
+function SectionCard({ emoji, title, minHeight = "320px", children }: SectionCardProps) {
   return (
     <article
-      className="flex flex-col rounded-[28px] border border-border bg-card/95 p-8 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
+      className="flex flex-col rounded-[28px] border border-border bg-card/95 p-6 sm:p-7 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
       style={{ minHeight }}
     >
       <div className="flex items-center gap-3">
-        <div className="text-2xl" aria-hidden>{emoji}</div>
-        <h2 className="text-2xl font-extrabold tracking-tight text-foreground">{title}</h2>
+        <div className="text-xl" aria-hidden>{emoji}</div>
+        <h2 className="text-[18px] sm:text-[20px] font-bold tracking-tight text-foreground leading-tight">{title}</h2>
       </div>
       {children}
     </article>
@@ -216,18 +216,21 @@ export default function ClassQuadro() {
       <BackLink label="alla classe" to={`/classe/${classId}`} />
       <main className="mx-auto max-w-7xl px-6 pt-6 sm:pt-10">
         <header className="mb-8">
-          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-foreground">
-            Quadro completo · {classe.nome}
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80 mb-2">
+            Quadro completo
+          </p>
+          <h1 className="text-[28px] sm:text-[30px] font-extrabold tracking-tight text-foreground leading-none">
+            {classe.nome}
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground">
+          <p className="mt-3 text-[14px] font-normal text-muted-foreground">
             Generato da {coachName} · {today}
           </p>
         </header>
 
         <section className="grid gap-6 md:grid-cols-2">
           {/* 1. Apprendimento */}
-          <SectionCard emoji="📊" title="Come sta andando l'apprendimento" minHeight="380px">
-            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+          <SectionCard emoji="📊" title="Come sta andando l'apprendimento" minHeight="320px">
+            <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
               {insight.learning.paragraph}
             </p>
             <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
@@ -247,8 +250,8 @@ export default function ClassQuadro() {
           </SectionCard>
 
           {/* 2. Metodo */}
-          <SectionCard emoji="🔁" title="Il metodo sta funzionando?" minHeight="380px">
-            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+          <SectionCard emoji="🔁" title="Il metodo sta funzionando?" minHeight="320px">
+            <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
               {insight.method.paragraph}
             </p>
             <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
@@ -269,7 +272,7 @@ export default function ClassQuadro() {
 
           {/* 3. Clima */}
           <SectionCard emoji="💬" title="Clima della classe" minHeight="320px">
-            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+            <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
               {insight.climate.paragraph}
             </p>
             <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
@@ -303,7 +306,7 @@ export default function ClassQuadro() {
           <SectionCard emoji="👤" title="Chi ha bisogno di attenzione" minHeight="320px">
             {insight.followStudents.length === 0 ? (
               <>
-                <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+                <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
                   Tutti gli studenti stanno procedendo regolarmente. Continuare a osservare le prossime attività per cogliere in tempo eventuali segnali di rallentamento.
                 </p>
                 <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
@@ -317,7 +320,7 @@ export default function ClassQuadro() {
               </>
             ) : (
               <>
-                <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+                <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
                   {insight.followStudents.length === 1
                     ? `1 studente sta restando indietro rispetto al resto della classe nelle ultime attività. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.`
                     : `${insight.followStudents.length} studenti stanno restando indietro rispetto al resto della classe nelle ultime attività. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.`}

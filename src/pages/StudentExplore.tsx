@@ -5,6 +5,7 @@ import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BackLink } from "@/components/shared/BackLink";
+import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { percentToGrade, type ScaleId } from "@/components/teacher/GradeReviewModal";
 
 type Activity = {
@@ -278,12 +279,18 @@ export default function StudentExplore() {
 
       <main className="mx-auto max-w-7xl px-6 pt-6 sm:pt-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-foreground">
-            Quadro completo · {studentName}
-          </h1>
-          <p className="mt-2 text-lg text-muted-foreground">Generato dal Coach · {today}</p>
-        </div>
+        <header className="mb-8 flex items-center gap-4">
+          <AvatarInitials name={studentName} size="lg" />
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80 mb-1">
+              Quadro completo
+            </p>
+            <h1 className="text-[26px] sm:text-[30px] font-extrabold tracking-tight text-foreground leading-tight">
+              {studentName}
+            </h1>
+            <p className="mt-1 text-[14px] font-normal text-muted-foreground">Generato dal Coach · {today}</p>
+          </div>
+        </header>
 
         {/* 4 cards uniformi 2x2 */}
         <section className="grid gap-6 md:grid-cols-2">
@@ -291,9 +298,9 @@ export default function StudentExplore() {
           <article className="flex min-h-[380px] flex-col rounded-[28px] border border-border bg-card/95 p-8 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
             <div className="flex items-center gap-3">
               <div className="text-2xl">📊</div>
-              <h2 className="text-2xl font-extrabold tracking-tight text-foreground">Come sta andando l'apprendimento</h2>
+              <h2 className="text-[18px] sm:text-[20px] font-bold tracking-tight text-foreground leading-tight">Come sta andando l'apprendimento</h2>
             </div>
-            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+            <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
               {verificheNarrative}
             </p>
             <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
@@ -316,9 +323,9 @@ export default function StudentExplore() {
           <article className="flex min-h-[380px] flex-col rounded-[28px] border border-border bg-card/95 p-8 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
             <div className="flex items-center gap-3">
               <div className="text-2xl">🔁</div>
-              <h2 className="text-2xl font-extrabold tracking-tight text-foreground">Il metodo sta funzionando?</h2>
+              <h2 className="text-[18px] sm:text-[20px] font-bold tracking-tight text-foreground leading-tight">Il metodo sta funzionando?</h2>
             </div>
-            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+            <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
               {studyNarrative} Se i risultati continuano a non corrispondere all'impegno, il canale potrebbe non essere quello giusto: vale la pena provare una spiegazione diversa.
             </p>
             <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
@@ -341,9 +348,9 @@ export default function StudentExplore() {
           <article className="flex min-h-[320px] flex-col rounded-[28px] border border-border bg-card/95 p-8 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
             <div className="flex items-center gap-3">
               <div className="text-2xl">💬</div>
-              <h2 className="text-2xl font-extrabold tracking-tight text-foreground">Clima emotivo</h2>
+              <h2 className="text-[18px] sm:text-[20px] font-bold tracking-tight text-foreground leading-tight">Clima emotivo</h2>
             </div>
-            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+            <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
               {emotivitaNarrative}
             </p>
             <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
@@ -372,9 +379,9 @@ export default function StudentExplore() {
           <article className="flex min-h-[320px] flex-col rounded-[28px] border border-border bg-card/95 p-8 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
             <div className="flex items-center gap-3">
               <div className="text-2xl">👤</div>
-              <h2 className="text-2xl font-extrabold tracking-tight text-foreground">Su cosa intervenire</h2>
+              <h2 className="text-[18px] sm:text-[20px] font-bold tracking-tight text-foreground leading-tight">Su cosa intervenire</h2>
             </div>
-            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+            <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
               {negativeWeeks >= 2
                 ? `${studentName.split(" ")[0]} sta restando indietro nelle ultime settimane. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.`
                 : `Il quadro generale di ${studentName.split(" ")[0]} è sotto controllo. Continuare a osservare le prossime attività per cogliere in tempo eventuali segnali di rallentamento.`}

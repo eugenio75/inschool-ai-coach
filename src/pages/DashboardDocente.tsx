@@ -424,7 +424,7 @@ export default function DashboardDocente() {
               <CoachAvatar mood="default" size={44} />
               <div>
                 <p className="text-[14px] font-medium text-foreground/80 leading-tight">{coachName || "Coach"}</p>
-                <p className="text-[14px] font-normal text-muted-foreground leading-tight mt-0.5">Centro di regia della giornata</p>
+                <p className="text-[14px] font-normal text-muted-foreground leading-tight mt-0.5">Il tuo Coach</p>
               </div>
             </div>
 
@@ -579,11 +579,13 @@ export default function DashboardDocente() {
             const recentAssignment = [...assignments].sort((a, b) =>
               new Date(b.assigned_at || 0).getTime() - new Date(a.assigned_at || 0).getTime()
             )[0];
+            const stripPrefix = (s: string) => s.replace(/^\s*(compito|verifica|esercizi|esercizio|recupero|potenziamento|lezione)\s*[:\-–—]\s*/i, "").trim();
             const attivitaPrimary = recentFeed?.message
-              || (recentAssignment ? `${recentAssignment.type === "verifica" ? "Verifica" : "Compito"}: ${recentAssignment.title}` : "Nessuna attività recente");
+              ? stripPrefix(recentFeed.message)
+              : (recentAssignment ? stripPrefix(recentAssignment.title || "") || (recentAssignment.type === "verifica" ? "Verifica" : "Compito") : "Nessuna attività recente");
             const attivitaSecondary = recentFeed
               ? new Date(recentFeed.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "short" })
-              : recentAssignment ? "assegnato" : "";
+              : recentAssignment ? (recentAssignment.type === "verifica" ? "Verifica assegnata" : "Compito assegnato") : "";
 
             // Da seguire — student needing attention from feed
             const followAlert = feedItems.find(f =>
