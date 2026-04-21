@@ -119,6 +119,27 @@ export default function ClassView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId, profileId, user?.id]);
 
+  // Handle navigation state from ClassQuadro CTAs:
+  //   { coachAsk: "..." }   → auto-send the question to the class coach
+  //   { action: "checkin" } → open the students sheet (class check-in)
+  useEffect(() => {
+    const state = (location.state as any) || {};
+    if (!classId) return;
+    if (state.action === "checkin") {
+      setStudentsOpen(true);
+      // Clear the state so it doesn't re-trigger
+      navigate(location.pathname, { replace: true, state: {} });
+      return;
+    }
+    if (state.coachAsk && typeof state.coachAsk === "string" && user) {
+      const q = state.coachAsk;
+      navigate(location.pathname, { replace: true, state: {} });
+      // Defer so handleCoachAsk is defined and class data is loading
+      setTimeout(() => { void handleCoachAsk(q); }, 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, classId, user?.id]);
+
   async function loadClass() {
     setLoading(true);
     setLoadError(null);
