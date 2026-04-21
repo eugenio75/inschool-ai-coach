@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { ChevronRight } from "lucide-react";
 import { formatName } from "@/lib/formatName";
+import { sortByPriority } from "@/lib/studentPriority";
 
 type Category = "attenzione" | "occhio" | "norma";
 
