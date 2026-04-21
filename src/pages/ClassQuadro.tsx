@@ -458,7 +458,7 @@ export default function ClassQuadro() {
                         Scrivi ai genitori
                       </button>
                       <button
-                        onClick={() => navigate(`/classe/${classId}`, { state: { action: "checkin" } })}
+                        onClick={() => navigate(`/classe/${classId}/checkin`)}
                         className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
                       >
                         Avvia check-in di classe
@@ -466,7 +466,7 @@ export default function ClassQuadro() {
                     </>
                   ) : (
                     <button
-                      onClick={() => navigate(`/classe/${classId}`, { state: { action: "checkin" } })}
+                      onClick={() => navigate(`/classe/${classId}/checkin`)}
                       className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
                     >
                       Avvia check-in di classe
@@ -508,9 +508,7 @@ export default function ClassQuadro() {
                           <p className="mt-3 text-[13px] leading-[1.6] text-muted-foreground">
                             Altri {others} {others === 1 ? "studente merita" : "studenti meritano"} attenzione —{" "}
                             <button
-                              onClick={() =>
-                                navigate(`/classe/${classId}`, { state: { action: "checkin" } })
-                              }
+                              onClick={() => navigate(`/classe/${classId}/checkin`)}
                               className="underline underline-offset-2 font-medium text-primary hover:text-primary/80 transition"
                             >
                               vedi il quadro completo
