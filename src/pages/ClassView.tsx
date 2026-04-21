@@ -516,6 +516,15 @@ export default function ClassView() {
     ? assignmentResults.filter(matchesArgomento)
     : assignmentResults;
 
+  // Time windows for check-in classification
+  const NOW = Date.now();
+  const SEVEN = 7 * 86400000;
+  const FOURTEEN = 14 * 86400000;
+  const NEGATIVE_TONES = new Set(["negative", "sad", "stressed", "anxious", "tired", "frustrated"]);
+  const isNegativeCheckin = (c: any) =>
+    NEGATIVE_TONES.has(String(c.emotional_tone || "").toLowerCase()) ||
+    String(c.energy_level || "").toLowerCase() === "low";
+
   const studentsForSheet = students.map((s: any) => {
     const firstName = formatName(s.profile?.name || s.student_name || "Studente");
     const lastName = formatName(s.profile?.last_name || "");
@@ -524,14 +533,56 @@ export default function ClassView() {
     const lastLabel = last
       ? new Date(last).toLocaleDateString("it-IT", { day: "numeric", month: "short" })
       : undefined;
-    // Detect "needs follow" via low score average across ALL assignments
+
+    // ── Academic signals (all assignments) ──
     const allScores: number[] = [];
+    let pendingCount = 0;
     assignmentResults.forEach((a: any) => {
       (a.results || []).forEach((r: any) => {
-        if ((r.student_id || r.id) === sid && r.score != null) allScores.push(r.score);
+        if ((r.student_id || r.id) !== sid) return;
+        if (r.score != null) allScores.push(r.score);
+        if (r.status && r.status !== "completed" && !r.completed_at) pendingCount++;
       });
     });
-    const mean = allScores.length > 0 ? allScores.reduce((a, b) => a + b, 0) / allScores.length : null;
+    const meanScore = allScores.length > 0 ? allScores.reduce((a, b) => a + b, 0) / allScores.length : null;
+
+    // ── Emotional signal: consecutive recent negative check-ins ──
+    const myCheckins = (emotionalCheckins || [])
+      .filter((c: any) => c.child_profile_id === sid)
+      .sort((a: any, b: any) => new Date(b.created_at || b.checkin_date || 0).getTime()
+                              - new Date(a.created_at || a.checkin_date || 0).getTime());
+    let moodStreak = 0;
+    for (const c of myCheckins) {
+      if (isNegativeCheckin(c)) moodStreak++;
+      else break;
+    }
+
+    // ── Frequency signals (focus sessions) ──
+    const myFocus = (focusSessions || []).filter((f: any) => f.child_profile_id === sid);
+    const sessions7d = myFocus.filter((f: any) => {
+      const t = new Date(f.completed_at || 0).getTime();
+      return NOW - t <= SEVEN;
+    }).length;
+    const sessionsPrev7d = myFocus.filter((f: any) => {
+      const t = new Date(f.completed_at || 0).getTime();
+      return NOW - t > SEVEN && NOW - t <= FOURTEEN;
+    }).length;
+
+    // ── Deterministic classification ──
+    let category: "attenzione" | "occhio" | "norma" = "norma";
+    if (
+      (meanScore != null && meanScore < 50 && pendingCount > 0) ||
+      moodStreak >= 5 ||
+      (sessions7d === 0 && moodStreak >= 2)
+    ) {
+      category = "attenzione";
+    } else if (
+      (meanScore != null && meanScore < 50) ||
+      (moodStreak >= 3 && moodStreak <= 4) ||
+      (sessionsPrev7d > 0 && sessions7d < sessionsPrev7d)
+    ) {
+      category = "occhio";
+    }
 
     // Topic-specific scores (for "risultati" mode)
     const topicScores: number[] = [];
@@ -552,9 +603,15 @@ export default function ClassView() {
       id: sid,
       name: lastName ? `${firstName} ${lastName}` : firstName,
       lastActivity: lastLabel,
-      needsFollow: mean != null && mean < 60,
+      needsFollow: meanScore != null && meanScore < 60,
       topicScore: topicMean,
       topicCompleted,
+      // Check-in classification
+      category,
+      meanScore,
+      pendingCount,
+      moodStreak,
+      sessions7d,
     };
   });
 
