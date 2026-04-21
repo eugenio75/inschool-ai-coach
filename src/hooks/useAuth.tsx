@@ -84,7 +84,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem("inschool-active-child-id");
+    // Clear ALL child/profile session keys to prevent stale profile leakage
+    // (otherwise getChildSession() returns the previous teacher/profile and
+    // the dashboard shows classes the new user can't actually access).
+    clearChildSession();
   };
 
   return (
