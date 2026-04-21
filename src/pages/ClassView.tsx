@@ -623,6 +623,8 @@ export default function ClassView() {
         onOpenChange={setStudentsOpen}
         classId={classId!}
         students={studentsForSheet}
+        mode={sheetMode}
+        argomento={sheetArgomento}
       />
 
       {user && (
