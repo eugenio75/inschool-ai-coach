@@ -216,10 +216,13 @@ export default function ClassQuadro() {
       <BackLink label="alla classe" to={`/classe/${classId}`} />
       <main className="mx-auto max-w-7xl px-6 pt-6 sm:pt-10">
         <header className="mb-8">
-          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-foreground">
-            Quadro completo · {classe.nome}
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80 mb-2">
+            Quadro completo
+          </p>
+          <h1 className="text-[28px] sm:text-[30px] font-extrabold tracking-tight text-foreground leading-none">
+            {classe.nome}
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground">
+          <p className="mt-3 text-[14px] font-normal text-muted-foreground">
             Generato da {coachName} · {today}
           </p>
         </header>
