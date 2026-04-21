@@ -176,7 +176,6 @@ export default function StudentsListSheet({
   // ─── Checkin mode — classification 🔴🟡🟢 ───────────────────
   // Use the shared priority helper so the order here matches the
   // student promoted in ClassQuadro card "Chi ha bisogno di attenzione".
-  const { sortByPriority } = require("@/lib/studentPriority") as typeof import("@/lib/studentPriority");
   const categoryOf = (s: Student): Category => s.category || "norma";
   const counts = students.reduce(
     (acc, s) => {
