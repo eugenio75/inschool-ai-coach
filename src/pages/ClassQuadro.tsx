@@ -544,6 +544,17 @@ export default function ClassQuadro() {
           );
         })()}
       </main>
+
+      {classId && (
+        <StudentsListSheet
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          classId={classId}
+          students={buildSheetStudents()}
+          mode={sheetMode}
+          argomento={sheetArgomento}
+        />
+      )}
     </div>
   );
 }
