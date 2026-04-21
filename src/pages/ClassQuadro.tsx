@@ -91,6 +91,7 @@ export default function ClassQuadro() {
 
   const [classe, setClasse] = useState<any>(null);
   const [insight, setInsight] = useState<FullPictureInsight | null>(null);
+  const [classified, setClassified] = useState<ClassifiedStudent[]>([]);
   const [loading, setLoading] = useState(true);
   const [coachName, setCoachName] = useState("Coach");
 
