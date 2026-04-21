@@ -851,7 +851,8 @@ REGOLE:
 3. Esercizi guidati dal più semplice al più complesso
 4. Linguaggio chiaro e diretto — per studenti già in difficoltà
 5. Inserisci ===SOLUZIONI=== dopo il contenuto studente
-6. Dopo il separatore: soluzioni commentate, suggerimenti per il docente su come usare il materiale in classe`;
+6. Dopo il separatore: soluzioni commentate, suggerimenti per il docente su come usare il materiale in classe
+7. Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale nella sezione Note Docente o Risorse. NON incorporare immagini nel documento.`;
 
       } else if (activityType === "potenziamento") {
         systemPrompt = `Sei un docente esperto. Genera un MATERIALE DI POTENZIAMENTO per ${classe?.nome || "la classe"}.
