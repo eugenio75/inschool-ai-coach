@@ -138,9 +138,10 @@ export default function SharedMaterialsList({
     const dateStr = new Date(m.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
     const hasSolutions = (m.content || "").includes("===SOLUZIONI===");
     if (hasSolutions && version !== "full") {
-      const { studentContent } = splitTeacherContent(m.content || "");
+      const { studentContent, teacherContent } = splitTeacherContent(m.content || "");
       const isTeacherVersion = version === "teacher";
-      renderAndPrintPdf(isTeacherVersion ? (m.content || "") : studentContent, {
+      const contentToPrint = isTeacherVersion ? (teacherContent || "") : studentContent;
+      renderAndPrintPdf(contentToPrint, {
         title: m.title, type: m.type || "esercizi",
         subject: [m.subject, m.level ? "Livello: " + m.level : ""].filter(Boolean).join(" · "),
         className, date: dateStr, isTeacherOnly: isTeacherVersion,
