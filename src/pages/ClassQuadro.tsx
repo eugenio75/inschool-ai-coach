@@ -227,128 +227,176 @@ export default function ClassQuadro() {
           </p>
         </header>
 
-        <section className="grid gap-6 md:grid-cols-2">
-          {/* 1. Apprendimento */}
-          <SectionCard emoji="📊" title="Come sta andando l'apprendimento" minHeight="320px">
-            <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
-              {insight.learning.paragraph}
-            </p>
-            <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
-              <button
-                onClick={() => navigate(`/classe/${classId}/materiali?create=true&tipo=esercizio`)}
-                className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-              >
-                Genera esercizi di rinforzo
-              </button>
-              <button
-                onClick={() => navigate(`/classe/${classId}`)}
-                className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
-              >
-                Vedi risultati attività
-              </button>
-            </div>
-          </SectionCard>
+        {(() => {
+          // Argomento critico (per i CTA Jarvis)
+          const argomentoCritico = insight.learning.unclear[0] || "";
+          const subj = classe?.materia || "";
 
-          {/* 2. Metodo */}
-          <SectionCard emoji="🔁" title="Il metodo sta funzionando?" minHeight="320px">
-            <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
-              {insight.method.paragraph}
-            </p>
-            <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
-              <button
-                onClick={() => navigate(`/materiali-docente?classId=${classId}&tipo=lezione`)}
-                className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-              >
-                Prepara spiegazione alternativa
-              </button>
-              <button
-                onClick={() => navigate(`/materiali-docente?classId=${classId}&tipo=lezione&approccio=alternativo`)}
-                className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
-              >
-                Genera materiale diverso
-              </button>
-            </div>
-          </SectionCard>
+          // Helper: naviga a Crea & Assegna con state Jarvis precompilato
+          const goJarvis = (tipo: string, descrizione: string, studentIds?: string[]) => {
+            navigate(`/classe/${classId}/materiali?create=true`, {
+              state: {
+                prefilledMaterial: {
+                  tipo_attivita: tipo,
+                  materia: subj,
+                  descrizione,
+                  ...(studentIds && studentIds.length ? { studentIds } : {}),
+                },
+              },
+            });
+          };
 
-          {/* 3. Clima */}
-          <SectionCard emoji="💬" title="Clima della classe" minHeight="320px">
-            <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
-              {insight.climate.paragraph}
-            </p>
-            <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
-              {insight.climate.hasSignals ? (
-                <>
-                  <button
-                    onClick={() => navigate(`/classe/${classId}?action=parent-email`)}
-                    className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-                  >
-                    Scrivi ai genitori
-                  </button>
-                  <button
-                    onClick={() => navigate(`/agenda-docente?action=create&type=ascolto`)}
-                    className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
-                  >
-                    Programma momento di ascolto
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => navigate(`/agenda-docente?action=create&type=ascolto`)}
-                  className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-                >
-                  Avvia check-in di classe
-                </button>
-              )}
-            </div>
-          </SectionCard>
-
-          {/* 4. Studenti da seguire */}
-          <SectionCard emoji="👤" title="Chi ha bisogno di attenzione" minHeight="320px">
-            {insight.followStudents.length === 0 ? (
-              <>
+          return (
+            <section className="grid gap-6 md:grid-cols-2">
+              {/* 1. Apprendimento */}
+              <SectionCard emoji="📊" title="Come sta andando l'apprendimento" minHeight="320px">
                 <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
-                  Tutti gli studenti stanno procedendo regolarmente. Continuare a osservare le prossime attività per cogliere in tempo eventuali segnali di rallentamento.
+                  {insight.learning.paragraph}
                 </p>
                 <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
                   <button
-                    onClick={() => navigate(`/classe/${classId}`)}
+                    onClick={() =>
+                      goJarvis(
+                        "recupero",
+                        argomentoCritico
+                          ? `Esercizi di rinforzo su ${argomentoCritico}${subj ? ` (${subj})` : ""} per chiudere le lacune ricorrenti emerse in classe.`
+                          : `Esercizi di rinforzo${subj ? ` di ${subj}` : ""} sugli argomenti più critici della classe.`,
+                      )
+                    }
                     className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
                   >
-                    Apri classe
+                    Genera esercizi di rinforzo
+                  </button>
+                  <button
+                    onClick={() =>
+                      navigate(`/classe/${classId}/materiali`, {
+                        state: argomentoCritico ? { filtro_argomento: argomentoCritico } : undefined,
+                      })
+                    }
+                    className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+                  >
+                    Vedi risultati attività
                   </button>
                 </div>
-              </>
-            ) : (
-              <>
+              </SectionCard>
+
+              {/* 2. Metodo */}
+              <SectionCard emoji="🔁" title="Il metodo sta funzionando?" minHeight="320px">
                 <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
-                  {insight.followStudents.length === 1
-                    ? `1 studente sta restando indietro rispetto al resto della classe nelle ultime attività. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.`
-                    : `${insight.followStudents.length} studenti stanno restando indietro rispetto al resto della classe nelle ultime attività. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.`}
+                  {insight.method.paragraph}
                 </p>
                 <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
                   <button
                     onClick={() => {
-                      const first = insight.followStudents[0];
-                      navigate(`/studente/${first.studentId}?classId=${classId}`);
+                      const topic = argomentoCritico || (subj ? `argomenti recenti di ${subj}` : "l'argomento più critico");
+                      const askText = `Prepara una spiegazione alternativa di ${topic} con un esempio diverso e supporto visivo`;
+                      navigate(`/classe/${classId}`, { state: { coachAsk: askText } });
                     }}
                     className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
                   >
-                    Apri profilo
+                    Prepara spiegazione alternativa
                   </button>
                   <button
-                    onClick={() => {
-                      const first = insight.followStudents[0];
-                      navigate(`/materiali-docente?classId=${classId}&tipo=recupero&studentId=${first.studentId}`);
-                    }}
+                    onClick={() =>
+                      goJarvis(
+                        "esercizi",
+                        argomentoCritico
+                          ? `Materiale diverso su ${argomentoCritico}${subj ? ` (${subj})` : ""}: cambia angolo di entrata, usa esempi concreti e formato più guidato.`
+                          : `Materiale alternativo${subj ? ` di ${subj}` : ""} con un approccio diverso rispetto al precedente.`,
+                      )
+                    }
                     className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
                   >
-                    Genera recupero
+                    Genera materiale diverso
                   </button>
                 </div>
-              </>
-            )}
-          </SectionCard>
-        </section>
+              </SectionCard>
+
+              {/* 3. Clima */}
+              <SectionCard emoji="💬" title="Clima della classe" minHeight="320px">
+                <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
+                  {insight.climate.paragraph}
+                </p>
+                <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
+                  {insight.climate.hasSignals ? (
+                    <>
+                      <button
+                        onClick={() => navigate(`/classe/${classId}?action=parent-email`)}
+                        className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                      >
+                        Scrivi ai genitori
+                      </button>
+                      <button
+                        onClick={() => navigate(`/classe/${classId}`, { state: { action: "checkin" } })}
+                        className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+                      >
+                        Avvia check-in di classe
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => navigate(`/classe/${classId}`, { state: { action: "checkin" } })}
+                      className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                    >
+                      Avvia check-in di classe
+                    </button>
+                  )}
+                </div>
+              </SectionCard>
+
+              {/* 4. Studenti da seguire */}
+              <SectionCard emoji="👤" title="Chi ha bisogno di attenzione" minHeight="320px">
+                {insight.followStudents.length === 0 ? (
+                  <>
+                    <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
+                      Tutti gli studenti stanno procedendo regolarmente. Continuare a osservare le prossime attività per cogliere in tempo eventuali segnali di rallentamento.
+                    </p>
+                    <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
+                      <button
+                        onClick={() => navigate(`/classe/${classId}`)}
+                        className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                      >
+                        Apri classe
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
+                      {insight.followStudents.length === 1
+                        ? `1 studente sta restando indietro rispetto al resto della classe nelle ultime attività. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.`
+                        : `${insight.followStudents.length} studenti stanno restando indietro rispetto al resto della classe nelle ultime attività. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.`}
+                    </p>
+                    <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
+                      <button
+                        onClick={() => {
+                          const first = insight.followStudents[0];
+                          navigate(`/studente/${first.studentId}?classId=${classId}`);
+                        }}
+                        className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                      >
+                        Apri profilo
+                      </button>
+                      <button
+                        onClick={() => {
+                          const first = insight.followStudents[0];
+                          goJarvis(
+                            "recupero",
+                            `Materiale di recupero personalizzato per ${first.studentName}${subj ? ` (${subj})` : ""}${argomentoCritico ? ` su ${argomentoCritico}` : ""}.`,
+                            [first.studentId],
+                          );
+                        }}
+                        className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+                      >
+                        Genera recupero
+                      </button>
+                    </div>
+                  </>
+                )}
+              </SectionCard>
+            </section>
+          );
+        })()}
       </main>
     </div>
   );
