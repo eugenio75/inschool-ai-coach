@@ -289,7 +289,7 @@ export default function ClassQuadro() {
                   <button
                     onClick={() => {
                       const topic = argomentoCritico || (subj ? `argomenti recenti di ${subj}` : "l'argomento più critico");
-                      const askText = `Prepara una spiegazione alternativa di ${topic} con un esempio diverso e supporto visivo`;
+                      const askText = `Prepara una spiegazione alternativa di ${topic} con un esempio diverso e supporto visivo. La classe sta avendo difficoltà su questo punto specifico.`;
                       navigate(`/classe/${classId}`, { state: { coachAsk: askText } });
                     }}
                     className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
