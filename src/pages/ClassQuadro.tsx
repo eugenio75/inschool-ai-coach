@@ -432,56 +432,75 @@ export default function ClassQuadro() {
                 </div>
               </SectionCard>
 
-              {/* 4. Studenti da seguire */}
-              <SectionCard emoji="👤" title="Chi ha bisogno di attenzione" minHeight="320px">
-                {insight.followStudents.length === 0 ? (
-                  <>
-                    <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
-                      Tutti gli studenti stanno procedendo regolarmente. Continuare a osservare le prossime attività per cogliere in tempo eventuali segnali di rallentamento.
-                    </p>
-                    <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
-                      <button
-                        onClick={() => navigate(`/classe/${classId}`)}
-                        className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-                      >
-                        Apri classe
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
-                      {insight.followStudents.length === 1
-                        ? `1 studente sta restando indietro rispetto al resto della classe nelle ultime attività. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.`
-                        : `${insight.followStudents.length} studenti stanno restando indietro rispetto al resto della classe nelle ultime attività. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.`}
-                    </p>
-                    <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
-                      <button
-                        onClick={() => {
-                          const first = insight.followStudents[0];
-                          navigate(`/studente/${first.studentId}?classId=${classId}`);
-                        }}
-                        className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-                      >
-                        Apri profilo
-                      </button>
-                      <button
-                        onClick={() => {
-                          const first = insight.followStudents[0];
-                          goJarvis(
-                            "recupero",
-                            `Materiale di recupero personalizzato per ${first.studentName}${subj ? ` (${subj})` : ""}${argomentoCritico ? ` su ${argomentoCritico}` : ""}.`,
-                            [first.studentId],
-                          );
-                        }}
-                        className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
-                      >
-                        Genera recupero
-                      </button>
-                    </div>
-                  </>
-                )}
-              </SectionCard>
+              {/* 4. Studenti da seguire — shared priority logic */}
+              {(() => {
+                const priority = getPriorityStudent(classified);
+                const needAttn = countNeedingAttention(classified);
+                const others = priority ? Math.max(0, needAttn - 1) : 0;
+
+                return (
+                  <SectionCard emoji="👤" title="Chi ha bisogno di attenzione" minHeight="320px">
+                    {!priority ? (
+                      <>
+                        <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
+                          La classe sta procedendo bene — nessuno richiede attenzione immediata.
+                        </p>
+                        <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
+                          <button
+                            onClick={() => navigate(`/classe/${classId}`)}
+                            className="rounded-full bg-muted px-5 py-3 text-sm font-semibold text-muted-foreground shadow-sm transition hover:bg-muted/70"
+                          >
+                            Apri classe
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
+                          <span className="font-semibold text-foreground">{priority.name}</span>
+                          {" "}sta restando indietro rispetto al resto della classe nelle ultime attività. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.
+                        </p>
+
+                        {others > 0 && (
+                          <p className="mt-3 text-[13px] leading-[1.6] text-muted-foreground">
+                            Altri {others} {others === 1 ? "studente merita" : "studenti meritano"} attenzione —{" "}
+                            <button
+                              onClick={() =>
+                                navigate(`/classe/${classId}`, { state: { action: "checkin" } })
+                              }
+                              className="underline underline-offset-2 font-medium text-primary hover:text-primary/80 transition"
+                            >
+                              vedi il quadro completo
+                            </button>
+                            .
+                          </p>
+                        )}
+
+                        <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
+                          <button
+                            onClick={() => navigate(`/studente/${priority.id}?classId=${classId}`)}
+                            className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                          >
+                            Apri profilo
+                          </button>
+                          <button
+                            onClick={() =>
+                              goJarvis(
+                                "recupero",
+                                `Materiale di recupero personalizzato per ${priority.name}${subj ? ` (${subj})` : ""}${argomentoCritico ? ` su ${argomentoCritico}` : ""}.`,
+                                [priority.id],
+                              )
+                            }
+                            className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+                          >
+                            Genera recupero
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </SectionCard>
+                );
+              })()}
             </section>
           );
         })()}
