@@ -835,7 +835,7 @@ REGOLE:
 3. Ogni esercizio con spazio per la risposta
 4. Inserisci ===SOLUZIONI=== dopo il contenuto studente
 5. Dopo il separatore: soluzioni dettagliate passo per passo
-6. Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale nella sezione Note Docente o Risorse. NON incorporare immagini nel documento.`;
+6. Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale. I link vanno ESCLUSIVAMENTE nella sezione dopo ===SOLUZIONI=== (Note Docente / Risorse consigliate). NON inserire mai link nella parte studente del documento. NON incorporare immagini nel documento.`;
 
       } else if (activityType === "recupero") {
         systemPrompt = `Sei un docente esperto. Genera un MATERIALE DI RECUPERO per ${classe?.nome || "la classe"}.
@@ -852,7 +852,7 @@ REGOLE:
 4. Linguaggio chiaro e diretto — per studenti già in difficoltà
 5. Inserisci ===SOLUZIONI=== dopo il contenuto studente
 6. Dopo il separatore: soluzioni commentate, suggerimenti per il docente su come usare il materiale in classe
-7. Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale nella sezione Note Docente o Risorse. NON incorporare immagini nel documento.`;
+7. Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale. I link vanno ESCLUSIVAMENTE nella sezione dopo ===SOLUZIONI=== (Note Docente / Risorse consigliate). NON inserire mai link nella parte studente del documento. NON incorporare immagini nel documento.`;
 
       } else if (activityType === "potenziamento") {
         systemPrompt = `Sei un docente esperto. Genera un MATERIALE DI POTENZIAMENTO per ${classe?.nome || "la classe"}.
@@ -866,7 +866,7 @@ REGOLE:
 3. Domande aperte che richiedono ragionamento critico, non solo memoria
 4. Inserisci ===SOLUZIONI=== dopo il contenuto studente
 5. Dopo il separatore: soluzioni commentate, spunti per discussione in classe, risorse per approfondire
-6. Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale nella sezione Note Docente o Risorse. NON incorporare immagini nel documento.`;
+6. Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale. I link vanno ESCLUSIVAMENTE nella sezione dopo ===SOLUZIONI=== (Note Docente / Risorse consigliate). NON inserire mai link nella parte studente del documento. NON incorporare immagini nel documento.`;
 
       } else {
         systemPrompt = `Sei un docente esperto. Genera materiale didattico di tipo "${activityType}". Classe: ${classe?.nome || ""}. Materia: ${subjectStr}. ${levelContext} ${studentsContext}
@@ -875,7 +875,7 @@ REGOLE IMPORTANTI:
 1. La PRIMA RIGA del tuo output DEVE essere: TITOLO: [titolo contestuale del materiale]
 2. Se il contenuto include soluzioni o note docente, inserisci ===SOLUZIONI=== dopo il contenuto studente.
 3. Dopo il separatore: risposte corrette, griglia di valutazione e/o note per il docente.
-4. Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale nella sezione Note Docente o Risorse. NON incorporare immagini nel documento.`;
+4. Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale. I link vanno ESCLUSIVAMENTE nella sezione dopo ===SOLUZIONI=== (Note Docente / Risorse consigliate). NON inserire mai link nella parte studente del documento. NON incorporare immagini nel documento.`;
       }
 
       const maxTokensMap: Record<string, number> = {
