@@ -341,7 +341,7 @@ export default function StudentExplore() {
           <article className="flex min-h-[320px] flex-col rounded-[28px] border border-border bg-card/95 p-8 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
             <div className="flex items-center gap-3">
               <div className="text-2xl">💬</div>
-              <h2 className="text-2xl font-extrabold tracking-tight text-foreground">Clima emotivo</h2>
+              <h2 className="text-[18px] sm:text-[20px] font-bold tracking-tight text-foreground leading-tight">Clima emotivo</h2>
             </div>
             <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
               {emotivitaNarrative}
