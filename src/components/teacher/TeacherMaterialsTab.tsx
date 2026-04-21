@@ -803,7 +803,7 @@ REGOLE:
 4. Distribuzione difficoltà: 30% facile, 50% medio, 20% difficile
 5. Inserisci ===SOLUZIONI=== dopo il contenuto studente
 6. Dopo il separatore: risposte corrette, griglia di valutazione con fascia voto, note docente
-7. Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale nella sezione Note Docente o Risorse. NON incorporare immagini nel documento.`;
+7. Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale. I link vanno ESCLUSIVAMENTE nella sezione dopo ===SOLUZIONI=== (Note Docente / Risorse consigliate). NON inserire mai link nella parte studente del documento. NON incorporare immagini nel documento.`;
 
       } else if (activityType === "compito") {
         systemPrompt = `Sei un docente esperto. Genera un COMPITO DA CASA per ${classe?.nome || "la classe"}.
