@@ -187,6 +187,86 @@ export default function ClassQuadro() {
 
       setClasse(loadedClasse);
       setInsight(result);
+
+      // ── Compute deterministic per-student classification (shared with the
+      //    check-in sheet so the priority student here matches the one shown
+      //    on top of the sheet's red list). ────────────────────────────────
+      const NOW = Date.now();
+      const SEVEN = 7 * 86400000;
+      const FOURTEEN = 14 * 86400000;
+      const NEGATIVE_TONES = new Set([
+        "negative", "sad", "stressed", "anxious", "tired", "frustrated",
+      ]);
+      const isNegativeCheckin = (c: any) =>
+        NEGATIVE_TONES.has(String(c.emotional_tone || "").toLowerCase()) ||
+        String(c.energy_level || "").toLowerCase() === "low";
+
+      const classifiedStudents: ClassifiedStudent[] = loadedStudents.map((s: any) => {
+        const sid = s.student_id || s.id;
+        const firstName = formatName(s.profile?.name || s.student_name || "Studente");
+        const lastName = formatName(s.profile?.last_name || "");
+        const fullName = lastName ? `${firstName} ${lastName}` : firstName;
+
+        // Academic
+        const allScores: number[] = [];
+        let pendingCount = 0;
+        allResults.forEach((a: any) => {
+          (a.results || []).forEach((r: any) => {
+            if ((r.student_id || r.id) !== sid) return;
+            if (r.score != null) allScores.push(r.score);
+            if (r.status && r.status !== "completed" && !r.completed_at) pendingCount++;
+          });
+        });
+        const meanScore = allScores.length > 0
+          ? allScores.reduce((a, b) => a + b, 0) / allScores.length
+          : null;
+
+        // Emotional: consecutive negative check-ins
+        const myCheckins = (emotionalCheckins || [])
+          .filter((c: any) => c.child_profile_id === sid)
+          .sort((a: any, b: any) =>
+            new Date(b.created_at || b.checkin_date || 0).getTime()
+            - new Date(a.created_at || a.checkin_date || 0).getTime(),
+          );
+        let moodStreak = 0;
+        for (const c of myCheckins) {
+          if (isNegativeCheckin(c)) moodStreak++;
+          else break;
+        }
+
+        // Frequency
+        const myFocus = (focusSessions || []).filter((f: any) => f.child_profile_id === sid);
+        const sessions7d = myFocus.filter((f: any) => {
+          const t = new Date(f.completed_at || 0).getTime();
+          return NOW - t <= SEVEN;
+        }).length;
+        const sessionsPrev7d = myFocus.filter((f: any) => {
+          const t = new Date(f.completed_at || 0).getTime();
+          return NOW - t > SEVEN && NOW - t <= FOURTEEN;
+        }).length;
+
+        const category = classifyStudent({
+          id: sid,
+          name: fullName,
+          meanScore,
+          pendingCount,
+          moodStreak,
+          sessions7d,
+          sessionsPrev7d,
+        });
+
+        return {
+          id: sid,
+          name: fullName,
+          category,
+          meanScore,
+          pendingCount,
+          moodStreak,
+          sessions7d,
+        };
+      });
+
+      setClassified(classifiedStudents);
     } catch (err) {
       console.error("ClassQuadro load error:", err);
     }
