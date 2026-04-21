@@ -8,6 +8,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { BackLink } from "@/components/shared/BackLink";
 import { analyzeFullPicture, type FullPictureInsight } from "@/lib/classFullPictureAnalysis";
+import {
+  classifyStudent,
+  getPriorityStudent,
+  countNeedingAttention,
+  type ClassifiedStudent,
+} from "@/lib/studentPriority";
+import { formatName } from "@/lib/formatName";
 
 async function fetchTeacherClassData(classId: string) {
   const { data: { session } } = await supabase.auth.getSession();
