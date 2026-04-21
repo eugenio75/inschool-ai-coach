@@ -269,8 +269,8 @@ export default function ClassQuadro() {
                   </button>
                   <button
                     onClick={() =>
-                      navigate(`/classe/${classId}/materiali`, {
-                        state: argomentoCritico ? { filtro_argomento: argomentoCritico } : undefined,
+                      navigate(`/classe/${classId}`, {
+                        state: { action: "risultati", argomento: argomentoCritico },
                       })
                     }
                     className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
