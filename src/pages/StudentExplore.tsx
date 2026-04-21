@@ -5,6 +5,7 @@ import { getChildSession } from "@/lib/childSession";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BackLink } from "@/components/shared/BackLink";
+import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { percentToGrade, type ScaleId } from "@/components/teacher/GradeReviewModal";
 
 type Activity = {
@@ -278,12 +279,18 @@ export default function StudentExplore() {
 
       <main className="mx-auto max-w-7xl px-6 pt-6 sm:pt-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-foreground">
-            Quadro completo · {studentName}
-          </h1>
-          <p className="mt-2 text-lg text-muted-foreground">Generato dal Coach · {today}</p>
-        </div>
+        <header className="mb-8 flex items-center gap-4">
+          <AvatarInitials name={studentName} size="lg" />
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80 mb-1">
+              Quadro completo
+            </p>
+            <h1 className="text-[26px] sm:text-[30px] font-extrabold tracking-tight text-foreground leading-tight">
+              {studentName}
+            </h1>
+            <p className="mt-1 text-[14px] font-normal text-muted-foreground">Generato dal Coach · {today}</p>
+          </div>
+        </header>
 
         {/* 4 cards uniformi 2x2 */}
         <section className="grid gap-6 md:grid-cols-2">
