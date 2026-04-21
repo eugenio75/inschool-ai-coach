@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, Lightbulb, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, BookOpen, GraduationCap, Heart, AlertCircle, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
@@ -9,12 +11,32 @@ interface Props {
   classId: string;
 }
 
+interface Cta {
+  label: string;
+  action: string;
+  params?: Record<string, any>;
+}
+
+interface Card {
+  titolo: string;
+  testo: string;
+  cta_primaria: Cta | null;
+  cta_secondaria: Cta | null;
+}
+
 interface SummaryData {
   summary: string;
   suggestions: string[];
+  card1?: Card;
+  card2?: Card;
+  card3?: Card;
+  card4?: Card;
 }
 
+const CARD_ICONS = [BookOpen, GraduationCap, Heart, AlertCircle];
+
 export default function LearningIndexModal({ open, onOpenChange, classId }: Props) {
+  const navigate = useNavigate();
   const [data, setData] = useState<SummaryData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -41,7 +63,7 @@ export default function LearningIndexModal({ open, onOpenChange, classId }: Prop
         );
         if (!res.ok) throw new Error("Errore nel caricamento");
         const j = await res.json();
-        setData({ summary: j.summary || "", suggestions: j.suggestions || [] });
+        setData(j);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Errore");
       } finally {
@@ -50,13 +72,59 @@ export default function LearningIndexModal({ open, onOpenChange, classId }: Prop
     })();
   }, [open, classId]);
 
+  function handleCta(cta: Cta) {
+    const p = cta.params || {};
+    onOpenChange(false);
+    switch (cta.action) {
+      case "open_materiali": {
+        const qs = new URLSearchParams();
+        qs.set("create", "true");
+        if (p.tipo) qs.set("tipo", String(p.tipo));
+        if (p.argomento) qs.set("argomento", String(p.argomento));
+        if (p.studente_id) qs.set("studente_id", String(p.studente_id));
+        navigate(`/classe/${p.classe_id || classId}/materiali?${qs.toString()}`);
+        break;
+      }
+      case "open_coach_docente": {
+        const qs = new URLSearchParams();
+        if (p.prompt_precaricato) qs.set("prompt", String(p.prompt_precaricato));
+        if (p.classe_id) qs.set("classe_id", String(p.classe_id));
+        navigate(`/coach-docente${qs.toString() ? `?${qs.toString()}` : ""}`);
+        break;
+      }
+      case "open_classe_quadro": {
+        const qs = new URLSearchParams();
+        if (p.sezione) qs.set("sezione", String(p.sezione));
+        if (p.filtro_argomento) qs.set("argomento", String(p.filtro_argomento));
+        navigate(`/classe/${p.classe_id || classId}/quadro${qs.toString() ? `?${qs.toString()}` : ""}`);
+        break;
+      }
+      case "open_studente": {
+        const qs = new URLSearchParams();
+        if (p.classe_id) qs.set("classId", String(p.classe_id));
+        navigate(`/studente/${p.studente_id}${qs.toString() ? `?${qs.toString()}` : ""}`);
+        break;
+      }
+      case "open_checkin": {
+        navigate(`/classe/${p.classe_id || classId}/quadro?sezione=clima`);
+        break;
+      }
+      default:
+        console.warn("Azione CTA sconosciuta:", cta.action);
+    }
+  }
+
+  const cards: Card[] = data
+    ? ([data.card1, data.card2, data.card3, data.card4].filter(Boolean) as Card[])
+    : [];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-2xl max-w-lg">
+      <DialogContent className="rounded-2xl max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-primary" />
-            Come sta andando la classe
+            <Sparkles className="w-4 h-4 text-primary" />
+            Quadro della classe
           </DialogTitle>
         </DialogHeader>
 
@@ -71,35 +139,60 @@ export default function LearningIndexModal({ open, onOpenChange, classId }: Prop
           <div className="py-6 text-sm text-destructive text-center">{error}</div>
         )}
 
-        {!loading && data && (
+        {!loading && data && cards.length > 0 && (
+          <div className="space-y-3 py-2">
+            {cards.map((c, i) => {
+              const Icon = CARD_ICONS[i] || BookOpen;
+              return (
+                <section
+                  key={i}
+                  className="rounded-xl border border-border bg-card p-4 shadow-soft"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="rounded-lg bg-primary/10 p-1.5">
+                      <Icon className="w-4 h-4 text-primary" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-foreground">{c.titolo}</h3>
+                  </div>
+                  <p className="text-sm text-foreground leading-relaxed mb-3">
+                    {c.testo}
+                  </p>
+                  {(c.cta_primaria || c.cta_secondaria) && (
+                    <div className="flex flex-wrap gap-2">
+                      {c.cta_primaria && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleCta(c.cta_primaria!)}
+                          className="rounded-full"
+                        >
+                          {c.cta_primaria.label}
+                        </Button>
+                      )}
+                      {c.cta_secondaria && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleCta(c.cta_secondaria!)}
+                          className="rounded-full"
+                        >
+                          {c.cta_secondaria.label}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </section>
+              );
+            })}
+          </div>
+        )}
+
+        {!loading && data && cards.length === 0 && (
           <div className="space-y-4 py-2">
             <section className="rounded-xl bg-muted/40 border border-border p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                Sintesi
-              </p>
               <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">
                 {data.summary}
               </p>
             </section>
-
-            {data.suggestions.length > 0 && (
-              <section className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Lightbulb className="w-4 h-4 text-primary" />
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-primary">
-                    Cosa puoi fare
-                  </p>
-                </div>
-                <ul className="space-y-2">
-                  {data.suggestions.map((s, i) => (
-                    <li key={i} className="text-sm text-foreground flex items-start gap-2">
-                      <span className="text-primary font-semibold shrink-0">{i + 1}.</span>
-                      <span className="leading-relaxed">{s}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
           </div>
         )}
       </DialogContent>
