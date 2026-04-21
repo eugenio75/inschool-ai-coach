@@ -322,9 +322,13 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
     setMessages([...currentMessages, placeholder]);
 
     const aiMessages: ChatMsg[] = [
-      { role: "assistant", content: buildSystemPrompt(chatId) },
+      { role: "assistant" as any, content: buildSystemPrompt(chatId) },
       ...currentMessages.map(m => ({ role: m.role as "user" | "assistant", content: m.content })),
     ];
+    // Note: streamChat ChatMsg type only allows user|assistant. The first entry above
+    // is treated as a system priming message by the backend. To make it actually behave
+    // as a system prompt for the model, we replace the role to "system" via a cast below.
+    (aiMessages[0] as any).role = "system";
 
     try {
       await streamChat({
