@@ -230,7 +230,7 @@ export default function ClassQuadro() {
         <section className="grid gap-6 md:grid-cols-2">
           {/* 1. Apprendimento */}
           <SectionCard emoji="📊" title="Come sta andando l'apprendimento" minHeight="380px">
-            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+            <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
               {insight.learning.paragraph}
             </p>
             <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
@@ -251,7 +251,7 @@ export default function ClassQuadro() {
 
           {/* 2. Metodo */}
           <SectionCard emoji="🔁" title="Il metodo sta funzionando?" minHeight="380px">
-            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+            <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
               {insight.method.paragraph}
             </p>
             <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
@@ -272,7 +272,7 @@ export default function ClassQuadro() {
 
           {/* 3. Clima */}
           <SectionCard emoji="💬" title="Clima della classe" minHeight="320px">
-            <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+            <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
               {insight.climate.paragraph}
             </p>
             <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
@@ -306,7 +306,7 @@ export default function ClassQuadro() {
           <SectionCard emoji="👤" title="Chi ha bisogno di attenzione" minHeight="320px">
             {insight.followStudents.length === 0 ? (
               <>
-                <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+                <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
                   Tutti gli studenti stanno procedendo regolarmente. Continuare a osservare le prossime attività per cogliere in tempo eventuali segnali di rallentamento.
                 </p>
                 <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
@@ -320,7 +320,7 @@ export default function ClassQuadro() {
               </>
             ) : (
               <>
-                <p className="mt-8 text-[18px] leading-9 text-muted-foreground">
+                <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
                   {insight.followStudents.length === 1
                     ? `1 studente sta restando indietro rispetto al resto della classe nelle ultime attività. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.`
                     : `${insight.followStudents.length} studenti stanno restando indietro rispetto al resto della classe nelle ultime attività. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.`}
