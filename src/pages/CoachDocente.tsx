@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  ArrowLeft, Send, Trash2, Plus, Pencil, Menu, X,
+  ArrowLeft, Send, Trash2, Plus, Pencil, Menu, X, BookmarkPlus,
 } from "lucide-react";
 import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { supabase } from "@/integrations/supabase/client";
