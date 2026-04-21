@@ -696,9 +696,25 @@ Rispondi sempre in contesto con la classe, i suoi studenti e le attività correl
                           </span>
                         ) : "")}
                       </div>
-                      <p className="text-[10px] text-muted-foreground/60 px-1">
-                        {format(new Date(msg.created_at), "HH:mm", { locale: dateLocale })}
-                      </p>
+                      <div className="flex items-center gap-2 px-1">
+                        <p className="text-[10px] text-muted-foreground/60">
+                          {format(new Date(msg.created_at), "HH:mm", { locale: dateLocale })}
+                        </p>
+                        {msg.role === "assistant"
+                          && msg.content?.trim()
+                          && msg.id !== "temp-assistant"
+                          && activeChat?.class_id && (
+                          <button
+                            type="button"
+                            onClick={() => saveCoachReplyAsDraft(i)}
+                            className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors"
+                            title="Salva come bozza materiale"
+                          >
+                            <BookmarkPlus className="w-3 h-3" />
+                            Salva come bozza materiale
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
