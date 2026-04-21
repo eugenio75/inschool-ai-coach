@@ -63,6 +63,7 @@ const BlockchainTest = lazy(() => import("./pages/BlockchainTest"));
 const ClassMaterials = lazy(() => import("./pages/ClassMaterials"));
 const ClassGrading = lazy(() => import("./pages/ClassGrading"));
 const ClassQuadro = lazy(() => import("./pages/ClassQuadro"));
+const ClassRisultati = lazy(() => import("./pages/ClassRisultati"));
 
 const queryClient = new QueryClient();
 
@@ -216,6 +217,7 @@ const AppRoutes = () => (
         <Route path="/classe/:classId/materiali" element={<AccessibleRoute><MaybeAdultLayout><ClassMaterials /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/classe/:classId/correggi" element={<AccessibleRoute><MaybeAdultLayout><ClassGrading /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/classe/:classId/quadro" element={<AccessibleRoute><MaybeAdultLayout><ClassQuadro /></MaybeAdultLayout></AccessibleRoute>} />
+        <Route path="/classe/:classId/risultati" element={<AccessibleRoute><MaybeAdultLayout><ClassRisultati /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/studente/:studentId" element={<AccessibleRoute><MaybeAdultLayout><StudentView /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/studente/:studentId/esplora" element={<AccessibleRoute><MaybeAdultLayout><StudentExplore /></MaybeAdultLayout></AccessibleRoute>} />
         <Route path="/settings" element={<AccessibleRoute><MaybeAdultLayout><Settings /></MaybeAdultLayout></AccessibleRoute>} />
