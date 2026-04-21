@@ -395,11 +395,11 @@ export default function ClassQuadro() {
                     Genera esercizi di rinforzo
                   </button>
                   <button
-                    onClick={() =>
-                      navigate(`/classe/${classId}`, {
-                        state: { action: "risultati", argomento: argomentoCritico },
-                      })
-                    }
+                    onClick={() => {
+                      setSheetMode("risultati");
+                      setSheetArgomento(argomentoCritico || (subj ? `argomenti recenti di ${subj}` : "argomento più critico"));
+                      setSheetOpen(true);
+                    }}
                     className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
                   >
                     Vedi risultati attività
