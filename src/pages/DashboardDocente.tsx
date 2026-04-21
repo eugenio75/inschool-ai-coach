@@ -119,6 +119,28 @@ export default function DashboardDocente() {
   const availableSubjects = SUBJECTS_BY_LEVEL[effectiveOrdine] || [];
   const isUniversitaFreeText = effectiveOrdine === "Università" && availableSubjects.length === 0;
 
+  // Guard: if the cached child-session profile doesn't belong to the currently
+  // authenticated user, clear it to prevent showing classes the user can't access.
+  useEffect(() => {
+    if (!userId || !profileId) return;
+    let cancelled = false;
+    (async () => {
+      const { data: prof } = await (supabase as any)
+        .from("child_profiles")
+        .select("parent_id")
+        .eq("id", profileId)
+        .maybeSingle();
+      if (cancelled) return;
+      if (prof && prof.parent_id !== userId) {
+        // Stale profile from a previous account — clear and bounce to profile selector.
+        const { clearChildSession } = await import("@/lib/childSession");
+        clearChildSession();
+        navigate("/profili", { replace: true });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId, profileId, navigate]);
+
   useEffect(() => { if (!profileId) return; loadAll(); }, [profileId, userId]);
 
   useEffect(() => {
