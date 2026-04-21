@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { ChevronRight } from "lucide-react";
 import { formatName } from "@/lib/formatName";
+import { sortByPriority } from "@/lib/studentPriority";
 
 type Category = "attenzione" | "occhio" | "norma";
 
@@ -173,6 +174,8 @@ export default function StudentsListSheet({
   }
 
   // ─── Checkin mode — classification 🔴🟡🟢 ───────────────────
+  // Use the shared priority helper so the order here matches the
+  // student promoted in ClassQuadro card "Chi ha bisogno di attenzione".
   const categoryOf = (s: Student): Category => s.category || "norma";
   const counts = students.reduce(
     (acc, s) => {
@@ -185,13 +188,16 @@ export default function StudentsListSheet({
     { attenzione: 0, occhio: 0, norma: 0 },
   );
 
-  const order: Record<Category, number> = { attenzione: 0, occhio: 1, norma: 2 };
-  const sortedCheckin = [...students].sort((a, b) => {
-    const da = order[categoryOf(a)];
-    const db = order[categoryOf(b)];
-    if (da !== db) return da - db;
-    return a.name.localeCompare(b.name);
-  });
+  const sortedCheckin = sortByPriority(
+    students.map((s) => ({
+      ...s,
+      category: categoryOf(s),
+      meanScore: s.meanScore ?? null,
+      pendingCount: s.pendingCount ?? 0,
+      moodStreak: s.moodStreak ?? 0,
+      sessions7d: s.sessions7d ?? 0,
+    })),
+  );
 
   const dotClass = (c: Category) =>
     c === "attenzione"

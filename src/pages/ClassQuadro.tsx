@@ -8,6 +8,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { BackLink } from "@/components/shared/BackLink";
 import { analyzeFullPicture, type FullPictureInsight } from "@/lib/classFullPictureAnalysis";
+import {
+  classifyStudent,
+  getPriorityStudent,
+  countNeedingAttention,
+  type ClassifiedStudent,
+} from "@/lib/studentPriority";
+import { formatName } from "@/lib/formatName";
 
 async function fetchTeacherClassData(classId: string) {
   const { data: { session } } = await supabase.auth.getSession();
@@ -84,6 +91,7 @@ export default function ClassQuadro() {
 
   const [classe, setClasse] = useState<any>(null);
   const [insight, setInsight] = useState<FullPictureInsight | null>(null);
+  const [classified, setClassified] = useState<ClassifiedStudent[]>([]);
   const [loading, setLoading] = useState(true);
   const [coachName, setCoachName] = useState("Coach");
 
@@ -179,6 +187,86 @@ export default function ClassQuadro() {
 
       setClasse(loadedClasse);
       setInsight(result);
+
+      // ── Compute deterministic per-student classification (shared with the
+      //    check-in sheet so the priority student here matches the one shown
+      //    on top of the sheet's red list). ────────────────────────────────
+      const NOW = Date.now();
+      const SEVEN = 7 * 86400000;
+      const FOURTEEN = 14 * 86400000;
+      const NEGATIVE_TONES = new Set([
+        "negative", "sad", "stressed", "anxious", "tired", "frustrated",
+      ]);
+      const isNegativeCheckin = (c: any) =>
+        NEGATIVE_TONES.has(String(c.emotional_tone || "").toLowerCase()) ||
+        String(c.energy_level || "").toLowerCase() === "low";
+
+      const classifiedStudents: ClassifiedStudent[] = loadedStudents.map((s: any) => {
+        const sid = s.student_id || s.id;
+        const firstName = formatName(s.profile?.name || s.student_name || "Studente");
+        const lastName = formatName(s.profile?.last_name || "");
+        const fullName = lastName ? `${firstName} ${lastName}` : firstName;
+
+        // Academic
+        const allScores: number[] = [];
+        let pendingCount = 0;
+        allResults.forEach((a: any) => {
+          (a.results || []).forEach((r: any) => {
+            if ((r.student_id || r.id) !== sid) return;
+            if (r.score != null) allScores.push(r.score);
+            if (r.status && r.status !== "completed" && !r.completed_at) pendingCount++;
+          });
+        });
+        const meanScore = allScores.length > 0
+          ? allScores.reduce((a, b) => a + b, 0) / allScores.length
+          : null;
+
+        // Emotional: consecutive negative check-ins
+        const myCheckins = (emotionalCheckins || [])
+          .filter((c: any) => c.child_profile_id === sid)
+          .sort((a: any, b: any) =>
+            new Date(b.created_at || b.checkin_date || 0).getTime()
+            - new Date(a.created_at || a.checkin_date || 0).getTime(),
+          );
+        let moodStreak = 0;
+        for (const c of myCheckins) {
+          if (isNegativeCheckin(c)) moodStreak++;
+          else break;
+        }
+
+        // Frequency
+        const myFocus = (focusSessions || []).filter((f: any) => f.child_profile_id === sid);
+        const sessions7d = myFocus.filter((f: any) => {
+          const t = new Date(f.completed_at || 0).getTime();
+          return NOW - t <= SEVEN;
+        }).length;
+        const sessionsPrev7d = myFocus.filter((f: any) => {
+          const t = new Date(f.completed_at || 0).getTime();
+          return NOW - t > SEVEN && NOW - t <= FOURTEEN;
+        }).length;
+
+        const category = classifyStudent({
+          id: sid,
+          name: fullName,
+          meanScore,
+          pendingCount,
+          moodStreak,
+          sessions7d,
+          sessionsPrev7d,
+        });
+
+        return {
+          id: sid,
+          name: fullName,
+          category,
+          meanScore,
+          pendingCount,
+          moodStreak,
+          sessions7d,
+        };
+      });
+
+      setClassified(classifiedStudents);
     } catch (err) {
       console.error("ClassQuadro load error:", err);
     }
@@ -344,56 +432,75 @@ export default function ClassQuadro() {
                 </div>
               </SectionCard>
 
-              {/* 4. Studenti da seguire */}
-              <SectionCard emoji="👤" title="Chi ha bisogno di attenzione" minHeight="320px">
-                {insight.followStudents.length === 0 ? (
-                  <>
-                    <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
-                      Tutti gli studenti stanno procedendo regolarmente. Continuare a osservare le prossime attività per cogliere in tempo eventuali segnali di rallentamento.
-                    </p>
-                    <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
-                      <button
-                        onClick={() => navigate(`/classe/${classId}`)}
-                        className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-                      >
-                        Apri classe
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
-                      {insight.followStudents.length === 1
-                        ? `1 studente sta restando indietro rispetto al resto della classe nelle ultime attività. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.`
-                        : `${insight.followStudents.length} studenti stanno restando indietro rispetto al resto della classe nelle ultime attività. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.`}
-                    </p>
-                    <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
-                      <button
-                        onClick={() => {
-                          const first = insight.followStudents[0];
-                          navigate(`/studente/${first.studentId}?classId=${classId}`);
-                        }}
-                        className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-                      >
-                        Apri profilo
-                      </button>
-                      <button
-                        onClick={() => {
-                          const first = insight.followStudents[0];
-                          goJarvis(
-                            "recupero",
-                            `Materiale di recupero personalizzato per ${first.studentName}${subj ? ` (${subj})` : ""}${argomentoCritico ? ` su ${argomentoCritico}` : ""}.`,
-                            [first.studentId],
-                          );
-                        }}
-                        className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
-                      >
-                        Genera recupero
-                      </button>
-                    </div>
-                  </>
-                )}
-              </SectionCard>
+              {/* 4. Studenti da seguire — shared priority logic */}
+              {(() => {
+                const priority = getPriorityStudent(classified);
+                const needAttn = countNeedingAttention(classified);
+                const others = priority ? Math.max(0, needAttn - 1) : 0;
+
+                return (
+                  <SectionCard emoji="👤" title="Chi ha bisogno di attenzione" minHeight="320px">
+                    {!priority ? (
+                      <>
+                        <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
+                          La classe sta procedendo bene — nessuno richiede attenzione immediata.
+                        </p>
+                        <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
+                          <button
+                            onClick={() => navigate(`/classe/${classId}`)}
+                            className="rounded-full bg-muted px-5 py-3 text-sm font-semibold text-muted-foreground shadow-sm transition hover:bg-muted/70"
+                          >
+                            Apri classe
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <p className="mt-5 text-[15px] leading-[1.7] text-muted-foreground">
+                          <span className="font-semibold text-foreground">{priority.name}</span>
+                          {" "}sta restando indietro rispetto al resto della classe nelle ultime attività. Conviene intervenire adesso, prima che il distacco si allarghi e diventi più difficile recuperarlo.
+                        </p>
+
+                        {others > 0 && (
+                          <p className="mt-3 text-[13px] leading-[1.6] text-muted-foreground">
+                            Altri {others} {others === 1 ? "studente merita" : "studenti meritano"} attenzione —{" "}
+                            <button
+                              onClick={() =>
+                                navigate(`/classe/${classId}`, { state: { action: "checkin" } })
+                              }
+                              className="underline underline-offset-2 font-medium text-primary hover:text-primary/80 transition"
+                            >
+                              vedi il quadro completo
+                            </button>
+                            .
+                          </p>
+                        )}
+
+                        <div className="mt-auto flex flex-wrap items-center gap-4 pt-8">
+                          <button
+                            onClick={() => navigate(`/studente/${priority.id}?classId=${classId}`)}
+                            className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                          >
+                            Apri profilo
+                          </button>
+                          <button
+                            onClick={() =>
+                              goJarvis(
+                                "recupero",
+                                `Materiale di recupero personalizzato per ${priority.name}${subj ? ` (${subj})` : ""}${argomentoCritico ? ` su ${argomentoCritico}` : ""}.`,
+                                [priority.id],
+                              )
+                            }
+                            className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+                          >
+                            Genera recupero
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </SectionCard>
+                );
+              })()}
             </section>
           );
         })()}
