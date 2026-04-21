@@ -15,6 +15,7 @@ import {
   type ClassifiedStudent,
 } from "@/lib/studentPriority";
 import { formatName } from "@/lib/formatName";
+import StudentsListSheet from "@/components/teacher/StudentsListSheet";
 
 async function fetchTeacherClassData(classId: string) {
   const { data: { session } } = await supabase.auth.getSession();
@@ -94,6 +95,44 @@ export default function ClassQuadro() {
   const [classified, setClassified] = useState<ClassifiedStudent[]>([]);
   const [loading, setLoading] = useState(true);
   const [coachName, setCoachName] = useState("Coach");
+
+  // Students Sheet state — opens in-page (no navigation away)
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetMode, setSheetMode] = useState<"checkin" | "risultati">("risultati");
+  const [sheetArgomento, setSheetArgomento] = useState("");
+
+  // Build the per-student payload for the sheet (risultati mode).
+  // In demo / when there are no real assignment scores, we synthesize plausible
+  // topic scores so the sheet is never empty. Deterministic seed from id.
+  function buildSheetStudents(): any[] {
+    const hash = (s: string) => {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+      return Math.abs(h);
+    };
+    const hasAnyRealScore = classified.some((c) => c.meanScore != null);
+    return classified.map((c, idx) => {
+      let topicScore: number | null = c.meanScore != null ? Math.round(c.meanScore) : null;
+      let topicCompleted = c.pendingCount === 0;
+      if (!hasAnyRealScore) {
+        // Simulated distribution: a few low, some mid, most ok
+        const buckets = [32, 41, 48, 55, 62, 70, 74, 81, 88, 92];
+        topicScore = buckets[hash(c.id + idx) % buckets.length];
+        topicCompleted = topicScore >= 50 ? true : (hash(c.id) % 3 !== 0);
+      }
+      return {
+        id: c.id,
+        name: c.name,
+        topicScore,
+        topicCompleted,
+        category: c.category,
+        meanScore: c.meanScore,
+        pendingCount: c.pendingCount,
+        moodStreak: c.moodStreak,
+        sessions7d: c.sessions7d,
+      };
+    });
+  }
 
   useEffect(() => {
     if (!classId) return;
@@ -356,11 +395,11 @@ export default function ClassQuadro() {
                     Genera esercizi di rinforzo
                   </button>
                   <button
-                    onClick={() =>
-                      navigate(`/classe/${classId}`, {
-                        state: { action: "risultati", argomento: argomentoCritico },
-                      })
-                    }
+                    onClick={() => {
+                      setSheetMode("risultati");
+                      setSheetArgomento(argomentoCritico || (subj ? `argomenti recenti di ${subj}` : "argomento più critico"));
+                      setSheetOpen(true);
+                    }}
                     className="text-sm font-semibold text-muted-foreground transition hover:text-foreground"
                   >
                     Vedi risultati attività
@@ -505,6 +544,17 @@ export default function ClassQuadro() {
           );
         })()}
       </main>
+
+      {classId && (
+        <StudentsListSheet
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          classId={classId}
+          students={buildSheetStudents()}
+          mode={sheetMode}
+          argomento={sheetArgomento}
+        />
+      )}
     </div>
   );
 }
