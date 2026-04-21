@@ -401,6 +401,58 @@ Rispondi sempre in contesto con la classe, i suoi studenti e le attività correl
     }
   }
 
+  // Save an assistant message as a draft material in the current class.
+  // Extracts the topic from the most recent preceding user "Prepara una spiegazione alternativa di X..."
+  // request when available, otherwise falls back to a generic title.
+  async function saveCoachReplyAsDraft(msgIndex: number) {
+    const activeChat = chats.find(c => c.id === activeChatId);
+    if (!activeChat?.class_id) {
+      toast.error("Salvataggio disponibile solo nelle chat di classe.");
+      return;
+    }
+    if (!teacherId) {
+      toast.error("Sessione non valida.");
+      return;
+    }
+    const assistantMsg = messages[msgIndex];
+    if (!assistantMsg || assistantMsg.role !== "assistant" || !assistantMsg.content?.trim()) return;
+
+    // Look back for the closest user message to extract the topic
+    let topic = "";
+    for (let i = msgIndex - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (m.role !== "user") continue;
+      const match = m.content.match(/spiegazione alternativa(?:\s+di)?\s+["“']?([^"”'\.\n]+?)["”']?(?:\s+con\b|\s+per\b|\.|$)/i);
+      if (match?.[1]) {
+        topic = match[1].trim();
+      }
+      break;
+    }
+
+    const classInfo = classes.find(c => c.id === activeChat.class_id);
+    const subject = classInfo?.materia || null;
+    const title = topic
+      ? `Spiegazione alternativa — ${topic}`
+      : `Spiegazione alternativa — ${classInfo?.nome || "classe"}`;
+
+    const { error } = await (supabase as any).from("teacher_materials").insert({
+      teacher_id: teacherId,
+      class_id: activeChat.class_id,
+      title,
+      type: "lezione",
+      status: "draft",
+      content: assistantMsg.content,
+      subject,
+    });
+
+    if (error) {
+      console.error("saveCoachReplyAsDraft error:", error);
+      toast.error("Non sono riuscito a salvare la bozza.");
+      return;
+    }
+    toast.success("Salvato nelle bozze — puoi assegnarlo dalla sezione Materiali");
+  }
+
   async function deleteChat() {
     if (!activeChatId) return;
     const chat = chats.find(c => c.id === activeChatId);
