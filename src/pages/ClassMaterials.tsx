@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { ArrowLeft, FileText, Plus, Send, Loader2, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,6 +32,7 @@ export default function ClassMaterials() {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -41,7 +42,10 @@ export default function ClassMaterials() {
   const [students, setStudents] = useState<any[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const createMode = searchParams.get("create") === "true";
+  // Prefilled material coming from ClassQuadro CTAs (Genera con Jarvis)
+  const prefilledMaterial = (location.state as any)?.prefilledMaterial || null;
+  // If we have a prefilled material we automatically enter create mode
+  const createMode = searchParams.get("create") === "true" || !!prefilledMaterial;
 
   useEffect(() => {
     if (!classId || !user) return;
@@ -153,6 +157,7 @@ export default function ClassMaterials() {
             onReload={load}
             autoCreate={true}
             hideSaved={true}
+            prefilledMaterial={prefilledMaterial}
           />
         </div>
       </div>
