@@ -244,6 +244,8 @@ export default function CoachDocente() {
     const activeChat = chats.find(c => c.id === (chatId || activeChatId));
     const isClassChat = !!activeChat?.class_id;
     const className = activeChat?.name || "";
+    const classInfo = classes.find(c => c.id === activeChat?.class_id);
+    const materia = classInfo?.materia || "";
     const subjects = profile?.favorite_subjects || [];
 
     const isEN = i18n.language === "en";
@@ -259,8 +261,30 @@ NON chiedere mai "Come posso aiutarti?" o "Cosa vuoi fare?". Capisci dal contest
 
     if (isClassChat) {
       base += isEN
-        ? `\n\nThis is a class chat: ${className}. Always respond in the context of the class, its students and related activities.`
-        : `\n\nQuesta è una chat di classe: ${className}. Rispondi sempre in contesto con la classe, i suoi studenti e le attività correlate.`;
+        ? `\n\nYou are the SarAI Coach for the teacher.
+You know the class ${className}${materia ? `, subject ${materia}` : ""}.
+You help the teacher prepare explanations, materials and teaching strategies.
+
+When you prepare an alternative explanation:
+- Use a different example from the standard one
+- Suggest a visual support (diagram, analogy, drawing description)
+- Keep the language appropriate to the class level
+- You can include links to useful external resources
+
+DO NOT include embedded images in the text.
+Always respond in the context of the class, its students and related activities.`
+        : `\n\nSei il Coach AI di SarAI per il docente.
+Conosci la classe ${className}${materia ? `, materia ${materia}` : ""}.
+Aiuti il docente a preparare spiegazioni, materiali e strategie didattiche.
+
+Quando prepari una spiegazione alternativa:
+- Usa un esempio diverso da quello standard
+- Suggerisci un supporto visivo (schema, analogia, descrizione di un disegno)
+- Tieni il linguaggio adatto al livello della classe
+- Puoi includere link a risorse esterne utili
+
+NON includere immagini embedded nel testo.
+Rispondi sempre in contesto con la classe, i suoi studenti e le attività correlate.`;
     }
 
     base += isEN
