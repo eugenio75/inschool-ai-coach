@@ -780,7 +780,7 @@ Breve consolidamento — non una nuova verifica, solo rinforzo
 4. DOPO il separatore, scrivi la sezione "Note per il docente" che include:
    - Suggerimenti metodologici
    - Possibili domande difficili degli studenti con risposta suggerita
-   - Riferimenti a risorse multimediali (video, audio, immagini)
+   - Riferimenti a risorse esterne utili (video YouTube, siti educativi, articoli) — Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale nella sezione Note Docente o Risorse. NON incorporare immagini nel documento.
    - Differenziazione per studenti in difficoltà o avanzati
    Questa parte sarà visibile SOLO al docente.
 
