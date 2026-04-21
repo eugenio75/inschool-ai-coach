@@ -75,6 +75,7 @@ function getLastActivityMap(assignmentResults: any[], manualGrades: any[], stude
 export default function ClassView() {
   const { classId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const session = getChildSession();
   const profileId = session?.profileId;
