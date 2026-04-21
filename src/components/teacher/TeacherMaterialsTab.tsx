@@ -874,7 +874,8 @@ REGOLE:
 REGOLE IMPORTANTI:
 1. La PRIMA RIGA del tuo output DEVE essere: TITOLO: [titolo contestuale del materiale]
 2. Se il contenuto include soluzioni o note docente, inserisci ===SOLUZIONI=== dopo il contenuto studente.
-3. Dopo il separatore: risposte corrette, griglia di valutazione e/o note per il docente.`;
+3. Dopo il separatore: risposte corrette, griglia di valutazione e/o note per il docente.
+4. Puoi e DEVI includere link a risorse esterne utili (YouTube, siti educativi, articoli) scritti come testo normale nella sezione Note Docente o Risorse. NON incorporare immagini nel documento.`;
       }
 
       const maxTokensMap: Record<string, number> = {
