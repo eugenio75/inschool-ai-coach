@@ -371,7 +371,7 @@ export default function ClassView() {
         chatId = created.id;
       }
 
-      navigate(`/coach-docente?chat=${chatId}&q=${encodeURIComponent(question)}`);
+      navigate("/coach-docente", { state: { initialMessage: question, classId } });
     } catch (err) {
       console.error("handleCoachAsk error:", err);
       toast.error("Non sono riuscito ad aprire la chat con il coach.");
