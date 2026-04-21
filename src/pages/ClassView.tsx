@@ -94,6 +94,8 @@ export default function ClassView() {
 
   // UI state
   const [studentsOpen, setStudentsOpen] = useState(false);
+  const [sheetMode, setSheetMode] = useState<"checkin" | "risultati">("checkin");
+  const [sheetArgomento, setSheetArgomento] = useState<string>("");
   const [showGradeModal, setShowGradeModal] = useState(false);
   const [ocrAssignment, setOcrAssignment] = useState<any>(null);
   const [activeAssignment, setActiveAssignment] = useState<any>(null);
