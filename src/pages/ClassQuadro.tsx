@@ -60,15 +60,15 @@ interface SectionCardProps {
   children: React.ReactNode;
 }
 
-function SectionCard({ emoji, title, minHeight = "380px", children }: SectionCardProps) {
+function SectionCard({ emoji, title, minHeight = "320px", children }: SectionCardProps) {
   return (
     <article
-      className="flex flex-col rounded-[28px] border border-border bg-card/95 p-8 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
+      className="flex flex-col rounded-[28px] border border-border bg-card/95 p-6 sm:p-7 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
       style={{ minHeight }}
     >
       <div className="flex items-center gap-3">
-        <div className="text-2xl" aria-hidden>{emoji}</div>
-        <h2 className="text-2xl font-extrabold tracking-tight text-foreground">{title}</h2>
+        <div className="text-xl" aria-hidden>{emoji}</div>
+        <h2 className="text-[18px] sm:text-[20px] font-bold tracking-tight text-foreground leading-tight">{title}</h2>
       </div>
       {children}
     </article>
