@@ -504,6 +504,18 @@ export default function ClassView() {
   })();
 
   // For students sheet
+  // When in "risultati" mode and an argomento is set, restrict scoring to assignments
+  // whose title/description/subject matches the argomento (case-insensitive substring).
+  const argomentoLower = sheetArgomento.trim().toLowerCase();
+  const matchesArgomento = (a: any) => {
+    if (!argomentoLower) return true;
+    const hay = `${a.title || ""} ${a.description || ""} ${a.subject || ""}`.toLowerCase();
+    return hay.includes(argomentoLower);
+  };
+  const filteredAssignments = sheetMode === "risultati"
+    ? assignmentResults.filter(matchesArgomento)
+    : assignmentResults;
+
   const studentsForSheet = students.map((s: any) => {
     const firstName = formatName(s.profile?.name || s.student_name || "Studente");
     const lastName = formatName(s.profile?.last_name || "");
@@ -512,7 +524,7 @@ export default function ClassView() {
     const lastLabel = last
       ? new Date(last).toLocaleDateString("it-IT", { day: "numeric", month: "short" })
       : undefined;
-    // Detect "needs follow" via low score average
+    // Detect "needs follow" via low score average across ALL assignments
     const allScores: number[] = [];
     assignmentResults.forEach((a: any) => {
       (a.results || []).forEach((r: any) => {
@@ -520,11 +532,29 @@ export default function ClassView() {
       });
     });
     const mean = allScores.length > 0 ? allScores.reduce((a, b) => a + b, 0) / allScores.length : null;
+
+    // Topic-specific scores (for "risultati" mode)
+    const topicScores: number[] = [];
+    let topicCompleted = false;
+    filteredAssignments.forEach((a: any) => {
+      (a.results || []).forEach((r: any) => {
+        if ((r.student_id || r.id) === sid) {
+          if (r.score != null) topicScores.push(r.score);
+          if (r.status === "completed" || r.completed_at) topicCompleted = true;
+        }
+      });
+    });
+    const topicMean = topicScores.length > 0
+      ? topicScores.reduce((a, b) => a + b, 0) / topicScores.length
+      : null;
+
     return {
       id: sid,
       name: lastName ? `${firstName} ${lastName}` : firstName,
       lastActivity: lastLabel,
       needsFollow: mean != null && mean < 60,
+      topicScore: topicMean,
+      topicCompleted,
     };
   });
 
