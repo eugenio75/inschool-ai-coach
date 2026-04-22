@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  ArrowLeft, Send, Trash2, Plus, Pencil, Menu, X, BookmarkPlus,
+  ArrowLeft, Send, Trash2, Plus, Pencil, Menu, X, BookmarkPlus, ExternalLink, Download,
 } from "lucide-react";
 import { CoachAvatar } from "@/components/shared/CoachAvatar";
 import { supabase } from "@/integrations/supabase/client";
@@ -345,13 +345,11 @@ Rispondi sempre in contesto con la classe, i suoi studenti e le attività correl
     };
     setMessages([...currentMessages, placeholder]);
 
+    const recentMessages = currentMessages.slice(-14);
     const aiMessages: ChatMsg[] = [
       { role: "assistant" as any, content: buildSystemPrompt(chatId) },
-      ...currentMessages.map(m => ({ role: m.role as "user" | "assistant", content: m.content })),
+      ...recentMessages.map(m => ({ role: m.role as "user" | "assistant", content: m.content })),
     ];
-    // Note: streamChat ChatMsg type only allows user|assistant. The first entry above
-    // is treated as a system priming message by the backend. To make it actually behave
-    // as a system prompt for the model, we replace the role to "system" via a cast below.
     (aiMessages[0] as any).role = "system";
 
     try {
@@ -378,10 +376,18 @@ Rispondi sempre in contesto con la classe, i suoi studenti e le attività correl
           sessionStorage.setItem("teacher_coach_msg_at", Date.now().toString());
         },
       });
-    } catch {
+    } catch (error: any) {
+      const errorMessage = typeof error?.message === "string" ? error.message : "";
+      const fallbackText = errorMessage.includes("Crediti AI esauriti")
+        ? "Il coach non può rispondere ora perché i crediti AI del workspace sono terminati."
+        : errorMessage.includes("Troppe richieste")
+          ? "Il coach sta ricevendo troppe richieste in questo momento. Riprova tra poco."
+          : t("coach_fallback");
+
+      toast.error(fallbackText);
       const fallbackMsg: ChatMessage = {
         ...placeholder,
-        content: t("coach_fallback"),
+        content: fallbackText,
       };
       setMessages([...currentMessages, fallbackMsg]);
       setIsReplying(false);
