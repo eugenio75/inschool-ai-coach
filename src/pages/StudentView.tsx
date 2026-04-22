@@ -73,6 +73,21 @@ export default function StudentView() {
   const [habitsSummaryAi, setHabitsSummaryAi] = useState<string | null>(null);
   const [habitsLoading, setHabitsLoading] = useState(false);
   const [habitsLoaded, setHabitsLoaded] = useState(false);
+  const [coachName, setCoachName] = useState("Coach");
+
+  useEffect(() => {
+    if (!user?.id && !session?.profileId) return;
+    (async () => {
+      try {
+        const id = session?.profileId || user?.id;
+        if (id) {
+          const name = await getCoachName(id, !!session?.profileId);
+          if (name) setCoachName(name);
+        }
+      } catch {}
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, session?.profileId]);
 
   // Communication dialog
   const [showComm, setShowComm] = useState(false);
