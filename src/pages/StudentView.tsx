@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { BackLink } from "@/components/shared/BackLink";
+import { CoachAvatar } from "@/components/shared/CoachAvatar";
+import { getCoachName } from "@/lib/coachPreferences";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -71,6 +73,21 @@ export default function StudentView() {
   const [habitsSummaryAi, setHabitsSummaryAi] = useState<string | null>(null);
   const [habitsLoading, setHabitsLoading] = useState(false);
   const [habitsLoaded, setHabitsLoaded] = useState(false);
+  const [coachName, setCoachName] = useState("Coach");
+
+  useEffect(() => {
+    if (!user?.id && !session?.profileId) return;
+    (async () => {
+      try {
+        const id = session?.profileId || user?.id;
+        if (id) {
+          const name = await getCoachName(id, !!session?.profileId);
+          if (name) setCoachName(name);
+        }
+      } catch {}
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, session?.profileId]);
 
   // Communication dialog
   const [showComm, setShowComm] = useState(false);
@@ -368,26 +385,24 @@ export default function StudentView() {
         </header>
 
         {/* COACH CARD */}
-        <article className="bg-card border border-border rounded-[30px] shadow-sm overflow-hidden">
+        <article className="bg-card border border-border/60 rounded-[32px] shadow-[0_10px_30px_-15px_hsl(var(--foreground)/0.08)] overflow-hidden backdrop-blur">
           {/* Top — narrative */}
-          <div className="p-6 sm:p-8">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-full bg-foreground text-background flex items-center justify-center text-[12px] font-bold tracking-wide">
-                AI
-              </div>
+          <div className="px-6 sm:px-7 pt-6 sm:pt-7 pb-6">
+            <div className="flex items-center gap-3 mb-4">
+              <CoachAvatar mood="default" size={44} />
               <div className="min-w-0">
-                <p className="text-[14px] font-semibold text-foreground leading-tight">Coach dello studente</p>
-                <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">Sintesi chiara, didattica ed emotiva</p>
+                <p className="text-[14px] font-medium text-foreground/80 leading-tight">{coachName} · oggi</p>
+                <p className="text-[14px] font-normal text-muted-foreground leading-tight mt-0.5">Sintesi sullo studente</p>
               </div>
             </div>
 
-            <h2 className="text-[24px] sm:text-[26px] font-extrabold text-foreground tracking-tight leading-[1.2] mb-5">
+            <h2 className="max-w-3xl text-[19px] font-semibold leading-[1.6] tracking-[-0.005em] text-foreground">
               {coachTitle}
             </h2>
 
-            <div className="space-y-4 mb-6">
-              <p className="text-[15px] text-foreground leading-[1.7]">{didacticParagraph}</p>
-              <p className="text-[15px] text-foreground leading-[1.7]">{rhythmParagraph}</p>
+            <div className="space-y-3 mt-4 mb-6">
+              <p className="max-w-3xl text-[16px] font-normal leading-[1.7] text-muted-foreground">{didacticParagraph}</p>
+              <p className="max-w-3xl text-[16px] font-normal leading-[1.7] text-muted-foreground/85">{rhythmParagraph}</p>
             </div>
 
             <div className="flex flex-wrap gap-2.5">
