@@ -224,7 +224,7 @@ export default function ClassGrading() {
                               {isOnline && (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-[11px] font-semibold">
                                   <CheckCircle2 className="h-3 w-3" />
-                                  Online · {a.online_completed} consegne
+                                  SarAI · {a.online_completed} {a.online_completed === 1 ? "consegna" : "consegne"}
                                 </span>
                               )}
                             </div>
@@ -239,7 +239,7 @@ export default function ClassGrading() {
                             onClick={() => handleCorreggi(a)}
                             className="gap-1.5 bg-foreground text-background hover:bg-foreground/90 shrink-0"
                           >
-                            Correggi
+                            {isOnline ? "Vedi risultati" : "Correggi"}
                           </Button>
                         </div>
                       </div>
@@ -278,7 +278,7 @@ export default function ClassGrading() {
         )}
       </div>
 
-      {/* Chooser dialog: photo vs manual */}
+      {/* Chooser dialog: photo (primary) vs manual (secondary) — only for non-SarAI assignments */}
       <Dialog open={!!chooserAssignment} onOpenChange={(o) => { if (!o) setChooserAssignment(null); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -290,33 +290,40 @@ export default function ClassGrading() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-2.5 mt-2">
+          <div className="space-y-3 mt-2">
+            {/* Primary: photo upload */}
             <button
               onClick={pickPhoto}
-              className="w-full text-left rounded-[18px] border border-border/70 hover:border-foreground/40 hover:bg-muted/40 transition-colors p-4 flex items-start gap-3"
+              className="w-full text-left rounded-[20px] border-2 border-foreground/15 bg-gradient-to-br from-primary/5 to-transparent hover:border-foreground/40 hover:bg-muted/40 transition-all p-5 flex items-start gap-4"
             >
-              <div className="rounded-xl bg-foreground/5 p-2.5 shrink-0">
-                <Camera className="h-5 w-5 text-foreground/70" />
+              <div className="rounded-2xl bg-foreground text-background p-3 shrink-0">
+                <Camera className="h-6 w-6" />
               </div>
-              <div className="min-w-0">
-                <p className="text-[16px] font-semibold text-foreground">Carica foto degli elaborati</p>
-                <p className="text-[13px] text-muted-foreground mt-0.5 leading-relaxed">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-[17px] font-bold text-foreground">Carica foto degli elaborati</p>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                    Consigliato
+                  </span>
+                </div>
+                <p className="text-[13.5px] text-muted-foreground mt-1.5 leading-relaxed">
                   L'AI legge i fogli, riconosce i nomi e propone un voto. Tu confermi o modifichi.
                 </p>
               </div>
             </button>
 
+            {/* Secondary: manual entry */}
             <button
               onClick={pickManual}
-              className="w-full text-left rounded-[18px] border border-border/70 hover:border-foreground/40 hover:bg-muted/40 transition-colors p-4 flex items-start gap-3"
+              className="w-full text-left rounded-[14px] border border-border/70 hover:border-foreground/40 hover:bg-muted/30 transition-colors p-3 flex items-center gap-3"
             >
-              <div className="rounded-xl bg-foreground/5 p-2.5 shrink-0">
-                <Edit3 className="h-5 w-5 text-foreground/70" />
+              <div className="rounded-lg bg-foreground/5 p-2 shrink-0">
+                <Edit3 className="h-4 w-4 text-foreground/70" />
               </div>
-              <div className="min-w-0">
-                <p className="text-[16px] font-semibold text-foreground">Inserisci i voti a mano</p>
-                <p className="text-[13px] text-muted-foreground mt-0.5 leading-relaxed">
-                  Tabella con tutti gli studenti. Utile per verifiche online o quando preferisci scrivere tu i voti.
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-semibold text-foreground">Inserisci i voti a mano</p>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  Tabella con tutti gli studenti, da compilare manualmente.
                 </p>
               </div>
             </button>
