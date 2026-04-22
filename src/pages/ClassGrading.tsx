@@ -137,8 +137,12 @@ export default function ClassGrading() {
   }
 
   function handleCorreggi(a: AssignmentRow) {
-    // If online completions exist → go directly to manual review (showing AI scores would happen in OcrGradeModal in future)
-    // For now: open chooser to let teacher decide. If pure online, suggest the manual review path.
+    // Scenario A: la verifica è stata fatta su SarAI → vai direttamente alla pagina conferma
+    if (a.online_completed > 0) {
+      navigate(`/classe/${classId}/correggi/${a.id}`);
+      return;
+    }
+    // Scenario B/C: nessun risultato SarAI → mostra modal di scelta
     setChooserAssignment(a);
   }
 
