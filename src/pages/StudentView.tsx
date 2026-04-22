@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AvatarInitials } from "@/components/shared/AvatarInitials";
 import { BackLink } from "@/components/shared/BackLink";
+import { CoachAvatar } from "@/components/shared/CoachAvatar";
+import { getCoachName } from "@/lib/coachPreferences";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
