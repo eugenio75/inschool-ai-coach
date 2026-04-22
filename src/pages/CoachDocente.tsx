@@ -377,7 +377,6 @@ Rispondi sempre in contesto con la classe, i suoi studenti e le attività correl
           sessionStorage.setItem("teacher_coach_msg", fullText);
           sessionStorage.setItem("teacher_coach_msg_at", Date.now().toString());
         },
-        extraBody: { model: "google/gemini-2.5-flash" },
       });
     } catch {
       const fallbackMsg: ChatMessage = {
