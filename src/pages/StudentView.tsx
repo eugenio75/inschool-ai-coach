@@ -409,7 +409,18 @@ export default function StudentView() {
               <Button
                 size="default"
                 className="rounded-full text-[14px] font-medium px-5"
-                onClick={() => navigate(`/classe/${classId}?tab=materiali&recovery_topic=${encodeURIComponent(recoveryTopic)}&recovery_subject=${encodeURIComponent(classSubject || "")}`)}
+                onClick={() =>
+                  navigate(`/classe/${classId}/materiali?create=true`, {
+                    state: {
+                      prefilledMaterial: {
+                        tipo_attivita: "recupero",
+                        materia: classSubject || "",
+                        descrizione: `Esercizio di recupero personalizzato per ${firstName} su "${recoveryTopic}". Linguaggio semplice, esempi concreti, passi piccoli, focus sul consolidamento del concetto base.`,
+                        studentIds: studentId ? [studentId] : [],
+                      },
+                    },
+                  })
+                }
               >
                 Genera recupero
               </Button>
@@ -417,7 +428,18 @@ export default function StudentView() {
                 size="default"
                 variant="secondary"
                 className="rounded-full text-[14px] font-medium px-5"
-                onClick={() => navigate(`/classe/${classId}?tab=materiali`)}
+                onClick={() =>
+                  navigate(`/classe/${classId}/materiali?create=true`, {
+                    state: {
+                      prefilledMaterial: {
+                        tipo_attivita: "lezione",
+                        materia: classSubject || "",
+                        descrizione: `Versione semplificata della lezione su "${recoveryTopic}" per ${firstName}: testo più breve, frasi corte, un esempio per ogni concetto, supporti visivi dove possibile.`,
+                        studentIds: studentId ? [studentId] : [],
+                      },
+                    },
+                  })
+                }
               >
                 Materiale semplificato
               </Button>
