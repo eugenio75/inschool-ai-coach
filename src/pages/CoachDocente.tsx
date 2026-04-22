@@ -21,6 +21,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { it, enUS } from "date-fns/locale";
+import { renderAndPrintPdf } from "@/lib/pdfExport";
 
 interface TeacherChat {
   id: string;
@@ -406,23 +407,10 @@ Rispondi sempre in contesto con la classe, i suoi studenti e le attività correl
     }
   }
 
-  // Save an assistant message as a draft material in the current class.
-  // Extracts the topic from the most recent preceding user "Prepara una spiegazione alternativa di X..."
-  // request when available, otherwise falls back to a generic title.
-  async function saveCoachReplyAsDraft(msgIndex: number) {
+  function getDraftMetaFromMessage(msgIndex: number) {
     const activeChat = chats.find(c => c.id === activeChatId);
-    if (!activeChat?.class_id) {
-      toast.error("Salvataggio disponibile solo nelle chat di classe.");
-      return;
-    }
-    if (!teacherId) {
-      toast.error("Sessione non valida.");
-      return;
-    }
-    const assistantMsg = messages[msgIndex];
-    if (!assistantMsg || assistantMsg.role !== "assistant" || !assistantMsg.content?.trim()) return;
+    const classInfo = classes.find(c => c.id === activeChat?.class_id);
 
-    // Look back for the closest user message to extract the topic
     let topic = "";
     for (let i = msgIndex - 1; i >= 0; i--) {
       const m = messages[i];
@@ -434,11 +422,44 @@ Rispondi sempre in contesto con la classe, i suoi studenti e le attività correl
       break;
     }
 
-    const classInfo = classes.find(c => c.id === activeChat.class_id);
     const subject = classInfo?.materia || null;
     const title = topic
       ? `Spiegazione alternativa — ${topic}`
       : `Spiegazione alternativa — ${classInfo?.nome || "classe"}`;
+
+    return {
+      activeChat,
+      classInfo,
+      subject,
+      title,
+    };
+  }
+
+  async function downloadCoachReplyAsPdf(msgIndex: number) {
+    const assistantMsg = messages[msgIndex];
+    if (!assistantMsg || assistantMsg.role !== "assistant" || !assistantMsg.content?.trim()) return;
+
+    const { classInfo, subject, title } = getDraftMetaFromMessage(msgIndex);
+    renderAndPrintPdf(assistantMsg.content, {
+      title,
+      type: "lezione",
+      subject: subject || undefined,
+      className: classInfo?.nome || "",
+    });
+  }
+
+  async function saveCoachReplyAsDraft(msgIndex: number) {
+    const { activeChat, subject, title } = getDraftMetaFromMessage(msgIndex);
+    if (!activeChat?.class_id) {
+      toast.error("Salvataggio disponibile solo nelle chat di classe.");
+      return;
+    }
+    if (!teacherId) {
+      toast.error("Sessione non valida.");
+      return;
+    }
+    const assistantMsg = messages[msgIndex];
+    if (!assistantMsg || assistantMsg.role !== "assistant" || !assistantMsg.content?.trim()) return;
 
     const { error } = await (supabase as any).from("teacher_materials").insert({
       teacher_id: teacherId,
@@ -455,7 +476,15 @@ Rispondi sempre in contesto con la classe, i suoi studenti e le attività correl
       toast.error("Non sono riuscito a salvare la bozza.");
       return;
     }
-    toast.success("Salvato nelle bozze — puoi assegnarlo dalla sezione Materiali");
+    toast.success("Salvato nelle bozze — da Materiali puoi anche scaricarlo in PDF.");
+  }
+
+  function openCoachReplyInMaterials() {
+    if (!activeChat?.class_id) {
+      toast.error("Questa azione è disponibile solo nelle chat di classe.");
+      return;
+    }
+    navigate(`/classe/${activeChat.class_id}/materiali`);
   }
 
   async function deleteChat() {
@@ -701,7 +730,7 @@ Rispondi sempre in contesto con la classe, i suoi studenti e le attività correl
                           </span>
                         ) : "")}
                       </div>
-                      <div className="flex items-center gap-2 px-1">
+                      <div className="flex items-center gap-2 px-1 flex-wrap">
                         <p className="text-[10px] text-muted-foreground/60">
                           {format(new Date(msg.created_at), "HH:mm", { locale: dateLocale })}
                         </p>
@@ -709,15 +738,35 @@ Rispondi sempre in contesto con la classe, i suoi studenti e le attività correl
                           && msg.content?.trim()
                           && msg.id !== "temp-assistant"
                           && activeChat?.class_id && (
-                          <button
-                            type="button"
-                            onClick={() => saveCoachReplyAsDraft(i)}
-                            className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors"
-                            title="Salva come bozza materiale"
-                          >
-                            <BookmarkPlus className="w-3 h-3" />
-                            Salva come bozza materiale
-                          </button>
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => downloadCoachReplyAsPdf(i)}
+                              className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors"
+                              title="Scarica questa risposta in PDF"
+                            >
+                              <Download className="w-3 h-3" />
+                              Scarica PDF
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => saveCoachReplyAsDraft(i)}
+                              className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors"
+                              title="Salva come bozza materiale"
+                            >
+                              <BookmarkPlus className="w-3 h-3" />
+                              Salva in Materiali
+                            </button>
+                            <button
+                              type="button"
+                              onClick={openCoachReplyInMaterials}
+                              className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors"
+                              title="Apri la sezione Materiali"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              Apri Materiali
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
