@@ -318,16 +318,16 @@ serve(async (req) => {
   try {
     const { messages, systemPrompt, stream, model, maxTokens, generateTitle, profileId, subject: chatSubject, sessionFormat, lang, studentInstruction, daily_opening_tone, relational_trigger, behavioral_snapshot, opening_tone_streak } = await req.json();
     console.log("[ai-chat] COACH_RULES active");
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     // ── Title generation (non-streaming) ──
     if (generateTitle) {
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
-        headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
+          model: "google/gemini-2.5-flash",
           messages: [
             { role: "system", content: "In massimo 4 parole italiane, dai un titolo a questa conversazione. Solo il titolo, nessun preambolo." },
             { role: "user", content: generateTitle },
@@ -606,11 +606,11 @@ NON CHIUDERE LA CONVERSAZIONE. Rimani presente.`;
       ...messages,
     ];
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: model || "gpt-4o",
+        model: model || "google/gemini-2.5-pro",
         messages: allMessages,
         stream: shouldStream,
         ...(maxTokens ? { max_tokens: maxTokens } : {}),
@@ -662,11 +662,11 @@ NON CHIUDERE LA CONVERSAZIONE. Rimani presente.`;
           sessionState.currentStep?.attemptCount || 0
         );
 
-        const retryResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+        const retryResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
-          headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "gpt-4o",
+            model: "google/gemini-2.5-pro",
             messages: [{ role: "system", content: retryPrompt }, ...messages],
             stream: false,
             max_tokens: 500,

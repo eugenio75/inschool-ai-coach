@@ -178,15 +178,15 @@ Rispondi SOLO con JSON valido: { "message": "...", "suggestedAction": "...", "ac
 ${recognitionRule}`;
     }
 
-    const apiKey = Deno.env.get("OPENAI_API_KEY");
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: isEN
