@@ -158,20 +158,18 @@ RISPONDI ESCLUSIVAMENTE con un JSON valido: {"tasks": [...]}`;
         : `Analizza ${files.length > 1 ? "tutte queste foto" : "questa foto"} e estrai tutti i compiti. Rispondi SOLO con il JSON.`,
     });
 
-    // --- 4. Call OpenAI ---
-    step.current = "calling_openai";
-    console.log(`[parse-homework-upload] Chiamata OpenAI gpt-4o con ${contentParts.length} parti...`);
+    // --- 4. Call Lovable AI Gateway ---
+    step.current = "calling_ai_gateway";
+    console.log(`[parse-homework-upload] Chiamata Lovable AI (gemini-2.5-flash) con ${contentParts.length} parti...`);
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o",
-        temperature: 0,
-        max_tokens: 16384,
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: contentParts },
@@ -181,14 +179,14 @@ RISPONDI ESCLUSIVAMENTE con un JSON valido: {"tasks": [...]}`;
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`[parse-homework-upload] OpenAI error ${response.status}: ${errorText}`);
+      console.error(`[parse-homework-upload] AI Gateway error ${response.status}: ${errorText}`);
       if (response.status === 429) {
-        return errorResponse("rate_limited", "Troppe richieste. Aspetta un momento e riprova.", step.current, 429);
+        return errorResponse("rate_limited", "Troppe richieste in questo momento. Aspetta qualche secondo e riprova.", step.current, 429);
       }
       if (response.status === 402) {
-        return errorResponse("credits_exhausted", "Crediti OpenAI esauriti.", step.current, 402);
+        return errorResponse("credits_exhausted", "Crediti AI esauriti. Aggiungi crediti nelle impostazioni Lovable Cloud.", step.current, 402);
       }
-      return errorResponse("openai_failed", errorText.slice(0, 500), step.current, 502);
+      return errorResponse("ai_failed", errorText.slice(0, 500), step.current, 502);
     }
 
     // --- 5. Parse response ---
