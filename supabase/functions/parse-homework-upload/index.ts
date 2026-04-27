@@ -193,7 +193,7 @@ RISPONDI ESCLUSIVAMENTE con un JSON valido: {"tasks": [...]}`;
     step.current = "parsing_response";
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
-    console.log(`[parse-homework-upload] Risposta OpenAI ricevuta (${content.length} chars)`);
+    console.log(`[parse-homework-upload] Risposta AI ricevuta (${content.length} chars)`);
 
     let tasks = null;
     const cleaned = content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
