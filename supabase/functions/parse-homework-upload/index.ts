@@ -46,9 +46,9 @@ serve(async (req) => {
 
     // --- 2. Check API key ---
     step.current = "checking_api_key";
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) {
-      return errorResponse("missing_api_key", "OPENAI_API_KEY non configurata", step.current, 500);
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      return errorResponse("missing_api_key", "LOVABLE_API_KEY non configurata", step.current, 500);
     }
 
     // --- 3. Build OpenAI content parts ---
