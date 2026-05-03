@@ -167,11 +167,10 @@ export default function GuidedSession() {
         setMessages([{ role: "assistant", content: resumeMsg }]);
         setLoading(false);
       } else {
-        // Gate: require homework content before opening the coach
-        const content =
-          hw?.source_files?.[0]?.full_ocr_text ||
-          hw?.description ||
-          "";
+        // Gate: require homework content before opening the coach.
+        // Use the SAME isolation logic the coach will see, so a multi-exercise
+        // PDF with a tiny D24 section still validates against the section length.
+        const content = getHomeworkContent(hw);
         if (!content || content.trim().length < 80) {
           setNeedsContent(true);
           setManualContent(hw?.description || hw?.title || "");
