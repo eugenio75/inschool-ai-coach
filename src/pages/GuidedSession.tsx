@@ -237,22 +237,93 @@ export default function GuidedSession() {
     setLoading(false);
   }
 
-  async function sendMessage(text?: string) {
+  async function sendMessage(text?: string, opts?: { hideUser?: boolean; isInit?: boolean }) {
+    const isInit = opts?.isInit === true;
+    const hideUser = opts?.hideUser === true;
     const msgText = text || input.trim();
     if (!msgText || sending) return;
 
     const userMsg: ChatMessage = { role: "user", content: msgText };
+    // For the init turn, do NOT show the seed user message in the UI history,
+    // but DO send it to the model so it produces the first assistant message.
     const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
+    if (!hideUser) {
+      setMessages(newMessages);
+    }
     setInput("");
     setSending(true);
     setStreamingText("");
 
     try {
       const currentStepData = steps[currentStep - 1];
-      const systemAddition = currentStepData
+      const systemAddition = currentStepData && !isInit
         ? `\n\nStep attuale (${currentStep}/${totalSteps}): ${currentStepData.text || currentStepData.step_text}`
         : "";
+
+      const homeworkContent = getHomeworkContent(homework);
+
+      const initDirective = isInit
+        ? `\n\n[INIZIALIZZAZIONE SESSIONE]
+Questo è l'avvio della sessione. Lo studente NON ha ancora scritto nulla.
+Produci ESCLUSIVAMENTE il messaggio di conferma del contenuto come da RULE 0:
+"Ho visto il tuo compito. Devi [descrizione esatta di cosa chiede il problema, includendo TUTTE le misure, figure e domande a/b/c presenti nel contenuto del compito qui sotto]. Iniziamo?"
+NON mostrare i bottoni bisogno. NON fare domande aperte. NON inventare misure.`
+        : "";
+
+      const systemPrompt = `Sei in una sessione di studio guidata con ${profile?.name || "lo studente"} (livello: ${schoolLevel}).
+Materia: ${homework?.subject || "—"}.
+
+═══════════════════════════════════════
+RULE 0 — CONTENT FIRST, BISOGNO SECOND. ALWAYS.
+═══════════════════════════════════════
+Hai ricevuto il contenuto esatto del compito dello studente qui sotto, nella sezione HOMEWORK CONTENT.
+
+Il TUO PRIMO MESSAGGIO può essere SOLO ed esclusivamente:
+"Ho visto il tuo compito. Devi [descrizione esatta di cosa chiede il problema, incluse TUTTE le misure, figure e domande a/b/c visibili nel contenuto qui sotto]. Iniziamo?"
+
+Aspetta che lo studente confermi.
+
+SOLO DOPO che lo studente ha confermato → chiedi:
+"Come posso aiutarti?"
+e mostra i bottoni di scelta del bisogno (NON elencarli nel testo, il client li renderizza).
+
+MAI mostrare i bottoni bisogno come primo messaggio.
+MAI saltare la conferma del contenuto.
+MAI inventare misure, numeri, figure o dati che non siano esplicitamente presenti nel contenuto qui sotto.
+Se sei incerto su un valore specifico → chiedi allo studente di confermare quel valore. NON tirare a indovinare.
+
+═══════════════════════════════════════
+RULE 0b — CAMBIA IDEA SOLO SE PUOI VERIFICARE
+═══════════════════════════════════════
+Se lo studente è in disaccordo con la tua interpretazione del problema:
+1. Rileggi il contenuto del compito qui sotto con attenzione.
+2. Se rileggendo confermi che lo studente ha ragione → correggi te stesso chiaramente:
+   "Hai ragione — rileggendo vedo che [riferimento esatto al testo]. Mi sono sbagliato, partiamo dal tuo approccio."
+3. Se rileggendo confermi che eri tu ad aver ragione → mantieni la posizione con riferimento diretto al testo:
+   "Capisco il tuo ragionamento — ma guardando il problema, [citazione specifica]. Proviamo così?"
+4. Se ambiguo, non puoi verificare → chiedi:
+   "Non riesco a verificarlo dal testo che ho — puoi indicarmi esattamente quale parte del problema ti fa pensare questo?"
+
+MAI dire "hai ragione" senza averlo verificato nel contenuto qui sotto.
+MAI mantenere un'interpretazione sbagliata per orgoglio.
+MAI scusarti per un'interpretazione corretta.
+L'obiettivo è sempre l'accuratezza, non evitare il conflitto.
+
+═══════════════════════════════════════
+PEDAGOGIA
+═══════════════════════════════════════
+Non dare mai la risposta diretta. Guida lo studente con domande socratiche.
+Se lo studente risponde correttamente a uno step, scrivi [STEP_COMPLETATO: ${currentStep}].
+Se tutti gli step sono completati, scrivi [SESSIONE_COMPLETATA].${systemAddition}
+
+═══════════════════════════════════════
+--- HOMEWORK CONTENT ---
+Materia: ${homework?.subject || "—"}
+Titolo: ${homework?.title || "—"}
+
+${homeworkContent}
+--- END HOMEWORK CONTENT ---
+═══════════════════════════════════════${initDirective}`;
 
       const { data: { session: authSession } } = await supabase.auth.getSession();
       const res = await fetch(
@@ -265,8 +336,10 @@ export default function GuidedSession() {
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
-            messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-            systemPrompt: `Sei in una sessione di studio guidata. Compito: ${homework?.title}. Materia: ${homework?.subject}. Livello: ${schoolLevel}.${systemAddition}\n\nNon dare mai la risposta diretta. Guida lo studente con domande socratiche. Se risponde bene, scrivi [STEP_COMPLETATO: ${currentStep}]. Se tutti gli step sono fatti, scrivi [SESSIONE_COMPLETATA].`,
+            messages: isInit
+              ? [{ role: "user", content: "Inizia la sessione." }]
+              : newMessages.map(m => ({ role: m.role, content: m.content })),
+            systemPrompt,
             stream: true,
           }),
         }
