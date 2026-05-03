@@ -383,7 +383,12 @@ ${homeworkContent}
       displayText = displayText.replace(/\[STEP_COMPLETATO:\s*\d+\]/, "").replace("[SESSIONE_COMPLETATA]", "").replace(/\[SEGNALA_DIFFICOLTÀ:\s*.+?\]/, "").trim();
 
       setStreamingText("");
-      setMessages([...newMessages, { role: "assistant", content: displayText }]);
+      if (hideUser) {
+        // Init turn: keep history clean — only the assistant confirmation is visible
+        setMessages([{ role: "assistant", content: displayText }]);
+      } else {
+        setMessages([...newMessages, { role: "assistant", content: displayText }]);
+      }
 
       if (stepComplete) {
         const stepNum = parseInt(stepComplete[1]);
