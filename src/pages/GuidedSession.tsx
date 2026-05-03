@@ -111,6 +111,19 @@ export default function GuidedSession() {
     return hw?.description || hw?.title || "";
   }, [overrideContent]);
 
+  const buildInitialContentMessage = (hw: any): string => {
+    const studentName = profile?.name ? ` ${profile.name}` : "";
+    const content = getHomeworkContent(hw).trim();
+    const clipped = content.length > 2200 ? `${content.slice(0, 2200).trim()}\n[…]` : content;
+
+    return `Ciao${studentName}! Ho davanti questo compito:\n\n«${clipped}»\n\nConfermi che il testo è questo? Se qualcosa non torna, fermami subito.`;
+  };
+
+  const looksLikeChallenge = (value: string): boolean => {
+    const normalized = value.toLowerCase().trim();
+    return /\b(ma cosa dici|cosa dici|non è così|non e così|sbagli|hai sbagliato|no|non torna|non va bene|aspetta)\b/.test(normalized);
+  };
+
   const userId = user?.id || getChildSession()?.profileId;
 
   // Scroll to bottom on new messages
