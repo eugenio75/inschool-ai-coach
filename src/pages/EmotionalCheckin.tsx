@@ -46,7 +46,26 @@ const EmotionalCheckin = () => {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [conversationTone, setConversationTone] = useState<DailyOpeningTone | null>(null);
   const [readyToStart, setReadyToStart] = useState(false);
+  const [selectedMood, setSelectedMood] = useState<DailyOpeningTone | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // 4 icone di tono — tap rapido per chi non vuole scrivere.
+  // Mappate sui 3 toni che il Coach già conosce (heavy/neutral/positive).
+  const MOODS: { emoji: string; label: string; tone: DailyOpeningTone }[] = [
+    { emoji: "😟", label: "Giù", tone: "heavy" },
+    { emoji: "😐", label: "Così così", tone: "neutral" },
+    { emoji: "🙂", label: "Bene", tone: "positive" },
+    { emoji: "⚡", label: "Carico", tone: "positive" },
+  ];
+
+  const handleMoodTap = (tone: DailyOpeningTone) => {
+    if (busy || readyToStart) return;
+    setSelectedMood(tone);
+    setConversationTone(tone);
+    // Apri il campo testo per chi vuole aggiungere una frase, ma è opzionale.
+    setTimeout(() => textareaRef.current?.focus(), 0);
+  };
 
   const childSession = getChildSession();
   const savedProfile = useMemo(() => {
