@@ -125,6 +125,17 @@ export default function GuidedSession() {
         setMessages([{ role: "assistant", content: resumeMsg }]);
         setLoading(false);
       } else {
+        // Gate: require homework content before opening the coach
+        const content =
+          hw?.source_files?.[0]?.full_ocr_text ||
+          hw?.description ||
+          "";
+        if (!content || content.trim().length < 80) {
+          setNeedsContent(true);
+          setManualContent(hw?.description || hw?.title || "");
+          setLoading(false);
+          return;
+        }
         // New session — start directly (daily opening moment is handled at app entry)
         startNewSession("neutro");
       }
