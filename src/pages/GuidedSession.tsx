@@ -310,9 +310,15 @@ export default function GuidedSession() {
     if (!msgText || sending) return;
 
     const userMsg: ChatMessage = { role: "user", content: msgText };
+    const newMessages = [...messages, userMsg];
+    const deterministicNeedReply = getDeterministicNeedReply(msgText);
+    if (deterministicNeedReply) {
+      setMessages([...newMessages, { role: "assistant", content: deterministicNeedReply }]);
+      setInput("");
+      return;
+    }
     // For the init turn, do NOT show the seed user message in the UI history,
     // but DO send it to the model so it produces the first assistant message.
-    const newMessages = [...messages, userMsg];
     if (!hideUser) {
       setMessages(newMessages);
     }
