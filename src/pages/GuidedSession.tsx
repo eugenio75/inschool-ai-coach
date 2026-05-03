@@ -125,6 +125,20 @@ export default function GuidedSession() {
     return /\b(ma cosa dici|cosa dici|non è così|non e così|sbagli|hai sbagliato|no|non torna|non va bene|aspetta)\b/.test(normalized);
   };
 
+  const getDeterministicNeedReply = (value: string): string | null => {
+    const normalized = value.toLowerCase().trim();
+    if (normalized === "so il metodo, voglio esercitarmi") {
+      return "Quale dato del testo o della figura serve per iniziare?";
+    }
+    if (normalized === "non ho capito come si fa") {
+      return "Qual è il primo dato o la prima frase del compito che ti blocca?";
+    }
+    if (normalized === "so farlo ma faccio errori") {
+      return "Qual è il punto in cui di solito rischi l'errore?";
+    }
+    return null;
+  };
+
   const userId = user?.id || getChildSession()?.profileId;
 
   // Scroll to bottom on new messages
