@@ -316,7 +316,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, systemPrompt, stream, model, maxTokens, generateTitle, profileId, subject: chatSubject, sessionFormat, lang, studentInstruction, daily_opening_tone, relational_trigger, behavioral_snapshot, opening_tone_streak } = await req.json();
+    const { messages, systemPrompt, stream, model, maxTokens, generateTitle, profileId, subject: chatSubject, sessionFormat, lang, studentInstruction, daily_opening_tone, relational_trigger, behavioral_snapshot, opening_tone_streak, mode } = await req.json();
     console.log("[ai-chat] COACH_RULES active");
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
