@@ -651,10 +651,11 @@ ${homeworkContent}
 
           <Button
             onClick={() => {
-              setOverrideContent(manualContent.trim());
+              const nextContent = manualContent.trim();
+              setOverrideContent(nextContent);
               setNeedsContent(false);
               setLoading(true);
-              setTimeout(() => startNewSession("neutro"), 50);
+              setTimeout(() => startNewSession("neutro", nextContent), 50);
             }}
             disabled={manualContent.trim().length < 80}
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl py-5 text-base disabled:opacity-40"
