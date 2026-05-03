@@ -219,18 +219,17 @@ export default function GuidedSession() {
       setSteps(generatedSteps);
       setCurrentStep(1);
 
-      // Opening message from coach
-      const firstStep = generatedSteps[0];
-      const emotionResponse = emotion === "concentrato"
-        ? "Perfetto, sei concentrato. Partiamo subito."
-        : emotion === "stanco"
-        ? "Capisco che sei un po' stanco. Andiamo con calma, un passo alla volta."
-        : "Nessun problema se ti senti bloccato. Iniziamo da qualcosa di semplice.";
-
-      setMessages([{
-        role: "assistant",
-        content: `${emotionResponse}\n\n${homework.title} — Step 1 di ${generatedSteps.length}:\n\n${firstStep.text}`,
-      }]);
+      // Opening: ask the coach to confirm the homework content (RULE 0).
+      // The coach reads `extracted_content` from the system prompt of sendMessage.
+      // We trigger the first turn by sending a hidden init message.
+      setMessages([]);
+      setCurrentStep(1);
+      setLoading(false);
+      // Defer to next tick so state is committed before sendMessage reads it
+      setTimeout(() => {
+        sendMessage("__INIT_CONFIRM_CONTENT__", { hideUser: true, isInit: true });
+      }, 50);
+      return;
     } catch (err) {
       console.error("startNewSession error:", err);
       setMessages([{ role: "assistant", content: "Si è verificato un errore nell'avvio della sessione. Riprova." }]);
