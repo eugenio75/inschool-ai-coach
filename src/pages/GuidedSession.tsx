@@ -112,9 +112,9 @@ export default function GuidedSession() {
     return hw?.description || hw?.title || "";
   }, [overrideContent]);
 
-  const buildInitialContentMessage = (hw: any): string => {
+  const buildInitialContentMessage = (hw: any, contentOverride?: string): string => {
     const studentName = profile?.name ? ` ${profile.name}` : "";
-    const content = getHomeworkContent(hw).trim();
+    const content = (contentOverride || getHomeworkContent(hw)).trim();
     const clipped = content.length > 2200 ? `${content.slice(0, 2200).trim()}\n[…]` : content;
 
     return `Ciao${studentName}! Ho davanti questo compito:\n\n«${clipped}»\n\nConfermi che il testo è questo? Se qualcosa non torna, fermami subito.`;
@@ -192,7 +192,7 @@ export default function GuidedSession() {
           return;
         }
         // New session — start directly (daily opening moment is handled at app entry)
-        startNewSession("neutro");
+        startNewSession("neutro", undefined, hw);
       }
     } catch (err) {
       console.error("loadSession error:", err);
@@ -200,7 +200,9 @@ export default function GuidedSession() {
     }
   }
 
-  async function startNewSession(emotion: string) {
+  async function startNewSession(emotion: string, contentOverride?: string, homeworkArg?: any) {
+    const activeHomework = homeworkArg || homework;
+    const contentForSession = contentOverride || getHomeworkContent(activeHomework);
     setEmotionalCheckin(emotion);
     setLoading(true);
 
@@ -217,11 +219,11 @@ export default function GuidedSession() {
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
-            homeworkTitle: homework.title,
-            homeworkType: homework.task_type,
-            subject: homework.subject,
+            homeworkTitle: activeHomework.title,
+            homeworkType: activeHomework.task_type,
+            subject: activeHomework.subject,
             schoolLevel,
-            description: getHomeworkContent(homework) || homework.description,
+            description: contentForSession || activeHomework.description,
             lang: getCurrentLang(),
           }),
         }
@@ -276,7 +278,7 @@ export default function GuidedSession() {
 
       // Opening: show the exact homework content ourselves. The model must not
       // paraphrase it, because that is where hallucinations entered the chat.
-      setMessages([{ role: "assistant", content: buildInitialContentMessage(homework) }]);
+      setMessages([{ role: "assistant", content: buildInitialContentMessage(activeHomework, contentForSession) }]);
       setCurrentStep(1);
       setLoading(false);
       return;
