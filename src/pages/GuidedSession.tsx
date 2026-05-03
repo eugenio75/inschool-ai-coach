@@ -273,16 +273,11 @@ export default function GuidedSession() {
       setSteps(generatedSteps);
       setCurrentStep(1);
 
-      // Opening: ask the coach to confirm the homework content (RULE 0).
-      // The coach reads `extracted_content` from the system prompt of sendMessage.
-      // We trigger the first turn by sending a hidden init message.
-      setMessages([]);
+      // Opening: show the exact homework content ourselves. The model must not
+      // paraphrase it, because that is where hallucinations entered the chat.
+      setMessages([{ role: "assistant", content: buildInitialContentMessage(homework) }]);
       setCurrentStep(1);
       setLoading(false);
-      // Defer to next tick so state is committed before sendMessage reads it
-      setTimeout(() => {
-        sendMessage("__INIT_CONFIRM_CONTENT__", { hideUser: true, isInit: true });
-      }, 50);
       return;
     } catch (err) {
       console.error("startNewSession error:", err);
