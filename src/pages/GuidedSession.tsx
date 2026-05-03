@@ -52,8 +52,22 @@ export default function GuidedSession() {
   const [showPauseDialog, setShowPauseDialog] = useState(false);
   const [emotionalCheckin, setEmotionalCheckin] = useState<string | null>(null);
   const [showExplainOptions, setShowExplainOptions] = useState(false);
+  const [needsContent, setNeedsContent] = useState(false);
+  const [manualContent, setManualContent] = useState("");
+  const [overrideContent, setOverrideContent] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Helper: build the homework content string from DB fields or manual override
+  const getHomeworkContent = useCallback((hw: any): string => {
+    if (overrideContent) return overrideContent;
+    return (
+      hw?.source_files?.[0]?.full_ocr_text ||
+      hw?.description ||
+      hw?.title ||
+      ""
+    );
+  }, [overrideContent]);
 
   const userId = user?.id || getChildSession()?.profileId;
 
