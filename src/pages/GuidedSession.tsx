@@ -510,6 +510,62 @@ ${homeworkContent}
     );
   }
 
+  if (needsContent) {
+    return (
+      <div className="min-h-screen bg-background px-4 py-6">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center gap-3 mb-6">
+            <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <span className="font-display text-lg font-semibold">{homework?.title || "Compito"}</span>
+          </div>
+
+          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-2xl p-5 mb-5 flex gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-1">
+                Non riesco a trovare il contenuto del compito
+              </p>
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                Puoi scrivere qui il testo del problema, incluse tutte le misure e le domande?
+              </p>
+            </div>
+          </div>
+
+          <textarea
+            value={manualContent}
+            onChange={(e) => setManualContent(e.target.value)}
+            placeholder="Scrivi qui il testo completo del problema, incluse tutte le misure, le figure e le domande a) b) c)..."
+            rows={10}
+            className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none text-[15px] leading-relaxed"
+          />
+
+          <div className="flex items-center justify-between mt-2 mb-4 px-1">
+            <span className="text-xs text-muted-foreground">
+              {manualContent.trim().length < 80
+                ? `Almeno 80 caratteri (${manualContent.trim().length}/80)`
+                : "Pronto per iniziare"}
+            </span>
+          </div>
+
+          <Button
+            onClick={() => {
+              setOverrideContent(manualContent.trim());
+              setNeedsContent(false);
+              setLoading(true);
+              setTimeout(() => startNewSession("neutro"), 50);
+            }}
+            disabled={manualContent.trim().length < 80}
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl py-5 text-base disabled:opacity-40"
+          >
+            Inizia con questo testo →
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen flex flex-col bg-[var(--color-surface)]">
       {/* Header */}
