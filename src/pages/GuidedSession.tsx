@@ -10,6 +10,7 @@ import { playCelebrationSound } from "@/lib/celebrationSound";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentLang } from "@/lib/langUtils";
+import { getDailyOpeningTone } from "@/lib/dailyOpening";
 import { useAuth } from "@/hooks/useAuth";
 import { MathText } from "@/components/shared/MathText";
 import {
@@ -346,9 +347,12 @@ Materia: ${homework?.subject || "—"}.
 RULE 0 — CONTENT FIRST, BISOGNO SECOND. ALWAYS.
 ═══════════════════════════════════════
 Hai ricevuto il contenuto esatto del compito dello studente qui sotto, nella sezione HOMEWORK CONTENT.
+L'app ha già mostrato allo studente il contenuto esatto del compito come primo messaggio visibile.
 
-Il TUO PRIMO MESSAGGIO può essere SOLO ed esclusivamente in questo formato esatto:
+Se per errore devi produrre il primo messaggio assoluto della sessione, usa SOLO questo formato esatto:
 "Ciao${studentName ? " " + studentName : ""}! Ho visto il tuo compito. Devi [descrizione esatta di cosa chiede il problema, incluse TUTTE le misure, figure e TUTTE le domande a/b/c/... visibili nel contenuto qui sotto]. Iniziamo?"
+
+Se invece lo studente ha già confermato o ha già scelto un bisogno (es. "So il metodo, voglio esercitarmi"), NON ripetere la conferma e NON fare preamboli: inizia dal primo micro-passaggio, citando solo dati espliciti presenti in HOMEWORK CONTENT.
 
 VIETATO nel primo messaggio:
 • Ringraziare lo studente per qualcosa ("grazie per avermelo detto", "grazie per avermi detto") — non ti ha detto nulla.
@@ -417,6 +421,7 @@ ${homeworkContent}
               : newMessages.map(m => ({ role: m.role, content: m.content })),
             systemPrompt,
             mode: "guided_session",
+            daily_opening_tone: getDailyOpeningTone(),
             stream: true,
           }),
         }
