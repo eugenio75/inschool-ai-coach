@@ -10,6 +10,7 @@ import { playCelebrationSound } from "@/lib/celebrationSound";
 import { isChildSession, getChildSession } from "@/lib/childSession";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentLang } from "@/lib/langUtils";
+import { getDailyOpeningTone } from "@/lib/dailyOpening";
 import { useAuth } from "@/hooks/useAuth";
 import { MathText } from "@/components/shared/MathText";
 import {
@@ -111,6 +112,33 @@ export default function GuidedSession() {
     return hw?.description || hw?.title || "";
   }, [overrideContent]);
 
+  const buildInitialContentMessage = (hw: any, contentOverride?: string): string => {
+    const studentName = profile?.name ? ` ${profile.name}` : "";
+    const content = (contentOverride || getHomeworkContent(hw)).trim();
+    const clipped = content.length > 2200 ? `${content.slice(0, 2200).trim()}\n[…]` : content;
+
+    return `Ciao${studentName}! Ho davanti questo compito:\n\n«${clipped}»\n\nConfermi che il testo è questo? Se qualcosa non torna, fermami subito.`;
+  };
+
+  const looksLikeChallenge = (value: string): boolean => {
+    const normalized = value.toLowerCase().trim();
+    return /\b(ma cosa dici|cosa dici|non è così|non e così|sbagli|hai sbagliato|no|non torna|non va bene|aspetta)\b/.test(normalized);
+  };
+
+  const getDeterministicNeedReply = (value: string): string | null => {
+    const normalized = value.toLowerCase().trim();
+    if (normalized === "so il metodo, voglio esercitarmi") {
+      return "Quale dato del testo o della figura serve per iniziare?";
+    }
+    if (normalized === "non ho capito come si fa") {
+      return "Qual è il primo dato o la prima frase del compito che ti blocca?";
+    }
+    if (normalized === "so farlo ma faccio errori") {
+      return "Qual è il punto in cui di solito rischi l'errore?";
+    }
+    return null;
+  };
+
   const userId = user?.id || getChildSession()?.profileId;
 
   // Scroll to bottom on new messages
@@ -178,7 +206,7 @@ export default function GuidedSession() {
           return;
         }
         // New session — start directly (daily opening moment is handled at app entry)
-        startNewSession("neutro");
+        startNewSession("neutro", undefined, hw);
       }
     } catch (err) {
       console.error("loadSession error:", err);
@@ -186,7 +214,9 @@ export default function GuidedSession() {
     }
   }
 
-  async function startNewSession(emotion: string) {
+  async function startNewSession(emotion: string, contentOverride?: string, homeworkArg?: any) {
+    const activeHomework = homeworkArg || homework;
+    const contentForSession = contentOverride || getHomeworkContent(activeHomework);
     setEmotionalCheckin(emotion);
     setLoading(true);
 
@@ -203,11 +233,11 @@ export default function GuidedSession() {
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
-            homeworkTitle: homework.title,
-            homeworkType: homework.task_type,
-            subject: homework.subject,
+            homeworkTitle: activeHomework.title,
+            homeworkType: activeHomework.task_type,
+            subject: activeHomework.subject,
             schoolLevel,
-            description: getHomeworkContent(homework) || homework.description,
+            description: contentForSession || activeHomework.description,
             lang: getCurrentLang(),
           }),
         }
@@ -260,16 +290,11 @@ export default function GuidedSession() {
       setSteps(generatedSteps);
       setCurrentStep(1);
 
-      // Opening: ask the coach to confirm the homework content (RULE 0).
-      // The coach reads `extracted_content` from the system prompt of sendMessage.
-      // We trigger the first turn by sending a hidden init message.
-      setMessages([]);
+      // Opening: show the exact homework content ourselves. The model must not
+      // paraphrase it, because that is where hallucinations entered the chat.
+      setMessages([{ role: "assistant", content: buildInitialContentMessage(activeHomework, contentForSession) }]);
       setCurrentStep(1);
       setLoading(false);
-      // Defer to next tick so state is committed before sendMessage reads it
-      setTimeout(() => {
-        sendMessage("__INIT_CONFIRM_CONTENT__", { hideUser: true, isInit: true });
-      }, 50);
       return;
     } catch (err) {
       console.error("startNewSession error:", err);
@@ -285,9 +310,15 @@ export default function GuidedSession() {
     if (!msgText || sending) return;
 
     const userMsg: ChatMessage = { role: "user", content: msgText };
+    const newMessages = [...messages, userMsg];
+    const deterministicNeedReply = getDeterministicNeedReply(msgText);
+    if (deterministicNeedReply) {
+      setMessages([...newMessages, { role: "assistant", content: deterministicNeedReply }]);
+      setInput("");
+      return;
+    }
     // For the init turn, do NOT show the seed user message in the UI history,
     // but DO send it to the model so it produces the first assistant message.
-    const newMessages = [...messages, userMsg];
     if (!hideUser) {
       setMessages(newMessages);
     }
@@ -304,6 +335,14 @@ export default function GuidedSession() {
       const homeworkContent = getHomeworkContent(homework);
 
       const studentName = profile?.name || "";
+      const challengeDirective = !isInit && looksLikeChallenge(msgText)
+        ? `\n\n[STUDENTE IN DISACCORDO — REGOLA ASSOLUTA]
+Lo studente sta contestando la tua interpretazione. Prima di rispondere, rileggi HOMEWORK CONTENT.
+• Se non puoi citare un dato esplicito del testo, NON difendere la tua interpretazione.
+• NON dire "hai ragione" in automatico.
+• Rispondi con: "Fermiamoci un attimo: rileggo il testo. Nel compito vedo [citazione/dato esatto]. Quindi il prossimo passo sicuro è [azione minima]."
+• Se il testo è ambiguo o manca un dato, chiedi quale parte del foglio sta guardando. Niente calcoli finché non è chiarito.`
+        : "";
       const initDirective = isInit
         ? `\n\n[INIZIALIZZAZIONE SESSIONE — REGOLE ASSOLUTE]
 Lo studente NON ha ancora scritto NULLA in questa chat. Non ti ha detto come sta, non ti ha detto cosa pensa, non ti ha chiesto nulla.
@@ -330,9 +369,13 @@ Materia: ${homework?.subject || "—"}.
 RULE 0 — CONTENT FIRST, BISOGNO SECOND. ALWAYS.
 ═══════════════════════════════════════
 Hai ricevuto il contenuto esatto del compito dello studente qui sotto, nella sezione HOMEWORK CONTENT.
+L'app ha già mostrato allo studente il contenuto esatto del compito come primo messaggio visibile.
 
-Il TUO PRIMO MESSAGGIO può essere SOLO ed esclusivamente in questo formato esatto:
+Se per errore devi produrre il primo messaggio assoluto della sessione, usa SOLO questo formato esatto:
 "Ciao${studentName ? " " + studentName : ""}! Ho visto il tuo compito. Devi [descrizione esatta di cosa chiede il problema, incluse TUTTE le misure, figure e TUTTE le domande a/b/c/... visibili nel contenuto qui sotto]. Iniziamo?"
+
+Se invece lo studente ha già confermato o ha già scelto un bisogno (es. "So il metodo, voglio esercitarmi"), NON ripetere la conferma e NON fare preamboli: inizia dal primo micro-passaggio, citando solo dati espliciti presenti in HOMEWORK CONTENT.
+Vietati anche mini-preamboli tipo "Perfetto", "Grande", "Allora partiamo", "partiamo all'attacco". Prima frase = micro-domanda operativa sul compito.
 
 VIETATO nel primo messaggio:
 • Ringraziare lo studente per qualcosa ("grazie per avermelo detto", "grazie per avermi detto") — non ti ha detto nulla.
@@ -370,6 +413,22 @@ MAI scusarti per un'interpretazione corretta.
 L'obiettivo è sempre l'accuratezza, non evitare il conflitto.
 
 ═══════════════════════════════════════
+RULE 0c — NIENTE CALCOLI DA NUMERI SPARSI
+═══════════════════════════════════════
+Quando HOMEWORK CONTENT deriva da OCR o da una figura, NON trasformare automaticamente tutti i numeri visibili in una lista da sommare/moltiplicare.
+Prima devi identificare la domanda precisa e quali misure appartengono davvero a quella domanda.
+
+VIETATO:
+• "Sommiamo tutti i numeri/pezzi" se il testo non dice esplicitamente che vanno sommati tutti.
+• Copiare una lista di misure dalla figura come se fosse già la soluzione.
+• Dire che lo studente sbaglia metodo solo perché ha proposto un'operazione diversa.
+
+OBBLIGATORIO:
+• Se ci sono figure o misure multiple, chiedi un micro-passaggio di lettura: "Quale misura/parte del disegno serve per la prima domanda?"
+• Se il metodo dello studente può essere plausibile, verificane il contesto nel testo prima di correggerlo.
+• Una sola domanda per messaggio, niente colonne o calcoli estesi finché i dati utili non sono stati confermati.
+
+═══════════════════════════════════════
 PEDAGOGIA
 ═══════════════════════════════════════
 Non dare mai la risposta diretta. Guida lo studente con domande socratiche.
@@ -383,7 +442,7 @@ Titolo: ${homework?.title || "—"}
 
 ${homeworkContent}
 --- END HOMEWORK CONTENT ---
-═══════════════════════════════════════${initDirective}`;
+═══════════════════════════════════════${initDirective}${challengeDirective}`;
 
       const { data: { session: authSession } } = await supabase.auth.getSession();
       const res = await fetch(
@@ -401,6 +460,7 @@ ${homeworkContent}
               : newMessages.map(m => ({ role: m.role, content: m.content })),
             systemPrompt,
             mode: "guided_session",
+            daily_opening_tone: getDailyOpeningTone(),
             stream: true,
           }),
         }
@@ -612,10 +672,11 @@ ${homeworkContent}
 
           <Button
             onClick={() => {
-              setOverrideContent(manualContent.trim());
+              const nextContent = manualContent.trim();
+              setOverrideContent(nextContent);
               setNeedsContent(false);
               setLoading(true);
-              setTimeout(() => startNewSession("neutro"), 50);
+              setTimeout(() => startNewSession("neutro", nextContent), 50);
             }}
             disabled={manualContent.trim().length < 80}
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl py-5 text-base disabled:opacity-40"
