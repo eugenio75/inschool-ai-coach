@@ -400,6 +400,7 @@ ${homeworkContent}
               ? [{ role: "user", content: "Inizia la sessione." }]
               : newMessages.map(m => ({ role: m.role, content: m.content })),
             systemPrompt,
+            mode: "guided_session",
             stream: true,
           }),
         }
