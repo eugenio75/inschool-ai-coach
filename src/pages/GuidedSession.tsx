@@ -58,15 +58,57 @@ export default function GuidedSession() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Helper: extract only the section of full_ocr_text that matches the homework title.
+  // The OCR pipeline often returns a multi-exercise PDF chunked as:
+  //   [Parte N: <title>]\n<body>\n---\n[Parte N+1: ...]
+  // If we pass the entire blob to the coach, it mixes measurements between exercises
+  // (e.g. takes "3 rotoli da 10 metri" from a different problem). We must isolate only
+  // the section whose [Parte N: ...] header matches our homework title.
+  function extractRelevantSection(fullText: string, title: string): string {
+    if (!fullText) return "";
+    // Split on the "[Parte N: ..." markers, keeping the headers
+    const parts = fullText.split(/(?=\[Parte\s+\d+:)/gi).map(s => s.trim()).filter(Boolean);
+    if (parts.length <= 1) return fullText; // no markers — return as-is
+
+    // Normalize for matching: strip diacritics, collapse spaces, lowercase
+    const norm = (s: string) =>
+      s.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^\w\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    const titleNorm = norm(title);
+    // Try a strict header match first: "[Parte N: <title>]"
+    for (const part of parts) {
+      const headerMatch = part.match(/^\[Parte\s+\d+:\s*([^\]]+)\]/i);
+      if (!headerMatch) continue;
+      const sectionTitle = norm(headerMatch[1]);
+      if (sectionTitle === titleNorm || sectionTitle.includes(titleNorm) || titleNorm.includes(sectionTitle)) {
+        return part.replace(/^---\s*$/gm, "").trim();
+      }
+    }
+    // Fallback: find the part whose body contains the most title keywords
+    const titleWords = titleNorm.split(" ").filter(w => w.length >= 3);
+    if (titleWords.length === 0) return fullText;
+    let best = parts[0];
+    let bestScore = -1;
+    for (const part of parts) {
+      const partNorm = norm(part);
+      const score = titleWords.reduce((acc, w) => acc + (partNorm.includes(w) ? 1 : 0), 0);
+      if (score > bestScore) { bestScore = score; best = part; }
+    }
+    return best.replace(/^---\s*$/gm, "").trim();
+  }
+
   // Helper: build the homework content string from DB fields or manual override
   const getHomeworkContent = useCallback((hw: any): string => {
     if (overrideContent) return overrideContent;
-    return (
-      hw?.source_files?.[0]?.full_ocr_text ||
-      hw?.description ||
-      hw?.title ||
-      ""
-    );
+    const fullOcr = hw?.source_files?.[0]?.full_ocr_text || "";
+    if (fullOcr) {
+      const isolated = extractRelevantSection(fullOcr, hw?.title || "");
+      if (isolated && isolated.length >= 20) return isolated;
+    }
+    return hw?.description || hw?.title || "";
   }, [overrideContent]);
 
   const userId = user?.id || getChildSession()?.profileId;
@@ -125,11 +167,10 @@ export default function GuidedSession() {
         setMessages([{ role: "assistant", content: resumeMsg }]);
         setLoading(false);
       } else {
-        // Gate: require homework content before opening the coach
-        const content =
-          hw?.source_files?.[0]?.full_ocr_text ||
-          hw?.description ||
-          "";
+        // Gate: require homework content before opening the coach.
+        // Use the SAME isolation logic the coach will see, so a multi-exercise
+        // PDF with a tiny D24 section still validates against the section length.
+        const content = getHomeworkContent(hw);
         if (!content || content.trim().length < 80) {
           setNeedsContent(true);
           setManualContent(hw?.description || hw?.title || "");
@@ -359,6 +400,7 @@ ${homeworkContent}
               ? [{ role: "user", content: "Inizia la sessione." }]
               : newMessages.map(m => ({ role: m.role, content: m.content })),
             systemPrompt,
+            mode: "guided_session",
             stream: true,
           }),
         }
