@@ -46,7 +46,26 @@ const EmotionalCheckin = () => {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [conversationTone, setConversationTone] = useState<DailyOpeningTone | null>(null);
   const [readyToStart, setReadyToStart] = useState(false);
+  const [selectedMood, setSelectedMood] = useState<DailyOpeningTone | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // 4 icone di tono — tap rapido per chi non vuole scrivere.
+  // Mappate sui 3 toni che il Coach già conosce (heavy/neutral/positive).
+  const MOODS: { emoji: string; label: string; tone: DailyOpeningTone }[] = [
+    { emoji: "😟", label: "Giù", tone: "heavy" },
+    { emoji: "😐", label: "Così così", tone: "neutral" },
+    { emoji: "🙂", label: "Bene", tone: "positive" },
+    { emoji: "⚡", label: "Carico", tone: "positive" },
+  ];
+
+  const handleMoodTap = (tone: DailyOpeningTone) => {
+    if (busy || readyToStart) return;
+    setSelectedMood(tone);
+    setConversationTone(tone);
+    // Apri il campo testo per chi vuole aggiungere una frase, ma è opzionale.
+    setTimeout(() => textareaRef.current?.focus(), 0);
+  };
 
   const childSession = getChildSession();
   const savedProfile = useMemo(() => {
@@ -248,10 +267,49 @@ const EmotionalCheckin = () => {
               </p>
             )}
 
+            {/* Mood quick-tap: 4 icone per chi non vuole scrivere */}
+            {turns.length === 0 && !readyToStart && (
+              <div
+                role="radiogroup"
+                aria-label="Come ti senti?"
+                className="flex items-center justify-between gap-2 pt-1"
+              >
+                {MOODS.map((m) => {
+                  const active = selectedMood === m.tone &&
+                    // distingue Bene da Carico anche se condividono "positive"
+                    MOODS.findIndex((x) => x.tone === selectedMood) === MOODS.indexOf(m);
+                  const isSelected = selectedMood !== null && (
+                    // segna esattamente l'icona scelta (per emoji)
+                    (selectedMood === m.tone)
+                  );
+                  return (
+                    <button
+                      key={m.emoji}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      aria-label={m.label}
+                      onClick={() => handleMoodTap(m.tone)}
+                      disabled={busy}
+                      className={`flex-1 flex flex-col items-center gap-1 rounded-2xl border px-2 py-3 transition-all ${
+                        isSelected
+                          ? "border-primary bg-primary/10"
+                          : "border-border bg-background hover:bg-accent"
+                      }`}
+                    >
+                      <span className="text-2xl leading-none">{m.emoji}</span>
+                      <span className="text-[11px] text-foreground/70 leading-tight">{m.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             <Textarea
+              ref={textareaRef}
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder=""
+              placeholder={selectedMood ? "Vuoi aggiungere qualcosa? (facoltativo)" : ""}
               aria-label={DAILY_OPENING_PROMPT}
               className="min-h-[96px] resize-none rounded-xl text-base"
               autoFocus
@@ -263,6 +321,11 @@ const EmotionalCheckin = () => {
                 }
               }}
             />
+            {selectedMood && text.trim().length === 0 && (
+              <p className="text-muted-foreground text-[12px] leading-relaxed">
+                Quando vuoi, clicca Continua per iniziare.
+              </p>
+            )}
           </div>
 
           <div
