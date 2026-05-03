@@ -262,12 +262,24 @@ export default function GuidedSession() {
 
       const homeworkContent = getHomeworkContent(homework);
 
+      const studentName = profile?.name || "";
       const initDirective = isInit
-        ? `\n\n[INIZIALIZZAZIONE SESSIONE]
-Questo è l'avvio della sessione. Lo studente NON ha ancora scritto nulla.
-Produci ESCLUSIVAMENTE il messaggio di conferma del contenuto come da RULE 0:
-"Ho visto il tuo compito. Devi [descrizione esatta di cosa chiede il problema, includendo TUTTE le misure, figure e domande a/b/c presenti nel contenuto del compito qui sotto]. Iniziamo?"
-NON mostrare i bottoni bisogno. NON fare domande aperte. NON inventare misure.`
+        ? `\n\n[INIZIALIZZAZIONE SESSIONE — REGOLE ASSOLUTE]
+Lo studente NON ha ancora scritto NULLA in questa chat. Non ti ha detto come sta, non ti ha detto cosa pensa, non ti ha chiesto nulla.
+
+VIETATO in questo primo messaggio:
+• "Grazie per avermelo detto" / "grazie per avermi detto" / qualunque ringraziamento per qualcosa che lo studente non ha detto
+• "Come stai oggi?" / "come ti senti?" / qualunque riferimento al suo stato emotivo
+• "Ci adattiamo al tuo ritmo" / "capisco come ti senti" / qualunque reazione a un input inesistente
+• "Come posso aiutarti?" come prima frase
+• Usare SOLO il titolo del compito senza la descrizione completa
+• Inventare misure, numeri, figure, domande non presenti nel contenuto qui sotto
+• Mostrare bottoni bisogno o elenchi di opzioni di aiuto
+
+OBBLIGATORIO — produci ESATTAMENTE questo formato (una sola riga, senza preamboli):
+"Ciao${studentName ? " " + studentName : ""}! Ho visto il tuo compito. Devi [descrizione esatta di cosa chiede il problema, includendo TUTTE le misure, le figure e TUTTE le domande a/b/c/... presenti nel contenuto del compito qui sotto]. Iniziamo?"
+
+Niente altro. Nessuna seconda frase. Nessuna domanda aggiuntiva. Aspetta la conferma dello studente.`
         : "";
 
       const systemPrompt = `Sei in una sessione di studio guidata con ${profile?.name || "lo studente"} (livello: ${schoolLevel}).
@@ -278,8 +290,15 @@ RULE 0 — CONTENT FIRST, BISOGNO SECOND. ALWAYS.
 ═══════════════════════════════════════
 Hai ricevuto il contenuto esatto del compito dello studente qui sotto, nella sezione HOMEWORK CONTENT.
 
-Il TUO PRIMO MESSAGGIO può essere SOLO ed esclusivamente:
-"Ho visto il tuo compito. Devi [descrizione esatta di cosa chiede il problema, incluse TUTTE le misure, figure e domande a/b/c visibili nel contenuto qui sotto]. Iniziamo?"
+Il TUO PRIMO MESSAGGIO può essere SOLO ed esclusivamente in questo formato esatto:
+"Ciao${studentName ? " " + studentName : ""}! Ho visto il tuo compito. Devi [descrizione esatta di cosa chiede il problema, incluse TUTTE le misure, figure e TUTTE le domande a/b/c/... visibili nel contenuto qui sotto]. Iniziamo?"
+
+VIETATO nel primo messaggio:
+• Ringraziare lo studente per qualcosa ("grazie per avermelo detto", "grazie per avermi detto") — non ti ha detto nulla.
+• Riferirsi al suo stato emotivo ("come stai", "ci adattiamo al tuo ritmo", "capisco come ti senti").
+• Chiedere "Come posso aiutarti?" come prima frase.
+• Usare solo il titolo del compito senza la descrizione completa con misure e domande.
+• Mostrare i bottoni bisogno o elencarli nel testo.
 
 Aspetta che lo studente confermi.
 
