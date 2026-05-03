@@ -312,6 +312,14 @@ export default function GuidedSession() {
       const homeworkContent = getHomeworkContent(homework);
 
       const studentName = profile?.name || "";
+      const challengeDirective = !isInit && looksLikeChallenge(msgText)
+        ? `\n\n[STUDENTE IN DISACCORDO — REGOLA ASSOLUTA]
+Lo studente sta contestando la tua interpretazione. Prima di rispondere, rileggi HOMEWORK CONTENT.
+• Se non puoi citare un dato esplicito del testo, NON difendere la tua interpretazione.
+• NON dire "hai ragione" in automatico.
+• Rispondi con: "Fermiamoci un attimo: rileggo il testo. Nel compito vedo [citazione/dato esatto]. Quindi il prossimo passo sicuro è [azione minima]."
+• Se il testo è ambiguo o manca un dato, chiedi quale parte del foglio sta guardando. Niente calcoli finché non è chiarito.`
+        : "";
       const initDirective = isInit
         ? `\n\n[INIZIALIZZAZIONE SESSIONE — REGOLE ASSOLUTE]
 Lo studente NON ha ancora scritto NULLA in questa chat. Non ti ha detto come sta, non ti ha detto cosa pensa, non ti ha chiesto nulla.
@@ -391,7 +399,7 @@ Titolo: ${homework?.title || "—"}
 
 ${homeworkContent}
 --- END HOMEWORK CONTENT ---
-═══════════════════════════════════════${initDirective}`;
+═══════════════════════════════════════${initDirective}${challengeDirective}`;
 
       const { data: { session: authSession } } = await supabase.auth.getSession();
       const res = await fetch(
