@@ -166,7 +166,7 @@ export default function GuidedSession() {
             homeworkType: homework.task_type,
             subject: homework.subject,
             schoolLevel,
-            description: homework.description,
+            description: getHomeworkContent(homework) || homework.description,
             lang: getCurrentLang(),
           }),
         }
