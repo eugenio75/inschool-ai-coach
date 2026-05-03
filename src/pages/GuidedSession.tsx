@@ -52,8 +52,22 @@ export default function GuidedSession() {
   const [showPauseDialog, setShowPauseDialog] = useState(false);
   const [emotionalCheckin, setEmotionalCheckin] = useState<string | null>(null);
   const [showExplainOptions, setShowExplainOptions] = useState(false);
+  const [needsContent, setNeedsContent] = useState(false);
+  const [manualContent, setManualContent] = useState("");
+  const [overrideContent, setOverrideContent] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Helper: build the homework content string from DB fields or manual override
+  const getHomeworkContent = useCallback((hw: any): string => {
+    if (overrideContent) return overrideContent;
+    return (
+      hw?.source_files?.[0]?.full_ocr_text ||
+      hw?.description ||
+      hw?.title ||
+      ""
+    );
+  }, [overrideContent]);
 
   const userId = user?.id || getChildSession()?.profileId;
 
@@ -111,6 +125,17 @@ export default function GuidedSession() {
         setMessages([{ role: "assistant", content: resumeMsg }]);
         setLoading(false);
       } else {
+        // Gate: require homework content before opening the coach
+        const content =
+          hw?.source_files?.[0]?.full_ocr_text ||
+          hw?.description ||
+          "";
+        if (!content || content.trim().length < 80) {
+          setNeedsContent(true);
+          setManualContent(hw?.description || hw?.title || "");
+          setLoading(false);
+          return;
+        }
         // New session — start directly (daily opening moment is handled at app entry)
         startNewSession("neutro");
       }
@@ -141,7 +166,7 @@ export default function GuidedSession() {
             homeworkType: homework.task_type,
             subject: homework.subject,
             schoolLevel,
-            description: homework.description,
+            description: getHomeworkContent(homework) || homework.description,
             lang: getCurrentLang(),
           }),
         }
@@ -194,18 +219,17 @@ export default function GuidedSession() {
       setSteps(generatedSteps);
       setCurrentStep(1);
 
-      // Opening message from coach
-      const firstStep = generatedSteps[0];
-      const emotionResponse = emotion === "concentrato"
-        ? "Perfetto, sei concentrato. Partiamo subito."
-        : emotion === "stanco"
-        ? "Capisco che sei un po' stanco. Andiamo con calma, un passo alla volta."
-        : "Nessun problema se ti senti bloccato. Iniziamo da qualcosa di semplice.";
-
-      setMessages([{
-        role: "assistant",
-        content: `${emotionResponse}\n\n${homework.title} — Step 1 di ${generatedSteps.length}:\n\n${firstStep.text}`,
-      }]);
+      // Opening: ask the coach to confirm the homework content (RULE 0).
+      // The coach reads `extracted_content` from the system prompt of sendMessage.
+      // We trigger the first turn by sending a hidden init message.
+      setMessages([]);
+      setCurrentStep(1);
+      setLoading(false);
+      // Defer to next tick so state is committed before sendMessage reads it
+      setTimeout(() => {
+        sendMessage("__INIT_CONFIRM_CONTENT__", { hideUser: true, isInit: true });
+      }, 50);
+      return;
     } catch (err) {
       console.error("startNewSession error:", err);
       setMessages([{ role: "assistant", content: "Si è verificato un errore nell'avvio della sessione. Riprova." }]);
@@ -213,22 +237,93 @@ export default function GuidedSession() {
     setLoading(false);
   }
 
-  async function sendMessage(text?: string) {
+  async function sendMessage(text?: string, opts?: { hideUser?: boolean; isInit?: boolean }) {
+    const isInit = opts?.isInit === true;
+    const hideUser = opts?.hideUser === true;
     const msgText = text || input.trim();
     if (!msgText || sending) return;
 
     const userMsg: ChatMessage = { role: "user", content: msgText };
+    // For the init turn, do NOT show the seed user message in the UI history,
+    // but DO send it to the model so it produces the first assistant message.
     const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
+    if (!hideUser) {
+      setMessages(newMessages);
+    }
     setInput("");
     setSending(true);
     setStreamingText("");
 
     try {
       const currentStepData = steps[currentStep - 1];
-      const systemAddition = currentStepData
+      const systemAddition = currentStepData && !isInit
         ? `\n\nStep attuale (${currentStep}/${totalSteps}): ${currentStepData.text || currentStepData.step_text}`
         : "";
+
+      const homeworkContent = getHomeworkContent(homework);
+
+      const initDirective = isInit
+        ? `\n\n[INIZIALIZZAZIONE SESSIONE]
+Questo è l'avvio della sessione. Lo studente NON ha ancora scritto nulla.
+Produci ESCLUSIVAMENTE il messaggio di conferma del contenuto come da RULE 0:
+"Ho visto il tuo compito. Devi [descrizione esatta di cosa chiede il problema, includendo TUTTE le misure, figure e domande a/b/c presenti nel contenuto del compito qui sotto]. Iniziamo?"
+NON mostrare i bottoni bisogno. NON fare domande aperte. NON inventare misure.`
+        : "";
+
+      const systemPrompt = `Sei in una sessione di studio guidata con ${profile?.name || "lo studente"} (livello: ${schoolLevel}).
+Materia: ${homework?.subject || "—"}.
+
+═══════════════════════════════════════
+RULE 0 — CONTENT FIRST, BISOGNO SECOND. ALWAYS.
+═══════════════════════════════════════
+Hai ricevuto il contenuto esatto del compito dello studente qui sotto, nella sezione HOMEWORK CONTENT.
+
+Il TUO PRIMO MESSAGGIO può essere SOLO ed esclusivamente:
+"Ho visto il tuo compito. Devi [descrizione esatta di cosa chiede il problema, incluse TUTTE le misure, figure e domande a/b/c visibili nel contenuto qui sotto]. Iniziamo?"
+
+Aspetta che lo studente confermi.
+
+SOLO DOPO che lo studente ha confermato → chiedi:
+"Come posso aiutarti?"
+e mostra i bottoni di scelta del bisogno (NON elencarli nel testo, il client li renderizza).
+
+MAI mostrare i bottoni bisogno come primo messaggio.
+MAI saltare la conferma del contenuto.
+MAI inventare misure, numeri, figure o dati che non siano esplicitamente presenti nel contenuto qui sotto.
+Se sei incerto su un valore specifico → chiedi allo studente di confermare quel valore. NON tirare a indovinare.
+
+═══════════════════════════════════════
+RULE 0b — CAMBIA IDEA SOLO SE PUOI VERIFICARE
+═══════════════════════════════════════
+Se lo studente è in disaccordo con la tua interpretazione del problema:
+1. Rileggi il contenuto del compito qui sotto con attenzione.
+2. Se rileggendo confermi che lo studente ha ragione → correggi te stesso chiaramente:
+   "Hai ragione — rileggendo vedo che [riferimento esatto al testo]. Mi sono sbagliato, partiamo dal tuo approccio."
+3. Se rileggendo confermi che eri tu ad aver ragione → mantieni la posizione con riferimento diretto al testo:
+   "Capisco il tuo ragionamento — ma guardando il problema, [citazione specifica]. Proviamo così?"
+4. Se ambiguo, non puoi verificare → chiedi:
+   "Non riesco a verificarlo dal testo che ho — puoi indicarmi esattamente quale parte del problema ti fa pensare questo?"
+
+MAI dire "hai ragione" senza averlo verificato nel contenuto qui sotto.
+MAI mantenere un'interpretazione sbagliata per orgoglio.
+MAI scusarti per un'interpretazione corretta.
+L'obiettivo è sempre l'accuratezza, non evitare il conflitto.
+
+═══════════════════════════════════════
+PEDAGOGIA
+═══════════════════════════════════════
+Non dare mai la risposta diretta. Guida lo studente con domande socratiche.
+Se lo studente risponde correttamente a uno step, scrivi [STEP_COMPLETATO: ${currentStep}].
+Se tutti gli step sono completati, scrivi [SESSIONE_COMPLETATA].${systemAddition}
+
+═══════════════════════════════════════
+--- HOMEWORK CONTENT ---
+Materia: ${homework?.subject || "—"}
+Titolo: ${homework?.title || "—"}
+
+${homeworkContent}
+--- END HOMEWORK CONTENT ---
+═══════════════════════════════════════${initDirective}`;
 
       const { data: { session: authSession } } = await supabase.auth.getSession();
       const res = await fetch(
@@ -241,8 +336,10 @@ export default function GuidedSession() {
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
-            messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-            systemPrompt: `Sei in una sessione di studio guidata. Compito: ${homework?.title}. Materia: ${homework?.subject}. Livello: ${schoolLevel}.${systemAddition}\n\nNon dare mai la risposta diretta. Guida lo studente con domande socratiche. Se risponde bene, scrivi [STEP_COMPLETATO: ${currentStep}]. Se tutti gli step sono fatti, scrivi [SESSIONE_COMPLETATA].`,
+            messages: isInit
+              ? [{ role: "user", content: "Inizia la sessione." }]
+              : newMessages.map(m => ({ role: m.role, content: m.content })),
+            systemPrompt,
             stream: true,
           }),
         }
@@ -286,7 +383,12 @@ export default function GuidedSession() {
       displayText = displayText.replace(/\[STEP_COMPLETATO:\s*\d+\]/, "").replace("[SESSIONE_COMPLETATA]", "").replace(/\[SEGNALA_DIFFICOLTÀ:\s*.+?\]/, "").trim();
 
       setStreamingText("");
-      setMessages([...newMessages, { role: "assistant", content: displayText }]);
+      if (hideUser) {
+        // Init turn: keep history clean — only the assistant confirmation is visible
+        setMessages([{ role: "assistant", content: displayText }]);
+      } else {
+        setMessages([...newMessages, { role: "assistant", content: displayText }]);
+      }
 
       if (stepComplete) {
         const stepNum = parseInt(stepComplete[1]);
@@ -404,6 +506,62 @@ export default function GuidedSession() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-6 h-6 animate-spin text-[var(--color-accent)]" />
+      </div>
+    );
+  }
+
+  if (needsContent) {
+    return (
+      <div className="min-h-screen bg-background px-4 py-6">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center gap-3 mb-6">
+            <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <span className="font-display text-lg font-semibold">{homework?.title || "Compito"}</span>
+          </div>
+
+          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-2xl p-5 mb-5 flex gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-1">
+                Non riesco a trovare il contenuto del compito
+              </p>
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                Puoi scrivere qui il testo del problema, incluse tutte le misure e le domande?
+              </p>
+            </div>
+          </div>
+
+          <textarea
+            value={manualContent}
+            onChange={(e) => setManualContent(e.target.value)}
+            placeholder="Scrivi qui il testo completo del problema, incluse tutte le misure, le figure e le domande a) b) c)..."
+            rows={10}
+            className="w-full px-4 py-3 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none text-[15px] leading-relaxed"
+          />
+
+          <div className="flex items-center justify-between mt-2 mb-4 px-1">
+            <span className="text-xs text-muted-foreground">
+              {manualContent.trim().length < 80
+                ? `Almeno 80 caratteri (${manualContent.trim().length}/80)`
+                : "Pronto per iniziare"}
+            </span>
+          </div>
+
+          <Button
+            onClick={() => {
+              setOverrideContent(manualContent.trim());
+              setNeedsContent(false);
+              setLoading(true);
+              setTimeout(() => startNewSession("neutro"), 50);
+            }}
+            disabled={manualContent.trim().length < 80}
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl py-5 text-base disabled:opacity-40"
+          >
+            Inizia con questo testo →
+          </Button>
+        </div>
       </div>
     );
   }
